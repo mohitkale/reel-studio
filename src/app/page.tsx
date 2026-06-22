@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/shell/page-header";
+import { CreateWithAIDialog } from "@/components/projects/create-with-ai-dialog";
 import {
   Dialog,
   DialogContent,
@@ -97,7 +98,12 @@ export default function ProjectsPage() {
       <PageHeader
         title="Projects"
         description="Create and manage your short-form video projects."
-        actions={<NewProjectDialog />}
+        actions={
+          <>
+            <CreateWithAIDialog />
+            <NewProjectDialog />
+          </>
+        }
       />
 
       {isLoading ? (

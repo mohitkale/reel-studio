@@ -77,7 +77,7 @@ export function useAddScene(scriptId: string) {
 }
 
 export function useUpdateScene(scriptId: string) {
-  const invalidate = useScriptInvalidator(scriptId);
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: {
       id: string;
@@ -85,7 +85,35 @@ export function useUpdateScene(scriptId: string) {
       templateId?: string;
       emphasis?: string[];
     }) => apiSend(`/api/scenes/${vars.id}`, "PATCH", vars),
-    onSuccess: invalidate,
+    // Optimistic: reflect the edit in the preview instantly, before the server.
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: ["script", scriptId] });
+      const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
+      if (prev) {
+        qc.setQueryData<ScriptDTO>(["script", scriptId], {
+          ...prev,
+          scenes: prev.scenes.map((s) =>
+            s.id === vars.id
+              ? {
+                  ...s,
+                  ...(vars.text !== undefined ? { text: vars.text } : {}),
+                  ...(vars.templateId !== undefined
+                    ? { templateId: vars.templateId }
+                    : {}),
+                  ...(vars.emphasis !== undefined
+                    ? { emphasis: vars.emphasis }
+                    : {}),
+                }
+              : s,
+          ),
+        });
+      }
+      return { prev };
+    },
+    onError: (_e, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["script", scriptId], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
   });
 }
 

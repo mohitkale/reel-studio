@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import type { PlayerRef } from "@remotion/player";
 
 import {
   useScript,
@@ -11,13 +12,15 @@ import {
   useDeleteScene,
   useReorderScenes,
 } from "@/hooks/script";
+import { normalizeTemplateId } from "@/compositions/templates";
+import type { ReelScene } from "@/compositions/types";
+import { estimateTimeline } from "@/lib/preview-timeline";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SceneList } from "@/components/editor/scene-list";
 import { SceneInspector } from "@/components/editor/scene-inspector";
-import { PreviewFrame } from "@/components/editor/preview-frame";
-import { TakePlayer } from "@/components/editor/take-player";
+import { ReelPlayer } from "@/components/editor/reel-player";
 import { VoiceoverPanel } from "@/components/editor/voiceover-panel";
 
 export function EditorClient({ scriptId }: { scriptId: string }) {
@@ -30,7 +33,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
 
   const [selectedSceneId, setSelectedSceneId] = React.useState<string | null>(null);
   const [selectedTakeId, setSelectedTakeId] = React.useState<string | null>(null);
-  const [playingSceneId, setPlayingSceneId] = React.useState<string | null>(null);
+  const [previewMode, setPreviewMode] = React.useState<"scene" | "reel">("scene");
+  const playerRef = React.useRef<PlayerRef>(null);
 
   if (isLoading) {
     return (
@@ -68,13 +72,46 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
       : (script.takes[0]?.id ?? null);
   const selectedTake = script.takes.find((t) => t.id === effectiveTakeId) ?? null;
 
-  // What the preview shows: the playing beat's scene during playback, else the selected scene.
-  const previewScene =
-    (playingSceneId && scenes.find((s) => s.id === playingSceneId)) ||
-    selectedScene;
-  const previewIndex = previewScene
-    ? scenes.findIndex((s) => s.id === previewScene.id) + 1
+  // Reel input: scene templates + timeline (from the take, or estimated for silent preview).
+  const reelScenes: ReelScene[] = scenes.map((s) => ({
+    id: s.id,
+    templateId: normalizeTemplateId(s.templateId),
+    text: s.text,
+    emphasis: s.emphasis,
+  }));
+  const estimated = estimateTimeline(
+    scenes.map((s) => ({ id: s.id, text: s.text })),
+    script.fps,
+  );
+  const timeline = selectedTake?.timeline ?? estimated.timeline;
+  const totalFrames = selectedTake?.totalFrames ?? estimated.totalFrames;
+  const fps = selectedTake?.fps ?? script.fps;
+  const audioUrl = selectedTake?.audioUrl;
+
+  // Single-scene loop preview so template/text edits animate instantly.
+  const selectedReelScene: ReelScene | null = selectedScene
+    ? {
+        id: selectedScene.id,
+        templateId: normalizeTemplateId(selectedScene.templateId),
+        text: selectedScene.text,
+        emphasis: selectedScene.emphasis,
+      }
+    : null;
+  const sceneBeat = selectedScene
+    ? timeline.find((b) => b.sceneId === selectedScene.id)
     : undefined;
+  const sceneDuration =
+    sceneBeat?.durationFrames ??
+    (selectedScene
+      ? estimateTimeline([{ id: selectedScene.id, text: selectedScene.text }], fps)
+          .totalFrames
+      : 1);
+
+  function selectScene(id: string) {
+    setSelectedSceneId(id);
+    const beat = timeline.find((b) => b.sceneId === id);
+    if (beat) playerRef.current?.seekTo(beat.startFrame);
+  }
 
   function handleMove(id: string, direction: -1 | 1) {
     const ids = scenes.map((s) => s.id);
@@ -101,17 +138,18 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
           <h2 className="text-lg font-semibold leading-tight">{script.name}</h2>
           <p className="text-xs text-muted-foreground">
             {scenes.length} scenes · {script.fps} fps
+            {selectedTake ? " · previewing take audio" : " · estimated timing"}
           </p>
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[18rem_1fr_20rem]">
         <Card>
-          <CardContent className="h-[28rem] p-3">
+          <CardContent className="h-[34rem] p-3">
             <SceneList
               scenes={scenes}
               selectedId={effectiveSceneId}
-              onSelect={setSelectedSceneId}
+              onSelect={selectScene}
               onAdd={() => addScene.mutate("")}
               onMove={handleMove}
               onDelete={(id) => deleteScene.mutate(id)}
@@ -121,27 +159,66 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
         </Card>
 
         <Card>
-          <CardContent className="space-y-4 p-4">
-            <PreviewFrame
-              text={previewScene?.text ?? ""}
-              emphasis={previewScene?.emphasis ?? []}
-              sceneNumber={previewIndex}
-              sceneCount={scenes.length}
-              playing={Boolean(playingSceneId)}
-            />
-            {selectedTake ? (
-              <>
-                <Separator />
-                <TakePlayer
-                  take={selectedTake}
-                  onActiveSceneChange={setPlayingSceneId}
+          <CardContent className="p-4">
+            <Tabs
+              value={previewMode}
+              onValueChange={(v) => setPreviewMode(v as "scene" | "reel")}
+            >
+              <TabsList className="mb-3 w-full">
+                <TabsTrigger value="scene" className="flex-1">
+                  This scene
+                </TabsTrigger>
+                <TabsTrigger value="reel" className="flex-1">
+                  Full reel
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="scene">
+                {selectedReelScene ? (
+                  <ReelPlayer
+                    key={selectedReelScene.id}
+                    scenes={[selectedReelScene]}
+                    timeline={[
+                      {
+                        sceneId: selectedReelScene.id,
+                        startFrame: 0,
+                        durationFrames: sceneDuration,
+                      },
+                    ]}
+                    totalFrames={sceneDuration}
+                    fps={fps}
+                    autoPlay
+                    loop
+                  />
+                ) : (
+                  <ReelPlayer
+                    scenes={[]}
+                    timeline={[]}
+                    totalFrames={1}
+                    fps={fps}
+                  />
+                )}
+                <p className="mt-3 text-center text-xs text-muted-foreground">
+                  Looping the selected scene. Template and text edits update live.
+                </p>
+              </TabsContent>
+
+              <TabsContent value="reel">
+                <ReelPlayer
+                  ref={playerRef}
+                  scenes={reelScenes}
+                  timeline={timeline}
+                  totalFrames={totalFrames}
+                  fps={fps}
+                  audioUrl={audioUrl}
                 />
-              </>
-            ) : (
-              <p className="text-center text-xs text-muted-foreground">
-                Generate a take below to preview synced timing.
-              </p>
-            )}
+                <p className="mt-3 text-center text-xs text-muted-foreground">
+                  {selectedTake
+                    ? "Playing the selected take with synced captions."
+                    : "Estimated preview. Generate a take below for exact, audio-synced timing."}
+                </p>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 

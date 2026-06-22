@@ -5,6 +5,7 @@ import { Monitor, Moon, Sun } from "lucide-react";
 
 import { useMounted } from "@/hooks/use-mounted";
 import { useProviders } from "@/hooks/voice";
+import { useAIProviders } from "@/hooks/ai";
 import {
   Card,
   CardContent,
@@ -15,6 +16,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shell/page-header";
 import { ProviderKeyCard } from "@/components/voice/provider-key-card";
+import { AIProviderCard } from "@/components/ai/ai-provider-card";
 import { cn } from "@/lib/utils";
 
 const themeOptions = [
@@ -27,6 +29,7 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const mounted = useMounted();
   const { data, isLoading } = useProviders();
+  const { data: aiProviders, isLoading: aiLoading } = useAIProviders();
 
   return (
     <div className="space-y-8">
@@ -88,6 +91,29 @@ export default function SettingsPage() {
                 status={status}
                 config={data.config}
               />
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">AI director (optional)</CardTitle>
+          <CardDescription>
+            Add a Gemini or OpenAI key to generate a full scene plan from a one
+            line idea or a pasted story. The manual editor always works without
+            this.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {aiLoading || !aiProviders ? (
+            <div className="space-y-4">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          ) : (
+            aiProviders.map((status) => (
+              <AIProviderCard key={status.id} status={status} />
             ))
           )}
         </CardContent>

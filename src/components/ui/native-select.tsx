@@ -13,9 +13,11 @@ const NativeSelect = React.forwardRef<
       <select
         ref={ref}
         className={cn(
-          "h-9 w-full appearance-none rounded-md border border-input bg-transparent pl-3 pr-9 text-sm shadow-sm transition-colors",
+          "h-9 w-full appearance-none rounded-md border border-input bg-transparent pl-3 pr-9 text-sm text-foreground shadow-sm transition-colors",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
           "disabled:cursor-not-allowed disabled:opacity-50",
+          // Keep native option popups readable across browsers/OS themes.
+          "[&_optgroup]:bg-popover [&_optgroup]:text-popover-foreground [&_option]:bg-popover [&_option]:text-popover-foreground",
           className,
         )}
         {...props}

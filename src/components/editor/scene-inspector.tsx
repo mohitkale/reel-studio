@@ -4,7 +4,7 @@ import * as React from "react";
 import { Trash2 } from "lucide-react";
 
 import type { SceneDTO } from "@/lib/dto";
-import { TEMPLATES } from "@/compositions/templates";
+import { TEMPLATES, normalizeTemplateId } from "@/compositions/templates";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -73,7 +73,7 @@ export function SceneInspector({
         <Label htmlFor="scene-template">Template</Label>
         <NativeSelect
           id="scene-template"
-          value={scene.templateId}
+          value={normalizeTemplateId(scene.templateId)}
           onChange={(e) => onUpdate({ id: scene.id, templateId: e.target.value })}
         >
           {TEMPLATES.map((t) => (
@@ -83,7 +83,10 @@ export function SceneInspector({
           ))}
         </NativeSelect>
         <p className="text-xs text-muted-foreground">
-          {TEMPLATES.find((t) => t.id === scene.templateId)?.description}
+          {
+            TEMPLATES.find((t) => t.id === normalizeTemplateId(scene.templateId))
+              ?.description
+          }
         </p>
       </div>
 

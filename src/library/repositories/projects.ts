@@ -1,4 +1,5 @@
 import type { ProjectDTO } from "@/lib/dto";
+import type { ScenePlan } from "@/providers/ai/types";
 import { prisma } from "@/library/db";
 import {
   SAMPLE_PROJECT_NAME,
@@ -43,6 +44,34 @@ export async function createProject(
 
 export async function deleteProject(id: string): Promise<void> {
   await prisma.project.delete({ where: { id } });
+}
+
+/** Create a project + script + scenes from an AI-generated scene plan. */
+export async function createProjectFromPlan(
+  plan: ScenePlan,
+): Promise<{ projectId: string; scriptId: string }> {
+  const project = await prisma.project.create({
+    data: {
+      name: plan.projectName,
+      scripts: {
+        create: {
+          name: plan.scriptName,
+          scenes: {
+            create: plan.scenes.map((scene, order) => ({
+              order,
+              templateId: scene.templateId,
+              text: scene.text,
+              emphasis: scene.emphasis.length
+                ? JSON.stringify(scene.emphasis)
+                : null,
+            })),
+          },
+        },
+      },
+    },
+    include: { scripts: true },
+  });
+  return { projectId: project.id, scriptId: project.scripts[0].id };
 }
 
 /** Seed the sample project + script + scenes if the database has no projects yet. */
