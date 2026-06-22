@@ -1,65 +1,100 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Link from "next/link";
+import { Plus, Clapperboard, Mic, Sparkles } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/shell/page-header";
+
+const quickStart = [
+  {
+    icon: Clapperboard,
+    title: "Write a script",
+    body: "Break your reel into scenes with text, emphasis and a template.",
+  },
+  {
+    icon: Mic,
+    title: "Generate a voice",
+    body: "Pick a provider and voice, then synth a synced voiceover take.",
+  },
+  {
+    icon: Sparkles,
+    title: "Compose & render",
+    body: "Add motion-design templates and render a 1080x1920 MP4.",
+  },
+];
+
+export default function ProjectsPage() {
+  // Projects come from the library in M3; show the empty state for now.
+  const projects: { id: string; name: string }[] = [];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="space-y-8">
+      <PageHeader
+        title="Projects"
+        description="Create and manage your short-form video projects."
+        actions={
+          <Button disabled>
+            <Plus />
+            New project
+          </Button>
+        }
+      />
+
+      {projects.length === 0 ? (
+        <EmptyState
+          icon={Clapperboard}
+          title="No projects yet"
+          description="Projects and the editor land in milestone 3. Here is the workflow you will follow."
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+      ) : null}
+
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold">Quick start</h3>
+          <Badge variant="secondary">3 steps</Badge>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {quickStart.map((step) => {
+            const Icon = step.icon;
+            return (
+              <Card key={step.title}>
+                <CardHeader>
+                  <div className="mb-2 flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Icon className="size-5" />
+                  </div>
+                  <CardTitle className="text-base">{step.title}</CardTitle>
+                  <CardDescription>{step.body}</CardDescription>
+                </CardHeader>
+              </Card>
+            );
+          })}
         </div>
-      </main>
+      </section>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Set up your voice provider</CardTitle>
+          <CardDescription>
+            Add a Cartesia or ElevenLabs API key to start generating voiceovers.
+            Keys stay on your machine.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline">
+            <Link href="/settings">Open settings</Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
