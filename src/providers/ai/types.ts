@@ -9,12 +9,21 @@ export const AI_PROVIDER_IDS = ["gemini", "openai"] as const;
 export type AIProviderId = (typeof AI_PROVIDER_IDS)[number];
 
 // Keep in sync with the template registry ids (src/compositions/templates.ts).
-export const PLAN_TEMPLATE_IDS = ["kinetic", "lottie", "three"] as const;
+export const PLAN_TEMPLATE_IDS = [
+  "kinetic",
+  "lottie",
+  "three",
+  "stat-reveal",
+  "icon-grid",
+  "quote-card",
+  "emoji-punch",
+] as const;
 
 export const aiSceneSchema = z.object({
   text: z.string().min(1),
   templateId: z.enum(PLAN_TEMPLATE_IDS),
   emphasis: z.array(z.string()).default([]),
+  visual: z.string().max(64).optional(),
 });
 
 export const scenePlanSchema = z.object({

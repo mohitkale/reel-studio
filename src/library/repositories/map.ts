@@ -12,6 +12,7 @@ export function toSceneDTO(scene: Scene): SceneDTO {
     templateId: scene.templateId,
     text: scene.text,
     emphasis: parseJsonColumn(scene.emphasis, emphasisSchema, []),
+    visual: scene.visual ?? undefined,
   };
 }
 

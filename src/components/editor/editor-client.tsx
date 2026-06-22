@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Video, Loader2 } from "lucide-react";
 import type { PlayerRef } from "@remotion/player";
 
 import {
@@ -12,9 +12,11 @@ import {
   useDeleteScene,
   useReorderScenes,
 } from "@/hooks/script";
+import { useCreateRender } from "@/hooks/renders";
 import { normalizeTemplateId } from "@/compositions/templates";
 import type { ReelScene } from "@/compositions/types";
 import { estimateTimeline } from "@/lib/preview-timeline";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -30,6 +32,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   const updateScene = useUpdateScene(scriptId);
   const deleteScene = useDeleteScene(scriptId);
   const reorder = useReorderScenes(scriptId);
+  const createRender = useCreateRender();
 
   const [selectedSceneId, setSelectedSceneId] = React.useState<string | null>(null);
   const [selectedTakeId, setSelectedTakeId] = React.useState<string | null>(null);
@@ -78,6 +81,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
     templateId: normalizeTemplateId(s.templateId),
     text: s.text,
     emphasis: s.emphasis,
+    visual: s.visual,
   }));
   const estimated = estimateTimeline(
     scenes.map((s) => ({ id: s.id, text: s.text })),
@@ -95,6 +99,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
         templateId: normalizeTemplateId(selectedScene.templateId),
         text: selectedScene.text,
         emphasis: selectedScene.emphasis,
+        visual: selectedScene.visual,
       }
     : null;
   const sceneBeat = selectedScene
@@ -126,21 +131,40 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Link
-          href="/"
-          className="text-muted-foreground hover:text-foreground"
-          aria-label="Back to projects"
-        >
-          <ArrowLeft className="size-4" />
-        </Link>
-        <div>
-          <h2 className="text-lg font-semibold leading-tight">{script.name}</h2>
-          <p className="text-xs text-muted-foreground">
-            {scenes.length} scenes · {script.fps} fps
-            {selectedTake ? " · previewing take audio" : " · estimated timing"}
-          </p>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Back to projects"
+          >
+            <ArrowLeft className="size-4" />
+          </Link>
+          <div>
+            <h2 className="text-lg font-semibold leading-tight">{script.name}</h2>
+            <p className="text-xs text-muted-foreground">
+              {scenes.length} scenes · {script.fps} fps
+              {selectedTake ? " · previewing take audio" : " · estimated timing"}
+            </p>
+          </div>
         </div>
+        <Button
+          size="sm"
+          disabled={createRender.isPending || scenes.length === 0}
+          onClick={() =>
+            createRender.mutate({
+              scriptId,
+              voiceTakeId: effectiveTakeId ?? undefined,
+            })
+          }
+        >
+          {createRender.isPending ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <Video className="size-3.5" />
+          )}
+          Render
+        </Button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[18rem_1fr_20rem]">

@@ -1,11 +1,12 @@
 import type { BrandTokens } from "./tokens";
 
-/** A scene as the video engine consumes it (template + text + emphasis). */
+/** A scene as the video engine consumes it (template + text + emphasis + optional visual). */
 export interface ReelScene {
   id: string;
   templateId: string;
   text: string;
   emphasis: string[];
+  visual?: string;
 }
 
 /** Per-beat frame timing, from a voice take or estimated for silent preview. */

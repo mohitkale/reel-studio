@@ -14,6 +14,7 @@ export interface SceneDTO {
   templateId: string;
   text: string;
   emphasis: string[];
+  visual?: string;
 }
 
 export interface VoiceTakeDTO {
@@ -47,4 +48,15 @@ export interface ProjectDTO {
   scriptCount: number;
   sceneCount: number;
   firstScriptId: string | null;
+}
+
+export interface RenderDTO {
+  id: string;
+  scriptId: string;
+  voiceTakeId: string | null;
+  status: "queued" | "bundling" | "rendering" | "done" | "error";
+  progress: number;
+  outputUrl: string | null;
+  error: string | null;
+  createdAt: string;
 }

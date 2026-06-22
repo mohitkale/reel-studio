@@ -64,6 +64,7 @@ export async function createProjectFromPlan(
               emphasis: scene.emphasis.length
                 ? JSON.stringify(scene.emphasis)
                 : null,
+              visual: scene.visual ?? null,
             })),
           },
         },

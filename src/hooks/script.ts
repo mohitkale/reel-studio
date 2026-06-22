@@ -84,6 +84,7 @@ export function useUpdateScene(scriptId: string) {
       text?: string;
       templateId?: string;
       emphasis?: string[];
+      visual?: string | null;
     }) => apiSend(`/api/scenes/${vars.id}`, "PATCH", vars),
     // Optimistic: reflect the edit in the preview instantly, before the server.
     onMutate: async (vars) => {
@@ -102,6 +103,9 @@ export function useUpdateScene(scriptId: string) {
                     : {}),
                   ...(vars.emphasis !== undefined
                     ? { emphasis: vars.emphasis }
+                    : {}),
+                  ...(vars.visual !== undefined
+                    ? { visual: vars.visual ?? undefined }
                     : {}),
                 }
               : s,

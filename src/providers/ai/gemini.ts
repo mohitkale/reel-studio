@@ -25,8 +25,20 @@ const RESPONSE_SCHEMA = {
         type: "object",
         properties: {
           text: { type: "string" },
-          templateId: { type: "string", enum: ["kinetic", "lottie", "three"] },
+          templateId: {
+            type: "string",
+            enum: [
+              "kinetic",
+              "lottie",
+              "three",
+              "stat-reveal",
+              "icon-grid",
+              "quote-card",
+              "emoji-punch",
+            ],
+          },
           emphasis: { type: "array", items: { type: "string" } },
+          visual: { type: "string" },
         },
         required: ["text", "templateId", "emphasis"],
       },

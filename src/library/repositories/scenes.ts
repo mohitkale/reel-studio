@@ -4,7 +4,7 @@ import { toSceneDTO } from "./map";
 
 export async function addScene(
   scriptId: string,
-  data: { text: string; templateId?: string },
+  data: { text: string; templateId?: string; visual?: string },
 ): Promise<SceneDTO> {
   const last = await prisma.scene.findFirst({
     where: { scriptId },
@@ -17,6 +17,7 @@ export async function addScene(
       order: (last?.order ?? -1) + 1,
       text: data.text,
       templateId: data.templateId ?? "placeholder",
+      visual: data.visual,
     },
   });
   return toSceneDTO(scene);
@@ -24,7 +25,7 @@ export async function addScene(
 
 export async function updateScene(
   id: string,
-  data: { text?: string; templateId?: string; emphasis?: string[] },
+  data: { text?: string; templateId?: string; emphasis?: string[]; visual?: string | null },
 ): Promise<SceneDTO> {
   const scene = await prisma.scene.update({
     where: { id },
@@ -33,6 +34,7 @@ export async function updateScene(
       templateId: data.templateId,
       emphasis:
         data.emphasis !== undefined ? JSON.stringify(data.emphasis) : undefined,
+      visual: data.visual !== undefined ? (data.visual ?? null) : undefined,
     },
   });
   return toSceneDTO(scene);

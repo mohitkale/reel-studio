@@ -57,6 +57,7 @@ model Scene {
   templateId String   @default("placeholder")
   text       String
   emphasis   String? // JSON array of emphasized phrases
+  visual     String? // emoji, icon name, or stat value for the visual slot
   layoutJson String? // JSON
   assetRefs  String? // JSON array of asset ids
   createdAt  DateTime @default(now())

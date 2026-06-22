@@ -5,6 +5,10 @@ import { DEFAULT_TEMPLATE_ID } from "./templates";
 import { KineticTypography } from "./templates/kinetic-typography";
 import { LottieExplainer } from "./templates/lottie-explainer";
 import { ThreeAccent } from "./templates/three-accent";
+import { StatReveal } from "./templates/stat-reveal";
+import { IconGrid } from "./templates/icon-grid";
+import { QuoteCard } from "./templates/quote-card";
+import { EmojiPunch } from "./templates/emoji-punch";
 
 /**
  * Template registry: maps a templateId to its React component. Adding a new
@@ -15,6 +19,10 @@ const REGISTRY: Record<string, ComponentType<TemplateProps>> = {
   kinetic: KineticTypography,
   lottie: LottieExplainer,
   three: ThreeAccent,
+  "stat-reveal": StatReveal,
+  "icon-grid": IconGrid,
+  "quote-card": QuoteCard,
+  "emoji-punch": EmojiPunch,
 };
 
 export function getTemplateComponent(

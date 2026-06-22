@@ -11,9 +11,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
 
+const VISUAL_HINTS: Record<string, string> = {
+  "stat-reveal": "Key stat or number (e.g. 73% or 10x)",
+  "icon-grid": "Bullet emoji (e.g. ✓ or →)",
+  "quote-card": "Author or attribution (optional)",
+  "emoji-punch": "A single emoji (e.g. 🔥 or ⚡)",
+  kinetic: "Optional emoji shown in the kicker",
+  lottie: "Optional emoji shown above the animation",
+  three: "Optional emoji shown in the caption area",
+};
+
 /**
  * Edits one scene. Mount with key={scene.id} so local draft state resets when a
- * different scene is selected. Text/emphasis commit on blur; template on change.
+ * different scene is selected. Text/emphasis/visual commit on blur; template on change.
  */
 export function SceneInspector({
   scene,
@@ -27,12 +37,16 @@ export function SceneInspector({
     text?: string;
     templateId?: string;
     emphasis?: string[];
+    visual?: string | null;
   }) => void;
   onDelete: (id: string) => void;
   saving?: boolean;
 }) {
   const [text, setText] = React.useState(scene.text);
   const [emphasis, setEmphasis] = React.useState(scene.emphasis.join(", "));
+  const [visual, setVisual] = React.useState(scene.visual ?? "");
+
+  const normalId = normalizeTemplateId(scene.templateId);
 
   function commitText() {
     if (text !== scene.text) onUpdate({ id: scene.id, text });
@@ -45,6 +59,13 @@ export function SceneInspector({
       .filter(Boolean);
     if (parsed.join("|") !== scene.emphasis.join("|")) {
       onUpdate({ id: scene.id, emphasis: parsed });
+    }
+  }
+
+  function commitVisual() {
+    const val = visual.trim() || null;
+    if (val !== (scene.visual ?? null)) {
+      onUpdate({ id: scene.id, visual: val });
     }
   }
 
@@ -73,7 +94,7 @@ export function SceneInspector({
         <Label htmlFor="scene-template">Template</Label>
         <NativeSelect
           id="scene-template"
-          value={normalizeTemplateId(scene.templateId)}
+          value={normalId}
           onChange={(e) => onUpdate({ id: scene.id, templateId: e.target.value })}
         >
           {TEMPLATES.map((t) => (
@@ -83,10 +104,21 @@ export function SceneInspector({
           ))}
         </NativeSelect>
         <p className="text-xs text-muted-foreground">
-          {
-            TEMPLATES.find((t) => t.id === normalizeTemplateId(scene.templateId))
-              ?.description
-          }
+          {TEMPLATES.find((t) => t.id === normalId)?.description}
+        </p>
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="scene-visual">Visual</Label>
+        <Input
+          id="scene-visual"
+          value={visual}
+          placeholder={VISUAL_HINTS[normalId] ?? "Emoji, icon, or label"}
+          onChange={(e) => setVisual(e.target.value)}
+          onBlur={commitVisual}
+        />
+        <p className="text-xs text-muted-foreground">
+          {VISUAL_HINTS[normalId] ?? "Optional visual element for this scene."}
         </p>
       </div>
 

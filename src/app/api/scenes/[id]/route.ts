@@ -11,6 +11,7 @@ const patchSchema = z.object({
   text: z.string().max(2000).optional(),
   templateId: z.string().optional(),
   emphasis: z.array(z.string()).optional(),
+  visual: z.string().max(64).nullable().optional(),
 });
 
 export async function PATCH(
