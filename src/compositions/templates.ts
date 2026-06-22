@@ -73,6 +73,14 @@ export const TEMPLATES: TemplateMeta[] = [
     sampleEmphasis: ["changes everything"],
     sampleVisual: "🔥",
   },
+  {
+    id: "image-overlay",
+    name: "Image overlay",
+    description: "Full-bleed image with Ken Burns zoom and caption. Paste an asset URL into the visual field.",
+    visualHint: "Image URL (copy from Assets page)",
+    sampleText: "Visuals that stop the scroll.",
+    sampleEmphasis: ["stop the scroll"],
+  },
 ];
 
 export const DEFAULT_TEMPLATE_ID = "kinetic";

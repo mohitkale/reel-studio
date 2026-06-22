@@ -9,6 +9,7 @@ import { StatReveal } from "./templates/stat-reveal";
 import { IconGrid } from "./templates/icon-grid";
 import { QuoteCard } from "./templates/quote-card";
 import { EmojiPunch } from "./templates/emoji-punch";
+import { ImageOverlay } from "./templates/image-overlay";
 
 /**
  * Template registry: maps a templateId to its React component. Adding a new
@@ -23,6 +24,7 @@ const REGISTRY: Record<string, ComponentType<TemplateProps>> = {
   "icon-grid": IconGrid,
   "quote-card": QuoteCard,
   "emoji-punch": EmojiPunch,
+  "image-overlay": ImageOverlay,
 };
 
 export function getTemplateComponent(

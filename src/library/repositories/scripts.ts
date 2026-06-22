@@ -1,5 +1,7 @@
 import type { ScriptDTO } from "@/lib/dto";
+import { serverDefaultTokens } from "@/lib/brand-defaults";
 import { prisma } from "@/library/db";
+import { resolveBrandTokens } from "./brandkits";
 import { toSceneDTO, toTakeDTO } from "./map";
 
 export async function getScript(id: string): Promise<ScriptDTO | null> {
@@ -8,9 +10,12 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     include: {
       scenes: { orderBy: { order: "asc" } },
       takes: { orderBy: { createdAt: "desc" } },
+      project: { include: { brandKit: true } },
     },
   });
   if (!script) return null;
+
+  const brandKit = script.project.brandKit;
 
   return {
     id: script.id,
@@ -19,6 +24,8 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     fps: script.fps,
     scenes: script.scenes.map(toSceneDTO),
     takes: script.takes.map(toTakeDTO),
+    brandKitId: script.project.brandKitId,
+    brandTokens: brandKit ? resolveBrandTokens(brandKit) : serverDefaultTokens,
   };
 }
 

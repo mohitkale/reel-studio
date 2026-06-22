@@ -13,6 +13,7 @@ import {
   useReorderScenes,
 } from "@/hooks/script";
 import { useCreateRender } from "@/hooks/renders";
+import { useBrandKits, useAssignBrandKit } from "@/hooks/brandkits";
 import { normalizeTemplateId } from "@/compositions/templates";
 import type { ReelScene } from "@/compositions/types";
 import { estimateTimeline } from "@/lib/preview-timeline";
@@ -33,6 +34,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   const deleteScene = useDeleteScene(scriptId);
   const reorder = useReorderScenes(scriptId);
   const createRender = useCreateRender();
+  const { data: brandKits = [] } = useBrandKits();
+  const assignBrandKit = useAssignBrandKit();
 
   const [selectedSceneId, setSelectedSceneId] = React.useState<string | null>(null);
   const [selectedTakeId, setSelectedTakeId] = React.useState<string | null>(null);
@@ -148,23 +151,43 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             </p>
           </div>
         </div>
-        <Button
-          size="sm"
-          disabled={createRender.isPending || scenes.length === 0}
-          onClick={() =>
-            createRender.mutate({
-              scriptId,
-              voiceTakeId: effectiveTakeId ?? undefined,
-            })
-          }
-        >
-          {createRender.isPending ? (
-            <Loader2 className="size-3.5 animate-spin" />
-          ) : (
-            <Video className="size-3.5" />
-          )}
-          Render
-        </Button>
+        <div className="flex items-center gap-2">
+          <select
+            className="h-8 rounded-md border bg-background px-2 text-xs text-foreground"
+            value={script.brandKitId ?? ""}
+            onChange={(e) =>
+              assignBrandKit.mutate({
+                projectId: script.projectId,
+                brandKitId: e.target.value || null,
+              })
+            }
+            style={{ colorScheme: "dark" }}
+          >
+            <option value="">Default kit</option>
+            {brandKits.map((k) => (
+              <option key={k.id} value={k.id}>
+                {k.name}
+              </option>
+            ))}
+          </select>
+          <Button
+            size="sm"
+            disabled={createRender.isPending || scenes.length === 0}
+            onClick={() =>
+              createRender.mutate({
+                scriptId,
+                voiceTakeId: effectiveTakeId ?? undefined,
+              })
+            }
+          >
+            {createRender.isPending ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Video className="size-3.5" />
+            )}
+            Render
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[18rem_1fr_20rem]">
@@ -213,6 +236,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     fps={fps}
                     autoPlay
                     loop
+                    tokens={script.brandTokens}
                   />
                 ) : (
                   <ReelPlayer
@@ -220,6 +244,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     timeline={[]}
                     totalFrames={1}
                     fps={fps}
+                    tokens={script.brandTokens}
                   />
                 )}
                 <p className="mt-3 text-center text-xs text-muted-foreground">
@@ -235,6 +260,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                   totalFrames={totalFrames}
                   fps={fps}
                   audioUrl={audioUrl}
+                  tokens={script.brandTokens}
                 />
                 <p className="mt-3 text-center text-xs text-muted-foreground">
                   {selectedTake

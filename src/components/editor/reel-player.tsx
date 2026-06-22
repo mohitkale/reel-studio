@@ -10,7 +10,7 @@ import {
   type ReelBeat,
   type ReelScene,
 } from "@/compositions/types";
-import { defaultBrandTokens } from "@/compositions/tokens";
+import { defaultBrandTokens, type BrandTokens } from "@/compositions/tokens";
 
 interface ReelPlayerProps {
   scenes: ReelScene[];
@@ -20,17 +20,19 @@ interface ReelPlayerProps {
   audioUrl?: string;
   autoPlay?: boolean;
   loop?: boolean;
+  tokens?: BrandTokens;
 }
 
 /** Live Remotion preview of the reel, driven by the scene templates + timeline. */
 export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
   function ReelPlayer(
-    { scenes, timeline, totalFrames, fps, audioUrl, autoPlay, loop = true },
+    { scenes, timeline, totalFrames, fps, audioUrl, autoPlay, loop = true, tokens },
     ref,
   ) {
+    const resolvedTokens = tokens ?? defaultBrandTokens;
     const inputProps = React.useMemo(
-      () => ({ scenes, timeline, audioUrl, tokens: defaultBrandTokens }),
-      [scenes, timeline, audioUrl],
+      () => ({ scenes, timeline, audioUrl, tokens: resolvedTokens }),
+      [scenes, timeline, audioUrl, resolvedTokens],
     );
 
     if (scenes.length === 0) {

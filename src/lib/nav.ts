@@ -4,6 +4,7 @@ import {
   AudioLines,
   LayoutTemplate,
   Library,
+  Palette,
   ListVideo,
   Settings,
   type LucideIcon,
@@ -47,6 +48,12 @@ export const navItems: NavItem[] = [
     href: "/assets",
     icon: Library,
     description: "Images, Lottie, icons and avatars",
+  },
+  {
+    title: "Brand Kits",
+    href: "/brand-kits",
+    icon: Palette,
+    description: "Color palettes and style presets",
   },
   {
     title: "Renders",

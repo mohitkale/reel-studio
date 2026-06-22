@@ -12,11 +12,12 @@ datasource db {
 }
 
 model Project {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   name       String
   brandKitId String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  brandKit   BrandKit? @relation(fields: [brandKitId], references: [id], onDelete: SetNull)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   scripts Script[]
 }
@@ -24,12 +25,15 @@ model Project {
 model BrandKit {
   id          String   @id @default(cuid())
   name        String
-  palette     String? // JSON
-  fonts       String? // JSON
+  palette     String? // JSON: color token overrides
+  fonts       String? // JSON: {fontFamily?}
   logoAssetId String?
   handle      String?
   ctaDefaults String? // JSON
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projects Project[]
 }
 
 model Script {

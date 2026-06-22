@@ -13,6 +13,22 @@ export const timelineSchema = z.array(beatTimingSchema);
 
 export const emphasisSchema = z.array(z.string());
 
+export const paletteSchema = z.object({
+  background: z.string().optional(),
+  backgroundAccent: z.string().optional(),
+  foreground: z.string().optional(),
+  muted: z.string().optional(),
+  accent: z.string().optional(),
+  accentSecondary: z.string().optional(),
+  accentForeground: z.string().optional(),
+});
+
+export const fontsSchema = z.object({
+  fontFamily: z.string().optional(),
+});
+
+export const metaSchema = z.record(z.unknown());
+
 /** Parse a JSON string column, falling back to a default on null/invalid. */
 export function parseJsonColumn<T>(
   raw: string | null | undefined,

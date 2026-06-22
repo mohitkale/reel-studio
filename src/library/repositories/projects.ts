@@ -25,6 +25,7 @@ export async function listProjects(): Promise<ProjectDTO[]> {
     scriptCount: p.scripts.length,
     sceneCount: p.scripts.reduce((sum, s) => sum + s._count.scenes, 0),
     firstScriptId: p.scripts[0]?.id ?? null,
+    brandKitId: p.brandKitId,
   }));
 }
 
@@ -44,6 +45,16 @@ export async function createProject(
 
 export async function deleteProject(id: string): Promise<void> {
   await prisma.project.delete({ where: { id } });
+}
+
+export async function assignBrandKit(
+  projectId: string,
+  brandKitId: string | null,
+): Promise<void> {
+  await prisma.project.update({
+    where: { id: projectId },
+    data: { brandKitId },
+  });
 }
 
 /** Create a project + script + scenes from an AI-generated scene plan. */

@@ -1,5 +1,7 @@
 /** Plain data shapes returned by the API and consumed by the client (no Prisma types). */
 
+import type { BrandTokens } from "@/compositions/tokens";
+
 export interface BeatTimingDTO {
   sceneId: string;
   startFrame: number;
@@ -39,6 +41,8 @@ export interface ScriptDTO {
   fps: number;
   scenes: SceneDTO[];
   takes: VoiceTakeDTO[];
+  brandKitId: string | null;
+  brandTokens: BrandTokens;
 }
 
 export interface ProjectDTO {
@@ -48,6 +52,26 @@ export interface ProjectDTO {
   scriptCount: number;
   sceneCount: number;
   firstScriptId: string | null;
+  brandKitId: string | null;
+}
+
+export interface AssetDTO {
+  id: string;
+  type: "image" | "lottie" | "audio";
+  name: string | null;
+  url: string;
+  meta: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface BrandKitDTO {
+  id: string;
+  name: string;
+  tokens: BrandTokens;
+  handle: string | null;
+  logoAssetId: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface RenderDTO {
