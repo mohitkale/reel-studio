@@ -1,0 +1,115 @@
+// Reel Studio data model. SQLite for local-first; all access goes through the
+// repository layer (src/library/repositories) so a future cloud DB swap is
+// isolated. JSON-shaped columns are stored as strings and validated with Zod.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id         String   @id @default(cuid())
+  name       String
+  brandKitId String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  scripts Script[]
+}
+
+model BrandKit {
+  id          String   @id @default(cuid())
+  name        String
+  palette     String? // JSON
+  fonts       String? // JSON
+  logoAssetId String?
+  handle      String?
+  ctaDefaults String? // JSON
+  createdAt   DateTime @default(now())
+}
+
+model Script {
+  id             String   @id @default(cuid())
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name           String
+  fps            Int      @default(30)
+  brandOverrides String? // JSON
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  scenes  Scene[]
+  takes   VoiceTake[]
+  renders Render[]
+
+  @@index([projectId])
+}
+
+model Scene {
+  id         String   @id @default(cuid())
+  scriptId   String
+  script     Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  order      Int
+  templateId String   @default("placeholder")
+  text       String
+  emphasis   String? // JSON array of emphasized phrases
+  layoutJson String? // JSON
+  assetRefs  String? // JSON array of asset ids
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([scriptId, order])
+}
+
+model VoiceTake {
+  id          String   @id @default(cuid())
+  scriptId    String
+  script      Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  label       String?
+  providerId  String
+  voiceId     String
+  modelId     String?
+  fps         Int      @default(30)
+  totalFrames Int
+  timingJson  String // JSON: [{ sceneId, startFrame, durationFrames, text }]
+  audioPath   String // AssetStore key for the stitched WAV
+  isPlaceholder Boolean @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([scriptId])
+}
+
+model Render {
+  id            String   @id @default(cuid())
+  scriptId      String
+  script        Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  voiceTakeId   String?
+  templateSetId String?
+  status        String   @default("queued") // queued | rendering | done | error
+  progress      Float    @default(0)
+  outputPath    String?
+  error         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([scriptId])
+}
+
+model Asset {
+  id        String   @id @default(cuid())
+  type      String // image | lottie | audio | 3d | avatar
+  name      String?
+  path      String // AssetStore key
+  meta      String? // JSON
+  createdAt DateTime @default(now())
+}
+
+model ProviderSetting {
+  providerId   String  @id
+  hasKey       Boolean @default(false)
+  defaultModel String?
+}

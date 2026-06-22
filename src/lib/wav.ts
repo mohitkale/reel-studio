@@ -14,6 +14,8 @@ export interface WavInfo {
   sampleRate: number;
   channels: number;
   bitsPerSample: number;
+  /** Byte offset where the data chunk's samples begin. */
+  dataOffset: number;
   /** Number of bytes in the data chunk. */
   dataLength: number;
   /** Duration in seconds, derived from the data chunk size. */
@@ -38,6 +40,7 @@ export function parseWav(buf: Buffer): WavInfo {
     | { audioFormat: number; channels: number; sampleRate: number; bitsPerSample: number }
     | undefined;
   let dataLength: number | undefined;
+  let dataOffset = 0;
 
   while (offset + 8 <= buf.length) {
     const id = readTag(buf, offset);
@@ -54,6 +57,7 @@ export function parseWav(buf: Buffer): WavInfo {
     } else if (id === "data") {
       // Clamp to the actual bytes present in case the header over-reports.
       dataLength = Math.min(size, buf.length - body);
+      dataOffset = body;
       break;
     }
 
@@ -73,6 +77,7 @@ export function parseWav(buf: Buffer): WavInfo {
     sampleRate: fmt.sampleRate,
     channels: fmt.channels,
     bitsPerSample: fmt.bitsPerSample,
+    dataOffset,
     dataLength,
     durationSeconds,
   };

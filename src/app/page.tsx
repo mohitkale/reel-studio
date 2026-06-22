@@ -1,100 +1,164 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
-import { Plus, Clapperboard, Mic, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Plus, Clapperboard, Trash2, FileVideo } from "lucide-react";
+import { toast } from "sonner";
 
+import { useProjects, useCreateProject, useDeleteProject } from "@/hooks/script";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/shell/page-header";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 
-const quickStart = [
-  {
-    icon: Clapperboard,
-    title: "Write a script",
-    body: "Break your reel into scenes with text, emphasis and a template.",
-  },
-  {
-    icon: Mic,
-    title: "Generate a voice",
-    body: "Pick a provider and voice, then synth a synced voiceover take.",
-  },
-  {
-    icon: Sparkles,
-    title: "Compose & render",
-    body: "Add motion-design templates and render a 1080x1920 MP4.",
-  },
-];
+function NewProjectDialog() {
+  const router = useRouter();
+  const create = useCreateProject();
+  const [name, setName] = React.useState("");
+  const [open, setOpen] = React.useState(false);
+
+  function submit() {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    create.mutate(trimmed, {
+      onSuccess: ({ scriptId }) => {
+        setOpen(false);
+        setName("");
+        toast.success("Project created");
+        router.push(`/editor/${scriptId}`);
+      },
+      onError: (e) =>
+        toast.error("Could not create project", {
+          description: (e as Error).message,
+        }),
+    });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus />
+          New project
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>New project</DialogTitle>
+          <DialogDescription>
+            Give your project a name. You can rename scenes and scripts later.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-2">
+          <Label htmlFor="project-name">Name</Label>
+          <Input
+            id="project-name"
+            value={name}
+            autoFocus
+            placeholder="e.g. Launch teaser"
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && submit()}
+          />
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="ghost">Cancel</Button>
+          </DialogClose>
+          <Button onClick={submit} disabled={!name.trim() || create.isPending}>
+            {create.isPending ? "Creating..." : "Create"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function ProjectsPage() {
-  // Projects come from the library in M3; show the empty state for now.
-  const projects: { id: string; name: string }[] = [];
+  const { data: projects, isLoading } = useProjects();
+  const del = useDeleteProject();
 
   return (
     <div className="space-y-8">
       <PageHeader
         title="Projects"
         description="Create and manage your short-form video projects."
-        actions={
-          <Button disabled>
-            <Plus />
-            New project
-          </Button>
-        }
+        actions={<NewProjectDialog />}
       />
 
-      {projects.length === 0 ? (
+      {isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Skeleton className="h-36" />
+          <Skeleton className="h-36" />
+          <Skeleton className="h-36" />
+        </div>
+      ) : !projects?.length ? (
         <EmptyState
           icon={Clapperboard}
           title="No projects yet"
-          description="Projects and the editor land in milestone 3. Here is the workflow you will follow."
+          description="Create your first project to start writing a script and generating voiceovers."
         />
-      ) : null}
-
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold">Quick start</h3>
-          <Badge variant="secondary">3 steps</Badge>
-        </div>
+      ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {quickStart.map((step) => {
-            const Icon = step.icon;
-            return (
-              <Card key={step.title}>
-                <CardHeader>
-                  <div className="mb-2 flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <Icon className="size-5" />
+          {projects.map((p) => (
+            <Card key={p.id} className="group flex flex-col">
+              <CardContent className="flex flex-1 flex-col gap-3 p-5">
+                <div className="flex aspect-video items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 to-secondary text-primary">
+                  <FileVideo className="size-8" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium leading-tight">{p.name}</h3>
+                  <div className="mt-1 flex items-center gap-2">
+                    <Badge variant="secondary">{p.sceneCount} scenes</Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {p.scriptCount} script{p.scriptCount === 1 ? "" : "s"}
+                    </span>
                   </div>
-                  <CardTitle className="text-base">{step.title}</CardTitle>
-                  <CardDescription>{step.body}</CardDescription>
-                </CardHeader>
-              </Card>
-            );
-          })}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    asChild
+                    size="sm"
+                    className="flex-1"
+                    disabled={!p.firstScriptId}
+                  >
+                    <Link href={p.firstScriptId ? `/editor/${p.firstScriptId}` : "#"}>
+                      Open editor
+                    </Link>
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-muted-foreground hover:text-destructive"
+                    aria-label={`Delete ${p.name}`}
+                    onClick={() =>
+                      del.mutate(p.id, {
+                        onSuccess: () => toast.info("Project deleted"),
+                      })
+                    }
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </section>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Set up your voice provider</CardTitle>
-          <CardDescription>
-            Add a Cartesia or ElevenLabs API key to start generating voiceovers.
-            Keys stay on your machine.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button asChild variant="outline">
-            <Link href="/settings">Open settings</Link>
-          </Button>
-        </CardContent>
-      </Card>
+      )}
     </div>
   );
 }
