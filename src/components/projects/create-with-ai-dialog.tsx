@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -140,32 +140,27 @@ export function CreateWithAIDialog() {
             <div className="grid grid-cols-2 gap-3">
               <div className="grid gap-2">
                 <Label htmlFor="ai-provider">Provider</Label>
-                <NativeSelect
+                <Combobox
                   id="ai-provider"
                   value={effectiveProvider ?? ""}
-                  onChange={(e) => setProviderId(e.target.value as AIProviderId)}
-                >
-                  {configured.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.label}
-                    </option>
-                  ))}
-                </NativeSelect>
+                  onChange={(v) => setProviderId(v as AIProviderId)}
+                  options={configured.map((p) => ({ value: p.id, label: p.label }))}
+                  placeholder="Select provider…"
+                  searchPlaceholder="Search providers…"
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="ai-scenes">Scenes</Label>
-                <NativeSelect
+                <Combobox
                   id="ai-scenes"
                   value={sceneCount}
-                  onChange={(e) => setSceneCount(e.target.value)}
-                >
-                  <option value="auto">Auto</option>
-                  {[4, 5, 6, 7, 8].map((n) => (
-                    <option key={n} value={n}>
-                      {n} scenes
-                    </option>
-                  ))}
-                </NativeSelect>
+                  onChange={setSceneCount}
+                  options={[
+                    { value: "auto", label: "Auto (AI decides)" },
+                    ...[4, 5, 6, 7, 8, 10, 12, 14, 16].map((n) => ({ value: String(n), label: `${n} scenes` })),
+                  ]}
+                  searchPlaceholder="Search…"
+                />
               </div>
             </div>
           </div>

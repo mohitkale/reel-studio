@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Combobox } from "@/components/ui/combobox";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 const VISUAL_HINTS: Record<string, string> = {
   "stat-reveal": "Key stat or number (e.g. 73% or 10x)",
@@ -45,6 +46,7 @@ export function SceneInspector({
   const [text, setText] = React.useState(scene.text);
   const [emphasis, setEmphasis] = React.useState(scene.emphasis.join(", "));
   const [visual, setVisual] = React.useState(scene.visual ?? "");
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
 
   const normalId = normalizeTemplateId(scene.templateId);
 
@@ -70,78 +72,91 @@ export function SceneInspector({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Scene</h3>
-        {saving ? (
-          <span className="text-xs text-muted-foreground">Saving...</span>
-        ) : null}
-      </div>
+    <>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">Scene</h3>
+          {saving ? (
+            <span className="text-xs text-muted-foreground">Saving...</span>
+          ) : null}
+        </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="scene-text">Text</Label>
-        <Textarea
-          id="scene-text"
-          value={text}
-          rows={4}
-          placeholder="What is said in this scene"
-          onChange={(e) => setText(e.target.value)}
-          onBlur={commitText}
-        />
-      </div>
+        <div className="grid gap-2">
+          <Label htmlFor="scene-text">Text</Label>
+          <Textarea
+            id="scene-text"
+            value={text}
+            rows={4}
+            placeholder="What is said in this scene"
+            onChange={(e) => setText(e.target.value)}
+            onBlur={commitText}
+          />
+        </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="scene-template">Template</Label>
-        <NativeSelect
-          id="scene-template"
-          value={normalId}
-          onChange={(e) => onUpdate({ id: scene.id, templateId: e.target.value })}
+        <div className="grid gap-2">
+          <Label htmlFor="scene-template">Template</Label>
+          <Combobox
+            id="scene-template"
+            value={normalId}
+            onChange={(v) => onUpdate({ id: scene.id, templateId: v })}
+            options={TEMPLATES.map((t) => ({ value: t.id, label: t.name }))}
+            searchPlaceholder="Search templates…"
+          />
+          <p className="text-xs text-muted-foreground">
+            {TEMPLATES.find((t) => t.id === normalId)?.description}
+          </p>
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="scene-visual">Visual</Label>
+          <Input
+            id="scene-visual"
+            value={visual}
+            placeholder={VISUAL_HINTS[normalId] ?? "Emoji, icon, or label"}
+            onChange={(e) => setVisual(e.target.value)}
+            onBlur={commitVisual}
+          />
+          <p className="text-xs text-muted-foreground">
+            {VISUAL_HINTS[normalId] ?? "Optional visual element for this scene."}
+          </p>
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="scene-emphasis">Emphasis (comma separated)</Label>
+          <Input
+            id="scene-emphasis"
+            value={emphasis}
+            placeholder="key phrase, another phrase"
+            onChange={(e) => setEmphasis(e.target.value)}
+            onBlur={commitEmphasis}
+          />
+        </div>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-destructive"
+          onClick={() => setConfirmOpen(true)}
         >
-          {TEMPLATES.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </NativeSelect>
-        <p className="text-xs text-muted-foreground">
-          {TEMPLATES.find((t) => t.id === normalId)?.description}
-        </p>
+          <Trash2 />
+          Delete scene
+        </Button>
       </div>
 
-      <div className="grid gap-2">
-        <Label htmlFor="scene-visual">Visual</Label>
-        <Input
-          id="scene-visual"
-          value={visual}
-          placeholder={VISUAL_HINTS[normalId] ?? "Emoji, icon, or label"}
-          onChange={(e) => setVisual(e.target.value)}
-          onBlur={commitVisual}
-        />
-        <p className="text-xs text-muted-foreground">
-          {VISUAL_HINTS[normalId] ?? "Optional visual element for this scene."}
-        </p>
-      </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor="scene-emphasis">Emphasis (comma separated)</Label>
-        <Input
-          id="scene-emphasis"
-          value={emphasis}
-          placeholder="key phrase, another phrase"
-          onChange={(e) => setEmphasis(e.target.value)}
-          onBlur={commitEmphasis}
-        />
-      </div>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        className="text-muted-foreground hover:text-destructive"
-        onClick={() => onDelete(scene.id)}
-      >
-        <Trash2 />
-        Delete scene
-      </Button>
-    </div>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Delete scene?"
+        description={
+          scene.text
+            ? `"${scene.text.slice(0, 60)}${scene.text.length > 60 ? "…" : ""}" will be permanently removed.`
+            : "This scene will be permanently removed."
+        }
+        onConfirm={() => {
+          onDelete(scene.id);
+          setConfirmOpen(false);
+        }}
+      />
+    </>
   );
 }

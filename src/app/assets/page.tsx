@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Library, Upload, Trash2, Copy, ImageIcon, FileJson } from "lucide-react";
+import { Library, Upload, Trash2, Copy, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAssets, useUploadAsset, useDeleteAsset } from "@/hooks/assets";
@@ -12,8 +12,46 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 const ACCEPT = ".jpg,.jpeg,.png,.gif,.webp,.svg,.json";
+
+function LottiePreview({ url }: { url: string }) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!containerRef.current) return;
+    let destroyed = false;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let anim: any = null;
+
+    (async () => {
+      try {
+        const [json, lottie] = await Promise.all([
+          fetch(url).then((r) => r.json()),
+          import("lottie-web").then((m) => m.default),
+        ]);
+        if (destroyed || !containerRef.current) return;
+        anim = lottie.loadAnimation({
+          container: containerRef.current,
+          renderer: "svg",
+          loop: true,
+          autoplay: true,
+          animationData: json,
+        });
+      } catch {
+        // leave container empty on failure
+      }
+    })();
+
+    return () => {
+      destroyed = true;
+      anim?.destroy();
+    };
+  }, [url]);
+
+  return <div ref={containerRef} className="h-full w-full" aria-hidden="true" />;
+}
 
 function AssetCard({ asset, onDelete }: { asset: AssetDTO; onDelete: () => void }) {
   function copyUrl() {
@@ -30,18 +68,16 @@ function AssetCard({ asset, onDelete }: { asset: AssetDTO; onDelete: () => void 
           <img
             src={asset.url}
             alt={asset.name ?? "Asset"}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain p-2"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <FileJson className="size-12 text-muted-foreground" />
-          </div>
+          <LottiePreview url={asset.url} />
         )}
         <div className="absolute inset-0 flex items-end justify-end gap-1 bg-black/60 p-2 opacity-0 transition-opacity group-hover:opacity-100">
-          <Button size="icon" variant="outline" className="size-7" onClick={copyUrl}>
+          <Button size="icon" variant="outline" className="size-7" onClick={copyUrl} aria-label="Copy URL">
             <Copy className="size-3.5" />
           </Button>
-          <Button size="icon" variant="destructive" className="size-7" onClick={onDelete}>
+          <Button size="icon" variant="destructive" className="size-7" onClick={onDelete} aria-label="Delete asset">
             <Trash2 className="size-3.5" />
           </Button>
         </div>
@@ -61,6 +97,7 @@ type Filter = "all" | "image" | "lottie";
 export default function AssetsPage() {
   const [filter, setFilter] = React.useState<Filter>("all");
   const [isDragging, setIsDragging] = React.useState(false);
+  const [deleteTarget, setDeleteTarget] = React.useState<AssetDTO | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const { data: assets = [], isLoading } = useAssets(filter === "all" ? undefined : filter);
@@ -160,13 +197,7 @@ export default function AssetsPage() {
               <AssetCard
                 key={asset.id}
                 asset={asset}
-                onDelete={() => {
-                  if (confirm(`Delete "${asset.name ?? "this asset"}"?`)) {
-                    deleteAsset.mutate(asset.id, {
-                      onError: () => toast.error("Failed to delete asset"),
-                    });
-                  }
-                }}
+                onDelete={() => setDeleteTarget(asset)}
               />
             ))}
             <button
@@ -181,6 +212,21 @@ export default function AssetsPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Delete asset?"
+        description={`"${deleteTarget?.name ?? "This asset"}" will be permanently removed.`}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          deleteAsset.mutate(deleteTarget.id, {
+            onSuccess: () => setDeleteTarget(null),
+            onError: () => toast.error("Failed to delete asset"),
+          });
+        }}
+        isPending={deleteAsset.isPending}
+      />
     </div>
   );
 }

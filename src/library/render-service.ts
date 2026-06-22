@@ -62,6 +62,9 @@ export interface StartRenderOptions {
   renderId: string;
   scriptId: string;
   voiceTakeId?: string;
+  /** Base URL of the Next.js server (e.g. "http://localhost:3000") so Remotion's
+   *  Chrome process can fetch the audio take via an absolute URL. */
+  serverBaseUrl?: string;
 }
 
 /**
@@ -79,6 +82,7 @@ async function runRender({
   renderId,
   scriptId,
   voiceTakeId,
+  serverBaseUrl = "http://localhost:3000",
 }: StartRenderOptions): Promise<void> {
   function progress(
     p: number,
@@ -126,8 +130,16 @@ async function runRender({
         visual: s.visual,
       })),
       timeline,
-      audioUrl: take?.audioUrl,
-      tokens: (await import("@/compositions/tokens")).defaultBrandTokens,
+      // Remotion runs in a separate Chrome process with its own webpack dev
+      // server — relative URLs resolve against that server, not Next.js. Use
+      // an absolute URL so Chrome can reach the media file.
+      audioUrl: take?.audioUrl
+        ? `${serverBaseUrl}${take.audioUrl}`
+        : undefined,
+      // script.brandTokens is server-safe (uses serverDefaultTokens, no @remotion/google-fonts).
+      // Importing @/compositions/tokens here would pull loadFont() into the Next.js server
+      // process where React.createContext is undefined, crashing the render job.
+      tokens: script.brandTokens,
     };
 
     // 3. Resolve the "Reel" composition with input props to get the correct duration.

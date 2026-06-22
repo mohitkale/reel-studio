@@ -13,6 +13,8 @@ const CONTENT_TYPES: Record<string, string> = {
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
   webp: "image/webp",
+  svg: "image/svg+xml",
+  gif: "image/gif",
   json: "application/json",
 };
 

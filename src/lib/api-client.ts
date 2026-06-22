@@ -23,3 +23,7 @@ export async function apiPost<T>(url: string, body: unknown): Promise<T> {
     }),
   );
 }
+
+export async function apiDelete<T>(url: string): Promise<T> {
+  return parse<T>(await fetch(url, { method: "DELETE" }));
+}

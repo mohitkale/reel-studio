@@ -36,7 +36,6 @@ function TemplatePreviewCard({ template }: { template: typeof TEMPLATES[0] }) {
         timeline={timeline}
         totalFrames={PREVIEW_DURATION}
         fps={PREVIEW_FPS}
-        autoPlay
         loop
       />
       <div className="space-y-1 p-4">

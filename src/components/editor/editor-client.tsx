@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, Video, Loader2 } from "lucide-react";
+import { ArrowLeft, Video, Loader2, Sparkles, Undo2 } from "lucide-react";
+import { toast } from "sonner";
 import type { PlayerRef } from "@remotion/player";
 
 import {
@@ -11,9 +12,12 @@ import {
   useUpdateScene,
   useDeleteScene,
   useReorderScenes,
+  useUndoScript,
 } from "@/hooks/script";
+import type { SceneDTO } from "@/lib/dto";
 import { useCreateRender } from "@/hooks/renders";
 import { useBrandKits, useAssignBrandKit } from "@/hooks/brandkits";
+import { useHotkey } from "@/hooks/use-hotkeys";
 import { normalizeTemplateId } from "@/compositions/templates";
 import type { ReelScene } from "@/compositions/types";
 import { estimateTimeline } from "@/lib/preview-timeline";
@@ -25,6 +29,8 @@ import { SceneList } from "@/components/editor/scene-list";
 import { SceneInspector } from "@/components/editor/scene-inspector";
 import { ReelPlayer } from "@/components/editor/reel-player";
 import { VoiceoverPanel } from "@/components/editor/voiceover-panel";
+import { AIEnhanceDialog } from "@/components/editor/ai-enhance-dialog";
+import { Combobox } from "@/components/ui/combobox";
 
 export function EditorClient({ scriptId }: { scriptId: string }) {
   const { data: script, isLoading, isError, error } = useScript(scriptId);
@@ -34,13 +40,58 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   const deleteScene = useDeleteScene(scriptId);
   const reorder = useReorderScenes(scriptId);
   const createRender = useCreateRender();
+  const undoScript = useUndoScript(scriptId);
   const { data: brandKits = [] } = useBrandKits();
   const assignBrandKit = useAssignBrandKit();
 
   const [selectedSceneId, setSelectedSceneId] = React.useState<string | null>(null);
   const [selectedTakeId, setSelectedTakeId] = React.useState<string | null>(null);
+  // When true, user explicitly cleared the take — don't auto-select the first one
+  const [takeCleared, setTakeCleared] = React.useState(false);
   const [previewMode, setPreviewMode] = React.useState<"scene" | "reel">("scene");
+  const [aiOpen, setAiOpen] = React.useState(false);
+  // Snapshot of scenes taken before an AI enhance — cleared after render or undo
+  const [undoSnapshot, setUndoSnapshot] = React.useState<SceneDTO[] | null>(null);
   const playerRef = React.useRef<PlayerRef>(null);
+
+  // Derive early so hotkey handlers can close over up-to-date values via useHotkey's ref pattern.
+  const scenes = script?.scenes ?? [];
+  const effectiveSceneId =
+    selectedSceneId && scenes.some((s) => s.id === selectedSceneId)
+      ? selectedSceneId
+      : (scenes[0]?.id ?? null);
+  const effectiveTakeId = takeCleared
+    ? null
+    : selectedTakeId && (script?.takes ?? []).some((t) => t.id === selectedTakeId)
+    ? selectedTakeId
+    : (script?.takes[0]?.id ?? null);
+
+  function selectTake(id: string) {
+    setSelectedTakeId(id);
+    setTakeCleared(false);
+  }
+
+  function clearTake() {
+    setSelectedTakeId(null);
+    setTakeCleared(true);
+  }
+
+  // Editor keyboard shortcuts — hooks must be called unconditionally.
+  useHotkey("n", () => addScene.mutate(""), { enabled: !!script });
+  useHotkey("j", () => {
+    const idx = scenes.findIndex((s) => s.id === effectiveSceneId);
+    const next = scenes[idx + 1];
+    if (next) setSelectedSceneId(next.id);
+  }, { enabled: !!script });
+  useHotkey("k", () => {
+    const idx = scenes.findIndex((s) => s.id === effectiveSceneId);
+    const prev = scenes[idx - 1];
+    if (prev) setSelectedSceneId(prev.id);
+  }, { enabled: !!script });
+  useHotkey("R", () => {
+    if (!scenes.length || createRender.isPending) return;
+    createRender.mutate({ scriptId, voiceTakeId: effectiveTakeId ?? undefined });
+  }, { ctrl: true, shift: true, enabled: !!script });
 
   if (isLoading) {
     return (
@@ -65,17 +116,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
     );
   }
 
-  const scenes = script.scenes;
-  const effectiveSceneId =
-    selectedSceneId && scenes.some((s) => s.id === selectedSceneId)
-      ? selectedSceneId
-      : (scenes[0]?.id ?? null);
   const selectedScene = scenes.find((s) => s.id === effectiveSceneId) ?? null;
-
-  const effectiveTakeId =
-    selectedTakeId && script.takes.some((t) => t.id === selectedTakeId)
-      ? selectedTakeId
-      : (script.takes[0]?.id ?? null);
   const selectedTake = script.takes.find((t) => t.id === effectiveTakeId) ?? null;
 
   // Reel input: scene templates + timeline (from the take, or estimated for silent preview).
@@ -90,10 +131,38 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
     scenes.map((s) => ({ id: s.id, text: s.text })),
     script.fps,
   );
-  const timeline = selectedTake?.timeline ?? estimated.timeline;
-  const totalFrames = selectedTake?.totalFrames ?? estimated.totalFrames;
   const fps = selectedTake?.fps ?? script.fps;
   const audioUrl = selectedTake?.audioUrl;
+
+  // When new scenes are added after a take was recorded, blend: use take timing for
+  // covered scenes and estimated timing for any new scenes appended afterward.
+  const coveredByTake = new Set((selectedTake?.timeline ?? []).map((b) => b.sceneId));
+  const allScenesCovered =
+    !selectedTake || scenes.every((s) => coveredByTake.has(s.id));
+
+  let timeline: typeof estimated.timeline;
+  let totalFrames: number;
+  if (!selectedTake) {
+    timeline = estimated.timeline;
+    totalFrames = estimated.totalFrames;
+  } else if (allScenesCovered) {
+    timeline = selectedTake.timeline;
+    totalFrames = selectedTake.totalFrames;
+  } else {
+    const uncovered = scenes.filter((s) => !coveredByTake.has(s.id));
+    const extra = estimateTimeline(
+      uncovered.map((s) => ({ id: s.id, text: s.text })),
+      fps,
+    );
+    timeline = [
+      ...selectedTake.timeline,
+      ...extra.timeline.map((b) => ({
+        ...b,
+        startFrame: b.startFrame + selectedTake.totalFrames,
+      })),
+    ];
+    totalFrames = selectedTake.totalFrames + extra.totalFrames;
+  }
 
   // Single-scene loop preview so template/text edits animate instantly.
   const selectedReelScene: ReelScene | null = selectedScene
@@ -152,32 +221,81 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <select
-            className="h-8 rounded-md border bg-background px-2 text-xs text-foreground"
-            value={script.brandKitId ?? ""}
-            onChange={(e) =>
-              assignBrandKit.mutate({
-                projectId: script.projectId,
-                brandKitId: e.target.value || null,
-              })
-            }
-            style={{ colorScheme: "dark" }}
+          <div className="w-36">
+            <Combobox
+              value={script.brandKitId ?? ""}
+              onChange={(v) =>
+                assignBrandKit.mutate({
+                  projectId: script.projectId,
+                  brandKitId: v || null,
+                })
+              }
+              options={[
+                { value: "", label: "Default kit" },
+                ...brandKits.map((k) => ({ value: k.id, label: k.name })),
+              ]}
+              placeholder="Default kit"
+              searchPlaceholder="Search kits…"
+            />
+          </div>
+          {undoSnapshot && (
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={undoScript.isPending}
+              onClick={() =>
+                undoScript.mutate(
+                  undoSnapshot.map((s) => ({
+                    templateId: s.templateId,
+                    text: s.text,
+                    emphasis: s.emphasis,
+                    visual: s.visual ?? null,
+                  })),
+                  {
+                    onSuccess: () => {
+                      setUndoSnapshot(null);
+                      toast.success("Scenes restored", {
+                        description: "Rolled back to the version before AI changes.",
+                      });
+                    },
+                    onError: () => toast.error("Undo failed"),
+                  },
+                )
+              }
+            >
+              {undoScript.isPending ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Undo2 className="size-3.5" />
+              )}
+              Undo AI
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setAiOpen(true)}
           >
-            <option value="">Default kit</option>
-            {brandKits.map((k) => (
-              <option key={k.id} value={k.id}>
-                {k.name}
-              </option>
-            ))}
-          </select>
+            <Sparkles className="size-3.5" />
+            AI
+          </Button>
           <Button
             size="sm"
             disabled={createRender.isPending || scenes.length === 0}
             onClick={() =>
-              createRender.mutate({
-                scriptId,
-                voiceTakeId: effectiveTakeId ?? undefined,
-              })
+              createRender.mutate(
+                { scriptId, voiceTakeId: effectiveTakeId ?? undefined },
+                {
+                  onSuccess: () => {
+                    setUndoSnapshot(null); // can't undo after a render
+                    toast.success("Render queued", {
+                      description: "Track progress on the Renders page.",
+                      action: { label: "View", onClick: () => { window.location.href = "/renders"; } },
+                    });
+                  },
+                  onError: () => toast.error("Failed to queue render"),
+                },
+              )
             }
           >
             {createRender.isPending ? (
@@ -234,7 +352,6 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     ]}
                     totalFrames={sceneDuration}
                     fps={fps}
-                    autoPlay
                     loop
                     tokens={script.brandTokens}
                   />
@@ -297,11 +414,22 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             scriptId={scriptId}
             takes={script.takes}
             selectedTakeId={effectiveTakeId}
-            onSelectTake={setSelectedTakeId}
+            onSelectTake={selectTake}
+            onClearTake={clearTake}
             hasScenes={scenes.length > 0}
           />
         </CardContent>
       </Card>
+
+      <AIEnhanceDialog
+        scriptId={scriptId}
+        scriptName={script.name}
+        scenes={scenes}
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        onBeforeEnhance={() => setUndoSnapshot([...scenes])}
+        onEnhanceSuccess={clearTake}
+      />
     </div>
   );
 }

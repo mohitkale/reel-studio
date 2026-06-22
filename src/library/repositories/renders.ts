@@ -1,3 +1,6 @@
+import path from "node:path";
+import { promises as fs } from "node:fs";
+
 import type { RenderDTO } from "@/lib/dto";
 import { getAssetStore } from "@/library/storage";
 import { prisma } from "@/library/db";
@@ -84,4 +87,14 @@ export async function failRender(
     data: { status: "error", error: error.slice(0, 2000) },
   });
   return toDTO(row);
+}
+
+export async function deleteRender(id: string): Promise<void> {
+  const row = await prisma.render.findUnique({ where: { id } });
+  if (!row) return;
+  if (row.outputPath) {
+    const filePath = path.join(process.cwd(), "media", row.outputPath);
+    await fs.unlink(filePath).catch(() => {});
+  }
+  await prisma.render.delete({ where: { id } });
 }

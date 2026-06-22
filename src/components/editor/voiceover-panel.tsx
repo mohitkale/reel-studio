@@ -13,54 +13,16 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 
-function VoiceSelect({
-  providerId,
-  value,
-  onChange,
-}: {
-  providerId: ProviderId | undefined;
-  value: string;
-  onChange: (id: string) => void;
-}) {
-  const { data: voices, isLoading } = useVoices(providerId, "");
-  const mine = (voices ?? []).filter(
-    (v) => v.category === "cloned" || v.category === "professional",
-  );
-  const library = (voices ?? []).filter(
-    (v) => v.category === "default" || v.category === "shared",
-  );
-
-  return (
-    <NativeSelect
-      aria-label="Voice"
-      value={value}
-      disabled={isLoading || !voices?.length}
-      onChange={(e) => onChange(e.target.value)}
-    >
-      {isLoading ? <option>Loading voices...</option> : null}
-      {!isLoading && !voices?.length ? <option>No voices</option> : null}
-      {mine.length ? (
-        <optgroup label="My voices">
-          {mine.map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.name}
-            </option>
-          ))}
-        </optgroup>
-      ) : null}
-      {library.length ? (
-        <optgroup label="Library">
-          {library.map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.name}
-            </option>
-          ))}
-        </optgroup>
-      ) : null}
-    </NativeSelect>
-  );
+function formatTakeDate(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 export function VoiceoverPanel({
@@ -68,12 +30,14 @@ export function VoiceoverPanel({
   takes,
   selectedTakeId,
   onSelectTake,
+  onClearTake,
   hasScenes,
 }: {
   scriptId: string;
   takes: VoiceTakeDTO[];
   selectedTakeId: string | null;
   onSelectTake: (id: string) => void;
+  onClearTake?: () => void;
   hasScenes: boolean;
 }) {
   const { data: providersData } = useProviders();
@@ -83,12 +47,33 @@ export function VoiceoverPanel({
   const [voiceId, setVoiceId] = React.useState("");
   const [modelId, setModelId] = React.useState("");
 
-  // Derive effective provider without an effect (first configured by default).
   const effectiveProvider =
     providerId ?? providersData?.config.defaultProviderId ?? configured[0]?.id;
 
-  const { data: voices } = useVoices(effectiveProvider, "");
+  const { data: voices, isLoading: voicesLoading } = useVoices(effectiveProvider, "");
   const { data: models } = useModels(effectiveProvider);
+
+  const mine = (voices ?? []).filter(
+    (v) => v.category === "cloned" || v.category === "professional",
+  );
+  const library = (voices ?? []).filter(
+    (v) => v.category === "default" || v.category === "shared",
+  );
+
+  const voiceOptions: ComboboxOption[] = [
+    ...mine.map((v) => ({ value: v.id, label: v.name, group: "My voices" })),
+    ...library.map((v) => ({ value: v.id, label: v.name, group: "Library" })),
+  ];
+
+  const providerOptions: ComboboxOption[] = configured.map((p) => ({
+    value: p.id,
+    label: p.label,
+  }));
+
+  const modelOptions: ComboboxOption[] = (models ?? []).map((m) => ({
+    value: m.id,
+    label: m.label,
+  }));
 
   const effectiveVoice =
     voiceId && voices?.some((v) => v.id === voiceId)
@@ -102,7 +87,24 @@ export function VoiceoverPanel({
   const generate = useGenerateTake(scriptId);
   const del = useDeleteTake(scriptId);
 
+  function resolveVoiceName(take: VoiceTakeDTO): string {
+    // Try to resolve from currently loaded voices (works for current provider's takes)
+    const found = voices?.find((v) => v.id === take.voiceId)?.name;
+    if (found) return found;
+    // Fallback: voiceId itself (often a human-readable slug for cloned voices)
+    return take.voiceId || take.providerId;
+  }
+
   function runGenerate(placeholder: boolean) {
+    const voiceName = voices?.find((v) => v.id === effectiveVoice)?.name;
+    const providerLabel = configured.find((p) => p.id === effectiveProvider)?.label;
+    const modelLabel = models?.find((m) => m.id === effectiveModel)?.label;
+    const label = placeholder
+      ? undefined
+      : [voiceName, providerLabel, modelLabel || effectiveModel || undefined]
+          .filter(Boolean)
+          .join(" · ");
+
     generate.mutate(
       placeholder
         ? { placeholder: true }
@@ -110,6 +112,7 @@ export function VoiceoverPanel({
             providerId: effectiveProvider,
             voiceId: effectiveVoice,
             modelId: effectiveModel || undefined,
+            label,
           },
       {
         onSuccess: (take) => {
@@ -117,9 +120,9 @@ export function VoiceoverPanel({
           toast.success(
             placeholder ? "Placeholder take created" : "Voice take generated",
             {
-              description: `${take.timeline.length} scenes, ${(
+              description: `${take.timeline.length} scenes · ${(
                 take.totalFrames / take.fps
-              ).toFixed(1)}s.`,
+              ).toFixed(1)}s`,
             },
           );
         },
@@ -135,6 +138,7 @@ export function VoiceoverPanel({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+      {/* ---- Left: controls ---- */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold">Generate voiceover</h3>
 
@@ -150,42 +154,39 @@ export function VoiceoverPanel({
           <div className="space-y-3">
             <div className="grid gap-1.5">
               <Label>Provider</Label>
-              <NativeSelect
+              <Combobox
                 value={effectiveProvider ?? ""}
-                onChange={(e) => {
-                  setProviderId(e.target.value as ProviderId);
+                onChange={(v) => {
+                  setProviderId(v as ProviderId);
                   setVoiceId("");
                   setModelId("");
                 }}
-              >
-                {configured.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.label}
-                  </option>
-                ))}
-              </NativeSelect>
+                options={providerOptions}
+                placeholder="Select provider…"
+                searchPlaceholder="Search providers…"
+              />
             </div>
             <div className="grid gap-1.5">
               <Label>Voice</Label>
-              <VoiceSelect
-                providerId={effectiveProvider}
+              <Combobox
                 value={effectiveVoice}
                 onChange={setVoiceId}
+                options={voiceOptions}
+                placeholder={voicesLoading ? "Loading voices…" : "Select voice…"}
+                searchPlaceholder="Search voices…"
+                disabled={voicesLoading || voiceOptions.length === 0}
               />
             </div>
             <div className="grid gap-1.5">
               <Label>Model</Label>
-              <NativeSelect
+              <Combobox
                 value={effectiveModel}
-                disabled={!models?.length}
-                onChange={(e) => setModelId(e.target.value)}
-              >
-                {(models ?? []).map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.label}
-                  </option>
-                ))}
-              </NativeSelect>
+                onChange={setModelId}
+                options={modelOptions}
+                placeholder="Select model…"
+                searchPlaceholder="Search models…"
+                disabled={modelOptions.length === 0}
+              />
             </div>
           </div>
         )}
@@ -213,6 +214,7 @@ export function VoiceoverPanel({
         </div>
       </div>
 
+      {/* ---- Right: takes list ---- */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">Takes</h3>
@@ -229,6 +231,10 @@ export function VoiceoverPanel({
           <ul className="space-y-2">
             {takes.map((take) => {
               const active = take.id === selectedTakeId;
+              const voiceName = resolveVoiceName(take);
+              const modelLabel =
+                models?.find((m) => m.id === take.modelId)?.label ?? take.modelId;
+
               return (
                 <li
                   key={take.id}
@@ -237,27 +243,38 @@ export function VoiceoverPanel({
                     active ? "border-primary ring-1 ring-primary" : "",
                   )}
                 >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Mic className="size-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">
-                      {take.label ?? "Take"}
-                    </span>
-                    {take.isPlaceholder ? (
-                      <Badge variant="secondary">Placeholder</Badge>
-                    ) : (
-                      <Badge variant="success">{take.providerId}</Badge>
-                    )}
-                    <span className="text-xs text-muted-foreground">
-                      {(take.totalFrames / take.fps).toFixed(1)}s ·{" "}
-                      {take.timeline.length} scenes
-                    </span>
-                    <div className="ml-auto flex items-center gap-1">
+                  <div className="flex items-start gap-2">
+                    <Mic className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-medium leading-snug">
+                          {take.isPlaceholder ? "Silent placeholder" : voiceName}
+                        </span>
+                        {take.isPlaceholder ? (
+                          <Badge variant="secondary">Placeholder</Badge>
+                        ) : (
+                          <Badge variant="success">{take.providerId}</Badge>
+                        )}
+                        {!take.isPlaceholder && modelLabel ? (
+                          <Badge variant="outline" className="text-xs font-normal">
+                            {modelLabel}
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {formatTakeDate(take.createdAt)} &middot;{" "}
+                        {(take.totalFrames / take.fps).toFixed(1)}s &middot;{" "}
+                        {take.timeline.length} scenes
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1">
                       <Button
                         size="sm"
                         variant={active ? "secondary" : "ghost"}
-                        onClick={() => onSelectTake(take.id)}
+                        onClick={() => active ? onClearTake?.() : onSelectTake(take.id)}
+                        title={active ? "Click to deselect and use estimated timing" : "Use this take"}
                       >
-                        {active ? "In preview" : "Use"}
+                        {active ? "In preview ×" : "Use"}
                       </Button>
                       <Button
                         size="icon"
@@ -277,7 +294,7 @@ export function VoiceoverPanel({
                   <audio
                     className="mt-2 h-8 w-full"
                     controls
-                    preload="none"
+                    preload="metadata"
                     src={take.audioUrl}
                   />
                 </li>

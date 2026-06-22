@@ -148,9 +148,42 @@ export function useGenerateTake(scriptId: string) {
       providerId?: ProviderId;
       voiceId?: string;
       modelId?: string;
+      label?: string;
     }) =>
       apiPost<{ take: VoiceTakeDTO }>(`/api/scripts/${scriptId}/takes`, vars).then(
         (r) => r.take,
+      ),
+    onSuccess: invalidate,
+  });
+}
+
+export function useEnhanceScript(scriptId: string) {
+  const invalidate = useScriptInvalidator(scriptId);
+  return useMutation({
+    mutationFn: (vars: {
+      providerId: string;
+      mode: "rewrite" | "append";
+      brief: string;
+      sceneCount?: number;
+    }) =>
+      apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/ai`, vars).then(
+        (r) => r.script,
+      ),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUndoScript(scriptId: string) {
+  const invalidate = useScriptInvalidator(scriptId);
+  return useMutation({
+    mutationFn: (scenes: {
+      templateId: string | null;
+      text: string;
+      emphasis: string[];
+      visual: string | null;
+    }[]) =>
+      apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/undo`, { scenes }).then(
+        (r) => r.script,
       ),
     onSuccess: invalidate,
   });

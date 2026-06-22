@@ -26,6 +26,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 const COLOR_FIELDS: { key: keyof BrandTokens; label: string }[] = [
   { key: "background", label: "Background" },
@@ -194,10 +195,10 @@ function KitCard({
           )}
         </div>
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon" className="size-7" onClick={onEdit}>
+          <Button variant="ghost" size="icon" className="size-7" onClick={onEdit} aria-label="Edit kit">
             <Pencil className="size-3.5" />
           </Button>
-          <Button variant="ghost" size="icon" className="size-7 text-destructive hover:text-destructive" onClick={onDelete}>
+          <Button variant="ghost" size="icon" className="size-7 text-destructive hover:text-destructive" onClick={onDelete} aria-label="Delete kit">
             <Trash2 className="size-3.5" />
           </Button>
         </div>
@@ -231,6 +232,7 @@ export default function BrandKitsPage() {
 
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editingKit, setEditingKit] = React.useState<BrandKitDTO | null>(null);
+  const [deleteTarget, setDeleteTarget] = React.useState<BrandKitDTO | null>(null);
 
   function openNew() {
     setEditingKit(null);
@@ -314,13 +316,7 @@ export default function BrandKitsPage() {
               key={kit.id}
               kit={kit}
               onEdit={() => openEdit(kit)}
-              onDelete={() => {
-                if (confirm(`Delete "${kit.name}"? Projects using it will revert to the default style.`)) {
-                  deleteKit.mutate(kit.id, {
-                    onError: () => toast.error("Failed to delete kit"),
-                  });
-                }
-              }}
+              onDelete={() => setDeleteTarget(kit)}
             />
           ))}
         </div>
@@ -332,6 +328,21 @@ export default function BrandKitsPage() {
         kit={editingKit}
         onSave={handleSave}
         saving={saving}
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Delete brand kit?"
+        description={`"${deleteTarget?.name}" will be permanently removed. Projects using it will revert to the default style.`}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          deleteKit.mutate(deleteTarget.id, {
+            onSuccess: () => setDeleteTarget(null),
+            onError: () => toast.error("Failed to delete kit"),
+          });
+        }}
+        isPending={deleteKit.isPending}
       />
     </div>
   );

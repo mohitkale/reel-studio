@@ -27,8 +27,8 @@ export async function POST(req: Request) {
   try {
     const body = createSchema.parse(await req.json());
     const render = await createRender(body);
-    // Fire off the render in the background; the response returns immediately.
-    startRender({ renderId: render.id, ...body });
+    const serverBaseUrl = new URL(req.url).origin;
+    startRender({ renderId: render.id, ...body, serverBaseUrl });
     return NextResponse.json({ render }, { status: 201 });
   } catch (e) {
     return errorResponse(e);

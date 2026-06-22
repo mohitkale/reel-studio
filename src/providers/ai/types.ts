@@ -31,18 +31,22 @@ export const scenePlanSchema = z.object({
   projectName: z.string().min(1),
   scriptName: z.string().min(1),
   voiceStyle: z.string().optional(),
-  scenes: z.array(aiSceneSchema).min(1).max(12),
+  scenes: z.array(aiSceneSchema).min(1).max(20),
 });
 
 export type AIScene = z.infer<typeof aiSceneSchema>;
 export type ScenePlan = z.infer<typeof scenePlanSchema>;
 
 export interface GeneratePlanInput {
-  mode: "idea" | "story";
+  mode: "idea" | "story" | "rewrite" | "append";
   /** The one-line idea (mode "idea") or the full text/story (mode "story"). */
   brief: string;
   sceneCount?: number;
   modelId?: string;
+  /** For "rewrite"/"append": the existing scenes joined as text, for AI context. */
+  existingContext?: string;
+  /** For "append": how many scenes already exist, so AI knows its starting position. */
+  existingSceneCount?: number;
 }
 
 export interface AIModel {

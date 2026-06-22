@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/shell/page-header";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CreateWithAIDialog } from "@/components/projects/create-with-ai-dialog";
 import {
   Dialog,
@@ -92,6 +93,9 @@ function NewProjectDialog() {
 export default function ProjectsPage() {
   const { data: projects, isLoading } = useProjects();
   const del = useDeleteProject();
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
+
+  const deletingProject = projects?.find((p) => p.id === deletingId) ?? null;
 
   return (
     <div className="space-y-8">
@@ -151,11 +155,7 @@ export default function ProjectsPage() {
                     variant="ghost"
                     className="text-muted-foreground hover:text-destructive"
                     aria-label={`Delete ${p.name}`}
-                    onClick={() =>
-                      del.mutate(p.id, {
-                        onSuccess: () => toast.info("Project deleted"),
-                      })
-                    }
+                    onClick={() => setDeletingId(p.id)}
                   >
                     <Trash2 className="size-4" />
                   </Button>
@@ -165,6 +165,24 @@ export default function ProjectsPage() {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deletingId}
+        onOpenChange={(open) => { if (!open) setDeletingId(null); }}
+        title="Delete project?"
+        description={`Delete "${deletingProject?.name}"? This will permanently remove the project, all its scenes, scripts, and voice takes.`}
+        confirmLabel="Delete project"
+        onConfirm={() => {
+          if (!deletingId) return;
+          del.mutate(deletingId, {
+            onSuccess: () => {
+              toast.info("Project deleted");
+              setDeletingId(null);
+            },
+          });
+        }}
+        isPending={del.isPending}
+      />
     </div>
   );
 }

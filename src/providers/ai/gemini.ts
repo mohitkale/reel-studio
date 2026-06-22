@@ -21,6 +21,7 @@ const RESPONSE_SCHEMA = {
     scriptName: { type: "string" },
     scenes: {
       type: "array",
+      maxItems: 20,
       items: {
         type: "object",
         properties: {

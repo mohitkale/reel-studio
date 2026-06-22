@@ -15,7 +15,7 @@ const bodySchema = z.object({
   modelId: z.string().optional(),
   mode: z.enum(["idea", "story"]),
   brief: z.string().trim().min(3).max(8000),
-  sceneCount: z.number().int().min(3).max(12).optional(),
+  sceneCount: z.number().int().min(3).max(20).optional(),
 });
 
 /** POST /api/projects/ai - generate a scene plan from a brief and create the project. */

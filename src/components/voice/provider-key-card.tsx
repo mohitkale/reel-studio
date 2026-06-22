@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Combobox } from "@/components/ui/combobox";
 
 export function ProviderKeyCard({
   status,
@@ -151,27 +151,22 @@ export function ProviderKeyCard({
       {status.configured ? (
         <div className="grid gap-2 sm:max-w-xs">
           <Label htmlFor={`model-${status.id}`}>Default model</Label>
-          <NativeSelect
+          <Combobox
             id={`model-${status.id}`}
             value={selectedModel}
             disabled={models.isLoading}
-            onChange={(e) =>
+            onChange={(v) =>
               setDefaults.mutate(
-                { modelFor: status.id, modelId: e.target.value },
-                {
-                  onSuccess: () => toast.success("Default model updated"),
-                },
+                { modelFor: status.id, modelId: v },
+                { onSuccess: () => toast.success("Default model updated") },
               )
             }
-          >
-            {(models.data ?? [{ id: selectedModel, label: selectedModel }]).map(
-              (m) => (
-                <option key={m.id} value={m.id}>
-                  {m.label}
-                </option>
-              ),
+            options={(models.data ?? [{ id: selectedModel, label: selectedModel }]).map(
+              (m) => ({ value: m.id, label: m.label }),
             )}
-          </NativeSelect>
+            placeholder="Select model…"
+            searchPlaceholder="Search models…"
+          />
         </div>
       ) : null}
 
