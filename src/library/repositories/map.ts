@@ -1,10 +1,44 @@
 import type { Scene, VoiceTake } from "@prisma/client";
 
-import type { SceneDTO, VoiceTakeDTO } from "@/lib/dto";
+import type { SceneDTO, SceneBackground, VoiceTakeDTO } from "@/lib/dto";
 import { getAssetStore } from "@/library/storage";
-import { emphasisSchema, parseJsonColumn, timelineSchema } from "../schemas";
+import {
+  emphasisSchema,
+  parseJsonColumn,
+  sceneConfigSchema,
+  timelineSchema,
+} from "../schemas";
+
+/**
+ * Legacy migration: the old "image-overlay" template stored its image as JSON
+ * in the `visual` column ({"url":...,"effect":...}). Backgrounds are now a
+ * first-class per-scene config, so surface that as a background and drop it
+ * from `visual` (which is meant for short emoji/label hints).
+ */
+function legacyVisualBackground(visual: string | null): SceneBackground | null {
+  if (!visual || !visual.startsWith("{")) return null;
+  try {
+    const p = JSON.parse(visual) as { url?: string; effect?: string };
+    if (p && typeof p.url === "string" && p.url) {
+      return {
+        type: "image",
+        url: p.url,
+        effect: (p.effect as SceneBackground["effect"]) ?? "ken-burns",
+      };
+    }
+  } catch {
+    /* not JSON — treat as a plain visual */
+  }
+  return null;
+}
 
 export function toSceneDTO(scene: Scene): SceneDTO {
+  const config = parseJsonColumn(scene.layoutJson, sceneConfigSchema, {});
+  const legacy = config.background ? null : legacyVisualBackground(scene.visual);
+  const background = config.background ?? legacy ?? undefined;
+  // Hide the legacy image JSON from the visual field once promoted to background.
+  const visual = legacy ? undefined : scene.visual ?? undefined;
+
   return {
     id: scene.id,
     scriptId: scene.scriptId,
@@ -12,7 +46,9 @@ export function toSceneDTO(scene: Scene): SceneDTO {
     templateId: scene.templateId,
     text: scene.text,
     emphasis: parseJsonColumn(scene.emphasis, emphasisSchema, []),
-    visual: scene.visual ?? undefined,
+    visual,
+    background,
+    items: config.items && config.items.length ? config.items : undefined,
   };
 }
 

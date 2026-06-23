@@ -4,6 +4,7 @@ import "./globals.css";
 
 import { Providers } from "@/components/providers";
 import { Sidebar } from "@/components/shell/sidebar";
+import { SidebarProvider } from "@/components/shell/sidebar-context";
 import { Topbar } from "@/components/shell/topbar";
 import { GlobalHotkeys } from "@/components/shell/global-hotkeys";
 import { Toaster } from "@/components/ui/sonner";
@@ -42,17 +43,19 @@ export default function RootLayout({
           >
             Skip to content
           </a>
-          <div className="flex h-dvh overflow-hidden">
-            <Sidebar />
-            <div className="flex min-w-0 flex-1 flex-col">
-              <Topbar />
-              <main id="main-content" className="flex-1 overflow-y-auto">
-                <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
-                  {children}
-                </div>
-              </main>
+          <SidebarProvider>
+            <div className="flex h-dvh overflow-hidden">
+              <Sidebar />
+              <div className="flex min-w-0 flex-1 flex-col">
+                <Topbar />
+                <main id="main-content" className="flex-1 overflow-y-auto">
+                  <div className="mx-auto w-full max-w-[120rem] px-4 py-6 sm:px-6">
+                    {children}
+                  </div>
+                </main>
+              </div>
             </div>
-          </div>
+          </SidebarProvider>
           <GlobalHotkeys />
           <Toaster richColors closeButton position="bottom-right" />
         </Providers>

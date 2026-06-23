@@ -39,7 +39,6 @@ const JSON_SCHEMA = {
                 "icon-grid",
                 "quote-card",
                 "emoji-punch",
-                "image-overlay",
               ],
             },
             emphasis: { type: "array", items: { type: "string" } },

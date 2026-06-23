@@ -12,7 +12,7 @@ import path from "node:path";
 import { promises as fs } from "node:fs";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
-import type { ReelProps } from "@/compositions/types";
+import { type ReelProps, REEL_FPS, coverFrames } from "@/compositions/types";
 import { getAssetStore } from "@/library/storage";
 import { getScript } from "@/library/repositories/scripts";
 import { listTakes } from "@/library/repositories/takes";
@@ -121,6 +121,12 @@ async function runRender({
     const timeline = take?.timeline ?? estimated.timeline;
     const totalFrames = take?.totalFrames ?? estimated.totalFrames;
 
+    // Media URLs must be absolute so Remotion's separate Chrome process (its own
+    // webpack dev server) can fetch them — relative URLs resolve against that
+    // server, not Next.js.
+    const absolute = (url?: string | null) =>
+      url ? (url.startsWith("http") ? url : `${serverBaseUrl}${url}`) : undefined;
+
     const inputProps: ReelProps = {
       scenes: script.scenes.map((s) => ({
         id: s.id,
@@ -128,19 +134,23 @@ async function runRender({
         text: s.text,
         emphasis: s.emphasis,
         visual: s.visual,
+        background: s.background
+          ? { ...s.background, url: absolute(s.background.url)! }
+          : undefined,
+        items: s.items,
       })),
       timeline,
-      // Remotion runs in a separate Chrome process with its own webpack dev
-      // server — relative URLs resolve against that server, not Next.js. Use
-      // an absolute URL so Chrome can reach the media file.
-      audioUrl: take?.audioUrl
-        ? `${serverBaseUrl}${take.audioUrl}`
-        : undefined,
+      audioUrl: absolute(take?.audioUrl),
+      coverUrl: absolute(script.coverUrl),
       // script.brandTokens is server-safe (uses serverDefaultTokens, no @remotion/google-fonts).
       // Importing @/compositions/tokens here would pull loadFont() into the Next.js server
       // process where React.createContext is undefined, crashing the render job.
       tokens: script.brandTokens,
     };
+
+    // Cover is held at the start, lengthening the video by that many frames.
+    const cover = coverFrames(REEL_FPS, Boolean(script.coverUrl));
+    const fullDuration = Math.max(1, totalFrames + cover);
 
     // 3. Resolve the "Reel" composition with input props to get the correct duration.
     const composition = await selectComposition({
@@ -159,7 +169,7 @@ async function runRender({
 
     // 5. Render to MP4.
     await renderMedia({
-      composition: { ...composition, durationInFrames: Math.max(1, totalFrames) },
+      composition: { ...composition, durationInFrames: fullDuration },
       serveUrl,
       codec: "h264",
       outputLocation: outputPath,

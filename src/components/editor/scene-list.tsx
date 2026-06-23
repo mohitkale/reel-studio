@@ -30,7 +30,7 @@ export function SceneList({
 
   return (
     <>
-      <div className="flex h-full flex-col">
+      <div className="flex h-full min-h-0 flex-col">
         <div className="flex items-center justify-between px-1 pb-2">
           <h3 className="text-sm font-semibold">Scenes</h3>
           <Button size="sm" variant="outline" onClick={onAdd} disabled={busy}>

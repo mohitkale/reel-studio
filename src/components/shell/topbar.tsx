@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { navItems } from "@/lib/nav";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useSidebar } from "@/components/shell/sidebar-context";
 
 function currentTitle(pathname: string) {
   const match = navItems.find((item) =>
@@ -24,9 +25,22 @@ function currentTitle(pathname: string) {
 export function Topbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const { collapsed, toggle } = useSidebar();
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur">
+      {/* Desktop: collapse/expand the sidebar to reclaim screen width. */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="hidden md:inline-flex"
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        aria-expanded={!collapsed}
+        onClick={toggle}
+      >
+        <Menu />
+      </Button>
+
       <Dialog.Root open={mobileOpen} onOpenChange={setMobileOpen}>
         <Dialog.Trigger asChild>
           <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">

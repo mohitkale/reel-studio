@@ -9,6 +9,7 @@ function toDTO(r: {
   id: string;
   scriptId: string;
   voiceTakeId: string | null;
+  name: string | null;
   status: string;
   progress: number;
   outputPath: string | null;
@@ -19,12 +20,21 @@ function toDTO(r: {
     id: r.id,
     scriptId: r.scriptId,
     voiceTakeId: r.voiceTakeId,
+    name: r.name,
     status: r.status as RenderDTO["status"],
     progress: r.progress,
     outputUrl: r.outputPath ? getAssetStore().url(r.outputPath) : null,
     error: r.error,
     createdAt: r.createdAt.toISOString(),
   };
+}
+
+export async function renameRender(id: string, name: string): Promise<RenderDTO> {
+  const row = await prisma.render.update({
+    where: { id },
+    data: { name: name.trim() || null },
+  });
+  return toDTO(row);
 }
 
 export async function createRender(input: {

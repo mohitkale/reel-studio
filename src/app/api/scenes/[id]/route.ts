@@ -7,11 +7,25 @@ import { errorResponse } from "@/server/api-helpers";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const backgroundSchema = z.object({
+  type: z.enum(["image", "video"]),
+  url: z.string().min(1).max(2048),
+  effect: z
+    .enum(["ken-burns", "pan-left", "pan-right", "pan-up", "pan-down"])
+    .optional(),
+  muted: z.boolean().optional(),
+});
+
 const patchSchema = z.object({
   text: z.string().max(2000).optional(),
   templateId: z.string().optional(),
   emphasis: z.array(z.string()).optional(),
-  visual: z.string().max(64).nullable().optional(),
+  // Short label/emoji hint for the template's visual slot.
+  visual: z.string().max(2048).nullable().optional(),
+  // Per-scene full-bleed background (image/video); null clears it.
+  background: backgroundSchema.nullable().optional(),
+  // List items for list/checklist templates; null/empty clears them.
+  items: z.array(z.string().max(280)).max(24).nullable().optional(),
 });
 
 export async function PATCH(

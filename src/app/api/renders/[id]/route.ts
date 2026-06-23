@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
-import { getRender, deleteRender } from "@/library/repositories/renders";
+import { getRender, deleteRender, renameRender } from "@/library/repositories/renders";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -16,6 +17,22 @@ export async function GET(
     if (!render) {
       return NextResponse.json({ error: "Render not found" }, { status: 404 });
     }
+    return NextResponse.json({ render });
+  } catch (e) {
+    return errorResponse(e);
+  }
+}
+
+const patchSchema = z.object({ name: z.string().max(120) });
+
+export async function PATCH(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await ctx.params;
+    const { name } = patchSchema.parse(await req.json());
+    const render = await renameRender(id, name);
     return NextResponse.json({ render });
   } catch (e) {
     return errorResponse(e);

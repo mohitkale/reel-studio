@@ -1,7 +1,7 @@
 import type { ScriptDTO } from "@/lib/dto";
 import { serverDefaultTokens } from "@/lib/brand-defaults";
 import { prisma } from "@/library/db";
-import { resolveBrandTokens } from "./brandkits";
+import { resolveBrandTokens, getDefaultBrandKit } from "./brandkits";
 import { toSceneDTO, toTakeDTO } from "./map";
 
 export async function getScript(id: string): Promise<ScriptDTO | null> {
@@ -15,7 +15,7 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
   });
   if (!script) return null;
 
-  const brandKit = script.project.brandKit;
+  const brandKit = script.project.brandKit ?? await getDefaultBrandKit();
 
   return {
     id: script.id,
@@ -26,9 +26,19 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     takes: script.takes.map(toTakeDTO),
     brandKitId: script.project.brandKitId,
     brandTokens: brandKit ? resolveBrandTokens(brandKit) : serverDefaultTokens,
+    coverUrl: script.coverUrl,
   };
 }
 
-export async function renameScript(id: string, name: string): Promise<void> {
-  await prisma.script.update({ where: { id }, data: { name } });
+export async function updateScript(
+  id: string,
+  data: { name?: string; coverUrl?: string | null },
+): Promise<void> {
+  await prisma.script.update({
+    where: { id },
+    data: {
+      ...(data.name !== undefined ? { name: data.name } : {}),
+      ...(data.coverUrl !== undefined ? { coverUrl: data.coverUrl || null } : {}),
+    },
+  });
 }

@@ -27,6 +27,29 @@ export const fontsSchema = z.object({
   fontFamily: z.string().optional(),
 });
 
+export const ctaDefaultsSchema = z.object({ isDefault: z.boolean().optional() }).passthrough();
+
+export const panEffectSchema = z.enum([
+  "ken-burns",
+  "pan-left",
+  "pan-right",
+  "pan-up",
+  "pan-down",
+]);
+
+export const sceneBackgroundSchema = z.object({
+  type: z.enum(["image", "video"]),
+  url: z.string().min(1).max(2048),
+  effect: panEffectSchema.optional(),
+  muted: z.boolean().optional(),
+});
+
+/** Per-scene config stored in the Scene.layoutJson column. */
+export const sceneConfigSchema = z.object({
+  background: sceneBackgroundSchema.optional(),
+  items: z.array(z.string()).optional(),
+});
+
 export const metaSchema = z.record(z.unknown());
 
 /** Parse a JSON string column, falling back to a default on null/invalid. */

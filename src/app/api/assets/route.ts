@@ -16,6 +16,15 @@ const ALLOWED_MIME: Record<string, { type: string; ext: string }> = {
   "image/webp": { type: "image", ext: "webp" },
   "image/svg+xml": { type: "image", ext: "svg" },
   "application/json": { type: "lottie", ext: "json" },
+  "video/mp4": { type: "video", ext: "mp4" },
+  "video/webm": { type: "video", ext: "webm" },
+  "video/quicktime": { type: "video", ext: "mov" },
+};
+
+const TYPE_FOLDER: Record<string, string> = {
+  image: "images",
+  lottie: "lottie",
+  video: "videos",
 };
 
 export async function GET(req: Request) {
@@ -47,7 +56,8 @@ export async function POST(req: Request) {
     }
 
     const id = randomUUID();
-    const storeKey = path.posix.join("assets", info.type === "lottie" ? "lottie" : "images", `${id}.${info.ext}`);
+    const folder = TYPE_FOLDER[info.type] ?? "images";
+    const storeKey = path.posix.join("assets", folder, `${id}.${info.ext}`);
     const buffer = Buffer.from(await file.arrayBuffer());
 
     await getAssetStore().put(storeKey, buffer);

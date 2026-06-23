@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { ListVideo, Download, AlertCircle, CheckCircle2, Loader2, Clock, RefreshCcw, Maximize2, Trash2 } from "lucide-react";
+import { ListVideo, Download, AlertCircle, CheckCircle2, Loader2, Clock, RefreshCcw, Maximize2, Trash2, Pencil, Check, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { useRenders, useRenderProgress, useCreateRender, useDeleteRender } from "@/hooks/renders";
+import { useRenders, useRenderProgress, useCreateRender, useRenameRender, useDeleteRender } from "@/hooks/renders";
 import type { RenderDTO } from "@/lib/dto";
 import { PageHeader } from "@/components/shell/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -50,10 +50,23 @@ function ProgressBar({ value }: { value: number }) {
   );
 }
 
+function formatDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
 function RenderCard({ render: initial }: { render: RenderDTO }) {
   const [render, setRender] = React.useState(initial);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
+  const [renaming, setRenaming] = React.useState(false);
+  const [nameInput, setNameInput] = React.useState(render.name ?? "");
+  const [duration, setDuration] = React.useState<number | null>(null);
+  const nameRef = React.useRef<HTMLInputElement>(null);
   const createRender = useCreateRender();
+  const renameRender = useRenameRender();
   const deleteRender = useDeleteRender();
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
@@ -75,6 +88,32 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
 
   const Icon = STATUS_ICONS[render.status] ?? Clock;
   const isSpinner = render.status === "bundling" || render.status === "rendering";
+  const displayName = render.name ?? `Render ${render.id.slice(-8)}`;
+
+  function startRename() {
+    setNameInput(render.name ?? "");
+    setRenaming(true);
+    setTimeout(() => nameRef.current?.select(), 30);
+  }
+
+  function commitRename() {
+    const trimmed = nameInput.trim();
+    renameRender.mutate(
+      { id: render.id, name: trimmed },
+      {
+        onSuccess: (updated) => {
+          setRender((prev) => ({ ...prev, name: updated.name }));
+          setRenaming(false);
+        },
+        onError: () => toast.error("Failed to rename"),
+      },
+    );
+  }
+
+  function cancelRename() {
+    setRenaming(false);
+    setNameInput(render.name ?? "");
+  }
 
   function requestFullscreen() {
     if (videoRef.current) {
@@ -87,27 +126,59 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
       <Card>
         <CardContent className="space-y-3 p-4">
           <div className="flex items-start justify-between gap-3">
-            <div className="space-y-0.5">
-              <p className="text-sm font-medium">Render {render.id.slice(-8)}</p>
+            <div className="min-w-0 flex-1 space-y-0.5">
+              {renaming ? (
+                <div className="flex items-center gap-1">
+                  <input
+                    ref={nameRef}
+                    autoFocus
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") commitRename();
+                      if (e.key === "Escape") cancelRename();
+                    }}
+                    onBlur={commitRename}
+                    className="flex-1 truncate rounded border border-border bg-background px-2 py-0.5 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary"
+                    placeholder={`Render ${render.id.slice(-8)}`}
+                    maxLength={120}
+                  />
+                  <button onMouseDown={(e) => e.preventDefault()} onClick={commitRename} className="rounded p-0.5 hover:bg-accent" aria-label="Save name"><Check className="size-3.5 text-primary" /></button>
+                  <button onClick={cancelRename} className="rounded p-0.5 hover:bg-accent" aria-label="Cancel rename"><X className="size-3.5 text-muted-foreground" /></button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 group">
+                  <p className="truncate text-sm font-medium">{displayName}</p>
+                  <button
+                    onClick={startRename}
+                    className="rounded p-0.5 opacity-0 group-hover:opacity-100 hover:bg-accent transition-opacity"
+                    aria-label="Rename render"
+                  >
+                    <Pencil className="size-3 text-muted-foreground" />
+                  </button>
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
                 {new Date(render.createdAt).toLocaleString()}
               </p>
             </div>
-            <div className="flex items-center gap-1">
-              <Badge variant={STATUS_COLOR[render.status] ?? "secondary"} className="shrink-0 gap-1.5">
-                <Icon className={`size-3 ${isSpinner ? "animate-spin" : ""}`} />
-                {STATUS_LABEL[render.status] ?? render.status}
-              </Badge>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="size-7 text-muted-foreground hover:text-destructive"
-                aria-label="Delete render"
-                onClick={() => setConfirmDelete(true)}
-              >
-                <Trash2 className="size-3.5" />
-              </Button>
-            </div>
+            {!renaming && (
+              <div className="flex items-center gap-1">
+                <Badge variant={STATUS_COLOR[render.status] ?? "secondary"} className="shrink-0 gap-1.5">
+                  <Icon className={`size-3 ${isSpinner ? "animate-spin" : ""}`} />
+                  {STATUS_LABEL[render.status] ?? render.status}
+                </Badge>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="size-7 text-muted-foreground hover:text-destructive"
+                  aria-label="Delete render"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
+              </div>
+            )}
           </div>
 
           {isActive && (
@@ -127,32 +198,44 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
           )}
 
           {render.status === "done" && render.outputUrl && (
-            <div className="flex flex-col gap-2">
-              <video
-                ref={videoRef}
-                src={render.outputUrl}
-                controls
-                className="mx-auto w-full max-w-[180px] rounded-xl border"
+            <div className="space-y-1.5">
+              <div
+                className="group relative w-full overflow-hidden rounded-xl border bg-black"
                 style={{ aspectRatio: "9/16" }}
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={requestFullscreen}
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent transition-colors"
-                  aria-label="Watch fullscreen"
-                >
-                  <Maximize2 className="size-3" />
-                  Fullscreen
-                </button>
-                <a
-                  href={render.outputUrl}
-                  download
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent transition-colors"
-                >
-                  <Download className="size-3" />
-                  Download MP4
-                </a>
+              >
+                <video
+                  ref={videoRef}
+                  src={render.outputUrl}
+                  controls
+                  className="h-full w-full"
+                  onLoadedMetadata={(e) =>
+                    setDuration((e.target as HTMLVideoElement).duration)
+                  }
+                />
+                {/* Overlay: fullscreen + download (visible on hover) */}
+                <div className="pointer-events-none absolute right-0 top-0 flex items-center gap-1 p-2 opacity-0 transition-opacity group-hover:opacity-100">
+                  <button
+                    className="pointer-events-auto rounded-md bg-black/60 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/80"
+                    onClick={requestFullscreen}
+                    aria-label="Fullscreen"
+                  >
+                    <Maximize2 className="size-3.5" />
+                  </button>
+                  <a
+                    href={render.outputUrl}
+                    download
+                    className="pointer-events-auto rounded-md bg-black/60 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/80"
+                    aria-label="Download MP4"
+                  >
+                    <Download className="size-3.5" />
+                  </a>
+                </div>
               </div>
+              {duration !== null && (
+                <p className="text-center text-xs text-muted-foreground">
+                  {formatDuration(duration)}
+                </p>
+              )}
             </div>
           )}
 

@@ -3,12 +3,81 @@
 import * as React from "react";
 import {
   AbsoluteFill,
+  OffthreadVideo,
   interpolate,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
 
 import type { BrandTokens } from "../tokens";
+import type { PanEffect, SceneBackground } from "../types";
+
+function imageTransform(effect: PanEffect, frame: number, duration: number): string {
+  const t = interpolate(frame, [0, Math.max(1, duration)], [0, 1], {
+    extrapolateRight: "clamp",
+  });
+  switch (effect) {
+    case "pan-left":
+      return `scale(1.14) translateX(${interpolate(t, [0, 1], [4, -4])}%)`;
+    case "pan-right":
+      return `scale(1.14) translateX(${interpolate(t, [0, 1], [-4, 4])}%)`;
+    case "pan-up":
+      return `scale(1.14) translateY(${interpolate(t, [0, 1], [4, -4])}%)`;
+    case "pan-down":
+      return `scale(1.14) translateY(${interpolate(t, [0, 1], [-4, 4])}%)`;
+    case "ken-burns":
+    default:
+      return `scale(${1 + t * 0.08})`;
+  }
+}
+
+/**
+ * Full-bleed scene background (image or video) with a dark gradient scrim so
+ * foreground text stays legible. Images get a Ken Burns / pan animation; videos
+ * play muted by default so they never fight the voiceover.
+ */
+function SceneBackgroundLayer({
+  background,
+  durationInFrames,
+}: {
+  background: SceneBackground;
+  durationInFrames: number;
+}) {
+  const frame = useCurrentFrame();
+  return (
+    <>
+      {background.type === "video" ? (
+        <AbsoluteFill style={{ overflow: "hidden" }}>
+          <OffthreadVideo
+            src={background.url}
+            muted={background.muted ?? true}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </AbsoluteFill>
+      ) : (
+        <AbsoluteFill
+          style={{
+            backgroundImage: `url(${JSON.stringify(background.url)})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            transform: imageTransform(
+              background.effect ?? "ken-burns",
+              frame,
+              durationInFrames,
+            ),
+            transformOrigin: "center center",
+          }}
+        />
+      )}
+      <AbsoluteFill
+        style={{
+          background:
+            "linear-gradient(to top, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0.12) 100%)",
+        }}
+      />
+    </>
+  );
+}
 
 /** Drifting, blurred color blobs over a base gradient - the "lighting" of the scene. */
 function AnimatedBackground({ tokens }: { tokens: BrandTokens }) {
@@ -141,17 +210,33 @@ export function Stage({
   children,
   contentStyle,
   backdrop,
+  background,
+  durationInFrames,
 }: {
   tokens: BrandTokens;
   children: React.ReactNode;
   contentStyle?: React.CSSProperties;
   /** Full-bleed layer rendered above the lighting but below grain/vignette (e.g. a 3D canvas). */
   backdrop?: React.ReactNode;
+  /** Per-scene image/video background — takes precedence over `backdrop` when set. */
+  background?: SceneBackground;
+  /** This scene's sequence length, used to time the background image animation. */
+  durationInFrames?: number;
 }) {
+  const hasBackground = Boolean(background && background.url);
+  const computedBackdrop = hasBackground ? (
+    <SceneBackgroundLayer
+      background={background!}
+      durationInFrames={durationInFrames ?? 1}
+    />
+  ) : (
+    backdrop
+  );
+
   return (
     <AbsoluteFill style={{ fontFamily: tokens.fontFamily, overflow: "hidden" }}>
       <AnimatedBackground tokens={tokens} />
-      {backdrop ? <AbsoluteFill>{backdrop}</AbsoluteFill> : null}
+      {computedBackdrop ? <AbsoluteFill>{computedBackdrop}</AbsoluteFill> : null}
       <Grain />
       {/* Vignette */}
       <AbsoluteFill

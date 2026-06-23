@@ -21,18 +21,19 @@ interface ReelPlayerProps {
   autoPlay?: boolean;
   loop?: boolean;
   tokens?: BrandTokens;
+  coverUrl?: string;
 }
 
 /** Live Remotion preview of the reel, driven by the scene templates + timeline. */
 export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
   function ReelPlayer(
-    { scenes, timeline, totalFrames, fps, audioUrl, autoPlay, loop = true, tokens },
+    { scenes, timeline, totalFrames, fps, audioUrl, autoPlay, loop = true, tokens, coverUrl },
     ref,
   ) {
     const resolvedTokens = tokens ?? defaultBrandTokens;
     const inputProps = React.useMemo(
-      () => ({ scenes, timeline, audioUrl, tokens: resolvedTokens }),
-      [scenes, timeline, audioUrl, resolvedTokens],
+      () => ({ scenes, timeline, audioUrl, tokens: resolvedTokens, coverUrl }),
+      [scenes, timeline, audioUrl, resolvedTokens, coverUrl],
     );
 
     if (scenes.length === 0) {

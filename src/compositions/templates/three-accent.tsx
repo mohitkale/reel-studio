@@ -102,6 +102,8 @@ export function ThreeAccent({ scene, tokens, durationInFrames }: TemplateProps) 
   return (
     <Stage
       tokens={tokens}
+      background={scene.background}
+      durationInFrames={durationInFrames}
       contentStyle={{ alignItems: "center", justifyContent: "flex-end" }}
       backdrop={
         <ThreeCanvas

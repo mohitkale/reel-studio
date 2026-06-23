@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, Video, Loader2, Sparkles, Undo2 } from "lucide-react";
+import { ArrowLeft, Video, Loader2, Sparkles, Undo2, Braces } from "lucide-react";
 import { toast } from "sonner";
 import type { PlayerRef } from "@remotion/player";
 
@@ -19,7 +19,7 @@ import { useCreateRender } from "@/hooks/renders";
 import { useBrandKits, useAssignBrandKit } from "@/hooks/brandkits";
 import { useHotkey } from "@/hooks/use-hotkeys";
 import { normalizeTemplateId } from "@/compositions/templates";
-import type { ReelScene } from "@/compositions/types";
+import { type ReelScene, coverFrames } from "@/compositions/types";
 import { estimateTimeline } from "@/lib/preview-timeline";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,6 +30,8 @@ import { SceneInspector } from "@/components/editor/scene-inspector";
 import { ReelPlayer } from "@/components/editor/reel-player";
 import { VoiceoverPanel } from "@/components/editor/voiceover-panel";
 import { AIEnhanceDialog } from "@/components/editor/ai-enhance-dialog";
+import { ScenesJsonDialog } from "@/components/editor/scenes-json-dialog";
+import { CoverControl } from "@/components/editor/cover-control";
 import { Combobox } from "@/components/ui/combobox";
 
 export function EditorClient({ scriptId }: { scriptId: string }) {
@@ -50,6 +52,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   const [takeCleared, setTakeCleared] = React.useState(false);
   const [previewMode, setPreviewMode] = React.useState<"scene" | "reel">("scene");
   const [aiOpen, setAiOpen] = React.useState(false);
+  const [jsonOpen, setJsonOpen] = React.useState(false);
   // Snapshot of scenes taken before an AI enhance — cleared after render or undo
   const [undoSnapshot, setUndoSnapshot] = React.useState<SceneDTO[] | null>(null);
   const playerRef = React.useRef<PlayerRef>(null);
@@ -97,7 +100,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-8 w-64" />
-        <div className="grid gap-4 lg:grid-cols-[18rem_1fr_20rem]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(20rem,1fr)_22rem_22rem]">
           <Skeleton className="h-96" />
           <Skeleton className="h-96" />
           <Skeleton className="h-96" />
@@ -126,6 +129,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
     text: s.text,
     emphasis: s.emphasis,
     visual: s.visual,
+    background: s.background,
+    items: s.items,
   }));
   const estimated = estimateTimeline(
     scenes.map((s) => ({ id: s.id, text: s.text })),
@@ -133,6 +138,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   );
   const fps = selectedTake?.fps ?? script.fps;
   const audioUrl = selectedTake?.audioUrl;
+  // Full-reel preview holds the cover at the start, shifting everything by this much.
+  const coverFr = coverFrames(fps, !!script.coverUrl);
 
   // When new scenes are added after a take was recorded, blend: use take timing for
   // covered scenes and estimated timing for any new scenes appended afterward.
@@ -172,6 +179,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
         text: selectedScene.text,
         emphasis: selectedScene.emphasis,
         visual: selectedScene.visual,
+        background: selectedScene.background,
+        items: selectedScene.items,
       }
     : null;
   const sceneBeat = selectedScene
@@ -187,7 +196,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   function selectScene(id: string) {
     setSelectedSceneId(id);
     const beat = timeline.find((b) => b.sceneId === id);
-    if (beat) playerRef.current?.seekTo(beat.startFrame);
+    if (beat) playerRef.current?.seekTo(beat.startFrame + coverFr);
   }
 
   function handleMove(id: string, direction: -1 | 1) {
@@ -221,7 +230,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-36">
+          <div className="w-44">
             <Combobox
               value={script.brandKitId ?? ""}
               onChange={(v) =>
@@ -231,7 +240,12 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                 })
               }
               options={[
-                { value: "", label: "Default kit" },
+                {
+                  value: "",
+                  label: brandKits.find((k) => k.isDefault)
+                    ? `Default (${brandKits.find((k) => k.isDefault)!.name})`
+                    : "Default kit",
+                },
                 ...brandKits.map((k) => ({ value: k.id, label: k.name })),
               ]}
               placeholder="Default kit"
@@ -250,6 +264,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     text: s.text,
                     emphasis: s.emphasis,
                     visual: s.visual ?? null,
+                    background: s.background ?? null,
+                    items: s.items,
                   })),
                   {
                     onSuccess: () => {
@@ -271,6 +287,15 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
               Undo AI
             </Button>
           )}
+          <CoverControl scriptId={scriptId} coverUrl={script.coverUrl} />
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setJsonOpen(true)}
+          >
+            <Braces className="size-3.5" />
+            JSON
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -308,9 +333,12 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[18rem_1fr_20rem]">
-        <Card>
-          <CardContent className="h-[34rem] p-3">
+      {/* The center column (player) defines the row height; the side panels are
+          stretched to match it and scroll internally. Their content is absolutely
+          positioned so it never contributes to the grid row height. */}
+      <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(20rem,1fr)_22rem_22rem]">
+        <Card className="relative min-h-[24rem] overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden p-3">
             <SceneList
               scenes={scenes}
               selectedId={effectiveSceneId}
@@ -320,7 +348,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
               onDelete={(id) => deleteScene.mutate(id)}
               busy={sceneBusy}
             />
-          </CardContent>
+          </div>
         </Card>
 
         <Card>
@@ -374,10 +402,11 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                   ref={playerRef}
                   scenes={reelScenes}
                   timeline={timeline}
-                  totalFrames={totalFrames}
+                  totalFrames={totalFrames + coverFr}
                   fps={fps}
                   audioUrl={audioUrl}
                   tokens={script.brandTokens}
+                  coverUrl={script.coverUrl ?? undefined}
                 />
                 <p className="mt-3 text-center text-xs text-muted-foreground">
                   {selectedTake
@@ -389,12 +418,19 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-4">
+        <Card className="relative min-h-[24rem] overflow-hidden">
+          <div className="absolute inset-0 overflow-y-auto p-4">
             {selectedScene ? (
               <SceneInspector
                 key={selectedScene.id}
                 scene={selectedScene}
+                sceneIndex={scenes.findIndex((s) => s.id === effectiveSceneId)}
+                totalScenes={scenes.length}
+                onNavigate={(dir) => {
+                  const idx = scenes.findIndex((s) => s.id === effectiveSceneId);
+                  const next = scenes[idx + dir];
+                  if (next) selectScene(next.id);
+                }}
                 onUpdate={(vars) => updateScene.mutate(vars)}
                 onDelete={(id) => deleteScene.mutate(id)}
                 saving={updateScene.isPending}
@@ -404,7 +440,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                 Add a scene to start editing.
               </p>
             )}
-          </CardContent>
+          </div>
         </Card>
       </div>
 
@@ -429,6 +465,13 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
         onOpenChange={setAiOpen}
         onBeforeEnhance={() => setUndoSnapshot([...scenes])}
         onEnhanceSuccess={clearTake}
+      />
+
+      <ScenesJsonDialog
+        scriptId={scriptId}
+        scenes={scenes}
+        open={jsonOpen}
+        onOpenChange={setJsonOpen}
       />
     </div>
   );

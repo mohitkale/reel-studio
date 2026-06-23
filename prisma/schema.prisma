@@ -43,6 +43,7 @@ model Script {
   name           String
   fps            Int      @default(30)
   brandOverrides String? // JSON
+  coverUrl       String? // cover/thumbnail image baked as the reel's opening frame
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -94,6 +95,7 @@ model Render {
   script        Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
   voiceTakeId   String?
   templateSetId String?
+  name          String?
   status        String   @default("queued") // queued | rendering | done | error
   progress      Float    @default(0)
   outputPath    String?

@@ -74,6 +74,25 @@ export function useDeleteBrandKit() {
   });
 }
 
+export function useSetDefaultBrandKit() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, isDefault }: { id: string; isDefault: boolean }) => {
+      const res = await fetch(`/api/brandkits/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isDefault }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json() as Promise<BrandKitDTO>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["brandkits"] });
+      queryClient.invalidateQueries({ queryKey: ["scripts"] });
+    },
+  });
+}
+
 export function useAssignBrandKit() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -51,7 +51,7 @@ export function EmojiPunch({ scene, tokens, durationInFrames }: TemplateProps) {
   );
 
   return (
-    <Stage tokens={tokens} contentStyle={{ alignItems: "center", justifyContent: "center" }}>
+    <Stage tokens={tokens} background={scene.background} durationInFrames={durationInFrames} contentStyle={{ alignItems: "center", justifyContent: "center" }}>
       <div
         style={{
           display: "flex",

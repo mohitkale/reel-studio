@@ -16,7 +16,8 @@
     "db:studio": "prisma studio",
     "studio": "remotion studio src/remotion/index.ts",
     "postinstall": "prisma generate",
-    "seed:assets": "tsx scripts/seed-assets.ts"
+    "seed:assets": "tsx scripts/seed-assets.ts",
+    "seed:sapiens": "tsx scripts/seed-sapiens-brandkit.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getScript, renameScript } from "@/library/repositories/scripts";
+import { getScript, updateScript } from "@/library/repositories/scripts";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -23,7 +23,10 @@ export async function GET(
   }
 }
 
-const patchSchema = z.object({ name: z.string().trim().min(1).max(120) });
+const patchSchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  coverUrl: z.string().max(2048).nullable().optional(),
+});
 
 export async function PATCH(
   req: Request,
@@ -31,8 +34,8 @@ export async function PATCH(
 ) {
   try {
     const { id } = await ctx.params;
-    const { name } = patchSchema.parse(await req.json());
-    await renameScript(id, name);
+    const body = patchSchema.parse(await req.json());
+    await updateScript(id, body);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return errorResponse(e);

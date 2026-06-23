@@ -40,6 +40,8 @@ export function LottieExplainer({ scene, tokens, durationInFrames }: TemplatePro
   return (
     <Stage
       tokens={tokens}
+      background={scene.background}
+      durationInFrames={durationInFrames}
       contentStyle={{ alignItems: "center", justifyContent: "center" }}
     >
       <div

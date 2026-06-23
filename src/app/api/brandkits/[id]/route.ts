@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   getBrandKit,
   updateBrandKit,
+  setDefaultBrandKit,
   deleteBrandKit,
 } from "@/library/repositories/brandkits";
 import { errorResponse } from "@/server/api-helpers";
@@ -18,6 +19,7 @@ const patchSchema = z.object({
   handle: z.string().max(64).nullable().optional(),
   palette: colorRecord.optional(),
   fonts: z.object({ fontFamily: z.string().max(120).optional() }).optional(),
+  isDefault: z.boolean().optional(),
 });
 
 export async function GET(
@@ -41,7 +43,19 @@ export async function PATCH(
   try {
     const { id } = await ctx.params;
     const body = patchSchema.parse(await req.json());
-    const kit = await updateBrandKit(id, body);
+    const { isDefault, ...kitPatch } = body;
+
+    if (isDefault !== undefined) {
+      await setDefaultBrandKit(isDefault ? id : null);
+    }
+
+    if (Object.keys(kitPatch).length > 0) {
+      const kit = await updateBrandKit(id, kitPatch);
+      return NextResponse.json(kit);
+    }
+
+    const kit = await getBrandKit(id);
+    if (!kit) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json(kit);
   } catch (e) {
     return errorResponse(e);

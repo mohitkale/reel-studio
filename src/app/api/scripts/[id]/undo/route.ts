@@ -8,6 +8,15 @@ import { errorResponse } from "@/server/api-helpers";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const backgroundSchema = z.object({
+  type: z.enum(["image", "video"]),
+  url: z.string().min(1).max(2048),
+  effect: z
+    .enum(["ken-burns", "pan-left", "pan-right", "pan-up", "pan-down"])
+    .optional(),
+  muted: z.boolean().optional(),
+});
+
 const snapshotSchema = z.object({
   scenes: z.array(
     z.object({
@@ -15,9 +24,21 @@ const snapshotSchema = z.object({
       text: z.string(),
       emphasis: z.array(z.string()),
       visual: z.string().nullable(),
+      background: backgroundSchema.nullable().optional(),
+      items: z.array(z.string().max(280)).max(24).optional(),
     }),
   ),
 });
+
+function layoutJsonFor(scene: {
+  background?: z.infer<typeof backgroundSchema> | null;
+  items?: string[];
+}): string | null {
+  const config: Record<string, unknown> = {};
+  if (scene.background) config.background = scene.background;
+  if (scene.items && scene.items.length) config.items = scene.items;
+  return Object.keys(config).length ? JSON.stringify(config) : null;
+}
 
 /** Restore a script's scenes to a previously snapshotted state. */
 export async function POST(
@@ -37,6 +58,7 @@ export async function POST(
         text: s.text,
         emphasis: s.emphasis.length ? JSON.stringify(s.emphasis) : null,
         visual: s.visual,
+        layoutJson: layoutJsonFor(s),
       })),
     });
 

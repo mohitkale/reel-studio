@@ -3,7 +3,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { apiGet, apiPost } from "@/lib/api-client";
-import type { ProjectDTO, ScriptDTO, SceneDTO, VoiceTakeDTO } from "@/lib/dto";
+import type {
+  ProjectDTO,
+  ScriptDTO,
+  SceneDTO,
+  SceneBackground,
+  VoiceTakeDTO,
+} from "@/lib/dto";
 import type { ProviderId } from "@/providers/voice/types";
 
 async function apiSend<T>(
@@ -65,6 +71,25 @@ function useScriptInvalidator(scriptId: string) {
   return () => qc.invalidateQueries({ queryKey: ["script", scriptId] });
 }
 
+/** Set or clear the reel's cover image (baked as the opening frame at render). */
+export function useSetScriptCover(scriptId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (coverUrl: string | null) =>
+      apiSend(`/api/scripts/${scriptId}`, "PATCH", { coverUrl }),
+    onMutate: async (coverUrl) => {
+      await qc.cancelQueries({ queryKey: ["script", scriptId] });
+      const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
+      if (prev) qc.setQueryData<ScriptDTO>(["script", scriptId], { ...prev, coverUrl });
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["script", scriptId], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+  });
+}
+
 /* Scenes */
 
 export function useAddScene(scriptId: string) {
@@ -85,6 +110,8 @@ export function useUpdateScene(scriptId: string) {
       templateId?: string;
       emphasis?: string[];
       visual?: string | null;
+      background?: SceneBackground | null;
+      items?: string[] | null;
     }) => apiSend(`/api/scenes/${vars.id}`, "PATCH", vars),
     // Optimistic: reflect the edit in the preview instantly, before the server.
     onMutate: async (vars) => {
@@ -106,6 +133,12 @@ export function useUpdateScene(scriptId: string) {
                     : {}),
                   ...(vars.visual !== undefined
                     ? { visual: vars.visual ?? undefined }
+                    : {}),
+                  ...(vars.background !== undefined
+                    ? { background: vars.background ?? undefined }
+                    : {}),
+                  ...(vars.items !== undefined
+                    ? { items: vars.items ?? undefined }
                     : {}),
                 }
               : s,
@@ -173,6 +206,28 @@ export function useEnhanceScript(scriptId: string) {
   });
 }
 
+/**
+ * Replace ALL scenes of a script in one shot from an external JSON payload.
+ * Reuses the snapshot/undo endpoint, which deletes and recreates scenes in order.
+ */
+export function useImportScenes(scriptId: string) {
+  const invalidate = useScriptInvalidator(scriptId);
+  return useMutation({
+    mutationFn: (scenes: {
+      templateId: string | null;
+      text: string;
+      emphasis: string[];
+      visual: string | null;
+      background?: SceneBackground | null;
+      items?: string[];
+    }[]) =>
+      apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/undo`, { scenes }).then(
+        (r) => r.script,
+      ),
+    onSuccess: invalidate,
+  });
+}
+
 export function useUndoScript(scriptId: string) {
   const invalidate = useScriptInvalidator(scriptId);
   return useMutation({
@@ -181,6 +236,8 @@ export function useUndoScript(scriptId: string) {
       text: string;
       emphasis: string[];
       visual: string | null;
+      background?: SceneBackground | null;
+      items?: string[];
     }[]) =>
       apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/undo`, { scenes }).then(
         (r) => r.script,

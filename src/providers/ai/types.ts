@@ -17,7 +17,6 @@ export const PLAN_TEMPLATE_IDS = [
   "icon-grid",
   "quote-card",
   "emoji-punch",
-  "image-overlay",
 ] as const;
 
 export const aiSceneSchema = z.object({

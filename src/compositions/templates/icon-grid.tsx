@@ -98,7 +98,9 @@ export function IconGrid({ scene, tokens, durationInFrames }: TemplateProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const items = parseItems(scene.text);
+  // Prefer an explicit item list; fall back to splitting the scene text.
+  const items =
+    scene.items && scene.items.length ? scene.items : parseItems(scene.text);
   const icon = scene.visual || "✓";
 
   const headerIn = spring({
@@ -108,7 +110,7 @@ export function IconGrid({ scene, tokens, durationInFrames }: TemplateProps) {
   });
 
   return (
-    <Stage tokens={tokens} contentStyle={{ justifyContent: "center" }}>
+    <Stage tokens={tokens} background={scene.background} durationInFrames={durationInFrames} contentStyle={{ justifyContent: "center" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 48 }}>
         {/* Header label */}
         <div

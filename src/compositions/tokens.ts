@@ -19,14 +19,14 @@ export interface BrandTokens {
 }
 
 export const defaultBrandTokens: BrandTokens = {
-  background: "#08070d",
-  backgroundAccent: "#1a0f33",
-  foreground: "#ffffff",
-  muted: "#b7b3c7",
-  accent: "#8b5cf6",
-  accentSecondary: "#22d3ee",
-  accentForeground: "#0b0717",
-  handle: "@reel.studio",
+  background: "#0D256F",        // Sapphire — official primary dark background
+  backgroundAccent: "#1A3490",  // Lighter navy for gradient accents
+  foreground: "#FFFFFF",
+  muted: "#F6ECDB",             // Warm Grey 2 — official muted tone
+  accent: "#FF5900",            // Mandarin — official primary orange
+  accentSecondary: "#FFA000",   // Honey — official secondary amber
+  accentForeground: "#FFFFFF",
+  handle: "@sapiens",
   fontFamily: `${interFontFamily}, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`,
-  radius: 28,
+  radius: 20,
 };

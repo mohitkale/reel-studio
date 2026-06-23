@@ -1,5 +1,6 @@
-import type { SceneDTO } from "@/lib/dto";
+import type { SceneDTO, SceneBackground } from "@/lib/dto";
 import { prisma } from "@/library/db";
+import { sceneConfigSchema, parseJsonColumn } from "../schemas";
 import { toSceneDTO } from "./map";
 
 export async function addScene(
@@ -25,8 +26,35 @@ export async function addScene(
 
 export async function updateScene(
   id: string,
-  data: { text?: string; templateId?: string; emphasis?: string[]; visual?: string | null },
+  data: {
+    text?: string;
+    templateId?: string;
+    emphasis?: string[];
+    visual?: string | null;
+    background?: SceneBackground | null;
+    items?: string[] | null;
+  },
 ): Promise<SceneDTO> {
+  // background + items live together in the layoutJson config blob; merge so
+  // updating one never clobbers the other.
+  let layoutJson: string | undefined;
+  if (data.background !== undefined || data.items !== undefined) {
+    const current = await prisma.scene.findUnique({
+      where: { id },
+      select: { layoutJson: true },
+    });
+    const config = parseJsonColumn(current?.layoutJson, sceneConfigSchema, {});
+    if (data.background !== undefined) {
+      if (data.background === null) delete config.background;
+      else config.background = data.background;
+    }
+    if (data.items !== undefined) {
+      if (data.items === null || data.items.length === 0) delete config.items;
+      else config.items = data.items;
+    }
+    layoutJson = Object.keys(config).length ? JSON.stringify(config) : "";
+  }
+
   const scene = await prisma.scene.update({
     where: { id },
     data: {
@@ -35,6 +63,7 @@ export async function updateScene(
       emphasis:
         data.emphasis !== undefined ? JSON.stringify(data.emphasis) : undefined,
       visual: data.visual !== undefined ? (data.visual ?? null) : undefined,
+      layoutJson: layoutJson !== undefined ? (layoutJson || null) : undefined,
     },
   });
   return toSceneDTO(scene);
