@@ -1,73 +1,230 @@
 # Reel Studio
 
-A local-first web app for producing premium, professional vertical short-form
-videos (TikTok / Reels / Shorts) end to end: write a scene-by-scene script,
-generate AI voiceover, compose with real motion design (Remotion + Lottie +
-Three.js), render to MP4, and manage everything in a clean SaaS-style library.
+Reel Studio is a local-first short-form video editor for building vertical videos end to end:
 
-> Status: **Milestone 1 complete** (scaffold + design system). See
-> `docs/ai-reel-studio-BRIEF.md` for the full product spec and the milestone plan.
+- Script and scene editing
+- AI voice takes (pluggable providers)
+- Motion templates powered by Remotion (Lottie and Three.js support)
+- MP4 rendering with queue and progress updates
+- Project, asset, and brand-kit management
 
-## Stack
+The app runs as a single Next.js project with API routes and UI in one codebase.
 
-- **App:** Next.js (App Router) + TypeScript (strict), one process for UI + API.
-- **UI:** Tailwind CSS v4, shadcn-style components on Radix, lucide-react icons,
-  light/dark theming via next-themes, toasts via sonner.
-- **Data/state:** TanStack Query (client), Zod for validation.
-- **Video (later milestones):** Remotion 4 with Lottie, Three.js and transitions.
-- **Persistence (later milestones):** Prisma + SQLite, behind a repository layer;
-  binary assets on disk via a pluggable AssetStore.
-- **Tooling:** ESLint, Prettier, Vitest.
+## Open-Source Safety Status
 
-## Architecture (plug-and-play)
+This repository is prepared for open-source publishing with the following safeguards:
 
-Three layers are designed to be extended with one isolated file each:
+- No real API keys are tracked in git.
+- `.env*` files are ignored except `.env.example`.
+- Provider keys are read from local environment variables at runtime.
+- Project-specific branded seed data was removed and replaced with neutral demo data.
+- Paths and personal identifiers were removed from public documentation.
 
-1. **Voice providers** (`src/providers/voice/`) - one interface + a registry;
-   adding a TTS vendor is one new file. Cartesia + ElevenLabs land in M2.
-2. **Template / video engine** (`src/compositions/`) - a `TemplateRegistry` of
-   self-describing scene templates. Lands in M4-M6.
-3. **Storage** (`src/library/storage/`) - an `AssetStore` interface (local disk
-   now, cloud-ready later) plus a DB repository layer.
+Note: Your local machine may still contain a `.env.local` with real keys. Keep it untracked.
 
-## Getting started
+## Tech Stack
+
+- App: Next.js App Router + TypeScript (strict)
+- UI: Tailwind CSS v4 + Radix-based components + lucide-react
+- Data: TanStack Query + Zod
+- Video: Remotion 4 (`@remotion/renderer`, `@remotion/lottie`, `@remotion/three`)
+- Persistence: Prisma + SQLite
+- Storage: Local disk asset store under `media/`
+- Tooling: ESLint, Prettier, Vitest
+
+## Quick Start
+
+### 1. Install
 
 ```bash
 npm install
+```
+
+### 2. Configure environment
+
+```bash
+cp .env.example .env.local
+```
+
+Set only the keys you need. Empty values are fine for local non-provider testing.
+
+### 3. Initialize database
+
+```bash
+npm run db:push
+```
+
+### 4. Optional demo seed
+
+```bash
+npm run seed:demo-brandkit
+npm run seed:assets
+```
+
+### 5. Run app
+
+```bash
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open `http://localhost:3000`.
 
-### API keys
+## Available Scripts
 
-Provider keys are entered in the in-app **Settings** screen (from M2) and written
-to a git-ignored `.env.local`. You can also copy `.env.example` to `.env.local`
-and fill them in manually. Keys never leave your machine and are never committed.
+| Script | Purpose |
+| --- | --- |
+| `npm run dev` | Start development server |
+| `npm run build` | Build production app |
+| `npm run start` | Run production app |
+| `npm run lint` | Run ESLint |
+| `npm run typecheck` | TypeScript type-check |
+| `npm run test` | Run Vitest suite |
+| `npm run studio` | Open Remotion Studio |
+| `npm run security:scan` | Scan tracked files for secret patterns |
+| `npm run prepare:hooks` | Enable local git hooks in `.githooks` |
+| `npm run db:push` | Push Prisma schema to SQLite |
+| `npm run seed:assets` | Seed sample assets |
+| `npm run seed:demo-brandkit` | Seed neutral demo brand kit |
 
-## Scripts
+## Architecture
 
-| Script              | Purpose                         |
-| ------------------- | ------------------------------- |
-| `npm run dev`       | Start the dev server            |
-| `npm run build`     | Production build                |
-| `npm run start`     | Run the production build        |
-| `npm run lint`      | ESLint                          |
-| `npm run typecheck` | TypeScript type-check (no emit) |
-| `npm run format`    | Format with Prettier            |
-| `npm run test`      | Run unit tests (Vitest)         |
+![System architecture](docs/architecture.svg)
 
-## Project layout
+Key modules:
 
+1. `src/app`:
+API routes and pages using Next.js App Router.
+2. `src/library`:
+Repository layer, render service, storage abstraction, sample content.
+3. `src/providers`:
+Provider registries and concrete AI/voice implementations.
+4. `src/compositions`:
+Remotion composition, templates, visuals, and tokens.
+5. `prisma`:
+Database schema and generated client usage.
+
+## Render and Processing Flow
+
+![Render flow](docs/render-flow.svg)
+
+High-level sequence:
+
+1. User edits scenes and selects/generates a voice take.
+2. Timeline frames are computed from scene timings.
+3. API creates render job and enqueues it.
+4. Render service bundles/selects composition and calls `renderMedia`.
+5. Progress is streamed to UI via SSE and persisted with throttling.
+6. Final MP4 is written to `media/renders/` and linked in the renders library.
+
+## Data Model (Summary)
+
+- `Project`: top-level workspace for scripts and branding
+- `BrandKit`: palette, fonts, logo, handle, CTA defaults
+- `Script`: timeline container with scenes
+- `Scene`: ordered unit with template and content
+- `VoiceTake`: synthesized voice track + timing JSON
+- `Render`: render job state and output path
+- `Asset`: uploaded media metadata
+- `ProviderSetting`: provider readiness and defaults
+
+See `prisma/schema.prisma` for full schema details.
+
+## Environment Variables
+
+All supported variables are documented in `.env.example`.
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | Yes | Prisma SQLite connection string |
+| `CARTESIA_API_KEY` | No | Enable Cartesia voices and synthesis |
+| `ELEVENLABS_API_KEY` | No | Enable ElevenLabs voices and synthesis |
+| `GEMINI_API_KEY` | No | Enable Gemini AI planning flows |
+| `OPENAI_API_KEY` | No | Enable OpenAI AI planning flows |
+| `REMOTION_RENDER_CONCURRENCY` | No | Override adaptive render concurrency |
+| `SKIP_RENDER_SMOKE` | No | Skip render smoke test when set to `1` |
+
+Minimum local setup for non-provider testing: only `DATABASE_URL`.
+
+## Performance Notes
+
+Render speed is hardware-dependent. Current backend defaults include:
+
+- Adaptive capped concurrency for Remotion rendering
+- Faster x264 preset for local throughput
+- Render cache tuning for media and offthread video
+- Throttled DB progress writes to avoid SQLite contention
+
+You can override render concurrency with `REMOTION_RENDER_CONCURRENCY`.
+
+## Security and Publishing Checklist
+
+Before publishing:
+
+1. Confirm no secrets are staged:
+
+```bash
+git status
+git diff --staged
 ```
+
+2. Confirm no local env files are tracked:
+
+```bash
+git ls-files .env .env.local
+```
+
+3. Run static quality checks:
+
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run security:scan
+```
+
+4. Review docs and sample assets for private or licensed content.
+
+5. Enable local pre-commit secret scanning:
+
+```bash
+npm run prepare:hooks
+```
+
+## Project Structure
+
+```text
 src/
-  app/              # Routes (client editor) + /api route handlers (later)
-  components/
-    ui/             # Design-system primitives (button, card, ...)
-    shell/          # App shell (sidebar, topbar, page header)
-  lib/              # Utilities, nav config
-  providers/voice/  # Voice provider interface + registry (M2)
-  compositions/     # Remotion templates + registry (M4+)
-  library/          # DB repositories + storage (M3+)
-docs/               # Product brief
+  app/            # pages + API routes
+  components/     # UI and editor components
+  compositions/   # Remotion composition system
+  hooks/          # client data hooks
+  lib/            # shared helpers and DTOs
+  library/        # repositories, render service, storage
+  providers/      # AI and voice provider adapters
+  remotion/       # Remotion root registration
+docs/             # product and architecture docs
+prisma/           # schema and db setup
+scripts/          # local seed scripts
+media/            # local asset and render output (git-ignored)
 ```
+
+## Additional Docs
+
+- Product build brief: `docs/ai-reel-studio-BRIEF.md`
+- Security policy: `SECURITY.md`
+- Contribution guide: `CONTRIBUTING.md`
+
+## AI IDE Setup
+
+This repository includes a single shared instruction source for AI tools:
+
+- `AI_GUIDELINES.md` (canonical rules)
+
+Adapter files for common IDE agents are also included:
+
+- Claude Code: `CLAUDE.md` + `AGENTS.md`
+- GitHub Copilot: `.github/copilot-instructions.md`
+- Cursor: `.cursorrules`
+- Windsurf: `.windsurfrules`
+- Devin: `DEVIN.md`
+

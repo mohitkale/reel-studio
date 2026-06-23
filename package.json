@@ -15,9 +15,11 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "studio": "remotion studio src/remotion/index.ts",
+    "security:scan": "node scripts/scan-secrets.mjs",
+    "prepare:hooks": "git config core.hooksPath .githooks",
     "postinstall": "prisma generate",
     "seed:assets": "tsx scripts/seed-assets.ts",
-    "seed:sapiens": "tsx scripts/seed-sapiens-brandkit.ts"
+    "seed:demo-brandkit": "tsx scripts/seed-demo-brandkit.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

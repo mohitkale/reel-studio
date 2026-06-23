@@ -1,0 +1,11 @@
+# Windsurf Project Rules
+
+Use `AI_GUIDELINES.md` as the canonical instruction document.
+
+Key constraints:
+
+- Preserve project structure and existing coding style.
+- Avoid broad refactors unless requested.
+- Keep environment and secret handling safe (`.env.example` placeholders only).
+- Prefer incremental, tested changes.
+- For functional changes, run relevant checks before final output.

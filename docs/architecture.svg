@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Reel Studio Architecture</title>
+  <desc id="desc">High-level architecture showing Next.js app, providers, render service, storage, and data flow.</desc>
+  <defs>
+    <style>
+      .bg { fill: #0b1220; }
+      .panel { fill: #131c2f; stroke: #2d3d63; stroke-width: 2; rx: 12; }
+      .box { fill: #1b2945; stroke: #4b6aa5; stroke-width: 2; rx: 10; }
+      .label { fill: #e6edf7; font: 600 18px 'Segoe UI', Arial, sans-serif; }
+      .small { fill: #b6c3db; font: 14px 'Segoe UI', Arial, sans-serif; }
+      .arrow { stroke: #86a8e7; stroke-width: 3; fill: none; marker-end: url(#m); }
+      .title { fill: #ffffff; font: 700 28px 'Segoe UI', Arial, sans-serif; }
+    </style>
+    <marker id="m" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#86a8e7" />
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1200" height="760" />
+  <text class="title" x="40" y="52">Reel Studio: System Architecture</text>
+
+  <rect class="panel" x="40" y="90" width="1120" height="620" />
+
+  <rect class="box" x="80" y="140" width="260" height="130" />
+  <text class="label" x="105" y="185">Browser UI (Next.js App)</text>
+  <text class="small" x="105" y="215">Editor, assets, renders, settings</text>
+  <text class="small" x="105" y="238">TanStack Query + React client</text>
+
+  <rect class="box" x="430" y="120" width="340" height="190" />
+  <text class="label" x="455" y="165">Node Runtime API Layer</text>
+  <text class="small" x="455" y="195">App Router API routes</text>
+  <text class="small" x="455" y="218">Zod validation + DTO mapping</text>
+  <text class="small" x="455" y="241">Repository and service orchestration</text>
+  <text class="small" x="455" y="264">Queue + SSE progress streaming</text>
+
+  <rect class="box" x="840" y="120" width="280" height="190" />
+  <text class="label" x="865" y="165">External AI/Voice Providers</text>
+  <text class="small" x="865" y="195">Cartesia, ElevenLabs</text>
+  <text class="small" x="865" y="218">OpenAI, Gemini (optional)</text>
+  <text class="small" x="865" y="241">Keys from local env only</text>
+
+  <rect class="box" x="430" y="370" width="340" height="170" />
+  <text class="label" x="455" y="415">Render Service</text>
+  <text class="small" x="455" y="445">Remotion bundle + selectComposition</text>
+  <text class="small" x="455" y="468">renderMedia (h264 mp4 output)</text>
+  <text class="small" x="455" y="491">Adaptive concurrency and caches</text>
+
+  <rect class="box" x="80" y="590" width="340" height="90" />
+  <text class="label" x="105" y="630">Prisma + SQLite</text>
+  <text class="small" x="105" y="654">Projects, scripts, scenes, takes, renders</text>
+
+  <rect class="box" x="500" y="590" width="340" height="90" />
+  <text class="label" x="525" y="630">Local Asset Store (media/)</text>
+  <text class="small" x="525" y="654">Audio takes, uploads, rendered videos</text>
+
+  <rect class="box" x="900" y="590" width="220" height="90" />
+  <text class="label" x="925" y="630">MP4 Outputs</text>
+  <text class="small" x="925" y="654">Download or preview</text>
+
+  <path class="arrow" d="M 340 205 L 430 205" />
+  <path class="arrow" d="M 770 205 L 840 205" />
+  <path class="arrow" d="M 600 310 L 600 370" />
+  <path class="arrow" d="M 510 540 L 390 590" />
+  <path class="arrow" d="M 650 540 L 670 590" />
+  <path class="arrow" d="M 840 635 L 900 635" />
+  <path class="arrow" d="M 260 590 L 260 270" />
+  <path class="arrow" d="M 260 270 L 430 270" />
+
+  <text class="small" x="350" y="193">HTTP + SSE</text>
+  <text class="small" x="782" y="193">Provider calls</text>
+  <text class="small" x="613" y="348">Render jobs</text>
+</svg>

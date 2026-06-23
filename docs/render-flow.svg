@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">Render Flow</title>
+  <desc id="desc">Flow diagram from script editing to final MP4 output.</desc>
+  <defs>
+    <style>
+      .bg { fill: #0d1323; }
+      .step { fill: #182540; stroke: #4f6fa8; stroke-width: 2; rx: 12; }
+      .title { fill: #ffffff; font: 700 28px 'Segoe UI', Arial, sans-serif; }
+      .label { fill: #e7eefb; font: 600 17px 'Segoe UI', Arial, sans-serif; }
+      .small { fill: #b7c7e4; font: 14px 'Segoe UI', Arial, sans-serif; }
+      .arrow { stroke: #88b0ff; stroke-width: 3; fill: none; marker-end: url(#m2); }
+    </style>
+    <marker id="m2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#88b0ff" />
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1200" height="620" />
+  <text class="title" x="40" y="52">Reel Studio: End-to-End Render Flow</text>
+
+  <rect class="step" x="50" y="110" width="220" height="110" />
+  <text class="label" x="72" y="150">1. Script + Scenes</text>
+  <text class="small" x="72" y="178">User edits scenes in UI</text>
+  <text class="small" x="72" y="198">Template + emphasis chosen</text>
+
+  <rect class="step" x="330" y="110" width="230" height="110" />
+  <text class="label" x="352" y="150">2. Voice Take</text>
+  <text class="small" x="352" y="178">Provider synth per scene</text>
+  <text class="small" x="352" y="198">Timeline frames measured</text>
+
+  <rect class="step" x="620" y="110" width="240" height="110" />
+  <text class="label" x="642" y="150">3. Build Input Props</text>
+  <text class="small" x="642" y="178">Scene data + timeline</text>
+  <text class="small" x="642" y="198">Brand tokens + media URLs</text>
+
+  <rect class="step" x="920" y="110" width="230" height="110" />
+  <text class="label" x="942" y="150">4. Queue Render Job</text>
+  <text class="small" x="942" y="178">DB row + in-memory queue</text>
+  <text class="small" x="942" y="198">SSE progress channel</text>
+
+  <rect class="step" x="170" y="320" width="260" height="130" />
+  <text class="label" x="192" y="360">5. Remotion Bundle</text>
+  <text class="small" x="192" y="388">Bundle cached per process</text>
+  <text class="small" x="192" y="408">selectComposition(Reel)</text>
+
+  <rect class="step" x="500" y="320" width="300" height="130" />
+  <text class="label" x="522" y="360">6. renderMedia</text>
+  <text class="small" x="522" y="388">h264 + veryfast preset</text>
+  <text class="small" x="522" y="408">Adaptive concurrency + caching</text>
+  <text class="small" x="522" y="428">Progress throttled to DB</text>
+
+  <rect class="step" x="870" y="320" width="260" height="130" />
+  <text class="label" x="892" y="360">7. Output + Complete</text>
+  <text class="small" x="892" y="388">Write media/renders/*.mp4</text>
+  <text class="small" x="892" y="408">Mark render done + URL</text>
+
+  <path class="arrow" d="M 270 165 L 330 165" />
+  <path class="arrow" d="M 560 165 L 620 165" />
+  <path class="arrow" d="M 860 165 L 920 165" />
+  <path class="arrow" d="M 1035 220 L 1035 320" />
+  <path class="arrow" d="M 920 385 L 800 385" />
+  <path class="arrow" d="M 500 385 L 430 385" />
+  <path class="arrow" d="M 300 320 L 300 220" />
+</svg>

@@ -19,11 +19,9 @@ vertical short-form videos (TikTok / Reels / Shorts) end to end:
    images, icons, emojis, avatars, infographics), not flat gradient slides.
 4. Render to MP4 and manage everything in a clean, professional library UI.
 
-The current prototype in `C:\work\ai-weekly\animated-content\remotion` looks
-like a "college gradient" project and has a weak dashboard. Start fresh. You may
-reuse its *content* (the AI Unstuck Episode 1 script and beats, the Cartesia
-request shapes, the WAV-stitching logic) as reference, but rebuild the
-architecture and UI properly.
+The current prototype looked unfinished and had a weak dashboard. Start fresh.
+You may reuse prior sample content (script beats, provider request shapes, and
+WAV stitching logic) as reference, but rebuild the architecture and UI properly.
 
 ## 2. Non-negotiable qualities
 
@@ -229,18 +227,13 @@ Output: 1080x1920, 30fps, MP4, with the chosen voice take muxed in.
 ## 11. Seed content to migrate
 
 Reuse the **AI Unstuck Episode 1** script as the first project's first script.
-Beats (text, style, emphasis, label) are in
-`C:\work\ai-weekly\animated-content\remotion\src\content\ep01.json` and
-`ep01.test.json`. There is also an already-paid voice take WAV at
-`...\remotion\public\voice.wav` you can import as the first take to avoid
-spending credits during early testing.
+If migrating from another project, import the existing beat JSON and any local
+sample WAV file as the first take to avoid spending credits during early tests.
 
 ## 12. My setup / preferences
 
-- I have a Cartesia account with a cloned voice named **mohit**
-  (voice id `c2eb2668-dc88-415a-a0d7-58dfcd720fdb`). I will paste my Cartesia
-  and ElevenLabs API keys into the app's Settings screen, so build that screen
-  early. Do not hardcode keys.
+- I will paste Cartesia and ElevenLabs API keys into the app's Settings screen,
+  so build that screen early. Do not hardcode keys.
 - Plain, simple English in any user-facing copy. Avoid em-dashes.
 - Ask me to confirm the stack and milestone 1 scope before writing lots of code,
   then proceed milestone by milestone, showing me a runnable result each time.

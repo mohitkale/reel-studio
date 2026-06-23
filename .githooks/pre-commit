@@ -1,0 +1,11 @@
+#!/bin/sh
+
+npm run security:scan
+RESULT=$?
+if [ "$RESULT" -ne 0 ]; then
+  echo ""
+  echo "Commit blocked: fix potential secrets before committing."
+  exit "$RESULT"
+fi
+
+exit 0

@@ -1,0 +1,11 @@
+# Cursor Project Rules
+
+Primary source of truth: `AI_GUIDELINES.md`.
+
+Cursor behavior for this repo:
+
+- Respect existing architecture and module boundaries.
+- Keep code changes small and focused.
+- Prefer typed, validated APIs (TypeScript + Zod patterns already used).
+- Do not introduce secrets into tracked files.
+- Update docs when commands/env/setup change.
