@@ -21,6 +21,7 @@ import { useHotkey } from "@/hooks/use-hotkeys";
 import { normalizeTemplateId } from "@/compositions/templates";
 import { type ReelScene, coverFrames } from "@/compositions/types";
 import { estimateTimeline } from "@/lib/preview-timeline";
+import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,6 +34,10 @@ import { AIEnhanceDialog } from "@/components/editor/ai-enhance-dialog";
 import { ScenesJsonDialog } from "@/components/editor/scenes-json-dialog";
 import { CoverControl } from "@/components/editor/cover-control";
 import { Combobox } from "@/components/ui/combobox";
+
+/** Sentinel stored when the user explicitly clears the take (vs. never choosing). */
+const TAKE_CLEARED = "__cleared__";
+const takeKey = (scriptId: string) => `reel-studio:selected-take:${scriptId}`;
 
 export function EditorClient({ scriptId }: { scriptId: string }) {
   const { data: script, isLoading, isError, error } = useScript(scriptId);
@@ -47,9 +52,18 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   const assignBrandKit = useAssignBrandKit();
 
   const [selectedSceneId, setSelectedSceneId] = React.useState<string | null>(null);
-  const [selectedTakeId, setSelectedTakeId] = React.useState<string | null>(null);
+  // Take selection persists per-script across refreshes (lazy init from
+  // localStorage; avoids re-deriving in an effect).
+  const [selectedTakeId, setSelectedTakeId] = React.useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    const v = window.localStorage.getItem(takeKey(scriptId));
+    return v && v !== TAKE_CLEARED ? v : null;
+  });
   // When true, user explicitly cleared the take — don't auto-select the first one
-  const [takeCleared, setTakeCleared] = React.useState(false);
+  const [takeCleared, setTakeCleared] = React.useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(takeKey(scriptId)) === TAKE_CLEARED;
+  });
   const [previewMode, setPreviewMode] = React.useState<"scene" | "reel">("scene");
   const [aiOpen, setAiOpen] = React.useState(false);
   const [jsonOpen, setJsonOpen] = React.useState(false);
@@ -63,20 +77,34 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
     selectedSceneId && scenes.some((s) => s.id === selectedSceneId)
       ? selectedSceneId
       : (scenes[0]?.id ?? null);
+  // A take stays valid as long as its spoken text still matches the script
+  // (resolveReelTimeline matches by text, so background/template/effect edits
+  // never invalidate it). Auto-pick the most recent *usable* take; a take whose
+  // script changed falls back to estimated, silent timing instead of producing a
+  // broken, desynced timeline.
+  const sceneTexts = scenes.map((s) => ({ id: s.id, text: s.text }));
+  const allTakes = script?.takes ?? [];
+  const usableTakes = allTakes.filter(
+    (t) => resolveReelTimeline(sceneTexts, t, t.fps).takeUsable,
+  );
   const effectiveTakeId = takeCleared
     ? null
-    : selectedTakeId && (script?.takes ?? []).some((t) => t.id === selectedTakeId)
+    : selectedTakeId && usableTakes.some((t) => t.id === selectedTakeId)
     ? selectedTakeId
-    : (script?.takes[0]?.id ?? null);
+    : (usableTakes[0]?.id ?? null);
 
   function selectTake(id: string) {
     setSelectedTakeId(id);
     setTakeCleared(false);
+    if (typeof window !== "undefined")
+      window.localStorage.setItem(takeKey(scriptId), id);
   }
 
   function clearTake() {
     setSelectedTakeId(null);
     setTakeCleared(true);
+    if (typeof window !== "undefined")
+      window.localStorage.setItem(takeKey(scriptId), TAKE_CLEARED);
   }
 
   // Editor keyboard shortcuts — hooks must be called unconditionally.
@@ -132,44 +160,17 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
     background: s.background,
     items: s.items,
   }));
-  const estimated = estimateTimeline(
-    scenes.map((s) => ({ id: s.id, text: s.text })),
-    script.fps,
-  );
+  // Reconcile the take with the current scenes by spoken text (see
+  // resolveReelTimeline): non-text edits keep it; a changed script falls back to
+  // estimated timing. Beats are remapped onto current scene ids for rendering.
   const fps = selectedTake?.fps ?? script.fps;
-  const audioUrl = selectedTake?.audioUrl;
+  const resolved = resolveReelTimeline(sceneTexts, selectedTake, fps);
+  const takeUsable = resolved.takeUsable;
+  const timeline = resolved.timeline;
+  const totalFrames = resolved.totalFrames;
+  const audioUrl = takeUsable && selectedTake ? selectedTake.audioUrl : undefined;
   // Full-reel preview holds the cover at the start, shifting everything by this much.
   const coverFr = coverFrames(fps, !!script.coverUrl);
-
-  // When new scenes are added after a take was recorded, blend: use take timing for
-  // covered scenes and estimated timing for any new scenes appended afterward.
-  const coveredByTake = new Set((selectedTake?.timeline ?? []).map((b) => b.sceneId));
-  const allScenesCovered =
-    !selectedTake || scenes.every((s) => coveredByTake.has(s.id));
-
-  let timeline: typeof estimated.timeline;
-  let totalFrames: number;
-  if (!selectedTake) {
-    timeline = estimated.timeline;
-    totalFrames = estimated.totalFrames;
-  } else if (allScenesCovered) {
-    timeline = selectedTake.timeline;
-    totalFrames = selectedTake.totalFrames;
-  } else {
-    const uncovered = scenes.filter((s) => !coveredByTake.has(s.id));
-    const extra = estimateTimeline(
-      uncovered.map((s) => ({ id: s.id, text: s.text })),
-      fps,
-    );
-    timeline = [
-      ...selectedTake.timeline,
-      ...extra.timeline.map((b) => ({
-        ...b,
-        startFrame: b.startFrame + selectedTake.totalFrames,
-      })),
-    ];
-    totalFrames = selectedTake.totalFrames + extra.totalFrames;
-  }
 
   // Single-scene loop preview so template/text edits animate instantly.
   const selectedReelScene: ReelScene | null = selectedScene
@@ -225,7 +226,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             <h2 className="text-lg font-semibold leading-tight">{script.name}</h2>
             <p className="text-xs text-muted-foreground">
               {scenes.length} scenes · {script.fps} fps
-              {selectedTake ? " · previewing take audio" : " · estimated timing"}
+              {takeUsable ? " · previewing take audio" : " · estimated timing"}
             </p>
           </div>
         </div>
@@ -415,7 +416,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                   coverUrl={script.coverUrl ?? undefined}
                 />
                 <p className="mt-3 text-center text-xs text-muted-foreground">
-                  {selectedTake
+                  {takeUsable
                     ? "Playing the selected take with synced captions."
                     : "Estimated preview. Generate a take below for exact, audio-synced timing."}
                 </p>

@@ -184,14 +184,17 @@ async function runRender({
       : [];
     const take = takes[0] ?? null;
 
-    // Estimated timeline when no take is selected.
-    const { estimateTimeline } = await import("@/lib/preview-timeline");
-    const estimated = estimateTimeline(
+    // Reconcile the take with the scenes by spoken text (same logic as the
+    // editor): a take survives non-text edits and rewrites that keep the text,
+    // and falls back to estimated, silent timing otherwise.
+    const { resolveReelTimeline } = await import("@/lib/reel-timeline");
+    const resolved = resolveReelTimeline(
       script.scenes.map((s) => ({ id: s.id, text: s.text })),
+      take,
       script.fps,
     );
-    const timeline = take?.timeline ?? estimated.timeline;
-    const totalFrames = take?.totalFrames ?? estimated.totalFrames;
+    const timeline = resolved.timeline;
+    const totalFrames = resolved.totalFrames;
 
     // Media URLs must be absolute so Remotion's separate Chrome process (its own
     // webpack dev server) can fetch them — relative URLs resolve against that
@@ -215,7 +218,7 @@ async function runRender({
       width: script.width,
       height: script.height,
       fps: script.fps,
-      audioUrl: absolute(take?.audioUrl),
+      audioUrl: resolved.takeUsable ? absolute(take?.audioUrl) : undefined,
       coverUrl: absolute(script.coverUrl),
       // script.brandTokens is server-safe (uses serverDefaultTokens, no @remotion/google-fonts).
       // Importing @/compositions/tokens here would pull loadFont() into the Next.js server
