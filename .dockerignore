@@ -1,0 +1,29 @@
+# Keep the build context small and never copy host (Windows) artifacts into the
+# Linux image. node_modules/.next contain platform-specific native binaries
+# (lightningcss, Prisma engines, Remotion compositor) that MUST be built inside
+# the container — copying the host versions would break rendering and CSS.
+node_modules
+.next
+.git
+.gitignore
+
+# Local data, secrets and render output (mounted as volumes at runtime instead).
+media
+.data
+*.db
+*.db-journal
+prisma/dev.db*
+.env
+.env.*
+!.env.example
+
+# Editor / OS noise
+.vscode
+.idea
+.DS_Store
+npm-debug.log*
+
+# Docker files themselves
+Dockerfile
+docker-compose.yml
+.dockerignore

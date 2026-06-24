@@ -1,0 +1,67 @@
+# Reel Studio — isolated development environment.
+#
+#   docker compose up        # build (first time) + start, http://localhost:3000
+#   docker compose up --build  # rebuild after dependency/Dockerfile changes
+#   docker compose down      # stop (keeps data volumes)
+#   docker compose down -v   # stop AND delete volumes (db, media, node_modules)
+#
+# Source is bind-mounted for hot reload; everything platform-specific (deps,
+# build cache, database, media) lives in named volumes so the host is never
+# touched by the container's Linux binaries or render output.
+
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    image: reel-studio-dev
+    container_name: reel-studio
+    init: true # proper PID 1 so Chromium/ffmpeg child processes are reaped
+    ports:
+      - "3000:3000"
+
+    # API keys etc. Optional so the stack still boots before you create the
+    # file — keys can also be entered in the in-app Settings screen.
+    env_file:
+      - path: .env.local
+        required: false
+
+    environment:
+      # SQLite lives on a named volume (the `reel_db` mount below). A real path
+      # avoids the file-locking/perf issues of writing SQLite over a Windows
+      # bind mount from inside Linux.
+      DATABASE_URL: "file:/data/dev.db"
+      # Conservative render concurrency keeps the laptop responsive during
+      # CPU-heavy renders. Raise toward your core count for faster renders.
+      REMOTION_RENDER_CONCURRENCY: "2"
+      # Bind-mounted file change events don't always propagate into the
+      # container; polling makes hot reload reliable (esp. on Windows/macOS).
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+
+    volumes:
+      - .:/app # host source -> hot reload
+      - reel_node_modules:/app/node_modules # Linux deps shadow the host's
+      - reel_next:/app/.next # dev build cache (keep host's out of the container)
+      - reel_media:/app/media # uploaded assets + render output (.mp4)
+      - reel_db:/data # SQLite database
+
+    # Small shared-memory bump as a safety margin for Chromium (Remotion also
+    # passes --disable-dev-shm-usage, so this is belt-and-suspenders).
+    shm_size: "512m"
+
+    # --- Conservative resource caps (protects the host during renders) -------
+    # Tune to your machine: cpus should be roughly half your physical cores,
+    # memory comfortably above a single render's footprint. Applied by
+    # `docker compose up` in Compose v2.
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 6g
+
+volumes:
+  reel_node_modules:
+  reel_next:
+  reel_media:
+  reel_db:

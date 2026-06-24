@@ -69,6 +69,51 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+## Run with Docker (isolated)
+
+For an isolated environment that keeps rendering — headless Chromium, FFmpeg,
+native binaries and CPU-heavy work — off your host machine, run the app in a
+container. This is recommended if you want a hard boundary between Reel Studio's
+external processes and your laptop.
+
+**Prerequisites:** Docker Desktop (or Docker Engine + Compose v2) running.
+
+```bash
+# 1. Provide API keys (optional — you can also enter them in Settings later)
+cp .env.example .env.local   # then edit values
+
+# 2. Build and start (first run downloads the base image + installs deps)
+docker compose up --build
+```
+
+Open `http://localhost:3000`. Source is bind-mounted, so edits hot-reload.
+
+```bash
+docker compose up        # start (after the first build)
+docker compose down      # stop, keeping data
+docker compose down -v   # stop and delete volumes (database, media, deps)
+docker compose logs -f   # follow logs
+docker compose exec app sh   # shell into the container
+```
+
+What the container handles for you:
+
+- **Isolation & laptop health** — CPU/RAM are capped (conservative defaults in
+  `docker-compose.yml`: ~2 cores, 6 GB) and render concurrency is limited via
+  `REMOTION_RENDER_CONCURRENCY`. Tune these to your machine.
+- **Linux-native deps** — `node_modules`, the Next.js build cache, the SQLite
+  database and the `media/` store live in named volumes, never mixing with your
+  host's (Windows/macOS) files. Your host `node_modules` is untouched.
+- **Rendering** — Remotion's headless Chromium (downloaded on first render) runs
+  with `--no-sandbox`, so no extra container privileges are required.
+
+> First render downloads a headless Chromium build (~170 MB) into the deps
+> volume; it is cached for subsequent renders.
+>
+> After changing dependencies or the `Dockerfile`, rebuild with
+> `docker compose up --build`. If a dependency change isn't picked up, reset the
+> deps volume: `docker compose down -v` then `docker compose up --build`.
+
 ## Available Scripts
 
 | Script | Purpose |

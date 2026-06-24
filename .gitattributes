@@ -1,0 +1,7 @@
+# Files that execute inside the Linux Docker container must keep LF line
+# endings on checkout, even on Windows where core.autocrlf=true would otherwise
+# rewrite them to CRLF (which breaks shell scripts: `set -e\r` -> error).
+*.sh           text eol=lf
+docker/**      text eol=lf
+Dockerfile     text eol=lf
+docker-compose.yml text eol=lf
