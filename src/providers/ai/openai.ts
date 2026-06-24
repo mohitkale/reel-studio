@@ -43,6 +43,11 @@ const JSON_SCHEMA = {
             },
             emphasis: { type: "array", items: { type: "string" } },
             visual: { type: "string" },
+            backgroundQuery: { type: "string" },
+            effect: {
+              type: "string",
+              enum: ["ken-burns", "pan-left", "pan-right", "pan-up", "pan-down"],
+            },
           },
           required: ["text", "templateId", "emphasis"],
         },

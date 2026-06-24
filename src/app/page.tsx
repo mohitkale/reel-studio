@@ -12,6 +12,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Combobox } from "@/components/ui/combobox";
+import {
+  type Orientation,
+  ORIENTATIONS,
+  ORIENTATION_LABELS,
+  DEFAULT_ORIENTATION,
+} from "@/lib/orientation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/shell/page-header";
@@ -32,12 +39,14 @@ function NewProjectDialog() {
   const router = useRouter();
   const create = useCreateProject();
   const [name, setName] = React.useState("");
+  const [orientation, setOrientation] =
+    React.useState<Orientation>(DEFAULT_ORIENTATION);
   const [open, setOpen] = React.useState(false);
 
   function submit() {
     const trimmed = name.trim();
     if (!trimmed) return;
-    create.mutate(trimmed, {
+    create.mutate({ name: trimmed, orientation }, {
       onSuccess: ({ scriptId }) => {
         setOpen(false);
         setName("");
@@ -66,16 +75,31 @@ function NewProjectDialog() {
             Give your project a name. You can rename scenes and scripts later.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-2">
-          <Label htmlFor="project-name">Name</Label>
-          <Input
-            id="project-name"
-            value={name}
-            autoFocus
-            placeholder="e.g. Launch teaser"
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && submit()}
-          />
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="project-name">Name</Label>
+            <Input
+              id="project-name"
+              value={name}
+              autoFocus
+              placeholder="e.g. Launch teaser"
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submit()}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="project-orientation">Orientation</Label>
+            <Combobox
+              id="project-orientation"
+              value={orientation}
+              onChange={(v) => setOrientation(v as Orientation)}
+              options={ORIENTATIONS.map((o) => ({
+                value: o,
+                label: ORIENTATION_LABELS[o],
+              }))}
+              searchPlaceholder="Search…"
+            />
+          </div>
         </div>
         <DialogFooter>
           <DialogClose asChild>

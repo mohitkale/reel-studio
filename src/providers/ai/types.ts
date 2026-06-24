@@ -1,9 +1,21 @@
 import { z } from "zod";
 
+import type { Orientation } from "@/lib/orientation";
+
 /**
  * AI "director" contract. Mirrors the voice provider factory: the app talks only
  * to this interface; adding an LLM vendor = one new file + a registry entry.
  */
+
+// Pan/zoom motion the director can request for a scene's photo background.
+// Kept in sync with PanEffect (src/compositions/types.ts) / panEffectSchema.
+export const planEffectSchema = z.enum([
+  "ken-burns",
+  "pan-left",
+  "pan-right",
+  "pan-up",
+  "pan-down",
+]);
 
 export const AI_PROVIDER_IDS = ["gemini", "openai"] as const;
 export type AIProviderId = (typeof AI_PROVIDER_IDS)[number];
@@ -24,6 +36,14 @@ export const aiSceneSchema = z.object({
   templateId: z.enum(PLAN_TEMPLATE_IDS),
   emphasis: z.array(z.string()).default([]),
   visual: z.string().max(64).optional(),
+  /** 2-4 concrete visual keywords for a stock photo background, when one fits. */
+  backgroundQuery: z.string().trim().min(2).max(80).optional(),
+  /**
+   * Pan/zoom motion for the background image. Sent to the model as a free string
+   * (keeps Gemini's schema small); anything not a known pan effect normalizes to
+   * undefined so an invalid value never breaks the plan or persists a bad enum.
+   */
+  effect: planEffectSchema.optional().catch(undefined),
 });
 
 export const scenePlanSchema = z.object({
@@ -46,6 +66,8 @@ export interface GeneratePlanInput {
   existingContext?: string;
   /** For "append": how many scenes already exist, so AI knows its starting position. */
   existingSceneCount?: number;
+  /** Target video orientation, so the director frames visuals appropriately. */
+  orientation?: Orientation;
 }
 
 export interface AIModel {

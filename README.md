@@ -1,8 +1,10 @@
 # Reel Studio
 
-Reel Studio is a local-first short-form video editor for building vertical videos end to end:
+Reel Studio is a local-first short-form video editor for building portrait, landscape, or square videos end to end:
 
+- Choose a video orientation per project (portrait 9:16, landscape 16:9, square 1:1)
 - Script and scene editing
+- AI scene planning that selectively adds relevant Unsplash stock backgrounds with varied pan/zoom motion (optional, needs an Unsplash key)
 - AI voice takes (pluggable providers)
 - Motion templates powered by Remotion (Lottie and Three.js support)
 - MP4 rendering with queue and progress updates
@@ -185,6 +187,7 @@ All supported variables are documented in `.env.example`.
 | `ELEVENLABS_API_KEY` | No | Enable ElevenLabs voices and synthesis |
 | `GEMINI_API_KEY` | No | Enable Gemini AI planning flows |
 | `OPENAI_API_KEY` | No | Enable OpenAI AI planning flows |
+| `UNSPLASH_ACCESS_KEY` | No | Enable AI-picked stock photo backgrounds (free Unsplash Demo tier) |
 | `REMOTION_RENDER_CONCURRENCY` | No | Override adaptive render concurrency |
 | `SKIP_RENDER_SMOKE` | No | Skip render smoke test when set to `1` |
 

@@ -44,6 +44,8 @@ export interface ScriptDTO {
   projectId: string;
   name: string;
   fps: number;
+  width: number;
+  height: number;
   scenes: SceneDTO[];
   takes: VoiceTakeDTO[];
   brandKitId: string | null;

@@ -380,6 +380,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     ]}
                     totalFrames={sceneDuration}
                     fps={fps}
+                    width={script.width}
+                    height={script.height}
                     loop
                     tokens={script.brandTokens}
                   />
@@ -389,6 +391,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     timeline={[]}
                     totalFrames={1}
                     fps={fps}
+                    width={script.width}
+                    height={script.height}
                     tokens={script.brandTokens}
                   />
                 )}
@@ -404,6 +408,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                   timeline={timeline}
                   totalFrames={totalFrames + coverFr}
                   fps={fps}
+                  width={script.width}
+                  height={script.height}
                   audioUrl={audioUrl}
                   tokens={script.brandTokens}
                   coverUrl={script.coverUrl ?? undefined}

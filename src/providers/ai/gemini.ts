@@ -20,8 +20,11 @@ const RESPONSE_SCHEMA = {
     projectName: { type: "string" },
     scriptName: { type: "string" },
     scenes: {
+      // No maxItems here: Gemini's structured-output engine multiplies nested
+      // array bounds by per-item enum sizes into a "states" budget, and a bound
+      // array of multi-enum objects overflows it (HTTP 400). The 20-scene cap is
+      // enforced by the prompt and by scenePlanSchema (.max(20)) instead.
       type: "array",
-      maxItems: 20,
       items: {
         type: "object",
         properties: {
@@ -40,6 +43,10 @@ const RESPONSE_SCHEMA = {
           },
           emphasis: { type: "array", items: { type: "string" } },
           visual: { type: "string" },
+          backgroundQuery: { type: "string" },
+          // Plain string (not enum) to keep Gemini's schema state budget small;
+          // aiSceneSchema validates/normalizes it to a real pan effect.
+          effect: { type: "string" },
         },
         required: ["text", "templateId", "emphasis"],
       },

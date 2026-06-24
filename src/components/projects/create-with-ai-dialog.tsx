@@ -8,6 +8,12 @@ import { toast } from "sonner";
 
 import type { AIProviderId } from "@/providers/ai/types";
 import { useAIProviders, useGenerateProject } from "@/hooks/ai";
+import {
+  type Orientation,
+  ORIENTATIONS,
+  ORIENTATION_LABELS,
+  DEFAULT_ORIENTATION,
+} from "@/lib/orientation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -34,6 +40,8 @@ export function CreateWithAIDialog() {
   const [brief, setBrief] = React.useState("");
   const [providerId, setProviderId] = React.useState<AIProviderId | undefined>();
   const [sceneCount, setSceneCount] = React.useState<string>("auto");
+  const [orientation, setOrientation] =
+    React.useState<Orientation>(DEFAULT_ORIENTATION);
 
   const configured = (providers ?? []).filter((p) => p.configured);
   const effectiveProvider = providerId ?? configured[0]?.id;
@@ -47,6 +55,7 @@ export function CreateWithAIDialog() {
         mode,
         brief: trimmed,
         sceneCount: sceneCount === "auto" ? undefined : Number(sceneCount),
+        orientation,
       },
       {
         onSuccess: ({ scriptId }) => {
@@ -134,6 +143,20 @@ export function CreateWithAIDialog() {
                     ? "e.g. 3 quick tips for writing better prompts"
                     : "Paste the full story or script you want turned into a reel..."
                 }
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="ai-orientation">Orientation</Label>
+              <Combobox
+                id="ai-orientation"
+                value={orientation}
+                onChange={(v) => setOrientation(v as Orientation)}
+                options={ORIENTATIONS.map((o) => ({
+                  value: o,
+                  label: ORIENTATION_LABELS[o],
+                }))}
+                searchPlaceholder="Search…"
               />
             </div>
 

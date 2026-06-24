@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { type ProviderId, PROVIDER_IDS } from "@/providers/voice/types";
 import { type AIProviderId, AI_PROVIDER_IDS } from "@/providers/ai/types";
+import { type StockProviderId, STOCK_PROVIDER_IDS } from "@/providers/stock/types";
 
 /**
  * Server-only secret management. API keys live in a git-ignored .env.local at
@@ -22,6 +23,10 @@ const VOICE_ENV_KEY: Record<ProviderId, string> = {
 const AI_ENV_KEY: Record<AIProviderId, string> = {
   gemini: "GEMINI_API_KEY",
   openai: "OPENAI_API_KEY",
+};
+
+const STOCK_ENV_KEY: Record<StockProviderId, string> = {
+  unsplash: "UNSPLASH_ACCESS_KEY",
 };
 
 function envHas(envName: string): boolean {
@@ -87,4 +92,20 @@ export function aiKeyStatus(): Record<AIProviderId, boolean> {
 
 export function setAIKey(id: AIProviderId, value: string): Promise<void> {
   return writeEnvKey(AI_ENV_KEY[id], value);
+}
+
+/* Stock-image providers */
+
+export function hasStockKey(id: StockProviderId): boolean {
+  return envHas(STOCK_ENV_KEY[id]);
+}
+
+export function stockKeyStatus(): Record<StockProviderId, boolean> {
+  return Object.fromEntries(
+    STOCK_PROVIDER_IDS.map((id) => [id, hasStockKey(id)]),
+  ) as Record<StockProviderId, boolean>;
+}
+
+export function setStockKey(id: StockProviderId, value: string): Promise<void> {
+  return writeEnvKey(STOCK_ENV_KEY[id], value);
 }

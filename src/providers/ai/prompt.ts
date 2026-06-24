@@ -20,13 +20,21 @@ export function buildPrompt(input: GeneratePlanInput): {
     ? `${input.sceneCount}`
     : isAppend ? "3 to 5" : "between 5 and 16";
 
+  const orientation = input.orientation ?? "portrait";
+  const ASPECT: Record<typeof orientation, string> = {
+    portrait: "vertical 9:16 (TikTok, Reels, Shorts)",
+    landscape: "widescreen 16:9 (YouTube, landscape)",
+    square: "square 1:1 (feed posts)",
+  };
+  const aspect = ASPECT[orientation];
+
   // For append mode: output ONLY the new scenes — not the full script.
   const countRule = isAppend
     ? `- Output ONLY the ${count} NEW scenes you are adding. Do NOT repeat or include any existing scenes in your JSON output.`
     : `- Use ${count} scenes total. If the user's brief explicitly requests a specific number, honour it (max 20).`;
 
   const system = [
-    "You are a viral short-form video director for vertical (9:16) TikTok, Reels and Shorts.",
+    `You are a viral short-form video director producing a ${aspect} video.`,
     "Your single goal: maximum retention. Viewers decide in 3 seconds whether to keep watching or swipe.",
     "Rules:",
     "- Plain, conversational English. No em-dashes. No corporate filler.",
@@ -47,6 +55,11 @@ export function buildPrompt(input: GeneratePlanInput): {
     "  DIVERSITY RULE: in any video with 5+ scenes, you MUST use at least 4 different templates. Never use kinetic for more than 2 consecutive scenes.",
     "- emphasis: 1 to 3 short phrases that appear VERBATIM inside that scene's text, for on-screen highlight.",
     "- visual: a single emoji, short stat, or brief label as described. Omit when not applicable.",
+    "  CINEMATIC BACKGROUNDS — make it feel professionally produced:",
+    "  • backgroundQuery: for scenes that a real photo elevates (a place, object, mood, scene-setting, or emotional beat), add 2 to 4 concrete, literal visual keywords for a stock photo (e.g. 'sunrise mountain trail', 'busy modern office', 'fresh coffee beans'). Be specific and photographable — not abstract concepts.",
+    "  • Use backgroundQuery on roughly 40 to 70% of scenes. OMIT it for clean text-only beats (most stat-reveal, icon-grid, quote-card and emoji-punch scenes look best WITHOUT a busy photo behind them).",
+    "  • effect: pick a pan/zoom motion from ken-burns, pan-left, pan-right, pan-up, pan-down. VARY it across scenes so the video feels dynamic; default to ken-burns for hero shots.",
+    `  • The photo will be cropped full-bleed to a ${aspect} frame, so prefer subjects that read well at that shape.`,
     "- projectName: 2 to 4 words. scriptName: a short, catchy episode title.",
     "Return only JSON that matches the provided schema.",
   ].join("\n");

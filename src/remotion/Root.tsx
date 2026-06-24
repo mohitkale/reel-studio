@@ -53,6 +53,13 @@ export const RemotionRoot: React.FC = () => {
       width={REEL_WIDTH}
       height={REEL_HEIGHT}
       defaultProps={defaultProps}
+      // Dimensions/fps come from input props so one composition serves every
+      // orientation; render-service and the editor pass the script's values.
+      calculateMetadata={({ props }) => ({
+        width: props.width ?? REEL_WIDTH,
+        height: props.height ?? REEL_HEIGHT,
+        fps: props.fps ?? REEL_FPS,
+      })}
     />
   );
 };

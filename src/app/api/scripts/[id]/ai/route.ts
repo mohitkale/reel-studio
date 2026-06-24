@@ -5,6 +5,8 @@ import { getAIProvider, isAIProviderId } from "@/providers/ai/registry";
 import { AIError, AI_PROVIDER_IDS } from "@/providers/ai/types";
 import { getScript } from "@/library/repositories/scripts";
 import { prisma } from "@/library/db";
+import { resolveSceneBackgrounds } from "@/library/stock-backgrounds";
+import { orientationFromDims } from "@/lib/orientation";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -49,6 +51,7 @@ export async function POST(
       .map((s, i) => `Scene ${i + 1}: ${s.text}`)
       .join("\n");
 
+    const orientation = orientationFromDims(script.width, script.height);
     const plan = await provider.generatePlan({
       mode: body.mode,
       brief: body.brief,
@@ -56,7 +59,13 @@ export async function POST(
       existingContext,
       existingSceneCount: script.scenes.length,
       modelId: body.modelId,
+      orientation,
     });
+
+    // Best-effort stock backgrounds (no-op without an Unsplash key).
+    const backgrounds = await resolveSceneBackgrounds(plan.scenes, orientation);
+    const layoutFor = (i: number) =>
+      backgrounds[i] ? JSON.stringify({ background: backgrounds[i] }) : null;
 
     if (body.mode === "rewrite") {
       await prisma.scene.deleteMany({ where: { scriptId } });
@@ -68,6 +77,7 @@ export async function POST(
           text: s.text,
           emphasis: s.emphasis.length ? JSON.stringify(s.emphasis) : null,
           visual: s.visual ?? null,
+          layoutJson: layoutFor(order),
         })),
       });
     } else {
@@ -80,6 +90,7 @@ export async function POST(
           text: s.text,
           emphasis: s.emphasis.length ? JSON.stringify(s.emphasis) : null,
           visual: s.visual ?? null,
+          layoutJson: layoutFor(i),
         })),
       });
     }

@@ -56,6 +56,10 @@ export type ReelProps = {
   tokens: BrandTokens;
   /** Optional cover image baked as the reel's opening (thumbnail) frame. */
   coverUrl?: string;
+  /** Render canvas size (orientation). Falls back to REEL_WIDTH/HEIGHT. */
+  width?: number;
+  height?: number;
+  fps?: number;
 };
 
 export const REEL_WIDTH = 1080;

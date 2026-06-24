@@ -11,6 +11,7 @@ import type {
   VoiceTakeDTO,
 } from "@/lib/dto";
 import type { ProviderId } from "@/providers/voice/types";
+import type { Orientation } from "@/lib/orientation";
 
 async function apiSend<T>(
   url: string,
@@ -40,8 +41,8 @@ export function useProjects() {
 export function useCreateProject() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (name: string) =>
-      apiPost<{ projectId: string; scriptId: string }>("/api/projects", { name }),
+    mutationFn: (vars: { name: string; orientation?: Orientation }) =>
+      apiPost<{ projectId: string; scriptId: string }>("/api/projects", vars),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
   });
 }

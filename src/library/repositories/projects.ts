@@ -1,5 +1,7 @@
 import type { ProjectDTO } from "@/lib/dto";
 import type { ScenePlan } from "@/providers/ai/types";
+import type { SceneBackground } from "@/compositions/types";
+import { type Orientation, DEFAULT_ORIENTATION, dimsFor } from "@/lib/orientation";
 import { prisma } from "@/library/db";
 import {
   SAMPLE_PROJECT_NAME,
@@ -32,11 +34,13 @@ export async function listProjects(): Promise<ProjectDTO[]> {
 /** Create a project with one empty script, returning the new script id. */
 export async function createProject(
   name: string,
+  orientation: Orientation = DEFAULT_ORIENTATION,
 ): Promise<{ projectId: string; scriptId: string }> {
+  const { width, height } = dimsFor(orientation);
   const project = await prisma.project.create({
     data: {
       name,
-      scripts: { create: { name: "Untitled script" } },
+      scripts: { create: { name: "Untitled script", width, height } },
     },
     include: { scripts: true },
   });
@@ -57,26 +61,39 @@ export async function assignBrandKit(
   });
 }
 
-/** Create a project + script + scenes from an AI-generated scene plan. */
+/**
+ * Create a project + script + scenes from an AI-generated scene plan.
+ * `backgrounds` (aligned by scene index) and `orientation` come from the AI
+ * route after resolving stock imagery and the chosen video orientation.
+ */
 export async function createProjectFromPlan(
   plan: ScenePlan,
+  orientation: Orientation = DEFAULT_ORIENTATION,
+  backgrounds: (SceneBackground | undefined)[] = [],
 ): Promise<{ projectId: string; scriptId: string }> {
+  const { width, height } = dimsFor(orientation);
   const project = await prisma.project.create({
     data: {
       name: plan.projectName,
       scripts: {
         create: {
           name: plan.scriptName,
+          width,
+          height,
           scenes: {
-            create: plan.scenes.map((scene, order) => ({
-              order,
-              templateId: scene.templateId,
-              text: scene.text,
-              emphasis: scene.emphasis.length
-                ? JSON.stringify(scene.emphasis)
-                : null,
-              visual: scene.visual ?? null,
-            })),
+            create: plan.scenes.map((scene, order) => {
+              const background = backgrounds[order];
+              return {
+                order,
+                templateId: scene.templateId,
+                text: scene.text,
+                emphasis: scene.emphasis.length
+                  ? JSON.stringify(scene.emphasis)
+                  : null,
+                visual: scene.visual ?? null,
+                layoutJson: background ? JSON.stringify({ background }) : null,
+              };
+            }),
           },
         },
       },

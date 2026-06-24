@@ -22,6 +22,8 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     projectId: script.projectId,
     name: script.name,
     fps: script.fps,
+    width: script.width,
+    height: script.height,
     scenes: script.scenes.map(toSceneDTO),
     takes: script.takes.map(toTakeDTO),
     brandKitId: script.project.brandKitId,

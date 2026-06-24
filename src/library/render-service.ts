@@ -13,7 +13,7 @@ import { promises as fs } from "node:fs";
 import { cpus } from "node:os";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
-import { type ReelProps, REEL_FPS, coverFrames } from "@/compositions/types";
+import { type ReelProps, coverFrames } from "@/compositions/types";
 import { getAssetStore } from "@/library/storage";
 import { getScript } from "@/library/repositories/scripts";
 import { listTakes } from "@/library/repositories/takes";
@@ -212,6 +212,9 @@ async function runRender({
         items: s.items,
       })),
       timeline,
+      width: script.width,
+      height: script.height,
+      fps: script.fps,
       audioUrl: absolute(take?.audioUrl),
       coverUrl: absolute(script.coverUrl),
       // script.brandTokens is server-safe (uses serverDefaultTokens, no @remotion/google-fonts).
@@ -221,7 +224,7 @@ async function runRender({
     };
 
     // Cover is held at the start, lengthening the video by that many frames.
-    const cover = coverFrames(REEL_FPS, Boolean(script.coverUrl));
+    const cover = coverFrames(script.fps, Boolean(script.coverUrl));
     const fullDuration = Math.max(1, totalFrames + cover);
 
     // 3. Resolve the "Reel" composition with input props to get the correct duration.

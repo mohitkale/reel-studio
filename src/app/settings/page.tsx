@@ -6,6 +6,7 @@ import { Monitor, Moon, Sun } from "lucide-react";
 import { useMounted } from "@/hooks/use-mounted";
 import { useProviders } from "@/hooks/voice";
 import { useAIProviders } from "@/hooks/ai";
+import { useStockProviders } from "@/hooks/stock";
 import {
   Card,
   CardContent,
@@ -17,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shell/page-header";
 import { ProviderKeyCard } from "@/components/voice/provider-key-card";
 import { AIProviderCard } from "@/components/ai/ai-provider-card";
+import { StockProviderCard } from "@/components/stock/stock-provider-card";
 import { cn } from "@/lib/utils";
 
 const themeOptions = [
@@ -30,6 +32,7 @@ export default function SettingsPage() {
   const mounted = useMounted();
   const { data, isLoading } = useProviders();
   const { data: aiProviders, isLoading: aiLoading } = useAIProviders();
+  const { data: stockProviders, isLoading: stockLoading } = useStockProviders();
 
   return (
     <div className="space-y-8">
@@ -114,6 +117,28 @@ export default function SettingsPage() {
           ) : (
             aiProviders.map((status) => (
               <AIProviderCard key={status.id} status={status} />
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Stock images (optional)</CardTitle>
+          <CardDescription>
+            Add a free Unsplash Access Key so the AI director can place relevant
+            stock photo backgrounds on scenes. Generation works without it; those
+            scenes simply keep the clean branded look.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {stockLoading || !stockProviders ? (
+            <div className="space-y-4">
+              <Skeleton className="h-20 w-full" />
+            </div>
+          ) : (
+            stockProviders.map((status) => (
+              <StockProviderCard key={status.id} status={status} />
             ))
           )}
         </CardContent>
