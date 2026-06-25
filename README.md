@@ -49,6 +49,9 @@ cp .env.example .env.local
 ```
 
 Set only the keys you need. Empty values are fine for local non-provider testing.
+Free, no-key voices work out of the box: **Kokoro** (Apache-2.0) runs entirely in
+your browser, and **Web Speech** gives an instant in-editor preview. Cartesia and
+ElevenLabs keys are optional, for premium cloud voices.
 
 ### 3. Initialize database
 
@@ -127,6 +130,7 @@ What the container handles for you:
 | `npm run typecheck` | TypeScript type-check |
 | `npm run test` | Run Vitest suite |
 | `npm run studio` | Open Remotion Studio |
+| `npm run mcp` | Start the MCP server for AI tools (needs the app running + a token from Settings) |
 | `npm run security:scan` | Scan tracked files for secret patterns |
 | `npm run prepare:hooks` | Enable local git hooks in `.githooks` |
 | `npm run db:push` | Push Prisma schema to SQLite |
@@ -183,8 +187,9 @@ All supported variables are documented in `.env.example`.
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `DATABASE_URL` | Yes | Prisma SQLite connection string |
-| `CARTESIA_API_KEY` | No | Enable Cartesia voices and synthesis |
+| `CARTESIA_API_KEY` | No | Enable Cartesia voices and synthesis (Kokoro/Web Speech need no key) |
 | `ELEVENLABS_API_KEY` | No | Enable ElevenLabs voices and synthesis |
+| `MCP_API_TOKEN` | No | Auto-managed; generate/rotate in Settings → AI tools / MCP (never set by hand) |
 | `GEMINI_API_KEY` | No | Enable Gemini AI planning flows |
 | `OPENAI_API_KEY` | No | Enable OpenAI AI planning flows |
 | `UNSPLASH_ACCESS_KEY` | No | Enable AI-picked stock photo backgrounds (free Unsplash Demo tier) |

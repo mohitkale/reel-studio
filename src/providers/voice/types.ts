@@ -5,8 +5,21 @@ import { z } from "zod";
  * a vendor SDK directly. Adding a new TTS vendor = implement this + register it.
  */
 
-export const PROVIDER_IDS = ["cartesia", "elevenlabs"] as const;
+export const PROVIDER_IDS = [
+  "cartesia",
+  "elevenlabs",
+  "webspeech",
+  "kokoro",
+] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
+
+/**
+ * Where synthesis runs. "server" providers call a vendor API and return WAV
+ * bytes from synth(). "client" providers generate audio in the user's browser
+ * (free, no VPS load, no install) and have no server-side synth() — their takes
+ * are created via the upload endpoint instead.
+ */
+export type ProviderRuntime = "server" | "client";
 
 export const voiceCategorySchema = z.enum([
   "default",
@@ -56,12 +69,17 @@ export interface SynthResult {
 export interface VoiceProvider {
   id: ProviderId;
   label: string;
-  /** True when an API key is present in the environment. */
+  /** Where synthesis runs — see ProviderRuntime. */
+  runtime: ProviderRuntime;
+  /** Client providers that can only preview (e.g. Web Speech) and never persist a take. */
+  preview?: boolean;
+  /** True when an API key is present (server providers); always true for client providers. */
   isConfigured(): boolean;
   listModels(): Promise<VoiceModel[]>;
   /** Merges the vendor's default/library voices with the user's owned/cloned voices. */
   listVoices(query?: string): Promise<VoiceSummary[]>;
-  synth(opts: SynthOptions): Promise<SynthResult>;
+  /** Server-side synthesis. Omitted by client-runtime providers (browser-generated). */
+  synth?(opts: SynthOptions): Promise<SynthResult>;
 }
 
 /** Provider metadata exposed to the UI (no secrets). */
@@ -70,6 +88,9 @@ export const providerStatusSchema = z.object({
   label: z.string(),
   configured: z.boolean(),
   defaultModel: z.string().optional(),
+  runtime: z.enum(["server", "client"]),
+  /** Preview-only client providers cannot produce a render-usable take. */
+  preview: z.boolean().optional(),
 });
 export type ProviderStatus = z.infer<typeof providerStatusSchema>;
 

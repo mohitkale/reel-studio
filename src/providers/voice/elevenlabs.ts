@@ -70,6 +70,7 @@ export function createElevenLabsProvider(): VoiceProvider {
   return {
     id: "elevenlabs",
     label: "ElevenLabs",
+    runtime: "server",
 
     isConfigured: () => key().length > 0,
 

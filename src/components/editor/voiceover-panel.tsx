@@ -2,13 +2,18 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Loader2, Mic, Sparkles, Trash2, Wand2 } from "lucide-react";
+import { Cpu, Loader2, Mic, Sparkles, Square, Trash2, Volume2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 
 import type { VoiceTakeDTO } from "@/lib/dto";
 import type { ProviderId } from "@/providers/voice/types";
 import { useProviders, useModels, useVoices } from "@/hooks/voice";
 import { useGenerateTake, useDeleteTake } from "@/hooks/script";
+import {
+  useKokoroGenerate,
+  useWebSpeechPreview,
+  type KokoroGenerateProgress,
+} from "@/hooks/client-tts";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,8 +30,20 @@ function formatTakeDate(iso: string): string {
   });
 }
 
+function kokoroProgressLabel(p: KokoroGenerateProgress | null): string {
+  if (!p) return "";
+  if (p.phase === "model")
+    return p.modelProgress != null
+      ? `Loading voice model… ${Math.round(p.modelProgress * 100)}%`
+      : "Loading voice model…";
+  if (p.phase === "synth")
+    return `Synthesizing scene ${p.scene}/${p.sceneCount}…`;
+  return "Uploading…";
+}
+
 export function VoiceoverPanel({
   scriptId,
+  scenes,
   takes,
   selectedTakeId,
   onSelectTake,
@@ -34,6 +51,7 @@ export function VoiceoverPanel({
   hasScenes,
 }: {
   scriptId: string;
+  scenes: { id: string; text: string }[];
   takes: VoiceTakeDTO[];
   selectedTakeId: string | null;
   onSelectTake: (id: string) => void;
@@ -50,8 +68,15 @@ export function VoiceoverPanel({
   const effectiveProvider =
     providerId ?? providersData?.config.defaultProviderId ?? configured[0]?.id;
 
+  const selectedStatus = configured.find((p) => p.id === effectiveProvider);
+  const isPreview = selectedStatus?.preview === true; // Web Speech
+  const isKokoro = selectedStatus?.runtime === "client" && !isPreview;
+
   const { data: voices, isLoading: voicesLoading } = useVoices(effectiveProvider, "");
   const { data: models } = useModels(effectiveProvider);
+
+  // Web Speech voices come from the browser, not the server.
+  const webSpeech = useWebSpeechPreview();
 
   const mine = (voices ?? []).filter(
     (v) => v.category === "cloned" || v.category === "professional",
@@ -60,10 +85,15 @@ export function VoiceoverPanel({
     (v) => v.category === "default" || v.category === "shared",
   );
 
-  const voiceOptions: ComboboxOption[] = [
+  const serverVoiceOptions: ComboboxOption[] = [
     ...mine.map((v) => ({ value: v.id, label: v.name, group: "My voices" })),
     ...library.map((v) => ({ value: v.id, label: v.name, group: "Library" })),
   ];
+  const webVoiceOptions: ComboboxOption[] = webSpeech.voices.map((v) => ({
+    value: v.voiceURI,
+    label: `${v.name} (${v.lang})`,
+  }));
+  const voiceOptions = isPreview ? webVoiceOptions : serverVoiceOptions;
 
   const providerOptions: ComboboxOption[] = configured.map((p) => ({
     value: p.id,
@@ -75,8 +105,11 @@ export function VoiceoverPanel({
     label: m.label,
   }));
 
-  const effectiveVoice =
-    voiceId && voices?.some((v) => v.id === voiceId)
+  const effectiveVoice = isPreview
+    ? voiceId && webSpeech.voices.some((v) => v.voiceURI === voiceId)
+      ? voiceId
+      : (webSpeech.voices[0]?.voiceURI ?? "")
+    : voiceId && voices?.some((v) => v.id === voiceId)
       ? voiceId
       : (voices?.[0]?.id ?? "");
   const effectiveModel =
@@ -85,7 +118,43 @@ export function VoiceoverPanel({
       : (models?.[0]?.id ?? "");
 
   const generate = useGenerateTake(scriptId);
+  const kokoro = useKokoroGenerate(scriptId);
   const del = useDeleteTake(scriptId);
+
+  function runKokoro() {
+    const voiceName = voices?.find((v) => v.id === effectiveVoice)?.name;
+    kokoro.mutate(
+      {
+        scenes,
+        voiceId: effectiveVoice,
+        modelId: effectiveModel || undefined,
+        label: voiceName ? `Kokoro · ${voiceName}` : "Kokoro (in-browser)",
+      },
+      {
+        onSuccess: (take) => {
+          onSelectTake(take.id);
+          toast.success("Voice take generated", {
+            description: `${take.timeline.length} scenes · ${(
+              take.totalFrames / take.fps
+            ).toFixed(1)}s`,
+          });
+        },
+        onError: (e) => {
+          if ((e as Error).name === "AbortError") return; // user cancelled
+          toast.error("Generation failed", {
+            description: (e as Error).message,
+          });
+        },
+      },
+    );
+  }
+
+  function runPreview() {
+    const text =
+      scenes.map((s) => s.text).filter(Boolean).join(". ") ||
+      "No scene text to preview.";
+    webSpeech.preview(text, effectiveVoice || undefined);
+  }
 
   function resolveVoiceName(take: VoiceTakeDTO): string {
     // Try to resolve from currently loaded voices (works for current provider's takes)
@@ -172,37 +241,99 @@ export function VoiceoverPanel({
                 value={effectiveVoice}
                 onChange={setVoiceId}
                 options={voiceOptions}
-                placeholder={voicesLoading ? "Loading voices…" : "Select voice…"}
+                placeholder={
+                  isPreview && !webSpeech.supported
+                    ? "Not supported in this browser"
+                    : voiceOptions.length === 0
+                      ? voicesLoading || isPreview
+                        ? "Loading voices…"
+                        : "No voices"
+                      : "Select voice…"
+                }
                 searchPlaceholder="Search voices…"
-                disabled={voicesLoading || voiceOptions.length === 0}
+                disabled={
+                  voiceOptions.length === 0 || (isPreview && !webSpeech.supported)
+                }
               />
             </div>
-            <div className="grid gap-1.5">
-              <Label>Model</Label>
-              <Combobox
-                value={effectiveModel}
-                onChange={setModelId}
-                options={modelOptions}
-                placeholder="Select model…"
-                searchPlaceholder="Search models…"
-                disabled={modelOptions.length === 0}
-              />
-            </div>
+            {!isPreview && (
+              <div className="grid gap-1.5">
+                <Label>Model</Label>
+                <Combobox
+                  value={effectiveModel}
+                  onChange={setModelId}
+                  options={modelOptions}
+                  placeholder="Select model…"
+                  searchPlaceholder="Search models…"
+                  disabled={modelOptions.length === 0}
+                />
+              </div>
+            )}
           </div>
         )}
 
         <div className="flex flex-col gap-2 pt-1">
-          <Button
-            onClick={() => runGenerate(false)}
-            disabled={!hasScenes || !canGenerateReal || generate.isPending}
-          >
-            {generate.isPending ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              <Wand2 />
-            )}
-            Generate take
-          </Button>
+          {isPreview ? (
+            <>
+              <Button
+                onClick={runPreview}
+                disabled={!hasScenes || !webSpeech.supported}
+              >
+                <Volume2 />
+                Preview voice
+              </Button>
+              <Button variant="ghost" size="sm" onClick={webSpeech.stop}>
+                <Square />
+                Stop
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Preview only — browser speech can&apos;t be rendered. Use Kokoro
+                or a provider to create a take.
+              </p>
+            </>
+          ) : isKokoro ? (
+            <>
+              <Button
+                onClick={runKokoro}
+                disabled={!hasScenes || !effectiveVoice || kokoro.isPending}
+              >
+                {kokoro.isPending ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Cpu />
+                )}
+                Generate in browser
+              </Button>
+              {kokoro.isPending ? (
+                <>
+                  <Button variant="ghost" size="sm" onClick={kokoro.cancel}>
+                    <Square />
+                    Cancel
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    {kokoroProgressLabel(kokoro.progress)}
+                  </p>
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Free, runs on your device in the background. First run downloads
+                  the voice model (~80&nbsp;MB), then it&apos;s cached.
+                </p>
+              )}
+            </>
+          ) : (
+            <Button
+              onClick={() => runGenerate(false)}
+              disabled={!hasScenes || !canGenerateReal || generate.isPending}
+            >
+              {generate.isPending ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <Wand2 />
+              )}
+              Generate take
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() => runGenerate(true)}

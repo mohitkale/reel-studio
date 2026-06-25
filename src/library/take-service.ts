@@ -6,7 +6,7 @@ import {
   stitchBeats,
   type BeatInput,
 } from "@/lib/audio-timing";
-import { makeSilentWav } from "@/lib/wav";
+import { makeSilentWav, parseWav } from "@/lib/wav";
 import { getProvider } from "@/providers/voice/registry";
 import { ProviderError, type ProviderId } from "@/providers/voice/types";
 import { prisma } from "@/library/db";
@@ -58,6 +58,13 @@ export async function generateTake(
       throw new ProviderError("Pick a provider and voice first", 400);
     }
     const provider = getProvider(input.providerId);
+    if (provider.runtime === "client" || !provider.synth) {
+      throw new ProviderError(
+        `${provider.label} runs in your browser. Use "Generate in browser" in the editor instead.`,
+        400,
+        input.providerId,
+      );
+    }
     if (!provider.isConfigured()) {
       throw new ProviderError(
         `${provider.label} has no API key. Add one in Settings.`,
@@ -66,9 +73,11 @@ export async function generateTake(
       );
     }
 
+    const synth = provider.synth;
+
     // Sequential to stay friendly to provider rate limits.
     for (const scene of script.scenes) {
-      const { wav } = await provider.synth({
+      const { wav } = await synth({
         voiceId: input.voiceId,
         modelId: input.modelId,
         text: scene.text,
@@ -94,5 +103,73 @@ export async function generateTake(
     timeline: stitched.timeline,
     audioPath: key,
     isPlaceholder: Boolean(input.placeholder),
+  });
+}
+
+export interface UploadedBeat {
+  sceneId: string;
+  /** 16-bit PCM WAV bytes generated in the browser (e.g. by Kokoro). */
+  wav: Buffer;
+}
+
+export interface CreateTakeFromBeatsInput {
+  scriptId: string;
+  providerId: string;
+  voiceId: string;
+  modelId?: string;
+  label?: string;
+  beats: UploadedBeat[];
+}
+
+/**
+ * Create a take from per-scene WAVs generated client-side (browser TTS).
+ *
+ * The server re-stitches the beats itself so timing is always trustworthy — the
+ * client never supplies frame numbers. The resulting take is identical in shape
+ * to a server-generated one (same storage key scheme, timeline and columns), so
+ * selection, playback and rendering all work unchanged.
+ */
+export async function createTakeFromBeats(
+  input: CreateTakeFromBeatsInput,
+): Promise<VoiceTakeDTO> {
+  const script = await prisma.script.findUnique({
+    where: { id: input.scriptId },
+    include: { scenes: { orderBy: { order: "asc" } } },
+  });
+  if (!script) throw new ProviderError("Script not found", 404);
+  if (script.scenes.length === 0) {
+    throw new ProviderError("Add at least one scene before generating a take", 400);
+  }
+
+  const byScene = new Map(input.beats.map((b) => [b.sceneId, b.wav]));
+  const beats: BeatInput[] = [];
+  for (const scene of script.scenes) {
+    const wav = byScene.get(scene.id);
+    if (!wav) {
+      throw new ProviderError(
+        "Audio is missing for one or more scenes — regenerate the voiceover.",
+        400,
+      );
+    }
+    // Reject corrupt or non-PCM uploads before they reach storage.
+    parseWav(wav);
+    beats.push({ sceneId: scene.id, text: scene.text, wav });
+  }
+
+  const stitched = stitchBeats(beats, script.fps);
+  const key = `takes/${randomUUID()}.wav`;
+  await getAssetStore().put(key, stitched.wav);
+
+  return createTake({
+    scriptId: input.scriptId,
+    label: input.label ?? input.providerId,
+    providerId: input.providerId,
+    voiceId: input.voiceId,
+    modelId: input.modelId,
+    fps: script.fps,
+    totalFrames: stitched.totalFrames,
+    timeline: stitched.timeline,
+    audioPath: key,
+    isPlaceholder: false,
   });
 }

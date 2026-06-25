@@ -41,6 +41,7 @@ afterEach(() => {
 describe("registry", () => {
   it("validates provider ids", () => {
     expect(isProviderId("cartesia")).toBe(true);
+    expect(isProviderId("kokoro")).toBe(true);
     expect(isProviderId("nope")).toBe(false);
   });
 
@@ -53,6 +54,33 @@ describe("registry", () => {
     expect(getProvider("cartesia").isConfigured()).toBe(true);
     delete process.env.CARTESIA_API_KEY;
     expect(getProvider("cartesia").isConfigured()).toBe(false);
+  });
+});
+
+describe("client providers", () => {
+  it("kokoro and webspeech are client-runtime with no server synth", () => {
+    const kokoro = getProvider("kokoro");
+    expect(kokoro.runtime).toBe("client");
+    expect(kokoro.synth).toBeUndefined();
+    expect(kokoro.isConfigured()).toBe(true);
+
+    const webspeech = getProvider("webspeech");
+    expect(webspeech.runtime).toBe("client");
+    expect(webspeech.preview).toBe(true);
+    expect(webspeech.synth).toBeUndefined();
+  });
+
+  it("kokoro exposes a curated voice catalog; webspeech enumerates client-side", async () => {
+    const voices = await getProvider("kokoro").listVoices();
+    expect(voices.length).toBeGreaterThan(0);
+    expect(voices.every((v) => /^[ab][fm]_/.test(v.id))).toBe(true);
+
+    expect(await getProvider("webspeech").listVoices()).toEqual([]);
+  });
+
+  it("server providers remain server-runtime with a synth()", () => {
+    expect(getProvider("cartesia").runtime).toBe("server");
+    expect(typeof getProvider("cartesia").synth).toBe("function");
   });
 });
 
@@ -85,7 +113,7 @@ describe("cartesia", () => {
     const wav = makeSilentWav(0.25);
     fetchMock.mockResolvedValueOnce(bytesResponse(wav));
 
-    const result = await getProvider("cartesia").synth({
+    const result = await getProvider("cartesia").synth!({
       voiceId: "abc",
       text: "hello",
     });
@@ -138,7 +166,7 @@ describe("elevenlabs", () => {
     const wav = makeSilentWav(0.25);
     fetchMock.mockResolvedValueOnce(bytesResponse(wav));
 
-    const result = await getProvider("elevenlabs").synth({
+    const result = await getProvider("elevenlabs").synth!({
       voiceId: "xy z",
       text: "hi",
     });

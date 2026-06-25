@@ -89,13 +89,15 @@ export default function SettingsPage() {
               <Skeleton className="h-24 w-full" />
             </div>
           ) : (
-            data.providers.map((status) => (
-              <ProviderKeyCard
-                key={status.id}
-                status={status}
-                config={data.config}
-              />
-            ))
+            data.providers
+              .filter((status) => status.runtime === "server")
+              .map((status) => (
+                <ProviderKeyCard
+                  key={status.id}
+                  status={status}
+                  config={data.config}
+                />
+              ))
           )}
         </CardContent>
       </Card>

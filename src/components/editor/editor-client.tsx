@@ -455,6 +455,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
         <CardContent className="p-4">
           <VoiceoverPanel
             scriptId={scriptId}
+            scenes={scenes.map((s) => ({ id: s.id, text: s.text }))}
             takes={script.takes}
             selectedTakeId={effectiveTakeId}
             onSelectTake={selectTake}

@@ -16,7 +16,9 @@ import { type StockProviderId, STOCK_PROVIDER_IDS } from "@/providers/stock/type
 
 const ENV_FILE = path.join(process.cwd(), ".env.local");
 
-const VOICE_ENV_KEY: Record<ProviderId, string> = {
+// Only server-runtime providers have an API key; client providers (webspeech,
+// kokoro) run in the browser and need none, so they're absent here.
+const VOICE_ENV_KEY: Partial<Record<ProviderId, string>> = {
   cartesia: "CARTESIA_API_KEY",
   elevenlabs: "ELEVENLABS_API_KEY",
 };
@@ -66,7 +68,8 @@ async function writeEnvKey(envName: string, value: string): Promise<void> {
 /* Voice providers */
 
 export function hasKey(id: ProviderId): boolean {
-  return envHas(VOICE_ENV_KEY[id]);
+  const env = VOICE_ENV_KEY[id];
+  return env ? envHas(env) : false;
 }
 
 export function keyStatus(): Record<ProviderId, boolean> {
@@ -76,7 +79,9 @@ export function keyStatus(): Record<ProviderId, boolean> {
 }
 
 export function setKey(id: ProviderId, value: string): Promise<void> {
-  return writeEnvKey(VOICE_ENV_KEY[id], value);
+  const env = VOICE_ENV_KEY[id];
+  // Client providers have no key to set — no-op.
+  return env ? writeEnvKey(env, value) : Promise.resolve();
 }
 
 /* AI providers */

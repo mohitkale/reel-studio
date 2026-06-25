@@ -76,6 +76,7 @@ export function createCartesiaProvider(): VoiceProvider {
   return {
     id: "cartesia",
     label: "Cartesia",
+    runtime: "server",
 
     isConfigured: () => key().length > 0,
 
