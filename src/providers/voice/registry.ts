@@ -12,6 +12,10 @@ import {
 } from "./elevenlabs";
 import { createWebSpeechProvider, WEBSPEECH_DEFAULT_MODEL } from "./webspeech";
 import { createKokoroProvider, KOKORO_DEFAULT_MODEL } from "./kokoro";
+import {
+  createKokoroServerProvider,
+  KOKORO_SERVER_DEFAULT_MODEL,
+} from "./kokoro-server";
 
 /**
  * Provider registry / factory.
@@ -38,6 +42,10 @@ const factories: Record<
   kokoro: {
     create: createKokoroProvider,
     defaultModel: KOKORO_DEFAULT_MODEL,
+  },
+  "kokoro-server": {
+    create: createKokoroServerProvider,
+    defaultModel: KOKORO_SERVER_DEFAULT_MODEL,
   },
 };
 
@@ -76,6 +84,7 @@ export function listProviderStatuses(): ProviderStatus[] {
       defaultModel: factories[id].defaultModel,
       runtime: provider.runtime,
       preview: provider.preview,
+      keyless: provider.keyless,
     };
   });
 }

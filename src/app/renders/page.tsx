@@ -294,6 +294,7 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
                   ref={videoRef}
                   src={render.outputUrl}
                   controls
+                  loop={false}
                   className="h-full w-full"
                   onLoadedMetadata={(e) =>
                     setDuration((e.target as HTMLVideoElement).duration)

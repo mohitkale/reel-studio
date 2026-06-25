@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
     // binary at runtime. Turbopack must not bundle it, or the dynamic native
     // require fails ("Cannot find module ../lightningcss.<platform>.node").
     "lightningcss",
+    // Server-side Kokoro runs via onnxruntime-node, which ships native .node
+    // binaries. Keep kokoro-js and transformers external so they (and the
+    // native runtime) are required at runtime instead of bundled.
+    "kokoro-js",
+    "@huggingface/transformers",
+    "onnxruntime-node",
   ],
 };
 

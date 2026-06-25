@@ -90,7 +90,7 @@ export default function SettingsPage() {
             </div>
           ) : (
             data.providers
-              .filter((status) => status.runtime === "server")
+              .filter((status) => status.runtime === "server" && !status.keyless)
               .map((status) => (
                 <ProviderKeyCard
                   key={status.id}

@@ -12,8 +12,12 @@ import { type VoiceModel, type VoiceProvider, type VoiceSummary } from "./types"
  */
 export const KOKORO_DEFAULT_MODEL = "kokoro-82M";
 
+/** Hugging Face repo for the Kokoro ONNX weights (shared by client + server). */
+export const KOKORO_MODEL_ID = "onnx-community/Kokoro-82M-v1.0-ONNX";
+
 // Curated subset of kokoro-js voice ids. ids MUST match kokoro-js exactly.
-const VOICES: VoiceSummary[] = [
+// Shared by the in-browser and server-side Kokoro providers.
+export const KOKORO_VOICES: VoiceSummary[] = [
   { id: "af_heart", name: "Heart — US female", category: "default", language: "en-US", tags: ["female"] },
   { id: "af_bella", name: "Bella — US female", category: "default", language: "en-US", tags: ["female"] },
   { id: "af_nicole", name: "Nicole — US female", category: "default", language: "en-US", tags: ["female"] },
@@ -27,6 +31,20 @@ const VOICES: VoiceSummary[] = [
   { id: "bm_lewis", name: "Lewis — UK male", category: "default", language: "en-GB", tags: ["male"] },
 ];
 
+/** Kokoro model list (one model). Shared by the client + server providers. */
+export function kokoroModels(): VoiceModel[] {
+  return [{ id: KOKORO_DEFAULT_MODEL, label: "Kokoro 82M (Apache-2.0)" }];
+}
+
+/** Filter the curated Kokoro voices by an optional query. */
+export function filterKokoroVoices(query?: string): VoiceSummary[] {
+  if (!query) return KOKORO_VOICES;
+  const q = query.toLowerCase();
+  return KOKORO_VOICES.filter(
+    (v) => v.name.toLowerCase().includes(q) || v.id.toLowerCase().includes(q),
+  );
+}
+
 export function createKokoroProvider(): VoiceProvider {
   return {
     id: "kokoro",
@@ -35,18 +53,8 @@ export function createKokoroProvider(): VoiceProvider {
 
     isConfigured: () => true,
 
-    async listModels(): Promise<VoiceModel[]> {
-      return [{ id: KOKORO_DEFAULT_MODEL, label: "Kokoro 82M (Apache-2.0)" }];
-    },
-
-    async listVoices(query?: string) {
-      if (!query) return VOICES;
-      const q = query.toLowerCase();
-      return VOICES.filter(
-        (v) =>
-          v.name.toLowerCase().includes(q) || v.id.toLowerCase().includes(q),
-      );
-    },
+    listModels: async () => kokoroModels(),
+    listVoices: async (query?: string) => filterKokoroVoices(query),
 
     // No synth(): the browser generates audio and uploads it as a take.
   };

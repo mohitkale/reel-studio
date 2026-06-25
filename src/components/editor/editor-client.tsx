@@ -412,6 +412,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                   width={script.width}
                   height={script.height}
                   audioUrl={audioUrl}
+                  loop={false}
                   tokens={script.brandTokens}
                   coverUrl={script.coverUrl ?? undefined}
                 />

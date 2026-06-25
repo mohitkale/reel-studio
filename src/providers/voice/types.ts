@@ -5,11 +5,13 @@ import { z } from "zod";
  * a vendor SDK directly. Adding a new TTS vendor = implement this + register it.
  */
 
+// Order here is the order shown in the editor's provider dropdown.
 export const PROVIDER_IDS = [
+  "kokoro",
+  "kokoro-server",
+  "webspeech",
   "cartesia",
   "elevenlabs",
-  "webspeech",
-  "kokoro",
 ] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 
@@ -73,7 +75,9 @@ export interface VoiceProvider {
   runtime: ProviderRuntime;
   /** Client providers that can only preview (e.g. Web Speech) and never persist a take. */
   preview?: boolean;
-  /** True when an API key is present (server providers); always true for client providers. */
+  /** Server provider that needs no API key (e.g. local Kokoro) — hidden from the key settings. */
+  keyless?: boolean;
+  /** True when an API key is present (server providers); always true for client/keyless providers. */
   isConfigured(): boolean;
   listModels(): Promise<VoiceModel[]>;
   /** Merges the vendor's default/library voices with the user's owned/cloned voices. */
@@ -91,6 +95,8 @@ export const providerStatusSchema = z.object({
   runtime: z.enum(["server", "client"]),
   /** Preview-only client providers cannot produce a render-usable take. */
   preview: z.boolean().optional(),
+  /** Server provider needing no API key (hidden from the key settings card). */
+  keyless: z.boolean().optional(),
 });
 export type ProviderStatus = z.infer<typeof providerStatusSchema>;
 
