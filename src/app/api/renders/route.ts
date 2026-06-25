@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { createRender, listRenders } from "@/library/repositories/renders";
 import { startRender } from "@/library/render-service";
+import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -25,7 +26,17 @@ const createSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    const origin = authorize(req);
     const body = createSchema.parse(await req.json());
+
+    // MCP-originated renders are compute-heavy and must be verified by a human:
+    // create them as pending_approval and do NOT start the job. A same-origin
+    // web click on the Renders page approves and starts it.
+    if (origin === "mcp") {
+      const render = await createRender({ ...body, status: "pending_approval" });
+      return NextResponse.json({ render }, { status: 201 });
+    }
+
     const render = await createRender(body);
     const serverBaseUrl = new URL(req.url).origin;
     startRender({ renderId: render.id, ...body, serverBaseUrl });

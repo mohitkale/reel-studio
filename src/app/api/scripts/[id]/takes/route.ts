@@ -4,6 +4,7 @@ import { z } from "zod";
 import { listTakes } from "@/library/repositories/takes";
 import { generateTake } from "@/library/take-service";
 import { PROVIDER_IDS } from "@/providers/voice/types";
+import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -36,6 +37,7 @@ export async function POST(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorize(req);
     const { id } = await ctx.params;
     const body = generateSchema.parse(await req.json().catch(() => ({})));
     const take = await generateTake({ scriptId: id, ...body });

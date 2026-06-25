@@ -7,6 +7,7 @@ import {
   setDefaultBrandKit,
   deleteBrandKit,
 } from "@/library/repositories/brandkits";
+import { requireWeb } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -41,6 +42,7 @@ export async function PATCH(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    requireWeb(req);
     const { id } = await ctx.params;
     const body = patchSchema.parse(await req.json());
     const { isDefault, ...kitPatch } = body;
@@ -63,10 +65,11 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    requireWeb(req);
     const { id } = await ctx.params;
     await deleteBrandKit(id);
     return NextResponse.json({ ok: true });

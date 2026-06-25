@@ -6,6 +6,7 @@ import { AIError, AI_PROVIDER_IDS } from "@/providers/ai/types";
 import { createProjectFromPlan } from "@/library/repositories/projects";
 import { resolveSceneBackgrounds } from "@/library/stock-backgrounds";
 import { orientationSchema, DEFAULT_ORIENTATION } from "@/lib/orientation";
+import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -24,6 +25,7 @@ const bodySchema = z.object({
 /** POST /api/projects/ai - generate a scene plan from a brief and create the project. */
 export async function POST(req: Request) {
   try {
+    authorize(req);
     const body = bodySchema.parse(await req.json());
     if (!isAIProviderId(body.providerId)) {
       throw new AIError(`Unknown AI provider "${body.providerId}"`, 404);

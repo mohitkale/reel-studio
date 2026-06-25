@@ -88,7 +88,13 @@ export interface RenderDTO {
   scriptId: string;
   voiceTakeId: string | null;
   name: string | null;
-  status: "queued" | "bundling" | "rendering" | "done" | "error";
+  status:
+    | "pending_approval"
+    | "queued"
+    | "bundling"
+    | "rendering"
+    | "done"
+    | "error";
   progress: number;
   outputUrl: string | null;
   error: string | null;

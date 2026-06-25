@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { ListVideo, Download, AlertCircle, CheckCircle2, Loader2, Clock, RefreshCcw, Maximize2, Trash2, Pencil, Check, X } from "lucide-react";
+import { ListVideo, Download, AlertCircle, CheckCircle2, Loader2, Clock, RefreshCcw, Maximize2, Trash2, Pencil, Check, X, ShieldCheck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
-import { useRenders, useRenderProgress, useCreateRender, useRenameRender, useDeleteRender } from "@/hooks/renders";
+import { useRenders, useRenderProgress, useCreateRender, useRenameRender, useDeleteRender, useApproveRender } from "@/hooks/renders";
+import { useScript } from "@/hooks/script";
 import type { RenderDTO } from "@/lib/dto";
 import { PageHeader } from "@/components/shell/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -15,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 const STATUS_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  pending_approval: ShieldCheck,
   queued: Clock,
   bundling: Loader2,
   rendering: Loader2,
@@ -23,6 +25,7 @@ const STATUS_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
 };
 
 const STATUS_LABEL: Record<string, string> = {
+  pending_approval: "Awaiting approval",
   queued: "Queued",
   bundling: "Bundling...",
   rendering: "Rendering...",
@@ -32,12 +35,87 @@ const STATUS_LABEL: Record<string, string> = {
 
 type BadgeVariant = "default" | "secondary" | "outline" | "destructive";
 const STATUS_COLOR: Record<string, BadgeVariant> = {
+  pending_approval: "outline",
   queued: "secondary",
   bundling: "secondary",
   rendering: "secondary",
   done: "default",
   error: "destructive",
 };
+
+/**
+ * Storyboard summary + approval for an MCP-requested render. The human verifies
+ * the content here before the compute-heavy job is allowed to start.
+ */
+function PendingApprovalPanel({
+  render,
+  onApproved,
+}: {
+  render: RenderDTO;
+  onApproved: (updated: RenderDTO) => void;
+}) {
+  const { data: script } = useScript(render.scriptId);
+  const approve = useApproveRender();
+
+  function handleApprove() {
+    approve.mutate(render.id, {
+      onSuccess: (updated) => {
+        onApproved(updated);
+        toast.success("Render approved", { description: "The job is now running." });
+      },
+      onError: (e) => toast.error("Could not approve", { description: (e as Error).message }),
+    });
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-start gap-2 rounded-lg bg-muted/50 px-3 py-2">
+        <Sparkles className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+        <p className="text-xs text-muted-foreground">
+          An AI tool requested this render via MCP. Review the storyboard, then
+          approve to generate the video.
+        </p>
+      </div>
+
+      {script ? (
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium">
+            {script.name} · {script.scenes.length} scene
+            {script.scenes.length === 1 ? "" : "s"}
+          </p>
+          <ol className="space-y-1">
+            {script.scenes.slice(0, 4).map((s, i) => (
+              <li key={s.id} className="truncate text-xs text-muted-foreground">
+                {i + 1}. {s.text || <span className="italic">empty scene</span>}
+              </li>
+            ))}
+            {script.scenes.length > 4 && (
+              <li className="text-xs text-muted-foreground">
+                +{script.scenes.length - 4} more…
+              </li>
+            )}
+          </ol>
+        </div>
+      ) : (
+        <Skeleton className="h-16 w-full" />
+      )}
+
+      <Button
+        size="sm"
+        className="w-full"
+        disabled={approve.isPending}
+        onClick={handleApprove}
+      >
+        {approve.isPending ? (
+          <Loader2 className="size-3.5 animate-spin" />
+        ) : (
+          <ShieldCheck className="size-3.5" />
+        )}
+        Approve &amp; Render
+      </Button>
+    </div>
+  );
+}
 
 function ProgressBar({ value }: { value: number }) {
   return (
@@ -180,6 +258,15 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
               </div>
             )}
           </div>
+
+          {render.status === "pending_approval" && (
+            <PendingApprovalPanel
+              render={render}
+              onApproved={(updated) =>
+                setRender((prev) => ({ ...prev, status: updated.status, progress: updated.progress }))
+              }
+            />
+          )}
 
           {isActive && (
             <div className="space-y-1">

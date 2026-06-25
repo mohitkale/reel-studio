@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 
 import { listAssets, createAsset } from "@/library/repositories/assets";
 import { getAssetStore } from "@/library/storage";
+import { requireWeb } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -40,6 +41,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    requireWeb(req);
     const formData = await req.formData();
     const file = formData.get("file");
     if (!file || typeof file === "string") {

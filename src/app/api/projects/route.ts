@@ -7,6 +7,7 @@ import {
   listProjects,
 } from "@/library/repositories/projects";
 import { orientationSchema } from "@/lib/orientation";
+import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -28,6 +29,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    authorize(req);
     const { name, orientation } = createSchema.parse(await req.json());
     return NextResponse.json(await createProject(name, orientation), {
       status: 201,

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getRender, deleteRender, renameRender } from "@/library/repositories/renders";
+import { authorize } from "@/server/auth";
+import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -30,6 +32,7 @@ export async function PATCH(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorize(req);
     const { id } = await ctx.params;
     const { name } = patchSchema.parse(await req.json());
     const render = await renameRender(id, name);
@@ -40,10 +43,13 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    if (authorize(req) === "mcp") {
+      throw new ProviderError("Deletion is not available via MCP", 403);
+    }
     const { id } = await ctx.params;
     await deleteRender(id);
     return NextResponse.json({ ok: true });

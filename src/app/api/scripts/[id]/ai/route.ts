@@ -7,6 +7,7 @@ import { getScript } from "@/library/repositories/scripts";
 import { prisma } from "@/library/db";
 import { resolveSceneBackgrounds } from "@/library/stock-backgrounds";
 import { orientationFromDims } from "@/lib/orientation";
+import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -26,6 +27,7 @@ export async function POST(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorize(req);
     const { id: scriptId } = await ctx.params;
     const body = bodySchema.parse(await req.json());
 

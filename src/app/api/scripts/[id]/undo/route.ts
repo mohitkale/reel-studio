@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { prisma } from "@/library/db";
 import { getScript } from "@/library/repositories/scripts";
+import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -46,6 +47,7 @@ export async function POST(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorize(req);
     const { id: scriptId } = await ctx.params;
     const body = snapshotSchema.parse(await req.json());
 

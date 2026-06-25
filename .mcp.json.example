@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "reel-studio": {
+      "command": "npx",
+      "args": ["tsx", "mcp/src/index.ts"],
+      "env": {
+        "REEL_STUDIO_URL": "http://127.0.0.1:3000",
+        "REEL_STUDIO_MCP_TOKEN": "<paste the token from Reel Studio → Settings → AI tools / MCP>"
+      }
+    }
+  }
+}

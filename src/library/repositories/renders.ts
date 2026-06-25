@@ -40,16 +40,33 @@ export async function renameRender(id: string, name: string): Promise<RenderDTO>
 export async function createRender(input: {
   scriptId: string;
   voiceTakeId?: string;
+  /** "pending_approval" gates the job behind a human click (MCP-originated). */
+  status?: RenderDTO["status"];
 }): Promise<RenderDTO> {
   const row = await prisma.render.create({
     data: {
       scriptId: input.scriptId,
       voiceTakeId: input.voiceTakeId ?? null,
-      status: "queued",
+      status: input.status ?? "queued",
       progress: 0,
     },
   });
   return toDTO(row);
+}
+
+/**
+ * Atomically transition a pending render to "queued" so a human approval can
+ * start it. Returns the render only if it actually transitioned — a null result
+ * means it was already approved (or not pending), so the caller must NOT start a
+ * second render job (guards against double-fire).
+ */
+export async function approveRender(id: string): Promise<RenderDTO | null> {
+  const res = await prisma.render.updateMany({
+    where: { id, status: "pending_approval" },
+    data: { status: "queued", progress: 0 },
+  });
+  if (res.count === 0) return null;
+  return getRender(id);
 }
 
 export async function listRenders(scriptId?: string): Promise<RenderDTO[]> {

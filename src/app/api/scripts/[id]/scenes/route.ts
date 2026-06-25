@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { addScene, reorderScenes } from "@/library/repositories/scenes";
+import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -17,6 +18,7 @@ export async function POST(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorize(req);
     const { id } = await ctx.params;
     const body = addSchema.parse(await req.json().catch(() => ({})));
     return NextResponse.json(
@@ -35,6 +37,7 @@ export async function PATCH(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorize(req);
     const { id } = await ctx.params;
     const { orderedIds } = reorderSchema.parse(await req.json());
     await reorderScenes(id, orderedIds);

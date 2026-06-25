@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
@@ -108,4 +109,30 @@ export function stockKeyStatus(): Record<StockProviderId, boolean> {
 
 export function setStockKey(id: StockProviderId, value: string): Promise<void> {
   return writeEnvKey(STOCK_ENV_KEY[id], value);
+}
+
+/* MCP server token */
+
+const MCP_ENV_KEY = "MCP_API_TOKEN";
+
+/** The bearer token external AI tools present to authenticate MCP-originated calls. */
+export function getMcpToken(): string | undefined {
+  const token = process.env[MCP_ENV_KEY]?.trim();
+  return token ? token : undefined;
+}
+
+export function hasMcpToken(): boolean {
+  return envHas(MCP_ENV_KEY);
+}
+
+/** Generate, persist, and return a fresh MCP token (rotating any existing one). */
+export async function generateMcpToken(): Promise<string> {
+  const token = randomBytes(32).toString("base64url");
+  await writeEnvKey(MCP_ENV_KEY, token);
+  return token;
+}
+
+/** Remove the MCP token, disabling MCP-originated access until regenerated. */
+export function clearMcpToken(): Promise<void> {
+  return writeEnvKey(MCP_ENV_KEY, "");
 }

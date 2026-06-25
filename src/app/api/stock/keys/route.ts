@@ -4,6 +4,7 @@ import { z } from "zod";
 import { STOCK_PROVIDER_IDS, StockError } from "@/providers/stock/types";
 import { getStockProvider } from "@/providers/stock/registry";
 import { stockKeyStatus, setStockKey } from "@/server/secrets";
+import { requireWeb } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -26,6 +27,7 @@ export async function GET() {
 /** POST /api/stock/keys - set or clear a stock key, then best-effort verify via a search. */
 export async function POST(req: Request) {
   try {
+    requireWeb(req);
     const { providerId, apiKey } = bodySchema.parse(await req.json());
     await setStockKey(providerId, apiKey);
 

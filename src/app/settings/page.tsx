@@ -19,6 +19,7 @@ import { PageHeader } from "@/components/shell/page-header";
 import { ProviderKeyCard } from "@/components/voice/provider-key-card";
 import { AIProviderCard } from "@/components/ai/ai-provider-card";
 import { StockProviderCard } from "@/components/stock/stock-provider-card";
+import { McpTokenCard } from "@/components/mcp/mcp-token-card";
 import { cn } from "@/lib/utils";
 
 const themeOptions = [
@@ -141,6 +142,21 @@ export default function SettingsPage() {
               <StockProviderCard key={status.id} status={status} />
             ))
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">AI tools / MCP (optional)</CardTitle>
+          <CardDescription>
+            Generate a token so external AI agents can create and edit
+            storyboards through the MCP server. They can do everything except
+            delete or change configuration, and any render waits for your
+            approval on the Renders page.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <McpTokenCard />
         </CardContent>
       </Card>
     </div>

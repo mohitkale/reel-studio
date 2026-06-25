@@ -7,6 +7,7 @@ import {
   setDefaultModel,
   setDefaultProvider,
 } from "@/server/app-config";
+import { requireWeb } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -21,6 +22,7 @@ const bodySchema = z.object({
 /** POST /api/settings/defaults - set the default provider and/or a provider's default model. */
 export async function POST(req: Request) {
   try {
+    requireWeb(req);
     const body = bodySchema.parse(await req.json());
 
     if (body.defaultProviderId) {

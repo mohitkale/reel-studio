@@ -36,6 +36,18 @@ export function useRenameRender() {
   });
 }
 
+/** Approve a pending (MCP-requested) render and start the job. */
+export function useApproveRender() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiPost<{ render: RenderDTO }>(`/api/renders/${id}/approve`, {}).then(
+        (r) => r.render,
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["renders"] }),
+  });
+}
+
 export function useDeleteRender() {
   const qc = useQueryClient();
   return useMutation({

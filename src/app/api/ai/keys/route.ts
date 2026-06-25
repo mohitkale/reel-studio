@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getAIProvider, isAIProviderId } from "@/providers/ai/registry";
 import { AIError, AI_PROVIDER_IDS } from "@/providers/ai/types";
 import { aiKeyStatus, setAIKey } from "@/server/secrets";
+import { requireWeb } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -25,6 +26,7 @@ export async function GET() {
 /** POST /api/ai/keys - set or clear an AI key, then best-effort verify via listModels. */
 export async function POST(req: Request) {
   try {
+    requireWeb(req);
     const { providerId, apiKey } = bodySchema.parse(await req.json());
     if (!isAIProviderId(providerId)) {
       throw new AIError(`Unknown AI provider "${providerId}"`, 404);

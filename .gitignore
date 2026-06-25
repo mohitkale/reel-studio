@@ -34,6 +34,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# MCP config may contain the access token; commit the example only
+.mcp.json
+
 # local asset store, app data and render output
 /media
 /.data

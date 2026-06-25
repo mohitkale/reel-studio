@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getProvider, isProviderId } from "@/providers/voice/registry";
 import { ProviderError, PROVIDER_IDS } from "@/providers/voice/types";
 import { keyStatus, setKey } from "@/server/secrets";
+import { requireWeb } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -30,6 +31,7 @@ export async function GET() {
  */
 export async function POST(req: Request) {
   try {
+    requireWeb(req);
     const { providerId, apiKey } = bodySchema.parse(await req.json());
     if (!isProviderId(providerId)) {
       throw new ProviderError(`Unknown provider "${providerId}"`, 404);
