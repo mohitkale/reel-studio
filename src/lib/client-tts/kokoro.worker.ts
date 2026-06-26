@@ -25,6 +25,26 @@ const ctx = self as unknown as {
   onmessage: ((e: MessageEvent) => void) | null;
 };
 
+// kokoro-js lazy-fetches each voice's style vector from HuggingFace's CDN
+// (…/Kokoro-82M-v1.0-ONNX/resolve/main/voices/<id>.bin). Networks that block
+// that CDN leave only previously-cached voices working. Redirect those fetches
+// to our own same-origin route, which serves the files bundled in
+// node_modules/kokoro-js/voices — so every voice works without hitting HF.
+const VOICE_URL_RE =
+  /Kokoro-82M-v1\.0-ONNX\/resolve\/[^/]+\/voices\/([a-z]{2}_[a-z]+)\.bin(?:\?.*)?$/;
+const realFetch = globalThis.fetch.bind(globalThis);
+globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+  const url =
+    typeof input === "string"
+      ? input
+      : input instanceof URL
+        ? input.href
+        : input.url;
+  const match = url.match(VOICE_URL_RE);
+  if (match) return realFetch(`/api/kokoro-voice/${match[1]}`, init);
+  return realFetch(input as RequestInfo, init);
+}) as typeof fetch;
+
 let ttsPromise: Promise<KokoroTTS> | null = null;
 
 function load(): Promise<KokoroTTS> {

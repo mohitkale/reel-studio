@@ -14,14 +14,18 @@ export function isWebSpeechSupported(): boolean {
 export function getWebSpeechVoices(): Promise<SpeechSynthesisVoice[]> {
   return new Promise((resolve) => {
     if (!isWebSpeechSupported()) return resolve([]);
+
+    const filterToGoogle = (all: SpeechSynthesisVoice[]) =>
+      all.filter((v) => v.name.startsWith("Google"));
+
     const existing = window.speechSynthesis.getVoices();
-    if (existing.length) return resolve(existing);
+    if (existing.length) return resolve(filterToGoogle(existing));
 
     let done = false;
     const finish = () => {
       if (done) return;
       done = true;
-      resolve(window.speechSynthesis.getVoices());
+      resolve(filterToGoogle(window.speechSynthesis.getVoices()));
     };
     window.speechSynthesis.addEventListener?.("voiceschanged", finish, {
       once: true,
