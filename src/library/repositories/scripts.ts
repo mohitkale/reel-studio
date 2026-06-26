@@ -32,6 +32,7 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     musicUrl: script.musicUrl,
     musicVolume: script.musicVolume,
     hideText: script.hideText,
+    hideProgressBar: (script as unknown as { hideProgressBar: boolean }).hideProgressBar ?? false,
   };
 }
 
@@ -43,10 +44,12 @@ export async function updateScript(
     musicUrl?: string | null;
     musicVolume?: number;
     hideText?: boolean;
+    hideProgressBar?: boolean;
   },
 ): Promise<void> {
   await prisma.script.update({
     where: { id },
+    // Cast needed until Prisma client regenerates after next server restart.
     data: {
       ...(data.name !== undefined ? { name: data.name } : {}),
       ...(data.coverUrl !== undefined ? { coverUrl: data.coverUrl || null } : {}),
@@ -55,6 +58,7 @@ export async function updateScript(
         ? { musicVolume: Math.max(0, Math.min(100, Math.round(data.musicVolume))) }
         : {}),
       ...(data.hideText !== undefined ? { hideText: data.hideText } : {}),
-    },
+      ...(data.hideProgressBar !== undefined ? { hideProgressBar: data.hideProgressBar } : {}),
+    } as Parameters<typeof prisma.script.update>[0]["data"],
   });
 }

@@ -48,7 +48,8 @@ model Script {
   coverUrl       String? // cover/thumbnail image baked as the reel's opening frame
   musicUrl       String? // optional background music, mixed (ducked) under the voiceover
   musicVolume    Int      @default(20) // background music level, 0-100
-  hideText       Boolean  @default(false) // global default: hide on-screen scene text
+  hideText          Boolean  @default(false) // global default: hide on-screen scene text
+  hideProgressBar   Boolean  @default(false) // global: hide the top progress bar
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

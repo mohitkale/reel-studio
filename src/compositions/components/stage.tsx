@@ -147,14 +147,37 @@ function Grain() {
   );
 }
 
+/**
+ * Context that lets the editor toggle the progress bar without touching every
+ * template. Provided once at the composition root; consumed only by ProgressBar.
+ */
+const StageOptionsContext = React.createContext<{ showProgressBar: boolean }>({
+  showProgressBar: true,
+});
+
+export function StageOptionsProvider({
+  showProgressBar = true,
+  children,
+}: {
+  showProgressBar?: boolean;
+  children: React.ReactNode;
+}) {
+  const value = React.useMemo(() => ({ showProgressBar }), [showProgressBar]);
+  return (
+    <StageOptionsContext.Provider value={value}>{children}</StageOptionsContext.Provider>
+  );
+}
+
 /** Thin top progress bar reflecting how far through the scene we are. */
 function ProgressBar({ tokens }: { tokens: BrandTokens }) {
+  const { showProgressBar } = React.useContext(StageOptionsContext);
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
   const progress = interpolate(frame, [0, Math.max(1, durationInFrames - 1)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
+  if (!showProgressBar) return null;
   return (
     <div
       style={{

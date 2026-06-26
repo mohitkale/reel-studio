@@ -5,7 +5,7 @@ import { AbsoluteFill, Audio, Img, Sequence, useVideoConfig } from "remotion";
 import { type ReelProps, coverFrames } from "./types";
 import type { BrandTokens } from "./tokens";
 import { getTemplateComponent } from "./registry";
-import { Stage } from "./components/stage";
+import { Stage, StageOptionsProvider } from "./components/stage";
 
 /**
  * Static cover/thumbnail frame shown at the very start of the reel. The image is
@@ -38,6 +38,7 @@ export function ReelComposition({
   musicVolume = 20,
   tokens,
   coverUrl,
+  hideProgressBar,
 }: ReelProps) {
   const { fps } = useVideoConfig();
   const sceneById = new Map(scenes.map((s) => [s.id, s]));
@@ -54,6 +55,7 @@ export function ReelComposition({
     audioUrl && isVoiced(frame) ? baseMusic * 0.35 : baseMusic;
 
   return (
+    <StageOptionsProvider showProgressBar={!hideProgressBar}>
     <AbsoluteFill
       style={{
         backgroundColor: tokens.background,
@@ -105,5 +107,6 @@ export function ReelComposition({
         ) : null}
       </Sequence>
     </AbsoluteFill>
+    </StageOptionsProvider>
   );
 }

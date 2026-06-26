@@ -276,6 +276,7 @@ async function runRender({
       // Importing @/compositions/tokens here would pull loadFont() into the Next.js server
       // process where React.createContext is undefined, crashing the render job.
       tokens: script.brandTokens,
+      hideProgressBar: script.hideProgressBar,
     };
 
     // Cover is held at the start, lengthening the video by that many frames.

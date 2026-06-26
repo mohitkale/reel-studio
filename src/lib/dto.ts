@@ -59,6 +59,8 @@ export interface ScriptDTO {
   musicVolume: number;
   /** Global default: hide on-screen scene text (per-scene hideText overrides this). */
   hideText: boolean;
+  /** Global: hide the top progress bar on every scene. */
+  hideProgressBar: boolean;
 }
 
 export interface ProjectDTO {

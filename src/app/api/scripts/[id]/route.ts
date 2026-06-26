@@ -30,6 +30,7 @@ const patchSchema = z.object({
   musicUrl: z.string().max(2048).nullable().optional(),
   musicVolume: z.number().int().min(0).max(100).optional(),
   hideText: z.boolean().optional(),
+  hideProgressBar: z.boolean().optional(),
 });
 
 export async function PATCH(

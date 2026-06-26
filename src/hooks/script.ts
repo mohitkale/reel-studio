@@ -118,6 +118,25 @@ export function useSetScriptMusic(scriptId: string) {
   });
 }
 
+/** Toggle the script-wide default for hiding the top progress bar. */
+export function useSetScriptHideProgressBar(scriptId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (hideProgressBar: boolean) =>
+      apiSend(`/api/scripts/${scriptId}`, "PATCH", { hideProgressBar }),
+    onMutate: async (hideProgressBar) => {
+      await qc.cancelQueries({ queryKey: ["script", scriptId] });
+      const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
+      if (prev) qc.setQueryData<ScriptDTO>(["script", scriptId], { ...prev, hideProgressBar });
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["script", scriptId], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+  });
+}
+
 /** Toggle the script-wide default for hiding on-screen scene text. */
 export function useSetScriptHideText(scriptId: string) {
   const qc = useQueryClient();

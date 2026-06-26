@@ -27,6 +27,7 @@ interface ReelPlayerProps {
   loop?: boolean;
   tokens?: BrandTokens;
   coverUrl?: string;
+  hideProgressBar?: boolean;
 }
 
 /** Live Remotion preview of the reel, driven by the scene templates + timeline. */
@@ -46,13 +47,14 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
       loop = true,
       tokens,
       coverUrl,
+      hideProgressBar,
     },
     ref,
   ) {
     const resolvedTokens = tokens ?? defaultBrandTokens;
     const inputProps = React.useMemo(
-      () => ({ scenes, timeline, audioUrl, musicUrl, musicVolume, tokens: resolvedTokens, coverUrl, width, height, fps }),
-      [scenes, timeline, audioUrl, musicUrl, musicVolume, resolvedTokens, coverUrl, width, height, fps],
+      () => ({ scenes, timeline, audioUrl, musicUrl, musicVolume, tokens: resolvedTokens, coverUrl, width, height, fps, hideProgressBar }),
+      [scenes, timeline, audioUrl, musicUrl, musicVolume, resolvedTokens, coverUrl, width, height, fps, hideProgressBar],
     );
 
     const aspectRatio = `${width} / ${height}`;

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, Video, Loader2, Sparkles, Undo2, Braces, ChevronDown, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Video, Loader2, Sparkles, Undo2, Braces, ChevronDown, Eye, EyeOff, BarChart2 } from "lucide-react";
 
 import { ORIENTATIONS, ORIENTATION_LABELS, type Orientation } from "@/lib/orientation";
 import {
@@ -24,6 +24,7 @@ import {
   useReorderScenes,
   useUndoScript,
   useSetScriptHideText,
+  useSetScriptHideProgressBar,
 } from "@/hooks/script";
 import type { SceneDTO } from "@/lib/dto";
 import { useCreateRender } from "@/hooks/renders";
@@ -62,6 +63,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   const createRender = useCreateRender();
   const undoScript = useUndoScript(scriptId);
   const setHideText = useSetScriptHideText(scriptId);
+  const setHideProgressBar = useSetScriptHideProgressBar(scriptId);
   const { data: brandKits = [] } = useBrandKits();
   const assignBrandKit = useAssignBrandKit();
 
@@ -363,7 +365,20 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             ) : (
               <Eye className="size-3.5" />
             )}
-            {script.hideText ? "Text hidden" : "Text shown"}
+            {script.hideText ? "Text hidden" : "Show text"}
+          </Button>
+          <Button
+            size="sm"
+            variant={script.hideProgressBar ? "default" : "outline"}
+            onClick={() => setHideProgressBar.mutate(!script.hideProgressBar)}
+            title={
+              script.hideProgressBar
+                ? "Progress bar is hidden on all scenes"
+                : "Hide the top progress bar on all scenes"
+            }
+          >
+            <BarChart2 className="size-3.5" />
+            {script.hideProgressBar ? "Progress hidden" : "Show progress"}
           </Button>
           <Button
             size="sm"
@@ -481,6 +496,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     height={script.height}
                     loop
                     tokens={script.brandTokens}
+                    hideProgressBar={script.hideProgressBar}
                   />
                 ) : (
                   <ReelPlayer
@@ -513,6 +529,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                   loop={false}
                   tokens={script.brandTokens}
                   coverUrl={script.coverUrl ?? undefined}
+                  hideProgressBar={script.hideProgressBar}
                 />
                 <p className="mt-3 text-center text-xs text-muted-foreground">
                   {takeUsable

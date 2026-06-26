@@ -58,19 +58,20 @@ function CheckItem({
         transform: `translateX(${x}px)`,
       }}
     >
-      {/* Icon badge */}
+      {/* Icon badge — solid accent gradient so it pops against the dark background */}
       <div
         style={{
           flexShrink: 0,
           width: 96,
           height: 96,
           borderRadius: 28,
-          background: `linear-gradient(135deg, ${tokens.accent}33, ${tokens.accentSecondary}22)`,
-          border: `2px solid ${tokens.accent}66`,
+          background: `linear-gradient(135deg, ${tokens.accent}, ${tokens.accentSecondary})`,
+          border: `2px solid ${tokens.accent}`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           fontSize: 48,
+          boxShadow: `0 4px 16px ${tokens.accent}66`,
         }}
       >
         {icon}

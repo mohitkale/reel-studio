@@ -66,6 +66,8 @@ export type ReelProps = {
   width?: number;
   height?: number;
   fps?: number;
+  /** When true, suppress the top progress bar on every scene. */
+  hideProgressBar?: boolean;
 };
 
 export const REEL_WIDTH = 1080;
