@@ -12,10 +12,11 @@ const SidebarContext = React.createContext<SidebarContextValue | null>(null);
 /**
  * Holds the desktop sidebar collapsed/expanded state. Lives at the layout root
  * so it survives client-side navigation. In-memory (resets on hard reload),
- * which keeps it SSR-safe with no hydration mismatch.
+ * which keeps it SSR-safe with no hydration mismatch. Defaults to collapsed so
+ * editing surfaces get the full width; the topbar toggle expands it.
  */
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
-  const [collapsed, setCollapsed] = React.useState(false);
+  const [collapsed, setCollapsed] = React.useState(true);
   const toggle = React.useCallback(() => setCollapsed((c) => !c), []);
   const value = React.useMemo(() => ({ collapsed, toggle }), [collapsed, toggle]);
   return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>;

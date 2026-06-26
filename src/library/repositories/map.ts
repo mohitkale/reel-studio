@@ -49,6 +49,7 @@ export function toSceneDTO(scene: Scene): SceneDTO {
     visual,
     background,
     items: config.items && config.items.length ? config.items : undefined,
+    hideText: scene.hideText ?? null,
   };
 }
 

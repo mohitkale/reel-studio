@@ -29,18 +29,32 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     brandKitId: script.project.brandKitId,
     brandTokens: brandKit ? resolveBrandTokens(brandKit) : serverDefaultTokens,
     coverUrl: script.coverUrl,
+    musicUrl: script.musicUrl,
+    musicVolume: script.musicVolume,
+    hideText: script.hideText,
   };
 }
 
 export async function updateScript(
   id: string,
-  data: { name?: string; coverUrl?: string | null },
+  data: {
+    name?: string;
+    coverUrl?: string | null;
+    musicUrl?: string | null;
+    musicVolume?: number;
+    hideText?: boolean;
+  },
 ): Promise<void> {
   await prisma.script.update({
     where: { id },
     data: {
       ...(data.name !== undefined ? { name: data.name } : {}),
       ...(data.coverUrl !== undefined ? { coverUrl: data.coverUrl || null } : {}),
+      ...(data.musicUrl !== undefined ? { musicUrl: data.musicUrl || null } : {}),
+      ...(data.musicVolume !== undefined
+        ? { musicVolume: Math.max(0, Math.min(100, Math.round(data.musicVolume))) }
+        : {}),
+      ...(data.hideText !== undefined ? { hideText: data.hideText } : {}),
     },
   });
 }

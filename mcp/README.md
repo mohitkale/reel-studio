@@ -43,11 +43,11 @@ touches the database directly. By design it can do everything an editor can
 
 ## Tools
 
-- **Read:** `list_projects`, `get_script`, `list_takes`, `list_renders`,
-  `get_render`, `list_voice_providers`, `list_voices`, `list_voice_models`,
-  `list_ai_providers`
+- **Read:** `list_projects`, `get_script`, `list_takes`, `get_captions`,
+  `list_renders`, `get_render`, `list_voice_providers`, `list_voices`,
+  `list_voice_models`, `list_ai_providers`
 - **Create / edit:** `create_project`, `ai_create_project`, `assign_brand_kit`,
-  `update_script`, `add_scene`, `update_scene`, `reorder_scenes`,
+  `update_script`, `set_music`, `add_scene`, `update_scene`, `reorder_scenes`,
   `ai_generate_scenes`, `create_voice_take`, `rename_take`, `rename_render`
 - **Render (human-gated):** `request_render`, `download_render`
 

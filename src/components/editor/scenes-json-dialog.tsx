@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Sparkles } from "lucide-react";
 
 import type { SceneDTO, SceneBackground } from "@/lib/dto";
 import { TEMPLATES, DEFAULT_TEMPLATE_ID, normalizeTemplateId } from "@/compositions/templates";
@@ -104,6 +104,67 @@ function parseScenes(raw: string): SceneJson[] {
   });
 }
 
+/** A worked example covering several templates, emphasis, visual, items, background. */
+const SAMPLE_JSON = `[
+  {
+    "templateId": "kinetic",
+    "text": "Most teams ship features nobody asked for. Here is how to stop.",
+    "emphasis": ["nobody asked for"],
+    "visual": null
+  },
+  {
+    "templateId": "stat-reveal",
+    "text": "Up to 70% of product features are rarely or never used.",
+    "emphasis": ["rarely or never used"],
+    "visual": "70%"
+  },
+  {
+    "templateId": "icon-grid",
+    "text": "Validate before you build:",
+    "emphasis": [],
+    "visual": "✓",
+    "items": ["Talk to 5 real users", "Ship a fake-door test", "Measure true intent"]
+  },
+  {
+    "templateId": "emoji-punch",
+    "text": "Build less. Learn faster.",
+    "emphasis": ["Learn faster"],
+    "visual": "🚀",
+    "background": { "type": "image", "url": "https://images.example.com/launch.jpg", "effect": "ken-burns" }
+  }
+]`;
+
+/** Self-contained prompt the user pastes into any AI tool to get compliant JSON. */
+const AI_PROMPT = `You are generating a short-form vertical video storyboard as JSON for "Reel Studio".
+
+Output ONLY a JSON array (no markdown fences, no commentary). Each array item is one scene with these fields:
+
+- "text" (required): the spoken narration. Keep it punchy — about 18 words max.
+- "templateId" (optional, default "kinetic"), one of:
+  • "kinetic"     - punchy headline text reveal (the default workhorse)
+  • "stat-reveal" - a big number/metric; put the number in "visual" (e.g. "73%", "10x")
+  • "icon-grid"   - a checklist/tips list; set "visual" to a bullet emoji (e.g. "✓") and put rows in "items"
+  • "emoji-punch" - a single big emoji punchline; put the emoji in "visual" (e.g. "🔥")
+  • "quote-card"  - a quote or testimonial; "visual" is the optional attribution
+  • "lottie"      - a process step / how-it-works beat
+  • "three"       - one bold 3D hero moment (use at most once)
+- "emphasis" (optional): array of short phrases that appear VERBATIM inside "text"; they get highlighted on screen.
+- "visual" (optional): a single emoji, short stat, or label, as noted above. Use null when not applicable.
+- "items" (optional): array of short strings — the rows for an "icon-grid" scene.
+- "background" (optional): { "type": "image" | "video", "url": "https://…", "effect": "ken-burns" | "pan-left" | "pan-right" | "pan-up" | "pan-down" (image only), "muted": true (video only) }
+
+Rules:
+- Scene 1 MUST be a scroll-stopping hook. The final scene should end with a clear call to action.
+- Vary the templates — do not make every scene "kinetic".
+- Every "emphasis" phrase must match the scene's "text" exactly (same words, same case).
+- 5 to 12 scenes is a good length.
+
+Example of the exact output shape:
+${SAMPLE_JSON}
+
+Now write the JSON array for this video:
+TOPIC: <describe your video idea, audience, and tone here>`;
+
 export function ScenesJsonDialog({
   scriptId,
   scenes,
@@ -145,6 +206,7 @@ function JsonEditorBody({
   const [value, setValue] = React.useState(() => toJson(scenes));
   const [error, setError] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
+  const [guideOpen, setGuideOpen] = React.useState(false);
 
   function handleApply() {
     let parsed: SceneJson[];
@@ -173,6 +235,15 @@ function JsonEditorBody({
       await navigator.clipboard.writeText(value);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error("Could not copy to clipboard");
+    }
+  }
+
+  async function copyText(text: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`${label} copied`);
     } catch {
       toast.error("Could not copy to clipboard");
     }
@@ -210,10 +281,16 @@ function JsonEditorBody({
       </div>
 
       <DialogFooter className="sm:justify-between">
-        <Button variant="ghost" size="sm" onClick={handleCopy}>
-          {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-          {copied ? "Copied" : "Copy"}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={handleCopy}>
+            {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+            {copied ? "Copied" : "Copy"}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setGuideOpen(true)}>
+            <Sparkles className="size-3.5" />
+            Generate with AI
+          </Button>
+        </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onClose}>
             Cancel
@@ -223,6 +300,39 @@ function JsonEditorBody({
           </Button>
         </div>
       </DialogFooter>
+
+      <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Generate scenes with an AI tool</DialogTitle>
+            <DialogDescription>
+              Copy this prompt into Claude, ChatGPT, Cursor, or any AI tool, add
+              your video idea at the bottom, and paste the JSON it returns back
+              into the editor — then Apply. It documents every supported field,
+              template, and option.
+            </DialogDescription>
+          </DialogHeader>
+
+          <pre className="max-h-[22rem] overflow-auto rounded-lg border bg-muted/30 p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap">
+            {AI_PROMPT}
+          </pre>
+
+          <DialogFooter className="sm:justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => copyText(SAMPLE_JSON, "Sample JSON")}
+            >
+              <Copy className="size-3.5" />
+              Copy sample JSON
+            </Button>
+            <Button size="sm" onClick={() => copyText(AI_PROMPT, "AI prompt")}>
+              <Copy className="size-3.5" />
+              Copy AI prompt
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

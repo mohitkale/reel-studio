@@ -73,4 +73,19 @@ export const apiPost = <T>(path: string, body?: unknown) =>
 export const apiPatch = <T>(path: string, body?: unknown) =>
   request<T>("PATCH", path, body ?? {});
 
+/** GET an endpoint that returns plain text (e.g. an SRT/VTT subtitle file). */
+export async function apiGetText(path: string): Promise<string> {
+  if (!TOKEN) {
+    throw new Error("REEL_STUDIO_MCP_TOKEN is not set.");
+  }
+  const res = await fetch(absoluteUrl(path), {
+    headers: { authorization: `Bearer ${TOKEN}` },
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    throw new ApiError(text || `Request failed (HTTP ${res.status})`, res.status);
+  }
+  return text;
+}
+
 export const encode = (s: string) => encodeURIComponent(s);

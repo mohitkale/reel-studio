@@ -42,6 +42,8 @@ export async function createRender(input: {
   voiceTakeId?: string;
   /** "pending_approval" gates the job behind a human click (MCP-originated). */
   status?: RenderDTO["status"];
+  /** Optional label (e.g. the target format when repurposing). */
+  name?: string;
 }): Promise<RenderDTO> {
   const row = await prisma.render.create({
     data: {
@@ -49,6 +51,7 @@ export async function createRender(input: {
       voiceTakeId: input.voiceTakeId ?? null,
       status: input.status ?? "queued",
       progress: 0,
+      name: input.name ?? null,
     },
   });
   return toDTO(row);

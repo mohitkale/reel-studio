@@ -44,17 +44,25 @@ function SceneBackgroundLayer({
   durationInFrames: number;
 }) {
   const frame = useCurrentFrame();
+  // If a video background fails (unreachable URL, CORS, codec), fall back to the
+  // animated brand background instead of crashing the whole player/render.
+  // Track the URL that failed so the state resets automatically when the scene's
+  // background changes — no setState-in-effect needed.
+  const [failedUrl, setFailedUrl] = React.useState<string | null>(null);
+  const videoFailed = failedUrl === background.url;
+
   return (
     <>
-      {background.type === "video" ? (
+      {background.type === "video" && !videoFailed ? (
         <AbsoluteFill style={{ overflow: "hidden" }}>
           <OffthreadVideo
             src={background.url}
             muted={background.muted ?? true}
+            onError={() => setFailedUrl(background.url)}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         </AbsoluteFill>
-      ) : (
+      ) : background.type === "image" ? (
         <AbsoluteFill
           style={{
             backgroundImage: `url(${JSON.stringify(background.url)})`,
@@ -68,7 +76,7 @@ function SceneBackgroundLayer({
             transformOrigin: "center center",
           }}
         />
-      )}
+      ) : null}
       <AbsoluteFill
         style={{
           background:
@@ -214,7 +222,7 @@ export function Stage({
   durationInFrames,
 }: {
   tokens: BrandTokens;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   contentStyle?: React.CSSProperties;
   /** Full-bleed layer rendered above the lighting but below grain/vignette (e.g. a 3D canvas). */
   backdrop?: React.ReactNode;

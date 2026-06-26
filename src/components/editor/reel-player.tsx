@@ -21,6 +21,8 @@ interface ReelPlayerProps {
   width?: number;
   height?: number;
   audioUrl?: string;
+  musicUrl?: string;
+  musicVolume?: number;
   autoPlay?: boolean;
   loop?: boolean;
   tokens?: BrandTokens;
@@ -38,6 +40,8 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
       width = REEL_WIDTH,
       height = REEL_HEIGHT,
       audioUrl,
+      musicUrl,
+      musicVolume,
       autoPlay,
       loop = true,
       tokens,
@@ -47,8 +51,8 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
   ) {
     const resolvedTokens = tokens ?? defaultBrandTokens;
     const inputProps = React.useMemo(
-      () => ({ scenes, timeline, audioUrl, tokens: resolvedTokens, coverUrl, width, height, fps }),
-      [scenes, timeline, audioUrl, resolvedTokens, coverUrl, width, height, fps],
+      () => ({ scenes, timeline, audioUrl, musicUrl, musicVolume, tokens: resolvedTokens, coverUrl, width, height, fps }),
+      [scenes, timeline, audioUrl, musicUrl, musicVolume, resolvedTokens, coverUrl, width, height, fps],
     );
 
     const aspectRatio = `${width} / ${height}`;

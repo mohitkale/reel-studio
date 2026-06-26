@@ -27,6 +27,9 @@ export async function GET(
 const patchSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
   coverUrl: z.string().max(2048).nullable().optional(),
+  musicUrl: z.string().max(2048).nullable().optional(),
+  musicVolume: z.number().int().min(0).max(100).optional(),
+  hideText: z.boolean().optional(),
 });
 
 export async function PATCH(

@@ -28,6 +28,8 @@ const patchSchema = z.object({
   background: backgroundSchema.nullable().optional(),
   // List items for list/checklist templates; null/empty clears them.
   items: z.array(z.string().max(280)).max(24).nullable().optional(),
+  // Per-scene text visibility override; null = inherit the script default.
+  hideText: z.boolean().nullable().optional(),
 });
 
 export async function PATCH(

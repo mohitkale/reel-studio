@@ -14,6 +14,7 @@ import { cpus } from "node:os";
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
 import { type ReelProps, coverFrames } from "@/compositions/types";
+import { type Orientation, dimsFor } from "@/lib/orientation";
 import { getAssetStore } from "@/library/storage";
 import { getScript } from "@/library/repositories/scripts";
 import { listTakes } from "@/library/repositories/takes";
@@ -28,6 +29,10 @@ import { upsertJob } from "@/lib/render-queue";
 const DEFAULT_RENDER_CONCURRENCY_CAP = 8;
 const MIN_PROGRESS_PERSIST_INTERVAL_MS = 1_000;
 const MIN_PROGRESS_PERSIST_DELTA = 0.02;
+// How many render JOBS may run at once. Each render already spawns a headless
+// Chrome with several worker threads, so running multiple in parallel can
+// exhaust memory on a modest server. Default to 1 (serial); override via env.
+const DEFAULT_MAX_CONCURRENT_RENDERS = 1;
 
 function parsePositiveInt(value: string | undefined): number | null {
   if (!value) return null;
@@ -87,26 +92,63 @@ export interface StartRenderOptions {
   renderId: string;
   scriptId: string;
   voiceTakeId?: string;
+  /** Override the render canvas to repurpose the same script in another format.
+   *  Defaults to the script's own orientation. */
+  orientation?: Orientation;
   /** Base URL of the Next.js server (e.g. "http://localhost:3000") so Remotion's
    *  Chrome process can fetch the audio take via an absolute URL. */
   serverBaseUrl?: string;
 }
 
+function resolveMaxConcurrentRenders(): number {
+  return (
+    parsePositiveInt(process.env.REEL_MAX_CONCURRENT_RENDERS) ??
+    DEFAULT_MAX_CONCURRENT_RENDERS
+  );
+}
+
+// Simple in-process job gate. Jobs beyond the cap wait here (their DB row stays
+// "queued") until a slot frees, so we never run more renders in parallel than
+// the machine can handle.
+const pendingRenders: StartRenderOptions[] = [];
+let activeRenders = 0;
+
+function pumpRenderQueue(): void {
+  const max = resolveMaxConcurrentRenders();
+  while (activeRenders < max && pendingRenders.length > 0) {
+    const opts = pendingRenders.shift()!;
+    activeRenders += 1;
+    void runRender(opts)
+      .catch((err) => {
+        console.error("[render] Unhandled error in render job", opts.renderId, err);
+      })
+      .finally(() => {
+        activeRenders -= 1;
+        pumpRenderQueue();
+      });
+  }
+}
+
 /**
  * Kick off a render job in the background (fire and forget from the caller).
- * Progress is tracked in the render queue and persisted to the DB.
+ * Honors a concurrency cap: extra jobs wait in a queue (shown as "queued") until
+ * a slot is free. Progress is tracked in the render queue and persisted to DB.
  */
 export function startRender(opts: StartRenderOptions): void {
-  // Run async without awaiting so the HTTP response can return immediately.
-  void runRender(opts).catch((err) => {
-    console.error("[render] Unhandled error in render job", opts.renderId, err);
-  });
+  pendingRenders.push(opts);
+  if (pendingRenders.length > 1 || activeRenders >= resolveMaxConcurrentRenders()) {
+    console.log(
+      `[render] Job ${opts.renderId} queued (${activeRenders} running, ${pendingRenders.length} waiting)`,
+    );
+  }
+  pumpRenderQueue();
 }
 
 async function runRender({
   renderId,
   scriptId,
   voiceTakeId,
+  orientation,
   serverBaseUrl = "http://localhost:3000",
 }: StartRenderOptions): Promise<void> {
   let lastPersistedAt = 0;
@@ -202,6 +244,12 @@ async function runRender({
     const absolute = (url?: string | null) =>
       url ? (url.startsWith("http") ? url : `${serverBaseUrl}${url}`) : undefined;
 
+    // Repurpose: render at the requested orientation's canvas instead of the
+    // script's own. The composition reads width/height from these input props.
+    const dims = orientation
+      ? dimsFor(orientation)
+      : { width: script.width, height: script.height };
+
     const inputProps: ReelProps = {
       scenes: script.scenes.map((s) => ({
         id: s.id,
@@ -213,12 +261,16 @@ async function runRender({
           ? { ...s.background, url: absolute(s.background.url)! }
           : undefined,
         items: s.items,
+        // Per-scene override wins; otherwise the script-wide default.
+        hideText: s.hideText ?? script.hideText,
       })),
       timeline,
-      width: script.width,
-      height: script.height,
+      width: dims.width,
+      height: dims.height,
       fps: script.fps,
       audioUrl: resolved.takeUsable ? absolute(take?.audioUrl) : undefined,
+      musicUrl: absolute(script.musicUrl),
+      musicVolume: script.musicVolume,
       coverUrl: absolute(script.coverUrl),
       // script.brandTokens is server-safe (uses serverDefaultTokens, no @remotion/google-fonts).
       // Importing @/compositions/tokens here would pull loadFont() into the Next.js server

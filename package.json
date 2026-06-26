@@ -20,7 +20,8 @@
     "prepare:hooks": "git config core.hooksPath .githooks",
     "postinstall": "prisma generate",
     "seed:assets": "tsx scripts/seed-assets.ts",
-    "seed:demo-brandkit": "tsx scripts/seed-demo-brandkit.ts"
+    "seed:demo-brandkit": "tsx scripts/seed-demo-brandkit.ts",
+    "gen:music": "node scripts/generate-music.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

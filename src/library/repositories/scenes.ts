@@ -33,6 +33,8 @@ export async function updateScene(
     visual?: string | null;
     background?: SceneBackground | null;
     items?: string[] | null;
+    /** null = inherit script default, true/false = explicit per-scene override. */
+    hideText?: boolean | null;
   },
 ): Promise<SceneDTO> {
   // background + items live together in the layoutJson config blob; merge so
@@ -64,6 +66,7 @@ export async function updateScene(
         data.emphasis !== undefined ? JSON.stringify(data.emphasis) : undefined,
       visual: data.visual !== undefined ? (data.visual ?? null) : undefined,
       layoutJson: layoutJson !== undefined ? (layoutJson || null) : undefined,
+      hideText: data.hideText !== undefined ? data.hideText : undefined,
     },
   });
   return toSceneDTO(scene);

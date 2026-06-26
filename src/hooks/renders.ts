@@ -21,7 +21,11 @@ export function useRenders(scriptId?: string) {
 export function useCreateRender() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { scriptId: string; voiceTakeId?: string }) =>
+    mutationFn: (vars: {
+      scriptId: string;
+      voiceTakeId?: string;
+      orientation?: "portrait" | "landscape" | "square";
+    }) =>
       apiPost<{ render: RenderDTO }>("/api/renders", vars).then((r) => r.render),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["renders"] }),
   });

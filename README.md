@@ -59,6 +59,9 @@ ElevenLabs keys are optional, for premium cloud voices.
 npm run db:push
 ```
 
+Re-run this after pulling changes that touch `prisma/schema.prisma` (e.g. the
+background-music fields) so your local SQLite stays in sync.
+
 ### 4. Optional demo seed
 
 ```bash
@@ -193,7 +196,8 @@ All supported variables are documented in `.env.example`.
 | `GEMINI_API_KEY` | No | Enable Gemini AI planning flows |
 | `OPENAI_API_KEY` | No | Enable OpenAI AI planning flows |
 | `UNSPLASH_ACCESS_KEY` | No | Enable AI-picked stock photo backgrounds (free Unsplash Demo tier) |
-| `REMOTION_RENDER_CONCURRENCY` | No | Override adaptive render concurrency |
+| `REMOTION_RENDER_CONCURRENCY` | No | Override adaptive render concurrency (threads within one render) |
+| `REEL_MAX_CONCURRENT_RENDERS` | No | Max render jobs running at once (default 1; protects small servers) |
 | `SKIP_RENDER_SMOKE` | No | Skip render smoke test when set to `1` |
 
 Minimum local setup for non-provider testing: only `DATABASE_URL`.

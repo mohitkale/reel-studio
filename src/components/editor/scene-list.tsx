@@ -44,19 +44,27 @@ export function SceneList({
             const active = scene.id === selectedId;
             return (
               <li key={scene.id}>
+                {/* The whole card selects the scene; the action buttons stop
+                    propagation so they don't also trigger a select. */}
                 <div
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={active}
+                  onClick={() => onSelect(scene.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onSelect(scene.id);
+                    }
+                  }}
                   className={cn(
-                    "group rounded-lg border bg-card p-2.5 transition-colors",
+                    "group cursor-pointer rounded-lg border bg-card p-2.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     active
                       ? "border-primary ring-1 ring-primary"
                       : "hover:border-foreground/20",
                   )}
                 >
-                  <button
-                    type="button"
-                    onClick={() => onSelect(scene.id)}
-                    className="flex w-full items-start gap-2 text-left"
-                  >
+                  <div className="flex w-full items-start gap-2">
                     <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded bg-muted text-[11px] font-medium text-muted-foreground">
                       {i + 1}
                     </span>
@@ -65,7 +73,7 @@ export function SceneList({
                         <span className="text-muted-foreground">Empty scene</span>
                       )}
                     </span>
-                  </button>
+                  </div>
                   <div className="mt-2 flex items-center gap-1 opacity-70 transition-opacity group-hover:opacity-100">
                     <Button
                       size="icon"
@@ -73,7 +81,10 @@ export function SceneList({
                       className="size-7"
                       aria-label="Move scene up"
                       disabled={i === 0 || busy}
-                      onClick={() => onMove(scene.id, -1)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMove(scene.id, -1);
+                      }}
                     >
                       <ArrowUp className="size-3.5" />
                     </Button>
@@ -83,7 +94,10 @@ export function SceneList({
                       className="size-7"
                       aria-label="Move scene down"
                       disabled={i === scenes.length - 1 || busy}
-                      onClick={() => onMove(scene.id, 1)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMove(scene.id, 1);
+                      }}
                     >
                       <ArrowDown className="size-3.5" />
                     </Button>
@@ -93,7 +107,10 @@ export function SceneList({
                       className="ml-auto size-7 text-muted-foreground hover:text-destructive"
                       aria-label="Delete scene"
                       disabled={busy}
-                      onClick={() => setDeletingId(scene.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeletingId(scene.id);
+                      }}
                     >
                       <Trash2 className="size-3.5" />
                     </Button>

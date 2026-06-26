@@ -2,7 +2,17 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, Video, Loader2, Sparkles, Undo2, Braces } from "lucide-react";
+import { ArrowLeft, Video, Loader2, Sparkles, Undo2, Braces, ChevronDown, Eye, EyeOff } from "lucide-react";
+
+import { ORIENTATIONS, ORIENTATION_LABELS, type Orientation } from "@/lib/orientation";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import type { PlayerRef } from "@remotion/player";
 
@@ -13,6 +23,7 @@ import {
   useDeleteScene,
   useReorderScenes,
   useUndoScript,
+  useSetScriptHideText,
 } from "@/hooks/script";
 import type { SceneDTO } from "@/lib/dto";
 import { useCreateRender } from "@/hooks/renders";
@@ -33,6 +44,8 @@ import { VoiceoverPanel } from "@/components/editor/voiceover-panel";
 import { AIEnhanceDialog } from "@/components/editor/ai-enhance-dialog";
 import { ScenesJsonDialog } from "@/components/editor/scenes-json-dialog";
 import { CoverControl } from "@/components/editor/cover-control";
+import { MusicControl } from "@/components/editor/music-control";
+import { CaptionsMenu } from "@/components/editor/captions-menu";
 import { Combobox } from "@/components/ui/combobox";
 
 /** Sentinel stored when the user explicitly clears the take (vs. never choosing). */
@@ -48,6 +61,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   const reorder = useReorderScenes(scriptId);
   const createRender = useCreateRender();
   const undoScript = useUndoScript(scriptId);
+  const setHideText = useSetScriptHideText(scriptId);
   const { data: brandKits = [] } = useBrandKits();
   const assignBrandKit = useAssignBrandKit();
 
@@ -127,12 +141,18 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-8 w-64" />
-        <div className="grid gap-4 lg:grid-cols-[minmax(20rem,1fr)_22rem_22rem]">
+        {/* Mirror the real editor: a toolbar row, then 3 equal columns, then the
+            full-width voiceover panel. */}
+        <div className="flex items-center justify-between gap-2">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-8 w-72" />
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
           <Skeleton className="h-96" />
           <Skeleton className="h-96" />
           <Skeleton className="h-96" />
         </div>
+        <Skeleton className="h-40 w-full" />
       </div>
     );
   }
@@ -159,6 +179,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
     visual: s.visual,
     background: s.background,
     items: s.items,
+    // Per-scene override wins; otherwise the script-wide default.
+    hideText: s.hideText ?? script.hideText,
   }));
   // Reconcile the take with the current scenes by spoken text (see
   // resolveReelTimeline): non-text edits keep it; a changed script falls back to
@@ -182,6 +204,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
         visual: selectedScene.visual,
         background: selectedScene.background,
         items: selectedScene.items,
+        hideText: selectedScene.hideText ?? script.hideText,
       }
     : null;
   const sceneBeat = selectedScene
@@ -210,6 +233,37 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   }
 
   const sceneBusy = reorder.isPending || addScene.isPending || deleteScene.isPending;
+
+  // Queue a render at the script's native orientation, or repurpose into another
+  // format. Multiple formats simply queue several jobs (the server runs them
+  // within its concurrency cap).
+  function queueRender(orientation?: Orientation) {
+    createRender.mutate(
+      {
+        scriptId,
+        voiceTakeId: effectiveTakeId ?? undefined,
+        ...(orientation ? { orientation } : {}),
+      },
+      {
+        onSuccess: () => {
+          setUndoSnapshot(null); // can't undo after a render
+          toast.success(
+            orientation ? `Queued ${ORIENTATION_LABELS[orientation]}` : "Render queued",
+            {
+              description: "Track progress on the Renders page.",
+              action: {
+                label: "View",
+                onClick: () => {
+                  window.location.href = "/renders";
+                },
+              },
+            },
+          );
+        },
+        onError: () => toast.error("Failed to queue render"),
+      },
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -289,6 +343,28 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             </Button>
           )}
           <CoverControl scriptId={scriptId} coverUrl={script.coverUrl} />
+          <MusicControl
+            scriptId={scriptId}
+            musicUrl={script.musicUrl}
+            musicVolume={script.musicVolume}
+          />
+          <Button
+            size="sm"
+            variant={script.hideText ? "default" : "outline"}
+            onClick={() => setHideText.mutate(!script.hideText)}
+            title={
+              script.hideText
+                ? "On-screen text is hidden on all scenes (per-scene overrides still apply)"
+                : "Hide on-screen text on all scenes (background only)"
+            }
+          >
+            {script.hideText ? (
+              <EyeOff className="size-3.5" />
+            ) : (
+              <Eye className="size-3.5" />
+            )}
+            {script.hideText ? "Text hidden" : "Text shown"}
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -297,6 +373,11 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             <Braces className="size-3.5" />
             JSON
           </Button>
+          <CaptionsMenu
+            scriptId={scriptId}
+            takeId={effectiveTakeId}
+            disabled={scenes.length === 0}
+          />
           <Button
             size="sm"
             variant="outline"
@@ -305,39 +386,54 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             <Sparkles className="size-3.5" />
             AI
           </Button>
-          <Button
-            size="sm"
-            disabled={createRender.isPending || scenes.length === 0}
-            onClick={() =>
-              createRender.mutate(
-                { scriptId, voiceTakeId: effectiveTakeId ?? undefined },
-                {
-                  onSuccess: () => {
-                    setUndoSnapshot(null); // can't undo after a render
-                    toast.success("Render queued", {
-                      description: "Track progress on the Renders page.",
-                      action: { label: "View", onClick: () => { window.location.href = "/renders"; } },
-                    });
-                  },
-                  onError: () => toast.error("Failed to queue render"),
-                },
-              )
-            }
-          >
-            {createRender.isPending ? (
-              <Loader2 className="size-3.5 animate-spin" />
-            ) : (
-              <Video className="size-3.5" />
-            )}
-            Render
-          </Button>
+          <div className="flex items-center">
+            <Button
+              size="sm"
+              className="rounded-r-none"
+              disabled={createRender.isPending || scenes.length === 0}
+              onClick={() => queueRender()}
+            >
+              {createRender.isPending ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Video className="size-3.5" />
+              )}
+              Render
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  className="rounded-l-none border-l border-l-primary-foreground/20 px-1.5"
+                  disabled={createRender.isPending || scenes.length === 0}
+                  aria-label="Render in another format"
+                >
+                  <ChevronDown className="size-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Repurpose to format</DropdownMenuLabel>
+                {ORIENTATIONS.map((o) => (
+                  <DropdownMenuItem key={o} onClick={() => queueRender(o)}>
+                    {ORIENTATION_LABELS[o]}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => ORIENTATIONS.forEach((o) => queueRender(o))}
+                >
+                  All formats
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
 
       {/* The center column (player) defines the row height; the side panels are
           stretched to match it and scroll internally. Their content is absolutely
           positioned so it never contributes to the grid row height. */}
-      <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(20rem,1fr)_22rem_22rem]">
+      <div className="grid items-stretch gap-4 lg:grid-cols-3">
         <Card className="relative min-h-[24rem] overflow-hidden">
           <div className="absolute inset-0 overflow-hidden p-3">
             <SceneList
@@ -412,6 +508,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                   width={script.width}
                   height={script.height}
                   audioUrl={audioUrl}
+                  musicUrl={script.musicUrl ?? undefined}
+                  musicVolume={script.musicVolume}
                   loop={false}
                   tokens={script.brandTokens}
                   coverUrl={script.coverUrl ?? undefined}

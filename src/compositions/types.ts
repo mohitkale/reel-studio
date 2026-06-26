@@ -28,6 +28,8 @@ export interface ReelScene {
   background?: SceneBackground;
   /** Explicit list items for list/checklist templates (overrides text splitting). */
   items?: string[];
+  /** When true, suppress the on-screen text/visual and show just the background. */
+  hideText?: boolean;
 }
 
 /** Per-beat frame timing, from a voice take or estimated for silent preview. */
@@ -53,6 +55,10 @@ export type ReelProps = {
   scenes: ReelScene[];
   timeline: ReelBeat[];
   audioUrl?: string;
+  /** Optional background music track, mixed under the voiceover. */
+  musicUrl?: string;
+  /** Background music level, 0-100. */
+  musicVolume?: number;
   tokens: BrandTokens;
   /** Optional cover image baked as the reel's opening (thumbnail) frame. */
   coverUrl?: string;

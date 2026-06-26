@@ -10,6 +10,7 @@ import {
   Plus,
   X,
   GripVertical,
+  AlertTriangle,
 } from "lucide-react";
 
 import type { SceneDTO, SceneBackground } from "@/lib/dto";
@@ -55,7 +56,55 @@ type UpdateVars = {
   visual?: string | null;
   background?: SceneBackground | null;
   items?: string[] | null;
+  hideText?: boolean | null;
 };
+
+/**
+ * Probes a video URL in the browser and warns if it can't be loaded — the most
+ * common cause is a source that blocks hotlinking (Pixabay, many stock sites) or
+ * is missing CORS, in which case it won't play in the preview or the render.
+ */
+function VideoUrlStatus({ url }: { url: string }) {
+  const [result, setResult] = React.useState<{ url: string; ok: boolean } | null>(
+    null,
+  );
+  const status = result?.url === url ? (result.ok ? "ok" : "error") : "checking";
+
+  React.useEffect(() => {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    const video = document.createElement("video");
+    video.muted = true;
+    video.preload = "metadata";
+    const ok = () => setResult({ url, ok: true });
+    const fail = () => setResult({ url, ok: false });
+    video.addEventListener("loadeddata", ok);
+    video.addEventListener("canplay", ok);
+    video.addEventListener("error", fail);
+    video.src = trimmed;
+    video.load();
+    return () => {
+      video.removeEventListener("loadeddata", ok);
+      video.removeEventListener("canplay", ok);
+      video.removeEventListener("error", fail);
+      video.removeAttribute("src");
+      video.load();
+    };
+  }, [url]);
+
+  if (status !== "error") return null;
+  return (
+    <div className="flex items-start gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
+      <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+      <span>
+        This video couldn&apos;t be loaded, so the scene falls back to the brand
+        background. Many sites (Pixabay, stock sites) block direct links — download
+        the file and use the upload button, or use a direct, public{" "}
+        <code>.mp4</code> URL.
+      </span>
+    </div>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /* Background editor — image or video, applicable to any template      */
@@ -235,15 +284,18 @@ function BackgroundEditor({
           )}
 
           {kind === "video" && (
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={muted}
-                onChange={(e) => changeMuted(e.target.checked)}
-                className="size-4 rounded border-border"
-              />
-              Mute video audio track
-            </label>
+            <>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={muted}
+                  onChange={(e) => changeMuted(e.target.checked)}
+                  className="size-4 rounded border-border"
+                />
+                Mute video audio track
+              </label>
+              {url.trim() ? <VideoUrlStatus url={url} /> : null}
+            </>
           )}
         </>
       )}
@@ -486,6 +538,41 @@ export function SceneInspector({
           background={scene.background}
           onChange={(bg) => onUpdate({ id: scene.id, background: bg })}
         />
+
+        {/* Per-scene on-screen text override (wins over the global Text toggle). */}
+        <div className="grid gap-1.5">
+          <Label>Text on screen</Label>
+          <div className="flex rounded-md border p-0.5">
+            {(
+              [
+                ["Default", null],
+                ["Show", false],
+                ["Hide", true],
+              ] as const
+            ).map(([label, val]) => {
+              const selected = (scene.hideText ?? null) === val;
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => onUpdate({ id: scene.id, hideText: val })}
+                  className={cn(
+                    "flex-1 rounded px-2 py-0.5 text-xs transition-colors",
+                    selected
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            “Default” follows the global Text toggle; Show/Hide overrides it for
+            this scene. Hiding shows just the background.
+          </p>
+        </div>
 
         <div className="grid gap-2">
           <Label htmlFor="scene-visual">Visual</Label>

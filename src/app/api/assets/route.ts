@@ -20,12 +20,20 @@ const ALLOWED_MIME: Record<string, { type: string; ext: string }> = {
   "video/mp4": { type: "video", ext: "mp4" },
   "video/webm": { type: "video", ext: "webm" },
   "video/quicktime": { type: "video", ext: "mov" },
+  "audio/mpeg": { type: "audio", ext: "mp3" },
+  "audio/mp3": { type: "audio", ext: "mp3" },
+  "audio/wav": { type: "audio", ext: "wav" },
+  "audio/x-wav": { type: "audio", ext: "wav" },
+  "audio/ogg": { type: "audio", ext: "ogg" },
+  "audio/aac": { type: "audio", ext: "aac" },
+  "audio/mp4": { type: "audio", ext: "m4a" },
 };
 
 const TYPE_FOLDER: Record<string, string> = {
   image: "images",
   lottie: "lottie",
   video: "videos",
+  audio: "audio",
 };
 
 export async function GET(req: Request) {

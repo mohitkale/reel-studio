@@ -5,6 +5,7 @@ import { AbsoluteFill, Audio, Img, Sequence, useVideoConfig } from "remotion";
 import { type ReelProps, coverFrames } from "./types";
 import type { BrandTokens } from "./tokens";
 import { getTemplateComponent } from "./registry";
+import { Stage } from "./components/stage";
 
 /**
  * Static cover/thumbnail frame shown at the very start of the reel. The image is
@@ -33,12 +34,24 @@ export function ReelComposition({
   scenes,
   timeline,
   audioUrl,
+  musicUrl,
+  musicVolume = 20,
   tokens,
   coverUrl,
 }: ReelProps) {
   const { fps } = useVideoConfig();
   const sceneById = new Map(scenes.map((s) => [s.id, s]));
   const cover = coverFrames(fps, Boolean(coverUrl));
+
+  // Background music level (0-1). When there's a voiceover, duck the music while
+  // a scene is being spoken so narration stays clear; lift it in the gaps.
+  const baseMusic = Math.max(0, Math.min(1, musicVolume / 100));
+  const isVoiced = (frame: number) =>
+    timeline.some(
+      (b) => frame >= b.startFrame && frame < b.startFrame + b.durationFrames,
+    );
+  const musicAt = (frame: number) =>
+    audioUrl && isVoiced(frame) ? baseMusic * 0.35 : baseMusic;
 
   return (
     <AbsoluteFill
@@ -73,11 +86,23 @@ export function ReelComposition({
               durationInFrames={duration}
               name={scene.text.slice(0, 24) || "Scene"}
             >
-              <Template scene={scene} tokens={tokens} durationInFrames={duration} />
+              {scene.hideText ? (
+                // Text hidden: show just the (image/video) background + brand chrome.
+                <Stage
+                  tokens={tokens}
+                  background={scene.background}
+                  durationInFrames={duration}
+                />
+              ) : (
+                <Template scene={scene} tokens={tokens} durationInFrames={duration} />
+              )}
             </Sequence>
           );
         })}
         {audioUrl ? <Audio src={audioUrl} /> : null}
+        {musicUrl && baseMusic > 0 ? (
+          <Audio src={musicUrl} loop volume={musicAt} />
+        ) : null}
       </Sequence>
     </AbsoluteFill>
   );

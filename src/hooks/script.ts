@@ -91,6 +91,52 @@ export function useSetScriptCover(scriptId: string) {
   });
 }
 
+/** Set/clear the reel's background music track and/or its volume (0-100). */
+export function useSetScriptMusic(scriptId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { musicUrl?: string | null; musicVolume?: number }) =>
+      apiSend(`/api/scripts/${scriptId}`, "PATCH", vars),
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: ["script", scriptId] });
+      const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
+      if (prev) {
+        qc.setQueryData<ScriptDTO>(["script", scriptId], {
+          ...prev,
+          ...(vars.musicUrl !== undefined ? { musicUrl: vars.musicUrl } : {}),
+          ...(vars.musicVolume !== undefined
+            ? { musicVolume: vars.musicVolume }
+            : {}),
+        });
+      }
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["script", scriptId], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+  });
+}
+
+/** Toggle the script-wide default for hiding on-screen scene text. */
+export function useSetScriptHideText(scriptId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (hideText: boolean) =>
+      apiSend(`/api/scripts/${scriptId}`, "PATCH", { hideText }),
+    onMutate: async (hideText) => {
+      await qc.cancelQueries({ queryKey: ["script", scriptId] });
+      const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
+      if (prev) qc.setQueryData<ScriptDTO>(["script", scriptId], { ...prev, hideText });
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["script", scriptId], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+  });
+}
+
 /* Scenes */
 
 export function useAddScene(scriptId: string) {
@@ -113,6 +159,7 @@ export function useUpdateScene(scriptId: string) {
       visual?: string | null;
       background?: SceneBackground | null;
       items?: string[] | null;
+      hideText?: boolean | null;
     }) => apiSend(`/api/scenes/${vars.id}`, "PATCH", vars),
     // Optimistic: reflect the edit in the preview instantly, before the server.
     onMutate: async (vars) => {
@@ -140,6 +187,9 @@ export function useUpdateScene(scriptId: string) {
                     : {}),
                   ...(vars.items !== undefined
                     ? { items: vars.items ?? undefined }
+                    : {}),
+                  ...(vars.hideText !== undefined
+                    ? { hideText: vars.hideText }
                     : {}),
                 }
               : s,

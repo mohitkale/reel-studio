@@ -1,7 +1,14 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
-import { apiGet, apiPatch, apiPost, absoluteUrl, encode } from "./client.js";
+import {
+  apiGet,
+  apiGetText,
+  apiPatch,
+  apiPost,
+  absoluteUrl,
+  encode,
+} from "./client.js";
 
 type ToolResult = {
   content: { type: "text"; text: string }[];
@@ -75,6 +82,26 @@ export function registerTools(server: McpServer): void {
     guard(async ({ scriptId }) =>
       ok(await apiGet(`/api/scripts/${encode(scriptId)}/takes`)),
     ),
+  );
+
+  server.registerTool(
+    "get_captions",
+    {
+      description:
+        "Get the script's subtitles as SRT or WebVTT text. Timing matches the rendered video (uses the given take's measured timing, or estimated when none). Useful to review or hand back caption files.",
+      inputSchema: {
+        scriptId: z.string().min(1),
+        format: z.enum(["srt", "vtt"]).default("srt"),
+        takeId: z.string().optional(),
+      },
+    },
+    guard(async ({ scriptId, format, takeId }) => {
+      const qs = new URLSearchParams({ format });
+      if (takeId) qs.set("takeId", takeId);
+      return text(
+        await apiGetText(`/api/scripts/${encode(scriptId)}/captions?${qs.toString()}`),
+      );
+    }),
   );
 
   server.registerTool(
@@ -212,6 +239,25 @@ export function registerTools(server: McpServer): void {
     guard(async ({ scriptId, ...body }) =>
       ok(await apiPatch(`/api/scripts/${encode(scriptId)}`, body)),
     ),
+  );
+
+  server.registerTool(
+    "set_music",
+    {
+      description:
+        "Set or clear the reel's background music and/or its volume (0-100). Music is mixed under the voiceover and auto-ducked while scenes are spoken. Audio files are uploaded in the web app; pass an existing asset/media URL, or null to remove the track.",
+      inputSchema: {
+        scriptId: z.string().min(1),
+        musicUrl: z.string().max(2048).nullable().optional(),
+        musicVolume: z.number().int().min(0).max(100).optional(),
+      },
+    },
+    guard(async ({ scriptId, musicUrl, musicVolume }) => {
+      const body: Record<string, unknown> = {};
+      if (musicUrl !== undefined) body.musicUrl = musicUrl;
+      if (musicVolume !== undefined) body.musicVolume = musicVolume;
+      return ok(await apiPatch(`/api/scripts/${encode(scriptId)}`, body));
+    }),
   );
 
   server.registerTool(

@@ -22,6 +22,8 @@ export interface SceneDTO {
   visual?: string;
   background?: SceneBackground;
   items?: string[];
+  /** Per-scene override for on-screen text. null = inherit the script default. */
+  hideText: boolean | null;
 }
 
 export interface VoiceTakeDTO {
@@ -51,6 +53,12 @@ export interface ScriptDTO {
   brandKitId: string | null;
   brandTokens: BrandTokens;
   coverUrl: string | null;
+  /** Optional background music track URL, mixed (ducked) under the voiceover. */
+  musicUrl: string | null;
+  /** Background music level, 0-100. */
+  musicVolume: number;
+  /** Global default: hide on-screen scene text (per-scene hideText overrides this). */
+  hideText: boolean;
 }
 
 export interface ProjectDTO {

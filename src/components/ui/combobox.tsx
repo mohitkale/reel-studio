@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Check, ChevronDown, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useMounted } from "@/hooks/use-mounted";
 
 export interface ComboboxOption {
   value: string;
@@ -33,19 +34,40 @@ export function Combobox({
 }) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
-  const [pos, setPos] = React.useState({ top: 0, left: 0, width: 0 });
-  const [mounted, setMounted] = React.useState(false);
+  const [pos, setPos] = React.useState<{
+    left: number;
+    width: number;
+    maxHeight: number;
+    top?: number;
+    bottom?: number;
+  }>({ left: 0, width: 0, maxHeight: 300 });
+  const mounted = useMounted();
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const panelRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
-
-  React.useEffect(() => setMounted(true), []);
 
   function openPanel() {
     if (disabled) return;
     const rect = triggerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    setPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    const GAP = 4;
+    const spaceBelow = window.innerHeight - rect.bottom - GAP;
+    const spaceAbove = rect.top - GAP;
+    // Open upward when there isn't enough room below and there's more room above,
+    // so the list never spills off the bottom of the screen.
+    const openUp = spaceBelow < 240 && spaceAbove > spaceBelow;
+    const maxHeight = Math.max(
+      140,
+      Math.min(300, openUp ? spaceAbove : spaceBelow),
+    );
+    setPos({
+      left: rect.left,
+      width: rect.width,
+      maxHeight,
+      ...(openUp
+        ? { bottom: window.innerHeight - rect.top + GAP }
+        : { top: rect.bottom + GAP }),
+    });
     setOpen(true);
     setSearch("");
   }
@@ -99,14 +121,16 @@ export function Combobox({
           ref={panelRef}
           style={{
             position: "fixed",
-            top: pos.top,
+            ...(pos.top !== undefined ? { top: pos.top } : {}),
+            ...(pos.bottom !== undefined ? { bottom: pos.bottom } : {}),
             left: pos.left,
             width: Math.max(pos.width, 200),
+            maxHeight: pos.maxHeight,
             zIndex: 9999,
           }}
-          className="overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md"
+          className="flex flex-col overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md"
         >
-          <div className="flex items-center border-b px-3">
+          <div className="flex shrink-0 items-center border-b px-3">
             <Search className="mr-2 size-4 shrink-0 opacity-50" />
             <input
               ref={inputRef}
@@ -119,7 +143,7 @@ export function Combobox({
               }}
             />
           </div>
-          <div className="max-h-52 overflow-y-auto p-1">
+          <div className="flex-1 overflow-y-auto p-1">
             {groups.length === 0 && (
               <p className="py-6 text-center text-sm text-muted-foreground">
                 No results.

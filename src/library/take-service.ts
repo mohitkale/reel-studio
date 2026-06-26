@@ -7,6 +7,7 @@ import {
   type BeatInput,
 } from "@/lib/audio-timing";
 import { makeSilentWav, parseWav } from "@/lib/wav";
+import { normalizeWavLoudness } from "@/lib/audio-normalize";
 import { getProvider } from "@/providers/voice/registry";
 import { ProviderError, type ProviderId } from "@/providers/voice/types";
 import { prisma } from "@/library/db";
@@ -88,9 +89,13 @@ export async function generateTake(
   }
 
   const stitched = stitchBeats(beats, fps);
+  // Even out per-provider/voice level differences (no-op for silent placeholders).
+  const wav = input.placeholder
+    ? stitched.wav
+    : normalizeWavLoudness(stitched.wav);
 
   const key = `takes/${randomUUID()}.wav`;
-  await getAssetStore().put(key, stitched.wav);
+  await getAssetStore().put(key, wav);
 
   return createTake({
     scriptId: input.scriptId,
@@ -158,7 +163,7 @@ export async function createTakeFromBeats(
 
   const stitched = stitchBeats(beats, script.fps);
   const key = `takes/${randomUUID()}.wav`;
-  await getAssetStore().put(key, stitched.wav);
+  await getAssetStore().put(key, normalizeWavLoudness(stitched.wav));
 
   return createTake({
     scriptId: input.scriptId,
