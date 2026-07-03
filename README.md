@@ -1,6 +1,8 @@
 # Reel Studio
 
-Reel Studio is a local-first short-form video editor for building portrait, landscape, or square videos end to end:
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+**Reel Studio is an open-source, local-first short-form video editor** for building portrait, landscape, or square videos end to end.
 
 - Choose a video orientation per project (portrait 9:16, landscape 16:9, square 1:1)
 - Script and scene editing
@@ -12,17 +14,88 @@ Reel Studio is a local-first short-form video editor for building portrait, land
 
 The app runs as a single Next.js project with API routes and UI in one codebase.
 
-## Open-Source Safety Status
+## Open-Source
 
-This repository is prepared for open-source publishing with the following safeguards:
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. All local tools and components are open-source, including:
 
-- No real API keys are tracked in git.
-- `.env*` files are ignored except `.env.example`.
-- Provider keys are read from local environment variables at runtime.
-- Project-specific branded seed data was removed and replaced with neutral demo data.
-- Paths and personal identifiers were removed from public documentation.
+- **Kokoro TTS** - Apache-2.0 licensed, runs entirely in-browser
+- **MCP Server** - Open-source Model Context Protocol integration
+- **All custom components and templates** - MIT licensed
 
-Note: Your local machine may still contain a `.env.local` with real keys. Keep it untracked.
+We believe in transparent, community-driven development. Contributions are welcome!
+
+## Available Features
+
+### Video Creation
+- **Multi-format support**: Portrait (9:16), Landscape (16:9), Square (1:1)
+- **Script and scene editing**: Scene-by-scene content creation
+- **AI scene planning**: Automatically adds relevant Unsplash stock backgrounds with varied pan/zoom motion
+- **Motion templates**: Powered by Remotion with Lottie and Three.js support
+- **7 professional templates**: Kinetic typography, Lottie explainer, 3D accents, emoji punch, icon grid, quote cards, stat reveal
+- **MP4 rendering**: Queue-based rendering with progress updates
+- **Project management**: Organize projects, assets, and brand kits
+
+### Voice & Audio
+- **Multiple voice providers**:
+  - **Kokoro** (Apache-2.0): Free, runs entirely in-browser, no API key needed
+  - **Web Speech API**: Instant in-editor preview, no API key needed
+  - **Cartesia**: Premium cloud voices with cloning support
+  - **ElevenLabs**: Premium cloud voices with extensive library
+- **Voice takes management**: Generate, compare, and select multiple takes
+- **Caption sync**: Automatic timing alignment with voiceover
+- **Background music**: Support for royalty-free audio tracks
+
+### AI Integration
+- **AI scene generation**: Powered by Google Gemini or OpenAI
+- **MCP Server**: Model Context Protocol integration for AI tools
+- **Smart content planning**: AI-assisted storyboard creation
+
+### Developer Experience
+- **Type-safe**: Full TypeScript with strict mode
+- **Modern stack**: Next.js 16, React 19, Tailwind CSS v4
+- **Docker support**: Containerized deployment for isolated environments
+- **Comprehensive tooling**: ESLint, Prettier, Vitest
+- **Local-first**: SQLite database with local asset storage
+
+## Upcoming Features
+
+### Voice Cloning
+- **Local voice cloning**: Standalone project for training custom voice models locally
+- **Voice fine-tuning**: Personalize existing voices with your own samples
+- **Multi-language support**: Extended voice library for global content
+- **Real-time voice conversion**: Transform voice characteristics on-the-fly
+
+### Enhanced Video Capabilities
+- **Advanced transitions**: More sophisticated scene transitions and effects
+- **3D model integration**: Import and animate custom 3D models
+- **Video overlays**: Picture-in-picture and overlay effects
+- **Advanced text animations**: More kinetic typography options
+- **Custom Lottie support**: Import and use custom Lottie animations
+
+### AI & Automation
+- **Auto-generated scripts**: AI-powered script writing from prompts
+- **Smart scene suggestions**: AI recommendations for scene improvements
+- **Batch processing**: Generate multiple videos from templates
+- **Content optimization**: AI suggestions for engagement and retention
+
+### Collaboration & Sharing
+- **Project sharing**: Share projects with team members
+- **Version control**: Built-in version history for projects
+- **Cloud sync**: Optional cloud backup and sync
+- **Collaborative editing**: Real-time collaboration features
+
+### Performance & Scale
+- **GPU acceleration**: Hardware-accelerated rendering
+- **Distributed rendering**: Scale rendering across multiple machines
+- **Advanced caching**: Intelligent caching for faster renders
+- **Background processing**: Queue management for large batches
+
+### Platform Expansion
+- **Desktop app**: Native desktop applications (Windows, macOS, Linux)
+- **Mobile companion**: Mobile app for quick edits and previews
+- **Plugin system**: Extensible plugin architecture
+- **API access**: REST API for programmatic control
+
 
 ## Tech Stack
 
@@ -270,18 +343,4 @@ media/            # local asset and render output (git-ignored)
 - Product build brief: `docs/ai-reel-studio-BRIEF.md`
 - Security policy: `SECURITY.md`
 - Contribution guide: `CONTRIBUTING.md`
-
-## AI IDE Setup
-
-This repository includes a single shared instruction source for AI tools:
-
-- `AI_GUIDELINES.md` (canonical rules)
-
-Adapter files for common IDE agents are also included:
-
-- Claude Code: `CLAUDE.md` + `AGENTS.md`
-- GitHub Copilot: `.github/copilot-instructions.md`
-- Cursor: `.cursorrules`
-- Windsurf: `.windsurfrules`
-- Devin: `DEVIN.md`
 
