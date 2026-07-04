@@ -77,6 +77,13 @@ export interface VoiceProvider {
   preview?: boolean;
   /** Server provider that needs no API key (e.g. local Kokoro) — hidden from the key settings. */
   keyless?: boolean;
+  /**
+   * How many `synth()` calls take-service.ts may run in parallel for one take.
+   * Network-bound vendor APIs can safely run several at once; CPU-bound local
+   * models should stay low (or 1) to avoid contending for the same resource.
+   * Defaults to 4 when omitted.
+   */
+  maxConcurrency?: number;
   /** True when an API key is present (server providers); always true for client/keyless providers. */
   isConfigured(): boolean;
   listModels(): Promise<VoiceModel[]>;

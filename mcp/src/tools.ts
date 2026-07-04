@@ -38,6 +38,16 @@ function guard<A>(fn: (args: A) => Promise<ToolResult>) {
 }
 
 const orientation = z.enum(["portrait", "landscape", "square"]);
+const scriptStyle = z.enum(["short", "detailed"]);
+const sceneMood = z.enum([
+  "energetic",
+  "calm",
+  "dramatic",
+  "playful",
+  "inspiring",
+  "tech",
+  "nature",
+]);
 
 const backgroundShape = z.object({
   type: z.enum(["image", "video"]),
@@ -207,6 +217,11 @@ export function registerTools(server: McpServer): void {
         brief: z.string().trim().min(3).max(8000),
         sceneCount: z.number().int().min(3).max(20).optional(),
         orientation: orientation.optional(),
+        scriptStyle: scriptStyle
+          .optional()
+          .describe(
+            "'short' = punchy ~18 words/scene (default). 'detailed' = richer ~30-45 words/scene with a fuller story arc.",
+          ),
       },
     },
     guard(async (args) => ok(await apiPost("/api/projects/ai", args))),
@@ -289,6 +304,18 @@ export function registerTools(server: McpServer): void {
         visual: z.string().max(2048).nullable().optional(),
         background: backgroundShape.nullable().optional(),
         items: z.array(z.string().max(280)).max(24).nullable().optional(),
+        mood: sceneMood
+          .nullable()
+          .optional()
+          .describe(
+            "Emotional/visual tone driving the dynamic background treatment when there's no background image. Null clears it.",
+          ),
+        musicMood: z
+          .string()
+          .max(60)
+          .nullable()
+          .optional()
+          .describe("Short music vibe hint (e.g. 'uplifting lo-fi'), used for auto music suggestions. Null clears it."),
       },
     },
     guard(async ({ sceneId, ...body }) =>
@@ -325,6 +352,11 @@ export function registerTools(server: McpServer): void {
         mode: z.enum(["rewrite", "append"]),
         brief: z.string().trim().min(3).max(4000),
         sceneCount: z.number().int().min(2).max(20).optional(),
+        scriptStyle: scriptStyle
+          .optional()
+          .describe(
+            "'short' = punchy ~18 words/scene (default). 'detailed' = richer ~30-45 words/scene with a fuller story arc.",
+          ),
       },
     },
     guard(async ({ scriptId, ...body }) =>
@@ -336,7 +368,7 @@ export function registerTools(server: McpServer): void {
     "create_voice_take",
     {
       description:
-        "Generate a voice take (narration) for a script with a chosen provider+voice. Set placeholder:true for silent timing without spending TTS credits. Server-side providers require a key configured in the website.",
+        "Start generating a voice take (narration) for a script with a chosen provider+voice. Set placeholder:true for silent timing without spending TTS credits. Server-side providers require a key configured in the website. This does NOT block until finished: it returns a jobId immediately — poll get_voice_job with it until status is 'done' (the finished take is included in that response) or 'error'.",
       inputSchema: {
         scriptId: z.string().min(1),
         providerId: z.enum(["cartesia", "elevenlabs"]).optional(),
@@ -348,6 +380,21 @@ export function registerTools(server: McpServer): void {
     },
     guard(async ({ scriptId, ...body }) =>
       ok(await apiPost(`/api/scripts/${encode(scriptId)}/takes`, body)),
+    ),
+  );
+
+  server.registerTool(
+    "get_voice_job",
+    {
+      description:
+        "Poll the status of a voice-generation job started by create_voice_take. status progresses queued -> synthesizing -> stitching -> done|error; scene/sceneCount give per-scene synthesis progress. The finished take is included once status is 'done'.",
+      inputSchema: {
+        scriptId: z.string().min(1),
+        jobId: z.string().min(1),
+      },
+    },
+    guard(async ({ scriptId, jobId }) =>
+      ok(await apiGet(`/api/scripts/${encode(scriptId)}/takes/${encode(jobId)}`)),
     ),
   );
 
@@ -389,6 +436,8 @@ export function registerTools(server: McpServer): void {
       inputSchema: {
         scriptId: z.string().min(1),
         voiceTakeId: z.string().optional(),
+        /** Speed/resolution tradeoff. Omit for "standard" (the default). */
+        quality: z.enum(["draft", "standard", "high"]).optional(),
       },
     },
     guard(async (args) => {

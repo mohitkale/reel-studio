@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   interpolate,
   spring,
@@ -19,7 +20,11 @@ const animationData = pulse as unknown as LottieAnimationData;
  * Lottie explainer: a vector animation inside a glowing badge with an orbiting
  * conic ring, above a marker-highlighted caption. Spring entrance, fade exit.
  */
-export function LottieExplainer({ scene, tokens, durationInFrames }: TemplateProps) {
+export const LottieExplainer = React.memo(function LottieExplainer({
+  scene,
+  tokens,
+  durationInFrames,
+}: TemplateProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -41,6 +46,8 @@ export function LottieExplainer({ scene, tokens, durationInFrames }: TemplatePro
     <Stage
       tokens={tokens}
       background={scene.background}
+      mood={scene.mood}
+      treatmentSeed={scene.order}
       durationInFrames={durationInFrames}
       contentStyle={{ alignItems: "center", justifyContent: "center" }}
     >
@@ -115,4 +122,4 @@ export function LottieExplainer({ scene, tokens, durationInFrames }: TemplatePro
       </div>
     </Stage>
   );
-}
+});

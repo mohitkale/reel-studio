@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { AbsoluteFill, Audio, Img, Sequence, useVideoConfig } from "remotion";
 
 import { type ReelProps, coverFrames } from "./types";
@@ -30,7 +31,7 @@ function CoverFrame({ url, tokens }: { url: string; tokens: BrandTokens }) {
  * their sync is preserved. The composition's durationInFrames (set by the caller)
  * must already include the cover hold.
  */
-export function ReelComposition({
+export const ReelComposition = React.memo(function ReelComposition({
   scenes,
   timeline,
   audioUrl,
@@ -39,6 +40,7 @@ export function ReelComposition({
   tokens,
   coverUrl,
   hideProgressBar,
+  previewQuality = "standard",
 }: ReelProps) {
   const { fps } = useVideoConfig();
   const sceneById = new Map(scenes.map((s) => [s.id, s]));
@@ -55,7 +57,7 @@ export function ReelComposition({
     audioUrl && isVoiced(frame) ? baseMusic * 0.35 : baseMusic;
 
   return (
-    <StageOptionsProvider showProgressBar={!hideProgressBar}>
+    <StageOptionsProvider showProgressBar={!hideProgressBar} quality={previewQuality}>
     <AbsoluteFill
       style={{
         backgroundColor: tokens.background,
@@ -93,6 +95,8 @@ export function ReelComposition({
                 <Stage
                   tokens={tokens}
                   background={scene.background}
+                  mood={scene.mood}
+                  treatmentSeed={scene.order}
                   durationInFrames={duration}
                 />
               ) : (
@@ -109,4 +113,4 @@ export function ReelComposition({
     </AbsoluteFill>
     </StageOptionsProvider>
   );
-}
+});

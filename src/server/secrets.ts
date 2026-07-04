@@ -5,6 +5,7 @@ import path from "node:path";
 import { type ProviderId, PROVIDER_IDS } from "@/providers/voice/types";
 import { type AIProviderId, AI_PROVIDER_IDS } from "@/providers/ai/types";
 import { type StockProviderId, STOCK_PROVIDER_IDS } from "@/providers/stock/types";
+import { type MusicProviderId, MUSIC_PROVIDER_IDS } from "@/providers/music/types";
 
 /**
  * Server-only secret management. API keys live in a git-ignored .env.local at
@@ -30,6 +31,10 @@ const AI_ENV_KEY: Record<AIProviderId, string> = {
 
 const STOCK_ENV_KEY: Record<StockProviderId, string> = {
   unsplash: "UNSPLASH_ACCESS_KEY",
+};
+
+const MUSIC_ENV_KEY: Record<MusicProviderId, string> = {
+  jamendo: "JAMENDO_CLIENT_ID",
 };
 
 function envHas(envName: string): boolean {
@@ -114,6 +119,22 @@ export function stockKeyStatus(): Record<StockProviderId, boolean> {
 
 export function setStockKey(id: StockProviderId, value: string): Promise<void> {
   return writeEnvKey(STOCK_ENV_KEY[id], value);
+}
+
+/* Music providers */
+
+export function hasMusicKey(id: MusicProviderId): boolean {
+  return envHas(MUSIC_ENV_KEY[id]);
+}
+
+export function musicKeyStatus(): Record<MusicProviderId, boolean> {
+  return Object.fromEntries(
+    MUSIC_PROVIDER_IDS.map((id) => [id, hasMusicKey(id)]),
+  ) as Record<MusicProviderId, boolean>;
+}
+
+export function setMusicKey(id: MusicProviderId, value: string): Promise<void> {
+  return writeEnvKey(MUSIC_ENV_KEY[id], value);
 }
 
 /* MCP server token */

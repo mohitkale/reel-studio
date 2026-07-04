@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { Orientation } from "@/lib/orientation";
+import { stripMarkdown } from "@/lib/strip-markdown";
 
 /**
  * AI "director" contract. Mirrors the voice provider factory: the app talks only
@@ -19,6 +20,23 @@ export const planEffectSchema = z.enum([
 
 export const AI_PROVIDER_IDS = ["gemini", "openai"] as const;
 export type AIProviderId = (typeof AI_PROVIDER_IDS)[number];
+
+/** Short = punchy/fast (today's default). Detailed = deeper narration + story structure. */
+export const SCRIPT_STYLES = ["short", "detailed"] as const;
+export type ScriptStyle = (typeof SCRIPT_STYLES)[number];
+
+// Broad emotional/visual mood, mirrored from src/library/schemas.ts (kept here
+// too so the AI provider layer has no dependency on the DB schema module).
+export const sceneMoodSchema = z.enum([
+  "energetic",
+  "calm",
+  "dramatic",
+  "playful",
+  "inspiring",
+  "tech",
+  "nature",
+]);
+export type SceneMood = z.infer<typeof sceneMoodSchema>;
 
 // Keep in sync with the template registry ids (src/compositions/templates.ts).
 export const PLAN_TEMPLATE_IDS = [
@@ -44,14 +62,47 @@ export const aiSceneSchema = z.object({
    * undefined so an invalid value never breaks the plan or persists a bad enum.
    */
   effect: planEffectSchema.optional().catch(undefined),
+  /**
+   * Emotional/visual tone for scenes with no photo background — drives which
+   * dynamic background treatment (Aurora, Particles, Grid Pulse, ...) is used.
+   * Sent as a free string and coerced/dropped rather than rejected, same
+   * leniency pattern as `effect` above.
+   */
+  mood: sceneMoodSchema.optional().catch(undefined),
+  /** Free-text music vibe (e.g. "uplifting lo-fi", "tense cinematic") for auto music suggestions. */
+  musicMood: z.string().trim().max(60).optional(),
 });
 
-export const scenePlanSchema = z.object({
-  projectName: z.string().min(1),
-  scriptName: z.string().min(1),
-  voiceStyle: z.string().optional(),
-  scenes: z.array(aiSceneSchema).min(1).max(20),
-});
+function sanitizeAiScene(scene: z.infer<typeof aiSceneSchema>): AIScene {
+  const text = stripMarkdown(scene.text);
+  const emphasis = scene.emphasis
+    .map(stripMarkdown)
+    .filter((phrase) => phrase.length > 0 && text.includes(phrase));
+  return {
+    ...scene,
+    text,
+    emphasis,
+    visual: scene.visual ? stripMarkdown(scene.visual) : undefined,
+    backgroundQuery: scene.backgroundQuery
+      ? stripMarkdown(scene.backgroundQuery)
+      : undefined,
+    musicMood: scene.musicMood ? stripMarkdown(scene.musicMood) : undefined,
+  };
+}
+
+export const scenePlanSchema = z
+  .object({
+    projectName: z.string().min(1),
+    scriptName: z.string().min(1),
+    voiceStyle: z.string().optional(),
+    scenes: z.array(aiSceneSchema).min(1).max(20),
+  })
+  .transform((plan) => ({
+    ...plan,
+    projectName: stripMarkdown(plan.projectName),
+    scriptName: stripMarkdown(plan.scriptName),
+    scenes: plan.scenes.map(sanitizeAiScene),
+  }));
 
 export type AIScene = z.infer<typeof aiSceneSchema>;
 export type ScenePlan = z.infer<typeof scenePlanSchema>;
@@ -68,6 +119,8 @@ export interface GeneratePlanInput {
   existingSceneCount?: number;
   /** Target video orientation, so the director frames visuals appropriately. */
   orientation?: Orientation;
+  /** Short (punchy, ~18 words/scene) or Detailed (~30-45 words/scene, deeper story structure). Defaults to "short". */
+  scriptStyle?: ScriptStyle;
 }
 
 export interface AIModel {

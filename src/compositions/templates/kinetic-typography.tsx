@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   interpolate,
   spring,
@@ -23,7 +24,11 @@ function headlineSize(text: string): number {
  * Kinetic typography: an animated kicker, a masked word-by-word headline reveal
  * with marker-highlighted emphasis, a slow push-in, and a blur-out exit.
  */
-export function KineticTypography({ scene, tokens, durationInFrames }: TemplateProps) {
+export const KineticTypography = React.memo(function KineticTypography({
+  scene,
+  tokens,
+  durationInFrames,
+}: TemplateProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -43,7 +48,7 @@ export function KineticTypography({ scene, tokens, durationInFrames }: TemplateP
   );
 
   return (
-    <Stage tokens={tokens} background={scene.background} durationInFrames={durationInFrames} contentStyle={{ alignItems: "center", justifyContent: "center" }}>
+    <Stage tokens={tokens} background={scene.background} mood={scene.mood} treatmentSeed={scene.order} durationInFrames={durationInFrames} contentStyle={{ alignItems: "center", justifyContent: "center" }}>
       <div
         style={{
           display: "flex",
@@ -98,4 +103,4 @@ export function KineticTypography({ scene, tokens, durationInFrames }: TemplateP
       </div>
     </Stage>
   );
-}
+});

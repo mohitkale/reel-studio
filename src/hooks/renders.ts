@@ -25,6 +25,7 @@ export function useCreateRender() {
       scriptId: string;
       voiceTakeId?: string;
       orientation?: "portrait" | "landscape" | "square";
+      quality?: "draft" | "standard" | "high";
     }) =>
       apiPost<{ render: RenderDTO }>("/api/renders", vars).then((r) => r.render),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["renders"] }),

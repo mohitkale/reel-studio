@@ -4,6 +4,20 @@ import type { BrandTokens } from "./tokens";
 export type PanEffect = "ken-burns" | "pan-left" | "pan-right" | "pan-up" | "pan-down";
 
 /**
+ * Emotional/visual tone a scene can carry, mirrored from src/library/schemas.ts.
+ * Drives which dynamic background treatment is used when a scene has no photo
+ * background (see components/background-treatments.tsx).
+ */
+export type SceneMood =
+  | "energetic"
+  | "calm"
+  | "dramatic"
+  | "playful"
+  | "inspiring"
+  | "tech"
+  | "nature";
+
+/**
  * Optional full-bleed background for a scene, independent of the template.
  * An image animates with the chosen `effect`; a video plays muted by default
  * (so it never competes with the voiceover) unless `muted` is set false.
@@ -30,6 +44,10 @@ export interface ReelScene {
   items?: string[];
   /** When true, suppress the on-screen text/visual and show just the background. */
   hideText?: boolean;
+  /** Emotional/visual tone; picks the dynamic background treatment when there's no photo/video background. */
+  mood?: SceneMood;
+  /** This scene's position in the reel, used to deterministically vary the background treatment when no mood is set. */
+  order?: number;
 }
 
 /** Per-beat frame timing, from a voice take or estimated for silent preview. */
@@ -68,6 +86,12 @@ export type ReelProps = {
   fps?: number;
   /** When true, suppress the top progress bar on every scene. */
   hideProgressBar?: boolean;
+  /**
+   * Editor-only preview fidelity switch: "draft" trims expensive effects
+   * (background blur, grain, 3D particle count/DPR) for smoother scrubbing.
+   * Renders always use "standard" (the default).
+   */
+  previewQuality?: "standard" | "draft";
 };
 
 export const REEL_WIDTH = 1080;

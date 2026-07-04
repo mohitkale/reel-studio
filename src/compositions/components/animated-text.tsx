@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { spring, useCurrentFrame, useVideoConfig } from "remotion";
 
 import type { BrandTokens } from "../tokens";
@@ -24,7 +25,7 @@ interface AnimatedTextProps {
  * spring and a slight blur-in. Emphasized words get a marker-highlight that
  * wipes in behind them. Used for headlines and captions.
  */
-export function AnimatedText({
+export const AnimatedText = React.memo(function AnimatedText({
   text,
   emphasis,
   tokens,
@@ -39,9 +40,13 @@ export function AnimatedText({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const words = text.split(/\s+/).filter(Boolean);
-  const emphasisTokens = new Set(
-    emphasis.flatMap((p) => p.split(/\s+/).map(clean)).filter(Boolean),
+  // Splitting + emphasis-set construction is pure string work that never
+  // changes within a scene; memoize it so it isn't redone on every frame tick.
+  const words = React.useMemo(() => text.split(/\s+/).filter(Boolean), [text]);
+  const emphasisTokens = React.useMemo(
+    () =>
+      new Set(emphasis.flatMap((p) => p.split(/\s+/).map(clean)).filter(Boolean)),
+    [emphasis],
   );
 
   return (
@@ -135,4 +140,4 @@ export function AnimatedText({
       })}
     </div>
   );
-}
+});

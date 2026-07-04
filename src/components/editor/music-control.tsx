@@ -1,14 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { Music, Loader2, Trash2, Upload } from "lucide-react";
+import { Music, Loader2, Trash2, Upload, Search, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAssets, useUploadAsset } from "@/hooks/assets";
 import { useSetScriptMusic } from "@/hooks/script";
-import { MUSIC_LIBRARY } from "@/lib/music-library";
+import { useSearchMusic } from "@/hooks/music";
+import { MUSIC_LIBRARY, suggestBundledTrack } from "@/lib/music-library";
+import type { SceneDTO } from "@/lib/dto";
+import type { RemoteMusicTrack } from "@/providers/music/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -18,6 +22,53 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { HintTooltip } from "@/components/ui/hint-tooltip";
+
+/** Most common truthy value in a list, or undefined if there isn't one. */
+function mostCommon<T>(values: (T | undefined)[]): T | undefined {
+  const counts = new Map<T, number>();
+  for (const v of values) {
+    if (v === undefined) continue;
+    counts.set(v, (counts.get(v) ?? 0) + 1);
+  }
+  let best: T | undefined;
+  let bestCount = 0;
+  for (const [v, c] of counts) {
+    if (c > bestCount) {
+      best = v;
+      bestCount = c;
+    }
+  }
+  return best;
+}
+
+function RemoteTrackRow({
+  track,
+  active,
+  onUse,
+}: {
+  track: RemoteMusicTrack;
+  active: boolean;
+  onUse: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded-lg border px-3 py-2",
+        active ? "border-primary ring-1 ring-primary" : "border-border",
+      )}
+    >
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-medium">{track.name}</div>
+        <div className="truncate text-xs text-muted-foreground">{track.attribution}</div>
+      </div>
+      <audio controls preload="none" src={track.url} className="h-8 w-32" />
+      <Button size="sm" variant={active ? "default" : "outline"} onClick={onUse}>
+        Use
+      </Button>
+    </div>
+  );
+}
 
 /**
  * Attach a background music track to the reel. It is mixed under the voiceover
@@ -28,17 +79,39 @@ export function MusicControl({
   scriptId,
   musicUrl,
   musicVolume,
+  scenes = [],
 }: {
   scriptId: string;
   musicUrl: string | null;
   musicVolume: number;
+  /** Used to auto-suggest a track from the AI's per-scene mood/musicMood hints. */
+  scenes?: SceneDTO[];
 }) {
   const [open, setOpen] = React.useState(false);
+  const [searchInput, setSearchInput] = React.useState("");
+  const [searchQuery, setSearchQuery] = React.useState("");
   const setMusic = useSetScriptMusic(scriptId);
   const uploadAsset = useUploadAsset();
   const { data: audioAssets } = useAssets("audio");
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const audioRef = React.useRef<HTMLAudioElement>(null);
+
+  const dominantMood = React.useMemo(
+    () => mostCommon(scenes.map((s) => s.mood)),
+    [scenes],
+  );
+  const dominantMusicMood = React.useMemo(
+    () => mostCommon(scenes.map((s) => s.musicMood?.trim().toLowerCase())),
+    [scenes],
+  );
+  const suggestedTrack = React.useMemo(
+    () => suggestBundledTrack(dominantMood),
+    [dominantMood],
+  );
+
+  const suggestionQuery = open && !musicUrl ? dominantMusicMood : undefined;
+  const suggestionSearch = useSearchMusic(suggestionQuery ?? "", Boolean(suggestionQuery));
+  const manualSearch = useSearchMusic(searchQuery, open && searchQuery.length > 1);
 
   // Make the preview reflect the chosen level so you can hear the impact before
   // committing. (In the actual video the music is ducked further under narration.)
@@ -66,6 +139,10 @@ export function MusicControl({
 
   return (
     <>
+      <HintTooltip
+        label="Add background music — ducked under the voiceover while scenes are spoken"
+        side="bottom"
+      >
       <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
         <Music className="size-3.5" />
         Music
@@ -73,6 +150,7 @@ export function MusicControl({
           <span className="ml-1 size-1.5 rounded-full bg-primary" aria-hidden />
         )}
       </Button>
+      </HintTooltip>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
@@ -135,6 +213,36 @@ export function MusicControl({
               />
             )}
 
+            {!musicUrl && (suggestedTrack || dominantMusicMood) && (
+              <div className="grid gap-1.5 rounded-lg border border-dashed border-primary/40 bg-primary/5 p-2.5">
+                <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Wand2 className="size-3.5" />
+                  Suggested for this video{dominantMusicMood ? ` — "${dominantMusicMood}"` : ""}
+                </Label>
+                {suggestedTrack && (
+                  <button
+                    type="button"
+                    onClick={() => setMusic.mutate({ musicUrl: suggestedTrack.url })}
+                    className="rounded-lg border border-border bg-background px-3 py-2 text-left transition-colors hover:bg-accent"
+                  >
+                    <div className="text-sm font-medium">{suggestedTrack.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {suggestedTrack.description}
+                    </div>
+                  </button>
+                )}
+                {suggestionSearch.data?.tracks?.[0] && (
+                  <RemoteTrackRow
+                    track={suggestionSearch.data.tracks[0]}
+                    active={musicUrl === suggestionSearch.data.tracks[0].url}
+                    onUse={() =>
+                      setMusic.mutate({ musicUrl: suggestionSearch.data!.tracks[0].url })
+                    }
+                  />
+                )}
+              </div>
+            )}
+
             <div className="grid gap-1.5">
               <Label className="text-xs text-muted-foreground">
                 Starter tracks (free, CC0)
@@ -159,6 +267,56 @@ export function MusicControl({
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label className="text-xs text-muted-foreground">
+                Search a bigger library (Jamendo)
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && setSearchQuery(searchInput)}
+                  placeholder="e.g. upbeat lo-fi, tense cinematic..."
+                  className="h-8 text-sm"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setSearchQuery(searchInput)}
+                  disabled={!searchInput.trim()}
+                >
+                  <Search className="size-3.5" />
+                  Search
+                </Button>
+              </div>
+              {manualSearch.isFetching && (
+                <p className="text-xs text-muted-foreground">Searching...</p>
+              )}
+              {manualSearch.data?.configured === false && searchQuery && (
+                <p className="text-xs text-muted-foreground">
+                  Add a free Jamendo Client ID in Settings to search online tracks.
+                </p>
+              )}
+              {manualSearch.data?.tracks && manualSearch.data.tracks.length > 0 && (
+                <div className="flex max-h-56 flex-col gap-1.5 overflow-y-auto">
+                  {manualSearch.data.tracks.map((track) => (
+                    <RemoteTrackRow
+                      key={track.id}
+                      track={track}
+                      active={musicUrl === track.url}
+                      onUse={() => setMusic.mutate({ musicUrl: track.url })}
+                    />
+                  ))}
+                </div>
+              )}
+              {manualSearch.data?.configured &&
+                manualSearch.data.tracks.length === 0 &&
+                !manualSearch.isFetching &&
+                searchQuery && (
+                  <p className="text-xs text-muted-foreground">No tracks found. Try different words.</p>
+                )}
             </div>
 
             <div className="grid gap-1.5">

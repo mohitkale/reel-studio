@@ -36,6 +36,7 @@ export async function POST(
       renderId: render.id,
       scriptId: render.scriptId,
       voiceTakeId: render.voiceTakeId ?? undefined,
+      quality: render.quality,
       serverBaseUrl,
     });
 

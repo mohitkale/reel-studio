@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   interpolate,
   spring,
@@ -19,7 +20,7 @@ function parseItems(text: string): string[] {
   return split.length > 1 ? split : [text];
 }
 
-function CheckItem({
+const CheckItem = React.memo(function CheckItem({
   text,
   icon,
   delay,
@@ -89,13 +90,17 @@ function CheckItem({
       </span>
     </div>
   );
-}
+});
 
 /**
  * Icon grid / checklist: each line of the scene text becomes a row with an
  * icon badge and text. Good for tips, steps, and feature lists.
  */
-export function IconGrid({ scene, tokens, durationInFrames }: TemplateProps) {
+export const IconGrid = React.memo(function IconGrid({
+  scene,
+  tokens,
+  durationInFrames,
+}: TemplateProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -111,7 +116,7 @@ export function IconGrid({ scene, tokens, durationInFrames }: TemplateProps) {
   });
 
   return (
-    <Stage tokens={tokens} background={scene.background} durationInFrames={durationInFrames} contentStyle={{ justifyContent: "center" }}>
+    <Stage tokens={tokens} background={scene.background} mood={scene.mood} treatmentSeed={scene.order} durationInFrames={durationInFrames} contentStyle={{ justifyContent: "center" }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 48 }}>
         {/* Header label */}
         <div
@@ -156,4 +161,4 @@ export function IconGrid({ scene, tokens, durationInFrames }: TemplateProps) {
       </div>
     </Stage>
   );
-}
+});

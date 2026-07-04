@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   interpolate,
   spring,
@@ -22,7 +23,11 @@ function extractStat(visual: string | undefined, text: string): string {
  * Stat reveal: a big animated number/stat slams in with a counter-up effect,
  * then the supporting caption reveals below it. Good for metrics and key numbers.
  */
-export function StatReveal({ scene, tokens, durationInFrames }: TemplateProps) {
+export const StatReveal = React.memo(function StatReveal({
+  scene,
+  tokens,
+  durationInFrames,
+}: TemplateProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -46,7 +51,7 @@ export function StatReveal({ scene, tokens, durationInFrames }: TemplateProps) {
   );
 
   return (
-    <Stage tokens={tokens} background={scene.background} durationInFrames={durationInFrames} contentStyle={{ alignItems: "center", justifyContent: "center" }}>
+    <Stage tokens={tokens} background={scene.background} mood={scene.mood} treatmentSeed={scene.order} durationInFrames={durationInFrames} contentStyle={{ alignItems: "center", justifyContent: "center" }}>
       <div
         style={{
           display: "flex",
@@ -100,4 +105,4 @@ export function StatReveal({ scene, tokens, durationInFrames }: TemplateProps) {
       </div>
     </Stage>
   );
-}
+});

@@ -25,6 +25,8 @@ interface SceneJson {
   visual: string | null;
   background?: SceneBackground | null;
   items?: string[];
+  mood?: string;
+  musicMood?: string;
 }
 
 function toJson(scenes: SceneDTO[]): string {
@@ -35,12 +37,23 @@ function toJson(scenes: SceneDTO[]): string {
     visual: s.visual ?? null,
     ...(s.background ? { background: s.background } : {}),
     ...(s.items && s.items.length ? { items: s.items } : {}),
+    ...(s.mood ? { mood: s.mood } : {}),
+    ...(s.musicMood ? { musicMood: s.musicMood } : {}),
   }));
   return JSON.stringify(payload, null, 2);
 }
 
 const VALID_TEMPLATE_IDS = new Set(TEMPLATES.map((t) => t.id));
 const PAN_EFFECTS = new Set(["ken-burns", "pan-left", "pan-right", "pan-up", "pan-down"]);
+const SCENE_MOODS = new Set([
+  "energetic",
+  "calm",
+  "dramatic",
+  "playful",
+  "inspiring",
+  "tech",
+  "nature",
+]);
 
 function parseBackground(raw: unknown, sceneNum: number): SceneBackground | null {
   if (raw == null) return null;
@@ -100,7 +113,21 @@ function parseScenes(raw: string): SceneJson[] {
     } else if (s.items != null) {
       throw new Error(`Scene ${i + 1}: "items" must be an array of strings.`);
     }
-    return { templateId, text: s.text, emphasis, visual, background, items };
+    let mood: string | undefined;
+    if (typeof s.mood === "string" && SCENE_MOODS.has(s.mood)) {
+      mood = s.mood;
+    } else if (s.mood != null) {
+      throw new Error(
+        `Scene ${i + 1}: "mood" must be one of ${Array.from(SCENE_MOODS).join(", ")}.`,
+      );
+    }
+    let musicMood: string | undefined;
+    if (typeof s.musicMood === "string" && s.musicMood.trim()) {
+      musicMood = s.musicMood.trim().slice(0, 60);
+    } else if (s.musicMood != null) {
+      throw new Error(`Scene ${i + 1}: "musicMood" must be a string.`);
+    }
+    return { templateId, text: s.text, emphasis, visual, background, items, mood, musicMood };
   });
 }
 
@@ -130,7 +157,16 @@ const SAMPLE_JSON = `[
     "text": "Build less. Learn faster.",
     "emphasis": ["Learn faster"],
     "visual": "🚀",
-    "background": { "type": "image", "url": "https://images.example.com/launch.jpg", "effect": "ken-burns" }
+    "background": { "type": "image", "url": "https://images.example.com/launch.jpg", "effect": "ken-burns" },
+    "musicMood": "uplifting lo-fi"
+  },
+  {
+    "templateId": "quote-card",
+    "text": "Ship the ugly version. You can't learn from a plan.",
+    "emphasis": [],
+    "visual": "— Anonymous PM",
+    "mood": "inspiring",
+    "musicMood": "warm acoustic"
   }
 ]`;
 
@@ -152,12 +188,15 @@ Output ONLY a JSON array (no markdown fences, no commentary). Each array item is
 - "visual" (optional): a single emoji, short stat, or label, as noted above. Use null when not applicable.
 - "items" (optional): array of short strings — the rows for an "icon-grid" scene.
 - "background" (optional): { "type": "image" | "video", "url": "https://…", "effect": "ken-burns" | "pan-left" | "pan-right" | "pan-up" | "pan-down" (image only), "muted": true (video only) }
+- "mood" (optional): one of "energetic" | "calm" | "dramatic" | "playful" | "inspiring" | "tech" | "nature" — picks the animated background style for scenes with no "background" image. Vary it to match each scene's emotional tone.
+- "musicMood" (optional): 1-3 words describing the ideal background music vibe (e.g. "uplifting lo-fi", "tense cinematic"). Used to auto-suggest a matching track.
 
 Rules:
 - Scene 1 MUST be a scroll-stopping hook. The final scene should end with a clear call to action.
 - Vary the templates — do not make every scene "kinetic".
 - Every "emphasis" phrase must match the scene's "text" exactly (same words, same case).
 - 5 to 12 scenes is a good length.
+- Give scenes without a "background" image a "mood" so they get a dynamic, on-brand animated background instead of a plain gradient.
 
 Example of the exact output shape:
 ${SAMPLE_JSON}
@@ -257,8 +296,10 @@ function JsonEditorBody({
           Edit the raw scene structure or paste your own. Applying replaces all
           scenes for this script in order. Each scene needs a <code>text</code>.
           Optional: <code>templateId</code>, <code>emphasis</code>,{" "}
-          <code>visual</code>, <code>items</code> (checklist rows), and{" "}
-          <code>background</code> (<code>{`{"type":"image"|"video","url":"…","effect":"ken-burns","muted":true}`}</code>).
+          <code>visual</code>, <code>items</code> (checklist rows),{" "}
+          <code>background</code> (<code>{`{"type":"image"|"video","url":"…","effect":"ken-burns","muted":true}`}</code>
+          ), <code>mood</code> (drives the dynamic background style), and{" "}
+          <code>musicMood</code> (a short vibe hint for music suggestions).
         </DialogDescription>
       </DialogHeader>
 

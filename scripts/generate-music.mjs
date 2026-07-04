@@ -160,10 +160,113 @@ function ambientGlow() {
   return normalize(buf, -8);
 }
 
+function upbeatDrive() {
+  const buf = new Float32Array(N);
+  const rng = mulberry32(2024);
+  // C → G → Am → F, bright major-key drive with a syncopated bass and hats.
+  const prog = [
+    [48, [64, 67, 72, 76]],
+    [43, [62, 67, 71, 74]],
+    [45, [64, 69, 72, 76]],
+    [41, [65, 69, 72, 77]],
+  ];
+  prog.forEach(([bass, tones], c) => {
+    const t0 = c * 2;
+    // Punchy quarter-note bass with a syncopated eighth push.
+    addNote(buf, { freq: noteFreq(bass), start: t0, dur: 0.4, gain: 0.55, partials: [1, 0.5, 0.25], decay: 0.3 });
+    addNote(buf, { freq: noteFreq(bass), start: t0 + 0.75, dur: 0.3, gain: 0.4, partials: [1, 0.5], decay: 0.22 });
+    addNote(buf, { freq: noteFreq(bass), start: t0 + 1, dur: 0.4, gain: 0.5, partials: [1, 0.5, 0.25], decay: 0.3 });
+    addNote(buf, { freq: noteFreq(bass), start: t0 + 1.5, dur: 0.4, gain: 0.42, partials: [1, 0.5], decay: 0.25 });
+    // Sixteenth-note plucked arp, driving and bright.
+    const seq = [tones[0], tones[1], tones[2], tones[1], tones[3], tones[2], tones[1], tones[2]];
+    seq.forEach((m, i) => {
+      addNote(buf, { freq: noteFreq(m), start: t0 + i * 0.25, dur: 0.24, gain: 0.24, partials: PLUCK, decay: 0.14 });
+    });
+    // Bright hats on every eighth.
+    for (let i = 0; i < 4; i++) {
+      addTick(buf, { start: t0 + i * 0.5, dur: 0.05, gain: 0.14, decay: 0.015, rng });
+    }
+  });
+  return normalize(buf, -6);
+}
+
+function cinematicTension() {
+  const buf = new Float32Array(N);
+  // Cm - Ab, low sustained pad + a slow rising lead + sparse dramatic low hits.
+  const sections = [
+    { bass: 36, pad: [48, 51, 55], lead: 60 },
+    { bass: 32, pad: [44, 47, 51], lead: 63 },
+  ];
+  sections.forEach(({ bass, pad, lead }, c) => {
+    const t0 = c * 8;
+    addPad(buf, { midis: pad, gain: 0.09 });
+    addNote(buf, { freq: noteFreq(bass), start: t0, dur: 7.5, gain: 0.4, partials: [1, 0.3], decay: 4, attack: 0.3 });
+    // Slow rising lead across the section, half steps up.
+    for (let i = 0; i < 4; i++) {
+      addNote(buf, {
+        freq: noteFreq(lead + i),
+        start: t0 + i * 2,
+        dur: 2.2,
+        gain: 0.16 + i * 0.03,
+        partials: BELL,
+        attack: 0.4,
+        decay: 1.8,
+      });
+    }
+    // One low dramatic hit per section.
+    addNote(buf, { freq: noteFreq(bass - 12), start: t0 + 0.1, dur: 1.5, gain: 0.5, partials: [1, 0.6, 0.2], decay: 1.1, attack: 0.02 });
+  });
+  return normalize(buf, -8);
+}
+
+function playfulBounce() {
+  const buf = new Float32Array(N);
+  const rng = mulberry32(77);
+  // C major pentatonic bounce, staccato marimba-style plucks with a light skip beat.
+  const notes = [60, 64, 67, 72, 76, 72, 67, 64];
+  for (let bar = 0; bar < 4; bar++) {
+    const t0 = bar * 2;
+    notes.forEach((m, i) => {
+      addNote(buf, { freq: noteFreq(m), start: t0 + i * 0.25, dur: 0.18, gain: 0.3, partials: [1, 0.3, 0.15], decay: 0.1, attack: 0.002 });
+    });
+    addNote(buf, { freq: noteFreq(48), start: t0, dur: 0.5, gain: 0.4, partials: [1, 0.4], decay: 0.3 });
+    addNote(buf, { freq: noteFreq(48), start: t0 + 1, dur: 0.5, gain: 0.35, partials: [1, 0.4], decay: 0.3 });
+    for (let i = 0; i < 2; i++) {
+      addTick(buf, { start: t0 + 0.5 + i * 1, dur: 0.06, gain: 0.16, decay: 0.02, rng });
+    }
+  }
+  return normalize(buf, -7);
+}
+
+function warmAcoustic() {
+  const buf = new Float32Array(N);
+  // D - A - Bm - G, gentle fingerstyle-like rolling arpeggio, warm and open.
+  const prog = [
+    [38, [62, 66, 69, 74]],
+    [33, [61, 64, 69, 73]],
+    [35, [62, 66, 71, 74]],
+    [31, [62, 67, 71, 74]],
+  ];
+  prog.forEach(([bass, tones], c) => {
+    const t0 = c * 4;
+    addPad(buf, { midis: tones.map((m) => m - 12), gain: 0.05 });
+    addNote(buf, { freq: noteFreq(bass), start: t0, dur: 3.6, gain: 0.35, partials: [1, 0.3], decay: 2, attack: 0.02 });
+    const seq = [tones[0], tones[2], tones[1], tones[3], tones[0], tones[2], tones[1], tones[3]];
+    seq.forEach((m, i) => {
+      addNote(buf, { freq: noteFreq(m), start: t0 + i * 0.5, dur: 0.7, gain: 0.22, partials: PLUCK, attack: 0.01, decay: 0.6 });
+    });
+  });
+  return normalize(buf, -8);
+}
+
 const TRACKS = {
   "lofi-chill": lofiChill,
   "tech-minimal": techMinimal,
   "ambient-glow": ambientGlow,
+  "upbeat-drive": upbeatDrive,
+  "cinematic-tension": cinematicTension,
+  "playful-bounce": playfulBounce,
+  "warm-acoustic": warmAcoustic,
 };
 
 const outDir = path.join(process.cwd(), "public", "music");

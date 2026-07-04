@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   interpolate,
   spring,
@@ -11,18 +12,21 @@ import type {} from "@react-three/fiber";
 
 import type { TemplateProps } from "../types";
 import type { BrandTokens } from "../tokens";
-import { Stage } from "../components/stage";
+import { Stage, useStageOptions } from "../components/stage";
 import { AnimatedText } from "../components/animated-text";
 
 // Deterministic floating-particle positions (golden-angle spiral).
-const PARTICLES: [number, number, number][] = Array.from({ length: 20 }, (_, i) => {
+const PARTICLE_COUNT = 20;
+const PARTICLES: [number, number, number][] = Array.from({ length: PARTICLE_COUNT }, (_, i) => {
   const angle = i * 2.399963;
   const radius = 2.8 + (i % 4) * 0.45;
-  const y = (i / 20 - 0.5) * 4.4;
+  const y = (i / PARTICLE_COUNT - 0.5) * 4.4;
   return [Math.cos(angle) * radius, y, Math.sin(angle) * radius];
 });
+// Draft preview: render a fraction of the particles to cut WebGL draw calls.
+const DRAFT_PARTICLES = PARTICLES.filter((_, i) => i % 2 === 0);
 
-function Scene3D({ tokens }: { tokens: BrandTokens }) {
+function Scene3D({ tokens, particles }: { tokens: BrandTokens; particles: typeof PARTICLES }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -72,7 +76,7 @@ function Scene3D({ tokens }: { tokens: BrandTokens }) {
       </group>
 
       <group rotation={[0, frame * 0.005, 0]}>
-        {PARTICLES.map((pos, i) => (
+        {particles.map((pos, i) => (
           <mesh key={i} position={pos}>
             <sphereGeometry args={[0.05, 12, 12]} />
             <meshStandardMaterial
@@ -88,9 +92,15 @@ function Scene3D({ tokens }: { tokens: BrandTokens }) {
 }
 
 /** 3D accent: a lit, rotating icosahedron with wireframe overlay and floating particles, plus a lower-third caption. */
-export function ThreeAccent({ scene, tokens, durationInFrames }: TemplateProps) {
+export const ThreeAccent = React.memo(function ThreeAccent({
+  scene,
+  tokens,
+  durationInFrames,
+}: TemplateProps) {
   const frame = useCurrentFrame();
   const { width, height } = useVideoConfig();
+  const { quality } = useStageOptions();
+  const isDraft = quality === "draft";
 
   const exit = interpolate(
     frame,
@@ -103,16 +113,22 @@ export function ThreeAccent({ scene, tokens, durationInFrames }: TemplateProps) 
     <Stage
       tokens={tokens}
       background={scene.background}
+      mood={scene.mood}
+      treatmentSeed={scene.order}
       durationInFrames={durationInFrames}
       contentStyle={{ alignItems: "center", justifyContent: "flex-end" }}
       backdrop={
         <ThreeCanvas
           width={width}
           height={height}
+          // Cap device pixel ratio during draft preview — WebGL rasterization
+          // cost scales with the square of pixel ratio, so this is the single
+          // biggest lever for smoother scrubbing on the 3D template.
+          dpr={isDraft ? 1 : [1, 2]}
           style={{ position: "absolute", inset: 0 }}
           camera={{ position: [0, 0, 6], fov: 45 }}
         >
-          <Scene3D tokens={tokens} />
+          <Scene3D tokens={tokens} particles={isDraft ? DRAFT_PARTICLES : PARTICLES} />
         </ThreeCanvas>
       }
     >
@@ -129,4 +145,4 @@ export function ThreeAccent({ scene, tokens, durationInFrames }: TemplateProps) 
       </div>
     </Stage>
   );
-}
+});

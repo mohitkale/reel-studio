@@ -11,6 +11,7 @@ function toDTO(r: {
   voiceTakeId: string | null;
   name: string | null;
   status: string;
+  quality?: string | null;
   progress: number;
   outputPath: string | null;
   error: string | null;
@@ -22,6 +23,7 @@ function toDTO(r: {
     voiceTakeId: r.voiceTakeId,
     name: r.name,
     status: r.status as RenderDTO["status"],
+    quality: (r.quality as RenderDTO["quality"]) || "standard",
     progress: r.progress,
     outputUrl: r.outputPath ? getAssetStore().url(r.outputPath) : null,
     error: r.error,
@@ -44,6 +46,8 @@ export async function createRender(input: {
   status?: RenderDTO["status"];
   /** Optional label (e.g. the target format when repurposing). */
   name?: string;
+  /** Speed/resolution tradeoff; defaults to "standard" (unchanged behavior). */
+  quality?: RenderDTO["quality"];
 }): Promise<RenderDTO> {
   const row = await prisma.render.create({
     data: {
@@ -52,6 +56,7 @@ export async function createRender(input: {
       status: input.status ?? "queued",
       progress: 0,
       name: input.name ?? null,
+      quality: input.quality && input.quality !== "standard" ? input.quality : null,
     },
   });
   return toDTO(row);

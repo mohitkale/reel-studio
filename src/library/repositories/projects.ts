@@ -83,6 +83,10 @@ export async function createProjectFromPlan(
           scenes: {
             create: plan.scenes.map((scene, order) => {
               const background = backgrounds[order];
+              const config: Record<string, unknown> = {};
+              if (background) config.background = background;
+              if (scene.mood) config.mood = scene.mood;
+              if (scene.musicMood) config.musicMood = scene.musicMood;
               return {
                 order,
                 templateId: scene.templateId,
@@ -91,7 +95,9 @@ export async function createProjectFromPlan(
                   ? JSON.stringify(scene.emphasis)
                   : null,
                 visual: scene.visual ?? null,
-                layoutJson: background ? JSON.stringify({ background }) : null,
+                layoutJson: Object.keys(config).length
+                  ? JSON.stringify(config)
+                  : null,
               };
             }),
           },

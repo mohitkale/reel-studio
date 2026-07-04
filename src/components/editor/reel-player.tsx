@@ -28,6 +28,8 @@ interface ReelPlayerProps {
   tokens?: BrandTokens;
   coverUrl?: string;
   hideProgressBar?: boolean;
+  /** "draft" trims expensive preview effects for smoother scrubbing. */
+  previewQuality?: "standard" | "draft";
 }
 
 /** Live Remotion preview of the reel, driven by the scene templates + timeline. */
@@ -48,13 +50,40 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
       tokens,
       coverUrl,
       hideProgressBar,
+      previewQuality = "standard",
     },
     ref,
   ) {
     const resolvedTokens = tokens ?? defaultBrandTokens;
     const inputProps = React.useMemo(
-      () => ({ scenes, timeline, audioUrl, musicUrl, musicVolume, tokens: resolvedTokens, coverUrl, width, height, fps, hideProgressBar }),
-      [scenes, timeline, audioUrl, musicUrl, musicVolume, resolvedTokens, coverUrl, width, height, fps, hideProgressBar],
+      () => ({
+        scenes,
+        timeline,
+        audioUrl,
+        musicUrl,
+        musicVolume,
+        tokens: resolvedTokens,
+        coverUrl,
+        width,
+        height,
+        fps,
+        hideProgressBar,
+        previewQuality,
+      }),
+      [
+        scenes,
+        timeline,
+        audioUrl,
+        musicUrl,
+        musicVolume,
+        resolvedTokens,
+        coverUrl,
+        width,
+        height,
+        fps,
+        hideProgressBar,
+        previewQuality,
+      ],
     );
 
     const aspectRatio = `${width} / ${height}`;

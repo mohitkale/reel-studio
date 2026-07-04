@@ -47,6 +47,19 @@ const RESPONSE_SCHEMA = {
           // Plain string (not enum) to keep Gemini's schema state budget small;
           // aiSceneSchema validates/normalizes it to a real pan effect.
           effect: { type: "string" },
+          mood: {
+            type: "string",
+            enum: [
+              "energetic",
+              "calm",
+              "dramatic",
+              "playful",
+              "inspiring",
+              "tech",
+              "nature",
+            ],
+          },
+          musicMood: { type: "string" },
         },
         required: ["text", "templateId", "emphasis"],
       },

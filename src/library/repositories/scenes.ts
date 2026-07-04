@@ -35,12 +35,21 @@ export async function updateScene(
     items?: string[] | null;
     /** null = inherit script default, true/false = explicit per-scene override. */
     hideText?: boolean | null;
+    /** Emotional/visual tone; null clears it back to the deterministic per-scene default. */
+    mood?: string | null;
+    /** Free-text music vibe hint; null clears it. */
+    musicMood?: string | null;
   },
 ): Promise<SceneDTO> {
-  // background + items live together in the layoutJson config blob; merge so
-  // updating one never clobbers the other.
+  // background/items/mood/musicMood all live together in the layoutJson config
+  // blob; merge so updating one never clobbers the others.
   let layoutJson: string | undefined;
-  if (data.background !== undefined || data.items !== undefined) {
+  if (
+    data.background !== undefined ||
+    data.items !== undefined ||
+    data.mood !== undefined ||
+    data.musicMood !== undefined
+  ) {
     const current = await prisma.scene.findUnique({
       where: { id },
       select: { layoutJson: true },
@@ -53,6 +62,14 @@ export async function updateScene(
     if (data.items !== undefined) {
       if (data.items === null || data.items.length === 0) delete config.items;
       else config.items = data.items;
+    }
+    if (data.mood !== undefined) {
+      if (data.mood === null) delete config.mood;
+      else config.mood = data.mood as typeof config.mood;
+    }
+    if (data.musicMood !== undefined) {
+      if (data.musicMood === null) delete config.musicMood;
+      else config.musicMood = data.musicMood;
     }
     layoutJson = Object.keys(config).length ? JSON.stringify(config) : "";
   }

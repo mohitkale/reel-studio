@@ -18,6 +18,16 @@ const backgroundSchema = z.object({
   muted: z.boolean().optional(),
 });
 
+const sceneMoodSchema = z.enum([
+  "energetic",
+  "calm",
+  "dramatic",
+  "playful",
+  "inspiring",
+  "tech",
+  "nature",
+]);
+
 const snapshotSchema = z.object({
   scenes: z.array(
     z.object({
@@ -27,6 +37,8 @@ const snapshotSchema = z.object({
       visual: z.string().nullable(),
       background: backgroundSchema.nullable().optional(),
       items: z.array(z.string().max(280)).max(24).optional(),
+      mood: sceneMoodSchema.optional(),
+      musicMood: z.string().max(60).optional(),
     }),
   ),
 });
@@ -34,10 +46,14 @@ const snapshotSchema = z.object({
 function layoutJsonFor(scene: {
   background?: z.infer<typeof backgroundSchema> | null;
   items?: string[];
+  mood?: string;
+  musicMood?: string;
 }): string | null {
   const config: Record<string, unknown> = {};
   if (scene.background) config.background = scene.background;
   if (scene.items && scene.items.length) config.items = scene.items;
+  if (scene.mood) config.mood = scene.mood;
+  if (scene.musicMood) config.musicMood = scene.musicMood;
   return Object.keys(config).length ? JSON.stringify(config) : null;
 }
 

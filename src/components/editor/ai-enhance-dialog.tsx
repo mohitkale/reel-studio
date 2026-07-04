@@ -5,7 +5,7 @@ import { Sparkles, Loader2, RefreshCcw, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import type { SceneDTO } from "@/lib/dto";
-import type { AIProviderId } from "@/providers/ai/types";
+import type { AIProviderId, ScriptStyle } from "@/providers/ai/types";
 import { useAIProviders } from "@/hooks/ai";
 import { useEnhanceScript } from "@/hooks/script";
 import { cn } from "@/lib/utils";
@@ -61,6 +61,7 @@ export function AIEnhanceDialog({
   const [brief, setBrief] = React.useState("");
   const [providerId, setProviderId] = React.useState<AIProviderId | undefined>();
   const [sceneCount, setSceneCount] = React.useState<string>("auto");
+  const [scriptStyle, setScriptStyle] = React.useState<ScriptStyle>("short");
 
   const configured = (providers ?? []).filter((p) => p.configured);
   const effectiveProvider = providerId ?? configured[0]?.id;
@@ -83,6 +84,7 @@ export function AIEnhanceDialog({
         mode,
         brief: trimmed,
         sceneCount: sceneCount === "auto" ? undefined : Number(sceneCount),
+        scriptStyle,
       },
       {
         onSuccess: () => {
@@ -189,6 +191,36 @@ export function AIEnhanceDialog({
                     : "e.g. Common mistakes and how to avoid them"
                 }
               />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Script style</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {(
+                  [
+                    { id: "short" as const, label: "Short & punchy", description: "~18 words/scene, fast-paced hooks." },
+                    { id: "detailed" as const, label: "Detailed", description: "~30-45 words/scene, deeper story arc." },
+                  ]
+                ).map((opt) => {
+                  const active = scriptStyle === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setScriptStyle(opt.id)}
+                      className={cn(
+                        "flex flex-col items-start gap-0.5 rounded-lg border px-3 py-2 text-left text-sm transition-colors",
+                        active
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "text-muted-foreground hover:bg-accent",
+                      )}
+                    >
+                      <span className="font-medium">{opt.label}</span>
+                      <span className="text-xs opacity-70">{opt.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">

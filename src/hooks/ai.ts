@@ -7,6 +7,7 @@ import type {
   AIModel,
   AIProviderId,
   AIProviderStatus,
+  ScriptStyle,
 } from "@/providers/ai/types";
 import type { Orientation } from "@/lib/orientation";
 
@@ -61,6 +62,7 @@ export function useGenerateProject() {
       brief: string;
       sceneCount?: number;
       orientation?: Orientation;
+      scriptStyle?: ScriptStyle;
     }) =>
       apiPost<{ projectId: string; scriptId: string }>(
         "/api/projects/ai",

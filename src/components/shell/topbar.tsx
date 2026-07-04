@@ -11,6 +11,7 @@ import { navItems } from "@/lib/nav";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSidebar } from "@/components/shell/sidebar-context";
+import { HintTooltip } from "@/components/ui/hint-tooltip";
 
 function currentTitle(pathname: string) {
   const match = navItems.find((item) =>
@@ -30,16 +31,21 @@ export function Topbar() {
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur">
       {/* Desktop: collapse/expand the sidebar to reclaim screen width. */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="hidden md:inline-flex"
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        aria-expanded={!collapsed}
-        onClick={toggle}
+      <HintTooltip
+        label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        side="bottom"
       >
-        <Menu />
-      </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hidden md:inline-flex"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!collapsed}
+          onClick={toggle}
+        >
+          <Menu />
+        </Button>
+      </HintTooltip>
 
       <Dialog.Root open={mobileOpen} onOpenChange={setMobileOpen}>
         <Dialog.Trigger asChild>

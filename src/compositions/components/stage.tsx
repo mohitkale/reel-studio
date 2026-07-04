@@ -4,6 +4,8 @@ import * as React from "react";
 import {
   AbsoluteFill,
   OffthreadVideo,
+  continueRender,
+  delayRender,
   interpolate,
   useCurrentFrame,
   useVideoConfig,
@@ -11,6 +13,32 @@ import {
 
 import type { BrandTokens } from "../tokens";
 import type { PanEffect, SceneBackground } from "../types";
+import { DynamicBackground, pickBackgroundTreatment } from "./background-treatments";
+
+/**
+ * CSS `backgroundImage` (used for the Ken Burns/pan effect) isn't tracked by
+ * Remotion's asset-waiting machinery the way `<Img>` is, so a slow-loading
+ * background could get captured mid-render as a blank frame. Preload it via
+ * `delayRender`/`continueRender` so the renderer waits for the network fetch
+ * (bounded by Remotion's render timeout) instead of racing it.
+ */
+function usePreloadedBackgroundImage(url: string | undefined): void {
+  React.useEffect(() => {
+    if (!url) return;
+    let settled = false;
+    const handle = delayRender(`Loading scene background image: ${url}`);
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      continueRender(handle);
+    };
+    const img = new window.Image();
+    img.onload = finish;
+    img.onerror = finish; // never block the render on a broken image URL
+    img.src = url;
+    return finish;
+  }, [url]);
+}
 
 function imageTransform(effect: PanEffect, frame: number, duration: number): string {
   const t = interpolate(frame, [0, Math.max(1, duration)], [0, 1], {
@@ -36,7 +64,7 @@ function imageTransform(effect: PanEffect, frame: number, duration: number): str
  * foreground text stays legible. Images get a Ken Burns / pan animation; videos
  * play muted by default so they never fight the voiceover.
  */
-function SceneBackgroundLayer({
+const SceneBackgroundLayer = React.memo(function SceneBackgroundLayer({
   background,
   durationInFrames,
 }: {
@@ -50,6 +78,7 @@ function SceneBackgroundLayer({
   // background changes — no setState-in-effect needed.
   const [failedUrl, setFailedUrl] = React.useState<string | null>(null);
   const videoFailed = failedUrl === background.url;
+  usePreloadedBackgroundImage(background.type === "image" ? background.url : undefined);
 
   return (
     <>
@@ -85,42 +114,42 @@ function SceneBackgroundLayer({
       />
     </>
   );
-}
+});
 
-/** Drifting, blurred color blobs over a base gradient - the "lighting" of the scene. */
-function AnimatedBackground({ tokens }: { tokens: BrandTokens }) {
-  const frame = useCurrentFrame();
-  const x1 = 30 + Math.sin(frame / 70) * 12;
-  const y1 = 28 + Math.cos(frame / 90) * 10;
-  const x2 = 72 + Math.cos(frame / 80) * 12;
-  const y2 = 70 + Math.sin(frame / 60) * 10;
-
-  return (
-    <AbsoluteFill
-      style={{
-        background: `linear-gradient(155deg, ${tokens.background} 0%, ${tokens.backgroundAccent} 140%)`,
-      }}
-    >
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(45% 45% at ${x1}% ${y1}%, ${tokens.accent}66 0%, transparent 60%)`,
-          filter: "blur(40px)",
-          mixBlendMode: "screen",
-        }}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(40% 40% at ${x2}% ${y2}%, ${tokens.accentSecondary}55 0%, transparent 60%)`,
-          filter: "blur(50px)",
-          mixBlendMode: "screen",
-        }}
-      />
-    </AbsoluteFill>
+/**
+ * Production-grade scene "lighting": one of several deterministic animated
+ * background treatments (Aurora Glow, Floating Particles, Grid Pulse, Bokeh
+ * Drift, Wave Mesh), chosen from the scene's `mood` (when the AI/user set
+ * one) or a stable per-position fallback so backgroundless scenes never look
+ * identical. See background-treatments.tsx for the treatments themselves.
+ */
+const AnimatedBackground = React.memo(function AnimatedBackground({
+  tokens,
+  mood,
+  treatmentSeed = 0,
+}: {
+  tokens: BrandTokens;
+  mood?: string;
+  treatmentSeed?: number;
+}) {
+  const { quality } = useStageOptions();
+  const treatment = React.useMemo(
+    () => pickBackgroundTreatment(mood, treatmentSeed),
+    [mood, treatmentSeed],
   );
-}
+  return (
+    <DynamicBackground
+      treatment={treatment}
+      tokens={tokens}
+      quality={quality}
+      mood={mood}
+      treatmentSeed={treatmentSeed}
+    />
+  );
+});
 
-/** Static film grain via SVG turbulence. */
-function Grain() {
+/** Static film grain via SVG turbulence. Skipped in draft preview mode. */
+const Grain = React.memo(function Grain() {
   const id = React.useId().replace(/:/g, "");
   return (
     <svg
@@ -145,24 +174,39 @@ function Grain() {
       <rect width="100%" height="100%" filter={`url(#grain-${id})`} />
     </svg>
   );
-}
+});
 
 /**
- * Context that lets the editor toggle the progress bar without touching every
- * template. Provided once at the composition root; consumed only by ProgressBar.
+ * Context that lets the editor toggle the progress bar and preview quality
+ * without touching every template. Provided once at the composition root.
+ * "draft" trims expensive effects (blur layers, grain, 3D particle count) for
+ * smoother scrubbing on lower-end machines; renders always use "standard".
  */
-const StageOptionsContext = React.createContext<{ showProgressBar: boolean }>({
+const StageOptionsContext = React.createContext<{
+  showProgressBar: boolean;
+  quality: "standard" | "draft";
+}>({
   showProgressBar: true,
+  quality: "standard",
 });
+
+export function useStageOptions() {
+  return React.useContext(StageOptionsContext);
+}
 
 export function StageOptionsProvider({
   showProgressBar = true,
+  quality = "standard",
   children,
 }: {
   showProgressBar?: boolean;
+  quality?: "standard" | "draft";
   children: React.ReactNode;
 }) {
-  const value = React.useMemo(() => ({ showProgressBar }), [showProgressBar]);
+  const value = React.useMemo(
+    () => ({ showProgressBar, quality }),
+    [showProgressBar, quality],
+  );
   return (
     <StageOptionsContext.Provider value={value}>{children}</StageOptionsContext.Provider>
   );
@@ -201,7 +245,7 @@ function ProgressBar({ tokens }: { tokens: BrandTokens }) {
   );
 }
 
-function BrandBug({ tokens }: { tokens: BrandTokens }) {
+const BrandBug = React.memo(function BrandBug({ tokens }: { tokens: BrandTokens }) {
   return (
     <div
       style={{
@@ -230,19 +274,21 @@ function BrandBug({ tokens }: { tokens: BrandTokens }) {
       {tokens.handle}
     </div>
   );
-}
+});
 
 /**
  * Cinematic wrapper shared by every template: animated lighting, grain,
  * vignette, top progress bar, and a brand bug. Content renders in the safe area.
  */
-export function Stage({
+export const Stage = React.memo(function Stage({
   tokens,
   children,
   contentStyle,
   backdrop,
   background,
   durationInFrames,
+  mood,
+  treatmentSeed,
 }: {
   tokens: BrandTokens;
   children?: React.ReactNode;
@@ -253,8 +299,13 @@ export function Stage({
   background?: SceneBackground;
   /** This scene's sequence length, used to time the background image animation. */
   durationInFrames?: number;
+  /** Emotional/visual tone; picks the dynamic background treatment when there's no `background`. */
+  mood?: string;
+  /** Scene position, used to vary the treatment deterministically when `mood` is unset. */
+  treatmentSeed?: number;
 }) {
-  const hasBackground = Boolean(background && background.url);
+  const { quality } = useStageOptions();
+  const hasBackground = Boolean(background?.url);
   const computedBackdrop = hasBackground ? (
     <SceneBackgroundLayer
       background={background!}
@@ -263,12 +314,18 @@ export function Stage({
   ) : (
     backdrop
   );
+  // Animated lighting only when there's no full-bleed photo/video — otherwise
+  // the stock image (or 3D canvas) carries the scene and the gradient reads as
+  // a dull blue/orange wash bleeding through the scrim.
+  const showAnimatedLighting = !hasBackground && !backdrop;
 
   return (
     <AbsoluteFill style={{ fontFamily: tokens.fontFamily, overflow: "hidden" }}>
-      <AnimatedBackground tokens={tokens} />
+      {showAnimatedLighting ? (
+        <AnimatedBackground tokens={tokens} mood={mood} treatmentSeed={treatmentSeed} />
+      ) : null}
       {computedBackdrop ? <AbsoluteFill>{computedBackdrop}</AbsoluteFill> : null}
-      <Grain />
+      {quality === "draft" ? null : <Grain />}
       {/* Vignette */}
       <AbsoluteFill
         style={{
@@ -288,4 +345,4 @@ export function Stage({
       <BrandBug tokens={tokens} />
     </AbsoluteFill>
   );
-}
+});

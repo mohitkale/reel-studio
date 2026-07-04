@@ -71,6 +71,8 @@ export function createElevenLabsProvider(): VoiceProvider {
     id: "elevenlabs",
     label: "ElevenLabs",
     runtime: "server",
+    // Free/starter plans enforce a low concurrent-request limit.
+    maxConcurrency: 3,
 
     isConfigured: () => key().length > 0,
 

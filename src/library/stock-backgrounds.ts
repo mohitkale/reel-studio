@@ -1,10 +1,31 @@
-import type { Orientation } from "@/lib/orientation";
+import { dimsFor, type Orientation } from "@/lib/orientation";
 import type { SceneBackground } from "@/compositions/types";
 import { getStockProvider } from "@/providers/stock/registry";
 
 interface BackgroundRequest {
   backgroundQuery?: string;
   effect?: SceneBackground["effect"];
+}
+
+/**
+ * Unsplash (and most stock-photo CDNs) serve imgix-style URLs that accept
+ * `w`/`q`/`fit` overrides. Re-pin these to the video's actual render width
+ * (with a little headroom for the Ken Burns zoom) instead of trusting the
+ * provider's default preset — avoids shipping a full-resolution original to
+ * the browser/renderer when a 1080-2160px-wide frame is all that's needed.
+ */
+function sizeStockImageUrl(url: string, orientation: Orientation): string {
+  try {
+    const target = Math.round(dimsFor(orientation).width * 1.3);
+    const u = new URL(url);
+    if (!/unsplash\.com$/.test(u.hostname.replace(/^images\./, ""))) return url;
+    u.searchParams.set("w", String(target));
+    u.searchParams.set("q", "80");
+    u.searchParams.set("fit", "max");
+    return u.toString();
+  } catch {
+    return url;
+  }
 }
 
 /**
@@ -40,7 +61,7 @@ export async function resolveSceneBackgrounds<T extends BackgroundRequest>(
           provider.trackUsage?.(chosen);
           results[i] = {
             type: "image",
-            url: chosen.url,
+            url: sizeStockImageUrl(chosen.url, orientation),
             effect: scenes[i].effect ?? "ken-burns",
           };
         }

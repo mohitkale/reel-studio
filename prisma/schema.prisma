@@ -104,12 +104,34 @@ model Render {
   templateSetId String?
   name          String?
   status        String   @default("queued") // queued | rendering | done | error
+  quality       String?  // "draft" | "standard" | "high"; null = "standard"
   progress      Float    @default(0)
   outputPath    String?
   error         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  @@index([scriptId])
+}
+
+// Per-scene synthesized-audio cache, keyed by exactly what determines the
+// audio (scene, provider, voice, model, spoken text). Lets voice generation
+// skip re-calling the TTS API for scenes that haven't changed since a prior
+// take — a large speed win for iterative editing. Populated best-effort by
+// take-service.ts; stale rows (text/voice changed) are simply ignored by future
+// lookups and left for now rather than actively pruned.
+model SceneAudioBeat {
+  id         String   @id @default(cuid())
+  scriptId   String
+  sceneId    String
+  providerId String
+  voiceId    String
+  modelId    String   @default("") // normalized: "" when the provider has no model concept
+  textHash   String
+  audioPath  String // AssetStore key for this single scene's WAV
+  createdAt  DateTime @default(now())
+
+  @@unique([sceneId, providerId, voiceId, modelId, textHash])
   @@index([scriptId])
 }
 

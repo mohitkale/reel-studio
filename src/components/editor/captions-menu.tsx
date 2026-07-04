@@ -10,6 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { HintTooltip } from "@/components/ui/hint-tooltip";
 
 /**
  * Download the reel's captions as SRT or VTT. The timing comes from the selected
@@ -37,12 +38,14 @@ export function CaptionsMenu({
 
   return (
     <DropdownMenu>
+      <HintTooltip label="Download subtitles (SRT or VTT) synced to the selected take" side="bottom">
       <DropdownMenuTrigger asChild>
         <Button size="sm" variant="outline" disabled={disabled}>
           <Captions className="size-3.5" />
           Captions
         </Button>
       </DropdownMenuTrigger>
+      </HintTooltip>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Download subtitles</DropdownMenuLabel>
         <DropdownMenuItem onClick={() => download("srt")}>

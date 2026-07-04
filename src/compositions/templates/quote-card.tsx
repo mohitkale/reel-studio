@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   interpolate,
   spring,
@@ -15,7 +16,11 @@ import { AnimatedText } from "../components/animated-text";
  * Quote / testimonial: large decorative quotation marks frame a word-by-word
  * text reveal. An optional attribution line fades in below.
  */
-export function QuoteCard({ scene, tokens, durationInFrames }: TemplateProps) {
+export const QuoteCard = React.memo(function QuoteCard({
+  scene,
+  tokens,
+  durationInFrames,
+}: TemplateProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -43,7 +48,7 @@ export function QuoteCard({ scene, tokens, durationInFrames }: TemplateProps) {
   const openQuoteOpacity = quoteIn;
 
   return (
-    <Stage tokens={tokens} background={scene.background} durationInFrames={durationInFrames} contentStyle={{ alignItems: "center", justifyContent: "center" }}>
+    <Stage tokens={tokens} background={scene.background} mood={scene.mood} treatmentSeed={scene.order} durationInFrames={durationInFrames} contentStyle={{ alignItems: "center", justifyContent: "center" }}>
       <div
         style={{
           display: "flex",
@@ -136,4 +141,4 @@ export function QuoteCard({ scene, tokens, durationInFrames }: TemplateProps) {
       </div>
     </Stage>
   );
-}
+});

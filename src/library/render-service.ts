@@ -12,8 +12,8 @@ import path from "node:path";
 import { promises as fs } from "node:fs";
 import { cpus } from "node:os";
 import { bundle } from "@remotion/bundler";
-import { renderMedia, selectComposition } from "@remotion/renderer";
-import { type ReelProps, coverFrames } from "@/compositions/types";
+import { renderMedia, selectComposition, type X264Preset } from "@remotion/renderer";
+import { type ReelProps, type ReelScene, coverFrames } from "@/compositions/types";
 import { type Orientation, dimsFor } from "@/lib/orientation";
 import { getAssetStore } from "@/library/storage";
 import { getScript } from "@/library/repositories/scripts";
@@ -33,6 +33,32 @@ const MIN_PROGRESS_PERSIST_DELTA = 0.02;
 // Chrome with several worker threads, so running multiple in parallel can
 // exhaust memory on a modest server. Default to 1 (serial); override via env.
 const DEFAULT_MAX_CONCURRENT_RENDERS = 1;
+
+export type RenderQuality = "draft" | "standard" | "high";
+export const RENDER_QUALITIES: RenderQuality[] = ["draft", "standard", "high"];
+export const DEFAULT_RENDER_QUALITY: RenderQuality = "standard";
+
+/**
+ * Draft/High scale the render canvas relative to the orientation's native size
+ * (Standard == today's unchanged default). Draft trades resolution + a much
+ * faster x264 preset for a near-instant low-fidelity export good for checking
+ * timing/pacing; High renders at ~1.33x for a crisper final delivery. Because
+ * every template positions content with fixed pixel values (not %-relative),
+ * Draft/High will look slightly different in proportion from Standard — the
+ * same trade-off the app already makes between portrait/landscape/square.
+ */
+const QUALITY_PRESETS: Record<
+  RenderQuality,
+  { scale: number; x264Preset: X264Preset; crf?: number }
+> = {
+  // scale is passed to renderMedia() — it down/up-scales OUTPUT pixels while
+  // keeping the composition coordinate system at the script's native size.
+  // Templates use fixed pixel layouts (font sizes, padding) designed for
+  // 1080×1920; shrinking width/height in inputProps made draft renders clip text.
+  draft: { scale: 0.5, x264Preset: "ultrafast", crf: 30 },
+  standard: { scale: 1, x264Preset: "veryfast" },
+  high: { scale: 4 / 3, x264Preset: "medium", crf: 16 },
+};
 
 function parsePositiveInt(value: string | undefined): number | null {
   if (!value) return null;
@@ -95,16 +121,26 @@ export interface StartRenderOptions {
   /** Override the render canvas to repurpose the same script in another format.
    *  Defaults to the script's own orientation. */
   orientation?: Orientation;
+  /** Speed/resolution tradeoff for this job. Defaults to "standard" (unchanged
+   *  behavior). See QUALITY_PRESETS for what each tier changes. */
+  quality?: RenderQuality;
   /** Base URL of the Next.js server (e.g. "http://localhost:3000") so Remotion's
    *  Chrome process can fetch the audio take via an absolute URL. */
   serverBaseUrl?: string;
 }
 
 function resolveMaxConcurrentRenders(): number {
-  return (
-    parsePositiveInt(process.env.REEL_MAX_CONCURRENT_RENDERS) ??
-    DEFAULT_MAX_CONCURRENT_RENDERS
-  );
+  const fromEnv = parsePositiveInt(process.env.REEL_MAX_CONCURRENT_RENDERS);
+  if (fromEnv) return fromEnv;
+
+  // Each concurrent job spawns its own headless Chrome with several worker
+  // threads (see resolveRenderConcurrency), so this stays conservative: allow
+  // a second simultaneous job only on machines with real headroom (8+ cores),
+  // a third on very large boxes (16+). Still 1 by default, matching before.
+  const cpuCount = cpus().length;
+  if (cpuCount >= 16) return 3;
+  if (cpuCount >= 8) return 2;
+  return DEFAULT_MAX_CONCURRENT_RENDERS;
 }
 
 // Simple in-process job gate. Jobs beyond the cap wait here (their DB row stays
@@ -149,8 +185,10 @@ async function runRender({
   scriptId,
   voiceTakeId,
   orientation,
+  quality = DEFAULT_RENDER_QUALITY,
   serverBaseUrl = "http://localhost:3000",
 }: StartRenderOptions): Promise<void> {
+  const qualityPreset = QUALITY_PRESETS[quality];
   let lastPersistedAt = 0;
   let lastPersistedProgress = -1;
   let lastPersistedStatus: "queued" | "bundling" | "rendering" | "done" | "error" = "queued";
@@ -246,9 +284,10 @@ async function runRender({
 
     // Repurpose: render at the requested orientation's canvas instead of the
     // script's own. The composition reads width/height from these input props.
-    const dims = orientation
+    const nativeDims = orientation
       ? dimsFor(orientation)
       : { width: script.width, height: script.height };
+    const outputScale = qualityPreset.scale;
 
     const inputProps: ReelProps = {
       scenes: script.scenes.map((s) => ({
@@ -263,10 +302,12 @@ async function runRender({
         items: s.items,
         // Per-scene override wins; otherwise the script-wide default.
         hideText: s.hideText ?? script.hideText,
+        mood: s.mood as ReelScene["mood"],
+        order: s.order,
       })),
       timeline,
-      width: dims.width,
-      height: dims.height,
+      width: nativeDims.width,
+      height: nativeDims.height,
       fps: script.fps,
       audioUrl: resolved.takeUsable ? absolute(take?.audioUrl) : undefined,
       musicUrl: absolute(script.musicUrl),
@@ -310,10 +351,12 @@ async function runRender({
       codec: "h264",
       outputLocation: outputPath,
       inputProps,
+      scale: outputScale,
       imageFormat: "jpeg",
       pixelFormat: "yuv420p",
       concurrency,
-      x264Preset: "veryfast",
+      x264Preset: qualityPreset.x264Preset,
+      crf: qualityPreset.crf,
       offthreadVideoThreads,
       offthreadVideoCacheSizeInBytes: 512 * 1024 * 1024,
       mediaCacheSizeInBytes: 512 * 1024 * 1024,

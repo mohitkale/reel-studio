@@ -77,6 +77,7 @@ export function createCartesiaProvider(): VoiceProvider {
     id: "cartesia",
     label: "Cartesia",
     runtime: "server",
+    maxConcurrency: 4,
 
     isConfigured: () => key().length > 0,
 

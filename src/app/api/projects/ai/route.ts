@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getAIProvider, isAIProviderId } from "@/providers/ai/registry";
-import { AIError, AI_PROVIDER_IDS } from "@/providers/ai/types";
+import { AIError, AI_PROVIDER_IDS, SCRIPT_STYLES } from "@/providers/ai/types";
 import { createProjectFromPlan } from "@/library/repositories/projects";
+import { enrichScenePlan } from "@/library/enrich-scene-plan";
 import { resolveSceneBackgrounds } from "@/library/stock-backgrounds";
 import { orientationSchema, DEFAULT_ORIENTATION } from "@/lib/orientation";
 import { authorize } from "@/server/auth";
@@ -20,6 +21,7 @@ const bodySchema = z.object({
   brief: z.string().trim().min(3).max(8000),
   sceneCount: z.number().int().min(3).max(20).optional(),
   orientation: orientationSchema.optional(),
+  scriptStyle: z.enum(SCRIPT_STYLES).optional(),
 });
 
 /** POST /api/projects/ai - generate a scene plan from a brief and create the project. */
@@ -41,13 +43,15 @@ export async function POST(req: Request) {
     }
 
     const orientation = body.orientation ?? DEFAULT_ORIENTATION;
-    const plan = await provider.generatePlan({
+    const raw = await provider.generatePlan({
       mode: body.mode,
       brief: body.brief,
       sceneCount: body.sceneCount,
       modelId: body.modelId,
       orientation,
+      scriptStyle: body.scriptStyle,
     });
+    const plan = { ...raw, scenes: enrichScenePlan(raw.scenes) };
 
     // Best-effort: turn the director's backgroundQuery hints into real stock
     // backgrounds (no-op when no Unsplash key is configured).

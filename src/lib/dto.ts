@@ -24,6 +24,10 @@ export interface SceneDTO {
   items?: string[];
   /** Per-scene override for on-screen text. null = inherit the script default. */
   hideText: boolean | null;
+  /** Emotional/visual tone (AI-suggested or manually set); drives dynamic backgrounds + music. */
+  mood?: string;
+  /** Free-text music vibe hint (e.g. "uplifting lo-fi"), used for auto music suggestions. */
+  musicMood?: string;
 }
 
 export interface VoiceTakeDTO {
@@ -105,6 +109,8 @@ export interface RenderDTO {
     | "rendering"
     | "done"
     | "error";
+  /** Speed/resolution tradeoff used for this job. */
+  quality: "draft" | "standard" | "high";
   progress: number;
   outputUrl: string | null;
   error: string | null;

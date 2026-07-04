@@ -18,6 +18,16 @@ const backgroundSchema = z.object({
   muted: z.boolean().optional(),
 });
 
+const sceneMoodSchema = z.enum([
+  "energetic",
+  "calm",
+  "dramatic",
+  "playful",
+  "inspiring",
+  "tech",
+  "nature",
+]);
+
 const patchSchema = z.object({
   text: z.string().max(2000).optional(),
   templateId: z.string().optional(),
@@ -30,6 +40,10 @@ const patchSchema = z.object({
   items: z.array(z.string().max(280)).max(24).nullable().optional(),
   // Per-scene text visibility override; null = inherit the script default.
   hideText: z.boolean().nullable().optional(),
+  // Emotional/visual tone driving the dynamic background treatment; null clears it.
+  mood: sceneMoodSchema.nullable().optional(),
+  // Free-text music vibe hint for auto music suggestions; null clears it.
+  musicMood: z.string().max(60).nullable().optional(),
 });
 
 export async function PATCH(

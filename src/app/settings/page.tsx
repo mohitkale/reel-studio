@@ -7,6 +7,7 @@ import { useMounted } from "@/hooks/use-mounted";
 import { useProviders } from "@/hooks/voice";
 import { useAIProviders } from "@/hooks/ai";
 import { useStockProviders } from "@/hooks/stock";
+import { useMusicProviders } from "@/hooks/music";
 import {
   Card,
   CardContent,
@@ -19,6 +20,7 @@ import { PageHeader } from "@/components/shell/page-header";
 import { ProviderKeyCard } from "@/components/voice/provider-key-card";
 import { AIProviderCard } from "@/components/ai/ai-provider-card";
 import { StockProviderCard } from "@/components/stock/stock-provider-card";
+import { MusicProviderCard } from "@/components/music/music-provider-card";
 import { McpTokenCard } from "@/components/mcp/mcp-token-card";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +36,7 @@ export default function SettingsPage() {
   const { data, isLoading } = useProviders();
   const { data: aiProviders, isLoading: aiLoading } = useAIProviders();
   const { data: stockProviders, isLoading: stockLoading } = useStockProviders();
+  const { data: musicProviders, isLoading: musicLoading } = useMusicProviders();
 
   return (
     <div className="space-y-8">
@@ -142,6 +145,27 @@ export default function SettingsPage() {
           ) : (
             stockProviders.map((status) => (
               <StockProviderCard key={status.id} status={status} />
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Music library (optional)</CardTitle>
+          <CardDescription>
+            Add a free Jamendo Client ID to search 600k+ Creative Commons tracks
+            from the editor&apos;s Music control, on top of the bundled starter pack.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {musicLoading || !musicProviders ? (
+            <div className="space-y-4">
+              <Skeleton className="h-20 w-full" />
+            </div>
+          ) : (
+            musicProviders.map((status) => (
+              <MusicProviderCard key={status.id} status={status} />
             ))
           )}
         </CardContent>

@@ -38,6 +38,13 @@ an optional **visual**, and an optional photo **background**.
 - \`{ type: "image" | "video", url, effect? }\`. Effect is a pan/zoom: ken-burns, pan-left, pan-right, pan-up, pan-down.
 - Use a background on roughly 40–70% of scenes; clean text beats (most stat/icon/quote/emoji) look best without one.
 
+## mood & musicMood (optional, recommended)
+- \`mood\` — one of energetic, calm, dramatic, playful, inspiring, tech, nature. Drives a dynamic, on-brand animated background for scenes with no \`background\` image (instead of a plain gradient). Vary it to match each scene's emotional beat.
+- \`musicMood\` — 1–3 words describing the ideal background music vibe (e.g. "uplifting lo-fi", "tense cinematic"), used to auto-suggest a matching track.
+
+## Script style
+- \`ai_create_project\` / \`ai_generate_scenes\` accept \`scriptStyle\`: "short" (punchy, ~18 words/scene, default) or "detailed" (~30-45 words/scene, fuller setup → context → conflict/insight → payoff story arc, more scenes allowed).
+
 ## Building large storyboards incrementally
 - Models and single AI calls cap out around 20 scenes. To go bigger or stay current:
   1. \`ai_create_project\` (or \`create_project\`) for the first chunk.
@@ -68,8 +75,11 @@ const SCENE_SCHEMA = {
     background:
       "{ type: 'image'|'video', url: string<=2048, effect?: 'ken-burns'|'pan-left'|'pan-right'|'pan-up'|'pan-down', muted?: boolean } or null",
     items: "string[] (<=24, each <=280) for list/checklist templates, or null",
+    mood: "one of energetic|calm|dramatic|playful|inspiring|tech|nature, or null — drives the dynamic background when there's no photo background",
+    musicMood: "string <= 60 chars (e.g. 'uplifting lo-fi'), or null — music vibe hint for auto suggestions",
   },
   orientation: ["portrait", "landscape", "square"],
+  scriptStyle: ["short", "detailed"],
 };
 
 const TEMPLATE_CATALOG = [

@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   interpolate,
   spring,
@@ -15,7 +16,11 @@ import { AnimatedText } from "../components/animated-text";
  * Emoji punch: a giant emoji slams in with a spring bounce, shockwave rings
  * pulse out from it, then the one-liner text reveals below. Maximum impact.
  */
-export function EmojiPunch({ scene, tokens, durationInFrames }: TemplateProps) {
+export const EmojiPunch = React.memo(function EmojiPunch({
+  scene,
+  tokens,
+  durationInFrames,
+}: TemplateProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -51,7 +56,7 @@ export function EmojiPunch({ scene, tokens, durationInFrames }: TemplateProps) {
   );
 
   return (
-    <Stage tokens={tokens} background={scene.background} durationInFrames={durationInFrames} contentStyle={{ alignItems: "center", justifyContent: "center" }}>
+    <Stage tokens={tokens} background={scene.background} mood={scene.mood} treatmentSeed={scene.order} durationInFrames={durationInFrames} contentStyle={{ alignItems: "center", justifyContent: "center" }}>
       <div
         style={{
           display: "flex",
@@ -119,4 +124,4 @@ export function EmojiPunch({ scene, tokens, durationInFrames }: TemplateProps) {
       </div>
     </Stage>
   );
-}
+});

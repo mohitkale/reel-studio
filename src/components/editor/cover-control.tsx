@@ -17,6 +17,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { HintTooltip } from "@/components/ui/hint-tooltip";
 
 /**
  * Sets the reel's cover image — baked as the opening (thumbnail) frame of the
@@ -54,11 +55,13 @@ export function CoverControl({
 
   return (
     <>
+      <HintTooltip label="Set the opening thumbnail frame baked into the rendered MP4" side="bottom">
       <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
         <ImageIcon className="size-3.5" />
         Cover
         {coverUrl && <span className="ml-1 size-1.5 rounded-full bg-primary" aria-hidden />}
       </Button>
+      </HintTooltip>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">

@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 
 import type { VoiceTakeDTO } from "@/lib/dto";
 import {
@@ -9,10 +9,20 @@ import {
 import { makeSilentWav, parseWav } from "@/lib/wav";
 import { normalizeWavLoudness } from "@/lib/audio-normalize";
 import { getProvider } from "@/providers/voice/registry";
-import { ProviderError, type ProviderId } from "@/providers/voice/types";
+import {
+  ProviderError,
+  type ProviderId,
+  type SynthOptions,
+  type SynthResult,
+} from "@/providers/voice/types";
 import { prisma } from "@/library/db";
 import { getAssetStore } from "@/library/storage";
 import { createTake } from "@/library/repositories/takes";
+
+/** Reported as scenes finish synthesizing (cache hit or fresh call) or when stitching starts. */
+export type TakeProgress =
+  | { phase: "synthesizing"; scene: number; sceneCount: number }
+  | { phase: "stitching"; scene: number; sceneCount: number };
 
 export interface GenerateTakeInput {
   scriptId: string;
@@ -22,6 +32,127 @@ export interface GenerateTakeInput {
   voiceId?: string;
   modelId?: string;
   label?: string;
+  onProgress?: (progress: TakeProgress) => void;
+}
+
+const DEFAULT_SYNTH_CONCURRENCY = 4;
+
+function hashText(text: string): string {
+  return createHash("sha1").update(text).digest("hex");
+}
+
+interface CacheKeyParts {
+  sceneId: string;
+  providerId: string;
+  voiceId: string;
+  modelId?: string;
+  text: string;
+}
+
+/** Best-effort scene-audio cache lookup (see SceneAudioBeat in schema.prisma). */
+async function getCachedBeatWav(parts: CacheKeyParts): Promise<Buffer | null> {
+  try {
+    const row = await prisma.sceneAudioBeat.findUnique({
+      where: {
+        sceneId_providerId_voiceId_modelId_textHash: {
+          sceneId: parts.sceneId,
+          providerId: parts.providerId,
+          voiceId: parts.voiceId,
+          modelId: parts.modelId ?? "",
+          textHash: hashText(parts.text),
+        },
+      },
+    });
+    if (!row) return null;
+    return await getAssetStore().get(row.audioPath);
+  } catch {
+    return null; // cache miss on any error (missing row, deleted file, etc.)
+  }
+}
+
+/** Best-effort scene-audio cache write; failures never fail the generation. */
+async function setCachedBeatWav(
+  parts: CacheKeyParts & { scriptId: string },
+  wav: Buffer,
+): Promise<void> {
+  try {
+    const key = `scene-audio-cache/${parts.sceneId}-${randomUUID()}.wav`;
+    await getAssetStore().put(key, wav);
+    await prisma.sceneAudioBeat.upsert({
+      where: {
+        sceneId_providerId_voiceId_modelId_textHash: {
+          sceneId: parts.sceneId,
+          providerId: parts.providerId,
+          voiceId: parts.voiceId,
+          modelId: parts.modelId ?? "",
+          textHash: hashText(parts.text),
+        },
+      },
+      create: {
+        scriptId: parts.scriptId,
+        sceneId: parts.sceneId,
+        providerId: parts.providerId,
+        voiceId: parts.voiceId,
+        modelId: parts.modelId ?? "",
+        textHash: hashText(parts.text),
+        audioPath: key,
+      },
+      update: { audioPath: key },
+    });
+  } catch {
+    // Non-fatal: worst case, this scene just gets re-synthesized next time.
+  }
+}
+
+/**
+ * Synthesize every scene's audio with a bounded-concurrency worker pool
+ * (instead of one-at-a-time), skipping the TTS API entirely for scenes whose
+ * (text, voice, model) exactly matches a previously cached beat. Results are
+ * returned in original scene order regardless of completion order.
+ */
+async function synthesizeScenesConcurrently(
+  scenes: { id: string; text: string }[],
+  ctx: { scriptId: string; providerId: string; voiceId: string; modelId?: string },
+  synth: (opts: SynthOptions) => Promise<SynthResult>,
+  maxConcurrency: number,
+  onProgress?: (done: number, total: number) => void,
+): Promise<BeatInput[]> {
+  const total = scenes.length;
+  const results: BeatInput[] = new Array(total);
+  let cursor = 0;
+  let completed = 0;
+
+  async function worker() {
+    while (cursor < scenes.length) {
+      const i = cursor++;
+      const scene = scenes[i];
+      const cacheParts: CacheKeyParts = {
+        sceneId: scene.id,
+        providerId: ctx.providerId,
+        voiceId: ctx.voiceId,
+        modelId: ctx.modelId,
+        text: scene.text,
+      };
+      let wav = await getCachedBeatWav(cacheParts);
+      if (!wav) {
+        const result = await synth({
+          voiceId: ctx.voiceId,
+          modelId: ctx.modelId,
+          text: scene.text,
+        });
+        wav = result.wav;
+        void setCachedBeatWav({ ...cacheParts, scriptId: ctx.scriptId }, wav);
+      }
+      results[i] = { sceneId: scene.id, text: scene.text, wav };
+      completed += 1;
+      onProgress?.(completed, total);
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(maxConcurrency, scenes.length || 1) }, worker),
+  );
+  return results;
 }
 
 /**
@@ -46,6 +177,7 @@ export async function generateTake(
   let label = input.label;
 
   if (input.placeholder) {
+    input.onProgress?.({ phase: "synthesizing", scene: 0, sceneCount: script.scenes.length });
     for (const scene of script.scenes) {
       beats.push({
         sceneId: scene.id,
@@ -74,20 +206,26 @@ export async function generateTake(
       );
     }
 
-    const synth = provider.synth;
-
-    // Sequential to stay friendly to provider rate limits.
-    for (const scene of script.scenes) {
-      const { wav } = await synth({
+    const sceneCount = script.scenes.length;
+    input.onProgress?.({ phase: "synthesizing", scene: 0, sceneCount });
+    const synthesized = await synthesizeScenesConcurrently(
+      script.scenes.map((s) => ({ id: s.id, text: s.text })),
+      {
+        scriptId: input.scriptId,
+        providerId: input.providerId,
         voiceId: input.voiceId,
         modelId: input.modelId,
-        text: scene.text,
-      });
-      beats.push({ sceneId: scene.id, text: scene.text, wav });
-    }
+      },
+      provider.synth,
+      provider.maxConcurrency ?? DEFAULT_SYNTH_CONCURRENCY,
+      (done, total) =>
+        input.onProgress?.({ phase: "synthesizing", scene: done, sceneCount: total }),
+    );
+    beats.push(...synthesized);
     label = label ?? `${provider.label}${input.modelId ? ` · ${input.modelId}` : ""}`;
   }
 
+  input.onProgress?.({ phase: "stitching", scene: beats.length, sceneCount: beats.length });
   const stitched = stitchBeats(beats, fps);
   // Even out per-provider/voice level differences (no-op for silent placeholders).
   const wav = input.placeholder

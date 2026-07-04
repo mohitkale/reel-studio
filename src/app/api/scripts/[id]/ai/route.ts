@@ -2,13 +2,15 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getAIProvider, isAIProviderId } from "@/providers/ai/registry";
-import { AIError, AI_PROVIDER_IDS } from "@/providers/ai/types";
+import { AIError, AI_PROVIDER_IDS, SCRIPT_STYLES } from "@/providers/ai/types";
 import { getScript } from "@/library/repositories/scripts";
 import { prisma } from "@/library/db";
 import { resolveSceneBackgrounds } from "@/library/stock-backgrounds";
+import { enrichScenePlan } from "@/library/enrich-scene-plan";
 import { orientationFromDims } from "@/lib/orientation";
 import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
+import type { SceneBackground } from "@/compositions/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,7 +22,20 @@ const bodySchema = z.object({
   mode: z.enum(["rewrite", "append"]),
   brief: z.string().trim().min(3).max(4000),
   sceneCount: z.number().int().min(2).max(20).optional(),
+  scriptStyle: z.enum(SCRIPT_STYLES).optional(),
 });
+
+/** Build the Scene.layoutJson payload from a resolved background + AI mood hints. */
+function layoutJsonFor(
+  background: SceneBackground | undefined,
+  scene: { mood?: string; musicMood?: string },
+): string | null {
+  const config: Record<string, unknown> = {};
+  if (background) config.background = background;
+  if (scene.mood) config.mood = scene.mood;
+  if (scene.musicMood) config.musicMood = scene.musicMood;
+  return Object.keys(config).length ? JSON.stringify(config) : null;
+}
 
 export async function POST(
   req: Request,
@@ -54,7 +69,7 @@ export async function POST(
       .join("\n");
 
     const orientation = orientationFromDims(script.width, script.height);
-    const plan = await provider.generatePlan({
+    const raw = await provider.generatePlan({
       mode: body.mode,
       brief: body.brief,
       sceneCount: body.sceneCount,
@@ -62,12 +77,12 @@ export async function POST(
       existingSceneCount: script.scenes.length,
       modelId: body.modelId,
       orientation,
+      scriptStyle: body.scriptStyle,
     });
+    const plan = { ...raw, scenes: enrichScenePlan(raw.scenes) };
 
     // Best-effort stock backgrounds (no-op without an Unsplash key).
     const backgrounds = await resolveSceneBackgrounds(plan.scenes, orientation);
-    const layoutFor = (i: number) =>
-      backgrounds[i] ? JSON.stringify({ background: backgrounds[i] }) : null;
 
     if (body.mode === "rewrite") {
       await prisma.scene.deleteMany({ where: { scriptId } });
@@ -79,7 +94,7 @@ export async function POST(
           text: s.text,
           emphasis: s.emphasis.length ? JSON.stringify(s.emphasis) : null,
           visual: s.visual ?? null,
-          layoutJson: layoutFor(order),
+          layoutJson: layoutJsonFor(backgrounds[order], s),
         })),
       });
     } else {
@@ -92,7 +107,7 @@ export async function POST(
           text: s.text,
           emphasis: s.emphasis.length ? JSON.stringify(s.emphasis) : null,
           visual: s.visual ?? null,
-          layoutJson: layoutFor(i),
+          layoutJson: layoutJsonFor(backgrounds[i], s),
         })),
       });
     }

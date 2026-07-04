@@ -44,10 +44,27 @@ export const sceneBackgroundSchema = z.object({
   muted: z.boolean().optional(),
 });
 
+// Broad emotional/visual moods a scene can carry, used to auto-select a
+// background treatment (Phase 5) and matching music (Phase 5). Kept small and
+// generic so both AI providers and manual JSON authors can target it reliably.
+export const sceneMoodSchema = z.enum([
+  "energetic",
+  "calm",
+  "dramatic",
+  "playful",
+  "inspiring",
+  "tech",
+  "nature",
+]);
+
 /** Per-scene config stored in the Scene.layoutJson column. */
 export const sceneConfigSchema = z.object({
   background: sceneBackgroundSchema.optional(),
   items: z.array(z.string()).optional(),
+  /** Emotional/visual tone, drives the dynamic background treatment + music. */
+  mood: sceneMoodSchema.optional(),
+  /** Free-text music vibe hint (e.g. "uplifting lo-fi"), used for auto music suggestions. */
+  musicMood: z.string().max(60).optional(),
 });
 
 export const metaSchema = z.record(z.unknown());

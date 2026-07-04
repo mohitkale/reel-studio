@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, Video, Loader2, Sparkles, Undo2, Braces, ChevronDown, Eye, EyeOff, BarChart2 } from "lucide-react";
+import { ArrowLeft, Video, Loader2, Sparkles, Undo2, Braces, ChevronDown, Eye, EyeOff, BarChart2, Gauge, Zap, Gem } from "lucide-react";
 
 import { ORIENTATIONS, ORIENTATION_LABELS, type Orientation } from "@/lib/orientation";
 import {
@@ -27,7 +27,7 @@ import {
   useSetScriptHideProgressBar,
 } from "@/hooks/script";
 import type { SceneDTO } from "@/lib/dto";
-import { useCreateRender } from "@/hooks/renders";
+import { useCreateRender, useRenderProgress } from "@/hooks/renders";
 import { useBrandKits, useAssignBrandKit } from "@/hooks/brandkits";
 import { useHotkey } from "@/hooks/use-hotkeys";
 import { normalizeTemplateId } from "@/compositions/templates";
@@ -48,6 +48,7 @@ import { CoverControl } from "@/components/editor/cover-control";
 import { MusicControl } from "@/components/editor/music-control";
 import { CaptionsMenu } from "@/components/editor/captions-menu";
 import { Combobox } from "@/components/ui/combobox";
+import { HintTooltip } from "@/components/ui/hint-tooltip";
 
 /** Sentinel stored when the user explicitly clears the take (vs. never choosing). */
 const TAKE_CLEARED = "__cleared__";
@@ -81,18 +82,89 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
     return window.localStorage.getItem(takeKey(scriptId)) === TAKE_CLEARED;
   });
   const [previewMode, setPreviewMode] = React.useState<"scene" | "reel">("scene");
+  // Editor-only preview fidelity: "draft" trims expensive effects for smoother
+  // scrubbing on lower-end machines. Never affects the final render.
+  const [previewQuality, setPreviewQuality] = React.useState<"standard" | "draft">("standard");
   const [aiOpen, setAiOpen] = React.useState(false);
   const [jsonOpen, setJsonOpen] = React.useState(false);
   // Snapshot of scenes taken before an AI enhance — cleared after render or undo
   const [undoSnapshot, setUndoSnapshot] = React.useState<SceneDTO[] | null>(null);
   const playerRef = React.useRef<PlayerRef>(null);
 
+  // Inline render progress: track the most recently queued render from this
+  // editor session so the toolbar can show live % instead of only a toast +
+  // link to /renders. Cleared once the job finishes (done or error).
+  const [activeRender, setActiveRender] = React.useState<{
+    id: string;
+    label: string;
+    progress: number;
+    status: string;
+  } | null>(null);
+  const handleActiveRenderUpdate = React.useCallback(
+    (data: { progress: number; status: string }) => {
+      setActiveRender((prev) =>
+        prev ? { ...prev, progress: data.progress, status: data.status } : prev,
+      );
+    },
+    [],
+  );
+  const activeRenderIsLive =
+    activeRender?.status === "queued" ||
+    activeRender?.status === "bundling" ||
+    activeRender?.status === "rendering";
+  useRenderProgress(
+    activeRender && activeRenderIsLive ? activeRender.id : null,
+    handleActiveRenderUpdate,
+  );
+
   // Derive early so hotkey handlers can close over up-to-date values via useHotkey's ref pattern.
-  const scenes = script?.scenes ?? [];
+  // Memoized so `?? []` doesn't hand useMemo hooks below a new array identity every render.
+  const scenes = React.useMemo(() => script?.scenes ?? [], [script?.scenes]);
   const effectiveSceneId =
     selectedSceneId && scenes.some((s) => s.id === selectedSceneId)
       ? selectedSceneId
       : (scenes[0]?.id ?? null);
+  const selectedScene = scenes.find((s) => s.id === effectiveSceneId) ?? null;
+
+  // Reel input: scene templates + timeline. Memoized (and computed before any
+  // early return, per rules of hooks) so the Player only sees a new array
+  // reference when a scene actually changes, not on every unrelated re-render.
+  const reelScenes: ReelScene[] = React.useMemo(
+    () =>
+      scenes.map((s) => ({
+        id: s.id,
+        templateId: normalizeTemplateId(s.templateId),
+        text: s.text,
+        emphasis: s.emphasis,
+        visual: s.visual,
+        background: s.background,
+        items: s.items,
+        // Per-scene override wins; otherwise the script-wide default.
+        hideText: s.hideText ?? script?.hideText,
+        mood: s.mood as ReelScene["mood"],
+        order: s.order,
+      })),
+    [scenes, script?.hideText],
+  );
+  // Single-scene loop preview so template/text edits animate instantly.
+  const selectedReelScene: ReelScene | null = React.useMemo(
+    () =>
+      selectedScene
+        ? {
+            id: selectedScene.id,
+            templateId: normalizeTemplateId(selectedScene.templateId),
+            text: selectedScene.text,
+            emphasis: selectedScene.emphasis,
+            visual: selectedScene.visual,
+            background: selectedScene.background,
+            items: selectedScene.items,
+            hideText: selectedScene.hideText ?? script?.hideText,
+            mood: selectedScene.mood as ReelScene["mood"],
+            order: selectedScene.order,
+          }
+        : null,
+    [selectedScene, script?.hideText, scenes],
+  );
   // A take stays valid as long as its spoken text still matches the script
   // (resolveReelTimeline matches by text, so background/template/effect edits
   // never invalidate it). Auto-pick the most recent *usable* take; a take whose
@@ -169,21 +241,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
     );
   }
 
-  const selectedScene = scenes.find((s) => s.id === effectiveSceneId) ?? null;
   const selectedTake = script.takes.find((t) => t.id === effectiveTakeId) ?? null;
 
-  // Reel input: scene templates + timeline (from the take, or estimated for silent preview).
-  const reelScenes: ReelScene[] = scenes.map((s) => ({
-    id: s.id,
-    templateId: normalizeTemplateId(s.templateId),
-    text: s.text,
-    emphasis: s.emphasis,
-    visual: s.visual,
-    background: s.background,
-    items: s.items,
-    // Per-scene override wins; otherwise the script-wide default.
-    hideText: s.hideText ?? script.hideText,
-  }));
   // Reconcile the take with the current scenes by spoken text (see
   // resolveReelTimeline): non-text edits keep it; a changed script falls back to
   // estimated timing. Beats are remapped onto current scene ids for rendering.
@@ -196,19 +255,6 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   // Full-reel preview holds the cover at the start, shifting everything by this much.
   const coverFr = coverFrames(fps, !!script.coverUrl);
 
-  // Single-scene loop preview so template/text edits animate instantly.
-  const selectedReelScene: ReelScene | null = selectedScene
-    ? {
-        id: selectedScene.id,
-        templateId: normalizeTemplateId(selectedScene.templateId),
-        text: selectedScene.text,
-        emphasis: selectedScene.emphasis,
-        visual: selectedScene.visual,
-        background: selectedScene.background,
-        items: selectedScene.items,
-        hideText: selectedScene.hideText ?? script.hideText,
-      }
-    : null;
   const sceneBeat = selectedScene
     ? timeline.find((b) => b.sceneId === selectedScene.id)
     : undefined;
@@ -238,29 +284,34 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
 
   // Queue a render at the script's native orientation, or repurpose into another
   // format. Multiple formats simply queue several jobs (the server runs them
-  // within its concurrency cap).
-  function queueRender(orientation?: Orientation) {
+  // within its concurrency cap). `quality` trades resolution for speed: draft
+  // is a near-instant low-fidelity export, high is a crisper final delivery.
+  function queueRender(orientation?: Orientation, quality?: "draft" | "standard" | "high") {
     createRender.mutate(
       {
         scriptId,
         voiceTakeId: effectiveTakeId ?? undefined,
         ...(orientation ? { orientation } : {}),
+        ...(quality && quality !== "standard" ? { quality } : {}),
       },
       {
-        onSuccess: () => {
+        onSuccess: (render) => {
           setUndoSnapshot(null); // can't undo after a render
-          toast.success(
-            orientation ? `Queued ${ORIENTATION_LABELS[orientation]}` : "Render queued",
-            {
-              description: "Track progress on the Renders page.",
-              action: {
-                label: "View",
-                onClick: () => {
-                  window.location.href = "/renders";
-                },
+          const labelParts = [
+            orientation ? ORIENTATION_LABELS[orientation] : null,
+            quality === "draft" ? "draft" : quality === "high" ? "high quality" : null,
+          ].filter(Boolean);
+          const label = labelParts.length ? labelParts.join(" · ") : "Render";
+          setActiveRender({ id: render.id, label, progress: 0, status: render.status });
+          toast.success(labelParts.length ? `Queued ${labelParts.join(" · ")}` : "Render queued", {
+            description: "Track progress on the Renders page.",
+            action: {
+              label: "View",
+              onClick: () => {
+                window.location.href = "/renders";
               },
             },
-          );
+          });
         },
         onError: () => toast.error("Failed to queue render"),
       },
@@ -276,7 +327,11 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             className="text-muted-foreground hover:text-foreground"
             aria-label="Back to projects"
           >
-            <ArrowLeft className="size-4" />
+            <HintTooltip label="Back to projects" side="bottom">
+              <span className="inline-flex">
+                <ArrowLeft className="size-4" />
+              </span>
+            </HintTooltip>
           </Link>
           <div>
             <h2 className="text-lg font-semibold leading-tight">{script.name}</h2>
@@ -287,78 +342,91 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-44">
-            <Combobox
-              value={script.brandKitId ?? ""}
-              onChange={(v) =>
-                assignBrandKit.mutate({
-                  projectId: script.projectId,
-                  brandKitId: v || null,
-                })
-              }
-              options={[
-                {
-                  value: "",
-                  label: brandKits.find((k) => k.isDefault)
-                    ? `Default (${brandKits.find((k) => k.isDefault)!.name})`
-                    : "Default kit",
-                },
-                ...brandKits.map((k) => ({ value: k.id, label: k.name })),
-              ]}
-              placeholder="Default kit"
-              searchPlaceholder="Search kits…"
-            />
-          </div>
-          {undoSnapshot && (
-            <Button
-              size="sm"
-              variant="ghost"
-              disabled={undoScript.isPending}
-              onClick={() =>
-                undoScript.mutate(
-                  undoSnapshot.map((s) => ({
-                    templateId: s.templateId,
-                    text: s.text,
-                    emphasis: s.emphasis,
-                    visual: s.visual ?? null,
-                    background: s.background ?? null,
-                    items: s.items,
-                  })),
+          <HintTooltip
+            label="Choose a brand kit for colors, handle, and fonts. Leave on Default to use the starred kit."
+            side="bottom"
+          >
+            <div className="w-44">
+              <Combobox
+                value={script.brandKitId ?? ""}
+                onChange={(v) =>
+                  assignBrandKit.mutate({
+                    projectId: script.projectId,
+                    brandKitId: v || null,
+                  })
+                }
+                options={[
                   {
-                    onSuccess: () => {
-                      setUndoSnapshot(null);
-                      toast.success("Scenes restored", {
-                        description: "Rolled back to the version before AI changes.",
-                      });
-                    },
-                    onError: () => toast.error("Undo failed"),
+                    value: "",
+                    label: brandKits.find((k) => k.isDefault)
+                      ? `Default (${brandKits.find((k) => k.isDefault)!.name})`
+                      : "Default kit",
                   },
-                )
-              }
-            >
-              {undoScript.isPending ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Undo2 className="size-3.5" />
-              )}
-              Undo AI
-            </Button>
+                  ...brandKits.map((k) => ({ value: k.id, label: k.name })),
+                ]}
+                placeholder="Default kit"
+                searchPlaceholder="Search kits…"
+              />
+            </div>
+          </HintTooltip>
+          {undoSnapshot && (
+            <HintTooltip label="Restore scenes to how they were before the last AI change" side="bottom">
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={undoScript.isPending}
+                onClick={() =>
+                  undoScript.mutate(
+                    undoSnapshot.map((s) => ({
+                      templateId: s.templateId,
+                      text: s.text,
+                      emphasis: s.emphasis,
+                      visual: s.visual ?? null,
+                      background: s.background ?? null,
+                      items: s.items,
+                      mood: s.mood,
+                      musicMood: s.musicMood,
+                    })),
+                    {
+                      onSuccess: () => {
+                        setUndoSnapshot(null);
+                        toast.success("Scenes restored", {
+                          description: "Rolled back to the version before AI changes.",
+                        });
+                      },
+                      onError: () => toast.error("Undo failed"),
+                    },
+                  )
+                }
+              >
+                {undoScript.isPending ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Undo2 className="size-3.5" />
+                )}
+                Undo AI
+              </Button>
+            </HintTooltip>
           )}
           <CoverControl scriptId={scriptId} coverUrl={script.coverUrl} />
           <MusicControl
             scriptId={scriptId}
             musicUrl={script.musicUrl}
             musicVolume={script.musicVolume}
+            scenes={scenes}
           />
+          <HintTooltip
+            label={
+              script.hideText
+                ? "On-screen text is hidden on all scenes (per-scene overrides still apply)"
+                : "Hide on-screen text on all scenes — show background only"
+            }
+            side="bottom"
+          >
           <Button
             size="sm"
             variant={script.hideText ? "default" : "outline"}
             onClick={() => setHideText.mutate(!script.hideText)}
-            title={
-              script.hideText
-                ? "On-screen text is hidden on all scenes (per-scene overrides still apply)"
-                : "Hide on-screen text on all scenes (background only)"
-            }
           >
             {script.hideText ? (
               <EyeOff className="size-3.5" />
@@ -367,19 +435,44 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             )}
             {script.hideText ? "Text hidden" : "Show text"}
           </Button>
+          </HintTooltip>
+          <HintTooltip
+            label={
+              script.hideProgressBar
+                ? "Progress bar is hidden on all scenes"
+                : "Show or hide the thin progress bar at the top of each scene"
+            }
+            side="bottom"
+          >
           <Button
             size="sm"
             variant={script.hideProgressBar ? "default" : "outline"}
             onClick={() => setHideProgressBar.mutate(!script.hideProgressBar)}
-            title={
-              script.hideProgressBar
-                ? "Progress bar is hidden on all scenes"
-                : "Hide the top progress bar on all scenes"
-            }
           >
             <BarChart2 className="size-3.5" />
             {script.hideProgressBar ? "Progress hidden" : "Show progress"}
           </Button>
+          </HintTooltip>
+          <HintTooltip
+            label={
+              previewQuality === "draft"
+                ? "Draft preview: lighter effects for smoother scrubbing. Final render is unaffected."
+                : "Switch to a lighter draft preview for smoother scrubbing on slower machines"
+            }
+            side="bottom"
+          >
+          <Button
+            size="sm"
+            variant={previewQuality === "draft" ? "default" : "outline"}
+            onClick={() =>
+              setPreviewQuality((q) => (q === "draft" ? "standard" : "draft"))
+            }
+          >
+            <Gauge className="size-3.5" />
+            {previewQuality === "draft" ? "Draft preview" : "Full preview"}
+          </Button>
+          </HintTooltip>
+          <HintTooltip label="Edit scenes as JSON — templates, text, backgrounds, and moods" side="bottom">
           <Button
             size="sm"
             variant="outline"
@@ -388,11 +481,13 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             <Braces className="size-3.5" />
             JSON
           </Button>
+          </HintTooltip>
           <CaptionsMenu
             scriptId={scriptId}
             takeId={effectiveTakeId}
             disabled={scenes.length === 0}
           />
+          <HintTooltip label="Rewrite or append scenes with AI storyboarding" side="bottom">
           <Button
             size="sm"
             variant="outline"
@@ -401,7 +496,33 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             <Sparkles className="size-3.5" />
             AI
           </Button>
+          </HintTooltip>
+          {activeRenderIsLive && activeRender ? (
+            <HintTooltip
+              label={`${activeRender.label}: ${activeRender.status} — open Renders page`}
+              side="bottom"
+            >
+              <Link
+                href="/renders"
+                className="flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Loader2 className="size-3.5 shrink-0 animate-spin" />
+                <span className="whitespace-nowrap">
+                  {activeRender.status === "bundling"
+                    ? "Bundling…"
+                    : `${Math.round(activeRender.progress * 100)}%`}
+                </span>
+                <span className="h-1.5 w-14 overflow-hidden rounded-full bg-muted">
+                  <span
+                    className="block h-full rounded-full bg-primary transition-all duration-300"
+                    style={{ width: `${Math.round(activeRender.progress * 100)}%` }}
+                  />
+                </span>
+              </Link>
+            </HintTooltip>
+          ) : null}
           <div className="flex items-center">
+            <HintTooltip label="Export the reel as MP4 at standard quality" side="bottom">
             <Button
               size="sm"
               className="rounded-r-none"
@@ -415,7 +536,9 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
               )}
               Render
             </Button>
+            </HintTooltip>
             <DropdownMenu>
+              <HintTooltip label="Render options — draft, high quality, or other formats" side="bottom">
               <DropdownMenuTrigger asChild>
                 <Button
                   size="sm"
@@ -426,7 +549,18 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                   <ChevronDown className="size-3.5" />
                 </Button>
               </DropdownMenuTrigger>
+              </HintTooltip>
               <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Speed / quality</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => queueRender(undefined, "draft")}>
+                  <Zap className="size-3.5" />
+                  Quick draft (fastest, lower res)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => queueRender(undefined, "high")}>
+                  <Gem className="size-3.5" />
+                  High quality (slower, sharper)
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuLabel>Repurpose to format</DropdownMenuLabel>
                 {ORIENTATIONS.map((o) => (
                   <DropdownMenuItem key={o} onClick={() => queueRender(o)}>
@@ -497,6 +631,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     loop
                     tokens={script.brandTokens}
                     hideProgressBar={script.hideProgressBar}
+                    previewQuality={previewQuality}
                   />
                 ) : (
                   <ReelPlayer
@@ -530,6 +665,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                   tokens={script.brandTokens}
                   coverUrl={script.coverUrl ?? undefined}
                   hideProgressBar={script.hideProgressBar}
+                  previewQuality={previewQuality}
                 />
                 <p className="mt-3 text-center text-xs text-muted-foreground">
                   {takeUsable

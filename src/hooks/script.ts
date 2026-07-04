@@ -12,6 +12,7 @@ import type {
 } from "@/lib/dto";
 import type { ProviderId } from "@/providers/voice/types";
 import type { Orientation } from "@/lib/orientation";
+import type { ScriptStyle } from "@/providers/ai/types";
 
 async function apiSend<T>(
   url: string,
@@ -179,6 +180,8 @@ export function useUpdateScene(scriptId: string) {
       background?: SceneBackground | null;
       items?: string[] | null;
       hideText?: boolean | null;
+      mood?: string | null;
+      musicMood?: string | null;
     }) => apiSend(`/api/scenes/${vars.id}`, "PATCH", vars),
     // Optimistic: reflect the edit in the preview instantly, before the server.
     onMutate: async (vars) => {
@@ -243,18 +246,61 @@ export function useReorderScenes(scriptId: string) {
 
 /* Takes */
 
+export interface VoiceGenerationProgress {
+  status: "queued" | "synthesizing" | "stitching" | "done" | "error";
+  scene: number;
+  sceneCount: number;
+}
+
+/**
+ * Kicks off server-side voice generation (POST returns a jobId immediately),
+ * then follows its SSE progress stream until it resolves with the finished
+ * take or rejects with the job's error. Pass `onProgress` in the mutation
+ * variables to drive a live "scene N/M" indicator in the UI.
+ */
 export function useGenerateTake(scriptId: string) {
   const invalidate = useScriptInvalidator(scriptId);
   return useMutation({
-    mutationFn: (vars: {
+    mutationFn: ({
+      onProgress,
+      ...body
+    }: {
       placeholder?: boolean;
       providerId?: ProviderId;
       voiceId?: string;
       modelId?: string;
       label?: string;
+      onProgress?: (progress: VoiceGenerationProgress) => void;
     }) =>
-      apiPost<{ take: VoiceTakeDTO }>(`/api/scripts/${scriptId}/takes`, vars).then(
-        (r) => r.take,
+      apiPost<{ jobId: string }>(`/api/scripts/${scriptId}/takes`, body).then(
+        ({ jobId }) =>
+          new Promise<VoiceTakeDTO>((resolve, reject) => {
+            const es = new EventSource(
+              `/api/scripts/${scriptId}/takes/${jobId}/progress`,
+            );
+            es.onmessage = (e) => {
+              try {
+                const data = JSON.parse(e.data as string) as VoiceGenerationProgress & {
+                  error: string | null;
+                  take: VoiceTakeDTO | null;
+                };
+                onProgress?.(data);
+                if (data.status === "done" && data.take) {
+                  es.close();
+                  resolve(data.take);
+                } else if (data.status === "error") {
+                  es.close();
+                  reject(new Error(data.error || "Voice generation failed"));
+                }
+              } catch {
+                // ignore malformed/heartbeat messages, keep listening
+              }
+            };
+            es.onerror = () => {
+              es.close();
+              reject(new Error("Lost connection to the server while generating the take"));
+            };
+          }),
       ),
     onSuccess: invalidate,
   });
@@ -268,6 +314,7 @@ export function useEnhanceScript(scriptId: string) {
       mode: "rewrite" | "append";
       brief: string;
       sceneCount?: number;
+      scriptStyle?: ScriptStyle;
     }) =>
       apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/ai`, vars).then(
         (r) => r.script,
@@ -290,6 +337,8 @@ export function useImportScenes(scriptId: string) {
       visual: string | null;
       background?: SceneBackground | null;
       items?: string[];
+      mood?: string;
+      musicMood?: string;
     }[]) =>
       apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/undo`, { scenes }).then(
         (r) => r.script,
@@ -308,6 +357,8 @@ export function useUndoScript(scriptId: string) {
       visual: string | null;
       background?: SceneBackground | null;
       items?: string[];
+      mood?: string;
+      musicMood?: string;
     }[]) =>
       apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/undo`, { scenes }).then(
         (r) => r.script,

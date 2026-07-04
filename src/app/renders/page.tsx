@@ -136,12 +136,31 @@ function formatDuration(seconds: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+/** Rough "~Xs left" estimate from elapsed time and current progress. */
+function formatEta(elapsedMs: number, progress: number): string | null {
+  if (progress < 0.03 || progress >= 1) return null;
+  const remainingSeconds = Math.round((elapsedMs / 1000) * ((1 - progress) / progress));
+  if (!Number.isFinite(remainingSeconds) || remainingSeconds < 0) return null;
+  if (remainingSeconds < 5) return "almost done";
+  return `~${formatDuration(remainingSeconds)} left`;
+}
+
+const QUALITY_LABEL: Record<string, string> = {
+  draft: "Draft",
+  standard: "Standard",
+  high: "High quality",
+};
+
 function RenderCard({ render: initial }: { render: RenderDTO }) {
   const [render, setRender] = React.useState(initial);
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [renaming, setRenaming] = React.useState(false);
   const [nameInput, setNameInput] = React.useState(render.name ?? "");
   const [duration, setDuration] = React.useState<number | null>(null);
+  // First time we observe "rendering" (not "queued"/"bundling"), used to
+  // derive a rough ETA from elapsed time and current progress.
+  const [renderStartedAt, setRenderStartedAt] = React.useState<number | null>(null);
+  const [eta, setEta] = React.useState<string | null>(null);
   const nameRef = React.useRef<HTMLInputElement>(null);
   const createRender = useCreateRender();
   const renameRender = useRenameRender();
@@ -150,6 +169,9 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
 
   const handleUpdate = React.useCallback(
     (data: { progress: number; status: string; error: string | null; outputUrl: string | null }) => {
+      if (data.status === "rendering") {
+        setRenderStartedAt((prev) => prev ?? Date.now());
+      }
       setRender((prev) => ({
         ...prev,
         progress: data.progress,
@@ -160,6 +182,20 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
     },
     [],
   );
+  // Recompute the ETA every second while rendering; reading Date.now() inside
+  // a timer callback (not render, and not synchronously in the effect body)
+  // keeps the component pure. Stale eta values are harmless since it's only
+  // ever displayed while render.status === "rendering".
+  React.useEffect(() => {
+    if (render.status !== "rendering" || renderStartedAt === null) return;
+    const tick = () => setEta(formatEta(Date.now() - renderStartedAt, render.progress));
+    const kickoff = setTimeout(tick, 0);
+    const id = setInterval(tick, 1000);
+    return () => {
+      clearTimeout(kickoff);
+      clearInterval(id);
+    };
+  }, [render.status, render.progress, renderStartedAt]);
 
   const isActive = render.status === "queued" || render.status === "bundling" || render.status === "rendering";
   useRenderProgress(isActive ? render.id : null, handleUpdate);
@@ -242,6 +278,11 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
             </div>
             {!renaming && (
               <div className="flex items-center gap-1">
+                {render.quality && render.quality !== "standard" && (
+                  <Badge variant="outline" className="shrink-0">
+                    {QUALITY_LABEL[render.quality] ?? render.quality}
+                  </Badge>
+                )}
                 <Badge variant={STATUS_COLOR[render.status] ?? "secondary"} className="shrink-0 gap-1.5">
                   <Icon className={`size-3 ${isSpinner ? "animate-spin" : ""}`} />
                   {STATUS_LABEL[render.status] ?? render.status}
@@ -279,6 +320,7 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
               {render.status === "rendering" && (
                 <p className="text-xs text-muted-foreground">
                   {Math.round(render.progress * 100)}% rendered
+                  {eta ? ` · ${eta}` : ""}
                 </p>
               )}
             </div>
@@ -343,6 +385,7 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
                   createRender.mutate({
                     scriptId: render.scriptId,
                     voiceTakeId: render.voiceTakeId ?? undefined,
+                    ...(render.quality !== "standard" ? { quality: render.quality } : {}),
                   })
                 }
               >

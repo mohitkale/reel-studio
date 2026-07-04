@@ -7,6 +7,8 @@ import { ORIENTATION_LABELS, orientationSchema } from "@/lib/orientation";
 import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
+const qualitySchema = z.enum(["draft", "standard", "high"]);
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -25,6 +27,8 @@ const createSchema = z.object({
   voiceTakeId: z.string().optional(),
   /** Repurpose the script into another format; omit to use its native orientation. */
   orientation: orientationSchema.optional(),
+  /** Speed/resolution tradeoff; omit for "standard" (unchanged default). */
+  quality: qualitySchema.optional(),
 });
 
 export async function POST(req: Request) {
@@ -32,10 +36,16 @@ export async function POST(req: Request) {
     const origin = authorize(req);
     const body = createSchema.parse(await req.json());
 
-    // Label repurposed renders by their target format so the list is readable.
-    const name = body.orientation
-      ? ORIENTATION_LABELS[body.orientation]
-      : undefined;
+    // Label repurposed/non-standard-quality renders so the list is readable.
+    const labelParts = [
+      body.orientation ? ORIENTATION_LABELS[body.orientation] : null,
+      body.quality && body.quality !== "standard"
+        ? body.quality === "draft"
+          ? "Draft"
+          : "High quality"
+        : null,
+    ].filter(Boolean);
+    const name = labelParts.length ? labelParts.join(" · ") : undefined;
 
     // MCP-originated renders are compute-heavy and must be verified by a human:
     // create them as pending_approval and do NOT start the job. A same-origin
@@ -45,6 +55,7 @@ export async function POST(req: Request) {
         scriptId: body.scriptId,
         voiceTakeId: body.voiceTakeId,
         status: "pending_approval",
+        quality: body.quality,
       });
       return NextResponse.json({ render }, { status: 201 });
     }

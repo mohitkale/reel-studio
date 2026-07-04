@@ -7,6 +7,7 @@ import { Film } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { navItems } from "@/lib/nav";
 import { useSidebar } from "@/components/shell/sidebar-context";
+import { HintTooltip } from "@/components/ui/hint-tooltip";
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -43,12 +44,11 @@ export function Sidebar() {
         {navItems.map((item) => {
           const active = isActive(pathname, item.href);
           const Icon = item.icon;
-          return (
+          const link = (
             <Link
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              title={collapsed ? item.title : undefined}
               className={cn(
                 "group flex items-center gap-3 rounded-md text-sm font-medium transition-colors",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -61,6 +61,14 @@ export function Sidebar() {
               <Icon className="size-4 shrink-0" />
               {!collapsed && item.title}
             </Link>
+          );
+
+          return collapsed ? (
+            <HintTooltip key={item.href} label={item.title} side="right">
+              {link}
+            </HintTooltip>
+          ) : (
+            link
           );
         })}
       </nav>

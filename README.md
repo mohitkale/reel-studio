@@ -269,6 +269,7 @@ All supported variables are documented in `.env.example`.
 | `GEMINI_API_KEY` | No | Enable Gemini AI planning flows |
 | `OPENAI_API_KEY` | No | Enable OpenAI AI planning flows |
 | `UNSPLASH_ACCESS_KEY` | No | Enable AI-picked stock photo backgrounds (free Unsplash Demo tier) |
+| `JAMENDO_CLIENT_ID` | No | Enable searching Jamendo's 600k+ Creative Commons track library from the Music control (free Client ID) |
 | `REMOTION_RENDER_CONCURRENCY` | No | Override adaptive render concurrency (threads within one render) |
 | `REEL_MAX_CONCURRENT_RENDERS` | No | Max render jobs running at once (default 1; protects small servers) |
 | `SKIP_RENDER_SMOKE` | No | Skip render smoke test when set to `1` |

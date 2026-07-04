@@ -8,7 +8,11 @@ import { toast } from "sonner";
 import type { VoiceTakeDTO } from "@/lib/dto";
 import type { ProviderId } from "@/providers/voice/types";
 import { useProviders, useModels, useVoices } from "@/hooks/voice";
-import { useGenerateTake, useDeleteTake } from "@/hooks/script";
+import {
+  useGenerateTake,
+  useDeleteTake,
+  type VoiceGenerationProgress,
+} from "@/hooks/script";
 import {
   useKokoroGenerate,
   useWebSpeechPreview,
@@ -39,6 +43,19 @@ function kokoroProgressLabel(p: KokoroGenerateProgress | null): string {
   if (p.phase === "synth")
     return `Synthesizing scene ${p.scene}/${p.sceneCount}…`;
   return "Uploading…";
+}
+
+/** Live progress label for server-side providers (Cartesia, ElevenLabs, Kokoro server). */
+function serverProgressLabel(p: VoiceGenerationProgress | null): string {
+  if (!p) return "";
+  if (p.status === "queued") return "Queued…";
+  if (p.status === "stitching") return "Stitching audio…";
+  if (p.status === "synthesizing") {
+    return p.sceneCount > 0
+      ? `Synthesizing scene ${Math.min(p.scene + 1, p.sceneCount)}/${p.sceneCount}…`
+      : "Synthesizing…";
+  }
+  return "";
 }
 
 export function VoiceoverPanel({
@@ -120,6 +137,7 @@ export function VoiceoverPanel({
   const generate = useGenerateTake(scriptId);
   const kokoro = useKokoroGenerate(scriptId);
   const del = useDeleteTake(scriptId);
+  const [serverProgress, setServerProgress] = React.useState<VoiceGenerationProgress | null>(null);
 
   function runKokoro() {
     const voiceName = voices?.find((v) => v.id === effectiveVoice)?.name;
@@ -174,17 +192,20 @@ export function VoiceoverPanel({
           .filter(Boolean)
           .join(" · ");
 
+    setServerProgress(null);
     generate.mutate(
       placeholder
-        ? { placeholder: true }
+        ? { placeholder: true, onProgress: setServerProgress }
         : {
             providerId: effectiveProvider,
             voiceId: effectiveVoice,
             modelId: effectiveModel || undefined,
             label,
+            onProgress: setServerProgress,
           },
       {
         onSuccess: (take) => {
+          setServerProgress(null);
           onSelectTake(take.id);
           toast.success(
             placeholder ? "Placeholder take created" : "Voice take generated",
@@ -195,10 +216,12 @@ export function VoiceoverPanel({
             },
           );
         },
-        onError: (e) =>
+        onError: (e) => {
+          setServerProgress(null);
           toast.error("Generation failed", {
             description: (e as Error).message,
-          }),
+          });
+        },
       },
     );
   }
@@ -322,17 +345,24 @@ export function VoiceoverPanel({
               )}
             </>
           ) : (
-            <Button
-              onClick={() => runGenerate(false)}
-              disabled={!hasScenes || !canGenerateReal || generate.isPending}
-            >
-              {generate.isPending ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <Wand2 />
-              )}
-              Generate take
-            </Button>
+            <>
+              <Button
+                onClick={() => runGenerate(false)}
+                disabled={!hasScenes || !canGenerateReal || generate.isPending}
+              >
+                {generate.isPending ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Wand2 />
+                )}
+                Generate take
+              </Button>
+              {generate.isPending && serverProgress ? (
+                <p className="text-xs text-muted-foreground">
+                  {serverProgressLabel(serverProgress)}
+                </p>
+              ) : null}
+            </>
           )}
           <Button
             variant="outline"

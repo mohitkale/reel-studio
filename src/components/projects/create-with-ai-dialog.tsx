@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Sparkles, Loader2, Lightbulb, FileText } from "lucide-react";
 import { toast } from "sonner";
 
-import type { AIProviderId } from "@/providers/ai/types";
+import type { AIProviderId, ScriptStyle } from "@/providers/ai/types";
 import { useAIProviders, useGenerateProject } from "@/hooks/ai";
 import {
   type Orientation,
@@ -42,6 +42,7 @@ export function CreateWithAIDialog() {
   const [sceneCount, setSceneCount] = React.useState<string>("auto");
   const [orientation, setOrientation] =
     React.useState<Orientation>(DEFAULT_ORIENTATION);
+  const [scriptStyle, setScriptStyle] = React.useState<ScriptStyle>("short");
 
   const configured = (providers ?? []).filter((p) => p.configured);
   const effectiveProvider = providerId ?? configured[0]?.id;
@@ -56,6 +57,7 @@ export function CreateWithAIDialog() {
         brief: trimmed,
         sceneCount: sceneCount === "auto" ? undefined : Number(sceneCount),
         orientation,
+        scriptStyle,
       },
       {
         onSuccess: ({ scriptId }) => {
@@ -144,6 +146,36 @@ export function CreateWithAIDialog() {
                     : "Paste the full story or script you want turned into a reel..."
                 }
               />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Script style</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {(
+                  [
+                    { id: "short" as const, label: "Short & punchy", description: "~18 words/scene, fast-paced hooks." },
+                    { id: "detailed" as const, label: "Detailed", description: "~30-45 words/scene, deeper story arc." },
+                  ]
+                ).map((opt) => {
+                  const active = scriptStyle === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setScriptStyle(opt.id)}
+                      className={cn(
+                        "flex flex-col items-start gap-0.5 rounded-lg border px-3 py-2 text-left text-sm transition-colors",
+                        active
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "text-muted-foreground hover:bg-accent",
+                      )}
+                    >
+                      <span className="font-medium">{opt.label}</span>
+                      <span className="text-xs opacity-70">{opt.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="grid gap-2">

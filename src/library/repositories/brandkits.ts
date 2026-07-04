@@ -37,6 +37,7 @@ function toDTO(kit: BrandKit): BrandKitDTO {
 }
 
 export async function listBrandKits(): Promise<BrandKitDTO[]> {
+  await ensureSoleKitIsDefault();
   // Stable ordering by creation time so toggling the default doesn't reshuffle
   // the grid (every update bumps updatedAt).
   const kits = await prisma.brandKit.findMany({ orderBy: { createdAt: "asc" } });
@@ -51,17 +52,32 @@ export async function getBrandKit(id: string): Promise<BrandKitDTO | null> {
 /** Returns the raw BrandKit entity marked as default, or null. */
 export async function getDefaultBrandKit(): Promise<BrandKit | null> {
   const kits = await prisma.brandKit.findMany();
-  return (
-    kits.find((k) => {
-      const d = parseJsonColumn(k.ctaDefaults, ctaDefaultsSchema, {});
-      return d.isDefault === true;
-    }) ?? null
-  );
+  const marked = kits.find((k) => {
+    const d = parseJsonColumn(k.ctaDefaults, ctaDefaultsSchema, {});
+    return d.isDefault === true;
+  });
+  if (marked) return marked;
+  // A lone kit is always treated as the default even if the flag was never set.
+  if (kits.length === 1) return kits[0];
+  return null;
+}
+
+/** When only one kit exists, persist it as the default so the editor picks it up. */
+async function ensureSoleKitIsDefault(): Promise<void> {
+  const kits = await prisma.brandKit.findMany({ select: { id: true, ctaDefaults: true } });
+  if (kits.length !== 1) return;
+  const only = kits[0];
+  const current = parseJsonColumn(only.ctaDefaults, ctaDefaultsSchema, {});
+  if (current.isDefault !== true) {
+    await setDefaultBrandKit(only.id);
+  }
 }
 
 export async function createBrandKit(name: string): Promise<BrandKitDTO> {
   const kit = await prisma.brandKit.create({ data: { name } });
-  return toDTO(kit);
+  await ensureSoleKitIsDefault();
+  const refreshed = await prisma.brandKit.findUnique({ where: { id: kit.id } });
+  return toDTO(refreshed ?? kit);
 }
 
 export interface BrandKitPatch {
@@ -94,7 +110,9 @@ export async function updateBrandKit(
         : {}),
     },
   });
-  return toDTO(kit);
+  await ensureSoleKitIsDefault();
+  const refreshed = await prisma.brandKit.findUnique({ where: { id } });
+  return toDTO(refreshed ?? kit);
 }
 
 /**
@@ -122,4 +140,5 @@ export async function setDefaultBrandKit(id: string | null): Promise<void> {
 
 export async function deleteBrandKit(id: string): Promise<void> {
   await prisma.brandKit.delete({ where: { id } });
+  await ensureSoleKitIsDefault();
 }

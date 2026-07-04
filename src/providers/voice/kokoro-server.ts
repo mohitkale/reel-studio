@@ -82,6 +82,9 @@ export function createKokoroServerProvider(): VoiceProvider {
     label: "Kokoro (server, free)",
     runtime: "server",
     keyless: true,
+    // CPU-bound local model on a single onnxruntime session — run one scene
+    // at a time rather than contending for the same CPU cores.
+    maxConcurrency: 1,
 
     isConfigured: () => true,
 

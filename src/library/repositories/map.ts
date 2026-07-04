@@ -1,6 +1,7 @@
 import type { Scene, VoiceTake } from "@prisma/client";
 
 import type { SceneDTO, SceneBackground, VoiceTakeDTO } from "@/lib/dto";
+import { inferSceneMood } from "@/library/enrich-scene-plan";
 import { getAssetStore } from "@/library/storage";
 import {
   emphasisSchema,
@@ -50,6 +51,8 @@ export function toSceneDTO(scene: Scene): SceneDTO {
     background,
     items: config.items && config.items.length ? config.items : undefined,
     hideText: scene.hideText ?? null,
+    mood: config.mood ?? inferSceneMood(scene.templateId, scene.order),
+    musicMood: config.musicMood,
   };
 }
 
