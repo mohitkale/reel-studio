@@ -66,3 +66,9 @@ touches the database directly. By design it can do everything an editor can
 3. `create_voice_take` to add narration.
 4. `request_render` → ask the user to approve in the web app → poll `get_render`
    → `download_render`.
+
+## Licensing
+
+The MCP server code in this folder is part of Reel Studio and is MIT-licensed
+with the rest of the app. Rendering still goes through Remotion (Remotion
+License). See [`docs/LICENSING.md`](../docs/LICENSING.md).

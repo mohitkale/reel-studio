@@ -112,11 +112,19 @@ export function VoiceBrowser({
   );
 
   if (!configured) {
+    const description =
+      providerId === "voiceforge"
+        ? "Set VOICEFORGE_SERVICE_URL in .env.local and run VoiceForge locally."
+        : "Once a key is saved above, your default and cloned voices appear here.";
     return (
       <EmptyState
         icon={Mic}
-        title="Add an API key to browse voices"
-        description="Once a key is saved above, your default and cloned voices appear here."
+        title={
+          providerId === "voiceforge"
+            ? "VoiceForge not configured"
+            : "Add an API key to browse voices"
+        }
+        description={description}
       />
     );
   }

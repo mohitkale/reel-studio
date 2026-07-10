@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/shell/page-header";
 import { VoiceBrowser } from "@/components/voice/voice-browser";
+import { VoiceClonePanel } from "@/components/voice/voice-clone-panel";
 
 export default function VoicesPage() {
   const { data, isLoading } = useProviders();
@@ -35,7 +36,7 @@ export default function VoicesPage() {
         <EmptyState
           icon={AudioLines}
           title="No providers configured"
-          description="Add a Cartesia or ElevenLabs API key to browse and preview voices."
+          description="Add a provider API key or set VOICEFORGE_SERVICE_URL to browse and preview voices."
           action={
             <Button asChild>
               <Link href="/settings">Open settings</Link>
@@ -57,7 +58,10 @@ export default function VoicesPage() {
             ))}
           </TabsList>
           {providers.map((p) => (
-            <TabsContent key={p.id} value={p.id}>
+            <TabsContent key={p.id} value={p.id} className="space-y-6">
+              {p.id === "voiceforge" ? (
+                <VoiceClonePanel configured={p.configured} />
+              ) : null}
               <VoiceBrowser providerId={p.id} configured={p.configured} />
             </TabsContent>
           ))}

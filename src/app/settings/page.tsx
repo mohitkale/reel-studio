@@ -134,7 +134,16 @@ export default function SettingsPage() {
           <CardDescription>
             Add a free Unsplash Access Key so the AI director can place relevant
             stock photo backgrounds on scenes. Generation works without it; those
-            scenes simply keep the clean branded look.
+            scenes simply keep the clean branded look. Photos remain under the{" "}
+            <a
+              href="https://unsplash.com/license"
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2"
+            >
+              Unsplash License
+            </a>
+            ; follow their API attribution guidelines.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -155,7 +164,9 @@ export default function SettingsPage() {
           <CardTitle className="text-base">Music library (optional)</CardTitle>
           <CardDescription>
             Add a free Jamendo Client ID to search 600k+ Creative Commons tracks
-            from the editor&apos;s Music control, on top of the bundled starter pack.
+            from the editor&apos;s Music control, on top of the bundled CC0
+            starter pack. Each Jamendo track has its own CC license — check
+            attribution before commercial use.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -184,6 +195,32 @@ export default function SettingsPage() {
         <CardContent>
           <McpTokenCard />
         </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Licensing</CardTitle>
+          <CardDescription>
+            Reel Studio&apos;s own code is MIT. Preview and MP4 export use{" "}
+            <strong>Remotion</strong>, which is source-available under the
+            Remotion License (not OSI open-source). Individuals and small teams
+            are often covered by Remotion&apos;s Free License; larger for-profit
+            organizations may need a paid Company License. Optional providers
+            (Unsplash, Jamendo, cloud TTS/AI, VoiceForge) keep their own terms.
+            Full details are in{" "}
+            <code className="text-xs">docs/LICENSING.md</code> in the repo, and
+            at{" "}
+            <a
+              href="https://www.remotion.dev/license"
+              target="_blank"
+              rel="noreferrer"
+              className="underline underline-offset-2"
+            >
+              remotion.dev/license
+            </a>
+            .
+          </CardDescription>
+        </CardHeader>
       </Card>
     </div>
   );

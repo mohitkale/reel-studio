@@ -18,11 +18,11 @@ export async function GET(
 
     const provider = getProvider(id);
     if (!provider.isConfigured()) {
-      throw new ProviderError(
-        `${provider.label} has no API key. Add one in Settings.`,
-        400,
-        id,
-      );
+      const hint =
+        id === "voiceforge"
+          ? `${provider.label} is not configured. Set VOICEFORGE_SERVICE_URL in .env.local.`
+          : `${provider.label} has no API key. Add one in Settings.`;
+      throw new ProviderError(hint, 400, id);
     }
 
     const q = req.nextUrl.searchParams.get("q")?.trim() || undefined;

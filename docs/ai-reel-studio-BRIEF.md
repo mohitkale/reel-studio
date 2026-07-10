@@ -4,6 +4,10 @@ Paste this whole file into Claude Code as the opening prompt. Build it from
 scratch in a new folder. Treat this as a product spec, not a one-shot script:
 plan, propose the stack, confirm key choices with me, then build in milestones.
 
+> **Licensing note (current repo):** Reel Studio application code is MIT.
+> Remotion (required for composition/render) is **not** OSI open-source — see
+> [`docs/LICENSING.md`](./LICENSING.md). Do not document Remotion as MIT.
+
 ---
 
 ## 1. Mission

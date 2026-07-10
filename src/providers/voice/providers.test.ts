@@ -30,18 +30,22 @@ beforeEach(() => {
   fetchMock.mockReset();
   process.env.CARTESIA_API_KEY = "sk_car_test";
   process.env.ELEVENLABS_API_KEY = "el_test";
+  process.env.VOICEFORGE_SERVICE_URL = "http://voiceforge.test";
 });
 
 afterEach(() => {
   vi.unstubAllGlobals();
   delete process.env.CARTESIA_API_KEY;
   delete process.env.ELEVENLABS_API_KEY;
+  delete process.env.VOICEFORGE_SERVICE_URL;
+  delete process.env.VOICEFORGE_API_TOKEN;
 });
 
 describe("registry", () => {
   it("validates provider ids", () => {
     expect(isProviderId("cartesia")).toBe(true);
     expect(isProviderId("kokoro")).toBe(true);
+    expect(isProviderId("voiceforge")).toBe(true);
     expect(isProviderId("nope")).toBe(false);
   });
 
@@ -177,5 +181,108 @@ describe("elevenlabs", () => {
     expect(String(url)).toContain("output_format=wav_44100");
     const body = JSON.parse((init as RequestInit).body as string);
     expect(body.model_id).toBe("eleven_multilingual_v2");
+  });
+});
+
+describe("voiceforge", () => {
+  it("is configured when VOICEFORGE_SERVICE_URL is set", () => {
+    expect(getProvider("voiceforge").isConfigured()).toBe(true);
+    delete process.env.VOICEFORGE_SERVICE_URL;
+    expect(getProvider("voiceforge").isConfigured()).toBe(false);
+    process.env.VOICEFORGE_SERVICE_URL = "http://voiceforge.test";
+  });
+
+  it("lists ready cloned voices and maps preview URLs to the proxy", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse([
+        {
+          id: "v-ready",
+          name: "My clone",
+          engineId: "xtts-v2",
+          tier: "instant",
+          status: "ready",
+          language: "en",
+          previewUrl: "/v1/voices/v-ready/preview",
+        },
+        {
+          id: "v-pending",
+          name: "Still going",
+          engineId: "f5-tts",
+          tier: "instant",
+          status: "processing",
+          language: "en",
+        },
+      ]),
+    );
+
+    const voices = await getProvider("voiceforge").listVoices();
+    expect(voices).toHaveLength(1);
+    expect(voices[0]).toMatchObject({
+      id: "v-ready",
+      name: "My clone",
+      category: "cloned",
+      previewUrl: "/api/voiceforge/voices/v-ready/preview",
+    });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("http://voiceforge.test/v1/voices");
+    expect((init as RequestInit).headers).toMatchObject({
+      Accept: "application/json",
+    });
+  });
+
+  it("lists engines as models", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse([
+        { id: "xtts-v2", label: "XTTS-v2", ready: true },
+        { id: "rvc", label: "RVC", ready: false },
+      ]),
+    );
+
+    const models = await getProvider("voiceforge").listModels();
+    expect(models).toEqual([
+      {
+        id: "xtts-v2",
+        label: "XTTS-v2 · non-commercial · GPU recommended",
+      },
+    ]);
+    expect(fetchMock.mock.calls[0][0]).toBe("http://voiceforge.test/v1/engines");
+  });
+
+  it("synthesizes via POST /v1/synthesize and parses WAV", async () => {
+    const wav = makeSilentWav(0.25);
+    fetchMock.mockResolvedValueOnce(bytesResponse(wav));
+
+    const result = await getProvider("voiceforge").synth!({
+      voiceId: "v-ready",
+      text: "hello world",
+      speed: 1.1,
+    });
+
+    expect(result.sampleRate).toBe(44100);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("http://voiceforge.test/v1/synthesize");
+    const body = JSON.parse((init as RequestInit).body as string);
+    expect(body).toMatchObject({
+      voiceId: "v-ready",
+      text: "hello world",
+      sampleRate: 44100,
+      speed: 1.1,
+    });
+    expect((init as RequestInit).headers).toMatchObject({
+      Accept: "audio/wav",
+      "Content-Type": "application/json",
+    });
+  });
+
+  it("sends Authorization when VOICEFORGE_API_TOKEN is set", async () => {
+    process.env.VOICEFORGE_API_TOKEN = "vf_secret";
+    fetchMock.mockResolvedValueOnce(jsonResponse([]));
+
+    await getProvider("voiceforge").listVoices();
+
+    expect((fetchMock.mock.calls[0][1] as RequestInit).headers).toMatchObject({
+      Authorization: "Bearer vf_secret",
+    });
   });
 });

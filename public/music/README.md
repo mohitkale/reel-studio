@@ -14,3 +14,6 @@ npm run gen:music
 Users can also upload their own audio in the editor (Music control); uploaded
 tracks become reusable assets across projects. You are responsible for the
 licensing of any audio you upload.
+
+For Remotion, Unsplash, Jamendo, and other third-party terms that apply to the
+app as a whole, see [`docs/LICENSING.md`](../../docs/LICENSING.md).

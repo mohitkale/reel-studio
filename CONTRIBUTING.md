@@ -223,7 +223,15 @@ For feature requests:
 
 ## License
 
-By contributing to Reel Studio, you agree that your contributions will be licensed under the MIT License.
+By contributing to Reel Studio, you agree that your contributions will be
+licensed under the MIT License.
+
+**Third-party terms still apply.** Reel Studio depends on Remotion (Remotion
+License — source-available, not OSI open-source) and optional providers
+(Unsplash, Jamendo, cloud TTS/AI, VoiceForge). Running or redistributing the
+app does not relicense those components. Read
+[docs/LICENSING.md](docs/LICENSING.md) before commercial use, and do not claim
+in docs or marketing that Remotion itself is MIT or open-source.
 
 ## Getting Help
 

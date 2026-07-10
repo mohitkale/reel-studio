@@ -12,6 +12,7 @@ export const PROVIDER_IDS = [
   "webspeech",
   "cartesia",
   "elevenlabs",
+  "voiceforge",
 ] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 

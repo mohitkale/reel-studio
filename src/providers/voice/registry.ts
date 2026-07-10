@@ -16,6 +16,10 @@ import {
   createKokoroServerProvider,
   KOKORO_SERVER_DEFAULT_MODEL,
 } from "./kokoro-server";
+import {
+  createVoiceforgeProvider,
+  VOICEFORGE_DEFAULT_MODEL,
+} from "./voiceforge";
 
 /**
  * Provider registry / factory.
@@ -46,6 +50,10 @@ const factories: Record<
   "kokoro-server": {
     create: createKokoroServerProvider,
     defaultModel: KOKORO_SERVER_DEFAULT_MODEL,
+  },
+  voiceforge: {
+    create: createVoiceforgeProvider,
+    defaultModel: VOICEFORGE_DEFAULT_MODEL,
   },
 };
 

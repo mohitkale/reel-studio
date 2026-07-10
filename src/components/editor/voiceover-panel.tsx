@@ -7,7 +7,10 @@ import { toast } from "sonner";
 
 import type { VoiceTakeDTO } from "@/lib/dto";
 import type { ProviderId } from "@/providers/voice/types";
+import { voiceforgeEngineHelperText } from "@/providers/voice/voiceforge-engines";
 import { useProviders, useModels, useVoices } from "@/hooks/voice";
+import { VoiceCloneDialog } from "@/components/voice/voice-clone-dialog";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useGenerateTake,
   useDeleteTake,
@@ -46,14 +49,25 @@ function kokoroProgressLabel(p: KokoroGenerateProgress | null): string {
 }
 
 /** Live progress label for server-side providers (Cartesia, ElevenLabs, Kokoro server). */
-function serverProgressLabel(p: VoiceGenerationProgress | null): string {
+function serverProgressLabel(
+  p: VoiceGenerationProgress | null,
+  providerId?: ProviderId,
+): string {
   if (!p) return "";
   if (p.status === "queued") return "Queued…";
   if (p.status === "stitching") return "Stitching audio…";
   if (p.status === "synthesizing") {
-    return p.sceneCount > 0
-      ? `Synthesizing scene ${Math.min(p.scene + 1, p.sceneCount)}/${p.sceneCount}…`
-      : "Synthesizing…";
+    const active =
+      p.workingOn ??
+      (p.sceneCount > 0 ? Math.min(p.scene + 1, p.sceneCount) : undefined);
+    if (p.sceneCount > 0 && active) {
+      const base = `Synthesizing scene ${active}/${p.sceneCount}…`;
+      if (providerId === "voiceforge") {
+        return `${base} VoiceForge on CPU often needs 1–10 min per scene (first call loads the model). Watch VoiceForge Docker CPU — if it is busy, it is working.`;
+      }
+      return base;
+    }
+    return "Synthesizing…";
   }
   return "";
 }
@@ -86,6 +100,7 @@ export function VoiceoverPanel({
     providerId ?? providersData?.config.defaultProviderId ?? configured[0]?.id;
 
   const selectedStatus = configured.find((p) => p.id === effectiveProvider);
+  const isVoiceforge = effectiveProvider === "voiceforge";
   const isPreview = selectedStatus?.preview === true; // Web Speech
   const isKokoro = selectedStatus?.runtime === "client" && !isPreview;
 
@@ -95,15 +110,40 @@ export function VoiceoverPanel({
   // Web Speech voices come from the browser, not the server.
   const webSpeech = useWebSpeechPreview();
 
-  const mine = (voices ?? []).filter(
+  const modelOptions: ComboboxOption[] = (models ?? []).map((m) => ({
+    value: m.id,
+    label: m.label,
+  }));
+
+  const effectiveModel =
+    modelId && models?.some((m) => m.id === modelId)
+      ? modelId
+      : (models?.[0]?.id ?? "");
+
+  // VoiceForge binds an engine to each cloned voice at create time. The engine
+  // dropdown filters which clones appear; synthesis still uses that voice's engine.
+  const voicesForPicker = React.useMemo(() => {
+    const all = voices ?? [];
+    if (!isVoiceforge || !effectiveModel) return all;
+    return all.filter((v) => v.tags?.includes(effectiveModel));
+  }, [voices, isVoiceforge, effectiveModel]);
+
+  const mine = voicesForPicker.filter(
     (v) => v.category === "cloned" || v.category === "professional",
   );
-  const library = (voices ?? []).filter(
+  const library = voicesForPicker.filter(
     (v) => v.category === "default" || v.category === "shared",
   );
 
   const serverVoiceOptions: ComboboxOption[] = [
-    ...mine.map((v) => ({ value: v.id, label: v.name, group: "My voices" })),
+    ...mine.map((v) => {
+      const engine = v.tags?.[0];
+      return {
+        value: v.id,
+        label: engine ? `${v.name} · ${engine}` : v.name,
+        group: "My voices",
+      };
+    }),
     ...library.map((v) => ({ value: v.id, label: v.name, group: "Library" })),
   ];
   const webVoiceOptions: ComboboxOption[] = webSpeech.voices.map((v) => ({
@@ -117,26 +157,18 @@ export function VoiceoverPanel({
     label: p.label,
   }));
 
-  const modelOptions: ComboboxOption[] = (models ?? []).map((m) => ({
-    value: m.id,
-    label: m.label,
-  }));
-
   const effectiveVoice = isPreview
     ? voiceId && webSpeech.voices.some((v) => v.voiceURI === voiceId)
       ? voiceId
       : (webSpeech.voices[0]?.voiceURI ?? "")
-    : voiceId && voices?.some((v) => v.id === voiceId)
+    : voiceId && voicesForPicker.some((v) => v.id === voiceId)
       ? voiceId
-      : (voices?.[0]?.id ?? "");
-  const effectiveModel =
-    modelId && models?.some((m) => m.id === modelId)
-      ? modelId
-      : (models?.[0]?.id ?? "");
+      : (voicesForPicker[0]?.id ?? "");
 
   const generate = useGenerateTake(scriptId);
   const kokoro = useKokoroGenerate(scriptId);
   const del = useDeleteTake(scriptId);
+  const qc = useQueryClient();
   const [serverProgress, setServerProgress] = React.useState<VoiceGenerationProgress | null>(null);
 
   function runKokoro() {
@@ -258,6 +290,27 @@ export function VoiceoverPanel({
                 searchPlaceholder="Search providers…"
               />
             </div>
+            {!isPreview && (
+              <div className="grid gap-1.5">
+                <Label>{isVoiceforge ? "Engine" : "Model"}</Label>
+                <Combobox
+                  value={effectiveModel}
+                  onChange={(v) => {
+                    setModelId(v);
+                    // Drop the previous voice so we re-pick one for this engine.
+                    if (isVoiceforge) setVoiceId("");
+                  }}
+                  options={modelOptions}
+                  placeholder={
+                    isVoiceforge ? "Select engine…" : "Select model…"
+                  }
+                  searchPlaceholder={
+                    isVoiceforge ? "Search engines…" : "Search models…"
+                  }
+                  disabled={modelOptions.length === 0}
+                />
+              </div>
+            )}
             <div className="grid gap-1.5">
               <Label>Voice</Label>
               <Combobox
@@ -270,7 +323,9 @@ export function VoiceoverPanel({
                     : voiceOptions.length === 0
                       ? voicesLoading || isPreview
                         ? "Loading voices…"
-                        : "No voices"
+                        : isVoiceforge && effectiveModel
+                          ? `No ready voices for ${effectiveModel}`
+                          : "No voices"
                       : "Select voice…"
                 }
                 searchPlaceholder="Search voices…"
@@ -279,19 +334,23 @@ export function VoiceoverPanel({
                 }
               />
             </div>
-            {!isPreview && (
-              <div className="grid gap-1.5">
-                <Label>Model</Label>
-                <Combobox
-                  value={effectiveModel}
-                  onChange={setModelId}
-                  options={modelOptions}
-                  placeholder="Select model…"
-                  searchPlaceholder="Search models…"
-                  disabled={modelOptions.length === 0}
-                />
-              </div>
-            )}
+            {isVoiceforge ? (
+              <VoiceCloneDialog
+                configured={Boolean(selectedStatus?.configured)}
+                preferredEngineId={effectiveModel || undefined}
+                onVoiceReady={() => {
+                  qc.invalidateQueries({ queryKey: ["voices", "voiceforge"] });
+                  qc.invalidateQueries({ queryKey: ["models", "voiceforge"] });
+                }}
+              />
+            ) : null}
+            {isVoiceforge ? (
+              <p className="text-xs text-muted-foreground">
+                {voiceforgeEngineHelperText(effectiveModel)} Pick a cloned voice
+                built with this engine — synthesis always uses that voice&apos;s
+                engine.
+              </p>
+            ) : null}
           </div>
         )}
 
@@ -359,7 +418,7 @@ export function VoiceoverPanel({
               </Button>
               {generate.isPending && serverProgress ? (
                 <p className="text-xs text-muted-foreground">
-                  {serverProgressLabel(serverProgress)}
+                  {serverProgressLabel(serverProgress, effectiveProvider)}
                 </p>
               ) : null}
             </>

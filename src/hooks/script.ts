@@ -250,6 +250,8 @@ export interface VoiceGenerationProgress {
   status: "queued" | "synthesizing" | "stitching" | "done" | "error";
   scene: number;
   sceneCount: number;
+  /** 1-based scene index currently being synthesized (VoiceForge can take minutes). */
+  workingOn?: number | null;
 }
 
 /**
@@ -257,6 +259,9 @@ export interface VoiceGenerationProgress {
  * then follows its SSE progress stream until it resolves with the finished
  * take or rejects with the job's error. Pass `onProgress` in the mutation
  * variables to drive a live "scene N/M" indicator in the UI.
+ *
+ * If the EventSource drops (common on long VoiceForge CPU jobs), we fall back
+ * to polling the JSON job endpoint instead of failing immediately.
  */
 export function useGenerateTake(scriptId: string) {
   const invalidate = useScriptInvalidator(scriptId);
@@ -273,36 +278,123 @@ export function useGenerateTake(scriptId: string) {
       onProgress?: (progress: VoiceGenerationProgress) => void;
     }) =>
       apiPost<{ jobId: string }>(`/api/scripts/${scriptId}/takes`, body).then(
-        ({ jobId }) =>
-          new Promise<VoiceTakeDTO>((resolve, reject) => {
-            const es = new EventSource(
-              `/api/scripts/${scriptId}/takes/${jobId}/progress`,
-            );
-            es.onmessage = (e) => {
-              try {
-                const data = JSON.parse(e.data as string) as VoiceGenerationProgress & {
-                  error: string | null;
-                  take: VoiceTakeDTO | null;
-                };
-                onProgress?.(data);
-                if (data.status === "done" && data.take) {
-                  es.close();
-                  resolve(data.take);
-                } else if (data.status === "error") {
-                  es.close();
-                  reject(new Error(data.error || "Voice generation failed"));
-                }
-              } catch {
-                // ignore malformed/heartbeat messages, keep listening
-              }
-            };
-            es.onerror = () => {
-              es.close();
-              reject(new Error("Lost connection to the server while generating the take"));
-            };
-          }),
+        ({ jobId }) => waitForVoiceJob(scriptId, jobId, onProgress),
       ),
     onSuccess: invalidate,
+  });
+}
+
+type VoiceJobPayload = VoiceGenerationProgress & {
+  error: string | null;
+  take: VoiceTakeDTO | null;
+};
+
+function applyVoiceJobPayload(
+  data: VoiceJobPayload,
+  onProgress?: (progress: VoiceGenerationProgress) => void,
+): "done" | "error" | "pending" {
+  onProgress?.(data);
+  if (data.status === "done" && data.take) return "done";
+  if (data.status === "error") return "error";
+  return "pending";
+}
+
+async function pollVoiceJob(
+  scriptId: string,
+  jobId: string,
+  onProgress?: (progress: VoiceGenerationProgress) => void,
+): Promise<VoiceTakeDTO> {
+  const started = Date.now();
+  const maxMs = 20 * 60 * 1000;
+
+  while (Date.now() - started < maxMs) {
+    await new Promise((r) => setTimeout(r, 2000));
+    try {
+      const { job } = await apiGet<{
+        job: {
+          status: VoiceGenerationProgress["status"];
+          scene: number;
+          sceneCount: number;
+          workingOn?: number | null;
+          error: string | null;
+          take: VoiceTakeDTO | null;
+        };
+      }>(`/api/scripts/${scriptId}/takes/${jobId}`);
+
+      const outcome = applyVoiceJobPayload(
+        {
+          status: job.status,
+          scene: job.scene,
+          sceneCount: job.sceneCount,
+          workingOn: job.workingOn ?? null,
+          error: job.error,
+          take: job.take,
+        },
+        onProgress,
+      );
+      if (outcome === "done" && job.take) return job.take;
+      if (outcome === "error") {
+        throw new Error(job.error || "Voice generation failed");
+      }
+    } catch (e) {
+      if (e instanceof Error && e.message !== "Job not found" && !e.message.includes("Voice generation failed")) {
+        // Transient network blip while VoiceForge is still working — keep polling.
+        continue;
+      }
+      throw e;
+    }
+  }
+
+  throw new Error(
+    "Voice generation is still running after 20 minutes. Check VoiceForge logs/CPU, then refresh Takes.",
+  );
+}
+
+function waitForVoiceJob(
+  scriptId: string,
+  jobId: string,
+  onProgress?: (progress: VoiceGenerationProgress) => void,
+): Promise<VoiceTakeDTO> {
+  return new Promise<VoiceTakeDTO>((resolve, reject) => {
+    let settled = false;
+    let polling = false;
+    const es = new EventSource(
+      `/api/scripts/${scriptId}/takes/${jobId}/progress`,
+    );
+
+    const finish = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      es.close();
+      fn();
+    };
+
+    es.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data as string) as VoiceJobPayload;
+        const outcome = applyVoiceJobPayload(data, onProgress);
+        if (outcome === "done" && data.take) {
+          finish(() => resolve(data.take!));
+        } else if (outcome === "error") {
+          finish(() =>
+            reject(new Error(data.error || "Voice generation failed")),
+          );
+        }
+      } catch {
+        // ignore malformed/heartbeat messages, keep listening
+      }
+    };
+
+    es.onerror = () => {
+      if (settled || polling) return;
+      polling = true;
+      es.close();
+      // Long VoiceForge jobs can drop SSE; poll instead of failing the take.
+      void pollVoiceJob(scriptId, jobId, onProgress).then(
+        (take) => finish(() => resolve(take)),
+        (err) => finish(() => reject(err)),
+      );
+    };
   });
 }
 

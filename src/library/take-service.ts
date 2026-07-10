@@ -21,7 +21,7 @@ import { createTake } from "@/library/repositories/takes";
 
 /** Reported as scenes finish synthesizing (cache hit or fresh call) or when stitching starts. */
 export type TakeProgress =
-  | { phase: "synthesizing"; scene: number; sceneCount: number }
+  | { phase: "synthesizing"; scene: number; sceneCount: number; workingOn?: number }
   | { phase: "stitching"; scene: number; sceneCount: number };
 
 export interface GenerateTakeInput {
@@ -115,7 +115,7 @@ async function synthesizeScenesConcurrently(
   ctx: { scriptId: string; providerId: string; voiceId: string; modelId?: string },
   synth: (opts: SynthOptions) => Promise<SynthResult>,
   maxConcurrency: number,
-  onProgress?: (done: number, total: number) => void,
+  onProgress?: (done: number, total: number, workingOn?: number) => void,
 ): Promise<BeatInput[]> {
   const total = scenes.length;
   const results: BeatInput[] = new Array(total);
@@ -135,6 +135,7 @@ async function synthesizeScenesConcurrently(
       };
       let wav = await getCachedBeatWav(cacheParts);
       if (!wav) {
+        onProgress?.(completed, total, i + 1);
         const result = await synth({
           voiceId: ctx.voiceId,
           modelId: ctx.modelId,
@@ -200,7 +201,9 @@ export async function generateTake(
     }
     if (!provider.isConfigured()) {
       throw new ProviderError(
-        `${provider.label} has no API key. Add one in Settings.`,
+        input.providerId === "voiceforge"
+          ? `${provider.label} is not configured. Set VOICEFORGE_SERVICE_URL in .env.local (use http://127.0.0.1:8089, or host.docker.internal if Reel Studio runs in Docker).`
+          : `${provider.label} has no API key. Add one in Settings.`,
         400,
         input.providerId,
       );
@@ -218,8 +221,13 @@ export async function generateTake(
       },
       provider.synth,
       provider.maxConcurrency ?? DEFAULT_SYNTH_CONCURRENCY,
-      (done, total) =>
-        input.onProgress?.({ phase: "synthesizing", scene: done, sceneCount: total }),
+      (done, total, workingOn) =>
+        input.onProgress?.({
+          phase: "synthesizing",
+          scene: done,
+          sceneCount: total,
+          workingOn,
+        }),
     );
     beats.push(...synthesized);
     label = label ?? `${provider.label}${input.modelId ? ` · ${input.modelId}` : ""}`;

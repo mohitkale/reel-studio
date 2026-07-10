@@ -27,6 +27,7 @@ export async function GET(
         status: job.status,
         scene: job.scene,
         sceneCount: job.sceneCount,
+        workingOn: job.workingOn ?? null,
         error: job.error ?? null,
         take: job.take ?? null,
       },

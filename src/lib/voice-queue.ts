@@ -21,6 +21,8 @@ export interface VoiceJob {
   /** Scenes fully synthesized (cache hit or fresh) so far. */
   scene: number;
   sceneCount: number;
+  /** 1-based index of the scene currently being synthesized, if any. */
+  workingOn?: number;
   error?: string;
   /** Set once status === "done". */
   take?: VoiceTakeDTO;

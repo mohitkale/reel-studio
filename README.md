@@ -14,15 +14,29 @@
 
 The app runs as a single Next.js project with API routes and UI in one codebase.
 
-## Open-Source
+## Licensing
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. All local tools and components are open-source, including:
+**Reel Studio’s own code** is MIT — see [LICENSE](LICENSE). Contributions are
+welcome under the same terms ([CONTRIBUTING.md](CONTRIBUTING.md)).
 
-- **Kokoro TTS** - Apache-2.0 licensed, runs entirely in-browser
-- **MCP Server** - Open-source Model Context Protocol integration
-- **All custom components and templates** - MIT licensed
+**Important:** several dependencies and optional integrations are **not** MIT.
+In particular, **Remotion** (preview + MP4 rendering) is **source-available
+under the Remotion License — not OSI open-source**. Individuals and small teams
+are often covered by Remotion’s Free License; for-profit organizations with
+4+ employees typically need a paid Remotion Company License. Our MIT grant does
+**not** waive those obligations for you or for anyone who forks this project.
 
-We believe in transparent, community-driven development. Contributions are welcome!
+| Component | License / terms |
+| --- | --- |
+| Reel Studio app code, templates, MCP server code | **MIT** |
+| Bundled ambient music (`public/music/`) | **CC0** |
+| **Remotion** (Player, renderer, related packages) | **Remotion License** ([details](https://www.remotion.dev/license)) |
+| Kokoro TTS (`kokoro-js`) | Apache-2.0 |
+| Unsplash / Jamendo / Cartesia / ElevenLabs / Gemini / OpenAI | Each provider’s own terms (optional keys) |
+| VoiceForge engines (optional) | Per-engine (e.g. XTTS-v2 CPML non-commercial) |
+
+Full breakdown, Free vs Company License notes, and a checklist:
+**[docs/LICENSING.md](docs/LICENSING.md)**.
 
 ## Available Features
 
@@ -39,11 +53,12 @@ We believe in transparent, community-driven development. Contributions are welco
 - **Multiple voice providers**:
   - **Kokoro** (Apache-2.0): Free, runs entirely in-browser, no API key needed
   - **Web Speech API**: Instant in-editor preview, no API key needed
-  - **Cartesia**: Premium cloud voices with cloning support
-  - **ElevenLabs**: Premium cloud voices with extensive library
+  - **Cartesia**: Premium cloud voices with cloning support (vendor terms)
+  - **ElevenLabs**: Premium cloud voices with extensive library (vendor terms)
+  - **VoiceForge** (optional): Self-hosted cloning; engine licenses vary (see [docs/LICENSING.md](docs/LICENSING.md))
 - **Voice takes management**: Generate, compare, and select multiple takes
 - **Caption sync**: Automatic timing alignment with voiceover
-- **Background music**: Support for royalty-free audio tracks
+- **Background music**: Bundled CC0 beds; optional Jamendo Creative Commons search; user uploads are your responsibility
 
 ### AI Integration
 - **AI scene generation**: Powered by Google Gemini or OpenAI
@@ -102,7 +117,7 @@ We believe in transparent, community-driven development. Contributions are welco
 - App: Next.js App Router + TypeScript (strict)
 - UI: Tailwind CSS v4 + Radix-based components + lucide-react
 - Data: TanStack Query + Zod
-- Video: Remotion 4 (`@remotion/renderer`, `@remotion/lottie`, `@remotion/three`)
+- Video: Remotion 4 (`@remotion/renderer`, `@remotion/lottie`, `@remotion/three`) — [Remotion License](docs/LICENSING.md#critical-dependency-remotion-not-open-source), not MIT
 - Persistence: Prisma + SQLite
 - Storage: Local disk asset store under `media/`
 - Tooling: ESLint, Prettier, Vitest
@@ -313,7 +328,7 @@ npm run test
 npm run security:scan
 ```
 
-4. Review docs and sample assets for private or licensed content.
+4. Review [docs/LICENSING.md](docs/LICENSING.md) and sample assets for private or third-party licensed content (Remotion, Unsplash, music, VoiceForge engines).
 
 5. Enable local pre-commit secret scanning:
 
@@ -341,6 +356,7 @@ media/            # local asset and render output (git-ignored)
 
 ## Additional Docs
 
+- **Licensing & third-party terms:** [`docs/LICENSING.md`](docs/LICENSING.md)
 - Product build brief: `docs/ai-reel-studio-BRIEF.md`
 - Security policy: `SECURITY.md`
 - Contribution guide: `CONTRIBUTING.md`

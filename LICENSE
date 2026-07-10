@@ -19,3 +19,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+NOTE: This license covers the Reel Studio application source code in this
+repository only. Third-party dependencies and optional integrations — notably
+Remotion (Remotion License; not OSI open-source), cloud TTS/AI APIs, Unsplash,
+Jamendo, and VoiceForge model engines — remain under their own terms. See
+docs/LICENSING.md before commercial or enterprise use.

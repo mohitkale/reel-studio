@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { listTakes } from "@/library/repositories/takes";
 import { generateTake } from "@/library/take-service";
 import { PROVIDER_IDS } from "@/providers/voice/types";
-import { upsertVoiceJob } from "@/lib/voice-queue";
+import { getVoiceJob, upsertVoiceJob } from "@/lib/voice-queue";
 import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
@@ -52,25 +52,45 @@ export async function POST(
     const jobId = randomUUID();
     upsertVoiceJob({ id: jobId, status: "queued", scene: 0, sceneCount: 0 });
 
-    void generateTake({
-      scriptId: id,
-      ...body,
-      onProgress: (progress) => {
-        upsertVoiceJob({
-          id: jobId,
-          status: progress.phase,
-          scene: progress.scene,
-          sceneCount: progress.sceneCount,
-        });
-      },
-    })
-      .then((take) => {
-        upsertVoiceJob({ id: jobId, status: "done", scene: 1, sceneCount: 1, take });
+    // `after` keeps the work alive after the 202 response (important for slow
+    // local VoiceForge CPU synthesis that can run for many minutes).
+    after(() =>
+      generateTake({
+        scriptId: id,
+        ...body,
+        onProgress: (progress) => {
+          upsertVoiceJob({
+            id: jobId,
+            status: progress.phase,
+            scene: progress.scene,
+            sceneCount: progress.sceneCount,
+            workingOn:
+              progress.phase === "synthesizing" ? progress.workingOn : undefined,
+          });
+        },
       })
-      .catch((err) => {
-        const message = err instanceof Error ? err.message : String(err);
-        upsertVoiceJob({ id: jobId, status: "error", scene: 0, sceneCount: 0, error: message });
-      });
+        .then((take) => {
+          const last = getVoiceJob(jobId);
+          upsertVoiceJob({
+            id: jobId,
+            status: "done",
+            scene: take.timeline.length,
+            sceneCount: last?.sceneCount ?? take.timeline.length,
+            take,
+          });
+        })
+        .catch((err) => {
+          const message = err instanceof Error ? err.message : String(err);
+          console.error("[takes] generateTake failed:", message);
+          upsertVoiceJob({
+            id: jobId,
+            status: "error",
+            scene: 0,
+            sceneCount: 0,
+            error: message,
+          });
+        }),
+    );
 
     return NextResponse.json({ jobId }, { status: 202 });
   } catch (e) {

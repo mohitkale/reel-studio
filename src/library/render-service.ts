@@ -3,6 +3,10 @@
  * memory), then calls renderMedia for each job. Node.js only -- never import
  * this in a client component or edge runtime.
  *
+ * Remotion is licensed under the Remotion License (source-available, not OSI
+ * open-source). Calling renderMedia() is an automation under Remotion's terms;
+ * see docs/LICENSING.md. This service does not relicense Remotion.
+ *
  * FIRST RUN NOTE: renderMedia will download a headless Chromium build (~170 MB)
  * on first use if no system Chrome is available. The download is logged to the
  * terminal and may take a minute; subsequent runs use the cached binary.

@@ -80,3 +80,39 @@ export function arrayBufferToBase64(buffer: ArrayBuffer): string {
   }
   return btoa(binary);
 }
+
+/**
+ * Decode any browser-playable audio blob (e.g. MediaRecorder WebM/Opus) to a
+ * mono 16-bit PCM WAV File. VoiceForge validates uploads with libsndfile, which
+ * cannot read WebM — WAV is the reliable interchange format.
+ */
+export async function audioBlobToWavFile(
+  blob: Blob,
+  filename = "recording.wav",
+  sampleRate = TARGET_SAMPLE_RATE,
+): Promise<{ file: File; durationSeconds: number }> {
+  const AudioCtx =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext: typeof AudioContext })
+      .webkitAudioContext;
+  const ctx = new AudioCtx();
+  try {
+    const raw = await blob.arrayBuffer();
+    const decoded = await ctx.decodeAudioData(raw.slice(0));
+    const channels = decoded.numberOfChannels;
+    const length = decoded.length;
+    const mono = new Float32Array(length);
+    for (let c = 0; c < channels; c++) {
+      const data = decoded.getChannelData(c);
+      for (let i = 0; i < length; i++) mono[i] += data[i] / channels;
+    }
+    const resampled = resampleLinear(mono, decoded.sampleRate, sampleRate);
+    const wav = encodeWavPcm16(resampled, sampleRate);
+    return {
+      file: new File([wav], filename, { type: "audio/wav" }),
+      durationSeconds: resampled.length / sampleRate,
+    };
+  } finally {
+    await ctx.close().catch(() => {});
+  }
+}

@@ -32,7 +32,10 @@ interface ReelPlayerProps {
   previewQuality?: "standard" | "draft";
 }
 
-/** Live Remotion preview of the reel, driven by the scene templates + timeline. */
+/** Live Remotion preview of the reel, driven by the scene templates + timeline.
+ * `acknowledgeRemotionLicense` is required by Remotion's Player — Remotion is
+ * source-available under the Remotion License (not MIT). See docs/LICENSING.md.
+ */
 export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
   function ReelPlayer(
     {
