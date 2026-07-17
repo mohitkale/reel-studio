@@ -29,7 +29,6 @@ import { useCreateRender, useRenderProgress } from "@/hooks/renders";
 import { useBrandKits, useAssignBrandKit } from "@/hooks/brandkits";
 import { useHotkey } from "@/hooks/use-hotkeys";
 import { normalizeTemplateIdForEngine } from "@/engines/registry";
-import { VIDEO_ENGINE_LABELS } from "@/engines/types";
 import { type ReelScene, coverFrames } from "@/compositions/types";
 import { estimateTimeline } from "@/lib/preview-timeline";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
@@ -43,6 +42,7 @@ import {
   EnginePlayer,
   type EnginePlayerHandle,
 } from "@/components/editor/engine-player";
+import { EngineBadge } from "@/components/engines/engine-badge";
 import { VoiceoverPanel } from "@/components/editor/voiceover-panel";
 import { AIEnhanceDialog } from "@/components/editor/ai-enhance-dialog";
 import { ScenesJsonDialog } from "@/components/editor/scenes-json-dialog";
@@ -339,11 +339,13 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
               </span>
             </HintTooltip>
           </Link>
-          <div>
-            <h2 className="text-lg font-semibold leading-tight">{script.name}</h2>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-lg font-semibold leading-tight">{script.name}</h2>
+              <EngineBadge engine={videoEngine} size="lg" />
+            </div>
             <p className="text-xs text-muted-foreground">
-              {VIDEO_ENGINE_LABELS[videoEngine]} · {scenes.length} scenes ·{" "}
-              {script.fps} fps
+              {scenes.length} scenes · {script.fps} fps
               {takeUsable ? " · previewing take audio" : " · estimated timing"}
             </p>
           </div>

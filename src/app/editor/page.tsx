@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Clapperboard, ChevronRight } from "lucide-react";
 
 import { useProjects } from "@/hooks/script";
+import { EngineBadge } from "@/components/engines/engine-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/shell/page-header";
@@ -43,7 +44,10 @@ export default function EditorIndexPage() {
                     <Clapperboard className="size-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{p.name}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-medium">{p.name}</p>
+                      <EngineBadge engine={p.videoEngine} />
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       {p.sceneCount} scenes
                     </p>

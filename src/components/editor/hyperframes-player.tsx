@@ -54,9 +54,9 @@ type IframeApi = Window & {
 };
 
 /**
- * In-editor HyperFrames preview with Remotion-like transport controls
- * (play/pause, scrub, fullscreen). Playback is driven from React so the
- * scrubber stays in sync.
+ * In-editor HyperFrames preview with Remotion-like transport controls.
+ * The composition HTML letterboxes itself inside the iframe so portrait
+ * canvases stay fully visible and centered in both inline and fullscreen modes.
  */
 export const HyperFramesPlayer = React.forwardRef<
   HyperFramesPlayerHandle,
@@ -174,7 +174,6 @@ export const HyperFramesPlayer = React.forwardRef<
     [fps, pause, play, seekToTime],
   );
 
-  // Drive playback from the parent so the scrubber stays accurate.
   React.useEffect(() => {
     if (!playing) return;
     let raf = 0;
@@ -256,25 +255,25 @@ export const HyperFramesPlayer = React.forwardRef<
     <div
       ref={shellRef}
       className={cn(
-        "mx-auto w-full overflow-hidden rounded-2xl border bg-black shadow-sm",
-        frameClass,
-        fullscreen && "max-w-none rounded-none",
+        "flex flex-col overflow-hidden bg-black shadow-sm",
+        fullscreen
+          ? "h-screen w-screen max-w-none rounded-none"
+          : cn("mx-auto w-full rounded-2xl border", frameClass),
       )}
     >
       <div
-        className="relative w-full bg-black"
-        style={{ aspectRatio: fullscreen ? undefined : aspectRatio }}
+        className={cn(
+          "relative flex min-h-0 flex-1 items-center justify-center bg-black",
+          !fullscreen && "w-full",
+        )}
+        style={fullscreen ? undefined : { aspectRatio }}
       >
         <iframe
           ref={iframeRef}
           title="HyperFrames preview"
           srcDoc={html}
           sandbox="allow-scripts allow-same-origin"
-          className={cn(
-            "block w-full border-0 bg-black",
-            fullscreen ? "h-[calc(100vh-3rem)]" : "h-auto",
-          )}
-          style={fullscreen ? undefined : { aspectRatio }}
+          className="h-full w-full border-0 bg-black"
           onLoad={() => {
             setReady(true);
             seekIframe(timeRef.current);
@@ -282,7 +281,7 @@ export const HyperFramesPlayer = React.forwardRef<
         />
       </div>
 
-      <div className="flex items-center gap-2 border-t border-white/10 bg-zinc-950 px-2 py-1.5 text-zinc-100">
+      <div className="flex shrink-0 items-center gap-2 border-t border-white/10 bg-zinc-950 px-2 py-1.5 text-zinc-100">
         <Button
           type="button"
           size="icon"

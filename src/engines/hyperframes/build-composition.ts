@@ -157,8 +157,23 @@ const STYLES = `
   html, body {
     width: 100%; height: 100%; overflow: hidden;
     background: #05070d; font-family: "DM Sans", system-ui, sans-serif;
+    display: flex; align-items: center; justify-content: center;
   }
-  #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
+  /* fit-wrap owns the scaled layout box; #root keeps authored px and is
+     visually scaled inside so portrait previews/fullscreen letterbox cleanly. */
+  #fit-wrap {
+    position: relative;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  #root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: hidden;
+    container-type: size;
+    transform-origin: top left;
+  }
   .scene {
     position: absolute; inset: 0; display: flex; align-items: stretch;
     justify-content: stretch; opacity: 0; visibility: hidden;
@@ -186,9 +201,10 @@ const STYLES = `
     width: 72px; height: 8px; border-radius: 999px; margin-bottom: 28px;
     transform: scaleX(0); transform-origin: left;
   }
+  /* cqw = % of the authored stage, so scaled previews keep correct type size */
   .opener-text, .statement-text, .quote-text, .cta-text, .stat-text {
     font-weight: 800; letter-spacing: -0.03em; line-height: 1.12;
-    font-size: clamp(42px, 6.2vw, 78px);
+    font-size: clamp(42px, 6.2cqw, 78px);
   }
   .statement-text { text-align: center; }
   .underline {
@@ -198,25 +214,25 @@ const STYLES = `
   .tpl-list ul { list-style: none; display: grid; gap: 22px; }
   .list-item {
     display: flex; gap: 16px; align-items: flex-start;
-    font-size: clamp(30px, 4.2vw, 48px); font-weight: 700; line-height: 1.2;
+    font-size: clamp(30px, 4.2cqw, 48px); font-weight: 700; line-height: 1.2;
     opacity: 0; transform: translateY(24px);
   }
   .marker { font-size: 0.9em; line-height: 1.2; }
   .stat-num {
-    font-size: clamp(96px, 16vw, 180px); font-weight: 800; line-height: 0.95;
+    font-size: clamp(96px, 16cqw, 180px); font-weight: 800; line-height: 0.95;
     letter-spacing: -0.05em; text-align: center; margin-bottom: 20px;
     transform: scale(0.7); opacity: 0;
   }
-  .stat-text { text-align: center; font-size: clamp(28px, 3.8vw, 44px); font-weight: 700; }
+  .stat-text { text-align: center; font-size: clamp(28px, 3.8cqw, 44px); font-weight: 700; }
   .tpl-quote { text-align: left; }
   .qmark {
     font-family: "Instrument Serif", Georgia, serif;
-    font-size: clamp(90px, 14vw, 160px); line-height: 0.7; margin-bottom: 8px;
+    font-size: clamp(90px, 14cqw, 160px); line-height: 0.7; margin-bottom: 8px;
     opacity: 0.9;
   }
   .quote-text {
     font-family: "Instrument Serif", Georgia, serif; font-style: italic;
-    font-weight: 400; font-size: clamp(40px, 5.5vw, 68px);
+    font-weight: 400; font-size: clamp(40px, 5.5cqw, 68px);
   }
   .quote-attr {
     margin-top: 28px; font-size: 28px; font-weight: 600; opacity: 0.75;
@@ -358,6 +374,19 @@ function buildSeekScript(
     cancelAnimationFrame(raf);
   };
 
+  function fitStage() {
+    const wrap = document.getElementById('fit-wrap');
+    if (!wrap) return;
+    const w = Number(root.getAttribute('data-width')) || 1080;
+    const h = Number(root.getAttribute('data-height')) || 1920;
+    const scale = Math.min(window.innerWidth / w, window.innerHeight / h);
+    wrap.style.width = (w * scale) + 'px';
+    wrap.style.height = (h * scale) + 'px';
+    root.style.transform = 'scale(' + scale + ')';
+  }
+  window.addEventListener('resize', fitStage);
+  fitStage();
+
   seek(0);
 })();
 </script>`;
@@ -430,19 +459,21 @@ export function buildHyperframesCompositionHtml(props: ReelProps): string {
   <style>${STYLES}</style>
 </head>
 <body>
-  <div id="root"
-       data-composition-id="reel"
-       data-start="0"
-       data-duration="${totalSeconds.toFixed(3)}"
-       data-width="${width}"
-       data-height="${height}"
-       data-fps="${fps}"
-       data-total-frames="${totalFrames}"
-       style="width:${width}px;height:${height}px;--accent:${accent}">
-    ${coverBlock}
-    ${progress}
-    ${sceneBlocks.join("\n")}
-    ${audioTags.join("\n")}
+  <div id="fit-wrap">
+    <div id="root"
+         data-composition-id="reel"
+         data-start="0"
+         data-duration="${totalSeconds.toFixed(3)}"
+         data-width="${width}"
+         data-height="${height}"
+         data-fps="${fps}"
+         data-total-frames="${totalFrames}"
+         style="width:${width}px;height:${height}px;--accent:${accent}">
+      ${coverBlock}
+      ${progress}
+      ${sceneBlocks.join("\n")}
+      ${audioTags.join("\n")}
+    </div>
   </div>
   ${buildSeekScript(beats, coverSeconds, totalSeconds, fps, Boolean(props.hideProgressBar))}
 </body>

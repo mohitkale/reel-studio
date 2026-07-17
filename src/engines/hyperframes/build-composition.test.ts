@@ -39,6 +39,8 @@ describe("buildHyperframesCompositionHtml", () => {
     expect(html).toContain("tpl-opener");
     expect(html).toContain("tpl-cta");
     expect(html).toContain("window.__reelSeek");
+    expect(html).toContain("fitStage");
+    expect(html).toContain('id="fit-wrap"');
     expect(html).toContain("Stop scrolling");
     expect(html).toContain('<span class="em">matters</span>');
   });

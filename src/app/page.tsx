@@ -26,6 +26,7 @@ import {
   VIDEO_ENGINE_LABELS,
   type VideoEngineId,
 } from "@/engines/types";
+import { EngineBadge } from "@/components/engines/engine-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/shell/page-header";
@@ -190,16 +191,16 @@ export default function ProjectsPage() {
           {projects.map((p) => (
             <Card key={p.id} className="group flex flex-col">
               <CardContent className="flex flex-1 flex-col gap-3 p-5">
-                <div className="flex aspect-video items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 to-secondary text-primary">
+                <div className="relative flex aspect-video items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 to-secondary text-primary">
                   <FileVideo className="size-8" />
+                  <div className="absolute left-2 top-2">
+                    <EngineBadge engine={p.videoEngine} />
+                  </div>
                 </div>
                 <div className="flex-1">
                   <h3 className="font-medium leading-tight">{p.name}</h3>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">{p.sceneCount} scenes</Badge>
-                    <Badge variant="outline">
-                      {VIDEO_ENGINE_LABELS[p.videoEngine] ?? p.videoEngine}
-                    </Badge>
                     <span className="text-xs text-muted-foreground">
                       {p.scriptCount} script{p.scriptCount === 1 ? "" : "s"}
                     </span>
