@@ -40,10 +40,10 @@
   <text class="small" x="865" y="241">Keys from local env only</text>
 
   <rect class="box" x="430" y="370" width="340" height="170" />
-  <text class="label" x="455" y="415">Render Service</text>
-  <text class="small" x="455" y="445">Remotion bundle + selectComposition</text>
-  <text class="small" x="455" y="468">renderMedia (h264 mp4 output)</text>
-  <text class="small" x="455" y="491">Adaptive concurrency and caches</text>
+  <text class="label" x="455" y="415">Render Service (by videoEngine)</text>
+  <text class="small" x="455" y="445">Remotion: bundle + renderMedia</text>
+  <text class="small" x="455" y="468">HyperFrames: HTML + producer worker</text>
+  <text class="small" x="455" y="491">Queue, SSE progress, media/ output</text>
 
   <rect class="box" x="80" y="590" width="340" height="90" />
   <text class="label" x="105" y="630">Prisma + SQLite</text>

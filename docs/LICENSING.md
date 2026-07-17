@@ -20,10 +20,12 @@ cloud APIs, stock/music providers, or VoiceForge model weights.
 
 ## Critical dependency: Remotion (not open-source)
 
-Reel Studio’s preview player and MP4 export use **Remotion**
-(`remotion`, `@remotion/player`, `@remotion/renderer`, `@remotion/bundler`,
-`@remotion/lottie`, `@remotion/three`, `@remotion/transitions`,
-`@remotion/google-fonts`, `@remotion/cli`).
+**Remotion is the default video engine.** For Remotion projects, preview and MP4
+export use Remotion (`remotion`, `@remotion/player`, `@remotion/renderer`,
+`@remotion/bundler`, `@remotion/lottie`, `@remotion/three`,
+`@remotion/transitions`, `@remotion/google-fonts`, `@remotion/cli`). New projects
+can choose **HyperFrames** instead (see below); Remotion packages may still be
+installed even if you only create HyperFrames projects.
 
 | Fact | Detail |
 | --- | --- |
@@ -156,8 +158,9 @@ license.
 | --- | --- |
 | Can I open-source / fork Reel Studio under MIT? | **Yes** — for this repo’s code. |
 | Is Remotion MIT / OSI open-source? | **No.** |
+| Can I avoid Remotion License obligations by choosing HyperFrames? | **Yes for those projects** — preview/export use Apache-2.0 HyperFrames. Remotion deps may still be present in `node_modules`. |
 | Can an individual use Remotion via Reel Studio for free? | **Usually yes** under Remotion’s Free License (verify upstream). |
-| Can a 10-person company use Remotion via Reel Studio for free? | **Usually no** — they need a Remotion Company License. |
+| Can a 10-person company use Remotion via Reel Studio for free? | **Usually no** — they need a Remotion Company License (or use HyperFrames projects). |
 | Does MIT on this repo waive Remotion fees for downstream users? | **No.** |
 | Are Unsplash / Jamendo / cloud TTS “free forever, any use”? | **No** — follow each provider’s terms. |
 | Is VoiceForge XTTS-v2 OK for commercial products? | **No** (CPML non-commercial); prefer F5-TTS / OpenVoice / RVC as documented there. |

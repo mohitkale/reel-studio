@@ -3,13 +3,14 @@
 # ----------------------------------------------------------------------------
 # Reel Studio — development image.
 #
-# Runs the Next.js dev server AND Remotion's renderer (headless Chromium +
-# bundled FFmpeg) fully isolated from the host, so CPU-heavy renders and the
-# external browser/codec processes never touch the laptop directly.
+# Runs the Next.js dev server plus video rendering fully isolated from the
+# host: Remotion (headless Chromium + bundled FFmpeg) and HyperFrames
+# (@hyperframes/producer worker, also Chromium/FFmpeg). CPU-heavy renders
+# never touch the laptop directly.
 #
-# Node 22 matches the host toolchain. Debian (bookworm) is used rather than
-# Alpine because Remotion's headless Chromium needs glibc + the system libs
-# installed below. Remotion launches Chrome with --no-sandbox and
+# Node 22 matches the host toolchain and is required for HyperFrames.
+# Debian (bookworm) is used rather than Alpine because headless Chromium needs
+# glibc + the system libs installed below. Chrome runs with --no-sandbox and
 # --disable-dev-shm-usage, so the container needs no extra capabilities and
 # can run as a non-root user.
 # ----------------------------------------------------------------------------
