@@ -1,8 +1,17 @@
 import type { ScriptDTO } from "@/lib/dto";
 import { serverDefaultTokens } from "@/lib/brand-defaults";
+import {
+  DEFAULT_VIDEO_ENGINE,
+  isVideoEngineId,
+  type VideoEngineId,
+} from "@/engines/types";
 import { prisma } from "@/library/db";
 import { resolveBrandTokens, getDefaultBrandKit } from "./brandkits";
 import { toSceneDTO, toTakeDTO } from "./map";
+
+function resolveEngine(value: string | null | undefined): VideoEngineId {
+  return value && isVideoEngineId(value) ? value : DEFAULT_VIDEO_ENGINE;
+}
 
 export async function getScript(id: string): Promise<ScriptDTO | null> {
   const script = await prisma.script.findUnique({
@@ -24,6 +33,7 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     fps: script.fps,
     width: script.width,
     height: script.height,
+    videoEngine: resolveEngine(script.project.videoEngine),
     scenes: script.scenes.map(toSceneDTO),
     takes: script.takes.map(toTakeDTO),
     brandKitId: script.project.brandKitId,

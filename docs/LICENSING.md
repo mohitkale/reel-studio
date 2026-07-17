@@ -20,10 +20,12 @@ cloud APIs, stock/music providers, or VoiceForge model weights.
 
 ## Critical dependency: Remotion (not open-source)
 
-Reel Studio’s preview player and MP4 export use **Remotion**
-(`remotion`, `@remotion/player`, `@remotion/renderer`, `@remotion/bundler`,
-`@remotion/lottie`, `@remotion/three`, `@remotion/transitions`,
-`@remotion/google-fonts`, `@remotion/cli`).
+**Remotion is the default video engine.** For Remotion projects, preview and MP4
+export use Remotion (`remotion`, `@remotion/player`, `@remotion/renderer`,
+`@remotion/bundler`, `@remotion/lottie`, `@remotion/three`,
+`@remotion/transitions`, `@remotion/google-fonts`, `@remotion/cli`). New projects
+can choose **HyperFrames** instead (see below); Remotion packages may still be
+installed even if you only create HyperFrames projects.
 
 | Fact | Detail |
 | --- | --- |
@@ -64,6 +66,25 @@ usage obligations.
 
 ---
 
+## Optional video engine: HyperFrames (Apache 2.0)
+
+Projects can choose **HyperFrames** instead of Remotion at creation time
+(`videoEngine: "hyperframes"`). Preview and MP4 export then use HeyGen’s
+open-source HTML→video stack (`@hyperframes/producer` and related packages).
+
+| Fact | Detail |
+| --- | --- |
+| License | **Apache License 2.0** (OSI-approved) |
+| Upstream | [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) · [hyperframes.heygen.com](https://hyperframes.heygen.com/) |
+| Commercial use | Allowed at any scale on the self-hosted OSS stack — no Remotion company/automator seat fees |
+| Runtime | Node.js **≥ 22**, Chrome/Chromium, FFmpeg (bundled/auto-downloaded by the producer) |
+| Hosted MCP | HeyGen’s cloud MCP (`mcp.heygen.com`) is **optional / external** and uses HeyGen credits — Reel Studio does **not** require it; local render goes through `@hyperframes/producer` |
+
+HyperFrames does **not** replace Remotion for existing Remotion projects. Engine
+choice is per-project and fixed at creation.
+
+---
+
 ## Local / permissive runtime dependencies (selected)
 
 These are commonly used with Reel Studio and are generally permissive. Confirm
@@ -77,6 +98,7 @@ each package’s `LICENSE` file in `node_modules` for the exact text.
 | TanStack Query, Zod, Three.js | MIT | Data / 3D |
 | `kokoro-js` / Kokoro model | Apache-2.0 | Local TTS |
 | `@modelcontextprotocol/sdk` | MIT / Apache-2.0 (see package) | MCP server |
+| `@hyperframes/producer` (optional engine) | Apache-2.0 | HyperFrames HTML→MP4 export |
 
 ---
 
@@ -136,8 +158,9 @@ license.
 | --- | --- |
 | Can I open-source / fork Reel Studio under MIT? | **Yes** — for this repo’s code. |
 | Is Remotion MIT / OSI open-source? | **No.** |
+| Can I avoid Remotion License obligations by choosing HyperFrames? | **Yes for those projects** — preview/export use Apache-2.0 HyperFrames. Remotion deps may still be present in `node_modules`. |
 | Can an individual use Remotion via Reel Studio for free? | **Usually yes** under Remotion’s Free License (verify upstream). |
-| Can a 10-person company use Remotion via Reel Studio for free? | **Usually no** — they need a Remotion Company License. |
+| Can a 10-person company use Remotion via Reel Studio for free? | **Usually no** — they need a Remotion Company License (or use HyperFrames projects). |
 | Does MIT on this repo waive Remotion fees for downstream users? | **No.** |
 | Are Unsplash / Jamendo / cloud TTS “free forever, any use”? | **No** — follow each provider’s terms. |
 | Is VoiceForge XTTS-v2 OK for commercial products? | **No** (CPML non-commercial); prefer F5-TTS / OpenVoice / RVC as documented there. |

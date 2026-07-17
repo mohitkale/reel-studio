@@ -6,9 +6,7 @@ import { toast } from "sonner";
 
 import { useAssets, useUploadAsset } from "@/hooks/assets";
 import { useSetScriptCover } from "@/hooks/script";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +16,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { HintTooltip } from "@/components/ui/hint-tooltip";
+import { AssetThumbPicker } from "@/components/assets/asset-thumb-picker";
 
 /**
  * Sets the reel's cover image — baked as the opening (thumbnail) frame of the
@@ -121,29 +120,13 @@ export function CoverControl({
           </div>
 
           {imageAssets && imageAssets.length > 0 && (
-            <div className="grid gap-1.5">
-              <Label className="text-xs text-muted-foreground">Pick from assets</Label>
-              <div className="grid max-h-40 grid-cols-4 gap-1 overflow-y-auto rounded-lg border p-1">
-                {imageAssets.map((asset) => (
-                  <button
-                    key={asset.id}
-                    type="button"
-                    title={asset.name ?? asset.url}
-                    onClick={() => setCover.mutate(asset.url)}
-                    className={cn(
-                      "overflow-hidden rounded border bg-black/40 transition-all",
-                      coverUrl === asset.url
-                        ? "border-primary ring-2 ring-primary"
-                        : "border-border hover:border-primary/50",
-                    )}
-                    style={{ aspectRatio: "9/16" }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={asset.url} alt={asset.name ?? ""} className="h-full w-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            </div>
+            <AssetThumbPicker
+              assets={imageAssets}
+              selectedUrl={coverUrl}
+              kind="image"
+              aspect="portrait"
+              onSelect={(url) => setCover.mutate(url)}
+            />
           )}
 
           <DialogFooter>

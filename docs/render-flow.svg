@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680" role="img" aria-labelledby="title desc">
   <title id="title">Render Flow</title>
-  <desc id="desc">Flow diagram from script editing to final MP4 output.</desc>
+  <desc id="desc">Flow diagram from script editing to final MP4 output, branching on Remotion vs HyperFrames.</desc>
   <defs>
     <style>
       .bg { fill: #0d1323; }
@@ -15,13 +15,13 @@
     </marker>
   </defs>
 
-  <rect class="bg" x="0" y="0" width="1200" height="620" />
+  <rect class="bg" x="0" y="0" width="1200" height="680" />
   <text class="title" x="40" y="52">Reel Studio: End-to-End Render Flow</text>
 
   <rect class="step" x="50" y="110" width="220" height="110" />
   <text class="label" x="72" y="150">1. Script + Scenes</text>
   <text class="small" x="72" y="178">User edits scenes in UI</text>
-  <text class="small" x="72" y="198">Template + emphasis chosen</text>
+  <text class="small" x="72" y="198">Engine templates chosen</text>
 
   <rect class="step" x="330" y="110" width="230" height="110" />
   <text class="label" x="352" y="150">2. Voice Take</text>
@@ -38,27 +38,28 @@
   <text class="small" x="942" y="178">DB row + in-memory queue</text>
   <text class="small" x="942" y="198">SSE progress channel</text>
 
-  <rect class="step" x="170" y="320" width="260" height="130" />
-  <text class="label" x="192" y="360">5. Remotion Bundle</text>
-  <text class="small" x="192" y="388">Bundle cached per process</text>
-  <text class="small" x="192" y="408">selectComposition(Reel)</text>
+  <rect class="step" x="80" y="320" width="480" height="150" />
+  <text class="label" x="102" y="360">5a. Remotion path</text>
+  <text class="small" x="102" y="388">Bundle cached per process</text>
+  <text class="small" x="102" y="408">selectComposition + renderMedia</text>
+  <text class="small" x="102" y="428">h264, adaptive concurrency</text>
 
-  <rect class="step" x="500" y="320" width="300" height="130" />
-  <text class="label" x="522" y="360">6. renderMedia</text>
-  <text class="small" x="522" y="388">h264 + veryfast preset</text>
-  <text class="small" x="522" y="408">Adaptive concurrency + caching</text>
-  <text class="small" x="522" y="428">Progress throttled to DB</text>
+  <rect class="step" x="620" y="320" width="500" height="150" />
+  <text class="label" x="642" y="360">5b. HyperFrames path</text>
+  <text class="small" x="642" y="388">Build HTML composition (Node 22+)</text>
+  <text class="small" x="642" y="408">Copy local media into _assets/</text>
+  <text class="small" x="642" y="428">Spawn hyperframes-render-worker</text>
 
-  <rect class="step" x="870" y="320" width="260" height="130" />
-  <text class="label" x="892" y="360">7. Output + Complete</text>
-  <text class="small" x="892" y="388">Write media/renders/*.mp4</text>
-  <text class="small" x="892" y="408">Mark render done + URL</text>
+  <rect class="step" x="420" y="520" width="360" height="110" />
+  <text class="label" x="442" y="560">6. Output + Complete</text>
+  <text class="small" x="442" y="588">Write media/renders/*.mp4</text>
+  <text class="small" x="442" y="608">Mark render done + URL</text>
 
   <path class="arrow" d="M 270 165 L 330 165" />
   <path class="arrow" d="M 560 165 L 620 165" />
   <path class="arrow" d="M 860 165 L 920 165" />
-  <path class="arrow" d="M 1035 220 L 1035 320" />
-  <path class="arrow" d="M 920 385 L 800 385" />
-  <path class="arrow" d="M 500 385 L 430 385" />
-  <path class="arrow" d="M 300 320 L 300 220" />
+  <path class="arrow" d="M 1000 220 L 1000 280 L 870 280 L 870 320" />
+  <path class="arrow" d="M 1035 220 L 1035 280 L 320 280 L 320 320" />
+  <path class="arrow" d="M 320 470 L 320 500 L 600 500 L 600 520" />
+  <path class="arrow" d="M 870 470 L 870 500 L 600 500" />
 </svg>

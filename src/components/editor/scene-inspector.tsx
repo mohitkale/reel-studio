@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 
 import type { SceneDTO, SceneBackground } from "@/lib/dto";
-import { TEMPLATES, normalizeTemplateId } from "@/compositions/templates";
+import { getVideoEngine } from "@/engines/registry";
+import type { VideoEngineId } from "@/engines/types";
 import { useAssets, useUploadAsset } from "@/hooks/assets";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
@@ -23,11 +24,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { AssetThumbPicker } from "@/components/assets/asset-thumb-picker";
 
 const VISUAL_HINTS: Record<string, string> = {
   "stat-reveal": "Key stat or number (e.g. 73% or 10x)",
   "icon-grid": "Bullet emoji (e.g. ✓ or →)",
   "quote-card": "Author or attribution (optional)",
+  "hf-stat": "Key stat or number (e.g. 73% or 10x)",
+  "hf-list": "Bullet emoji (e.g. ✓ or →)",
+  "hf-quote": "Author or attribution (optional)",
+  "hf-cta": "CTA label (e.g. Follow for more)",
   "emoji-punch": "A single emoji (e.g. 🔥 or ⚡)",
   kinetic: "Optional emoji shown in the kicker",
   lottie: "Optional emoji shown above the animation",
@@ -238,37 +244,13 @@ function BackgroundEditor({
           </div>
 
           {assets && assets.length > 0 && (
-            <div className="grid max-h-32 grid-cols-4 gap-1 overflow-y-auto rounded-lg border p-1">
-              {assets.map((asset) => {
-                const selected = url === asset.url;
-                return (
-                  <button
-                    key={asset.id}
-                    type="button"
-                    title={asset.name ?? asset.url}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => changeUrl(asset.url)}
-                    className={cn(
-                      "aspect-video overflow-hidden rounded border bg-black/40 transition-all",
-                      selected
-                        ? "border-primary ring-2 ring-primary"
-                        : "border-border hover:border-primary/50",
-                    )}
-                  >
-                    {kind === "video" ? (
-                      <video src={asset.url} muted className="h-full w-full object-cover" />
-                    ) : (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={asset.url}
-                        alt={asset.name ?? ""}
-                        className="h-full w-full object-cover"
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+            <AssetThumbPicker
+              assets={assets}
+              selectedUrl={url}
+              kind={kind}
+              onSelect={changeUrl}
+              aspect="video"
+            />
           )}
 
           {kind === "image" && (
@@ -424,6 +406,7 @@ export function SceneInspector({
   onUpdate,
   onDelete,
   saving,
+  videoEngine = "remotion",
 }: {
   scene: SceneDTO;
   sceneIndex: number;
@@ -432,14 +415,17 @@ export function SceneInspector({
   onUpdate: (vars: UpdateVars) => void;
   onDelete: (id: string) => void;
   saving?: boolean;
+  videoEngine?: VideoEngineId;
 }) {
   const [text, setText] = React.useState(scene.text);
   const [emphasis, setEmphasis] = React.useState(scene.emphasis.join(", "));
   const [visual, setVisual] = React.useState(scene.visual ?? "");
   const [confirmOpen, setConfirmOpen] = React.useState(false);
 
-  const normalId = normalizeTemplateId(scene.templateId);
-  const isChecklist = normalId === "icon-grid";
+  const engine = getVideoEngine(videoEngine);
+  const templates = engine.listTemplates();
+  const normalId = engine.normalizeTemplateId(scene.templateId);
+  const isChecklist = normalId === "icon-grid" || normalId === "hf-list";
 
   function commitText() {
     if (text !== scene.text) onUpdate({ id: scene.id, text });
@@ -516,11 +502,11 @@ export function SceneInspector({
             id="scene-template"
             value={normalId}
             onChange={(v) => onUpdate({ id: scene.id, templateId: v })}
-            options={TEMPLATES.map((t) => ({ value: t.id, label: t.name }))}
+            options={templates.map((t) => ({ value: t.id, label: t.name }))}
             searchPlaceholder="Search templates…"
           />
           <p className="text-xs text-muted-foreground">
-            {TEMPLATES.find((t) => t.id === normalId)?.description}
+            {templates.find((t) => t.id === normalId)?.description}
           </p>
         </div>
 

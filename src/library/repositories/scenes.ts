@@ -1,4 +1,6 @@
 import type { SceneDTO, SceneBackground } from "@/lib/dto";
+import { defaultTemplateIdForEngine } from "@/engines/registry";
+import { isVideoEngineId, DEFAULT_VIDEO_ENGINE } from "@/engines/types";
 import { prisma } from "@/library/db";
 import { sceneConfigSchema, parseJsonColumn } from "../schemas";
 import { toSceneDTO } from "./map";
@@ -12,12 +14,20 @@ export async function addScene(
     orderBy: { order: "desc" },
     select: { order: true },
   });
+  const script = await prisma.script.findUnique({
+    where: { id: scriptId },
+    select: { project: { select: { videoEngine: true } } },
+  });
+  const engine =
+    script?.project.videoEngine && isVideoEngineId(script.project.videoEngine)
+      ? script.project.videoEngine
+      : DEFAULT_VIDEO_ENGINE;
   const scene = await prisma.scene.create({
     data: {
       scriptId,
       order: (last?.order ?? -1) + 1,
       text: data.text,
-      templateId: data.templateId ?? "placeholder",
+      templateId: data.templateId ?? defaultTemplateIdForEngine(engine),
       visual: data.visual,
     },
   });

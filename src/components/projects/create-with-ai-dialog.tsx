@@ -14,6 +14,13 @@ import {
   ORIENTATION_LABELS,
   DEFAULT_ORIENTATION,
 } from "@/lib/orientation";
+import {
+  DEFAULT_VIDEO_ENGINE,
+  VIDEO_ENGINE_DESCRIPTIONS,
+  VIDEO_ENGINE_IDS,
+  VIDEO_ENGINE_LABELS,
+  type VideoEngineId,
+} from "@/engines/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -43,6 +50,8 @@ export function CreateWithAIDialog() {
   const [orientation, setOrientation] =
     React.useState<Orientation>(DEFAULT_ORIENTATION);
   const [scriptStyle, setScriptStyle] = React.useState<ScriptStyle>("short");
+  const [videoEngine, setVideoEngine] =
+    React.useState<VideoEngineId>(DEFAULT_VIDEO_ENGINE);
 
   const configured = (providers ?? []).filter((p) => p.configured);
   const effectiveProvider = providerId ?? configured[0]?.id;
@@ -58,11 +67,13 @@ export function CreateWithAIDialog() {
         sceneCount: sceneCount === "auto" ? undefined : Number(sceneCount),
         orientation,
         scriptStyle,
+        videoEngine,
       },
       {
         onSuccess: ({ scriptId }) => {
           setOpen(false);
           setBrief("");
+          setVideoEngine(DEFAULT_VIDEO_ENGINE);
           toast.success("Video drafted", {
             description: "Review and tweak the scenes in the editor.",
           });
@@ -172,6 +183,33 @@ export function CreateWithAIDialog() {
                     >
                       <span className="font-medium">{opt.label}</span>
                       <span className="text-xs opacity-70">{opt.description}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Video engine</Label>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {VIDEO_ENGINE_IDS.map((id) => {
+                  const selected = videoEngine === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setVideoEngine(id)}
+                      className={cn(
+                        "rounded-lg border p-3 text-left text-sm transition-colors",
+                        selected
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "text-muted-foreground hover:bg-accent",
+                      )}
+                    >
+                      <div className="font-medium">{VIDEO_ENGINE_LABELS[id]}</div>
+                      <p className="mt-1 text-xs opacity-80">
+                        {VIDEO_ENGINE_DESCRIPTIONS[id]}
+                      </p>
                     </button>
                   );
                 })}

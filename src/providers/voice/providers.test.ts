@@ -182,6 +182,34 @@ describe("elevenlabs", () => {
     const body = JSON.parse((init as RequestInit).body as string);
     expect(body.model_id).toBe("eleven_multilingual_v2");
   });
+
+  it("falls back to wav_24000 and resamples when the plan blocks wav_44100", async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            detail: {
+              type: "authorization_error",
+              code: "subscription_required",
+              message:
+                "Output format 'wav_44100' is only available on the Pro tier and above.",
+              status: "output_format_not_allowed",
+            },
+          }),
+          { status: 403, headers: { "Content-Type": "application/json" } },
+        ),
+      )
+      .mockResolvedValueOnce(bytesResponse(makeSilentWav(0.25, { sampleRate: 24000 })));
+
+    const result = await getProvider("elevenlabs").synth!({
+      voiceId: "voice1",
+      text: "hi",
+    });
+
+    expect(result.sampleRate).toBe(44100);
+    expect(String(fetchMock.mock.calls[0][0])).toContain("output_format=wav_44100");
+    expect(String(fetchMock.mock.calls[1][0])).toContain("output_format=wav_24000");
+  });
 });
 
 describe("voiceforge", () => {

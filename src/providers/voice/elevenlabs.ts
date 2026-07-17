@@ -1,8 +1,13 @@
 import { z } from "zod";
 
-import { parseWav } from "@/lib/wav";
+import {
+  normalizeWavToTarget,
+  parseWav,
+  TARGET_SAMPLE_RATE,
+} from "@/lib/wav";
 import { providerFetch } from "./http";
 import {
+  ProviderError,
   type SynthOptions,
   type SynthResult,
   type VoiceModel,
@@ -12,6 +17,14 @@ import {
 
 const API_BASE = "https://api.elevenlabs.io";
 export const ELEVENLABS_DEFAULT_MODEL = "eleven_multilingual_v2";
+
+/**
+ * Prefer native 44.1 kHz WAV when the plan allows it (Pro+). Free/Starter reject
+ * wav_44100 with HTTP 403 subscription_required — fall back to wav_24000 and
+ * resample into the pipeline's 44.1 kHz target.
+ */
+const PREFERRED_OUTPUT_FORMAT = "wav_44100";
+const FREE_TIER_OUTPUT_FORMAT = "wav_24000";
 
 const elVoiceSchema = z.object({
   voice_id: z.string(),
@@ -63,16 +76,58 @@ function mapVoice(v: ElVoice): VoiceSummary {
   };
 }
 
+function isOutputFormatPlanError(err: unknown): boolean {
+  if (!(err instanceof ProviderError)) return false;
+  if (err.status !== 403 && err.status !== 401) return false;
+  const msg = err.message.toLowerCase();
+  return (
+    msg.includes("output_format") ||
+    msg.includes("subscription_required") ||
+    msg.includes("output format") ||
+    msg.includes("pro tier")
+  );
+}
+
 export function createElevenLabsProvider(): VoiceProvider {
   const key = () => process.env.ELEVENLABS_API_KEY?.trim() || "";
   const headers = () => ({ "xi-api-key": key() });
+
+  async function requestSpeech(
+    opts: SynthOptions,
+    outputFormat: string,
+  ): Promise<Buffer> {
+    const voiceSettings: Record<string, number> = {};
+    if (opts.stability !== undefined) voiceSettings.stability = opts.stability;
+    if (opts.similarity !== undefined)
+      voiceSettings.similarity_boost = opts.similarity;
+
+    const body = {
+      text: opts.text,
+      model_id: opts.modelId ?? ELEVENLABS_DEFAULT_MODEL,
+      ...(Object.keys(voiceSettings).length
+        ? { voice_settings: voiceSettings }
+        : {}),
+    };
+
+    const res = await providerFetch(
+      `${API_BASE}/v1/text-to-speech/${encodeURIComponent(opts.voiceId)}?output_format=${outputFormat}`,
+      {
+        method: "POST",
+        headers: { ...headers(), "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+      "elevenlabs",
+    );
+
+    return Buffer.from(await res.arrayBuffer());
+  }
 
   return {
     id: "elevenlabs",
     label: "ElevenLabs",
     runtime: "server",
-    // Free/starter plans enforce a low concurrent-request limit.
-    maxConcurrency: 3,
+    // Free plans allow 2 concurrent requests; keep headroom under that.
+    maxConcurrency: 2,
 
     isConfigured: () => key().length > 0,
 
@@ -101,33 +156,18 @@ export function createElevenLabsProvider(): VoiceProvider {
     },
 
     async synth(opts: SynthOptions): Promise<SynthResult> {
-      const voiceSettings: Record<string, number> = {};
-      if (opts.stability !== undefined) voiceSettings.stability = opts.stability;
-      if (opts.similarity !== undefined)
-        voiceSettings.similarity_boost = opts.similarity;
+      let wav: Buffer;
+      try {
+        wav = await requestSpeech(opts, PREFERRED_OUTPUT_FORMAT);
+      } catch (err) {
+        if (!isOutputFormatPlanError(err)) throw err;
+        wav = await requestSpeech(opts, FREE_TIER_OUTPUT_FORMAT);
+      }
 
-      const body = {
-        text: opts.text,
-        model_id: opts.modelId ?? ELEVENLABS_DEFAULT_MODEL,
-        ...(Object.keys(voiceSettings).length
-          ? { voice_settings: voiceSettings }
-          : {}),
-      };
-
-      // wav_44100 returns a 16-bit PCM WAV directly, matching our pipeline target.
-      const res = await providerFetch(
-        `${API_BASE}/v1/text-to-speech/${encodeURIComponent(opts.voiceId)}?output_format=wav_44100`,
-        {
-          method: "POST",
-          headers: { ...headers(), "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        },
-        "elevenlabs",
-      );
-
-      const wav = Buffer.from(await res.arrayBuffer());
-      const info = parseWav(wav);
-      return { wav, sampleRate: info.sampleRate };
+      const target = opts.sampleRate ?? TARGET_SAMPLE_RATE;
+      const normalized = normalizeWavToTarget(wav, target);
+      const info = parseWav(normalized);
+      return { wav: normalized, sampleRate: info.sampleRate };
     },
   };
 }

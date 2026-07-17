@@ -20,7 +20,6 @@ import { renderMedia, selectComposition, type X264Preset } from "@remotion/rende
 import { type ReelProps, type ReelScene, coverFrames } from "@/compositions/types";
 import { type Orientation, dimsFor } from "@/lib/orientation";
 import { getAssetStore } from "@/library/storage";
-import { getScript } from "@/library/repositories/scripts";
 import { listTakes } from "@/library/repositories/takes";
 import { normalizeTemplateId } from "@/compositions/templates";
 import {
@@ -29,6 +28,7 @@ import {
   failRender,
 } from "@/library/repositories/renders";
 import { upsertJob } from "@/lib/render-queue";
+import { getScript } from "@/library/repositories/scripts";
 
 const DEFAULT_RENDER_CONCURRENCY_CAP = 8;
 const MIN_PROGRESS_PERSIST_INTERVAL_MS = 1_000;
@@ -184,7 +184,18 @@ export function startRender(opts: StartRenderOptions): void {
   pumpRenderQueue();
 }
 
-async function runRender({
+async function runRender(opts: StartRenderOptions): Promise<void> {
+  // Dispatch by project video engine before entering the Remotion path.
+  const script = await getScript(opts.scriptId);
+  if (script?.videoEngine === "hyperframes") {
+    const { runHyperframesRender } = await import("@/library/hyperframes-render");
+    await runHyperframesRender(opts);
+    return;
+  }
+  await runRemotionRender(opts);
+}
+
+async function runRemotionRender({
   renderId,
   scriptId,
   voiceTakeId,

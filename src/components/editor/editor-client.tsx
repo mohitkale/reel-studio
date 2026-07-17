@@ -14,8 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import type { PlayerRef } from "@remotion/player";
-
 import {
   useScript,
   useAddScene,
@@ -30,7 +28,7 @@ import type { SceneDTO } from "@/lib/dto";
 import { useCreateRender, useRenderProgress } from "@/hooks/renders";
 import { useBrandKits, useAssignBrandKit } from "@/hooks/brandkits";
 import { useHotkey } from "@/hooks/use-hotkeys";
-import { normalizeTemplateId } from "@/compositions/templates";
+import { normalizeTemplateIdForEngine } from "@/engines/registry";
 import { type ReelScene, coverFrames } from "@/compositions/types";
 import { estimateTimeline } from "@/lib/preview-timeline";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
@@ -40,7 +38,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SceneList } from "@/components/editor/scene-list";
 import { SceneInspector } from "@/components/editor/scene-inspector";
-import { ReelPlayer } from "@/components/editor/reel-player";
+import {
+  EnginePlayer,
+  type EnginePlayerHandle,
+} from "@/components/editor/engine-player";
+import { EngineBadge } from "@/components/engines/engine-badge";
 import { VoiceoverPanel } from "@/components/editor/voiceover-panel";
 import { AIEnhanceDialog } from "@/components/editor/ai-enhance-dialog";
 import { ScenesJsonDialog } from "@/components/editor/scenes-json-dialog";
@@ -89,7 +91,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   const [jsonOpen, setJsonOpen] = React.useState(false);
   // Snapshot of scenes taken before an AI enhance — cleared after render or undo
   const [undoSnapshot, setUndoSnapshot] = React.useState<SceneDTO[] | null>(null);
-  const playerRef = React.useRef<PlayerRef>(null);
+  const playerRef = React.useRef<EnginePlayerHandle>(null);
 
   // Inline render progress: track the most recently queued render from this
   // editor session so the toolbar can show live % instead of only a toast +
@@ -129,11 +131,12 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   // Reel input: scene templates + timeline. Memoized (and computed before any
   // early return, per rules of hooks) so the Player only sees a new array
   // reference when a scene actually changes, not on every unrelated re-render.
+  const videoEngine = script?.videoEngine ?? "remotion";
   const reelScenes: ReelScene[] = React.useMemo(
     () =>
       scenes.map((s) => ({
         id: s.id,
-        templateId: normalizeTemplateId(s.templateId),
+        templateId: normalizeTemplateIdForEngine(videoEngine, s.templateId),
         text: s.text,
         emphasis: s.emphasis,
         visual: s.visual,
@@ -144,7 +147,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
         mood: s.mood as ReelScene["mood"],
         order: s.order,
       })),
-    [scenes, script?.hideText],
+    [scenes, script?.hideText, videoEngine],
   );
   // Single-scene loop preview so template/text edits animate instantly.
   const selectedReelScene: ReelScene | null = React.useMemo(
@@ -152,7 +155,10 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
       selectedScene
         ? {
             id: selectedScene.id,
-            templateId: normalizeTemplateId(selectedScene.templateId),
+            templateId: normalizeTemplateIdForEngine(
+              videoEngine,
+              selectedScene.templateId,
+            ),
             text: selectedScene.text,
             emphasis: selectedScene.emphasis,
             visual: selectedScene.visual,
@@ -163,7 +169,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             order: selectedScene.order,
           }
         : null,
-    [selectedScene, script?.hideText, scenes],
+    [selectedScene, script?.hideText, scenes, videoEngine],
   );
   // A take stays valid as long as its spoken text still matches the script
   // (resolveReelTimeline matches by text, so background/template/effect edits
@@ -333,8 +339,11 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
               </span>
             </HintTooltip>
           </Link>
-          <div>
-            <h2 className="text-lg font-semibold leading-tight">{script.name}</h2>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-lg font-semibold leading-tight">{script.name}</h2>
+              <EngineBadge engine={videoEngine} size="lg" />
+            </div>
             <p className="text-xs text-muted-foreground">
               {scenes.length} scenes · {script.fps} fps
               {takeUsable ? " · previewing take audio" : " · estimated timing"}
@@ -614,8 +623,9 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
 
               <TabsContent value="scene">
                 {selectedReelScene ? (
-                  <ReelPlayer
+                  <EnginePlayer
                     key={selectedReelScene.id}
+                    videoEngine={videoEngine}
                     scenes={[selectedReelScene]}
                     timeline={[
                       {
@@ -634,7 +644,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     previewQuality={previewQuality}
                   />
                 ) : (
-                  <ReelPlayer
+                  <EnginePlayer
+                    videoEngine={videoEngine}
                     scenes={[]}
                     timeline={[]}
                     totalFrames={1}
@@ -650,8 +661,9 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
               </TabsContent>
 
               <TabsContent value="reel">
-                <ReelPlayer
+                <EnginePlayer
                   ref={playerRef}
+                  videoEngine={videoEngine}
                   scenes={reelScenes}
                   timeline={timeline}
                   totalFrames={totalFrames + coverFr}
@@ -693,6 +705,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                 onUpdate={(vars) => updateScene.mutate(vars)}
                 onDelete={(id) => deleteScene.mutate(id)}
                 saving={updateScene.isPending}
+                videoEngine={videoEngine}
               />
             ) : (
               <p className="text-sm text-muted-foreground">
@@ -732,6 +745,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
         scenes={scenes}
         open={jsonOpen}
         onOpenChange={setJsonOpen}
+        videoEngine={videoEngine}
       />
     </div>
   );

@@ -8,7 +8,8 @@
 - Script and scene editing
 - AI scene planning that selectively adds relevant Unsplash stock backgrounds with varied pan/zoom motion (optional, needs an Unsplash key)
 - AI voice takes (pluggable providers)
-- Motion templates powered by Remotion (Lottie and Three.js support)
+- Choose a video engine per project: **Remotion** or **HyperFrames** (Apache 2.0)
+- Motion templates for each engine (Remotion React templates + HyperFrames-native HTML templates)
 - MP4 rendering with queue and progress updates
 - Project, asset, and brand-kit management
 
@@ -20,17 +21,19 @@ The app runs as a single Next.js project with API routes and UI in one codebase.
 welcome under the same terms ([CONTRIBUTING.md](CONTRIBUTING.md)).
 
 **Important:** several dependencies and optional integrations are **not** MIT.
-In particular, **Remotion** (preview + MP4 rendering) is **source-available
-under the Remotion License — not OSI open-source**. Individuals and small teams
-are often covered by Remotion’s Free License; for-profit organizations with
-4+ employees typically need a paid Remotion Company License. Our MIT grant does
-**not** waive those obligations for you or for anyone who forks this project.
+**Remotion** (default video engine) is **source-available under the Remotion
+License, not OSI open-source**. Individuals and small teams are often covered
+by Remotion’s Free License; for-profit organizations with 4+ employees typically
+need a paid Remotion Company License. Our MIT grant does **not** waive those
+obligations. Projects can instead use **HyperFrames** (Apache-2.0) for preview
+and MP4 export without Remotion company/automator seats for those projects.
 
 | Component | License / terms |
 | --- | --- |
 | Reel Studio app code, templates, MCP server code | **MIT** |
 | Bundled ambient music (`public/music/`) | **CC0** |
 | **Remotion** (Player, renderer, related packages) | **Remotion License** ([details](https://www.remotion.dev/license)) |
+| **HyperFrames** (`@hyperframes/producer`, optional engine) | **Apache-2.0** |
 | Kokoro TTS (`kokoro-js`) | Apache-2.0 |
 | Unsplash / Jamendo / Cartesia / ElevenLabs / Gemini / OpenAI | Each provider’s own terms (optional keys) |
 | VoiceForge engines (optional) | Per-engine (e.g. XTTS-v2 CPML non-commercial) |
@@ -44,9 +47,10 @@ Full breakdown, Free vs Company License notes, and a checklist:
 - **Multi-format support**: Portrait (9:16), Landscape (16:9), Square (1:1)
 - **Script and scene editing**: Scene-by-scene content creation
 - **AI scene planning**: Automatically adds relevant Unsplash stock backgrounds with varied pan/zoom motion
-- **Motion templates**: Powered by Remotion with Lottie and Three.js support
-- **7 professional templates**: Kinetic typography, Lottie explainer, 3D accents, emoji punch, icon grid, quote cards, stat reveal
-- **MP4 rendering**: Queue-based rendering with progress updates
+- **Dual video engines**: Remotion (React) or HyperFrames (HTML, Apache 2.0) — chosen at project create
+- **Remotion templates**: Kinetic typography, Lottie, 3D, emoji punch, icon grid, quote cards, stat reveal
+- **HyperFrames templates**: Cold open, bold statement, paced list, proof number, pull quote, end card
+- **MP4 rendering**: Queue-based rendering with progress updates (HyperFrames runs in an isolated worker)
 - **Project management**: Organize projects, assets, and brand kits
 
 ### Voice & Audio
@@ -117,16 +121,19 @@ Full breakdown, Free vs Company License notes, and a checklist:
 - App: Next.js App Router + TypeScript (strict)
 - UI: Tailwind CSS v4 + Radix-based components + lucide-react
 - Data: TanStack Query + Zod
-- Video: Remotion 4 (`@remotion/renderer`, `@remotion/lottie`, `@remotion/three`) — [Remotion License](docs/LICENSING.md#critical-dependency-remotion-not-open-source), not MIT
+- Video: Remotion 4 and/or HyperFrames (`@hyperframes/producer`) — see [docs/LICENSING.md](docs/LICENSING.md)
 - Persistence: Prisma + SQLite
 - Storage: Local disk asset store under `media/`
 - Tooling: ESLint, Prettier, Vitest
+- Node.js: **≥ 22** recommended (required for HyperFrames renders; see `.nvmrc`)
 
 ## Quick Start
 
 ### 1. Install
 
 ```bash
+# HyperFrames rendering requires Node 22+
+nvm use   # respects .nvmrc
 npm install
 ```
 
@@ -139,7 +146,9 @@ cp .env.example .env.local
 Set only the keys you need. Empty values are fine for local non-provider testing.
 Free, no-key voices work out of the box: **Kokoro** (Apache-2.0) runs entirely in
 your browser, and **Web Speech** gives an instant in-editor preview. Cartesia and
-ElevenLabs keys are optional, for premium cloud voices.
+ElevenLabs keys are optional, for premium cloud voices. On ElevenLabs free/Starter
+plans the app falls back from `wav_44100` to `wav_24000` and resamples to 44.1 kHz
+(Pro+ still gets native 44.1 kHz when allowed).
 
 ### 3. Initialize database
 
@@ -147,8 +156,8 @@ ElevenLabs keys are optional, for premium cloud voices.
 npm run db:push
 ```
 
-Re-run this after pulling changes that touch `prisma/schema.prisma` (e.g. the
-background-music fields) so your local SQLite stays in sync.
+Re-run this after pulling changes that touch `prisma/schema.prisma` (e.g.
+`videoEngine` on projects, music fields) so your local SQLite stays in sync.
 
 ### 4. Optional demo seed
 
@@ -167,10 +176,12 @@ Open `http://localhost:3000`.
 
 ## Run with Docker (isolated)
 
-For an isolated environment that keeps rendering — headless Chromium, FFmpeg,
-native binaries and CPU-heavy work — off your host machine, run the app in a
-container. This is recommended if you want a hard boundary between Reel Studio's
-external processes and your laptop.
+For an isolated environment that keeps rendering (headless Chromium, FFmpeg,
+native binaries, and CPU-heavy work) off your host machine, run the app in a
+container. This covers both Remotion renders and HyperFrames
+(`@hyperframes/producer` worker). Recommended if you want a hard boundary
+between Reel Studio's external processes and your laptop. Node 22+ is required
+in the image (already set in the Dockerfile).
 
 **Prerequisites:** Docker Desktop (or Docker Engine + Compose v2) running.
 
@@ -200,11 +211,13 @@ What the container handles for you:
 - **Linux-native deps** — `node_modules`, the Next.js build cache, the SQLite
   database and the `media/` store live in named volumes, never mixing with your
   host's (Windows/macOS) files. Your host `node_modules` is untouched.
-- **Rendering** — Remotion's headless Chromium (downloaded on first render) runs
-  with `--no-sandbox`, so no extra container privileges are required.
+- **Rendering** — Remotion and HyperFrames both use headless Chromium in-process
+  / via the HyperFrames worker, with `--no-sandbox`, so no extra container
+  privileges are required.
 
-> First render downloads a headless Chromium build (~170 MB) into the deps
-> volume; it is cached for subsequent renders.
+> First Remotion render downloads a headless Chromium build (~170 MB) into the
+> deps volume; HyperFrames may download its own Chrome/FFmpeg on first use.
+> Both are cached for subsequent renders.
 >
 > After changing dependencies or the `Dockerfile`, rebuild with
 > `docker compose up --build`. If a dependency change isn't picked up, reset the
@@ -237,12 +250,18 @@ Key modules:
 1. `src/app`:
 API routes and pages using Next.js App Router.
 2. `src/library`:
-Repository layer, render service, storage abstraction, sample content.
-3. `src/providers`:
+Repository layer, render orchestration, storage abstraction, sample content.
+HyperFrames export lives in `hyperframes-render.ts` (spawns the worker).
+3. `src/engines`:
+Video-engine registry and adapters (`remotion` | `hyperframes`). Engine choice
+is fixed on the project at create time.
+4. `src/providers`:
 Provider registries and concrete AI/voice implementations.
-4. `src/compositions`:
-Remotion composition, templates, visuals, and tokens.
-5. `prisma`:
+5. `src/compositions`:
+Remotion-only composition, templates, visuals, and tokens.
+6. `scripts/hyperframes-render-worker.mjs`:
+Isolated Node process that runs `@hyperframes/producer` for HyperFrames MP4s.
+7. `prisma`:
 Database schema and generated client usage.
 
 ## Render and Processing Flow
@@ -254,16 +273,20 @@ High-level sequence:
 1. User edits scenes and selects/generates a voice take.
 2. Timeline frames are computed from scene timings.
 3. API creates render job and enqueues it.
-4. Render service bundles/selects composition and calls `renderMedia`.
+4. Render path branches on `Project.videoEngine`:
+   - **Remotion:** bundle composition and call `renderMedia`.
+   - **HyperFrames:** build HTML composition, copy local takes/music into the
+     project as relative `_assets/`, then spawn `hyperframes-render-worker.mjs`
+     (isolated `@hyperframes/producer` session).
 5. Progress is streamed to UI via SSE and persisted with throttling.
 6. Final MP4 is written to `media/renders/` and linked in the renders library.
 
 ## Data Model (Summary)
 
-- `Project`: top-level workspace for scripts and branding
+- `Project`: top-level workspace; includes `videoEngine` (`remotion` | `hyperframes`, default `remotion`, set at create)
 - `BrandKit`: palette, fonts, logo, handle, CTA defaults
 - `Script`: timeline container with scenes
-- `Scene`: ordered unit with template and content
+- `Scene`: ordered unit with template and content (template ids differ per engine)
 - `VoiceTake`: synthesized voice track + timing JSON
 - `Render`: render job state and output path
 - `Asset`: uploaded media metadata
@@ -279,7 +302,9 @@ All supported variables are documented in `.env.example`.
 | --- | --- | --- |
 | `DATABASE_URL` | Yes | Prisma SQLite connection string |
 | `CARTESIA_API_KEY` | No | Enable Cartesia voices and synthesis (Kokoro/Web Speech need no key) |
-| `ELEVENLABS_API_KEY` | No | Enable ElevenLabs voices and synthesis |
+| `ELEVENLABS_API_KEY` | No | Enable ElevenLabs voices and synthesis (free tier supported via wav fallback) |
+| `VOICEFORGE_SERVICE_URL` | No | Base URL for optional self-hosted VoiceForge cloning (`http://127.0.0.1:8089`) |
+| `VOICEFORGE_API_TOKEN` | No | Optional bearer token when VoiceForge requires auth |
 | `MCP_API_TOKEN` | No | Auto-managed; generate/rotate in Settings → AI tools / MCP (never set by hand) |
 | `GEMINI_API_KEY` | No | Enable Gemini AI planning flows |
 | `OPENAI_API_KEY` | No | Enable OpenAI AI planning flows |
@@ -343,6 +368,7 @@ src/
   app/            # pages + API routes
   components/     # UI and editor components
   compositions/   # Remotion composition system
+  engines/        # video engine registry (Remotion + HyperFrames)
   hooks/          # client data hooks
   lib/            # shared helpers and DTOs
   library/        # repositories, render service, storage
@@ -350,7 +376,7 @@ src/
   remotion/       # Remotion root registration
 docs/             # product and architecture docs
 prisma/           # schema and db setup
-scripts/          # local seed scripts
+scripts/          # seed scripts + HyperFrames render worker
 media/            # local asset and render output (git-ignored)
 ```
 

@@ -7,6 +7,7 @@ import { ReelPlayer } from "@/components/editor/reel-player";
 import { PageHeader } from "@/components/shell/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { LISTING_GRID_6_CARDS } from "@/lib/listing-layout";
 
 const PREVIEW_DURATION = 90; // 3 seconds at 30fps
 const PREVIEW_FPS = 30;
@@ -49,7 +50,7 @@ function TemplatePreviewCard({ template }: { template: typeof TEMPLATES[0] }) {
     <Card className="overflow-hidden">
       <div
         ref={containerRef}
-        className="mx-auto w-full max-w-[280px]"
+        className="mx-auto w-full max-w-[220px] xl:max-w-none"
         style={{ aspectRatio: "1080 / 1920" }}
       >
         {isVisible ? (
@@ -94,7 +95,7 @@ export default function TemplatesPage() {
         title="Templates"
         description="Seven premium animated scene templates with live previews. Pick any in the scene inspector."
       />
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className={LISTING_GRID_6_CARDS}>
         {TEMPLATES.map((t) => (
           <TemplatePreviewCard key={t.id} template={t} />
         ))}

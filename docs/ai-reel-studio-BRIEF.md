@@ -5,8 +5,9 @@ scratch in a new folder. Treat this as a product spec, not a one-shot script:
 plan, propose the stack, confirm key choices with me, then build in milestones.
 
 > **Licensing note (current repo):** Reel Studio application code is MIT.
-> Remotion (required for composition/render) is **not** OSI open-source — see
-> [`docs/LICENSING.md`](./LICENSING.md). Do not document Remotion as MIT.
+> Remotion is the **default** engine and is **not** OSI open-source. Projects can
+> instead use **HyperFrames** (Apache-2.0). See [`docs/LICENSING.md`](./LICENSING.md).
+> Do not document Remotion as MIT.
 
 ---
 
@@ -47,13 +48,11 @@ WAV stitching logic) as reference, but rebuild the architecture and UI properly.
 - **App:** Next.js (App Router) + TypeScript. One process serves UI and API.
 - **UI:** Tailwind CSS + shadcn/ui (Radix primitives) for accessible components.
   Icons via lucide-react. Use a clean type scale and a small design-token set.
-- **Video:** Remotion 4 (keep Remotion Studio available as a dev surface).
-  - Lottie via `@remotion/lottie`.
-  - 3D via `@remotion/three` (Three.js).
-  - Audio via Remotion `<Audio>`, captions synced to measured voice timing.
-- **Rendering:** server-side via `@remotion/renderer` (bundle + renderMedia) with
-  a small job queue and progress reporting (SSE or polling). Remotion bundles
-  ffmpeg, so no separate ffmpeg install.
+- **Video:** Dual engines, chosen per project at create time:
+  - **Remotion 4** (default): Lottie, Three.js, Remotion Studio; render via
+    `renderMedia`. Remotion License applies.
+  - **HyperFrames** (optional): HTML templates + `@hyperframes/producer` worker
+    (Apache-2.0, Node ≥ 22). Captions/timeline still driven by measured voice timing.
 - **Persistence:** SQLite via Prisma for metadata (projects, scripts, scenes,
   takes, renders, settings). Store binary assets (audio, video, images, Lottie
   JSON) on disk in a structured `media/` folder referenced by the DB.
@@ -135,6 +134,8 @@ Requirements:
   `GET https://api.elevenlabs.io/v1/shared-voices`. Models via `GET /v1/models`.
 - Docs: https://elevenlabs.io/docs/api-reference/text-to-speech/convert and
   https://elevenlabs.io/docs/api-reference/voices
+- Prefer `output_format=wav_44100` (Pro+). Free/Starter reject that format; fall
+  back to `wav_24000` and resample to 44.1 kHz. Cap concurrency at 2 on free.
 
 Always confirm the exact current request/response shapes from the live docs
 before coding, and write the parser around the real response.

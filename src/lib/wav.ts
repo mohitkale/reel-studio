@@ -137,3 +137,77 @@ export function makeSilentWav(
   const pcm = Buffer.alloc(frames * channels * (TARGET_BITS_PER_SAMPLE / 8));
   return pcmToWav(pcm, { sampleRate, channels });
 }
+
+/** Linear resample mono Float32 samples from srcRate to dstRate. */
+export function resampleLinear(
+  input: Float32Array,
+  srcRate: number,
+  dstRate: number,
+): Float32Array {
+  if (srcRate === dstRate || input.length === 0) return input;
+  const ratio = srcRate / dstRate;
+  const outLength = Math.max(1, Math.round(input.length / ratio));
+  const out = new Float32Array(outLength);
+  for (let i = 0; i < outLength; i++) {
+    const pos = i * ratio;
+    const i0 = Math.floor(pos);
+    const i1 = Math.min(i0 + 1, input.length - 1);
+    const frac = pos - i0;
+    out[i] = input[i0] * (1 - frac) + input[i1] * frac;
+  }
+  return out;
+}
+
+function pcm16ToFloat(pcm: Buffer, channels: number): Float32Array {
+  const frames = Math.floor(pcm.length / (2 * channels));
+  const out = new Float32Array(frames);
+  for (let i = 0; i < frames; i++) {
+    let sample = 0;
+    for (let c = 0; c < channels; c++) {
+      sample += pcm.readInt16LE((i * channels + c) * 2) / 32768;
+    }
+    out[i] = sample / channels;
+  }
+  return out;
+}
+
+function floatToPcm16(samples: Float32Array): Buffer {
+  const buf = Buffer.alloc(samples.length * 2);
+  for (let i = 0; i < samples.length; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    buf.writeInt16LE(Math.round(s < 0 ? s * 0x8000 : s * 0x7fff), i * 2);
+  }
+  return buf;
+}
+
+/**
+ * Convert a PCM WAV to the pipeline target (mono 16-bit @ TARGET_SAMPLE_RATE).
+ * No-op when already in that format. Used when a vendor returns a free-tier
+ * sample rate (e.g. ElevenLabs wav_24000) that still needs to match Cartesia/etc.
+ */
+export function normalizeWavToTarget(
+  wav: Buffer,
+  targetRate = TARGET_SAMPLE_RATE,
+): Buffer {
+  const info = parseWav(wav);
+  if (
+    info.sampleRate === targetRate &&
+    info.channels === TARGET_CHANNELS &&
+    info.bitsPerSample === TARGET_BITS_PER_SAMPLE
+  ) {
+    return wav;
+  }
+  if (info.bitsPerSample !== 16) {
+    throw new Error(
+      `Unsupported WAV bit depth ${info.bitsPerSample}; expected 16-bit PCM`,
+    );
+  }
+  const pcm = wav.subarray(info.dataOffset, info.dataOffset + info.dataLength);
+  const mono = pcm16ToFloat(pcm, info.channels);
+  const resampled = resampleLinear(mono, info.sampleRate, targetRate);
+  return pcmToWav(floatToPcm16(resampled), {
+    sampleRate: targetRate,
+    channels: TARGET_CHANNELS,
+    bitsPerSample: TARGET_BITS_PER_SAMPLE,
+  });
+}

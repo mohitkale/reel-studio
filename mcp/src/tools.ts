@@ -193,13 +193,22 @@ export function registerTools(server: McpServer): void {
 
   /* ---- Create / edit tools ---- */
 
+  const videoEngine = z
+    .enum(["remotion", "hyperframes"])
+    .optional()
+    .describe(
+      "Video composition engine. 'remotion' (default) or 'hyperframes' (Apache-2.0 HTML engine). Fixed at project creation.",
+    );
+
   server.registerTool(
     "create_project",
     {
-      description: "Create a new empty project and its first script.",
+      description:
+        "Create a new empty project and its first script. Pass videoEngine='hyperframes' for the commercially open HTML engine.",
       inputSchema: {
         name: z.string().trim().min(1).max(120),
         orientation: orientation.optional(),
+        videoEngine,
       },
     },
     guard(async (args) => ok(await apiPost("/api/projects", args))),
@@ -209,7 +218,7 @@ export function registerTools(server: McpServer): void {
     "ai_create_project",
     {
       description:
-        "Generate a full scene plan from a brief and create a new project. Requires an AI key configured in the website. For large storyboards, create a smaller plan then extend with ai_generate_scenes (append) or add_scene.",
+        "Generate a full scene plan from a brief and create a new project. Requires an AI key configured in the website. For large storyboards, create a smaller plan then extend with ai_generate_scenes (append) or add_scene. Pass videoEngine='hyperframes' to use HyperFrames-native templates.",
       inputSchema: {
         providerId: z.enum(["gemini", "openai"]),
         modelId: z.string().optional(),
@@ -222,9 +231,53 @@ export function registerTools(server: McpServer): void {
           .describe(
             "'short' = punchy ~18 words/scene (default). 'detailed' = richer ~30-45 words/scene with a fuller story arc.",
           ),
+        videoEngine,
       },
     },
     guard(async (args) => ok(await apiPost("/api/projects/ai", args))),
+  );
+
+  server.registerTool(
+    "list_video_engines",
+    {
+      description:
+        "List supported video engines (remotion, hyperframes) and their template catalogs. Use before create_project when choosing an engine.",
+      inputSchema: {},
+    },
+    guard(async () =>
+      ok({
+        engines: [
+          {
+            id: "remotion",
+            label: "Remotion",
+            license: "Remotion License (source-available)",
+            templates: [
+              "kinetic",
+              "lottie",
+              "three",
+              "stat-reveal",
+              "icon-grid",
+              "quote-card",
+              "emoji-punch",
+            ],
+          },
+          {
+            id: "hyperframes",
+            label: "HyperFrames",
+            license: "Apache-2.0",
+            templates: [
+              "hf-opener",
+              "hf-statement",
+              "hf-list",
+              "hf-stat",
+              "hf-quote",
+              "hf-cta",
+            ],
+            note: "Renders via self-hosted @hyperframes/producer (Node >= 22). HeyGen hosted MCP is not used.",
+          },
+        ],
+      }),
+    ),
   );
 
   server.registerTool(

@@ -43,24 +43,31 @@ touches the database directly. By design it can do everything an editor can
 
 ## Tools
 
-- **Read:** `list_projects`, `get_script`, `list_takes`, `get_captions`,
-  `list_renders`, `get_render`, `list_voice_providers`, `list_voices`,
-  `list_voice_models`, `list_ai_providers`
+- **Read:** `list_projects`, `list_video_engines`, `get_script`, `list_takes`,
+  `get_captions`, `list_renders`, `get_render`, `list_voice_providers`,
+  `list_voices`, `list_voice_models`, `list_ai_providers`
 - **Create / edit:** `create_project`, `ai_create_project`, `assign_brand_kit`,
   `update_script`, `set_music`, `add_scene`, `update_scene`, `reorder_scenes`,
   `ai_generate_scenes`, `create_voice_take`, `rename_take`, `rename_render`
 - **Render (human-gated):** `request_render`, `download_render`
 
+`create_project` / `ai_create_project` accept optional `videoEngine`
+(`remotion` | `hyperframes`, default `remotion`). Engine is fixed at creation.
+Call `list_video_engines` first to see each engine’s template catalog
+(Remotion vs `hf-*` HyperFrames templates).
+
 ## Resources
 
 - `reel://authoring/rules` — how to write valid, high-retention scenes
 - `reel://schema/scene` — field types and enums the API enforces
-- `reel://catalog/templates` — the seven scene templates
+- `reel://catalog/templates` — Remotion scene templates (use `list_video_engines`
+  for HyperFrames `hf-*` templates)
 - `reel://catalog/voices` — live voice-provider status
 
 ## Typical flow
 
-1. `ai_create_project` (or `create_project`) for the first chunk.
+1. Optionally `list_video_engines`, then `ai_create_project` / `create_project`
+   (pass `videoEngine: "hyperframes"` when you want the Apache-2.0 HTML engine).
 2. `ai_generate_scenes` with mode `append` (or `add_scene` / `update_scene`) to
    extend the storyboard in parts — using your own web search to add current facts.
 3. `create_voice_take` to add narration.
@@ -70,5 +77,5 @@ touches the database directly. By design it can do everything an editor can
 ## Licensing
 
 The MCP server code in this folder is part of Reel Studio and is MIT-licensed
-with the rest of the app. Rendering still goes through Remotion (Remotion
-License). See [`docs/LICENSING.md`](../docs/LICENSING.md).
+with the rest of the app. Rendering goes through **Remotion** or **HyperFrames**
+depending on the project’s `videoEngine`. See [`docs/LICENSING.md`](../docs/LICENSING.md).

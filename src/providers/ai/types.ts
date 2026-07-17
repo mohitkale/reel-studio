@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { Orientation } from "@/lib/orientation";
+import type { VideoEngineId } from "@/engines/types";
 import { stripMarkdown } from "@/lib/strip-markdown";
 
 /**
@@ -38,7 +39,8 @@ export const sceneMoodSchema = z.enum([
 ]);
 export type SceneMood = z.infer<typeof sceneMoodSchema>;
 
-// Keep in sync with the template registry ids (src/compositions/templates.ts).
+// Remotion + HyperFrames template ids. AI providers still emit Remotion ids
+// (smaller schema); HyperFrames projects remap via mapScenesToEngineTemplates.
 export const PLAN_TEMPLATE_IDS = [
   "kinetic",
   "lottie",
@@ -47,6 +49,12 @@ export const PLAN_TEMPLATE_IDS = [
   "icon-grid",
   "quote-card",
   "emoji-punch",
+  "hf-opener",
+  "hf-statement",
+  "hf-list",
+  "hf-stat",
+  "hf-quote",
+  "hf-cta",
 ] as const;
 
 export const aiSceneSchema = z.object({
@@ -121,6 +129,8 @@ export interface GeneratePlanInput {
   orientation?: Orientation;
   /** Short (punchy, ~18 words/scene) or Detailed (~30-45 words/scene, deeper story structure). Defaults to "short". */
   scriptStyle?: ScriptStyle;
+  /** Target video engine; used for prompt/template mapping. Defaults to remotion. */
+  videoEngine?: VideoEngineId;
 }
 
 export interface AIModel {

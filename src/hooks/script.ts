@@ -12,6 +12,7 @@ import type {
 } from "@/lib/dto";
 import type { ProviderId } from "@/providers/voice/types";
 import type { Orientation } from "@/lib/orientation";
+import type { VideoEngineId } from "@/engines/types";
 import type { ScriptStyle } from "@/providers/ai/types";
 
 async function apiSend<T>(
@@ -42,7 +43,11 @@ export function useProjects() {
 export function useCreateProject() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { name: string; orientation?: Orientation }) =>
+    mutationFn: (vars: {
+      name: string;
+      orientation?: Orientation;
+      videoEngine?: VideoEngineId;
+    }) =>
       apiPost<{ projectId: string; scriptId: string }>("/api/projects", vars),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
   });

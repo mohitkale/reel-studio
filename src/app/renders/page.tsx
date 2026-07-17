@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { LISTING_GRID_6_CARDS } from "@/lib/listing-layout";
 
 const STATUS_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   pending_approval: ShieldCheck,
@@ -438,8 +439,8 @@ export default function RendersPage() {
       />
 
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
+        <div className={LISTING_GRID_6_CARDS}>
+          {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-36 rounded-xl" />
           ))}
         </div>
@@ -450,7 +451,7 @@ export default function RendersPage() {
           description='Open a project in the editor and click "Render" to start a render job. The first render downloads a headless Chromium build (~170 MB).'
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className={LISTING_GRID_6_CARDS}>
           {renders.map((r) => (
             <RenderCard key={r.id} render={r} />
           ))}

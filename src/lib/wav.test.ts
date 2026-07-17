@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 
-import { makeSilentWav, parseWav, pcmToWav } from "./wav";
+import {
+  makeSilentWav,
+  normalizeWavToTarget,
+  parseWav,
+  pcmToWav,
+} from "./wav";
 
 describe("wav", () => {
   it("round-trips PCM through a WAV header", () => {
@@ -22,5 +27,14 @@ describe("wav", () => {
 
   it("rejects non-WAV buffers", () => {
     expect(() => parseWav(Buffer.from("not a wav"))).toThrow();
+  });
+
+  it("normalizes a 24 kHz WAV up to 44.1 kHz", () => {
+    const src = makeSilentWav(0.5, { sampleRate: 24000 });
+    const out = normalizeWavToTarget(src);
+    const info = parseWav(out);
+    expect(info.sampleRate).toBe(44100);
+    expect(info.channels).toBe(1);
+    expect(info.durationSeconds).toBeCloseTo(0.5, 2);
   });
 });
