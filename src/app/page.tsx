@@ -19,6 +19,13 @@ import {
   ORIENTATION_LABELS,
   DEFAULT_ORIENTATION,
 } from "@/lib/orientation";
+import {
+  DEFAULT_VIDEO_ENGINE,
+  VIDEO_ENGINE_DESCRIPTIONS,
+  VIDEO_ENGINE_IDS,
+  VIDEO_ENGINE_LABELS,
+  type VideoEngineId,
+} from "@/engines/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/shell/page-header";
@@ -41,23 +48,29 @@ function NewProjectDialog() {
   const [name, setName] = React.useState("");
   const [orientation, setOrientation] =
     React.useState<Orientation>(DEFAULT_ORIENTATION);
+  const [videoEngine, setVideoEngine] =
+    React.useState<VideoEngineId>(DEFAULT_VIDEO_ENGINE);
   const [open, setOpen] = React.useState(false);
 
   function submit() {
     const trimmed = name.trim();
     if (!trimmed) return;
-    create.mutate({ name: trimmed, orientation }, {
-      onSuccess: ({ scriptId }) => {
-        setOpen(false);
-        setName("");
-        toast.success("Project created");
-        router.push(`/editor/${scriptId}`);
+    create.mutate(
+      { name: trimmed, orientation, videoEngine },
+      {
+        onSuccess: ({ scriptId }) => {
+          setOpen(false);
+          setName("");
+          setVideoEngine(DEFAULT_VIDEO_ENGINE);
+          toast.success("Project created");
+          router.push(`/editor/${scriptId}`);
+        },
+        onError: (e) =>
+          toast.error("Could not create project", {
+            description: (e as Error).message,
+          }),
       },
-      onError: (e) =>
-        toast.error("Could not create project", {
-          description: (e as Error).message,
-        }),
-    });
+    );
   }
 
   return (
@@ -72,10 +85,36 @@ function NewProjectDialog() {
         <DialogHeader>
           <DialogTitle>New project</DialogTitle>
           <DialogDescription>
-            Give your project a name. You can rename scenes and scripts later.
+            Choose a video engine, then name your project. Engine cannot be
+            changed later.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label>Video engine</Label>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {VIDEO_ENGINE_IDS.map((id) => {
+                const selected = videoEngine === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setVideoEngine(id)}
+                    className={
+                      selected
+                        ? "rounded-lg border border-primary bg-primary/5 p-3 text-left"
+                        : "rounded-lg border p-3 text-left hover:bg-muted/40"
+                    }
+                  >
+                    <div className="font-medium">{VIDEO_ENGINE_LABELS[id]}</div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {VIDEO_ENGINE_DESCRIPTIONS[id]}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <div className="grid gap-2">
             <Label htmlFor="project-name">Name</Label>
             <Input
@@ -156,8 +195,11 @@ export default function ProjectsPage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-medium leading-tight">{p.name}</h3>
-                  <div className="mt-1 flex items-center gap-2">
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">{p.sceneCount} scenes</Badge>
+                    <Badge variant="outline">
+                      {VIDEO_ENGINE_LABELS[p.videoEngine] ?? p.videoEngine}
+                    </Badge>
                     <span className="text-xs text-muted-foreground">
                       {p.scriptCount} script{p.scriptCount === 1 ? "" : "s"}
                     </span>

@@ -1,4 +1,6 @@
 import type { AIScene, SceneMood } from "@/providers/ai/types";
+import type { VideoEngineId } from "@/engines/types";
+import { mapScenesToEngineTemplates } from "@/engines/hyperframes/map-templates";
 
 const MOODS: SceneMood[] = [
   "energetic",
@@ -11,15 +13,19 @@ const MOODS: SceneMood[] = [
 ];
 
 /** Templates that read best with mood-driven animation, not a stock photo. */
-const MOOD_ONLY_TEMPLATES = new Set<AIScene["templateId"]>([
+const MOOD_ONLY_TEMPLATES = new Set<string>([
   "emoji-punch",
   "stat-reveal",
   "icon-grid",
   "quote-card",
+  "hf-stat",
+  "hf-list",
+  "hf-quote",
+  "hf-cta",
 ]);
 
 /** Default mood when the model omits one — biased by template so beats feel intentional. */
-const TEMPLATE_MOOD: Partial<Record<AIScene["templateId"], SceneMood>> = {
+const TEMPLATE_MOOD: Partial<Record<string, SceneMood>> = {
   "emoji-punch": "playful",
   "stat-reveal": "dramatic",
   "icon-grid": "tech",
@@ -27,6 +33,12 @@ const TEMPLATE_MOOD: Partial<Record<AIScene["templateId"], SceneMood>> = {
   lottie: "calm",
   three: "inspiring",
   kinetic: "energetic",
+  "hf-opener": "dramatic",
+  "hf-statement": "energetic",
+  "hf-list": "tech",
+  "hf-stat": "dramatic",
+  "hf-quote": "inspiring",
+  "hf-cta": "inspiring",
 };
 
 /** Rotating stock-photo queries per mood when the model leaves backgroundQuery empty. */
@@ -123,7 +135,7 @@ export function inferSceneMood(
   templateId: string,
   order: number,
 ): SceneMood {
-  const mood = TEMPLATE_MOOD[templateId as AIScene["templateId"]];
+  const mood = TEMPLATE_MOOD[templateId];
   return mood ?? MOODS[((order % MOODS.length) + MOODS.length) % MOODS.length];
 }
 
@@ -142,9 +154,14 @@ function defaultBackgroundQuery(scene: AIScene, mood: SceneMood, index: number):
  * Fill gaps the model often leaves: every scene gets a mood, a stock-photo
  * query, and a pan effect so AI generation never lands on a plain empty gradient.
  * Safe to run on every plan before resolveSceneBackgrounds().
+ * When `videoEngine` is hyperframes, Remotion template ids are remapped first.
  */
-export function enrichScenePlan(scenes: AIScene[]): AIScene[] {
-  return scenes.map((scene, index) => {
+export function enrichScenePlan(
+  scenes: AIScene[],
+  videoEngine: VideoEngineId = "remotion",
+): AIScene[] {
+  const mapped = mapScenesToEngineTemplates(scenes, videoEngine);
+  return mapped.map((scene, index) => {
     const mood = scene.mood ?? defaultMood(scene, index);
     const wantsPhoto =
       Boolean(scene.backgroundQuery?.trim()) ||

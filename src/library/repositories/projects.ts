@@ -2,12 +2,22 @@ import type { ProjectDTO } from "@/lib/dto";
 import type { ScenePlan } from "@/providers/ai/types";
 import type { SceneBackground } from "@/compositions/types";
 import { type Orientation, DEFAULT_ORIENTATION, dimsFor } from "@/lib/orientation";
+import {
+  DEFAULT_VIDEO_ENGINE,
+  type VideoEngineId,
+  isVideoEngineId,
+} from "@/engines/types";
+import { defaultTemplateIdForEngine } from "@/engines/registry";
 import { prisma } from "@/library/db";
 import {
   SAMPLE_PROJECT_NAME,
   SAMPLE_SCRIPT_NAME,
   SAMPLE_SCENES,
 } from "@/library/sample-content";
+
+function resolveEngine(engine?: VideoEngineId | string | null): VideoEngineId {
+  return engine && isVideoEngineId(engine) ? engine : DEFAULT_VIDEO_ENGINE;
+}
 
 export async function listProjects(): Promise<ProjectDTO[]> {
   const projects = await prisma.project.findMany({
@@ -28,6 +38,7 @@ export async function listProjects(): Promise<ProjectDTO[]> {
     sceneCount: p.scripts.reduce((sum, s) => sum + s._count.scenes, 0),
     firstScriptId: p.scripts[0]?.id ?? null,
     brandKitId: p.brandKitId,
+    videoEngine: resolveEngine(p.videoEngine),
   }));
 }
 
@@ -35,11 +46,14 @@ export async function listProjects(): Promise<ProjectDTO[]> {
 export async function createProject(
   name: string,
   orientation: Orientation = DEFAULT_ORIENTATION,
+  videoEngine: VideoEngineId = DEFAULT_VIDEO_ENGINE,
 ): Promise<{ projectId: string; scriptId: string }> {
   const { width, height } = dimsFor(orientation);
+  const engine = resolveEngine(videoEngine);
   const project = await prisma.project.create({
     data: {
       name,
+      videoEngine: engine,
       scripts: { create: { name: "Untitled script", width, height } },
     },
     include: { scripts: true },
@@ -70,11 +84,15 @@ export async function createProjectFromPlan(
   plan: ScenePlan,
   orientation: Orientation = DEFAULT_ORIENTATION,
   backgrounds: (SceneBackground | undefined)[] = [],
+  videoEngine: VideoEngineId = DEFAULT_VIDEO_ENGINE,
 ): Promise<{ projectId: string; scriptId: string }> {
   const { width, height } = dimsFor(orientation);
+  const engine = resolveEngine(videoEngine);
+  const fallbackTemplate = defaultTemplateIdForEngine(engine);
   const project = await prisma.project.create({
     data: {
       name: plan.projectName,
+      videoEngine: engine,
       scripts: {
         create: {
           name: plan.scriptName,
@@ -89,7 +107,7 @@ export async function createProjectFromPlan(
               if (scene.musicMood) config.musicMood = scene.musicMood;
               return {
                 order,
-                templateId: scene.templateId,
+                templateId: scene.templateId || fallbackTemplate,
                 text: scene.text,
                 emphasis: scene.emphasis.length
                   ? JSON.stringify(scene.emphasis)
@@ -117,6 +135,7 @@ export async function ensureSampleSeed(): Promise<void> {
   await prisma.project.create({
     data: {
       name: SAMPLE_PROJECT_NAME,
+      videoEngine: DEFAULT_VIDEO_ENGINE,
       scripts: {
         create: {
           name: SAMPLE_SCRIPT_NAME,

@@ -8,7 +8,8 @@
 - Script and scene editing
 - AI scene planning that selectively adds relevant Unsplash stock backgrounds with varied pan/zoom motion (optional, needs an Unsplash key)
 - AI voice takes (pluggable providers)
-- Motion templates powered by Remotion (Lottie and Three.js support)
+- Choose a video engine per project: **Remotion** or **HyperFrames** (Apache 2.0)
+- Motion templates for each engine (Remotion React templates + HyperFrames-native HTML templates)
 - MP4 rendering with queue and progress updates
 - Project, asset, and brand-kit management
 
@@ -31,6 +32,7 @@ are often covered by Remotion’s Free License; for-profit organizations with
 | Reel Studio app code, templates, MCP server code | **MIT** |
 | Bundled ambient music (`public/music/`) | **CC0** |
 | **Remotion** (Player, renderer, related packages) | **Remotion License** ([details](https://www.remotion.dev/license)) |
+| **HyperFrames** (`@hyperframes/producer`, optional engine) | **Apache-2.0** |
 | Kokoro TTS (`kokoro-js`) | Apache-2.0 |
 | Unsplash / Jamendo / Cartesia / ElevenLabs / Gemini / OpenAI | Each provider’s own terms (optional keys) |
 | VoiceForge engines (optional) | Per-engine (e.g. XTTS-v2 CPML non-commercial) |
@@ -44,9 +46,10 @@ Full breakdown, Free vs Company License notes, and a checklist:
 - **Multi-format support**: Portrait (9:16), Landscape (16:9), Square (1:1)
 - **Script and scene editing**: Scene-by-scene content creation
 - **AI scene planning**: Automatically adds relevant Unsplash stock backgrounds with varied pan/zoom motion
-- **Motion templates**: Powered by Remotion with Lottie and Three.js support
-- **7 professional templates**: Kinetic typography, Lottie explainer, 3D accents, emoji punch, icon grid, quote cards, stat reveal
-- **MP4 rendering**: Queue-based rendering with progress updates
+- **Dual video engines**: Remotion (React) or HyperFrames (HTML, Apache 2.0) — chosen at project create
+- **Remotion templates**: Kinetic typography, Lottie, 3D, emoji punch, icon grid, quote cards, stat reveal
+- **HyperFrames templates**: Cold open, bold statement, paced list, proof number, pull quote, end card
+- **MP4 rendering**: Queue-based rendering with progress updates (HyperFrames runs in an isolated worker)
 - **Project management**: Organize projects, assets, and brand kits
 
 ### Voice & Audio
@@ -117,16 +120,19 @@ Full breakdown, Free vs Company License notes, and a checklist:
 - App: Next.js App Router + TypeScript (strict)
 - UI: Tailwind CSS v4 + Radix-based components + lucide-react
 - Data: TanStack Query + Zod
-- Video: Remotion 4 (`@remotion/renderer`, `@remotion/lottie`, `@remotion/three`) — [Remotion License](docs/LICENSING.md#critical-dependency-remotion-not-open-source), not MIT
+- Video: Remotion 4 and/or HyperFrames (`@hyperframes/producer`) — see [docs/LICENSING.md](docs/LICENSING.md)
 - Persistence: Prisma + SQLite
 - Storage: Local disk asset store under `media/`
 - Tooling: ESLint, Prettier, Vitest
+- Node.js: **≥ 22** recommended (required for HyperFrames renders; see `.nvmrc`)
 
 ## Quick Start
 
 ### 1. Install
 
 ```bash
+# HyperFrames rendering requires Node 22+
+nvm use   # respects .nvmrc
 npm install
 ```
 
@@ -343,6 +349,7 @@ src/
   app/            # pages + API routes
   components/     # UI and editor components
   compositions/   # Remotion composition system
+  engines/        # video engine registry (Remotion + HyperFrames)
   hooks/          # client data hooks
   lib/            # shared helpers and DTOs
   library/        # repositories, render service, storage
@@ -350,7 +357,7 @@ src/
   remotion/       # Remotion root registration
 docs/             # product and architecture docs
 prisma/           # schema and db setup
-scripts/          # local seed scripts
+scripts/          # seed scripts + HyperFrames render worker
 media/            # local asset and render output (git-ignored)
 ```
 

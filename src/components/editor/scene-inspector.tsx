@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 
 import type { SceneDTO, SceneBackground } from "@/lib/dto";
-import { TEMPLATES, normalizeTemplateId } from "@/compositions/templates";
+import { getVideoEngine } from "@/engines/registry";
+import type { VideoEngineId } from "@/engines/types";
 import { useAssets, useUploadAsset } from "@/hooks/assets";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
@@ -28,6 +29,10 @@ const VISUAL_HINTS: Record<string, string> = {
   "stat-reveal": "Key stat or number (e.g. 73% or 10x)",
   "icon-grid": "Bullet emoji (e.g. ✓ or →)",
   "quote-card": "Author or attribution (optional)",
+  "hf-stat": "Key stat or number (e.g. 73% or 10x)",
+  "hf-list": "Bullet emoji (e.g. ✓ or →)",
+  "hf-quote": "Author or attribution (optional)",
+  "hf-cta": "CTA label (e.g. Follow for more)",
   "emoji-punch": "A single emoji (e.g. 🔥 or ⚡)",
   kinetic: "Optional emoji shown in the kicker",
   lottie: "Optional emoji shown above the animation",
@@ -424,6 +429,7 @@ export function SceneInspector({
   onUpdate,
   onDelete,
   saving,
+  videoEngine = "remotion",
 }: {
   scene: SceneDTO;
   sceneIndex: number;
@@ -432,14 +438,17 @@ export function SceneInspector({
   onUpdate: (vars: UpdateVars) => void;
   onDelete: (id: string) => void;
   saving?: boolean;
+  videoEngine?: VideoEngineId;
 }) {
   const [text, setText] = React.useState(scene.text);
   const [emphasis, setEmphasis] = React.useState(scene.emphasis.join(", "));
   const [visual, setVisual] = React.useState(scene.visual ?? "");
   const [confirmOpen, setConfirmOpen] = React.useState(false);
 
-  const normalId = normalizeTemplateId(scene.templateId);
-  const isChecklist = normalId === "icon-grid";
+  const engine = getVideoEngine(videoEngine);
+  const templates = engine.listTemplates();
+  const normalId = engine.normalizeTemplateId(scene.templateId);
+  const isChecklist = normalId === "icon-grid" || normalId === "hf-list";
 
   function commitText() {
     if (text !== scene.text) onUpdate({ id: scene.id, text });
@@ -516,11 +525,11 @@ export function SceneInspector({
             id="scene-template"
             value={normalId}
             onChange={(v) => onUpdate({ id: scene.id, templateId: v })}
-            options={TEMPLATES.map((t) => ({ value: t.id, label: t.name }))}
+            options={templates.map((t) => ({ value: t.id, label: t.name }))}
             searchPlaceholder="Search templates…"
           />
           <p className="text-xs text-muted-foreground">
-            {TEMPLATES.find((t) => t.id === normalId)?.description}
+            {templates.find((t) => t.id === normalId)?.description}
           </p>
         </div>
 

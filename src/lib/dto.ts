@@ -2,8 +2,10 @@
 
 import type { BrandTokens } from "@/compositions/tokens";
 import type { SceneBackground } from "@/compositions/types";
+import type { VideoEngineId } from "@/engines/types";
 
 export type { SceneBackground };
+export type { VideoEngineId };
 
 export interface BeatTimingDTO {
   sceneId: string;
@@ -52,6 +54,8 @@ export interface ScriptDTO {
   fps: number;
   width: number;
   height: number;
+  /** Inherited from the parent project; fixed at project creation. */
+  videoEngine: VideoEngineId;
   scenes: SceneDTO[];
   takes: VoiceTakeDTO[];
   brandKitId: string | null;
@@ -75,6 +79,7 @@ export interface ProjectDTO {
   sceneCount: number;
   firstScriptId: string | null;
   brandKitId: string | null;
+  videoEngine: VideoEngineId;
 }
 
 export interface AssetDTO {

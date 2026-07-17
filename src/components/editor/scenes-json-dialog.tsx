@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { Copy, Check, Sparkles } from "lucide-react";
 
 import type { SceneDTO, SceneBackground } from "@/lib/dto";
-import { TEMPLATES, DEFAULT_TEMPLATE_ID, normalizeTemplateId } from "@/compositions/templates";
+import { getVideoEngine } from "@/engines/registry";
+import type { VideoEngineId } from "@/engines/types";
 import { useImportScenes } from "@/hooks/script";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,9 +30,10 @@ interface SceneJson {
   musicMood?: string;
 }
 
-function toJson(scenes: SceneDTO[]): string {
+function toJson(scenes: SceneDTO[], videoEngine: VideoEngineId): string {
+  const engine = getVideoEngine(videoEngine);
   const payload: SceneJson[] = scenes.map((s) => ({
-    templateId: normalizeTemplateId(s.templateId),
+    templateId: engine.normalizeTemplateId(s.templateId),
     text: s.text,
     emphasis: s.emphasis,
     visual: s.visual ?? null,
@@ -42,8 +44,6 @@ function toJson(scenes: SceneDTO[]): string {
   }));
   return JSON.stringify(payload, null, 2);
 }
-
-const VALID_TEMPLATE_IDS = new Set(TEMPLATES.map((t) => t.id));
 const PAN_EFFECTS = new Set(["ken-burns", "pan-left", "pan-right", "pan-up", "pan-down"]);
 const SCENE_MOODS = new Set([
   "energetic",
@@ -80,7 +80,10 @@ function parseBackground(raw: unknown, sceneNum: number): SceneBackground | null
 }
 
 /** Validate + normalize parsed JSON into the import payload. Throws on bad shape. */
-function parseScenes(raw: string): SceneJson[] {
+function parseScenes(raw: string, videoEngine: VideoEngineId): SceneJson[] {
+  const engine = getVideoEngine(videoEngine);
+  const validIds = new Set(engine.listTemplates().map((t) => t.id));
+  const defaultId = engine.defaultTemplateId;
   const data = JSON.parse(raw);
   if (!Array.isArray(data)) {
     throw new Error("Top-level value must be an array of scenes.");
@@ -94,9 +97,9 @@ function parseScenes(raw: string): SceneJson[] {
       throw new Error(`Scene ${i + 1}: "text" is required and must be a string.`);
     }
     const templateId =
-      typeof s.templateId === "string" && VALID_TEMPLATE_IDS.has(s.templateId)
+      typeof s.templateId === "string" && validIds.has(s.templateId)
         ? s.templateId
-        : DEFAULT_TEMPLATE_ID;
+        : defaultId;
     let emphasis: string[] = [];
     if (Array.isArray(s.emphasis)) {
       emphasis = s.emphasis.filter((e): e is string => typeof e === "string");
@@ -209,11 +212,13 @@ export function ScenesJsonDialog({
   scenes,
   open,
   onOpenChange,
+  videoEngine = "remotion",
 }: {
   scriptId: string;
   scenes: SceneDTO[];
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  videoEngine?: VideoEngineId;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -224,6 +229,7 @@ export function ScenesJsonDialog({
           <JsonEditorBody
             scriptId={scriptId}
             scenes={scenes}
+            videoEngine={videoEngine}
             onClose={() => onOpenChange(false)}
           />
         )}
@@ -235,14 +241,16 @@ export function ScenesJsonDialog({
 function JsonEditorBody({
   scriptId,
   scenes,
+  videoEngine,
   onClose,
 }: {
   scriptId: string;
   scenes: SceneDTO[];
+  videoEngine: VideoEngineId;
   onClose: () => void;
 }) {
   const importScenes = useImportScenes(scriptId);
-  const [value, setValue] = React.useState(() => toJson(scenes));
+  const [value, setValue] = React.useState(() => toJson(scenes, videoEngine));
   const [error, setError] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
   const [guideOpen, setGuideOpen] = React.useState(false);
@@ -250,7 +258,7 @@ function JsonEditorBody({
   function handleApply() {
     let parsed: SceneJson[];
     try {
-      parsed = parseScenes(value);
+      parsed = parseScenes(value, videoEngine);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Invalid JSON.");
       return;

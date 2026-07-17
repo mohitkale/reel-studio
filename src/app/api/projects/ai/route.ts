@@ -7,6 +7,7 @@ import { createProjectFromPlan } from "@/library/repositories/projects";
 import { enrichScenePlan } from "@/library/enrich-scene-plan";
 import { resolveSceneBackgrounds } from "@/library/stock-backgrounds";
 import { orientationSchema, DEFAULT_ORIENTATION } from "@/lib/orientation";
+import { VIDEO_ENGINE_IDS, DEFAULT_VIDEO_ENGINE } from "@/engines/types";
 import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
@@ -22,6 +23,7 @@ const bodySchema = z.object({
   sceneCount: z.number().int().min(3).max(20).optional(),
   orientation: orientationSchema.optional(),
   scriptStyle: z.enum(SCRIPT_STYLES).optional(),
+  videoEngine: z.enum(VIDEO_ENGINE_IDS).optional(),
 });
 
 /** POST /api/projects/ai - generate a scene plan from a brief and create the project. */
@@ -43,6 +45,7 @@ export async function POST(req: Request) {
     }
 
     const orientation = body.orientation ?? DEFAULT_ORIENTATION;
+    const videoEngine = body.videoEngine ?? DEFAULT_VIDEO_ENGINE;
     const raw = await provider.generatePlan({
       mode: body.mode,
       brief: body.brief,
@@ -50,14 +53,20 @@ export async function POST(req: Request) {
       modelId: body.modelId,
       orientation,
       scriptStyle: body.scriptStyle,
+      videoEngine,
     });
-    const plan = { ...raw, scenes: enrichScenePlan(raw.scenes) };
+    const plan = { ...raw, scenes: enrichScenePlan(raw.scenes, videoEngine) };
 
     // Best-effort: turn the director's backgroundQuery hints into real stock
     // backgrounds (no-op when no Unsplash key is configured).
     const backgrounds = await resolveSceneBackgrounds(plan.scenes, orientation);
 
-    const created = await createProjectFromPlan(plan, orientation, backgrounds);
+    const created = await createProjectFromPlan(
+      plan,
+      orientation,
+      backgrounds,
+      videoEngine,
+    );
     return NextResponse.json({ ...created, plan }, { status: 201 });
   } catch (e) {
     return errorResponse(e);

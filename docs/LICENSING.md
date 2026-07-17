@@ -64,6 +64,25 @@ usage obligations.
 
 ---
 
+## Optional video engine: HyperFrames (Apache 2.0)
+
+Projects can choose **HyperFrames** instead of Remotion at creation time
+(`videoEngine: "hyperframes"`). Preview and MP4 export then use HeyGen’s
+open-source HTML→video stack (`@hyperframes/producer` and related packages).
+
+| Fact | Detail |
+| --- | --- |
+| License | **Apache License 2.0** (OSI-approved) |
+| Upstream | [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) · [hyperframes.heygen.com](https://hyperframes.heygen.com/) |
+| Commercial use | Allowed at any scale on the self-hosted OSS stack — no Remotion company/automator seat fees |
+| Runtime | Node.js **≥ 22**, Chrome/Chromium, FFmpeg (bundled/auto-downloaded by the producer) |
+| Hosted MCP | HeyGen’s cloud MCP (`mcp.heygen.com`) is **optional / external** and uses HeyGen credits — Reel Studio does **not** require it; local render goes through `@hyperframes/producer` |
+
+HyperFrames does **not** replace Remotion for existing Remotion projects. Engine
+choice is per-project and fixed at creation.
+
+---
+
 ## Local / permissive runtime dependencies (selected)
 
 These are commonly used with Reel Studio and are generally permissive. Confirm
@@ -77,6 +96,7 @@ each package’s `LICENSE` file in `node_modules` for the exact text.
 | TanStack Query, Zod, Three.js | MIT | Data / 3D |
 | `kokoro-js` / Kokoro model | Apache-2.0 | Local TTS |
 | `@modelcontextprotocol/sdk` | MIT / Apache-2.0 (see package) | MCP server |
+| `@hyperframes/producer` (optional engine) | Apache-2.0 | HyperFrames HTML→MP4 export |
 
 ---
 

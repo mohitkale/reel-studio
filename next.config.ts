@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
     "@remotion/renderer",
     "@remotion/bundler",
     "@remotion/compositor-win32-x64-msvc",
+    "@hyperframes/producer",
+    "@hyperframes/engine",
+    "@hyperframes/core",
+    "puppeteer",
     "puppeteer-core",
     // Tailwind v4 uses lightningcss, which loads a platform-specific native
     // binary at runtime. Turbopack must not bundle it, or the dynamic native
