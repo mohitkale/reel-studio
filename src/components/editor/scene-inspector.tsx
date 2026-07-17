@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { AssetThumbPicker } from "@/components/assets/asset-thumb-picker";
 
 const VISUAL_HINTS: Record<string, string> = {
   "stat-reveal": "Key stat or number (e.g. 73% or 10x)",
@@ -243,37 +244,13 @@ function BackgroundEditor({
           </div>
 
           {assets && assets.length > 0 && (
-            <div className="grid max-h-32 grid-cols-4 gap-1 overflow-y-auto rounded-lg border p-1">
-              {assets.map((asset) => {
-                const selected = url === asset.url;
-                return (
-                  <button
-                    key={asset.id}
-                    type="button"
-                    title={asset.name ?? asset.url}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => changeUrl(asset.url)}
-                    className={cn(
-                      "aspect-video overflow-hidden rounded border bg-black/40 transition-all",
-                      selected
-                        ? "border-primary ring-2 ring-primary"
-                        : "border-border hover:border-primary/50",
-                    )}
-                  >
-                    {kind === "video" ? (
-                      <video src={asset.url} muted className="h-full w-full object-cover" />
-                    ) : (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img
-                        src={asset.url}
-                        alt={asset.name ?? ""}
-                        className="h-full w-full object-cover"
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+            <AssetThumbPicker
+              assets={assets}
+              selectedUrl={url}
+              kind={kind}
+              onSelect={changeUrl}
+              aspect="video"
+            />
           )}
 
           {kind === "image" && (
