@@ -315,6 +315,8 @@ export async function runHyperframesRender(
       coverUrl,
       tokens: script.brandTokens,
       hideProgressBar: script.hideProgressBar,
+      styleId: script.styleId,
+      energy: script.energy,
     };
 
     const html = buildHyperframesCompositionHtml(inputProps);

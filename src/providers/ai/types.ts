@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import type { Orientation } from "@/lib/orientation";
 import type { VideoEngineId } from "@/engines/types";
+import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import { stripMarkdown } from "@/lib/strip-markdown";
 
 /**
@@ -62,6 +63,8 @@ export const aiSceneSchema = z.object({
   templateId: z.enum(PLAN_TEMPLATE_IDS),
   emphasis: z.array(z.string()).default([]),
   visual: z.string().max(64).optional(),
+  /** Short checklist rows for icon-grid (2–5 items, ~8 words each). */
+  items: z.array(z.string().trim().min(1).max(80)).max(5).optional(),
   /** 2-4 concrete visual keywords for a stock photo background, when one fits. */
   backgroundQuery: z.string().trim().min(2).max(80).optional(),
   /**
@@ -86,10 +89,16 @@ function sanitizeAiScene(scene: z.infer<typeof aiSceneSchema>): AIScene {
   const emphasis = scene.emphasis
     .map(stripMarkdown)
     .filter((phrase) => phrase.length > 0 && text.includes(phrase));
+  const items = scene.items
+    ?.map(stripMarkdown)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 5);
   return {
     ...scene,
     text,
     emphasis,
+    items: items && items.length >= 2 ? items : undefined,
     visual: scene.visual ? stripMarkdown(scene.visual) : undefined,
     backgroundQuery: scene.backgroundQuery
       ? stripMarkdown(scene.backgroundQuery)
@@ -98,11 +107,23 @@ function sanitizeAiScene(scene: z.infer<typeof aiSceneSchema>): AIScene {
   };
 }
 
+export const planStyleIdSchema = z.enum([
+  "bold-hook",
+  "clean-story",
+  "teach-me",
+  "soft-brand",
+]);
+export const planEnergySchema = z.enum(["calm", "normal", "high"]);
+
 export const scenePlanSchema = z
   .object({
     projectName: z.string().min(1),
     scriptName: z.string().min(1),
     voiceStyle: z.string().optional(),
+    /** Whole-reel look family. Optional — UI override or enrichment fills it. */
+    styleId: planStyleIdSchema.optional().catch(undefined),
+    /** Cut / text snappiness. Optional — UI override or enrichment fills it. */
+    energy: planEnergySchema.optional().catch(undefined),
     scenes: z.array(aiSceneSchema).min(1).max(20),
   })
   .transform((plan) => ({
@@ -131,6 +152,13 @@ export interface GeneratePlanInput {
   scriptStyle?: ScriptStyle;
   /** Target video engine; used for prompt/template mapping. Defaults to remotion. */
   videoEngine?: VideoEngineId;
+  /**
+   * When set (not "auto"), the UI chose Style — the model should still return
+   * styleId matching this; enrichment will force it.
+   */
+  styleId?: StyleId | "auto";
+  /** When set (not "auto"), the UI chose Energy — enrichment will force it. */
+  energy?: EnergyId | "auto";
 }
 
 export interface AIModel {

@@ -10,6 +10,7 @@ import {
 
 import type { TemplateProps } from "../types";
 import { Stage } from "../components/stage";
+import { AnimatedText } from "../components/animated-text";
 
 /** Split scene text into list items at newline, bullet, or semicolon. */
 function parseItems(text: string): string[] {
@@ -20,18 +21,32 @@ function parseItems(text: string): string[] {
   return split.length > 1 ? split : [text];
 }
 
+function wordCount(s: string): number {
+  return s.trim().split(/\s+/).filter(Boolean).length;
+}
+
+/** Prefer short checklist rows; drop empty noise. */
+function normalizeItems(raw: string[]): string[] {
+  return raw
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 5);
+}
+
 const CheckItem = React.memo(function CheckItem({
   text,
   icon,
   delay,
   tokens,
   durationInFrames,
+  fontSize,
 }: {
   text: string;
   icon: string;
   delay: number;
   tokens: TemplateProps["tokens"];
   durationInFrames: number;
+  fontSize: number;
 }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -39,9 +54,9 @@ const CheckItem = React.memo(function CheckItem({
   const enter = spring({
     frame: frame - delay,
     fps,
-    config: { damping: 200, stiffness: 80, mass: 0.8 },
+    config: { damping: 220, stiffness: 90, mass: 0.75 },
   });
-  const x = (1 - enter) * -60;
+  const x = (1 - enter) * -36;
   const exit = interpolate(
     frame,
     [durationInFrames - 12, durationInFrames],
@@ -53,37 +68,38 @@ const CheckItem = React.memo(function CheckItem({
     <div
       style={{
         display: "flex",
-        alignItems: "center",
-        gap: 36,
+        alignItems: "flex-start",
+        gap: 28,
         opacity: enter * exit,
         transform: `translateX(${x}px)`,
       }}
     >
-      {/* Icon badge — solid accent gradient so it pops against the dark background */}
       <div
         style={{
           flexShrink: 0,
-          width: 96,
-          height: 96,
-          borderRadius: 28,
-          background: `linear-gradient(135deg, ${tokens.accent}, ${tokens.accentSecondary})`,
-          border: `2px solid ${tokens.accent}`,
+          width: 72,
+          height: 72,
+          borderRadius: 22,
+          marginTop: 4,
+          background: `linear-gradient(145deg, ${tokens.accent}, ${tokens.accentSecondary})`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 48,
-          boxShadow: `0 4px 16px ${tokens.accent}66`,
+          fontSize: 34,
+          color: tokens.accentForeground,
+          boxShadow: `0 6px 20px ${tokens.accent}33`,
         }}
       >
         {icon}
       </div>
       <span
         style={{
-          fontSize: 68,
+          fontSize,
           fontWeight: 700,
           color: tokens.foreground,
-          lineHeight: 1.1,
-          letterSpacing: "-0.015em",
+          lineHeight: 1.18,
+          letterSpacing: "-0.02em",
+          textShadow: "0 2px 16px rgba(0,0,0,0.45)",
         }}
       >
         {text}
@@ -93,8 +109,8 @@ const CheckItem = React.memo(function CheckItem({
 });
 
 /**
- * Icon grid / checklist: each line of the scene text becomes a row with an
- * icon badge and text. Good for tips, steps, and feature lists.
+ * Checklist for 2–5 short tips. If the scene only has one long line, we fall
+ * back to a clean kinetic statement so it never looks like a broken list.
  */
 export const IconGrid = React.memo(function IconGrid({
   scene,
@@ -104,57 +120,98 @@ export const IconGrid = React.memo(function IconGrid({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Prefer an explicit item list; fall back to splitting the scene text.
-  const items =
-    scene.items && scene.items.length ? scene.items : parseItems(scene.text);
+  const fromItems = scene.items && scene.items.length ? scene.items : null;
+  const items = normalizeItems(fromItems ?? parseItems(scene.text));
   const icon = scene.visual || "✓";
+
+  // One long beat ≠ a checklist — render as a personal statement instead.
+  const isChecklist =
+    items.length >= 2 && items.every((item) => wordCount(item) <= 12);
 
   const headerIn = spring({
     frame,
     fps,
-    config: { damping: 200, stiffness: 90 },
+    config: { damping: 220, stiffness: 90 },
   });
 
-  return (
-    <Stage tokens={tokens} background={scene.background} mood={scene.mood} treatmentSeed={scene.order} durationInFrames={durationInFrames} contentStyle={{ justifyContent: "center" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 48 }}>
-        {/* Header label */}
-        <div
-          style={{
-            opacity: headerIn,
-            transform: `translateY(${(1 - headerIn) * -20}px)`,
-            fontSize: 32,
-            fontWeight: 700,
-            letterSpacing: "0.3em",
-            textTransform: "uppercase",
-            color: tokens.muted,
-            display: "flex",
-            alignItems: "center",
-            gap: 16,
-          }}
-        >
-          <span
-            style={{
-              display: "inline-block",
-              width: 40,
-              height: 3,
-              borderRadius: 3,
-              background: `linear-gradient(90deg, ${tokens.accent}, ${tokens.accentSecondary})`,
-            }}
-          />
-          Quick checklist
-        </div>
+  if (!isChecklist) {
+    const line = items[0] ?? scene.text;
+    return (
+      <Stage
+        tokens={tokens}
+        background={scene.background}
+        mood={scene.mood}
+        treatmentSeed={scene.order}
+        durationInFrames={durationInFrames}
+        contentStyle={{ justifyContent: "center", alignItems: "center" }}
+      >
+        <AnimatedText
+          text={line}
+          emphasis={scene.emphasis}
+          tokens={tokens}
+          fontSize={wordCount(line) > 14 ? 68 : 78}
+          align="center"
+        />
+      </Stage>
+    );
+  }
 
-        {/* Items */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+  // Short header from scene.text when it isn't just a dump of the list.
+  const header =
+    fromItems && scene.text.trim() && wordCount(scene.text) <= 8
+      ? scene.text.trim()
+      : null;
+
+  const longest = Math.max(...items.map(wordCount));
+  const fontSize = longest > 8 ? 52 : longest > 5 ? 58 : 64;
+
+  return (
+    <Stage
+      tokens={tokens}
+      background={scene.background}
+      mood={scene.mood}
+      treatmentSeed={scene.order}
+      durationInFrames={durationInFrames}
+      contentStyle={{ justifyContent: "center" }}
+    >
+      <div style={{ display: "flex", flexDirection: "column", gap: 40, width: "100%" }}>
+        {header ? (
+          <div
+            style={{
+              opacity: headerIn,
+              transform: `translateY(${(1 - headerIn) * -16}px)`,
+              fontSize: 36,
+              fontWeight: 700,
+              letterSpacing: "-0.01em",
+              color: tokens.muted,
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+            }}
+          >
+            <span
+              style={{
+                display: "inline-block",
+                width: 28,
+                height: 3,
+                borderRadius: 3,
+                background: tokens.accent,
+              }}
+            />
+            {header}
+          </div>
+        ) : null}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
           {items.map((item, i) => (
             <CheckItem
               key={i}
               text={item}
               icon={icon}
-              delay={i * 10 + 6}
+              delay={i * 9 + 5}
               tokens={tokens}
               durationInFrames={durationInFrames}
+              fontSize={fontSize}
             />
           ))}
         </div>

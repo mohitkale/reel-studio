@@ -21,11 +21,17 @@ import {
   VIDEO_ENGINE_LABELS,
   type VideoEngineId,
 } from "@/engines/types";
+import {
+  StyleEnergyControls,
+  type EnergyPick,
+  type StylePick,
+} from "@/components/visual/style-energy-controls";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
+import { Combobox } from "@/components/ui/combobox";
+import { HintTooltip } from "@/components/ui/hint-tooltip";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +42,13 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+
+const EXAMPLE_BRIEFS = [
+  "3 mistakes new founders make in their first year",
+  "Why your mornings feel chaotic (and the 2-minute fix)",
+  "One CapCut habit that doubles watch time on Reels",
+  "Stop posting every day — do this weekly instead",
+];
 
 export function CreateWithAIDialog() {
   const router = useRouter();
@@ -52,6 +65,8 @@ export function CreateWithAIDialog() {
   const [scriptStyle, setScriptStyle] = React.useState<ScriptStyle>("short");
   const [videoEngine, setVideoEngine] =
     React.useState<VideoEngineId>(DEFAULT_VIDEO_ENGINE);
+  const [styleId, setStyleId] = React.useState<StylePick>("bold-hook");
+  const [energy, setEnergy] = React.useState<EnergyPick>("normal");
 
   const configured = (providers ?? []).filter((p) => p.configured);
   const effectiveProvider = providerId ?? configured[0]?.id;
@@ -68,12 +83,16 @@ export function CreateWithAIDialog() {
         orientation,
         scriptStyle,
         videoEngine,
+        styleId,
+        energy,
       },
       {
         onSuccess: ({ scriptId }) => {
           setOpen(false);
           setBrief("");
           setVideoEngine(DEFAULT_VIDEO_ENGINE);
+          setStyleId("bold-hook");
+          setEnergy("normal");
           toast.success("Video drafted", {
             description: "Review and tweak the scenes in the editor.",
           });
@@ -95,12 +114,21 @@ export function CreateWithAIDialog() {
           Create with AI
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create with AI</DialogTitle>
-          <DialogDescription>
-            Describe your video. The AI writes the script, splits it into scenes,
-            and picks templates. You can edit everything afterward.
+          <DialogDescription asChild>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                Describe your video. AI writes a hook-first script, splits it into
+                scenes, picks layouts, and applies your default brand kit.
+              </p>
+              <p className="text-xs">
+                You&apos;ll get: a scroll-stopping first scene, mixed templates
+                (stats, lists, punchlines), your Style + Energy look, and everything
+                editable afterward.
+              </p>
+            </div>
           </DialogDescription>
         </DialogHeader>
 
@@ -157,15 +185,46 @@ export function CreateWithAIDialog() {
                     : "Paste the full story or script you want turned into a reel..."
                 }
               />
+              {mode === "idea" ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {EXAMPLE_BRIEFS.map((example) => (
+                    <button
+                      key={example}
+                      type="button"
+                      onClick={() => setBrief(example)}
+                      className="rounded-full border bg-muted/40 px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+                    >
+                      {example}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
+
+            <StyleEnergyControls
+              styleId={styleId}
+              energy={energy}
+              onStyleChange={setStyleId}
+              onEnergyChange={setEnergy}
+              allowAuto
+              compact
+            />
 
             <div className="grid gap-2">
               <Label>Script style</Label>
               <div className="grid grid-cols-2 gap-2">
                 {(
                   [
-                    { id: "short" as const, label: "Short & punchy", description: "~18 words/scene, fast-paced hooks." },
-                    { id: "detailed" as const, label: "Detailed", description: "~30-45 words/scene, deeper story arc." },
+                    {
+                      id: "short" as const,
+                      label: "Short & punchy",
+                      description: "~18 words/scene, fast-paced hooks.",
+                    },
+                    {
+                      id: "detailed" as const,
+                      label: "Detailed",
+                      description: "~30-45 words/scene, deeper story arc.",
+                    },
                   ]
                 ).map((opt) => {
                   const active = scriptStyle === opt.id;
@@ -243,14 +302,19 @@ export function CreateWithAIDialog() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="ai-scenes">Scenes</Label>
+                <HintTooltip label="How many scenes the AI should write. Auto usually picks 5–10." side="top">
+                  <Label htmlFor="ai-scenes">Scenes</Label>
+                </HintTooltip>
                 <Combobox
                   id="ai-scenes"
                   value={sceneCount}
                   onChange={setSceneCount}
                   options={[
                     { value: "auto", label: "Auto (AI decides)" },
-                    ...[4, 5, 6, 7, 8, 10, 12, 14, 16].map((n) => ({ value: String(n), label: `${n} scenes` })),
+                    ...[4, 5, 6, 7, 8, 10, 12, 14, 16].map((n) => ({
+                      value: String(n),
+                      label: `${n} scenes`,
+                    })),
                   ]}
                   searchPlaceholder="Search…"
                 />

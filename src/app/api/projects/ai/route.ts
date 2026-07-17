@@ -4,7 +4,10 @@ import { z } from "zod";
 import { getAIProvider, isAIProviderId } from "@/providers/ai/registry";
 import { AIError, AI_PROVIDER_IDS, SCRIPT_STYLES } from "@/providers/ai/types";
 import { createProjectFromPlan } from "@/library/repositories/projects";
-import { enrichScenePlan } from "@/library/enrich-scene-plan";
+import {
+  enrichScenePlan,
+  resolvePlanVisualStyle,
+} from "@/library/enrich-scene-plan";
 import { resolveSceneBackgrounds } from "@/library/stock-backgrounds";
 import { orientationSchema, DEFAULT_ORIENTATION } from "@/lib/orientation";
 import { VIDEO_ENGINE_IDS, DEFAULT_VIDEO_ENGINE } from "@/engines/types";
@@ -24,6 +27,12 @@ const bodySchema = z.object({
   orientation: orientationSchema.optional(),
   scriptStyle: z.enum(SCRIPT_STYLES).optional(),
   videoEngine: z.enum(VIDEO_ENGINE_IDS).optional(),
+  /** "auto" lets the AI choose; otherwise lock Style for the whole reel. */
+  styleId: z
+    .enum(["auto", "bold-hook", "clean-story", "teach-me", "soft-brand"])
+    .optional(),
+  /** "auto" lets the AI choose; otherwise lock Energy. */
+  energy: z.enum(["auto", "calm", "normal", "high"]).optional(),
 });
 
 /** POST /api/projects/ai - generate a scene plan from a brief and create the project. */
@@ -46,6 +55,8 @@ export async function POST(req: Request) {
 
     const orientation = body.orientation ?? DEFAULT_ORIENTATION;
     const videoEngine = body.videoEngine ?? DEFAULT_VIDEO_ENGINE;
+    const styleLock = body.styleId ?? "bold-hook";
+    const energyLock = body.energy ?? "normal";
     const raw = await provider.generatePlan({
       mode: body.mode,
       brief: body.brief,
@@ -54,8 +65,14 @@ export async function POST(req: Request) {
       orientation,
       scriptStyle: body.scriptStyle,
       videoEngine,
+      styleId: styleLock,
+      energy: energyLock,
     });
     const plan = { ...raw, scenes: enrichScenePlan(raw.scenes, videoEngine) };
+    const visualStyle = resolvePlanVisualStyle(plan, {
+      styleId: styleLock,
+      energy: energyLock,
+    });
 
     // Best-effort: turn the director's backgroundQuery hints into real stock
     // backgrounds (no-op when no Unsplash key is configured).
@@ -66,8 +83,9 @@ export async function POST(req: Request) {
       orientation,
       backgrounds,
       videoEngine,
+      visualStyle,
     );
-    return NextResponse.json({ ...created, plan }, { status: 201 });
+    return NextResponse.json({ ...created, plan, visualStyle }, { status: 201 });
   } catch (e) {
     return errorResponse(e);
   }

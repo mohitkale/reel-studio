@@ -11,6 +11,7 @@ import type {
 } from "@/providers/ai/types";
 import type { Orientation } from "@/lib/orientation";
 import type { VideoEngineId } from "@/engines/types";
+import type { EnergyId, StyleId } from "@/compositions/visual-style";
 
 export function useAIProviders() {
   return useQuery({
@@ -65,6 +66,8 @@ export function useGenerateProject() {
       orientation?: Orientation;
       scriptStyle?: ScriptStyle;
       videoEngine?: VideoEngineId;
+      styleId?: StyleId | "auto";
+      energy?: EnergyId | "auto";
     }) =>
       apiPost<{ projectId: string; scriptId: string }>(
         "/api/projects/ai",

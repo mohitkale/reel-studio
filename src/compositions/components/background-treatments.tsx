@@ -30,8 +30,11 @@ const ALL_MOODS: SceneMood[] = [
   "nature",
 ];
 
-/** Per-mood color overrides — keeps brand handle/fonts but shifts the canvas feel. */
-const MOOD_PALETTES: Record<
+/**
+ * Mood tint targets — blended with brand colors (not full overrides) so
+ * consecutive scenes vary without losing brand identity.
+ */
+const MOOD_TINTS: Record<
   SceneMood,
   Pick<BrandTokens, "background" | "backgroundAccent" | "accent" | "accentSecondary">
 > = {
@@ -79,6 +82,29 @@ const MOOD_PALETTES: Record<
   },
 };
 
+function clampByte(n: number): number {
+  return Math.max(0, Math.min(255, Math.round(n)));
+}
+
+function hexToRgb(hex: string): [number, number, number] | null {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return null;
+  const n = parseInt(m[1], 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+/** Mix brand hex toward mood hex. `t` = mood weight (0 = brand only). */
+function mixHex(brand: string, mood: string, t: number): string {
+  const a = hexToRgb(brand);
+  const b = hexToRgb(mood);
+  if (!a || !b) return brand;
+  const u = Math.max(0, Math.min(1, t));
+  const r = clampByte(a[0] * (1 - u) + b[0] * u);
+  const g = clampByte(a[1] * (1 - u) + b[1] * u);
+  const bl = clampByte(a[2] * (1 - u) + b[2] * u);
+  return `#${((1 << 24) | (r << 16) | (g << 8) | bl).toString(16).slice(1)}`;
+}
+
 const MOOD_TREATMENT: Record<SceneMood, BackgroundTreatment> = {
   dramatic: "grid-pulse",
   inspiring: "wave-mesh",
@@ -91,7 +117,7 @@ const MOOD_TREATMENT: Record<SceneMood, BackgroundTreatment> = {
 
 /** Resolve mood for palette/treatment when the scene has no explicit mood stored. */
 export function resolveSceneMood(mood: string | undefined, seed: number): SceneMood {
-  if (mood && mood in MOOD_PALETTES) return mood as SceneMood;
+  if (mood && mood in MOOD_TINTS) return mood as SceneMood;
   return ALL_MOODS[((seed % ALL_MOODS.length) + ALL_MOODS.length) % ALL_MOODS.length];
 }
 
@@ -108,14 +134,24 @@ export function pickBackgroundTreatment(
   return BACKGROUND_TREATMENTS[i];
 }
 
-/** Merge brand tokens with the mood palette so treatments feel distinct per scene. */
+/**
+ * Soft mood tint — keep brand readable. Foreground/muted stay brand-true so
+ * on-screen text never loses contrast against a neon mood wash.
+ */
 export function treatmentTokens(
   tokens: BrandTokens,
   mood: string | undefined,
   seed: number,
 ): BrandTokens {
-  const palette = MOOD_PALETTES[resolveSceneMood(mood, seed)];
-  return { ...tokens, ...palette };
+  const tint = MOOD_TINTS[resolveSceneMood(mood, seed)];
+  return {
+    ...tokens,
+    background: mixHex(tokens.background, tint.background, 0.22),
+    backgroundAccent: mixHex(tokens.backgroundAccent, tint.backgroundAccent, 0.28),
+    // Accents shift lightly so highlights stay on-brand and high-contrast.
+    accent: mixHex(tokens.accent, tint.accent, 0.22),
+    accentSecondary: mixHex(tokens.accentSecondary, tint.accentSecondary, 0.22),
+  };
 }
 
 interface TreatmentProps {
@@ -139,14 +175,14 @@ const Aurora = React.memo(function Aurora({ tokens, draft }: TreatmentProps) {
     >
       <AbsoluteFill
         style={{
-          background: `radial-gradient(45% 45% at ${x1}% ${y1}%, ${tokens.accent}88 0%, transparent 62%)`,
+          background: `radial-gradient(45% 45% at ${x1}% ${y1}%, ${tokens.accent}44 0%, transparent 62%)`,
           filter: `blur(${blur}px)`,
           mixBlendMode: "screen",
         }}
       />
       <AbsoluteFill
         style={{
-          background: `radial-gradient(40% 40% at ${x2}% ${y2}%, ${tokens.accentSecondary}77 0%, transparent 62%)`,
+          background: `radial-gradient(40% 40% at ${x2}% ${y2}%, ${tokens.accentSecondary}33 0%, transparent 62%)`,
           filter: `blur(${blur + 8}px)`,
           mixBlendMode: "screen",
         }}
@@ -192,9 +228,11 @@ const Particles = React.memo(function Particles({ tokens, draft }: TreatmentProp
               height: size,
               borderRadius: "50%",
               background: colors[i % colors.length],
-              opacity: 0.35 + r3 * 0.35,
+              opacity: 0.18 + r3 * 0.22,
               filter: draft ? undefined : "blur(1px)",
-              boxShadow: draft ? undefined : `0 0 ${size * 2}px ${colors[i % colors.length]}`,
+              boxShadow: draft
+                ? undefined
+                : `0 0 ${size}px ${colors[i % colors.length]}55`,
             }}
           />
         );
@@ -217,16 +255,16 @@ const GridPulse = React.memo(function GridPulse({ tokens, draft }: TreatmentProp
     >
       <AbsoluteFill
         style={{
-          backgroundImage: `linear-gradient(${tokens.accent}44 1px, transparent 1px), linear-gradient(90deg, ${tokens.accent}44 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(${tokens.accent}28 1px, transparent 1px), linear-gradient(90deg, ${tokens.accent}28 1px, transparent 1px)`,
           backgroundSize: draft ? "48px 48px" : "56px 56px",
-          opacity: 0.55,
+          opacity: 0.4,
         }}
       />
       <AbsoluteFill
         style={{
-          background: `radial-gradient(40% 65% at ${scanX}% 42%, ${tokens.accentSecondary}66 0%, transparent 68%)`,
+          background: `radial-gradient(40% 65% at ${scanX}% 42%, ${tokens.accentSecondary}40 0%, transparent 68%)`,
           filter: draft ? "blur(20px)" : "blur(32px)",
-          opacity: 0.45 + pulse * 0.35,
+          opacity: 0.28 + pulse * 0.2,
           mixBlendMode: "screen",
         }}
       />
@@ -265,7 +303,7 @@ const Bokeh = React.memo(function Bokeh({ tokens, draft }: TreatmentProps) {
               borderRadius: "50%",
               transform: "translate(-50%, -50%)",
               background: colors[i % colors.length],
-              opacity: draft ? 0.18 : 0.28,
+              opacity: draft ? 0.1 : 0.16,
               filter: draft ? "blur(24px)" : "blur(42px)",
               mixBlendMode: "screen",
             }}
@@ -311,7 +349,7 @@ const WaveMesh = React.memo(function WaveMesh({ tokens, draft }: TreatmentProps)
               key={i}
               d={wavePath(phase, amplitude, yBase)}
               fill={colors[i % colors.length]}
-              opacity={0.12 + i * 0.04}
+              opacity={0.07 + i * 0.03}
             />
           );
         })}

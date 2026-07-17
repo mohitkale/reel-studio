@@ -10,6 +10,7 @@ import {
 } from "@/components/editor/hyperframes-player";
 import type { ReelBeat, ReelScene } from "@/compositions/types";
 import type { BrandTokens } from "@/compositions/tokens";
+import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { VideoEngineId } from "@/engines/types";
 
 export type EnginePlayerHandle = PlayerRef | HyperFramesPlayerHandle;
@@ -31,6 +32,8 @@ interface EnginePlayerProps {
   coverUrl?: string;
   hideProgressBar?: boolean;
   previewQuality?: "standard" | "draft";
+  styleId?: StyleId;
+  energy?: EnergyId;
 }
 
 /** Engine-selected preview player (Remotion or HyperFrames). */

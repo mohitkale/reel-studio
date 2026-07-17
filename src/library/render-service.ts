@@ -333,6 +333,8 @@ async function runRemotionRender({
       // process where React.createContext is undefined, crashing the render job.
       tokens: script.brandTokens,
       hideProgressBar: script.hideProgressBar,
+      styleId: script.styleId,
+      energy: script.energy,
     };
 
     // Cover is held at the start, lengthening the video by that many frames.

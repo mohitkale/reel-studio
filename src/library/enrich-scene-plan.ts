@@ -1,5 +1,13 @@
-import type { AIScene, SceneMood } from "@/providers/ai/types";
+import type { AIScene, SceneMood, ScenePlan } from "@/providers/ai/types";
 import type { VideoEngineId } from "@/engines/types";
+import {
+  DEFAULT_ENERGY_ID,
+  DEFAULT_STYLE_ID,
+  normalizeEnergyId,
+  normalizeStyleId,
+  type EnergyId,
+  type StyleId,
+} from "@/compositions/visual-style";
 import { mapScenesToEngineTemplates } from "@/engines/hyperframes/map-templates";
 
 const MOODS: SceneMood[] = [
@@ -150,6 +158,54 @@ function defaultBackgroundQuery(scene: AIScene, mood: SceneMood, index: number):
   );
 }
 
+function wordCount(s: string): number {
+  return s.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function parseListItems(text: string): string[] {
+  return text
+    .split(/\n|•|;/)
+    .map((s) => s.replace(/^[-*–]\s*/, "").trim())
+    .filter(Boolean);
+}
+
+/**
+ * Checklist templates need 2–5 short rows. One long paragraph as a "checklist"
+ * looks broken — demote to kinetic / hf-statement instead.
+ */
+export function repairChecklistScene(scene: AIScene): AIScene {
+  const isList =
+    scene.templateId === "icon-grid" || scene.templateId === "hf-list";
+  if (!isList) return scene;
+
+  const items = (scene.items?.length ? scene.items : parseListItems(scene.text))
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 5);
+
+  const valid =
+    items.length >= 2 &&
+    items.length <= 5 &&
+    items.every((item) => wordCount(item) <= 12);
+
+  if (!valid) {
+    return {
+      ...scene,
+      templateId: scene.templateId === "hf-list" ? "hf-statement" : "kinetic",
+      items: undefined,
+      visual: scene.templateId === "icon-grid" ? undefined : scene.visual,
+    };
+  }
+
+  // Keep spoken `text` for voiceover. Prefer explicit items; otherwise persist
+  // the short rows we parsed so the template doesn't re-split a paragraph.
+  return {
+    ...scene,
+    items,
+    visual: scene.visual?.trim() || "✓",
+  };
+}
+
 /**
  * Fill gaps the model often leaves: every scene gets a mood, a stock-photo
  * query, and a pan effect so AI generation never lands on a plain empty gradient.
@@ -160,9 +216,19 @@ export function enrichScenePlan(
   scenes: AIScene[],
   videoEngine: VideoEngineId = "remotion",
 ): AIScene[] {
-  const mapped = mapScenesToEngineTemplates(scenes, videoEngine);
+  const mapped = mapScenesToEngineTemplates(scenes, videoEngine).map(
+    repairChecklistScene,
+  );
   return mapped.map((scene, index) => {
-    const mood = scene.mood ?? defaultMood(scene, index);
+    // Prefer calmer moods for text-heavy beats so the eye can rest.
+    const moodBias =
+      scene.templateId === "kinetic" ||
+      scene.templateId === "hf-statement" ||
+      scene.templateId === "quote-card" ||
+      scene.templateId === "hf-quote"
+        ? ("calm" as SceneMood)
+        : undefined;
+    const mood = scene.mood ?? moodBias ?? defaultMood(scene, index);
     const wantsPhoto =
       Boolean(scene.backgroundQuery?.trim()) ||
       !MOOD_ONLY_TEMPLATES.has(scene.templateId);
@@ -179,4 +245,20 @@ export function enrichScenePlan(
       effect,
     };
   });
+}
+
+/** Resolve Style + Energy from UI locks and/or the model plan. */
+export function resolvePlanVisualStyle(
+  plan: Pick<ScenePlan, "styleId" | "energy">,
+  locks?: { styleId?: StyleId | "auto"; energy?: EnergyId | "auto" },
+): { styleId: StyleId; energy: EnergyId } {
+  const styleId =
+    locks?.styleId && locks.styleId !== "auto"
+      ? normalizeStyleId(locks.styleId)
+      : normalizeStyleId(plan.styleId ?? DEFAULT_STYLE_ID);
+  const energy =
+    locks?.energy && locks.energy !== "auto"
+      ? normalizeEnergyId(locks.energy)
+      : normalizeEnergyId(plan.energy ?? DEFAULT_ENERGY_ID);
+  return { styleId, energy };
 }

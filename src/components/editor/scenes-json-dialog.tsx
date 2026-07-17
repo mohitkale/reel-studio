@@ -134,78 +134,107 @@ function parseScenes(raw: string, videoEngine: VideoEngineId): SceneJson[] {
   });
 }
 
-/** A worked example covering several templates, emphasis, visual, items, background. */
+/** A worked example: hook → proof → list → punch → CTA. */
 const SAMPLE_JSON = `[
   {
     "templateId": "kinetic",
-    "text": "Most teams ship features nobody asked for. Here is how to stop.",
-    "emphasis": ["nobody asked for"],
-    "visual": null
+    "text": "Stop posting every day. Your audience is tired of noise.",
+    "emphasis": ["Stop posting every day"],
+    "visual": null,
+    "mood": "dramatic",
+    "musicMood": "tense cinematic"
   },
   {
     "templateId": "stat-reveal",
-    "text": "Up to 70% of product features are rarely or never used.",
-    "emphasis": ["rarely or never used"],
-    "visual": "70%"
+    "text": "Accounts that post three strong clips a week grow 2x faster than daily posters.",
+    "emphasis": ["2x faster"],
+    "visual": "2x",
+    "mood": "tech"
   },
   {
     "templateId": "icon-grid",
-    "text": "Validate before you build:",
+    "text": "Do this instead:",
     "emphasis": [],
     "visual": "✓",
-    "items": ["Talk to 5 real users", "Ship a fake-door test", "Measure true intent"]
+    "items": ["One hook people finish", "One proof they believe", "One clear next step"],
+    "mood": "energetic"
   },
   {
     "templateId": "emoji-punch",
-    "text": "Build less. Learn faster.",
-    "emphasis": ["Learn faster"],
-    "visual": "🚀",
-    "background": { "type": "image", "url": "https://images.example.com/launch.jpg", "effect": "ken-burns" },
+    "text": "Quality beats calendar spam. Every time.",
+    "emphasis": ["Quality beats"],
+    "visual": "🔥",
+    "mood": "playful",
     "musicMood": "uplifting lo-fi"
   },
   {
     "templateId": "quote-card",
-    "text": "Ship the ugly version. You can't learn from a plan.",
+    "text": "Ship fewer videos. Make each one impossible to scroll past.",
     "emphasis": [],
-    "visual": "— Anonymous PM",
+    "visual": "— Your future self",
     "mood": "inspiring",
     "musicMood": "warm acoustic"
   }
 ]`;
 
-/** Self-contained prompt the user pastes into any AI tool to get compliant JSON. */
+/**
+ * Scene-array prompt for any external AI. Style + Energy are set in the Reel
+ * Studio editor (not in this JSON) so import stays backward compatible.
+ */
 const AI_PROMPT = `You are generating a short-form vertical video storyboard as JSON for "Reel Studio".
 
-Output ONLY a JSON array (no markdown fences, no commentary). Each array item is one scene with these fields:
+Output ONLY a JSON array (no markdown fences, no commentary). Each array item is one scene.
 
-- "text" (required): the spoken narration. Keep it punchy — about 18 words max.
-- "templateId" (optional, default "kinetic"), one of:
-  • "kinetic"     - punchy headline text reveal (the default workhorse)
-  • "stat-reveal" - a big number/metric; put the number in "visual" (e.g. "73%", "10x")
-  • "icon-grid"   - a checklist/tips list; set "visual" to a bullet emoji (e.g. "✓") and put rows in "items"
-  • "emoji-punch" - a single big emoji punchline; put the emoji in "visual" (e.g. "🔥")
-  • "quote-card"  - a quote or testimonial; "visual" is the optional attribution
-  • "lottie"      - a process step / how-it-works beat
+FIELD GUIDE (plain English):
+- "text" (required): words spoken by the voiceover. About 18 words max. No markdown.
+- "templateId" (optional, default "kinetic") — the on-screen layout:
+  • "kinetic"     - big headline text (use sparingly)
+  • "stat-reveal" - giant number; put the number in "visual" (e.g. "73%", "10x")
+  • "icon-grid"   - ONLY for 3–5 SHORT tips (max ~8 words each). Put rows in "items"; short header in "text"; "visual" = "✓". Never use for one long sentence.
+  • "emoji-punch" - big emoji reaction; put emoji in "visual"
+  • "quote-card"  - quote/testimonial; "visual" = optional attribution
+  • "lottie"      - process / how-it-works beat
   • "three"       - one bold 3D hero moment (use at most once)
-- "emphasis" (optional): array of short phrases that appear VERBATIM inside "text"; they get highlighted on screen.
-- "visual" (optional): a single emoji, short stat, or label, as noted above. Use null when not applicable.
-- "items" (optional): array of short strings — the rows for an "icon-grid" scene.
-- "background" (optional): { "type": "image" | "video", "url": "https://…", "effect": "ken-burns" | "pan-left" | "pan-right" | "pan-up" | "pan-down" (image only), "muted": true (video only) }
-- "mood" (optional): one of "energetic" | "calm" | "dramatic" | "playful" | "inspiring" | "tech" | "nature" — picks the animated background style for scenes with no "background" image. Vary it to match each scene's emotional tone.
-- "musicMood" (optional): 1-3 words describing the ideal background music vibe (e.g. "uplifting lo-fi", "tense cinematic"). Used to auto-suggest a matching track.
+- "emphasis" (optional): short phrases copied EXACTLY from "text" to highlight on screen
+- "visual" (optional): emoji, stat, or label as above; use null when not needed
+- "items" (optional): checklist rows for "icon-grid"
+- "background" (optional): { "type": "image"|"video", "url": "https://…", "effect": "ken-burns"|"pan-left"|"pan-right"|"pan-up"|"pan-down", "muted": true }
+- "mood" (optional): energetic|calm|dramatic|playful|inspiring|tech|nature — animated background when there is no photo
+- "musicMood" (optional): 1–3 words for music vibe (e.g. "uplifting lo-fi")
 
-Rules:
-- Scene 1 MUST be a scroll-stopping hook. The final scene should end with a clear call to action.
-- Vary the templates — do not make every scene "kinetic".
-- Every "emphasis" phrase must match the scene's "text" exactly (same words, same case).
+STORY RULES:
+- Scene 1 MUST be a scroll-stopping hook (bold claim, surprising number, "stop doing X", or tense question).
+- Shape: Hook → Problem/Insight → Proof or List → Punch → CTA (last scene).
+- Never use the same templateId twice in a row. Prefer at least 4 different templates in 5+ scenes.
+- Every "emphasis" phrase must appear verbatim inside that scene's "text".
 - 5 to 12 scenes is a good length.
-- Give scenes without a "background" image a "mood" so they get a dynamic, on-brand animated background instead of a plain gradient.
+- Scenes without a photo need a "mood".
+
+NOTE: Do NOT put styleId or energy in this JSON. In Reel Studio, Style (Bold Hook / Clean Story / Teach Me / Soft Brand) and Energy (Calm / Normal / High) are chosen in the editor toolbar and apply to the whole video.
 
 Example of the exact output shape:
 ${SAMPLE_JSON}
 
 Now write the JSON array for this video:
-TOPIC: <describe your video idea, audience, and tone here>`;
+TOPIC: <replace with your video idea, audience, and tone>`;
+
+/** Longer guide users can copy when they want Style/Energy recommendations too. */
+const FULL_STORYBOARD_PROMPT = `You are a short-form video director helping me plan a Reel Studio video.
+
+1) Recommend ONE Style for the whole video:
+   - bold-hook — big text, strong pops (tips, launches)
+   - clean-story — calmer, premium brand story
+   - teach-me — explainers, lists, stats
+   - soft-brand — lifestyle / wellness / soft motion
+   And ONE Energy: calm | normal | high
+
+2) Then output ONLY a JSON array of scenes (no markdown fences) following this schema and example:
+
+${AI_PROMPT}
+
+At the top of your reply (before the JSON), write one line like:
+STYLE: bold-hook | ENERGY: normal
+I will set Style/Energy in the Reel Studio editor myself; paste only the JSON array into Scenes as JSON.`;
 
 export function ScenesJsonDialog({
   scriptId,
@@ -300,14 +329,26 @@ function JsonEditorBody({
     <>
       <DialogHeader>
         <DialogTitle>Scenes as JSON</DialogTitle>
-        <DialogDescription>
-          Edit the raw scene structure or paste your own. Applying replaces all
-          scenes for this script in order. Each scene needs a <code>text</code>.
-          Optional: <code>templateId</code>, <code>emphasis</code>,{" "}
-          <code>visual</code>, <code>items</code> (checklist rows),{" "}
-          <code>background</code> (<code>{`{"type":"image"|"video","url":"…","effect":"ken-burns","muted":true}`}</code>
-          ), <code>mood</code> (drives the dynamic background style), and{" "}
-          <code>musicMood</code> (a short vibe hint for music suggestions).
+        <DialogDescription asChild>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              Edit or paste a JSON <strong className="text-foreground">array of scenes</strong>.
+              Apply replaces all scenes for this script. Each scene needs{" "}
+              <code className="text-xs">text</code> (the spoken line).
+            </p>
+            <p className="text-xs">
+              Optional fields: layout (<code className="text-xs">templateId</code>),
+              highlights (<code className="text-xs">emphasis</code>),{" "}
+              <code className="text-xs">visual</code>, checklist{" "}
+              <code className="text-xs">items</code>, photo/video{" "}
+              <code className="text-xs">background</code>,{" "}
+              <code className="text-xs">mood</code>,{" "}
+              <code className="text-xs">musicMood</code>.{" "}
+              <strong className="text-foreground">Style</strong> and{" "}
+              <strong className="text-foreground">Energy</strong> are set in the
+              editor toolbar — not in this JSON.
+            </p>
+          </div>
         </DialogDescription>
       </DialogHeader>
 
@@ -330,14 +371,27 @@ function JsonEditorBody({
       </div>
 
       <DialogFooter className="sm:justify-between">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="ghost" size="sm" onClick={handleCopy}>
             {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-            {copied ? "Copied" : "Copy"}
+            {copied ? "Copied" : "Copy JSON"}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setValue(SAMPLE_JSON);
+              setError(null);
+              toast.success("Sample loaded", {
+                description: "Review it, then Apply scenes — or edit the topic first.",
+              });
+            }}
+          >
+            Load sample
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setGuideOpen(true)}>
             <Sparkles className="size-3.5" />
-            Generate with AI
+            AI prompt help
           </Button>
         </div>
         <div className="flex gap-2">
@@ -353,31 +407,67 @@ function JsonEditorBody({
       <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Generate scenes with an AI tool</DialogTitle>
-            <DialogDescription>
-              Copy this prompt into Claude, ChatGPT, Cursor, or any AI tool, add
-              your video idea at the bottom, and paste the JSON it returns back
-              into the editor — then Apply. It documents every supported field,
-              template, and option.
+            <DialogTitle>Generate scenes with any AI tool</DialogTitle>
+            <DialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>
+                  1) Copy a prompt below into ChatGPT, Claude, Cursor, etc.
+                </p>
+                <p>
+                  2) Replace <code className="text-xs">TOPIC:</code> with your idea.
+                </p>
+                <p>
+                  3) Paste only the JSON array back here and click{" "}
+                  <strong className="text-foreground">Apply scenes</strong>.
+                </p>
+                <p className="text-xs">
+                  Tip: set Style + Energy in the editor after import so the whole
+                  reel looks consistent.
+                </p>
+              </div>
             </DialogDescription>
           </DialogHeader>
 
-          <pre className="max-h-[22rem] overflow-auto rounded-lg border bg-muted/30 p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap">
-            {AI_PROMPT}
-          </pre>
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-foreground">
+              Scenes-only prompt (paste result into this dialog)
+            </p>
+            <pre className="max-h-[14rem] overflow-auto rounded-lg border bg-muted/30 p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap">
+              {AI_PROMPT}
+            </pre>
+          </div>
 
-          <DialogFooter className="sm:justify-between">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => copyText(SAMPLE_JSON, "Sample JSON")}
-            >
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-foreground">
+              Full storyboard prompt (also recommends Style + Energy)
+            </p>
+            <pre className="max-h-[10rem] overflow-auto rounded-lg border bg-muted/30 p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap">
+              {FULL_STORYBOARD_PROMPT}
+            </pre>
+          </div>
+
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => copyText(SAMPLE_JSON, "Sample JSON")}
+              >
+                <Copy className="size-3.5" />
+                Copy sample JSON
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => copyText(FULL_STORYBOARD_PROMPT, "Full storyboard prompt")}
+              >
+                <Copy className="size-3.5" />
+                Copy full prompt
+              </Button>
+            </div>
+            <Button size="sm" onClick={() => copyText(AI_PROMPT, "AI scenes prompt")}>
               <Copy className="size-3.5" />
-              Copy sample JSON
-            </Button>
-            <Button size="sm" onClick={() => copyText(AI_PROMPT, "AI prompt")}>
-              <Copy className="size-3.5" />
-              Copy AI prompt
+              Copy scenes prompt
             </Button>
           </DialogFooter>
         </DialogContent>

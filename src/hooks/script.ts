@@ -14,6 +14,7 @@ import type { ProviderId } from "@/providers/voice/types";
 import type { Orientation } from "@/lib/orientation";
 import type { VideoEngineId } from "@/engines/types";
 import type { ScriptStyle } from "@/providers/ai/types";
+import type { EnergyId, StyleId } from "@/compositions/visual-style";
 
 async function apiSend<T>(
   url: string,
@@ -113,6 +114,31 @@ export function useSetScriptMusic(scriptId: string) {
           ...(vars.musicVolume !== undefined
             ? { musicVolume: vars.musicVolume }
             : {}),
+        });
+      }
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["script", scriptId], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+  });
+}
+
+/** Update whole-reel Style and/or Energy (live preview). */
+export function useSetScriptVisualStyle(scriptId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { styleId?: StyleId; energy?: EnergyId }) =>
+      apiSend(`/api/scripts/${scriptId}`, "PATCH", vars),
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: ["script", scriptId] });
+      const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
+      if (prev) {
+        qc.setQueryData<ScriptDTO>(["script", scriptId], {
+          ...prev,
+          ...(vars.styleId !== undefined ? { styleId: vars.styleId } : {}),
+          ...(vars.energy !== undefined ? { energy: vars.energy } : {}),
         });
       }
       return { prev };

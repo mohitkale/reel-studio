@@ -4,8 +4,9 @@ import * as React from "react";
 import { spring, useCurrentFrame, useVideoConfig } from "remotion";
 
 import type { BrandTokens } from "../tokens";
+import { useVisualStyle } from "./visual-style-context";
 
-const clean = (w: string) => w.toLowerCase().replace(/[^a-z0-9]/g, "");
+const clean = (w: string) => w.toLowerCase().replace(/[^a-z0-9']/g, "");
 
 interface AnimatedTextProps {
   text: string;
@@ -24,6 +25,7 @@ interface AnimatedTextProps {
  * Word-by-word masked reveal: each word slides up from behind a clip mask with a
  * spring and a slight blur-in. Emphasized words get a marker-highlight that
  * wipes in behind them. Used for headlines and captions.
+ * Spring snappiness follows the reel's Style + Energy.
  */
 export const AnimatedText = React.memo(function AnimatedText({
   text,
@@ -32,13 +34,16 @@ export const AnimatedText = React.memo(function AnimatedText({
   fontSize,
   fontWeight = 800,
   startDelay = 0,
-  stagger = 2.5,
+  stagger,
   lineHeight = 1.04,
   align = "center",
   maxWidth,
 }: AnimatedTextProps) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const { motion } = useVisualStyle();
+  const wordStagger = stagger ?? motion.stagger;
+  const delayScale = motion.startDelayScale;
 
   // Splitting + emphasis-set construction is pure string work that never
   // changes within a scene; memoize it so it isn't redone on every frame tick.
@@ -68,11 +73,15 @@ export const AnimatedText = React.memo(function AnimatedText({
       }}
     >
       {words.map((word, i) => {
-        const delay = startDelay + i * stagger;
+        const delay = startDelay * delayScale + i * wordStagger;
         const enter = spring({
           frame: frame - delay,
           fps,
-          config: { damping: 200, stiffness: 95, mass: 0.7 },
+          config: {
+            damping: motion.damping,
+            stiffness: motion.stiffness,
+            mass: motion.mass,
+          },
         });
         const y = (1 - enter) * fontSize * 0.95;
         const blur = (1 - enter) * 7;
@@ -81,7 +90,11 @@ export const AnimatedText = React.memo(function AnimatedText({
           ? spring({
               frame: frame - delay - 7,
               fps,
-              config: { damping: 200, stiffness: 120, mass: 0.6 },
+              config: {
+                damping: motion.damping,
+                stiffness: motion.stiffness + 25,
+                mass: Math.max(0.5, motion.mass - 0.1),
+              },
             })
           : 0;
 

@@ -31,6 +31,8 @@ const patchSchema = z.object({
   musicVolume: z.number().int().min(0).max(100).optional(),
   hideText: z.boolean().optional(),
   hideProgressBar: z.boolean().optional(),
+  styleId: z.enum(["bold-hook", "clean-story", "teach-me", "soft-brand"]).optional(),
+  energy: z.enum(["calm", "normal", "high"]).optional(),
 });
 
 export async function PATCH(

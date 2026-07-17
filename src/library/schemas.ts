@@ -29,6 +29,19 @@ export const fontsSchema = z.object({
 
 export const ctaDefaultsSchema = z.object({ isDefault: z.boolean().optional() }).passthrough();
 
+/** Whole-reel Style + Energy stored in Script.brandOverrides JSON. */
+export const visualStyleSchema = z.object({
+  styleId: z.enum(["bold-hook", "clean-story", "teach-me", "soft-brand"]).optional(),
+  energy: z.enum(["calm", "normal", "high"]).optional(),
+});
+
+export const brandOverridesSchema = z
+  .object({
+    styleId: z.enum(["bold-hook", "clean-story", "teach-me", "soft-brand"]).optional(),
+    energy: z.enum(["calm", "normal", "high"]).optional(),
+  })
+  .passthrough();
+
 export const panEffectSchema = z.enum([
   "ken-burns",
   "pan-left",

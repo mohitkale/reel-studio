@@ -2,6 +2,7 @@
 
 import type { BrandTokens } from "@/compositions/tokens";
 import type { SceneBackground } from "@/compositions/types";
+import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { VideoEngineId } from "@/engines/types";
 
 export type { SceneBackground };
@@ -69,6 +70,10 @@ export interface ScriptDTO {
   hideText: boolean;
   /** Global: hide the top progress bar on every scene. */
   hideProgressBar: boolean;
+  /** Whole-reel look family (Bold Hook, Clean Story, …). */
+  styleId: StyleId;
+  /** How fast and punchy cuts/text feel. */
+  energy: EnergyId;
 }
 
 export interface ProjectDTO {

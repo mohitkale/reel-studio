@@ -14,6 +14,7 @@ import {
 import type { BrandTokens } from "../tokens";
 import type { PanEffect, SceneBackground } from "../types";
 import { DynamicBackground, pickBackgroundTreatment } from "./background-treatments";
+import { useVisualStyle } from "./visual-style-context";
 
 /**
  * CSS `backgroundImage` (used for the Ken Burns/pan effect) isn't tracked by
@@ -108,8 +109,9 @@ const SceneBackgroundLayer = React.memo(function SceneBackgroundLayer({
       ) : null}
       <AbsoluteFill
         style={{
+          // Stronger mid/top scrim so white type stays readable on busy photos.
           background:
-            "linear-gradient(to top, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0.12) 100%)",
+            "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.45) 48%, rgba(0,0,0,0.35) 100%)",
         }}
       />
     </>
@@ -149,8 +151,9 @@ const AnimatedBackground = React.memo(function AnimatedBackground({
 });
 
 /** Static film grain via SVG turbulence. Skipped in draft preview mode. */
-const Grain = React.memo(function Grain() {
+const Grain = React.memo(function Grain({ opacity }: { opacity: number }) {
   const id = React.useId().replace(/:/g, "");
+  if (opacity <= 0) return null;
   return (
     <svg
       style={{
@@ -158,7 +161,7 @@ const Grain = React.memo(function Grain() {
         inset: 0,
         width: "100%",
         height: "100%",
-        opacity: 0.09,
+        opacity,
         mixBlendMode: "overlay",
         pointerEvents: "none",
       }}
@@ -305,6 +308,7 @@ export const Stage = React.memo(function Stage({
   treatmentSeed?: number;
 }) {
   const { quality } = useStageOptions();
+  const { chrome } = useVisualStyle();
   const hasBackground = Boolean(background?.url);
   const computedBackdrop = hasBackground ? (
     <SceneBackgroundLayer
@@ -316,8 +320,9 @@ export const Stage = React.memo(function Stage({
   );
   // Animated lighting only when there's no full-bleed photo/video — otherwise
   // the stock image (or 3D canvas) carries the scene and the gradient reads as
-  // a dull blue/orange wash bleeding through the scrim.
+  // a dull wash bleeding through the scrim.
   const showAnimatedLighting = !hasBackground && !backdrop;
+  const vignette = Math.max(0, Math.min(1, chrome.vignetteStrength));
 
   return (
     <AbsoluteFill style={{ fontFamily: tokens.fontFamily, overflow: "hidden" }}>
@@ -325,12 +330,11 @@ export const Stage = React.memo(function Stage({
         <AnimatedBackground tokens={tokens} mood={mood} treatmentSeed={treatmentSeed} />
       ) : null}
       {computedBackdrop ? <AbsoluteFill>{computedBackdrop}</AbsoluteFill> : null}
-      {quality === "draft" ? null : <Grain />}
-      {/* Vignette */}
+      {quality === "draft" ? null : <Grain opacity={chrome.grainOpacity} />}
+      {/* Vignette — strength follows Style */}
       <AbsoluteFill
         style={{
-          background:
-            "radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(0,0,0,0.55) 100%)",
+          background: `radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(0,0,0,${vignette}) 100%)`,
         }}
       />
       <AbsoluteFill

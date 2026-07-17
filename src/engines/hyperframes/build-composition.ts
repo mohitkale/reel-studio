@@ -6,6 +6,15 @@
 import type { BrandTokens } from "@/compositions/tokens";
 import type { ReelBeat, ReelProps, ReelScene, SceneMood } from "@/compositions/types";
 import { coverFrames } from "@/compositions/types";
+import {
+  DEFAULT_ENERGY_ID,
+  DEFAULT_STYLE_ID,
+  getMotionRecipe,
+  getStyleChrome,
+  getTransitionFrames,
+  normalizeEnergyId,
+  normalizeStyleId,
+} from "@/compositions/visual-style";
 import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
 
 function escapeHtml(value: string): string {
@@ -234,7 +243,7 @@ const STYLES = `
   .bg-fx-pan-down { animation-name: hf-pan-down; }
   .bg-video { width: 100%; height: 100%; object-fit: cover; }
   .bg-scrim {
-    background: linear-gradient(180deg, rgba(5,7,13,.35) 0%, rgba(5,7,13,.72) 100%);
+    background: linear-gradient(180deg, rgba(5,7,13,.42) 0%, rgba(5,7,13,.55) 45%, rgba(5,7,13,.88) 100%);
   }
   .content {
     position: relative; z-index: 2; flex: 1;
@@ -299,6 +308,52 @@ const STYLES = `
     opacity: 0; visibility: hidden;
   }
   .cover.is-active { opacity: 1; visibility: visible; }
+  /* Style + Energy driven via CSS variables on #root */
+  .scene {
+    --enter-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .scene.style-crossfade .content {
+    opacity: calc(var(--p, 0) * (1 - var(--exit, 0)));
+  }
+  .scene.style-blur-slide .content {
+    opacity: calc(var(--p, 0) * (1 - var(--exit, 0)));
+    transform: translateY(calc((1 - var(--p, 0)) * 28px + var(--exit, 0) * -20px));
+    filter: blur(calc((1 - var(--p, 0)) * 6px + var(--exit, 0) * 4px));
+  }
+  .scene.style-accent-flash .content {
+    opacity: calc(var(--p, 0) * (1 - var(--exit, 0)));
+    transform: scale(calc(0.97 + var(--p, 0) * 0.03));
+  }
+  .scene.style-accent-flash::after {
+    content: "";
+    position: absolute; inset: 0; z-index: 8; pointer-events: none;
+    background: var(--accent, #ff5a5f);
+    opacity: calc((1 - var(--p, 0)) * 0.12);
+  }
+  .tpl-opener .accent-bar,
+  .underline {
+    transition: none;
+  }
+  .scene.is-active .tpl-opener .accent-bar,
+  .scene.is-active .underline {
+    transform: scaleX(calc(min(1, var(--p, 0) * var(--motion-stiffness, 1.2))));
+  }
+  .list-item {
+    opacity: calc(min(1, max(0, (var(--p, 0) - var(--i) * 0.08) * var(--motion-stiffness, 1.4))));
+    transform: translateY(calc((1 - min(1, max(0, (var(--p, 0) - var(--i) * 0.08) * 2))) * 24px));
+  }
+  .stat-num, .cta-pill {
+    opacity: calc(min(1, var(--p, 0) * var(--motion-stiffness, 1.5)));
+    transform: scale(calc(0.75 + min(1, var(--p, 0) * var(--motion-stiffness, 1.5)) * 0.25));
+  }
+  #root[data-hide-progress="1"] .progress { display: none; }
+  #root[data-grain="1"]::before {
+    content: "";
+    position: absolute; inset: 0; z-index: 7; pointer-events: none;
+    opacity: var(--grain-opacity, 0.08);
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
 `;
 
 function buildSeekScript(
@@ -341,6 +396,11 @@ function buildSeekScript(
       if (on) {
         const p = Math.min(1, Math.max(0, localT / Math.max(0.001, duration)));
         el.style.setProperty('--p', String(p));
+        const exitWindow = Math.min(0.35, Number(el.dataset.exitWindow || 0.12));
+        const exit = p > 1 - exitWindow
+          ? Math.min(1, Math.max(0, (p - (1 - exitWindow)) / Math.max(0.001, exitWindow)))
+          : 0;
+        el.style.setProperty('--exit', String(exit));
         const bgVideo = el.querySelector('.bg-video');
         if (bgVideo) {
           try {
@@ -597,6 +657,15 @@ export function buildHyperframesCompositionHtml(props: ReelProps): string {
   const accent = tokens.accent ?? "#ff6b4a";
   const cover = coverFrames(fps, Boolean(props.coverUrl));
   const coverSeconds = framesToSeconds(cover, fps);
+  const styleId = normalizeStyleId(props.styleId ?? DEFAULT_STYLE_ID);
+  const energy = normalizeEnergyId(props.energy ?? DEFAULT_ENERGY_ID);
+  const chrome = getStyleChrome(styleId);
+  const motion = getMotionRecipe(styleId, energy);
+  const transitionFrames = getTransitionFrames(styleId, energy, fps);
+  const transitionClass = `style-${chrome.transition}`;
+  const hideProgress =
+    props.hideProgressBar === true ? true : chrome.preferHideProgressBar;
+  const motionStiffness = (motion.stiffness / 100).toFixed(2);
 
   const beats: Array<{ id: string; start: number; duration: number }> = [];
   const sceneBlocks: string[] = [];
@@ -617,12 +686,17 @@ export function buildHyperframesCompositionHtml(props: ReelProps): string {
     const duration = framesToSeconds(holdFrames, fps);
     beats.push({ id: scene.id, start, duration });
     const absoluteStart = start + coverSeconds;
+    const exitWindow = Math.min(
+      0.35,
+      framesToSeconds(transitionFrames, fps) / Math.max(0.05, duration),
+    );
     sceneBlocks.push(`
-      <section class="scene" data-scene-id="${escapeHtml(scene.id)}"
+      <section class="scene ${transitionClass}" data-scene-id="${escapeHtml(scene.id)}"
                data-start="${absoluteStart.toFixed(3)}"
                data-duration="${duration.toFixed(3)}"
                data-track-index="1"
-               style="--accent:${accent}">
+               data-exit-window="${exitWindow.toFixed(3)}"
+               style="--accent:${accent};--motion-stiffness:${motionStiffness}">
         ${backgroundLayer(scene, absoluteStart, duration)}
         <div class="content">${sceneInnerHtml(scene, tokens)}</div>
       </section>`);
@@ -650,9 +724,11 @@ export function buildHyperframesCompositionHtml(props: ReelProps): string {
     ? `<div class="cover" data-start="0" data-duration="${coverSeconds.toFixed(3)}" data-track-index="0" style="background-image:url('${escapeHtml(props.coverUrl)}')"></div>`
     : "";
 
-  const progress = props.hideProgressBar
+  const progress = hideProgress
     ? ""
     : `<div class="progress" style="background:${accent}"></div>`;
+
+  const grainAttr = chrome.grainOpacity > 0 ? "1" : "0";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -673,14 +749,18 @@ export function buildHyperframesCompositionHtml(props: ReelProps): string {
          data-height="${height}"
          data-fps="${fps}"
          data-total-frames="${totalFrames}"
-         style="width:${width}px;height:${height}px;--accent:${accent}">
+         data-style="${styleId}"
+         data-energy="${energy}"
+         data-hide-progress="${hideProgress ? "1" : "0"}"
+         data-grain="${grainAttr}"
+         style="width:${width}px;height:${height}px;--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness}">
       ${coverBlock}
       ${progress}
       ${sceneBlocks.join("\n")}
       ${audioTags.join("\n")}
     </div>
   </div>
-  ${buildSeekScript(beats, coverSeconds, totalSeconds, fps, Boolean(props.hideProgressBar))}
+  ${buildSeekScript(beats, coverSeconds, totalSeconds, fps, hideProgress)}
 </body>
 </html>`;
 }
