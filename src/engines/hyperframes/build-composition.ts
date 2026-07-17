@@ -135,9 +135,21 @@ function sceneInnerHtml(scene: ReelScene, tokens: BrandTokens): string {
   }
 }
 
-function backgroundLayer(scene: ReelScene): string {
+function backgroundLayer(
+  scene: ReelScene,
+  absoluteStart: number,
+  durationSec: number,
+): string {
   if (scene.background?.type === "image" && scene.background.url) {
-    return `<div class="bg-photo" style="background-image:url('${escapeHtml(scene.background.url)}')"></div>
+    const effect = scene.background.effect ?? "ken-burns";
+    const dur = Math.max(0.05, durationSec);
+    // Seekable CSS animations: HyperFrames' CSS adapter drives these via
+    // animation-delay during capture; the preview seek script does the same.
+    return `<div class="bg-photo bg-fx-${escapeHtml(effect)}"
+                 data-start="${absoluteStart.toFixed(3)}"
+                 data-duration="${dur.toFixed(3)}"
+                 data-effect="${escapeHtml(effect)}"
+                 style="background-image:url('${escapeHtml(scene.background.url)}');animation-duration:${dur.toFixed(3)}s"></div>
             <div class="bg-scrim"></div>`;
   }
   if (scene.background?.type === "video" && scene.background.url) {
@@ -148,6 +160,7 @@ function backgroundLayer(scene: ReelScene): string {
 }
 
 function framesToSeconds(frames: number, fps: number): number {
+  if (frames <= 0) return 0;
   return Math.max(0.05, frames / Math.max(1, fps));
 }
 
@@ -174,18 +187,51 @@ const STYLES = `
     container-type: size;
     transform-origin: top left;
   }
+  /*
+   * HyperFrames toggles inline visibility on [data-start] clips during capture.
+   * Keep opacity at 1 so scenes aren't stuck invisible when only HF visibility
+   * flips (our .is-active class is mainly for the in-editor iframe preview).
+   */
   .scene {
     position: absolute; inset: 0; display: flex; align-items: stretch;
-    justify-content: stretch; opacity: 0; visibility: hidden;
+    justify-content: stretch; opacity: 1; visibility: hidden;
   }
-  .scene.is-active { opacity: 1; visibility: visible; }
+  .scene.is-active { visibility: visible; }
   .bg-mood, .bg-photo, .bg-video, .bg-scrim {
     position: absolute; inset: 0;
   }
   .bg-photo {
     background-size: cover; background-position: center;
-    transform: scale(1.08);
+    will-change: transform;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-play-state: paused;
   }
+  @keyframes hf-ken-burns {
+    from { transform: scale(1); }
+    to { transform: scale(1.08); }
+  }
+  @keyframes hf-pan-left {
+    from { transform: scale(1.14) translateX(4%); }
+    to { transform: scale(1.14) translateX(-4%); }
+  }
+  @keyframes hf-pan-right {
+    from { transform: scale(1.14) translateX(-4%); }
+    to { transform: scale(1.14) translateX(4%); }
+  }
+  @keyframes hf-pan-up {
+    from { transform: scale(1.14) translateY(4%); }
+    to { transform: scale(1.14) translateY(-4%); }
+  }
+  @keyframes hf-pan-down {
+    from { transform: scale(1.14) translateY(-4%); }
+    to { transform: scale(1.14) translateY(4%); }
+  }
+  .bg-fx-ken-burns { animation-name: hf-ken-burns; }
+  .bg-fx-pan-left { animation-name: hf-pan-left; }
+  .bg-fx-pan-right { animation-name: hf-pan-right; }
+  .bg-fx-pan-up { animation-name: hf-pan-up; }
+  .bg-fx-pan-down { animation-name: hf-pan-down; }
   .bg-video { width: 100%; height: 100%; object-fit: cover; }
   .bg-scrim {
     background: linear-gradient(180deg, rgba(5,7,13,.35) 0%, rgba(5,7,13,.72) 100%);
@@ -272,6 +318,21 @@ function buildSeekScript(
   const cover = document.querySelector('.cover');
   const progress = document.querySelector('.progress');
   const byId = Object.fromEntries(scenes.map((el) => [el.dataset.sceneId, el]));
+  let playing = false;
+
+  function syncBgPhoto(photo, localT) {
+    // Match HyperFrames CSS adapter: paused animation + negative delay = seek.
+    const t = Math.max(0, Number(localT) || 0);
+    photo.style.animationPlayState = 'paused';
+    photo.style.animationDelay = (-t).toFixed(4) + 's';
+  }
+
+  function syncAllBgPhotos(time) {
+    document.querySelectorAll('.bg-photo').forEach((photo) => {
+      const start = Number(photo.dataset.start || 0);
+      syncBgPhoto(photo, time - start);
+    });
+  }
 
   function activate(sceneId, localT, duration) {
     for (const el of scenes) {
@@ -280,6 +341,16 @@ function buildSeekScript(
       if (on) {
         const p = Math.min(1, Math.max(0, localT / Math.max(0.001, duration)));
         el.style.setProperty('--p', String(p));
+        const bgVideo = el.querySelector('.bg-video');
+        if (bgVideo) {
+          try {
+            if (Math.abs((bgVideo.currentTime || 0) - localT) > 0.12) {
+              bgVideo.currentTime = Math.max(0, localT);
+            }
+            if (playing && bgVideo.paused) bgVideo.play().catch(function () {});
+            if (!playing && !bgVideo.paused) bgVideo.pause();
+          } catch (_) { /* ignore seek races */ }
+        }
         el.querySelectorAll('.list-item').forEach((item, i) => {
           const threshold = (i + 1) / (el.querySelectorAll('.list-item').length + 1);
           const show = p >= threshold * 0.85;
@@ -305,18 +376,46 @@ function buildSeekScript(
           opener.style.opacity = String(Math.min(1, p * 3));
           opener.style.transform = 'translateY(' + (1 - Math.min(1, p * 2.5)) * 18 + 'px)';
         }
+      } else {
+        const bgVideo = el.querySelector('.bg-video');
+        if (bgVideo && !bgVideo.paused) bgVideo.pause();
       }
     }
   }
 
+  function syncAudio(time) {
+    document.querySelectorAll('audio').forEach((audio) => {
+      const start = Number(audio.dataset.start || 0);
+      const duration = Number(audio.dataset.duration || 0);
+      const vol = audio.dataset.volume;
+      if (vol != null && vol !== '') audio.volume = Math.max(0, Math.min(1, Number(vol)));
+      const local = time - start;
+      if (local < 0 || (duration > 0 && local > duration)) {
+        if (!audio.paused) audio.pause();
+        return;
+      }
+      if (Math.abs((audio.currentTime || 0) - local) > 0.12) {
+        try { audio.currentTime = Math.max(0, local); } catch (_) { /* ignore seek races */ }
+      }
+      if (playing) {
+        if (audio.paused) audio.play().catch(function () { /* autoplay blocked until gesture */ });
+      } else if (!audio.paused) {
+        audio.pause();
+      }
+    });
+  }
+
   function seek(time) {
     const t = Math.max(0, Math.min(CFG.totalSeconds, time));
+    root._t = t;
+    syncAllBgPhotos(t);
     if (cover) {
       const inCover = CFG.coverSeconds > 0 && t < CFG.coverSeconds;
       cover.classList.toggle('is-active', inCover);
       if (inCover) {
         for (const el of scenes) el.classList.remove('is-active');
         if (progress && !CFG.hideProgressBar) progress.style.width = '0%';
+        syncAudio(t);
         return;
       }
     }
@@ -325,29 +424,113 @@ function buildSeekScript(
     for (const beat of CFG.beats) {
       if (contentT >= beat.start) active = beat;
     }
-    if (!active) return;
-    const local = contentT - active.start;
-    activate(active.id, local, active.duration);
+    if (active) {
+      const local = contentT - active.start;
+      activate(active.id, local, active.duration);
+    }
     if (progress && !CFG.hideProgressBar) {
       progress.style.width = (Math.min(1, t / CFG.totalSeconds) * 100) + '%';
     }
+    syncAudio(t);
   }
 
   // HyperFrames / preview: expose seek API used by player + frame adapters.
   window.__reelSeek = seek;
   window.__reelDuration = CFG.totalSeconds;
   window.__reelFps = CFG.fps;
+  window.__reelSetPlaying = function (next) {
+    playing = !!next;
+    syncAudio(root._t || 0);
+  };
 
-  // Frame-adapter style hook: HyperFrames seeks via currentTime on composition.
+  // Frame-adapter style hook: in-editor iframe preview seeks via currentTime.
   Object.defineProperty(root, 'currentTime', {
     configurable: true,
     get() { return root._t || 0; },
     set(v) { root._t = Number(v) || 0; seek(root._t); },
   });
 
+  /**
+   * HyperFrames capture calls window.__hf.seek → __player.renderSeek, which
+   * drives window.__timelines[compositionId]. Without a timeline (and without
+   * hooking seek), only the initial seek(0) scene stays visible while audio
+   * still muxes for the full duration.
+   */
+  let tlTime = 0;
+  const timeline = {
+    duration() { return CFG.totalSeconds; },
+    time(v) {
+      if (arguments.length) {
+        tlTime = Math.max(0, Number(v) || 0);
+        seek(tlTime);
+        return this;
+      }
+      return tlTime;
+    },
+    totalTime(v) {
+      if (arguments.length) {
+        tlTime = Math.max(0, Number(v) || 0);
+        seek(tlTime);
+        return this;
+      }
+      return tlTime;
+    },
+    seek(v) {
+      tlTime = Math.max(0, Number(v) || 0);
+      seek(tlTime);
+      return this;
+    },
+    pause() { return this; },
+    play() { return this; },
+    paused() { return true; },
+    progress(v) {
+      if (arguments.length) {
+        tlTime = (Number(v) || 0) * CFG.totalSeconds;
+        seek(tlTime);
+        return this;
+      }
+      return CFG.totalSeconds > 0 ? tlTime / CFG.totalSeconds : 0;
+    },
+    timeScale() { return 1; },
+    getChildren() { return []; },
+  };
+  window.__timelines = window.__timelines || {};
+  window.__timelines.reel = timeline;
+
+  function patchHfSeek() {
+    const player = window.__player;
+    if (player && typeof player.renderSeek === 'function' && !player.__reelSeekPatched) {
+      const orig = player.renderSeek.bind(player);
+      player.renderSeek = function (t, options) {
+        const result = orig(t, options);
+        seek(Math.max(0, Number(t) || 0));
+        return result;
+      };
+      player.__reelSeekPatched = true;
+    }
+    // Bridge may overwrite window.__hf.seek after we wrap it — re-wrap when needed.
+    const hf = window.__hf;
+    if (hf && typeof hf.seek === 'function' && !hf.seek.__reelWrapped) {
+      const origHf = hf.seek.bind(hf);
+      const wrapped = function (t, options) {
+        const result = origHf(t, options);
+        seek(Math.max(0, Number(t) || 0));
+        return result;
+      };
+      wrapped.__reelWrapped = true;
+      hf.seek = wrapped;
+    }
+  }
+  patchHfSeek();
+  const patchIv = setInterval(patchHfSeek, 50);
+  setTimeout(function () { clearInterval(patchIv); }, 60000);
+  window.addEventListener('hf-seek', function (ev) {
+    const t = ev && ev.detail ? Number(ev.detail.time) : NaN;
+    if (Number.isFinite(t)) seek(t);
+  });
+
   // GSAP-less wall-clock preview when not under the HyperFrames capture loop.
   let raf = 0;
-  let playing = false;
   let startWall = 0;
   let startT = 0;
   function tick(now) {
@@ -357,6 +540,7 @@ function buildSeekScript(
     if (next >= CFG.totalSeconds) {
       seek(CFG.totalSeconds);
       playing = false;
+      syncAudio(CFG.totalSeconds);
       return;
     }
     seek(next);
@@ -366,17 +550,27 @@ function buildSeekScript(
     playing = true;
     startWall = performance.now();
     startT = root._t || 0;
+    syncAudio(startT);
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(tick);
   };
   window.__reelPause = function () {
     playing = false;
     cancelAnimationFrame(raf);
+    syncAudio(root._t || 0);
   };
 
   function fitStage() {
     const wrap = document.getElementById('fit-wrap');
     if (!wrap) return;
+    // During HyperFrames export capture the viewport is the stage size —
+    // leave the authored canvas unscaled so screenshots stay full-bleed.
+    if (window.__HF_EXPORT_RENDER_SEEK_CONFIG || window.__hf && window.__hf.seek) {
+      wrap.style.width = '';
+      wrap.style.height = '';
+      root.style.transform = '';
+      return;
+    }
     const w = Number(root.getAttribute('data-width')) || 1080;
     const h = Number(root.getAttribute('data-height')) || 1920;
     const scale = Math.min(window.innerWidth / w, window.innerHeight / h);
@@ -406,20 +600,30 @@ export function buildHyperframesCompositionHtml(props: ReelProps): string {
 
   const beats: Array<{ id: string; start: number; duration: number }> = [];
   const sceneBlocks: string[] = [];
+  const timeline = props.timeline as ReelBeat[];
 
-  for (const beat of props.timeline as ReelBeat[]) {
+  // Match Remotion: hold each scene until the next beat starts so inter-beat
+  // voice gaps (silence between takes) never show a blank frame.
+  for (let i = 0; i < timeline.length; i++) {
+    const beat = timeline[i];
     const scene = props.scenes.find((s) => s.id === beat.sceneId);
     if (!scene) continue;
+    const next = timeline[i + 1];
+    const endFrame = next
+      ? next.startFrame
+      : beat.startFrame + beat.durationFrames;
+    const holdFrames = Math.max(1, endFrame - beat.startFrame);
     const start = framesToSeconds(beat.startFrame, fps);
-    const duration = framesToSeconds(beat.durationFrames, fps);
+    const duration = framesToSeconds(holdFrames, fps);
     beats.push({ id: scene.id, start, duration });
+    const absoluteStart = start + coverSeconds;
     sceneBlocks.push(`
       <section class="scene" data-scene-id="${escapeHtml(scene.id)}"
-               data-start="${(start + coverSeconds).toFixed(3)}"
+               data-start="${absoluteStart.toFixed(3)}"
                data-duration="${duration.toFixed(3)}"
                data-track-index="1"
                style="--accent:${accent}">
-        ${backgroundLayer(scene)}
+        ${backgroundLayer(scene, absoluteStart, duration)}
         <div class="content">${sceneInnerHtml(scene, tokens)}</div>
       </section>`);
   }
@@ -432,13 +636,13 @@ export function buildHyperframesCompositionHtml(props: ReelProps): string {
   const audioTags: string[] = [];
   if (props.audioUrl) {
     audioTags.push(
-      `<audio id="vo" data-start="${coverSeconds.toFixed(3)}" data-duration="${contentDuration.toFixed(3)}" data-track-index="10" src="${escapeHtml(props.audioUrl)}"></audio>`,
+      `<audio id="vo" preload="auto" data-start="${coverSeconds.toFixed(3)}" data-duration="${contentDuration.toFixed(3)}" data-track-index="10" src="${escapeHtml(props.audioUrl)}"></audio>`,
     );
   }
   if (props.musicUrl) {
     const vol = Math.max(0, Math.min(1, (props.musicVolume ?? 20) / 100));
     audioTags.push(
-      `<audio id="music" data-start="0" data-duration="${totalSeconds.toFixed(3)}" data-track-index="11" data-volume="${vol}" src="${escapeHtml(props.musicUrl)}"></audio>`,
+      `<audio id="music" preload="auto" data-start="0" data-duration="${totalSeconds.toFixed(3)}" data-track-index="11" data-volume="${vol}" src="${escapeHtml(props.musicUrl)}"></audio>`,
     );
   }
 
@@ -462,6 +666,7 @@ export function buildHyperframesCompositionHtml(props: ReelProps): string {
   <div id="fit-wrap">
     <div id="root"
          data-composition-id="reel"
+         data-no-timeline
          data-start="0"
          data-duration="${totalSeconds.toFixed(3)}"
          data-width="${width}"

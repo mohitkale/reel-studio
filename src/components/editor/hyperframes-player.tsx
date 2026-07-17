@@ -50,8 +50,28 @@ type IframeApi = Window & {
   __reelSeek?: (t: number) => void;
   __reelPlay?: () => void;
   __reelPause?: () => void;
+  __reelSetPlaying?: (playing: boolean) => void;
   __reelDuration?: number;
 };
+
+/** Resolve media URLs against the app origin — srcDoc iframes cannot load `/media/...`. */
+function toAbsoluteUrl(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  if (
+    url.startsWith("http://") ||
+    url.startsWith("https://") ||
+    url.startsWith("blob:") ||
+    url.startsWith("data:")
+  ) {
+    return url;
+  }
+  if (typeof window === "undefined") return url;
+  try {
+    return new URL(url, window.location.origin).href;
+  } catch {
+    return url;
+  }
+}
 
 /**
  * In-editor HyperFrames preview with Remotion-like transport controls.
@@ -93,35 +113,39 @@ export const HyperFramesPlayer = React.forwardRef<
 
   const durationSec = Math.max(1 / Math.max(1, fps), totalFrames / Math.max(1, fps));
 
-  const html = React.useMemo(
-    () =>
-      buildHyperframesCompositionHtml({
-        scenes,
-        timeline,
-        audioUrl,
-        musicUrl,
-        musicVolume,
-        tokens: resolvedTokens,
-        coverUrl,
-        width,
-        height,
-        fps,
-        hideProgressBar,
-      }),
-    [
-      scenes,
+  const html = React.useMemo(() => {
+    const absScenes = scenes.map((scene) => ({
+      ...scene,
+      background: scene.background
+        ? { ...scene.background, url: toAbsoluteUrl(scene.background.url) ?? scene.background.url }
+        : undefined,
+    }));
+    return buildHyperframesCompositionHtml({
+      scenes: absScenes,
       timeline,
-      audioUrl,
-      musicUrl,
+      audioUrl: toAbsoluteUrl(audioUrl),
+      musicUrl: toAbsoluteUrl(musicUrl),
       musicVolume,
-      resolvedTokens,
-      coverUrl,
+      tokens: resolvedTokens,
+      coverUrl: toAbsoluteUrl(coverUrl),
       width,
       height,
       fps,
       hideProgressBar,
-    ],
-  );
+    });
+  }, [
+    scenes,
+    timeline,
+    audioUrl,
+    musicUrl,
+    musicVolume,
+    resolvedTokens,
+    coverUrl,
+    width,
+    height,
+    fps,
+    hideProgressBar,
+  ]);
 
   const seekIframe = React.useCallback((seconds: number) => {
     const win = iframeRef.current?.contentWindow as IframeApi | null;
@@ -139,17 +163,25 @@ export const HyperFramesPlayer = React.forwardRef<
     [durationSec, fps, seekIframe],
   );
 
+  const setIframePlaying = React.useCallback((next: boolean) => {
+    const win = iframeRef.current?.contentWindow as IframeApi | null;
+    win?.__reelSetPlaying?.(next);
+  }, []);
+
   const play = React.useCallback(() => {
     playingRef.current = true;
     setPlaying(true);
-  }, []);
+    // Kick audio inside the iframe from the user gesture (autoplay policy).
+    setIframePlaying(true);
+  }, [setIframePlaying]);
 
   const pause = React.useCallback(() => {
     playingRef.current = false;
     setPlaying(false);
+    setIframePlaying(false);
     const win = iframeRef.current?.contentWindow as IframeApi | null;
     win?.__reelPause?.();
-  }, []);
+  }, [setIframePlaying]);
 
   const togglePlay = React.useCallback(() => {
     if (playingRef.current) pause();

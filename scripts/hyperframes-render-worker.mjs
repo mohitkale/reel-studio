@@ -6,6 +6,8 @@
  *
  * Usage:
  *   node scripts/hyperframes-render-worker.mjs <projectDir> <outputPath> <fps> <quality>
+ *
+ * Progress: HyperFrames reports job.progress as 0–100. We emit HF_PROGRESS as 0–1.
  */
 
 import path from "node:path";
@@ -35,6 +37,15 @@ const producerUrl = pathToFileURL(
 
 const { createRenderJob, executeRenderJob } = await import(producerUrl);
 
+/** Normalize HyperFrames 0–100 progress to a 0–1 fraction for the parent. */
+function toFraction(raw) {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  // Producer uses 0–100; tolerate a 0–1 value if an older build ever emits one.
+  const pct = n > 1 ? n / 100 : n;
+  return Math.max(0, Math.min(1, pct));
+}
+
 const job = createRenderJob({
   fps,
   quality: ["draft", "standard", "high"].includes(quality)
@@ -45,10 +56,22 @@ const job = createRenderJob({
   strictness: "best-effort",
 });
 
-await executeRenderJob(job, projectDir, outputPath, (renderJob) => {
-  const pct = Math.max(0, Math.min(1, Number(renderJob.progress) || 0));
-  // Machine-readable progress line for the parent process.
-  console.log(`HF_PROGRESS ${pct.toFixed(4)}`);
-});
-
-console.log("HF_DONE");
+try {
+  await executeRenderJob(job, projectDir, outputPath, (renderJob) => {
+    const pct = toFraction(renderJob.progress);
+    console.log(`HF_PROGRESS ${pct.toFixed(4)}`);
+  });
+  console.log("HF_DONE");
+} catch (err) {
+  const message = err instanceof Error ? err.message : String(err);
+  const warnings =
+    err && typeof err === "object" && Array.isArray(err.warnings)
+      ? err.warnings
+          .map((w) => (w && typeof w === "object" && "message" in w ? w.message : String(w)))
+          .filter(Boolean)
+          .join("; ")
+      : "";
+  // Compact, machine-readable failure line for the parent (avoid dumping full logs).
+  console.error(`HF_ERROR ${message}${warnings ? ` | ${warnings}` : ""}`);
+  process.exitCode = 1;
+}
