@@ -159,3 +159,76 @@ export interface RenderDTO {
   error: string | null;
   createdAt: string;
 }
+
+export type PodcastLengthDTO = "short" | "long";
+export type PodcastGenderDTO = "male" | "female" | "neutral";
+
+export interface PodcastBeatTimingDTO {
+  turnId: string;
+  startFrame: number;
+  durationFrames: number;
+  text: string;
+  characterKey?: string;
+}
+
+export interface PodcastCharacterDTO {
+  id: string;
+  podcastId: string;
+  key: string;
+  name: string;
+  gender: PodcastGenderDTO;
+  /** Personality / role brief for AI script generation. */
+  definition: string;
+  providerId: string;
+  voiceId: string;
+  modelId: string | null;
+  order: number;
+}
+
+export interface PodcastTurnDTO {
+  id: string;
+  podcastId: string;
+  characterId: string;
+  characterKey: string;
+  characterName: string;
+  order: number;
+  text: string;
+}
+
+export interface PodcastTakeDTO {
+  id: string;
+  podcastId: string;
+  label: string | null;
+  providerId: string;
+  voiceId: string;
+  modelId: string | null;
+  fps: number;
+  totalFrames: number;
+  timeline: PodcastBeatTimingDTO[];
+  audioUrl: string;
+  createdAt: string;
+}
+
+export interface PodcastSummaryDTO {
+  id: string;
+  title: string;
+  description: string;
+  length: PodcastLengthDTO;
+  characterCount: number;
+  turnCount: number;
+  takeCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PodcastDTO {
+  id: string;
+  title: string;
+  description: string;
+  length: PodcastLengthDTO;
+  characters: PodcastCharacterDTO[];
+  turns: PodcastTurnDTO[];
+  takes: PodcastTakeDTO[];
+  createdAt: string;
+  updatedAt: string;
+}

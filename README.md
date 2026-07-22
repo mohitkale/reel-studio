@@ -253,14 +253,18 @@ Key modules:
 
 1. `src/app`:
 API routes and pages using Next.js App Router.
+Includes **Podcasts** (`/podcasts`) — a voice-only multi-speaker feature
+separate from video projects (characters, AI/JSON scripts, ordered TTS stitch).
 2. `src/library`:
 Repository layer, render orchestration, storage abstraction, sample content.
 HyperFrames export lives in `hyperframes-render.ts` (spawns the worker).
+Podcast audio generation lives in `podcast-take-service.ts`.
 3. `src/engines`:
 Video-engine registry and adapters (`remotion` | `hyperframes`). Engine choice
 is fixed on the project at create time.
 4. `src/providers`:
 Provider registries and concrete AI/voice implementations.
+Podcast script prompts live in `ai/podcast-prompt.ts` (humanised dialogue).
 5. `src/compositions`:
 Remotion-only composition, templates, visuals, and tokens.
 6. `scripts/hyperframes-render-worker.mjs`:

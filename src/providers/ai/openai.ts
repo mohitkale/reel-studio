@@ -1,5 +1,12 @@
 import { aiFetch } from "./http";
 import { buildPrompt } from "./prompt";
+import { buildPodcastPrompt } from "./podcast-prompt";
+import {
+  normalizePodcastPlan,
+  podcastAiPlanSchema,
+  type GeneratePodcastPlanInput,
+  type PodcastPlan,
+} from "./podcast-types";
 import {
   AIError,
   scenePlanSchema,
@@ -80,6 +87,45 @@ const JSON_SCHEMA = {
   },
 };
 
+const PODCAST_JSON_SCHEMA = {
+  name: "podcast_plan",
+  strict: true,
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      title: { type: "string" },
+      description: { type: "string" },
+      characters: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            id: { type: "string" },
+            name: { type: "string" },
+            gender: { type: "string", enum: ["male", "female", "neutral"] },
+          },
+          required: ["id", "name", "gender"],
+        },
+      },
+      turns: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            characterId: { type: "string" },
+            text: { type: "string" },
+          },
+          required: ["characterId", "text"],
+        },
+      },
+    },
+    required: ["characters", "turns"],
+  },
+};
+
 export function createOpenAIProvider(): AIProvider {
   const key = () => process.env.OPENAI_API_KEY?.trim() || "";
   const headers = () => ({
@@ -142,6 +188,62 @@ export function createOpenAIProvider(): AIProvider {
         throw new AIError("OpenAI returned invalid JSON", 502, "openai");
       }
       return scenePlanSchema.parse(parsed);
+    },
+
+    async generatePodcastPlan(
+      input: GeneratePodcastPlanInput,
+    ): Promise<PodcastPlan> {
+      if (input.characters.length < 2) {
+        throw new AIError("Podcast needs at least 2 characters", 400, "openai");
+      }
+      const { system, user } = buildPodcastPrompt(input);
+      const model = input.modelId || OPENAI_DEFAULT_MODEL;
+
+      const res = await aiFetch(
+        `${API_BASE}/chat/completions`,
+        {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify({
+            model,
+            temperature: 0.9,
+            messages: [
+              { role: "system", content: system },
+              { role: "user", content: user },
+            ],
+            response_format: {
+              type: "json_schema",
+              json_schema: PODCAST_JSON_SCHEMA,
+            },
+          }),
+        },
+        "openai",
+      );
+
+      const json = (await res.json()) as {
+        choices?: { message?: { content?: string } }[];
+      };
+      const text = json.choices?.[0]?.message?.content ?? "";
+      if (!text) {
+        throw new AIError("OpenAI returned an empty response", 502, "openai");
+      }
+
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        throw new AIError("OpenAI returned invalid JSON", 502, "openai");
+      }
+      const raw = podcastAiPlanSchema.parse(parsed);
+      try {
+        return normalizePodcastPlan(raw, input.characters);
+      } catch (e) {
+        throw new AIError(
+          e instanceof Error ? e.message : String(e),
+          502,
+          "openai",
+        );
+      }
     },
   };
 }
