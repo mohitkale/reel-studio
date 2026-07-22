@@ -226,8 +226,9 @@ export async function runHyperframesRender(
     const take = takes[0] ?? null;
 
     const { resolveReelTimeline } = await import("@/lib/reel-timeline");
+    const { resolveSpokenText } = await import("@/lib/spoken-text");
     const resolved = resolveReelTimeline(
-      script.scenes.map((s) => ({ id: s.id, text: s.text })),
+      script.scenes.map((s) => ({ id: s.id, text: resolveSpokenText(s) })),
       take,
       script.fps,
     );

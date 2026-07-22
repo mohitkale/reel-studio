@@ -33,6 +33,7 @@ const snapshotSchema = z.object({
     z.object({
       templateId: z.string().nullable(),
       text: z.string(),
+      spokenText: z.string().nullable().optional(),
       emphasis: z.array(z.string()),
       visual: z.string().nullable(),
       background: backgroundSchema.nullable().optional(),
@@ -74,6 +75,7 @@ export async function POST(
         order,
         templateId: s.templateId ?? undefined,
         text: s.text,
+        spokenText: s.spokenText ?? null,
         emphasis: s.emphasis.length ? JSON.stringify(s.emphasis) : null,
         visual: s.visual,
         layoutJson: layoutJsonFor(s),

@@ -3,11 +3,6 @@ import { getVoiceJob, subscribeToVoiceJob, type VoiceJob } from "@/lib/voice-que
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/**
- * SSE endpoint: streams voice-generation progress for one job until it
- * finishes (done/error) or the client disconnects. The final "done" message
- * carries the created take so the client never needs a second round-trip.
- */
 export async function GET(
   req: Request,
   ctx: { params: Promise<{ id: string; jobId: string }> },
@@ -26,7 +21,11 @@ export async function GET(
       function send(job: VoiceJob) {
         controller.enqueue(enc.encode(`data: ${JSON.stringify(toPayload(job))}\n\n`));
         if (job.status === "done" || job.status === "error") {
-          try { controller.close(); } catch { /* already closed */ }
+          try {
+            controller.close();
+          } catch {
+            /* already closed */
+          }
         }
       }
 
@@ -43,7 +42,11 @@ export async function GET(
       req.signal?.addEventListener("abort", () => {
         unsub();
         clearInterval(heartbeat);
-        try { controller.close(); } catch { /* ok */ }
+        try {
+          controller.close();
+        } catch {
+          /* ok */
+        }
       });
     },
   });

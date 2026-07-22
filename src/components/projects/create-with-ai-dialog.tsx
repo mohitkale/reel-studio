@@ -211,19 +211,21 @@ export function CreateWithAIDialog() {
             />
 
             <div className="grid gap-2">
-              <Label>Script style</Label>
+              <Label>Voice script</Label>
               <div className="grid grid-cols-2 gap-2">
                 {(
                   [
                     {
                       id: "short" as const,
-                      label: "Short & punchy",
-                      description: "~18 words/scene, fast-paced hooks.",
+                      label: "Short",
+                      description:
+                        "Same short line on screen and in voice (~14–18 words).",
                     },
                     {
                       id: "detailed" as const,
                       label: "Detailed",
-                      description: "~30-45 words/scene, deeper story arc.",
+                      description:
+                        "Short on-screen text + longer voiceover (~2–3×).",
                     },
                   ]
                 ).map((opt) => {

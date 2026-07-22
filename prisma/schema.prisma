@@ -52,12 +52,15 @@ model Script {
   musicVolume    Int      @default(20) // background music level, 0-100
   hideText          Boolean  @default(false) // global default: hide on-screen scene text
   hideProgressBar   Boolean  @default(false) // global: hide the top progress bar
+  /// Voice workflow: "oneshot" (full take) | "per_scene" (clip library + assemble)
+  voiceMode         String   @default("oneshot")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  scenes  Scene[]
-  takes   VoiceTake[]
-  renders Render[]
+  scenes     Scene[]
+  takes      VoiceTake[]
+  voiceClips SceneVoiceClip[]
+  renders    Render[]
 
   @@index([projectId])
 }
@@ -68,14 +71,22 @@ model Scene {
   script     Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
   order      Int
   templateId String   @default("placeholder")
+  /// On-screen display text for the template.
   text       String
+  /// Voiceover script. Null = same as `text` (most scenes).
+  spokenText String?
   emphasis   String? // JSON array of emphasized phrases
   visual     String? // emoji, icon name, or stat value for the visual slot
   layoutJson String? // JSON
   assetRefs  String? // JSON array of asset ids
   hideText   Boolean? // per-scene override for on-screen text; null = inherit script default
+  /// Active clip in per_scene voice mode; null = no selection.
+  selectedVoiceClipId String? @unique
+  selectedVoiceClip   SceneVoiceClip? @relation("SceneSelectedClip", fields: [selectedVoiceClipId], references: [id], onDelete: SetNull)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  voiceClips SceneVoiceClip[] @relation("SceneClips")
 
   @@index([scriptId, order])
 }
@@ -93,9 +104,36 @@ model VoiceTake {
   timingJson  String // JSON: [{ sceneId, startFrame, durationFrames, text }]
   audioPath   String // AssetStore key for the stitched WAV
   isPlaceholder Boolean @default(false)
+  /// "oneshot" (full generate) | "assembled" (stitched from selected scene clips)
+  source      String   @default("oneshot")
   createdAt   DateTime @default(now())
 
   @@index([scriptId])
+}
+
+/// User-facing per-scene voice versions (mix-and-match in per_scene mode).
+model SceneVoiceClip {
+  id             String   @id @default(cuid())
+  scriptId       String
+  script         Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  sceneId        String
+  scene          Scene    @relation("SceneClips", fields: [sceneId], references: [id], onDelete: Cascade)
+  providerId     String
+  voiceId        String
+  modelId        String?
+  text           String // spoken text snapshot at synth time
+  textHash       String
+  audioPath      String // AssetStore key for this scene's WAV
+  durationFrames Int
+  fps            Int      @default(30)
+  label          String?
+  isPlaceholder  Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  selectedByScene Scene? @relation("SceneSelectedClip")
+
+  @@index([scriptId])
+  @@index([sceneId, createdAt])
 }
 
 model Render {

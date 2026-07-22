@@ -33,6 +33,7 @@ const patchSchema = z.object({
   hideProgressBar: z.boolean().optional(),
   styleId: z.enum(["bold-hook", "clean-story", "teach-me", "soft-brand"]).optional(),
   energy: z.enum(["calm", "normal", "high"]).optional(),
+  voiceMode: z.enum(["oneshot", "per_scene"]).optional(),
 });
 
 export async function PATCH(

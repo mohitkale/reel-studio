@@ -28,7 +28,11 @@ describe.skipIf(SKIP)("render smoke", () => {
       const outputPath = path.join(os.tmpdir(), `render-smoke-${Date.now()}.mp4`);
 
       // Bundle (cached on subsequent runs by OS tmpdir presence, not by this test).
-      const serveUrl = await bundle({ entryPoint });
+      const serveUrl = await bundle({
+        entryPoint,
+        webpackOverride: (await import("@/remotion/webpack-override"))
+          .remotionWebpackOverride,
+      });
 
       const { defaultBrandTokens } = await import("@/compositions/tokens");
 

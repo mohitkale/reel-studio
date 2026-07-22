@@ -1,6 +1,12 @@
-import type { Scene, VoiceTake } from "@prisma/client";
+import type { Scene, SceneVoiceClip, VoiceTake } from "@prisma/client";
 
-import type { SceneDTO, SceneBackground, VoiceTakeDTO } from "@/lib/dto";
+import type {
+  SceneDTO,
+  SceneBackground,
+  SceneVoiceClipDTO,
+  VoiceTakeDTO,
+  VoiceTakeSource,
+} from "@/lib/dto";
 import { inferSceneMood } from "@/library/enrich-scene-plan";
 import { getAssetStore } from "@/library/storage";
 import {
@@ -8,6 +14,7 @@ import {
   parseJsonColumn,
   sceneConfigSchema,
   timelineSchema,
+  voiceTakeSourceSchema,
 } from "../schemas";
 
 /**
@@ -46,6 +53,7 @@ export function toSceneDTO(scene: Scene): SceneDTO {
     order: scene.order,
     templateId: scene.templateId,
     text: scene.text,
+    spokenText: scene.spokenText ?? null,
     emphasis: parseJsonColumn(scene.emphasis, emphasisSchema, []),
     visual,
     background,
@@ -53,7 +61,32 @@ export function toSceneDTO(scene: Scene): SceneDTO {
     hideText: scene.hideText ?? null,
     mood: config.mood ?? inferSceneMood(scene.templateId, scene.order),
     musicMood: config.musicMood,
+    selectedVoiceClipId: scene.selectedVoiceClipId ?? null,
   };
+}
+
+export function toVoiceClipDTO(clip: SceneVoiceClip): SceneVoiceClipDTO {
+  return {
+    id: clip.id,
+    scriptId: clip.scriptId,
+    sceneId: clip.sceneId,
+    providerId: clip.providerId,
+    voiceId: clip.voiceId,
+    modelId: clip.modelId,
+    text: clip.text,
+    textHash: clip.textHash,
+    audioUrl: getAssetStore().url(clip.audioPath),
+    durationFrames: clip.durationFrames,
+    fps: clip.fps,
+    label: clip.label,
+    isPlaceholder: clip.isPlaceholder,
+    createdAt: clip.createdAt.toISOString(),
+  };
+}
+
+function resolveTakeSource(raw: string | null | undefined): VoiceTakeSource {
+  const parsed = voiceTakeSourceSchema.safeParse(raw ?? "oneshot");
+  return parsed.success ? parsed.data : "oneshot";
 }
 
 export function toTakeDTO(take: VoiceTake): VoiceTakeDTO {
@@ -69,6 +102,7 @@ export function toTakeDTO(take: VoiceTake): VoiceTakeDTO {
     timeline: parseJsonColumn(take.timingJson, timelineSchema, []),
     audioUrl: getAssetStore().url(take.audioPath),
     isPlaceholder: take.isPlaceholder,
+    source: resolveTakeSource(take.source),
     createdAt: take.createdAt.toISOString(),
   };
 }

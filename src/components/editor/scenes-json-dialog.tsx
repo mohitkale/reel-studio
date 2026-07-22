@@ -22,6 +22,7 @@ import {
 interface SceneJson {
   templateId: string;
   text: string;
+  spokenText?: string | null;
   emphasis: string[];
   visual: string | null;
   background?: SceneBackground | null;
@@ -35,6 +36,7 @@ function toJson(scenes: SceneDTO[], videoEngine: VideoEngineId): string {
   const payload: SceneJson[] = scenes.map((s) => ({
     templateId: engine.normalizeTemplateId(s.templateId),
     text: s.text,
+    ...(s.spokenText != null ? { spokenText: s.spokenText } : {}),
     emphasis: s.emphasis,
     visual: s.visual ?? null,
     ...(s.background ? { background: s.background } : {}),
@@ -130,7 +132,25 @@ function parseScenes(raw: string, videoEngine: VideoEngineId): SceneJson[] {
     } else if (s.musicMood != null) {
       throw new Error(`Scene ${i + 1}: "musicMood" must be a string.`);
     }
-    return { templateId, text: s.text, emphasis, visual, background, items, mood, musicMood };
+    let spokenText: string | null | undefined;
+    if (s.spokenText === null) {
+      spokenText = null;
+    } else if (typeof s.spokenText === "string") {
+      spokenText = s.spokenText;
+    } else if (s.spokenText != null) {
+      throw new Error(`Scene ${i + 1}: "spokenText" must be a string or null.`);
+    }
+    return {
+      templateId,
+      text: s.text,
+      ...(spokenText !== undefined ? { spokenText } : {}),
+      emphasis,
+      visual,
+      background,
+      items,
+      mood,
+      musicMood,
+    };
   });
 }
 

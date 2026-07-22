@@ -11,6 +11,9 @@ export const beatTimingSchema = z.object({
 
 export const timelineSchema = z.array(beatTimingSchema);
 
+export const voiceModeSchema = z.enum(["oneshot", "per_scene"]);
+export const voiceTakeSourceSchema = z.enum(["oneshot", "assembled"]);
+
 export const emphasisSchema = z.array(z.string());
 
 export const paletteSchema = z.object({

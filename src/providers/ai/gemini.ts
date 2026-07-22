@@ -37,6 +37,7 @@ const RESPONSE_SCHEMA = {
         type: "object",
         properties: {
           text: { type: "string" },
+          spokenText: { type: "string" },
           templateId: {
             type: "string",
             enum: [

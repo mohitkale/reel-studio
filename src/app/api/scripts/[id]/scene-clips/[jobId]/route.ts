@@ -6,11 +6,6 @@ import { errorResponse } from "@/server/api-helpers";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/**
- * Plain JSON poll for a voice-generation job's status (companion to the SSE
- * .../progress route). Used by non-browser callers (e.g. the MCP server) that
- * can't easily consume an EventSource.
- */
 export async function GET(
   _req: Request,
   ctx: { params: Promise<{ jobId: string }> },

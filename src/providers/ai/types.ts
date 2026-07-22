@@ -60,9 +60,25 @@ export const PLAN_TEMPLATE_IDS = [
 
 export const aiSceneSchema = z.object({
   text: z.string().min(1),
+  /**
+   * Longer voiceover when scriptStyle is "detailed". Omit/empty for short style
+   * (voice uses `text`). When set, should be ~2–3× the on-screen `text`.
+   */
+  spokenText: z.string().optional(),
   templateId: z.enum(PLAN_TEMPLATE_IDS),
   emphasis: z.array(z.string()).default([]),
-  visual: z.string().max(64).optional(),
+  /**
+   * Short visual slot (stat, emoji, CTA label). Models sometimes overshoot —
+   * truncate instead of failing the whole plan (same leniency as effect/mood).
+   */
+  visual: z
+    .string()
+    .optional()
+    .transform((v) => {
+      if (v == null) return undefined;
+      const trimmed = v.trim().slice(0, 64);
+      return trimmed.length ? trimmed : undefined;
+    }),
   /** Short checklist rows for icon-grid (2–5 items, ~8 words each). */
   items: z.array(z.string().trim().min(1).max(80)).max(5).optional(),
   /** 2-4 concrete visual keywords for a stock photo background, when one fits. */
@@ -86,9 +102,19 @@ export const aiSceneSchema = z.object({
 
 function sanitizeAiScene(scene: z.infer<typeof aiSceneSchema>): AIScene {
   const text = stripMarkdown(scene.text);
+  const spokenRaw = scene.spokenText
+    ? stripMarkdown(scene.spokenText).trim()
+    : "";
+  // Drop spokenText when empty or identical to on-screen text (inherit).
+  const spokenText =
+    spokenRaw && spokenRaw !== text.trim() ? spokenRaw : undefined;
   const emphasis = scene.emphasis
     .map(stripMarkdown)
-    .filter((phrase) => phrase.length > 0 && text.includes(phrase));
+    .filter((phrase) => {
+      if (!phrase.length) return false;
+      // Highlights can appear in on-screen or spoken copy.
+      return text.includes(phrase) || (spokenText?.includes(phrase) ?? false);
+    });
   const items = scene.items
     ?.map(stripMarkdown)
     .map((s) => s.trim())
@@ -97,6 +123,7 @@ function sanitizeAiScene(scene: z.infer<typeof aiSceneSchema>): AIScene {
   return {
     ...scene,
     text,
+    spokenText,
     emphasis,
     items: items && items.length >= 2 ? items : undefined,
     visual: scene.visual ? stripMarkdown(scene.visual) : undefined,
@@ -148,7 +175,7 @@ export interface GeneratePlanInput {
   existingSceneCount?: number;
   /** Target video orientation, so the director frames visuals appropriately. */
   orientation?: Orientation;
-  /** Short (punchy, ~18 words/scene) or Detailed (~30-45 words/scene, deeper story structure). Defaults to "short". */
+  /** Short = same short line on screen + in voice. Detailed = short on-screen text + longer spokenText (~2–3×). Defaults to "short". */
   scriptStyle?: ScriptStyle;
   /** Target video engine; used for prompt/template mapping. Defaults to remotion. */
   videoEngine?: VideoEngineId;

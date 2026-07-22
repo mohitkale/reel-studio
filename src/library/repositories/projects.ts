@@ -125,6 +125,7 @@ export async function createProjectFromPlan(
                 order,
                 templateId: scene.templateId || fallbackTemplate,
                 text: scene.text,
+                spokenText: scene.spokenText ?? null,
                 emphasis: scene.emphasis.length
                   ? JSON.stringify(scene.emphasis)
                   : null,

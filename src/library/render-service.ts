@@ -29,6 +29,8 @@ import {
 } from "@/library/repositories/renders";
 import { upsertJob } from "@/lib/render-queue";
 import { getScript } from "@/library/repositories/scripts";
+import { remotionWebpackOverride } from "@/remotion/webpack-override";
+import { resolveSpokenText } from "@/lib/spoken-text";
 
 const DEFAULT_RENDER_CONCURRENCY_CAP = 8;
 const MIN_PROGRESS_PERSIST_INTERVAL_MS = 1_000;
@@ -104,6 +106,7 @@ async function ensureBundle(
     console.log("[render] Bundling Remotion composition (first render only)...");
     const out = await bundle({
       entryPoint: ENTRY_POINT,
+      webpackOverride: remotionWebpackOverride,
       onProgress: (p) => {
         if (p % 20 === 0) console.log(`[render] Bundle progress: ${p}%`);
       },
@@ -284,7 +287,7 @@ async function runRemotionRender({
     // and falls back to estimated, silent timing otherwise.
     const { resolveReelTimeline } = await import("@/lib/reel-timeline");
     const resolved = resolveReelTimeline(
-      script.scenes.map((s) => ({ id: s.id, text: s.text })),
+      script.scenes.map((s) => ({ id: s.id, text: resolveSpokenText(s) })),
       take,
       script.fps,
     );

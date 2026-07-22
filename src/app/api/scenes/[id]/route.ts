@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { deleteScene, updateScene } from "@/library/repositories/scenes";
+import { assembleVoiceTake } from "@/library/scene-voice-service";
 import { authorize } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
@@ -30,6 +31,7 @@ const sceneMoodSchema = z.enum([
 
 const patchSchema = z.object({
   text: z.string().max(2000).optional(),
+  spokenText: z.string().max(4000).nullable().optional(),
   templateId: z.string().optional(),
   emphasis: z.array(z.string()).optional(),
   // Short label/emoji hint for the template's visual slot.
@@ -44,6 +46,8 @@ const patchSchema = z.object({
   mood: sceneMoodSchema.nullable().optional(),
   // Free-text music vibe hint for auto music suggestions; null clears it.
   musicMood: z.string().max(60).nullable().optional(),
+  // Active per-scene voice clip; null clears selection.
+  selectedVoiceClipId: z.string().nullable().optional(),
 });
 
 export async function PATCH(
@@ -54,7 +58,18 @@ export async function PATCH(
     authorize(req);
     const { id } = await ctx.params;
     const body = patchSchema.parse(await req.json());
-    return NextResponse.json({ scene: await updateScene(id, body) });
+    const scene = await updateScene(id, body);
+
+    let take = null;
+    if (body.selectedVoiceClipId !== undefined && body.selectedVoiceClipId !== null) {
+      try {
+        take = await assembleVoiceTake(scene.scriptId);
+      } catch {
+        take = null;
+      }
+    }
+
+    return NextResponse.json({ scene, take });
   } catch (e) {
     return errorResponse(e);
   }

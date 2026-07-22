@@ -4,7 +4,7 @@ import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { apiPost } from "@/lib/api-client";
-import type { VoiceTakeDTO } from "@/lib/dto";
+import type { SceneVoiceClipDTO, VoiceTakeDTO } from "@/lib/dto";
 
 export interface KokoroGenerateProgress {
   phase: "model" | "synth" | "upload";
@@ -76,6 +76,139 @@ export function useKokoroGenerate(scriptId: string) {
       import("@/lib/client-tts/kokoro").then((m) => m.terminateKokoro());
     };
   }, []);
+
+  return { ...mutation, progress, cancel };
+}
+
+/** Generate per-scene clips in the browser, upload + assemble. */
+export function useKokoroGenerateSceneClips(scriptId: string) {
+  const qc = useQueryClient();
+  const [progress, setProgress] = React.useState<KokoroGenerateProgress | null>(
+    null,
+  );
+  const abortRef = React.useRef<AbortController | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: async (
+      vars: KokoroGenerateVars,
+    ): Promise<{ take: VoiceTakeDTO | null; clips: SceneVoiceClipDTO[] }> => {
+      const { generateScenesToBeats } = await import("@/lib/client-tts/kokoro");
+
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      setProgress({ phase: "model" });
+      const voicedScenes = vars.scenes.filter((s) => s.text.trim().length > 0);
+      const beats =
+        voicedScenes.length > 0
+          ? await generateScenesToBeats(voicedScenes, {
+              voice: vars.voiceId,
+              signal: controller.signal,
+              onModelProgress: (modelProgress) =>
+                setProgress({ phase: "model", modelProgress }),
+              onScene: (completed, total) =>
+                setProgress({
+                  phase: "synth",
+                  scene: completed + 1,
+                  sceneCount: total,
+                }),
+            })
+          : [];
+
+      setProgress({ phase: "upload" });
+      const res = await apiPost<{
+        take: VoiceTakeDTO | null;
+        clips: SceneVoiceClipDTO[];
+      }>(`/api/scripts/${scriptId}/scene-clips/upload`, {
+        providerId: "kokoro",
+        voiceId: vars.voiceId,
+        modelId: vars.modelId,
+        label: vars.label,
+        beats,
+      });
+      return res;
+    },
+    onSettled: () => {
+      setProgress(null);
+      abortRef.current = null;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+  });
+
+  const cancel = React.useCallback(() => abortRef.current?.abort(), []);
+
+  return { ...mutation, progress, cancel };
+}
+
+/** Generate one scene clip in the browser and upload it. */
+export function useKokoroGenerateOneSceneClip(scriptId: string) {
+  const qc = useQueryClient();
+  const [progress, setProgress] = React.useState<KokoroGenerateProgress | null>(
+    null,
+  );
+  const abortRef = React.useRef<AbortController | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: async (vars: {
+      scene: { id: string; text: string };
+      voiceId: string;
+      modelId?: string;
+      label?: string;
+    }): Promise<{ clip: SceneVoiceClipDTO; take: VoiceTakeDTO | null }> => {
+      const { generateScenesToBeats } = await import("@/lib/client-tts/kokoro");
+
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      setProgress({ phase: "model" });
+      // Empty spoken text → server stores a silent hold (no Kokoro call).
+      if (!vars.scene.text.trim()) {
+        setProgress({ phase: "upload" });
+        return apiPost<{ clip: SceneVoiceClipDTO; take: VoiceTakeDTO | null }>(
+          `/api/scenes/${vars.scene.id}/clips/upload`,
+          {
+            providerId: "kokoro",
+            voiceId: vars.voiceId,
+            modelId: vars.modelId,
+            label: vars.label,
+            // Minimal valid payload; server replaces with silent for blank text.
+            wavBase64: "",
+          },
+        );
+      }
+
+      const beats = await generateScenesToBeats([vars.scene], {
+        voice: vars.voiceId,
+        signal: controller.signal,
+        onModelProgress: (modelProgress) =>
+          setProgress({ phase: "model", modelProgress }),
+        onScene: (completed, total) =>
+          setProgress({ phase: "synth", scene: completed + 1, sceneCount: total }),
+      });
+
+      setProgress({ phase: "upload" });
+      const beat = beats[0];
+      if (!beat) throw new Error("No audio generated for scene");
+
+      return apiPost<{ clip: SceneVoiceClipDTO; take: VoiceTakeDTO | null }>(
+        `/api/scenes/${vars.scene.id}/clips/upload`,
+        {
+          providerId: "kokoro",
+          voiceId: vars.voiceId,
+          modelId: vars.modelId,
+          label: vars.label,
+          wavBase64: beat.wavBase64,
+        },
+      );
+    },
+    onSettled: () => {
+      setProgress(null);
+      abortRef.current = null;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+  });
+
+  const cancel = React.useCallback(() => abortRef.current?.abort(), []);
 
   return { ...mutation, progress, cancel };
 }

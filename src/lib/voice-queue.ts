@@ -1,12 +1,13 @@
 /**
  * In-process job queue for server-side voice generation, mirroring
- * render-queue.ts. Lets POST /api/scripts/:id/takes return immediately with a
- * jobId while synthesis runs in the background, with real per-scene progress
- * streamed over SSE. Module-level state persists across requests in Next.js
- * dev mode (not serverless) — same local-first assumption as the render queue.
+ * render-queue.ts. Lets POST /api/scripts/:id/takes (and scene-clips) return
+ * immediately with a jobId while synthesis runs in the background, with real
+ * per-scene progress streamed over SSE. Module-level state persists across
+ * requests in Next.js dev mode (not serverless) — same local-first assumption
+ * as the render queue.
  */
 
-import type { VoiceTakeDTO } from "@/lib/dto";
+import type { SceneVoiceClipDTO, VoiceTakeDTO } from "@/lib/dto";
 
 export type VoiceJobStatus =
   | "queued"
@@ -24,8 +25,12 @@ export interface VoiceJob {
   /** 1-based index of the scene currently being synthesized, if any. */
   workingOn?: number;
   error?: string;
-  /** Set once status === "done". */
+  /** Set once status === "done" for oneshot / assemble jobs. */
   take?: VoiceTakeDTO;
+  /** Set when a single-scene clip job finishes. */
+  clip?: SceneVoiceClipDTO;
+  /** Set when a generate-all clips job finishes. */
+  clips?: SceneVoiceClipDTO[];
 }
 
 const jobs = new Map<string, VoiceJob>();

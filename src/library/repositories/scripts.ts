@@ -1,4 +1,4 @@
-import type { ScriptDTO } from "@/lib/dto";
+import type { ScriptDTO, VoiceMode } from "@/lib/dto";
 import { serverDefaultTokens } from "@/lib/brand-defaults";
 import {
   DEFAULT_ENERGY_ID,
@@ -14,12 +14,21 @@ import {
   type VideoEngineId,
 } from "@/engines/types";
 import { prisma } from "@/library/db";
-import { brandOverridesSchema, parseJsonColumn } from "@/library/schemas";
+import {
+  brandOverridesSchema,
+  parseJsonColumn,
+  voiceModeSchema,
+} from "@/library/schemas";
 import { resolveBrandTokens, getDefaultBrandKit } from "./brandkits";
-import { toSceneDTO, toTakeDTO } from "./map";
+import { toSceneDTO, toTakeDTO, toVoiceClipDTO } from "./map";
 
 function resolveEngine(value: string | null | undefined): VideoEngineId {
   return value && isVideoEngineId(value) ? value : DEFAULT_VIDEO_ENGINE;
+}
+
+function resolveVoiceMode(value: string | null | undefined): VoiceMode {
+  const parsed = voiceModeSchema.safeParse(value ?? "oneshot");
+  return parsed.success ? parsed.data : "oneshot";
 }
 
 export async function getScript(id: string): Promise<ScriptDTO | null> {
@@ -28,6 +37,7 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     include: {
       scenes: { orderBy: { order: "asc" } },
       takes: { orderBy: { createdAt: "desc" } },
+      voiceClips: { orderBy: { createdAt: "desc" } },
       project: { include: { brandKit: true } },
     },
   });
@@ -50,6 +60,8 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     videoEngine: resolveEngine(script.project.videoEngine),
     scenes: script.scenes.map(toSceneDTO),
     takes: script.takes.map(toTakeDTO),
+    voiceClips: script.voiceClips.map(toVoiceClipDTO),
+    voiceMode: resolveVoiceMode(script.voiceMode),
     brandKitId: script.project.brandKitId,
     brandTokens: brandKit
       ? resolveBrandTokens(brandKit)
@@ -58,7 +70,7 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     musicUrl: script.musicUrl,
     musicVolume: script.musicVolume,
     hideText: script.hideText,
-    hideProgressBar: (script as unknown as { hideProgressBar: boolean }).hideProgressBar ?? false,
+    hideProgressBar: script.hideProgressBar ?? false,
     styleId: normalizeStyleId(overrides.styleId),
     energy: normalizeEnergyId(overrides.energy),
   };
@@ -75,6 +87,7 @@ export async function updateScript(
     hideProgressBar?: boolean;
     styleId?: StyleId;
     energy?: EnergyId;
+    voiceMode?: VoiceMode;
   },
 ): Promise<void> {
   const patch: Record<string, unknown> = {
@@ -86,6 +99,7 @@ export async function updateScript(
       : {}),
     ...(data.hideText !== undefined ? { hideText: data.hideText } : {}),
     ...(data.hideProgressBar !== undefined ? { hideProgressBar: data.hideProgressBar } : {}),
+    ...(data.voiceMode !== undefined ? { voiceMode: data.voiceMode } : {}),
   };
 
   if (data.styleId !== undefined || data.energy !== undefined) {

@@ -1,4 +1,4 @@
-import type { VoiceTakeDTO } from "@/lib/dto";
+import type { VoiceTakeDTO, VoiceTakeSource } from "@/lib/dto";
 import type { BeatTiming } from "@/lib/audio-timing";
 import { prisma } from "@/library/db";
 import { getAssetStore } from "@/library/storage";
@@ -15,6 +15,7 @@ export interface CreateTakeInput {
   timeline: BeatTiming[];
   audioPath: string;
   isPlaceholder?: boolean;
+  source?: VoiceTakeSource;
 }
 
 export async function createTake(
@@ -32,6 +33,7 @@ export async function createTake(
       timingJson: JSON.stringify(input.timeline),
       audioPath: input.audioPath,
       isPlaceholder: input.isPlaceholder ?? false,
+      source: input.source ?? "oneshot",
     },
   });
   return toTakeDTO(take);

@@ -46,11 +46,11 @@ export function buildPrompt(input: GeneratePlanInput): {
     : `- Use ${count} scenes total. If the user's brief explicitly requests a specific number, honour it (max 20).`;
 
   const lengthRule = isDetailed
-    ? "- Each scene is 2 to 3 spoken sentences (about 28 to 40 words). Concrete and personal — one example or number per beat."
-    : "- Each scene is one short spoken sentence, or two very short ones (about 14 words max). Easy to hear and easy to read on screen.";
+    ? "- Each scene has TWO copy fields: (1) 'text' = short ON-SCREEN line (about 12 to 18 words, easy to read at a glance). (2) 'spokenText' = the VOICEOVER script, about 2 to 3 times longer than 'text' (about 30 to 55 words, 2 to 3 spoken sentences). spokenText expands the same beat with one concrete detail, example, or number — never filler. emphasis phrases should appear in 'text' (preferred) or 'spokenText'."
+    : "- Each scene is one short spoken sentence, or two very short ones (about 14 words max). Put that in 'text' only. Leave 'spokenText' empty — voice uses the same words as on screen.";
 
   const structureRule = isDetailed
-    ? "- Shape: Hook → why it matters to YOU → insight → proof or short steps → punch → soft CTA. Let scenes breathe."
+    ? "- Shape: Hook → why it matters to YOU → insight → proof or short steps → punch → soft CTA. Let the spokenText breathe while on-screen text stays scannable."
     : "- Shape: Hook → relatable problem → insight or proof → punch → clear CTA. Every beat earns the next second of attention.";
 
   const styleLock =
@@ -74,7 +74,7 @@ export function buildPrompt(input: GeneratePlanInput): {
     `Creative direction for this take: write in the voice of ${pickCreativeAngle()}. Specific beats beat generic advice.`,
     "Rules:",
     "- Plain conversational English. Use 'you' and 'your'. No em-dashes. No corporate filler. No clickbait all-caps energy in the words.",
-    "- NEVER use markdown in any field. Scene text is spoken aloud — plain words only.",
+    "- NEVER use markdown in any field. Scene text and spokenText are spoken aloud — plain words only.",
     lengthRule,
     countRule,
     "- Scene 1 MUST hook with one of: (1) a bold but believable claim to the viewer, (2) a surprising number, (3) 'Stop doing X' with a kinder fix promised, (4) a direct question about their life, (5) a pain they feel today — said warmly, not mocked.",
@@ -92,7 +92,7 @@ export function buildPrompt(input: GeneratePlanInput): {
     "  • 'kinetic': default for one clear spoken idea / hook / insight. Prefer this over a fake checklist.",
     "  DIVERSITY: 5+ scenes → at least 4 different templates. kinetic ≤ 40% of scenes. Never kinetic more than twice in a row.",
     "- emphasis: 1–2 short phrases that appear VERBATIM in that scene's text (highlights for the eye).",
-    "- visual: only as required above; otherwise omit.",
+    "- visual: only as required above; otherwise omit. Keep it SHORT (a number, one emoji, or a CTA label under ~20 characters).",
     "  LOOK OF THE WHOLE VIDEO:",
     styleLock,
     energyLock,

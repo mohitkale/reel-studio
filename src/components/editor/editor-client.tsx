@@ -39,6 +39,7 @@ import {
 } from "@/compositions/visual-style";
 import { estimateTimeline } from "@/lib/preview-timeline";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
+import { resolveSpokenText } from "@/lib/spoken-text";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -184,7 +185,10 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   // never invalidate it). Auto-pick the most recent *usable* take; a take whose
   // script changed falls back to estimated, silent timing instead of producing a
   // broken, desynced timeline.
-  const sceneTexts = scenes.map((s) => ({ id: s.id, text: s.text }));
+  const sceneTexts = scenes.map((s) => ({
+    id: s.id,
+    text: resolveSpokenText(s),
+  }));
   const allTakes = script?.takes ?? [];
   const usableTakes = allTakes.filter(
     (t) => resolveReelTimeline(sceneTexts, t, t.fps).takeUsable,
@@ -275,7 +279,10 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   const sceneDuration =
     sceneBeat?.durationFrames ??
     (selectedScene
-      ? estimateTimeline([{ id: selectedScene.id, text: selectedScene.text }], fps)
+      ? estimateTimeline(
+          [{ id: selectedScene.id, text: resolveSpokenText(selectedScene) }],
+          fps,
+        )
           .totalFrames
       : 1);
 
@@ -775,11 +782,15 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
         <CardContent className="p-4">
           <VoiceoverPanel
             scriptId={scriptId}
-            scenes={scenes.map((s) => ({ id: s.id, text: s.text }))}
+            scenes={scenes}
             takes={script.takes}
+            voiceClips={script.voiceClips ?? []}
+            voiceMode={script.voiceMode ?? "oneshot"}
             selectedTakeId={effectiveTakeId}
+            selectedSceneId={selectedSceneId}
             onSelectTake={selectTake}
             onClearTake={clearTake}
+            onSelectScene={setSelectedSceneId}
             hasScenes={scenes.length > 0}
           />
         </CardContent>

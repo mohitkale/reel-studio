@@ -57,6 +57,7 @@ function backgroundKind(bg: SceneBackground | undefined): BackgroundKind {
 type UpdateVars = {
   id: string;
   text?: string;
+  spokenText?: string | null;
   templateId?: string;
   emphasis?: string[];
   visual?: string | null;
@@ -418,6 +419,9 @@ export function SceneInspector({
   videoEngine?: VideoEngineId;
 }) {
   const [text, setText] = React.useState(scene.text);
+  const [spokenText, setSpokenText] = React.useState(
+    scene.spokenText ?? scene.text,
+  );
   const [emphasis, setEmphasis] = React.useState(scene.emphasis.join(", "));
   const [visual, setVisual] = React.useState(scene.visual ?? "");
   const [confirmOpen, setConfirmOpen] = React.useState(false);
@@ -428,7 +432,22 @@ export function SceneInspector({
   const isChecklist = normalId === "icon-grid" || normalId === "hf-list";
 
   function commitText() {
-    if (text !== scene.text) onUpdate({ id: scene.id, text });
+    if (text !== scene.text) {
+      onUpdate({ id: scene.id, text });
+      // Keep the voice-script field in sync while it still inherits display text.
+      if (scene.spokenText == null) setSpokenText(text);
+    }
+  }
+
+  function commitSpokenText() {
+    const currentEffective = scene.spokenText ?? scene.text;
+    if (spokenText === currentEffective) return;
+    // Matching display text clears the override (inherit again).
+    if (spokenText.trim() === scene.text.trim()) {
+      if (scene.spokenText != null) onUpdate({ id: scene.id, spokenText: null });
+      return;
+    }
+    onUpdate({ id: scene.id, spokenText });
   }
 
   function commitEmphasis() {
@@ -485,15 +504,32 @@ export function SceneInspector({
         </div>
 
         <div className="grid gap-2">
-          <Label htmlFor="scene-text">Text</Label>
+          <Label htmlFor="scene-text">On-screen text</Label>
           <Textarea
             id="scene-text"
             value={text}
-            rows={4}
-            placeholder="What is said in this scene"
+            rows={3}
+            placeholder="What appears on screen in this scene"
             onChange={(e) => setText(e.target.value)}
             onBlur={commitText}
           />
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="scene-spoken">Voice script</Label>
+          <Textarea
+            id="scene-spoken"
+            value={spokenText}
+            rows={4}
+            placeholder="What the voiceover says (defaults to on-screen text)"
+            onChange={(e) => setSpokenText(e.target.value)}
+            onBlur={commitSpokenText}
+          />
+          <p className="text-xs text-muted-foreground">
+            {scene.spokenText == null || scene.spokenText === scene.text
+              ? "Using the same words as on-screen text for voice."
+              : "Voice script differs from on-screen text."}
+          </p>
         </div>
 
         <div className="grid gap-2">

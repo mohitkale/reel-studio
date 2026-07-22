@@ -37,6 +37,7 @@ const JSON_SCHEMA = {
           additionalProperties: false,
           properties: {
             text: { type: "string" },
+            spokenText: { type: "string" },
             templateId: {
               type: "string",
               enum: [
