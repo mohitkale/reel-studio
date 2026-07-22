@@ -46,7 +46,9 @@ Full breakdown, Free vs Company License notes, and a checklist:
 ### Video Creation
 - **Multi-format support**: Portrait (9:16), Landscape (16:9), Square (1:1)
 - **Script and scene editing**: Scene-by-scene content creation
+- **On-screen vs voice script**: Short display `text` plus optional longer `spokenText` for TTS
 - **AI scene planning**: Automatically adds relevant Unsplash stock backgrounds with varied pan/zoom motion
+- **Style + Energy looks**: Whole-reel Style (`bold-hook`, `clean-story`, `teach-me`, `soft-brand`) and Energy (`calm`, `normal`, `high`); default brand kit is **Coral Harbor**
 - **Dual video engines**: Remotion (React) or HyperFrames (HTML, Apache 2.0) — chosen at project create
 - **Remotion templates**: Kinetic typography, Lottie, 3D, emoji punch, icon grid, quote cards, stat reveal
 - **HyperFrames templates**: Cold open, bold statement, paced list, proof number, pull quote, end card
@@ -60,13 +62,15 @@ Full breakdown, Free vs Company License notes, and a checklist:
   - **Cartesia**: Premium cloud voices with cloning support (vendor terms)
   - **ElevenLabs**: Premium cloud voices with extensive library (vendor terms)
   - **VoiceForge** (optional): Self-hosted cloning; engine licenses vary (see [docs/LICENSING.md](docs/LICENSING.md))
+- **Voice modes**: **Oneshot** (one full-reel take) or **Per-scene** (generate/select clips per scene, then assemble)
 - **Voice takes management**: Generate, compare, and select multiple takes
 - **Caption sync**: Automatic timing alignment with voiceover
 - **Background music**: Bundled CC0 beds; optional Jamendo Creative Commons search; user uploads are your responsibility
 
 ### AI Integration
 - **AI scene generation**: Powered by Google Gemini or OpenAI
-- **MCP Server**: Model Context Protocol integration for AI tools
+- **Voice script styles**: **Short** (on-screen text only) or **Detailed** (short on-screen + longer spoken narration)
+- **MCP Server**: Model Context Protocol integration for AI tools (see [mcp/README.md](mcp/README.md) for oneshot vs per-scene examples)
 - **Smart content planning**: AI-assisted storyboard creation
 
 ### Developer Experience
@@ -284,10 +288,11 @@ High-level sequence:
 ## Data Model (Summary)
 
 - `Project`: top-level workspace; includes `videoEngine` (`remotion` | `hyperframes`, default `remotion`, set at create)
-- `BrandKit`: palette, fonts, logo, handle, CTA defaults
-- `Script`: timeline container with scenes
-- `Scene`: ordered unit with template and content (template ids differ per engine)
-- `VoiceTake`: synthesized voice track + timing JSON
+- `BrandKit`: palette, fonts, logo, handle, CTA defaults (fresh DBs get **Coral Harbor**)
+- `Script`: timeline container with scenes; `voiceMode` (`oneshot` | `per_scene`); Style/Energy in brand overrides
+- `Scene`: ordered unit with template, on-screen `text`, optional `spokenText`, and content (template ids differ per engine)
+- `SceneVoiceClip`: per-scene voice versions used when `voiceMode` is `per_scene`
+- `VoiceTake`: synthesized voice track + timing JSON (`source`: `oneshot` | `assembled`)
 - `Render`: render job state and output path
 - `Asset`: uploaded media metadata
 - `ProviderSetting`: provider readiness and defaults

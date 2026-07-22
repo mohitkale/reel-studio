@@ -39,6 +39,10 @@ function guard<A>(fn: (args: A) => Promise<ToolResult>) {
 
 const orientation = z.enum(["portrait", "landscape", "square"]);
 const scriptStyle = z.enum(["short", "detailed"]);
+/** Whole-reel Style look (Coral Harbor / Style+Energy system). */
+const styleId = z.enum(["bold-hook", "clean-story", "teach-me", "soft-brand"]);
+const energy = z.enum(["calm", "normal", "high"]);
+const voiceMode = z.enum(["oneshot", "per_scene"]);
 const sceneMood = z.enum([
   "energetic",
   "calm",
@@ -48,6 +52,8 @@ const sceneMood = z.enum([
   "tech",
   "nature",
 ]);
+/** Server-side TTS providers MCP can drive without browser upload. */
+const serverVoiceProvider = z.enum(["cartesia", "elevenlabs", "voiceforge"]);
 
 const backgroundShape = z.object({
   type: z.enum(["image", "video"]),
@@ -218,7 +224,7 @@ export function registerTools(server: McpServer): void {
     "ai_create_project",
     {
       description:
-        "Generate a full scene plan from a brief and create a new project. Requires an AI key configured in the website. For large storyboards, create a smaller plan then extend with ai_generate_scenes (append) or add_scene. Pass videoEngine='hyperframes' to use HyperFrames-native templates.",
+        "Generate a full scene plan from a brief and create a new project. Requires an AI key configured in the website. For large storyboards, create a smaller plan then extend with ai_generate_scenes (append) or add_scene. Pass videoEngine='hyperframes' to use HyperFrames-native templates. scriptStyle='detailed' writes short on-screen text plus longer spokenText for voiceover.",
       inputSchema: {
         providerId: z.enum(["gemini", "openai"]),
         modelId: z.string().optional(),
@@ -229,7 +235,19 @@ export function registerTools(server: McpServer): void {
         scriptStyle: scriptStyle
           .optional()
           .describe(
-            "'short' = punchy ~18 words/scene (default). 'detailed' = richer ~30-45 words/scene with a fuller story arc.",
+            "'short' = punchy on-screen ~14-18 words/scene; voice uses the same text (default). 'detailed' = short on-screen text + longer spokenText (~30-55 words) for narration.",
+          ),
+        styleId: z
+          .enum(["auto", "bold-hook", "clean-story", "teach-me", "soft-brand"])
+          .optional()
+          .describe(
+            "Whole-reel Style look. 'auto' lets the AI choose; omit defaults to bold-hook.",
+          ),
+        energy: z
+          .enum(["auto", "calm", "normal", "high"])
+          .optional()
+          .describe(
+            "Whole-reel Energy (motion intensity). 'auto' lets the AI choose; omit defaults to normal.",
           ),
         videoEngine,
       },
@@ -297,11 +315,21 @@ export function registerTools(server: McpServer): void {
   server.registerTool(
     "update_script",
     {
-      description: "Update a script's name and/or cover frame URL.",
+      description:
+        "Update a script's name, cover, Style/Energy look, and/or voiceMode. voiceMode 'oneshot' = one full-reel take; 'per_scene' = generate/select clips per scene then assemble.",
       inputSchema: {
         scriptId: z.string().min(1),
         name: z.string().trim().min(1).max(120).optional(),
         coverUrl: z.string().max(2048).nullable().optional(),
+        styleId: styleId
+          .optional()
+          .describe("Whole-reel Style: bold-hook | clean-story | teach-me | soft-brand."),
+        energy: energy
+          .optional()
+          .describe("Whole-reel Energy: calm | normal | high."),
+        voiceMode: voiceMode
+          .optional()
+          .describe("'oneshot' (default) or 'per_scene' for clip-per-scene workflow."),
       },
     },
     guard(async ({ scriptId, ...body }) =>
@@ -348,10 +376,18 @@ export function registerTools(server: McpServer): void {
     "update_scene",
     {
       description:
-        "Update fields of one scene. emphasis phrases must appear verbatim in text. Pass null to clear visual/background/items.",
+        "Update fields of one scene. text = on-screen copy; spokenText = optional longer voiceover (null = inherit text). emphasis phrases must appear verbatim in text or spokenText. Pass null to clear visual/background/items/spokenText.",
       inputSchema: {
         sceneId: z.string().min(1),
         text: z.string().max(2000).optional(),
+        spokenText: z
+          .string()
+          .max(4000)
+          .nullable()
+          .optional()
+          .describe(
+            "Voice script. Null clears override so TTS uses text. Empty string is treated as no speech for that scene.",
+          ),
         templateId: z.string().optional(),
         emphasis: z.array(z.string()).optional(),
         visual: z.string().max(2048).nullable().optional(),
@@ -369,6 +405,13 @@ export function registerTools(server: McpServer): void {
           .nullable()
           .optional()
           .describe("Short music vibe hint (e.g. 'uplifting lo-fi'), used for auto music suggestions. Null clears it."),
+        selectedVoiceClipId: z
+          .string()
+          .nullable()
+          .optional()
+          .describe(
+            "In per_scene mode, select which SceneVoiceClip is active for this scene (null clears). Selecting a clip may trigger assemble.",
+          ),
       },
     },
     guard(async ({ sceneId, ...body }) =>
@@ -408,7 +451,7 @@ export function registerTools(server: McpServer): void {
         scriptStyle: scriptStyle
           .optional()
           .describe(
-            "'short' = punchy ~18 words/scene (default). 'detailed' = richer ~30-45 words/scene with a fuller story arc.",
+            "'short' = punchy on-screen text; voice inherits. 'detailed' = short on-screen + longer spokenText for TTS.",
           ),
       },
     },
@@ -421,10 +464,10 @@ export function registerTools(server: McpServer): void {
     "create_voice_take",
     {
       description:
-        "Start generating a voice take (narration) for a script with a chosen provider+voice. Set placeholder:true for silent timing without spending TTS credits. Server-side providers require a key configured in the website. This does NOT block until finished: it returns a jobId immediately — poll get_voice_job with it until status is 'done' (the finished take is included in that response) or 'error'.",
+        "Start a oneshot voice take (full-reel narration) for a script. Prefer this when voiceMode is oneshot. Set placeholder:true for silent timing without spending TTS credits. Server-side providers require a key in the website. Returns jobId immediately — poll get_voice_job until status is 'done' or 'error'. For per-scene clips use generate_scene_clips instead.",
       inputSchema: {
         scriptId: z.string().min(1),
-        providerId: z.enum(["cartesia", "elevenlabs"]).optional(),
+        providerId: serverVoiceProvider.optional(),
         voiceId: z.string().optional(),
         modelId: z.string().optional(),
         placeholder: z.boolean().optional(),
@@ -440,7 +483,7 @@ export function registerTools(server: McpServer): void {
     "get_voice_job",
     {
       description:
-        "Poll the status of a voice-generation job started by create_voice_take. status progresses queued -> synthesizing -> stitching -> done|error; scene/sceneCount give per-scene synthesis progress. The finished take is included once status is 'done'.",
+        "Poll a oneshot voice job from create_voice_take. status: queued -> synthesizing -> stitching -> done|error. The finished take is included when status is 'done'.",
       inputSchema: {
         scriptId: z.string().min(1),
         jobId: z.string().min(1),
@@ -448,6 +491,75 @@ export function registerTools(server: McpServer): void {
     },
     guard(async ({ scriptId, jobId }) =>
       ok(await apiGet(`/api/scripts/${encode(scriptId)}/takes/${encode(jobId)}`)),
+    ),
+  );
+
+  server.registerTool(
+    "list_scene_clips",
+    {
+      description:
+        "List per-scene voice clips for a script (per_scene voiceMode). Each scene can have multiple clip versions; selectedVoiceClipId on the scene marks the active one.",
+      inputSchema: { scriptId: z.string().min(1) },
+    },
+    guard(async ({ scriptId }) =>
+      ok(await apiGet(`/api/scripts/${encode(scriptId)}/scene-clips`)),
+    ),
+  );
+
+  server.registerTool(
+    "generate_scene_clips",
+    {
+      description:
+        "Generate a new voice clip for every scene in parallel, select each newest clip, and assemble a VoiceTake. Set the script voiceMode to per_scene first via update_script. Returns jobId — poll get_scene_clips_job until done. Use placeholder:true for silent holds without TTS credits.",
+      inputSchema: {
+        scriptId: z.string().min(1),
+        providerId: serverVoiceProvider.optional(),
+        voiceId: z.string().optional(),
+        modelId: z.string().optional(),
+        placeholder: z.boolean().optional(),
+        label: z.string().max(120).optional(),
+      },
+    },
+    guard(async ({ scriptId, ...body }) =>
+      ok(
+        await apiPost(`/api/scripts/${encode(scriptId)}/scene-clips`, body),
+      ),
+    ),
+  );
+
+  server.registerTool(
+    "get_scene_clips_job",
+    {
+      description:
+        "Poll a generate_scene_clips job. When status is 'done', response includes the assembled take and clips.",
+      inputSchema: {
+        scriptId: z.string().min(1),
+        jobId: z.string().min(1),
+      },
+    },
+    guard(async ({ scriptId, jobId }) =>
+      ok(
+        await apiGet(
+          `/api/scripts/${encode(scriptId)}/scene-clips/${encode(jobId)}`,
+        ),
+      ),
+    ),
+  );
+
+  server.registerTool(
+    "assemble_scene_clips",
+    {
+      description:
+        "Stitch currently selected per-scene clips into a VoiceTake (source=assembled). Call after selecting clips via update_scene.selectedVoiceClipId, or after generate_scene_clips finishes.",
+      inputSchema: { scriptId: z.string().min(1) },
+    },
+    guard(async ({ scriptId }) =>
+      ok(
+        await apiPost(
+          `/api/scripts/${encode(scriptId)}/scene-clips/assemble`,
+          {},
+        ),
+      ),
     ),
   );
 

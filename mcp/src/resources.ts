@@ -11,18 +11,22 @@ import { apiGet } from "./client.js";
 const AUTHORING_RULES = `# Reel Studio — scene authoring rules
 
 A reel is a vertical (or square/landscape) short video made of ordered **scenes**.
-Each scene has spoken **text**, a **templateId**, optional **emphasis** phrases,
-an optional **visual**, and an optional photo **background**.
+Each scene has on-screen **text**, optional **spokenText** for voiceover, a
+**templateId**, optional **emphasis** phrases, an optional **visual**, and an
+optional photo **background**.
 
-## Text
-- Plain, conversational English. No em-dashes. No corporate filler.
-- One or two short spoken sentences per scene — about **18 words max**.
+## Text vs spokenText
+- \`text\` — short on-screen copy (~14–18 words). Always required for the visual.
+- \`spokenText\` — optional longer narration. When null/omitted, TTS uses \`text\`.
+- With AI \`scriptStyle: "short"\`: only \`text\` (voice inherits).
+- With AI \`scriptStyle: "detailed"\`: short \`text\` + longer \`spokenText\` (~2–3×, ~30–55 words).
+- Plain conversational English. No em-dashes. No corporate filler.
 - Scene 1 must be a scroll-stopping hook (surprising fact, bold claim, problem, or question).
 - Every scene should create a curiosity gap pulling the viewer to the next.
 - The final scene should include a clear call to action.
 
 ## templateId (pick precisely)
-- **stat-reveal** — any scene with a number/stat/metric. REQUIRED: set \`visual\` to the number string (e.g. "73%", "10x", "$2B").
+- **stat-reveal** — any scene with a number/stat/metric. REQUIRED: set \`visual\` to the number string (e.g. "73%", "10x", "$2B"). Keep \`visual\` SHORT (under ~20 characters).
 - **icon-grid** — any scene listing 3+ tips/steps/items. REQUIRED: set \`visual\` to a bullet emoji (e.g. "✓", "→", "⚡") and put items in \`items\`.
 - **emoji-punch** — punchline, emotional beat, or reveal. REQUIRED: set \`visual\` to a fitting emoji (e.g. "🔥", "😱", "💡").
 - **quote-card** — quotes/testimonials. \`visual\` = speaker name (optional).
@@ -32,7 +36,7 @@ an optional **visual**, and an optional photo **background**.
 - DIVERSITY: a video with 5+ scenes should use at least 4 different templates.
 
 ## emphasis
-- 1–3 short phrases that appear **verbatim** inside that scene's text (used for on-screen highlight).
+- 1–3 short phrases that appear **verbatim** inside that scene's \`text\` or \`spokenText\` (used for on-screen highlight).
 
 ## background (optional)
 - \`{ type: "image" | "video", url, effect? }\`. Effect is a pan/zoom: ken-burns, pan-left, pan-right, pan-up, pan-down.
@@ -42,8 +46,18 @@ an optional **visual**, and an optional photo **background**.
 - \`mood\` — one of energetic, calm, dramatic, playful, inspiring, tech, nature. Drives a dynamic, on-brand animated background for scenes with no \`background\` image (instead of a plain gradient). Vary it to match each scene's emotional beat.
 - \`musicMood\` — 1–3 words describing the ideal background music vibe (e.g. "uplifting lo-fi", "tense cinematic"), used to auto-suggest a matching track.
 
+## Style + Energy (whole reel)
+- Set via \`ai_create_project\` (\`styleId\` / \`energy\`) or \`update_script\` after create.
+- Style: \`bold-hook\` | \`clean-story\` | \`teach-me\` | \`soft-brand\` (default brand kit is Coral Harbor).
+- Energy: \`calm\` | \`normal\` | \`high\` — controls motion intensity.
+
+## Voice modes
+- \`oneshot\` (default): \`create_voice_take\` → poll \`get_voice_job\`.
+- \`per_scene\`: \`update_script\` with \`voiceMode: "per_scene"\` → \`generate_scene_clips\` → poll \`get_scene_clips_job\` → optional \`assemble_scene_clips\` / \`update_scene.selectedVoiceClipId\`.
+- TTS always uses \`spokenText ?? text\` per scene.
+
 ## Script style
-- \`ai_create_project\` / \`ai_generate_scenes\` accept \`scriptStyle\`: "short" (punchy, ~18 words/scene, default) or "detailed" (~30-45 words/scene, fuller setup → context → conflict/insight → payoff story arc, more scenes allowed).
+- \`ai_create_project\` / \`ai_generate_scenes\` accept \`scriptStyle\`: "short" or "detailed" (see Text vs spokenText above).
 
 ## Building large storyboards incrementally
 - Models and single AI calls cap out around 20 scenes. To go bigger or stay current:
@@ -68,15 +82,23 @@ const SCENE_SCHEMA = {
     "emoji-punch",
   ],
   scene: {
-    text: "string, <= 2000 chars (spoken narration, ~18 words)",
+    text: "string, <= 2000 chars (on-screen copy, ~14-18 words)",
+    spokenText:
+      "string <= 4000 chars, or null to clear — longer voiceover; TTS uses spokenText ?? text",
     templateId: "one of templateIds",
-    emphasis: "string[] — phrases appearing verbatim in text",
-    visual: "string <= 2048 chars, or null to clear (emoji/stat/label)",
+    emphasis: "string[] — phrases appearing verbatim in text or spokenText",
+    visual: "string <= 2048 chars, or null to clear (emoji/stat/label; keep short)",
     background:
       "{ type: 'image'|'video', url: string<=2048, effect?: 'ken-burns'|'pan-left'|'pan-right'|'pan-up'|'pan-down', muted?: boolean } or null",
     items: "string[] (<=24, each <=280) for list/checklist templates, or null",
     mood: "one of energetic|calm|dramatic|playful|inspiring|tech|nature, or null — drives the dynamic background when there's no photo background",
     musicMood: "string <= 60 chars (e.g. 'uplifting lo-fi'), or null — music vibe hint for auto suggestions",
+    selectedVoiceClipId: "string or null — active SceneVoiceClip in per_scene mode",
+  },
+  script: {
+    styleId: ["bold-hook", "clean-story", "teach-me", "soft-brand"],
+    energy: ["calm", "normal", "high"],
+    voiceMode: ["oneshot", "per_scene"],
   },
   orientation: ["portrait", "landscape", "square"],
   scriptStyle: ["short", "detailed"],

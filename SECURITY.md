@@ -21,13 +21,16 @@ Please do not open a public issue for sensitive security reports.
 
 ## Pre-Commit Secret Scan
 
-A local git hook is provided at .githooks/pre-commit.
+Local git hooks live in `.githooks/` (`pre-commit` + `commit-msg`).
 
-Enable it once per clone:
+Enable once per clone:
 
-- git config core.hooksPath .githooks
+- `npm run prepare:hooks` (sets `git config core.hooksPath .githooks`)
 
-Then each commit will run npm run security:scan and block commits that appear to contain secrets.
+Then each commit will:
+
+- run `npm run security:scan` and block commits that appear to contain secrets
+- strip Cursor / cursoragent `Co-authored-by` trailers from the commit message
 
 ## Scope
 
