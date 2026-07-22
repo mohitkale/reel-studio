@@ -7,6 +7,13 @@ import { type ReelProps, coverFrames } from "./types";
 import type { BrandTokens } from "./tokens";
 import { getTemplateComponent } from "./registry";
 import { Stage, StageOptionsProvider } from "./components/stage";
+import { SceneTransition } from "./components/scene-transition";
+import { VisualStyleProvider } from "./components/visual-style-context";
+import {
+  DEFAULT_ENERGY_ID,
+  DEFAULT_STYLE_ID,
+  getStyleChrome,
+} from "./visual-style";
 
 /**
  * Static cover/thumbnail frame shown at the very start of the reel. The image is
@@ -41,10 +48,16 @@ export const ReelComposition = React.memo(function ReelComposition({
   coverUrl,
   hideProgressBar,
   previewQuality = "standard",
+  styleId = DEFAULT_STYLE_ID,
+  energy = DEFAULT_ENERGY_ID,
 }: ReelProps) {
   const { fps } = useVideoConfig();
   const sceneById = new Map(scenes.map((s) => [s.id, s]));
   const cover = coverFrames(fps, Boolean(coverUrl));
+  const chrome = getStyleChrome(styleId);
+  // Explicit script hide wins; otherwise Style may prefer a cleaner chrome.
+  const showProgressBar =
+    hideProgressBar === true ? false : !chrome.preferHideProgressBar;
 
   // Background music level (0-1). When there's a voiceover, duck the music while
   // a scene is being spoken so narration stays clear; lift it in the gaps.
@@ -57,60 +70,68 @@ export const ReelComposition = React.memo(function ReelComposition({
     audioUrl && isVoiced(frame) ? baseMusic * 0.35 : baseMusic;
 
   return (
-    <StageOptionsProvider showProgressBar={!hideProgressBar} quality={previewQuality}>
-    <AbsoluteFill
-      style={{
-        backgroundColor: tokens.background,
-        fontFamily: tokens.fontFamily,
-      }}
-    >
-      {coverUrl ? (
-        <Sequence durationInFrames={cover} name="Cover">
-          <CoverFrame url={coverUrl} tokens={tokens} />
-        </Sequence>
-      ) : null}
-
-      {/* Everything after the cover is offset by `cover` via this wrapping Sequence. */}
-      <Sequence from={cover} name="Reel">
-        {timeline.map((beat, i) => {
-          const scene = sceneById.get(beat.sceneId);
-          if (!scene) return null;
-          const Template = getTemplateComponent(scene.templateId);
-          // Hold each scene until the next one starts so the inter-beat audio gap
-          // never shows a black frame. The last scene uses its own duration.
-          const next = timeline[i + 1];
-          const end = next
-            ? next.startFrame
-            : beat.startFrame + beat.durationFrames;
-          const duration = Math.max(1, end - beat.startFrame);
-          return (
-            <Sequence
-              key={beat.sceneId}
-              from={beat.startFrame}
-              durationInFrames={duration}
-              name={scene.text.slice(0, 24) || "Scene"}
-            >
-              {scene.hideText ? (
-                // Text hidden: show just the (image/video) background + brand chrome.
-                <Stage
-                  tokens={tokens}
-                  background={scene.background}
-                  mood={scene.mood}
-                  treatmentSeed={scene.order}
-                  durationInFrames={duration}
-                />
-              ) : (
-                <Template scene={scene} tokens={tokens} durationInFrames={duration} />
-              )}
+    <VisualStyleProvider styleId={styleId} energy={energy} fps={fps}>
+      <StageOptionsProvider showProgressBar={showProgressBar} quality={previewQuality}>
+        <AbsoluteFill
+          style={{
+            backgroundColor: tokens.background,
+            fontFamily: tokens.fontFamily,
+          }}
+        >
+          {coverUrl ? (
+            <Sequence durationInFrames={cover} name="Cover">
+              <CoverFrame url={coverUrl} tokens={tokens} />
             </Sequence>
-          );
-        })}
-        {audioUrl ? <Audio src={audioUrl} /> : null}
-        {musicUrl && baseMusic > 0 ? (
-          <Audio src={musicUrl} loop volume={musicAt} />
-        ) : null}
-      </Sequence>
-    </AbsoluteFill>
-    </StageOptionsProvider>
+          ) : null}
+
+          {/* Everything after the cover is offset by `cover` via this wrapping Sequence. */}
+          <Sequence from={cover} name="Reel">
+            {timeline.map((beat, i) => {
+              const scene = sceneById.get(beat.sceneId);
+              if (!scene) return null;
+              const Template = getTemplateComponent(scene.templateId);
+              // Hold each scene until the next one starts so the inter-beat audio gap
+              // never shows a black frame. The last scene uses its own duration.
+              const next = timeline[i + 1];
+              const end = next
+                ? next.startFrame
+                : beat.startFrame + beat.durationFrames;
+              const duration = Math.max(1, end - beat.startFrame);
+              return (
+                <Sequence
+                  key={beat.sceneId}
+                  from={beat.startFrame}
+                  durationInFrames={duration}
+                  name={scene.text.slice(0, 24) || "Scene"}
+                >
+                  <SceneTransition tokens={tokens}>
+                    {scene.hideText ? (
+                      // Text hidden: show just the (image/video) background + brand chrome.
+                      <Stage
+                        tokens={tokens}
+                        background={scene.background}
+                        mood={scene.mood}
+                        treatmentSeed={scene.order}
+                        durationInFrames={duration}
+                      />
+                    ) : (
+                      <Template
+                        scene={scene}
+                        tokens={tokens}
+                        durationInFrames={duration}
+                      />
+                    )}
+                  </SceneTransition>
+                </Sequence>
+              );
+            })}
+            {audioUrl ? <Audio src={audioUrl} /> : null}
+            {musicUrl && baseMusic > 0 ? (
+              <Audio src={musicUrl} loop volume={musicAt} />
+            ) : null}
+          </Sequence>
+        </AbsoluteFill>
+      </StageOptionsProvider>
+    </VisualStyleProvider>
   );
 });

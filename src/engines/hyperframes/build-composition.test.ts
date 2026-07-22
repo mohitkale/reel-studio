@@ -32,10 +32,15 @@ describe("buildHyperframesCompositionHtml", () => {
       height: 1920,
       fps: 30,
       tokens: defaultBrandTokens,
+      styleId: "bold-hook",
+      energy: "high",
     });
 
     expect(html).toContain('data-composition-id="reel"');
     expect(html).toContain('data-scene-id="s1"');
+    expect(html).toContain('data-style="bold-hook"');
+    expect(html).toContain('data-energy="high"');
+    expect(html).toContain("style-accent-flash");
     expect(html).toContain("tpl-opener");
     expect(html).toContain("tpl-cta");
     expect(html).toContain("window.__reelSeek");

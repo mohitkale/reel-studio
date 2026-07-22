@@ -30,6 +30,8 @@ export async function GET(
         workingOn: job.workingOn ?? null,
         error: job.error ?? null,
         take: job.take ?? null,
+        clip: job.clip ?? null,
+        clips: job.clips ?? null,
       },
     });
   } catch (e) {

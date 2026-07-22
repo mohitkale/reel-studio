@@ -28,12 +28,13 @@ const bodySchema = z.object({
 /** Build the Scene.layoutJson payload from a resolved background + AI mood hints. */
 function layoutJsonFor(
   background: SceneBackground | undefined,
-  scene: { mood?: string; musicMood?: string },
+  scene: { mood?: string; musicMood?: string; items?: string[] },
 ): string | null {
   const config: Record<string, unknown> = {};
   if (background) config.background = background;
   if (scene.mood) config.mood = scene.mood;
   if (scene.musicMood) config.musicMood = scene.musicMood;
+  if (scene.items?.length) config.items = scene.items;
   return Object.keys(config).length ? JSON.stringify(config) : null;
 }
 
@@ -65,7 +66,13 @@ export async function POST(
     }
 
     const existingContext = script.scenes
-      .map((s, i) => `Scene ${i + 1}: ${s.text}`)
+      .map((s, i) => {
+        const spoken =
+          s.spokenText && s.spokenText !== s.text
+            ? ` | voice: ${s.spokenText}`
+            : "";
+        return `Scene ${i + 1}: ${s.text}${spoken}`;
+      })
       .join("\n");
 
     const orientation = orientationFromDims(script.width, script.height);
@@ -92,6 +99,7 @@ export async function POST(
           order,
           templateId: s.templateId,
           text: s.text,
+          spokenText: s.spokenText ?? null,
           emphasis: s.emphasis.length ? JSON.stringify(s.emphasis) : null,
           visual: s.visual ?? null,
           layoutJson: layoutJsonFor(backgrounds[order], s),
@@ -105,6 +113,7 @@ export async function POST(
           order: startOrder + i,
           templateId: s.templateId,
           text: s.text,
+          spokenText: s.spokenText ?? null,
           emphasis: s.emphasis.length ? JSON.stringify(s.emphasis) : null,
           visual: s.visual ?? null,
           layoutJson: layoutJsonFor(backgrounds[i], s),

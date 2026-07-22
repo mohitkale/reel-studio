@@ -49,4 +49,37 @@ describe("scenePlanSchema markdown sanitization", () => {
     expect(plan.projectName).toBe("My Project");
     expect(plan.scriptName).toBe("Episode One");
   });
+
+  it("truncates oversized visual instead of rejecting the plan", () => {
+    const long = "A".repeat(120);
+    const plan = scenePlanSchema.parse({
+      projectName: "Demo",
+      scriptName: "Ep",
+      scenes: [{ ...base, visual: long }],
+    });
+    expect(plan.scenes[0].visual).toHaveLength(64);
+  });
+
+  it("keeps a longer spokenText override and drops it when identical to text", () => {
+    const withVoice = scenePlanSchema.parse({
+      projectName: "Demo",
+      scriptName: "Ep",
+      scenes: [
+        {
+          ...base,
+          text: "Stop scrolling past this tip.",
+          spokenText:
+            "Stop scrolling past this tip. Most people ignore the one habit that actually compounds — here is the simple version.",
+        },
+      ],
+    });
+    expect(withVoice.scenes[0].spokenText).toContain("compounds");
+
+    const same = scenePlanSchema.parse({
+      projectName: "Demo",
+      scriptName: "Ep",
+      scenes: [{ ...base, text: "Same line", spokenText: "Same line" }],
+    });
+    expect(same.scenes[0].spokenText).toBeUndefined();
+  });
 });

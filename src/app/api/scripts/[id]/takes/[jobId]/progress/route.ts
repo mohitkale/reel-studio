@@ -65,6 +65,8 @@ function toPayload(job: VoiceJob) {
     workingOn: job.workingOn ?? null,
     error: job.error ?? null,
     take: job.take ?? null,
+    clip: job.clip ?? null,
+    clips: job.clips ?? null,
   };
 }
 

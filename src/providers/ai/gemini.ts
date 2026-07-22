@@ -19,6 +19,14 @@ const RESPONSE_SCHEMA = {
   properties: {
     projectName: { type: "string" },
     scriptName: { type: "string" },
+    styleId: {
+      type: "string",
+      enum: ["bold-hook", "clean-story", "teach-me", "soft-brand"],
+    },
+    energy: {
+      type: "string",
+      enum: ["calm", "normal", "high"],
+    },
     scenes: {
       // No maxItems here: Gemini's structured-output engine multiplies nested
       // array bounds by per-item enum sizes into a "states" budget, and a bound
@@ -29,6 +37,7 @@ const RESPONSE_SCHEMA = {
         type: "object",
         properties: {
           text: { type: "string" },
+          spokenText: { type: "string" },
           templateId: {
             type: "string",
             enum: [
@@ -43,6 +52,7 @@ const RESPONSE_SCHEMA = {
           },
           emphasis: { type: "array", items: { type: "string" } },
           visual: { type: "string" },
+          items: { type: "array", items: { type: "string" } },
           backgroundQuery: { type: "string" },
           // Plain string (not enum) to keep Gemini's schema state budget small;
           // aiSceneSchema validates/normalizes it to a real pan effect.

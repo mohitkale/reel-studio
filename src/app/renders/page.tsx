@@ -273,8 +273,14 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
                   </button>
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">
-                {new Date(render.createdAt).toLocaleString()}
+              <p className="truncate whitespace-nowrap text-xs text-muted-foreground">
+                {new Date(render.createdAt).toLocaleString(undefined, {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </p>
             </div>
             {!renaming && (

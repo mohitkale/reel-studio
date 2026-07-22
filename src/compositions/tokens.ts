@@ -1,4 +1,5 @@
 import { interFontFamily } from "./fonts";
+import { CORAL_HARBOR_PALETTE } from "@/lib/brand-defaults";
 
 /**
  * Design tokens for the video templates. Concrete hex values (canvas and WebGL
@@ -18,15 +19,10 @@ export interface BrandTokens {
   radius: number;
 }
 
+/** Coral Harbor — Airbnb-inspired default for new content. */
 export const defaultBrandTokens: BrandTokens = {
-  background: "#0D256F",        // Deep blue primary background
-  backgroundAccent: "#1A3490",  // Lighter navy for gradient accents
-  foreground: "#FFFFFF",
-  muted: "#F6ECDB",             // Warm muted tone
-  accent: "#FF5900",            // Primary accent orange
-  accentSecondary: "#FFA000",   // Secondary accent amber
-  accentForeground: "#FFFFFF",
-  handle: "@northstarstudio",
+  ...CORAL_HARBOR_PALETTE,
+  handle: "@yourbrand",
   fontFamily: `${interFontFamily}, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`,
   radius: 20,
 };

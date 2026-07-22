@@ -2,6 +2,7 @@ import type { SceneDTO, SceneBackground } from "@/lib/dto";
 import { defaultTemplateIdForEngine } from "@/engines/registry";
 import { isVideoEngineId, DEFAULT_VIDEO_ENGINE } from "@/engines/types";
 import { prisma } from "@/library/db";
+import { ProviderError } from "@/providers/voice/types";
 import { sceneConfigSchema, parseJsonColumn } from "../schemas";
 import { toSceneDTO } from "./map";
 
@@ -38,6 +39,8 @@ export async function updateScene(
   id: string,
   data: {
     text?: string;
+    /** null clears override (voice uses display text again). */
+    spokenText?: string | null;
     templateId?: string;
     emphasis?: string[];
     visual?: string | null;
@@ -49,6 +52,8 @@ export async function updateScene(
     mood?: string | null;
     /** Free-text music vibe hint; null clears it. */
     musicMood?: string | null;
+    /** Active clip in per_scene mode; null clears selection. */
+    selectedVoiceClipId?: string | null;
   },
 ): Promise<SceneDTO> {
   // background/items/mood/musicMood all live together in the layoutJson config
@@ -84,16 +89,32 @@ export async function updateScene(
     layoutJson = Object.keys(config).length ? JSON.stringify(config) : "";
   }
 
+  if (data.selectedVoiceClipId !== undefined && data.selectedVoiceClipId !== null) {
+    const clip = await prisma.sceneVoiceClip.findUnique({
+      where: { id: data.selectedVoiceClipId },
+      select: { sceneId: true },
+    });
+    if (!clip || clip.sceneId !== id) {
+      throw new ProviderError("Voice clip does not belong to this scene", 400);
+    }
+  }
+
   const scene = await prisma.scene.update({
     where: { id },
     data: {
       text: data.text,
+      spokenText:
+        data.spokenText !== undefined ? data.spokenText : undefined,
       templateId: data.templateId,
       emphasis:
         data.emphasis !== undefined ? JSON.stringify(data.emphasis) : undefined,
       visual: data.visual !== undefined ? (data.visual ?? null) : undefined,
       layoutJson: layoutJson !== undefined ? (layoutJson || null) : undefined,
       hideText: data.hideText !== undefined ? data.hideText : undefined,
+      selectedVoiceClipId:
+        data.selectedVoiceClipId !== undefined
+          ? data.selectedVoiceClipId
+          : undefined,
     },
   });
   return toSceneDTO(scene);

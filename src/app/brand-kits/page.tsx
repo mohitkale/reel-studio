@@ -24,11 +24,13 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { HintTooltip } from "@/components/ui/hint-tooltip";
 
 const COLOR_FIELDS: { key: keyof BrandTokens; label: string }[] = [
   { key: "background", label: "Background" },
@@ -256,6 +258,7 @@ export default function BrandKitsPage() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editingKit, setEditingKit] = React.useState<BrandKitDTO | null>(null);
   const [deleteTarget, setDeleteTarget] = React.useState<BrandKitDTO | null>(null);
+  const [helpOpen, setHelpOpen] = React.useState(false);
 
   function openNew() {
     setEditingKit(null);
@@ -321,12 +324,19 @@ export default function BrandKitsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Brand Kits"
-        description="Create color palettes and style presets. Star a kit to make it the default for all projects."
+        description="Your colors and @handle on every video. Star a kit to apply it to all new projects automatically."
         actions={
-          <Button size="sm" onClick={openNew}>
-            <Plus className="size-3.5" />
-            New kit
-          </Button>
+          <div className="flex items-center gap-2">
+            <HintTooltip label="What is a brand kit?" side="bottom">
+              <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)}>
+                What is this?
+              </Button>
+            </HintTooltip>
+            <Button size="sm" onClick={openNew}>
+              <Plus className="size-3.5" />
+              New kit
+            </Button>
+          </div>
         }
       />
 
@@ -385,6 +395,34 @@ export default function BrandKitsPage() {
         }}
         isPending={deleteKit.isPending}
       />
+
+      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>What is a brand kit?</DialogTitle>
+            <DialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>
+                  A brand kit is the color palette and @handle that appear on your
+                  videos — accents, backgrounds, and the small brand mark at the bottom.
+                </p>
+                <p>
+                  Star a kit to make it the <strong className="text-foreground">Default</strong>.
+                  Every new project (including Create with AI) will use that kit
+                  automatically. You can still switch kits per project in the editor.
+                </p>
+                <p>
+                  New installs start with <strong className="text-foreground">Coral Harbor</strong> —
+                  a dark, coral-and-teal look inspired by Airbnb, tuned for short-form video.
+                </p>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button size="sm" onClick={() => setHelpOpen(false)}>Got it</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

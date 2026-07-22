@@ -11,6 +11,7 @@ import {
   type ReelScene,
 } from "@/compositions/types";
 import { defaultBrandTokens, type BrandTokens } from "@/compositions/tokens";
+import type { EnergyId, StyleId } from "@/compositions/visual-style";
 
 interface ReelPlayerProps {
   scenes: ReelScene[];
@@ -30,6 +31,8 @@ interface ReelPlayerProps {
   hideProgressBar?: boolean;
   /** "draft" trims expensive preview effects for smoother scrubbing. */
   previewQuality?: "standard" | "draft";
+  styleId?: StyleId;
+  energy?: EnergyId;
 }
 
 /** Live Remotion preview of the reel, driven by the scene templates + timeline.
@@ -54,6 +57,8 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
       coverUrl,
       hideProgressBar,
       previewQuality = "standard",
+      styleId,
+      energy,
     },
     ref,
   ) {
@@ -72,6 +77,8 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
         fps,
         hideProgressBar,
         previewQuality,
+        styleId,
+        energy,
       }),
       [
         scenes,
@@ -86,6 +93,8 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
         fps,
         hideProgressBar,
         previewQuality,
+        styleId,
+        energy,
       ],
     );
 

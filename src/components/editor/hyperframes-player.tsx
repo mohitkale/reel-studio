@@ -10,6 +10,7 @@ import {
   type ReelScene,
 } from "@/compositions/types";
 import { defaultBrandTokens, type BrandTokens } from "@/compositions/tokens";
+import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-composition";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,8 @@ interface HyperFramesPlayerProps {
   coverUrl?: string;
   hideProgressBar?: boolean;
   previewQuality?: "standard" | "draft";
+  styleId?: StyleId;
+  energy?: EnergyId;
 }
 
 function formatClock(seconds: number): string {
@@ -97,6 +100,8 @@ export const HyperFramesPlayer = React.forwardRef<
     tokens,
     coverUrl,
     hideProgressBar,
+    styleId,
+    energy,
   },
   ref,
 ) {
@@ -132,6 +137,8 @@ export const HyperFramesPlayer = React.forwardRef<
       height,
       fps,
       hideProgressBar,
+      styleId,
+      energy,
     });
   }, [
     scenes,
@@ -145,6 +152,8 @@ export const HyperFramesPlayer = React.forwardRef<
     height,
     fps,
     hideProgressBar,
+    styleId,
+    energy,
   ]);
 
   const seekIframe = React.useCallback((seconds: number) => {

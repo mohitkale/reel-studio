@@ -1,0 +1,14 @@
+#!/bin/sh
+# Strip Cursor/agent Co-authored-by trailers so commits stay solo-authored.
+# Cursor may re-inject these even when the agent omits them from the message.
+MSG_FILE="$1"
+if [ ! -f "$MSG_FILE" ]; then
+  exit 0
+fi
+
+tmp=$(mktemp)
+grep -viE '^[[:space:]]*Co-authored-by:[[:space:]].*(Cursor|cursoragent)' "$MSG_FILE" > "$tmp" || true
+# Trim trailing blank lines
+sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' "$tmp" > "$MSG_FILE"
+rm -f "$tmp"
+exit 0

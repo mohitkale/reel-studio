@@ -23,6 +23,7 @@ import {
   useUndoScript,
   useSetScriptHideText,
   useSetScriptHideProgressBar,
+  useSetScriptVisualStyle,
 } from "@/hooks/script";
 import type { SceneDTO } from "@/lib/dto";
 import { useCreateRender, useRenderProgress } from "@/hooks/renders";
@@ -30,8 +31,15 @@ import { useBrandKits, useAssignBrandKit } from "@/hooks/brandkits";
 import { useHotkey } from "@/hooks/use-hotkeys";
 import { normalizeTemplateIdForEngine } from "@/engines/registry";
 import { type ReelScene, coverFrames } from "@/compositions/types";
+import {
+  ENERGY_META,
+  STYLE_META,
+  type EnergyId,
+  type StyleId,
+} from "@/compositions/visual-style";
 import { estimateTimeline } from "@/lib/preview-timeline";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
+import { resolveSpokenText } from "@/lib/spoken-text";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -67,6 +75,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   const undoScript = useUndoScript(scriptId);
   const setHideText = useSetScriptHideText(scriptId);
   const setHideProgressBar = useSetScriptHideProgressBar(scriptId);
+  const setVisualStyle = useSetScriptVisualStyle(scriptId);
   const { data: brandKits = [] } = useBrandKits();
   const assignBrandKit = useAssignBrandKit();
 
@@ -176,7 +185,10 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   // never invalidate it). Auto-pick the most recent *usable* take; a take whose
   // script changed falls back to estimated, silent timing instead of producing a
   // broken, desynced timeline.
-  const sceneTexts = scenes.map((s) => ({ id: s.id, text: s.text }));
+  const sceneTexts = scenes.map((s) => ({
+    id: s.id,
+    text: resolveSpokenText(s),
+  }));
   const allTakes = script?.takes ?? [];
   const usableTakes = allTakes.filter(
     (t) => resolveReelTimeline(sceneTexts, t, t.fps).takeUsable,
@@ -267,7 +279,10 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   const sceneDuration =
     sceneBeat?.durationFrames ??
     (selectedScene
-      ? estimateTimeline([{ id: selectedScene.id, text: selectedScene.text }], fps)
+      ? estimateTimeline(
+          [{ id: selectedScene.id, text: resolveSpokenText(selectedScene) }],
+          fps,
+        )
           .totalFrames
       : 1);
 
@@ -352,7 +367,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
         </div>
         <div className="flex items-center gap-2">
           <HintTooltip
-            label="Choose a brand kit for colors, handle, and fonts. Leave on Default to use the starred kit."
+            label="Brand kit: colors and @handle on every scene. Star a kit on Brand Kits to make it the default for new projects."
             side="bottom"
           >
             <div className="w-44">
@@ -375,6 +390,44 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                 ]}
                 placeholder="Default kit"
                 searchPlaceholder="Search kits…"
+              />
+            </div>
+          </HintTooltip>
+          <HintTooltip
+            label="Style: the overall look of this video (Bold Hook, Clean Story, Teach Me, Soft Brand)."
+            side="bottom"
+          >
+            <div className="w-36">
+              <Combobox
+                value={script.styleId}
+                onChange={(v) =>
+                  setVisualStyle.mutate({ styleId: v as StyleId })
+                }
+                options={STYLE_META.map((s) => ({
+                  value: s.id,
+                  label: s.label,
+                }))}
+                placeholder="Style"
+                searchPlaceholder="Search styles…"
+              />
+            </div>
+          </HintTooltip>
+          <HintTooltip
+            label="Energy: how fast and punchy cuts and text feel (Calm, Normal, High)."
+            side="bottom"
+          >
+            <div className="w-28">
+              <Combobox
+                value={script.energy}
+                onChange={(v) =>
+                  setVisualStyle.mutate({ energy: v as EnergyId })
+                }
+                options={ENERGY_META.map((e) => ({
+                  value: e.id,
+                  label: e.label,
+                }))}
+                placeholder="Energy"
+                searchPlaceholder="Search…"
               />
             </div>
           </HintTooltip>
@@ -481,7 +534,10 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             {previewQuality === "draft" ? "Draft preview" : "Full preview"}
           </Button>
           </HintTooltip>
-          <HintTooltip label="Edit scenes as JSON — templates, text, backgrounds, and moods" side="bottom">
+          <HintTooltip
+            label="Edit scenes as JSON, load a sample, or copy a prompt for ChatGPT/Claude. Style and Energy stay in the editor toolbar."
+            side="bottom"
+          >
           <Button
             size="sm"
             variant="outline"
@@ -642,6 +698,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     tokens={script.brandTokens}
                     hideProgressBar={script.hideProgressBar}
                     previewQuality={previewQuality}
+                    styleId={script.styleId}
+                    energy={script.energy}
                   />
                 ) : (
                   <EnginePlayer
@@ -653,6 +711,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     width={script.width}
                     height={script.height}
                     tokens={script.brandTokens}
+                    styleId={script.styleId}
+                    energy={script.energy}
                   />
                 )}
                 <p className="mt-3 text-center text-xs text-muted-foreground">
@@ -678,6 +738,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                   coverUrl={script.coverUrl ?? undefined}
                   hideProgressBar={script.hideProgressBar}
                   previewQuality={previewQuality}
+                  styleId={script.styleId}
+                  energy={script.energy}
                 />
                 <p className="mt-3 text-center text-xs text-muted-foreground">
                   {takeUsable
@@ -720,11 +782,15 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
         <CardContent className="p-4">
           <VoiceoverPanel
             scriptId={scriptId}
-            scenes={scenes.map((s) => ({ id: s.id, text: s.text }))}
+            scenes={scenes}
             takes={script.takes}
+            voiceClips={script.voiceClips ?? []}
+            voiceMode={script.voiceMode ?? "oneshot"}
             selectedTakeId={effectiveTakeId}
+            selectedSceneId={selectedSceneId}
             onSelectTake={selectTake}
             onClearTake={clearTake}
+            onSelectScene={setSelectedSceneId}
             hasScenes={scenes.length > 0}
           />
         </CardContent>

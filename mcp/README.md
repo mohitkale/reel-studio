@@ -44,17 +44,28 @@ touches the database directly. By design it can do everything an editor can
 ## Tools
 
 - **Read:** `list_projects`, `list_video_engines`, `get_script`, `list_takes`,
-  `get_captions`, `list_renders`, `get_render`, `list_voice_providers`,
-  `list_voices`, `list_voice_models`, `list_ai_providers`
+  `list_scene_clips`, `get_captions`, `list_renders`, `get_render`,
+  `list_voice_providers`, `list_voices`, `list_voice_models`, `list_ai_providers`
 - **Create / edit:** `create_project`, `ai_create_project`, `assign_brand_kit`,
   `update_script`, `set_music`, `add_scene`, `update_scene`, `reorder_scenes`,
-  `ai_generate_scenes`, `create_voice_take`, `rename_take`, `rename_render`
+  `ai_generate_scenes`, `create_voice_take`, `get_voice_job`,
+  `generate_scene_clips`, `get_scene_clips_job`, `assemble_scene_clips`,
+  `rename_take`, `rename_render`
 - **Render (human-gated):** `request_render`, `download_render`
 
 `create_project` / `ai_create_project` accept optional `videoEngine`
 (`remotion` | `hyperframes`, default `remotion`). Engine is fixed at creation.
 Call `list_video_engines` first to see each engine’s template catalog
 (Remotion vs `hf-*` HyperFrames templates).
+
+### Voice: oneshot vs per-scene
+
+| Mode | How to set | Generate audio |
+| --- | --- | --- |
+| `oneshot` (default) | omit or `update_script({ voiceMode: "oneshot" })` | `create_voice_take` → `get_voice_job` |
+| `per_scene` | `update_script({ voiceMode: "per_scene" })` | `generate_scene_clips` → `get_scene_clips_job` → optional `assemble_scene_clips` |
+
+TTS always uses each scene’s `spokenText ?? text`.
 
 ## Resources
 
@@ -70,9 +81,72 @@ Call `list_video_engines` first to see each engine’s template catalog
    (pass `videoEngine: "hyperframes"` when you want the Apache-2.0 HTML engine).
 2. `ai_generate_scenes` with mode `append` (or `add_scene` / `update_scene`) to
    extend the storyboard in parts — using your own web search to add current facts.
-3. `create_voice_take` to add narration.
+3. Add narration (oneshot **or** per-scene — see examples below).
 4. `request_render` → ask the user to approve in the web app → poll `get_render`
    → `download_render`.
+
+## Examples
+
+### AI project with Detailed voice scripts + Style/Energy
+
+```json
+{
+  "providerId": "gemini",
+  "mode": "idea",
+  "brief": "3 habits that compound quietly for creators",
+  "sceneCount": 6,
+  "scriptStyle": "detailed",
+  "styleId": "bold-hook",
+  "energy": "normal",
+  "videoEngine": "remotion"
+}
+```
+
+`scriptStyle: "detailed"` produces short on-screen `text` plus longer `spokenText`
+for narration. `"short"` keeps a single punchy line (voice inherits `text`).
+
+### Override a scene’s voice script
+
+```json
+{
+  "sceneId": "<id>",
+  "text": "Stop scrolling past this tip.",
+  "spokenText": "Stop scrolling past this tip. Most people ignore the one habit that actually compounds — here is the simple version."
+}
+```
+
+Pass `"spokenText": null` to clear the override so TTS uses `text` again.
+
+### Switch to per-scene voice clips
+
+```json
+{ "scriptId": "<id>", "voiceMode": "per_scene" }
+```
+
+Then generate all clips (server providers: `cartesia` | `elevenlabs` | `voiceforge`):
+
+```json
+{
+  "scriptId": "<id>",
+  "providerId": "elevenlabs",
+  "voiceId": "<voice>",
+  "placeholder": false
+}
+```
+
+Poll `get_scene_clips_job` with the returned `jobId` until `status` is `done`.
+To re-stitch after changing `selectedVoiceClipId` on a scene, call
+`assemble_scene_clips`.
+
+### Set Style / Energy on an existing script
+
+```json
+{
+  "scriptId": "<id>",
+  "styleId": "clean-story",
+  "energy": "calm"
+}
+```
 
 ## Licensing
 

@@ -1,4 +1,4 @@
-import { randomUUID, createHash } from "node:crypto";
+import { randomUUID } from "node:crypto";
 
 import type { VoiceTakeDTO } from "@/lib/dto";
 import {
@@ -18,6 +18,12 @@ import {
 import { prisma } from "@/library/db";
 import { getAssetStore } from "@/library/storage";
 import { createTake } from "@/library/repositories/takes";
+import {
+  getCachedBeatWav,
+  setCachedBeatWav,
+  type SceneAudioCacheKey,
+} from "@/library/scene-audio-cache";
+import { resolveSpokenText } from "@/lib/spoken-text";
 
 /** Reported as scenes finish synthesizing (cache hit or fresh call) or when stitching starts. */
 export type TakeProgress =
@@ -36,73 +42,6 @@ export interface GenerateTakeInput {
 }
 
 const DEFAULT_SYNTH_CONCURRENCY = 4;
-
-function hashText(text: string): string {
-  return createHash("sha1").update(text).digest("hex");
-}
-
-interface CacheKeyParts {
-  sceneId: string;
-  providerId: string;
-  voiceId: string;
-  modelId?: string;
-  text: string;
-}
-
-/** Best-effort scene-audio cache lookup (see SceneAudioBeat in schema.prisma). */
-async function getCachedBeatWav(parts: CacheKeyParts): Promise<Buffer | null> {
-  try {
-    const row = await prisma.sceneAudioBeat.findUnique({
-      where: {
-        sceneId_providerId_voiceId_modelId_textHash: {
-          sceneId: parts.sceneId,
-          providerId: parts.providerId,
-          voiceId: parts.voiceId,
-          modelId: parts.modelId ?? "",
-          textHash: hashText(parts.text),
-        },
-      },
-    });
-    if (!row) return null;
-    return await getAssetStore().get(row.audioPath);
-  } catch {
-    return null; // cache miss on any error (missing row, deleted file, etc.)
-  }
-}
-
-/** Best-effort scene-audio cache write; failures never fail the generation. */
-async function setCachedBeatWav(
-  parts: CacheKeyParts & { scriptId: string },
-  wav: Buffer,
-): Promise<void> {
-  try {
-    const key = `scene-audio-cache/${parts.sceneId}-${randomUUID()}.wav`;
-    await getAssetStore().put(key, wav);
-    await prisma.sceneAudioBeat.upsert({
-      where: {
-        sceneId_providerId_voiceId_modelId_textHash: {
-          sceneId: parts.sceneId,
-          providerId: parts.providerId,
-          voiceId: parts.voiceId,
-          modelId: parts.modelId ?? "",
-          textHash: hashText(parts.text),
-        },
-      },
-      create: {
-        scriptId: parts.scriptId,
-        sceneId: parts.sceneId,
-        providerId: parts.providerId,
-        voiceId: parts.voiceId,
-        modelId: parts.modelId ?? "",
-        textHash: hashText(parts.text),
-        audioPath: key,
-      },
-      update: { audioPath: key },
-    });
-  } catch {
-    // Non-fatal: worst case, this scene just gets re-synthesized next time.
-  }
-}
 
 /**
  * Synthesize every scene's audio with a bounded-concurrency worker pool
@@ -126,7 +65,7 @@ async function synthesizeScenesConcurrently(
     while (cursor < scenes.length) {
       const i = cursor++;
       const scene = scenes[i];
-      const cacheParts: CacheKeyParts = {
+      const cacheParts: SceneAudioCacheKey = {
         sceneId: scene.id,
         providerId: ctx.providerId,
         voiceId: ctx.voiceId,
@@ -180,10 +119,11 @@ export async function generateTake(
   if (input.placeholder) {
     input.onProgress?.({ phase: "synthesizing", scene: 0, sceneCount: script.scenes.length });
     for (const scene of script.scenes) {
+      const spoken = resolveSpokenText(scene);
       beats.push({
         sceneId: scene.id,
-        text: scene.text,
-        wav: makeSilentWav(estimateSpeechSeconds(scene.text)),
+        text: spoken,
+        wav: makeSilentWav(estimateSpeechSeconds(spoken)),
       });
     }
     label = label ?? "Placeholder (silent)";
@@ -212,7 +152,7 @@ export async function generateTake(
     const sceneCount = script.scenes.length;
     input.onProgress?.({ phase: "synthesizing", scene: 0, sceneCount });
     const synthesized = await synthesizeScenesConcurrently(
-      script.scenes.map((s) => ({ id: s.id, text: s.text })),
+      script.scenes.map((s) => ({ id: s.id, text: resolveSpokenText(s) })),
       {
         scriptId: input.scriptId,
         providerId: input.providerId,
@@ -304,7 +244,7 @@ export async function createTakeFromBeats(
     }
     // Reject corrupt or non-PCM uploads before they reach storage.
     parseWav(wav);
-    beats.push({ sceneId: scene.id, text: scene.text, wav });
+    beats.push({ sceneId: scene.id, text: resolveSpokenText(scene), wav });
   }
 
   const stitched = stitchBeats(beats, script.fps);

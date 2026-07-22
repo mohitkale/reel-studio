@@ -2,6 +2,7 @@
 
 import type { BrandTokens } from "@/compositions/tokens";
 import type { SceneBackground } from "@/compositions/types";
+import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { VideoEngineId } from "@/engines/types";
 
 export type { SceneBackground };
@@ -14,12 +15,21 @@ export interface BeatTimingDTO {
   text: string;
 }
 
+export type VoiceMode = "oneshot" | "per_scene";
+export type VoiceTakeSource = "oneshot" | "assembled";
+
 export interface SceneDTO {
   id: string;
   scriptId: string;
   order: number;
   templateId: string;
+  /** On-screen display text. */
   text: string;
+  /**
+   * Voiceover script. null = same as `text` (typical). Set when narration
+   * should differ from what appears on screen.
+   */
+  spokenText: string | null;
   emphasis: string[];
   visual?: string;
   background?: SceneBackground;
@@ -30,6 +40,25 @@ export interface SceneDTO {
   mood?: string;
   /** Free-text music vibe hint (e.g. "uplifting lo-fi"), used for auto music suggestions. */
   musicMood?: string;
+  /** Active SceneVoiceClip in per_scene mode; null = none selected. */
+  selectedVoiceClipId: string | null;
+}
+
+export interface SceneVoiceClipDTO {
+  id: string;
+  scriptId: string;
+  sceneId: string;
+  providerId: string;
+  voiceId: string;
+  modelId: string | null;
+  text: string;
+  textHash: string;
+  audioUrl: string;
+  durationFrames: number;
+  fps: number;
+  label: string | null;
+  isPlaceholder: boolean;
+  createdAt: string;
 }
 
 export interface VoiceTakeDTO {
@@ -44,6 +73,7 @@ export interface VoiceTakeDTO {
   timeline: BeatTimingDTO[];
   audioUrl: string;
   isPlaceholder: boolean;
+  source: VoiceTakeSource;
   createdAt: string;
 }
 
@@ -58,6 +88,10 @@ export interface ScriptDTO {
   videoEngine: VideoEngineId;
   scenes: SceneDTO[];
   takes: VoiceTakeDTO[];
+  /** Per-scene voice clip versions (per_scene mode). */
+  voiceClips: SceneVoiceClipDTO[];
+  /** oneshot = full takes; per_scene = clip library + assemble. */
+  voiceMode: VoiceMode;
   brandKitId: string | null;
   brandTokens: BrandTokens;
   coverUrl: string | null;
@@ -69,6 +103,10 @@ export interface ScriptDTO {
   hideText: boolean;
   /** Global: hide the top progress bar on every scene. */
   hideProgressBar: boolean;
+  /** Whole-reel look family (Bold Hook, Clean Story, …). */
+  styleId: StyleId;
+  /** How fast and punchy cuts/text feel. */
+  energy: EnergyId;
 }
 
 export interface ProjectDTO {

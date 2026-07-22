@@ -1,4 +1,5 @@
 import type { BrandTokens } from "./tokens";
+import type { EnergyId, StyleId } from "./visual-style";
 
 /** Image pan/zoom animations available for a background image. */
 export type PanEffect = "ken-burns" | "pan-left" | "pan-right" | "pan-up" | "pan-down";
@@ -92,6 +93,10 @@ export type ReelProps = {
    * Renders always use "standard" (the default).
    */
   previewQuality?: "standard" | "draft";
+  /** Whole-reel look family. Defaults to bold-hook. */
+  styleId?: StyleId;
+  /** Cut / text snappiness. Defaults to normal. */
+  energy?: EnergyId;
 };
 
 export const REEL_WIDTH = 1080;

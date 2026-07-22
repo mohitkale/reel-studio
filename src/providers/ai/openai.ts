@@ -22,6 +22,14 @@ const JSON_SCHEMA = {
     properties: {
       projectName: { type: "string" },
       scriptName: { type: "string" },
+      styleId: {
+        type: "string",
+        enum: ["bold-hook", "clean-story", "teach-me", "soft-brand"],
+      },
+      energy: {
+        type: "string",
+        enum: ["calm", "normal", "high"],
+      },
       scenes: {
         type: "array",
         items: {
@@ -29,6 +37,7 @@ const JSON_SCHEMA = {
           additionalProperties: false,
           properties: {
             text: { type: "string" },
+            spokenText: { type: "string" },
             templateId: {
               type: "string",
               enum: [
@@ -43,6 +52,7 @@ const JSON_SCHEMA = {
             },
             emphasis: { type: "array", items: { type: "string" } },
             visual: { type: "string" },
+            items: { type: "array", items: { type: "string" } },
             backgroundQuery: { type: "string" },
             effect: {
               type: "string",
@@ -66,7 +76,7 @@ const JSON_SCHEMA = {
         },
       },
     },
-    required: ["projectName", "scriptName", "scenes"],
+    required: ["projectName", "scriptName", "styleId", "energy", "scenes"],
   },
 };
 
