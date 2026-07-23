@@ -23,8 +23,13 @@
     "security:scan": "node scripts/scan-secrets.mjs",
     "prepare:hooks": "git config core.hooksPath .githooks",
     "postinstall": "prisma generate",
+    "setup": "node scripts/setup.mjs",
+    "demo": "node scripts/demo.mjs",
     "seed:assets": "tsx scripts/seed-assets.ts",
     "seed:demo-brandkit": "tsx scripts/seed-demo-brandkit.ts",
+    "seed:demo-project": "tsx scripts/seed-demo-project.ts",
+    "seed:demo-podcast": "tsx scripts/seed-demo-podcast.ts",
+    "export:demo-assets": "tsx scripts/export-demo-assets.ts",
     "gen:music": "node scripts/generate-music.mjs"
   },
   "dependencies": {
