@@ -4,6 +4,10 @@ import type { Orientation } from "@/lib/orientation";
 import type { VideoEngineId } from "@/engines/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import { stripMarkdown } from "@/lib/strip-markdown";
+import type {
+  GeneratePodcastPlanInput,
+  PodcastPlan,
+} from "./podcast-types";
 
 /**
  * AI "director" contract. Mirrors the voice provider factory: the app talks only
@@ -199,6 +203,7 @@ export interface AIProvider {
   isConfigured(): boolean;
   listModels(): Promise<AIModel[]>;
   generatePlan(input: GeneratePlanInput): Promise<ScenePlan>;
+  generatePodcastPlan(input: GeneratePodcastPlanInput): Promise<PodcastPlan>;
 }
 
 export const aiProviderStatusSchema = z.object({

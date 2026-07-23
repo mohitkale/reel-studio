@@ -1,17 +1,19 @@
 # Reel Studio MCP server
 
 A stdio [Model Context Protocol](https://modelcontextprotocol.io) server that lets
-external AI tools (Claude Code, Cursor, etc.) build and edit storyboards in a
-running Reel Studio app.
+external AI tools (Claude Code, Cursor, etc.) build and edit **video storyboards**
+and **audio-only podcasts** in a running Reel Studio app.
 
 It talks to the app **only over its REST API** with a bearer token — it never
 touches the database directly. By design it can do everything an editor can
 **except**:
 
-- ❌ delete anything (projects, scenes, takes, renders)
+- ❌ delete anything (projects, scenes, takes, renders, podcasts, dialogue turns)
 - ❌ change configuration or secrets (API keys, defaults — website only)
-- ⏸️ start a render — `request_render` only _queues_ a render that a human must
+- ⏸️ start a **video** render — `request_render` only _queues_ a render that a human must
   **approve in the web app** (Renders → "Approve & Render")
+- ✅ podcast audio generation **does** run when you call `create_podcast_take`
+  (same as the web Generate button; costs TTS credits)
 
 ## Setup
 
@@ -43,6 +45,8 @@ touches the database directly. By design it can do everything an editor can
 
 ## Tools
 
+### Video storyboards
+
 - **Read:** `list_projects`, `list_video_engines`, `get_script`, `list_takes`,
   `list_scene_clips`, `get_captions`, `list_renders`, `get_render`,
   `list_voice_providers`, `list_voices`, `list_voice_models`, `list_ai_providers`
@@ -53,12 +57,21 @@ touches the database directly. By design it can do everything an editor can
   `rename_take`, `rename_render`
 - **Render (human-gated):** `request_render`, `download_render`
 
+### Audio podcasts
+
+- **Read:** `list_podcasts`, `get_podcast`, `list_podcast_takes`
+- **Create / edit:** `create_podcast`, `update_podcast`,
+  `replace_podcast_characters` (clears turns), `update_podcast_characters`,
+  `ai_generate_podcast_script`, `import_podcast_script`, `insert_podcast_turn`,
+  `update_podcast_turn`
+- **Audio:** `create_podcast_take`, `get_podcast_take_job`, `download_podcast_take`
+
 `create_project` / `ai_create_project` accept optional `videoEngine`
 (`remotion` | `hyperframes`, default `remotion`). Engine is fixed at creation.
 Call `list_video_engines` first to see each engine’s template catalog
 (Remotion vs `hf-*` HyperFrames templates).
 
-### Voice: oneshot vs per-scene
+### Voice: oneshot vs per-scene (video)
 
 | Mode | How to set | Generate audio |
 | --- | --- | --- |
@@ -70,20 +83,28 @@ TTS always uses each scene’s `spokenText ?? text`.
 ## Resources
 
 - `reel://authoring/rules` — how to write valid, high-retention scenes
+- `reel://authoring/podcast` — podcast cast / script / take workflow
 - `reel://schema/scene` — field types and enums the API enforces
+- `reel://schema/podcast` — podcast cast, turns, length
 - `reel://catalog/templates` — Remotion scene templates (use `list_video_engines`
   for HyperFrames `hf-*` templates)
 - `reel://catalog/voices` — live voice-provider status
 
-## Typical flow
+## Typical flows
 
-1. Optionally `list_video_engines`, then `ai_create_project` / `create_project`
-   (pass `videoEngine: "hyperframes"` when you want the Apache-2.0 HTML engine).
-2. `ai_generate_scenes` with mode `append` (or `add_scene` / `update_scene`) to
-   extend the storyboard in parts — using your own web search to add current facts.
-3. Add narration (oneshot **or** per-scene — see examples below).
+### Video
+
+1. Optionally `list_video_engines`, then `ai_create_project` / `create_project`.
+2. `ai_generate_scenes` with mode `append` (or `add_scene` / `update_scene`).
+3. Add narration (oneshot **or** per-scene).
 4. `request_render` → ask the user to approve in the web app → poll `get_render`
    → `download_render`.
+
+### Podcast
+
+1. `create_podcast` → `update_podcast_characters` (set TTS voices).
+2. `ai_generate_podcast_script` (or `import_podcast_script` / `insert_podcast_turn`).
+3. `create_podcast_take` → poll `get_podcast_take_job` → `download_podcast_take`.
 
 ## Examples
 
@@ -147,6 +168,26 @@ To re-stitch after changing `selectedVoiceClipId` on a scene, call
   "energy": "calm"
 }
 ```
+
+### Create a podcast and generate audio
+
+```json
+{ "title": "Why Rest Is Productive", "length": "short" }
+```
+
+Then patch voices (`update_podcast_characters` with ids from `get_podcast`), generate:
+
+```json
+{
+  "podcastId": "<id>",
+  "providerId": "gemini",
+  "brief": "Two hosts discuss why deliberate rest improves deep work",
+  "length": "short"
+}
+```
+
+Then `create_podcast_take` with `{ "podcastId": "<id>" }` and poll
+`get_podcast_take_job`.
 
 ## Licensing
 

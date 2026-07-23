@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   Clapperboard,
+  Mic,
   AudioLines,
   LayoutTemplate,
   Library,
@@ -24,6 +25,12 @@ export const navItems: NavItem[] = [
     href: "/",
     icon: LayoutDashboard,
     description: "Your reel projects",
+  },
+  {
+    title: "Podcasts",
+    href: "/podcasts",
+    icon: Mic,
+    description: "Voice-only multi-speaker podcasts",
   },
   {
     title: "Editor",

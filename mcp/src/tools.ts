@@ -6,6 +6,7 @@ import {
   apiGetText,
   apiPatch,
   apiPost,
+  apiPut,
   absoluteUrl,
   encode,
 } from "./client.js";
@@ -641,5 +642,298 @@ export function registerTools(server: McpServer): void {
         `Render is not ready yet (status: ${r.status}). Poll get_render until it is 'done'.`,
       );
     }),
+  );
+
+  /* ---- Podcasts (audio-only; no deletes) ---- */
+
+  const podcastLength = z.enum(["short", "long"]);
+  const podcastGender = z.enum(["male", "female", "neutral"]);
+  const podcastCharacterInput = z.object({
+    id: z.string().optional(),
+    key: z
+      .string()
+      .trim()
+      .min(1)
+      .max(40)
+      .optional()
+      .describe("Stable JSON id used in dialogue (e.g. host, guest)."),
+    name: z.string().trim().min(1).max(80),
+    gender: podcastGender,
+    definition: z
+      .string()
+      .trim()
+      .max(1000)
+      .optional()
+      .describe(
+        "Personality/role brief for AI script writing only — does not change TTS voice.",
+      ),
+    providerId: z.string().optional(),
+    voiceId: z.string().optional(),
+    modelId: z.string().nullable().optional(),
+  });
+
+  server.registerTool(
+    "list_podcasts",
+    {
+      description:
+        "List audio-only podcasts (id, title, character/turn/take counts). Separate from video projects.",
+      inputSchema: {},
+    },
+    guard(async () => ok(await apiGet("/api/podcasts"))),
+  );
+
+  server.registerTool(
+    "get_podcast",
+    {
+      description:
+        "Get one podcast with characters, dialogue turns, and takes. Use before editing cast, script, or generating audio.",
+      inputSchema: { podcastId: z.string().min(1) },
+    },
+    guard(async ({ podcastId }) =>
+      ok(await apiGet(`/api/podcasts/${encode(podcastId)}`)),
+    ),
+  );
+
+  server.registerTool(
+    "create_podcast",
+    {
+      description:
+        "Create an audio-only podcast episode with a default 2-character cast. Then set voices via update_podcast_characters and generate a script.",
+      inputSchema: {
+        title: z.string().trim().min(1).max(120).optional(),
+        description: z.string().trim().max(2000).optional(),
+        length: podcastLength
+          .optional()
+          .describe("'short' or 'long' target episode length for AI scripts."),
+      },
+    },
+    guard(async (args) => ok(await apiPost("/api/podcasts", args))),
+  );
+
+  server.registerTool(
+    "update_podcast",
+    {
+      description: "Update podcast title, description, and/or length.",
+      inputSchema: {
+        podcastId: z.string().min(1),
+        title: z.string().trim().min(1).max(120).optional(),
+        description: z.string().trim().max(2000).optional(),
+        length: podcastLength.optional(),
+      },
+    },
+    guard(async ({ podcastId, ...body }) =>
+      ok(await apiPatch(`/api/podcasts/${encode(podcastId)}`, body)),
+    ),
+  );
+
+  server.registerTool(
+    "replace_podcast_characters",
+    {
+      description:
+        "Replace the full cast (2–4 characters). WARNING: clears the current script turns. Prefer update_podcast_characters to change voices/names without wiping dialogue.",
+      inputSchema: {
+        podcastId: z.string().min(1),
+        characters: z.array(podcastCharacterInput).min(2).max(4),
+      },
+    },
+    guard(async ({ podcastId, characters }) =>
+      ok(
+        await apiPut(`/api/podcasts/${encode(podcastId)}/characters`, {
+          characters,
+        }),
+      ),
+    ),
+  );
+
+  server.registerTool(
+    "update_podcast_characters",
+    {
+      description:
+        "Patch character voices/names/definitions without clearing the script. Pass character ids from get_podcast. Audio generation uses these latest voice picks.",
+      inputSchema: {
+        podcastId: z.string().min(1),
+        updates: z
+          .array(
+            z.object({
+              id: z.string().min(1),
+              name: z.string().trim().min(1).max(80).optional(),
+              gender: podcastGender.optional(),
+              definition: z.string().trim().max(1000).optional(),
+              providerId: z.string().optional(),
+              voiceId: z.string().optional(),
+              modelId: z.string().nullable().optional(),
+            }),
+          )
+          .min(1),
+      },
+    },
+    guard(async ({ podcastId, updates }) =>
+      ok(
+        await apiPatch(`/api/podcasts/${encode(podcastId)}/characters`, {
+          updates,
+        }),
+      ),
+    ),
+  );
+
+  server.registerTool(
+    "ai_generate_podcast_script",
+    {
+      description:
+        "AI-generate a humanised multi-speaker podcast script for an existing cast. Requires an AI key in Settings. Characters must already exist (create_podcast / replace_podcast_characters).",
+      inputSchema: {
+        podcastId: z.string().min(1),
+        providerId: z.enum(["gemini", "openai"]),
+        modelId: z.string().optional(),
+        brief: z.string().trim().min(3).max(8000),
+        length: podcastLength.optional(),
+        updateMeta: z
+          .boolean()
+          .optional()
+          .describe("When true (default), apply plan title/description to the podcast."),
+      },
+    },
+    guard(async ({ podcastId, ...body }) =>
+      ok(await apiPost(`/api/podcasts/${encode(podcastId)}/ai`, body)),
+    ),
+  );
+
+  server.registerTool(
+    "import_podcast_script",
+    {
+      description:
+        "Replace all dialogue turns from a structured plan JSON. characterId on each turn must match Setup character keys. Prefer ai_generate_podcast_script for AI drafts.",
+      inputSchema: {
+        podcastId: z.string().min(1),
+        plan: z.object({
+          title: z.string().trim().min(1).max(120).optional(),
+          description: z.string().trim().max(2000).optional(),
+          characters: z
+            .array(
+              z.object({
+                id: z.string().trim().min(1).max(40),
+                name: z.string().trim().min(1).max(80),
+                gender: podcastGender.optional(),
+              }),
+            )
+            .min(2)
+            .max(4),
+          turns: z
+            .array(
+              z.object({
+                characterId: z.string().trim().min(1).max(40),
+                text: z.string().trim().min(1).max(4000),
+              }),
+            )
+            .min(2)
+            .max(120),
+        }),
+        updateMeta: z.boolean().optional(),
+      },
+    },
+    guard(async ({ podcastId, plan, updateMeta }) =>
+      ok(
+        await apiPost(`/api/podcasts/${encode(podcastId)}/turns`, {
+          plan,
+          updateMeta,
+        }),
+      ),
+    ),
+  );
+
+  server.registerTool(
+    "insert_podcast_turn",
+    {
+      description:
+        "Insert one dialogue line. characterId is the PodcastCharacter.id from get_podcast (not the key). Omit afterTurnId to append; set afterTurnId to insert below that turn.",
+      inputSchema: {
+        podcastId: z.string().min(1),
+        characterId: z.string().min(1),
+        text: z.string().trim().min(1).max(4000),
+        afterTurnId: z.string().min(1).nullable().optional(),
+      },
+    },
+    guard(async ({ podcastId, ...body }) =>
+      ok(await apiPost(`/api/podcasts/${encode(podcastId)}/turns`, body)),
+    ),
+  );
+
+  server.registerTool(
+    "update_podcast_turn",
+    {
+      description: "Update the spoken text of one dialogue turn.",
+      inputSchema: {
+        podcastId: z.string().min(1).describe("Podcast id (for routing consistency)."),
+        turnId: z.string().min(1),
+        text: z.string().trim().min(1).max(4000),
+      },
+    },
+    guard(async ({ podcastId, turnId, text }) =>
+      ok(
+        await apiPatch(`/api/podcasts/${encode(podcastId)}/turns`, {
+          turnId,
+          text,
+        }),
+      ),
+    ),
+  );
+
+  server.registerTool(
+    "list_podcast_takes",
+    {
+      description: "List generated audio takes for a podcast (newest first).",
+      inputSchema: { podcastId: z.string().min(1) },
+    },
+    guard(async ({ podcastId }) =>
+      ok(await apiGet(`/api/podcasts/${encode(podcastId)}/takes`)),
+    ),
+  );
+
+  server.registerTool(
+    "create_podcast_take",
+    {
+      description:
+        "Start multi-speaker podcast audio generation (per-turn TTS by character voice, then stitch in order). Requires voices on all characters. Returns jobId — poll get_podcast_take_job until done.",
+      inputSchema: { podcastId: z.string().min(1) },
+    },
+    guard(async ({ podcastId }) =>
+      ok(await apiPost(`/api/podcasts/${encode(podcastId)}/takes`, {})),
+    ),
+  );
+
+  server.registerTool(
+    "get_podcast_take_job",
+    {
+      description:
+        "Poll a create_podcast_take job. status flows queued → synthesizing → stitching → done|error. When done, podcastTake includes audioUrl and voice snapshot.",
+      inputSchema: {
+        podcastId: z.string().min(1),
+        jobId: z.string().min(1),
+      },
+    },
+    guard(async ({ podcastId, jobId }) =>
+      ok(
+        await apiGet(
+          `/api/podcasts/${encode(podcastId)}/takes/${encode(jobId)}`,
+        ),
+      ),
+    ),
+  );
+
+  server.registerTool(
+    "download_podcast_take",
+    {
+      description:
+        "Return an absolute WAV URL for a finished podcast take. Pass audioUrl from get_podcast / list_podcast_takes / get_podcast_take_job.",
+      inputSchema: {
+        audioUrl: z
+          .string()
+          .min(1)
+          .describe("Relative /media/... path or absolute URL from the take."),
+      },
+    },
+    guard(async ({ audioUrl }) =>
+      ok({ downloadUrl: absoluteUrl(audioUrl) }),
+    ),
   );
 }

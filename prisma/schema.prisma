@@ -189,3 +189,78 @@ model ProviderSetting {
   hasKey       Boolean @default(false)
   defaultModel String?
 }
+
+/// Voice-only multi-speaker podcast (separate from video Project/Script).
+model Podcast {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @default("")
+  /// Target length hint for AI/JSON: "short" (~2-3 min) | "long" (~5-10 min)
+  length      String   @default("short")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  characters PodcastCharacter[]
+  turns      PodcastTurn[]
+  takes      PodcastTake[]
+}
+
+model PodcastCharacter {
+  id         String   @id @default(cuid())
+  podcastId  String
+  podcast    Podcast  @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  /// Stable id for JSON/AI (e.g. "host", "guest")
+  key        String
+  name       String
+  /// "male" | "female" | "neutral"
+  gender     String   @default("neutral")
+  /// Personality / role brief used when AI writes this character's lines.
+  definition String   @default("")
+  providerId String   @default("")
+  voiceId    String   @default("")
+  modelId    String?
+  order      Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  turns PodcastTurn[]
+
+  @@unique([podcastId, key])
+  @@index([podcastId, order])
+}
+
+model PodcastTurn {
+  id          String           @id @default(cuid())
+  podcastId   String
+  podcast     Podcast          @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  characterId String
+  character   PodcastCharacter @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  order       Int
+  text        String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([podcastId, order])
+}
+
+model PodcastTake {
+  id          String   @id @default(cuid())
+  podcastId   String
+  podcast     Podcast  @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  label       String?
+  /// Metadata from first character voice used (mixed takes use multiple voices).
+  providerId  String
+  voiceId     String
+  modelId     String?
+  fps         Int      @default(30)
+  totalFrames Int
+  /// JSON: [{ turnId, startFrame, durationFrames, text, characterKey? }]
+  timingJson  String
+  /// JSON snapshot of cast voices used for this take:
+  /// [{ key, name, providerId, voiceId, modelId? }]
+  voicesJson  String   @default("[]")
+  audioPath   String
+  createdAt   DateTime @default(now())
+
+  @@index([podcastId])
+}

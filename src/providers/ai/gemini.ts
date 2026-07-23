@@ -1,5 +1,12 @@
 import { aiFetch } from "./http";
 import { buildPrompt } from "./prompt";
+import { buildPodcastPrompt } from "./podcast-prompt";
+import {
+  normalizePodcastPlan,
+  podcastAiPlanSchema,
+  type GeneratePodcastPlanInput,
+  type PodcastPlan,
+} from "./podcast-types";
 import {
   AIError,
   scenePlanSchema,
@@ -78,6 +85,38 @@ const RESPONSE_SCHEMA = {
   required: ["projectName", "scriptName", "scenes"],
 };
 
+const PODCAST_RESPONSE_SCHEMA = {
+  type: "object",
+  properties: {
+    title: { type: "string" },
+    description: { type: "string" },
+    characters: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          name: { type: "string" },
+          gender: { type: "string" },
+        },
+        required: ["id", "name"],
+      },
+    },
+    turns: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          characterId: { type: "string" },
+          text: { type: "string" },
+        },
+        required: ["characterId", "text"],
+      },
+    },
+  },
+  required: ["turns"],
+};
+
 export function createGeminiProvider(): AIProvider {
   const key = () => process.env.GEMINI_API_KEY?.trim() || "";
   const headers = () => ({
@@ -151,6 +190,62 @@ export function createGeminiProvider(): AIProvider {
         throw new AIError("Gemini returned invalid JSON", 502, "gemini");
       }
       return scenePlanSchema.parse(parsed);
+    },
+
+    async generatePodcastPlan(
+      input: GeneratePodcastPlanInput,
+    ): Promise<PodcastPlan> {
+      if (input.characters.length < 2) {
+        throw new AIError("Podcast needs at least 2 characters", 400, "gemini");
+      }
+      const { system, user } = buildPodcastPrompt(input);
+      const model = input.modelId || GEMINI_DEFAULT_MODEL;
+
+      const res = await aiFetch(
+        `${API_BASE}/models/${model}:generateContent`,
+        {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: system }] },
+            contents: [{ role: "user", parts: [{ text: user }] }],
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: PODCAST_RESPONSE_SCHEMA,
+              temperature: 0.9,
+            },
+          }),
+        },
+        "gemini",
+      );
+
+      const json = (await res.json()) as {
+        candidates?: { content?: { parts?: { text?: string }[] } }[];
+      };
+      const text =
+        json.candidates?.[0]?.content?.parts
+          ?.map((p) => p.text ?? "")
+          .join("") ?? "";
+      if (!text) {
+        throw new AIError("Gemini returned an empty response", 502, "gemini");
+      }
+
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        throw new AIError("Gemini returned invalid JSON", 502, "gemini");
+      }
+      const raw = podcastAiPlanSchema.parse(parsed);
+      try {
+        return normalizePodcastPlan(raw, input.characters);
+      } catch (e) {
+        throw new AIError(
+          e instanceof Error ? e.message : String(e),
+          502,
+          "gemini",
+        );
+      }
     },
   };
 }
