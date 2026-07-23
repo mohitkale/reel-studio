@@ -18,7 +18,10 @@ services:
     container_name: reel-studio
     init: true # proper PID 1 so Chromium/ffmpeg child processes are reaped
     ports:
-      - "3000:3000"
+      # Bind to loopback only — do not expose the unauthenticated local-first
+      # API on LAN/WAN. For remote access, put a reverse proxy + auth in front
+      # and set REEL_STRICT_AUTH=1 (see SECURITY.md).
+      - "127.0.0.1:3000:3000"
 
     # API keys etc. Optional so the stack still boots before you create the
     # file — keys can also be entered in the in-app Settings screen.

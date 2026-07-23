@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
+import { authorize } from "@/server/auth";
 import {
   isVoiceforgeConfigured,
   voiceforgeAuthHeaders,
@@ -13,10 +14,11 @@ export const dynamic = "force-dynamic";
 
 /** GET /api/voiceforge/voices/:id/preview — proxy cached preview audio. */
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorize(req);
     if (!isVoiceforgeConfigured()) {
       throw new ProviderError(
         "VoiceForge is not configured. Set VOICEFORGE_SERVICE_URL in .env.local.",

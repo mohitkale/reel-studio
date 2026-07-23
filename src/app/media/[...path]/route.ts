@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { getAssetStore } from "@/library/storage";
+import { authorizeMedia } from "@/server/auth";
+import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,7 +15,6 @@ const CONTENT_TYPES: Record<string, string> = {
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
   webp: "image/webp",
-  svg: "image/svg+xml",
   gif: "image/gif",
   json: "application/json",
 };
@@ -22,11 +23,20 @@ const CONTENT_TYPES: Record<string, string> = {
  * GET /media/<key> - stream a stored asset. Supports HTTP Range requests so the
  * Remotion Player (and native <audio>) can seek; without this, playback audio
  * sync fails with "media cannot be seeked".
+ *
+ * Access is same-origin / loopback / MCP-token gated — never world-readable on
+ * a LAN or public bind.
  */
 export async function GET(
   req: NextRequest,
   ctx: { params: Promise<{ path: string[] }> },
 ) {
+  try {
+    authorizeMedia(req);
+  } catch (e) {
+    return errorResponse(e);
+  }
+
   const { path: segments } = await ctx.params;
   const key = segments.join("/");
 
@@ -38,7 +48,11 @@ export async function GET(
   }
 
   const ext = key.split(".").pop()?.toLowerCase() ?? "";
-  const contentType = CONTENT_TYPES[ext] ?? "application/octet-stream";
+  // Never serve SVG as image/svg+xml (scriptable). Treat as downloadable bytes.
+  const contentType =
+    ext === "svg"
+      ? "application/octet-stream"
+      : (CONTENT_TYPES[ext] ?? "application/octet-stream");
   const total = data.length;
   const range = req.headers.get("range");
 
@@ -64,7 +78,8 @@ export async function GET(
         "Content-Range": `bytes ${start}-${end}/${total}`,
         "Accept-Ranges": "bytes",
         "Content-Length": String(chunk.length),
-        "Cache-Control": "no-store",
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
       },
     });
   }
@@ -74,7 +89,8 @@ export async function GET(
       "Content-Type": contentType,
       "Content-Length": String(total),
       "Accept-Ranges": "bytes",
-      "Cache-Control": "no-store",
+      "Cache-Control": "private, no-store",
+      "X-Content-Type-Options": "nosniff",
     },
   });
 }

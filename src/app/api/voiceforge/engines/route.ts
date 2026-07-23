@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
+import { authorize } from "@/server/auth";
 import {
   isVoiceforgeConfigured,
   voiceforgeAuthHeaders,
@@ -41,8 +42,9 @@ function assertConfigured() {
 }
 
 /** GET /api/voiceforge/engines — proxy engine list for the clone UI. */
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    authorize(req);
     assertConfigured();
     const res = await fetch(`${voiceforgeBaseUrl()}/v1/engines`, {
       headers: { ...voiceforgeAuthHeaders(), Accept: "application/json" },

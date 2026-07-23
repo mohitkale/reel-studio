@@ -115,6 +115,8 @@ Use clear, descriptive commit messages:
 - ❌ Never include personal credentials in any code or comments
 - ✅ Keep `.env.example` values empty or use placeholder-only values
 - ✅ If a secret is accidentally exposed, rotate it immediately and report it
+- ✅ Read [SECURITY.md](SECURITY.md) — the app is local-first; do not advertise
+  public hosting without additional authentication
 
 ### Local Git Hook (Recommended)
 
@@ -124,8 +126,9 @@ Enable the provided pre-commit hook once per clone:
 npm run prepare:hooks
 ```
 
-This runs `npm run security:scan` before each commit to catch accidental secret exposure,
-and strips Cursor `Co-authored-by` trailers from commit messages via `.githooks/commit-msg`.
+This runs `npm run security:scan` before each commit to catch accidental secret exposure.
+
+Agent-assisted commits in this repo include a `Co-authored-by: Cursor <cursoragent@cursor.com>` trailer so [Cursor Agent](https://github.com/cursoragent) appears in GitHub’s contributor graph. See [CONTRIBUTORS.md](CONTRIBUTORS.md).
 
 ## Architecture Guidelines
 

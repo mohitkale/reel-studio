@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { assertSafeMediaUrl } from "@/lib/media-url-safety";
+
 /** Zod schemas for JSON-shaped DB columns and API inputs. */
 
 export const beatTimingSchema = z.object({
@@ -55,7 +57,20 @@ export const panEffectSchema = z.enum([
 
 export const sceneBackgroundSchema = z.object({
   type: z.enum(["image", "video"]),
-  url: z.string().min(1).max(2048),
+  url: z
+    .string()
+    .min(1)
+    .max(2048)
+    .superRefine((url, ctx) => {
+      try {
+        assertSafeMediaUrl(url);
+      } catch (e) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: (e as Error).message,
+        });
+      }
+    }),
   effect: panEffectSchema.optional(),
   muted: z.boolean().optional(),
 });

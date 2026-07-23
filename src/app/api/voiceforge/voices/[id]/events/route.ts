@@ -1,5 +1,6 @@
 import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
+import { authorize } from "@/server/auth";
 import {
   isVoiceforgeConfigured,
   voiceforgeAuthHeaders,
@@ -15,6 +16,7 @@ export async function GET(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorize(req);
     if (!isVoiceforgeConfigured()) {
       throw new ProviderError(
         "VoiceForge is not configured. Set VOICEFORGE_SERVICE_URL in .env.local.",

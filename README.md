@@ -15,6 +15,22 @@
 
 The app runs as a single Next.js project with API routes and UI in one codebase.
 
+## Security (local-first)
+
+Reel Studio is built for **trusted localhost use**. Do **not** bind it to the public
+internet without your own auth layer. Docker Compose publishes **`127.0.0.1:3000`**
+only. See [SECURITY.md](SECURITY.md) for the threat model, reporting, and
+`REEL_STRICT_AUTH` / `TRUST_PROXY` options.
+
+## Contributors
+
+See **[CONTRIBUTORS.md](CONTRIBUTORS.md)** for the full list.
+
+- **[Mohit Kale](https://github.com/mohitkale)** — creator & maintainer
+- **[Cursor](https://cursor.com)** / **[Cursor Agent](https://github.com/cursoragent)** — pair programmer & first AI contributor (security hardening, audio podcasts, MCP tools, workspace UX)
+
+Agent-assisted commits are co-authored as `Cursor <cursoragent@cursor.com>` so GitHub’s contributor graph includes [cursoragent](https://github.com/cursoragent).
+
 ## Licensing
 
 **Reel Studio’s own code** is MIT — see [LICENSE](LICENSE). Contributions are
@@ -198,6 +214,8 @@ docker compose up --build
 ```
 
 Open `http://localhost:3000`. Source is bind-mounted, so edits hot-reload.
+The Compose file binds the published port to **127.0.0.1** so the local-first
+API is not exposed on your LAN by default.
 
 ```bash
 docker compose up        # start (after the first build)
@@ -395,4 +413,5 @@ media/            # local asset and render output (git-ignored)
 - Product build brief: `docs/ai-reel-studio-BRIEF.md`
 - Security policy: `SECURITY.md`
 - Contribution guide: `CONTRIBUTING.md`
+- Contributors: `CONTRIBUTORS.md`
 

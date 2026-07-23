@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
+import { authorize } from "@/server/auth";
 import {
   isVoiceforgeConfigured,
   voiceforgeAuthHeaders,
@@ -36,10 +37,11 @@ function assertConfigured() {
 
 /** GET /api/voiceforge/voices/:id — poll voice processing status. */
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorize(req);
     assertConfigured();
     const { id } = await ctx.params;
     const res = await fetch(
