@@ -4,7 +4,20 @@ Thanks for your interest in contributing to Reel Studio! This is an open-source 
 
 ## Getting Started
 
-### Development Setup
+### Fast path
+
+```bash
+git clone https://github.com/mohitkale/reel-studio.git
+cd reel-studio
+nvm use          # Node 22+
+npm install
+npm run setup    # creates .env.local if missing; does not overwrite existing files
+npm run dev
+```
+
+Or: `npm run demo` (setup + dev server).
+
+### Development Setup (manual)
 
 1. **Fork and clone the repository**:
    ```bash
@@ -30,6 +43,8 @@ Thanks for your interest in contributing to Reel Studio! This is an open-source 
 5. **Optional sample data**:
    ```bash
    npm run seed:demo-brandkit
+   npm run seed:demo-project
+   npm run seed:demo-podcast
    npm run seed:assets
    ```
 
@@ -39,6 +54,8 @@ Thanks for your interest in contributing to Reel Studio! This is an open-source 
    ```
 
    Open `http://localhost:3000` to see the application.
+
+Please follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Contribution Guidelines
 
@@ -231,11 +248,19 @@ By contributing to Reel Studio, you agree that your contributions will be
 licensed under the MIT License.
 
 **Third-party terms still apply.** Reel Studio depends on Remotion (Remotion
-License — source-available, not OSI open-source) and optional providers
+License, source-available, not OSI open-source) and optional providers
 (Unsplash, Jamendo, cloud TTS/AI, VoiceForge). Running or redistributing the
 app does not relicense those components. Read
 [docs/LICENSING.md](docs/LICENSING.md) before commercial use, and do not claim
 in docs or marketing that Remotion itself is MIT or open-source.
+
+## Maintainer checklist (repo settings)
+
+After merging launch docs, set in GitHub → Settings:
+
+- **Description:** Local-first AI video + podcast studio with MCP server for Instagram Reels, YouTube Shorts, TikTok, Facebook, X, LinkedIn; voiceovers, templates, and local MP4 export.
+- **Topics:** `ai-video` `video-editor` `short-form-video` `instagram-reels` `youtube-shorts` `tiktok` `facebook` `twitter` `linkedin` `reels` `remotion` `hyperframes` `text-to-video` `ai-voice` `podcast` `mcp` `model-context-protocol` `local-first` `nextjs` `typescript` `open-source`
+- **Social preview:** `docs/assets/reel-studio-editor.png` or a still from the demo GIF
 
 ## Getting Help
 

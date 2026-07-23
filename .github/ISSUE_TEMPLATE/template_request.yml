@@ -1,0 +1,55 @@
+name: Template request
+description: Request a new Remotion or HyperFrames motion template
+title: "[template] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the visual purpose. Do not upload copyrighted reference media without permission.
+  - type: textarea
+    id: purpose
+    attributes:
+      label: Visual purpose
+      description: What should this template communicate on screen?
+    validations:
+      required: true
+  - type: dropdown
+    id: format
+    attributes:
+      label: Target format
+      options:
+        - Portrait 9:16
+        - Landscape 16:9
+        - Square 1:1
+        - All formats
+    validations:
+      required: true
+  - type: dropdown
+    id: engine
+    attributes:
+      label: Preferred engine
+      options:
+        - HyperFrames (Apache-2.0)
+        - Remotion
+        - Either
+    validations:
+      required: true
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Required inputs
+      description: Text, stats, images, brand kit fields, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: motion
+    attributes:
+      label: Expected animation behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: refs
+    attributes:
+      label: Reference assets and licences
+      description: Links plus licence (CC0, own work, etc.). No unlicensed uploads.

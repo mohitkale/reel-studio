@@ -1,0 +1,38 @@
+name: Voice provider request
+description: Suggest a new voice backend or integration
+title: "[voice] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste API keys, private voice samples, or cloning audio.
+  - type: input
+    id: provider
+    attributes:
+      label: Provider or engine name
+    validations:
+      required: true
+  - type: dropdown
+    id: locality
+    attributes:
+      label: Locality
+      options:
+        - Fully local / self-hosted
+        - Cloud API
+        - Hybrid
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why add it?
+    validations:
+      required: true
+  - type: textarea
+    id: licence
+    attributes:
+      label: Known licence / commercial terms
+      description: Link to terms if available.
+    validations:
+      required: true
