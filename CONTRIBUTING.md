@@ -126,8 +126,9 @@ Enable the provided pre-commit hook once per clone:
 npm run prepare:hooks
 ```
 
-This runs `npm run security:scan` before each commit to catch accidental secret exposure,
-and strips Cursor `Co-authored-by` trailers from commit messages via `.githooks/commit-msg`.
+This runs `npm run security:scan` before each commit to catch accidental secret exposure.
+
+Agent-assisted commits in this repo include a `Co-authored-by: Cursor <cursoragent@cursor.com>` trailer so [Cursor Agent](https://github.com/cursoragent) appears in GitHub’s contributor graph. See [CONTRIBUTORS.md](CONTRIBUTORS.md).
 
 ## Architecture Guidelines
 

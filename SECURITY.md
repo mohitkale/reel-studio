@@ -55,7 +55,7 @@ Still **your** responsibility when hosting:
 
 ## Pre-Commit Secret Scan
 
-Local git hooks live in `.githooks/` (`pre-commit` + `commit-msg`).
+Local git hooks live in `.githooks/` (`pre-commit` secret scan).
 
 Enable once per clone:
 
@@ -63,10 +63,7 @@ Enable once per clone:
 npm run prepare:hooks
 ```
 
-Then each commit will:
-
-- run `npm run security:scan` and block commits that appear to contain secrets
-- strip Cursor / cursoragent `Co-authored-by` trailers from the commit message
+Then each commit will run `npm run security:scan` and block commits that appear to contain secrets.
 
 ## Scope
 

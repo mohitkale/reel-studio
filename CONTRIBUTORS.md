@@ -12,13 +12,13 @@ Thank you to everyone who helps build Reel Studio.
 
 | Name | Role | Link |
 | --- | --- | --- |
-| **[Cursor](https://cursor.com)** | Pair programmer & first AI contributor — security hardening (CISO audit), audio podcast feature, MCP podcast tools, workspace UX, and ongoing implementation partnership | [cursor.com](https://cursor.com) |
+| **[Cursor](https://cursor.com)** / **[Cursor Agent](https://github.com/cursoragent)** | Pair programmer & first AI contributor — security hardening (CISO audit), audio podcast feature, MCP podcast tools, workspace UX, and ongoing implementation partnership | [cursor.com](https://cursor.com) · [github.com/cursoragent](https://github.com/cursoragent) |
 
-Cursor is an AI-assisted development environment. Its agent work on this repo is
-credited here and in the [README](README.md) because GitHub’s **Participants**
-and **Contributors** graphs only list accounts that authored commits on GitHub;
-they do not show AI tooling partners unless a human chooses to document them in
-project docs (as we do here).
+Cursor-assisted commits include this trailer so GitHub credits the agent account:
+
+```text
+Co-authored-by: Cursor <cursoragent@cursor.com>
+```
 
 ## Human contributors
 
