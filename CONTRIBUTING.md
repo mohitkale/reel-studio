@@ -4,7 +4,20 @@ Thanks for your interest in contributing to Reel Studio! This is an open-source 
 
 ## Getting Started
 
-### Development Setup
+### Fast path
+
+```bash
+git clone https://github.com/mohitkale/reel-studio.git
+cd reel-studio
+nvm use          # Node 22+
+npm install
+npm run setup    # creates .env.local if missing; does not overwrite existing files
+npm run dev
+```
+
+Or: `npm run demo` (setup + dev server).
+
+### Development Setup (manual)
 
 1. **Fork and clone the repository**:
    ```bash
@@ -30,6 +43,8 @@ Thanks for your interest in contributing to Reel Studio! This is an open-source 
 5. **Optional sample data**:
    ```bash
    npm run seed:demo-brandkit
+   npm run seed:demo-project
+   npm run seed:demo-podcast
    npm run seed:assets
    ```
 
@@ -39,6 +54,8 @@ Thanks for your interest in contributing to Reel Studio! This is an open-source 
    ```
 
    Open `http://localhost:3000` to see the application.
+
+Please follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Contribution Guidelines
 

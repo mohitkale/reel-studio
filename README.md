@@ -1,417 +1,246 @@
 # Reel Studio
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D22-brightgreen.svg)](https://nodejs.org/)
 
-**Reel Studio is an open-source, local-first short-form video editor** for building portrait, landscape, or square videos end to end.
+**Turn a script into a complete short-form video locally.**
 
-- Choose a video orientation per project (portrait 9:16, landscape 16:9, square 1:1)
-- Script and scene editing
-- AI scene planning that selectively adds relevant Unsplash stock backgrounds with varied pan/zoom motion (optional, needs an Unsplash key)
-- AI voice takes (pluggable providers)
-- Choose a video engine per project: **Remotion** or **HyperFrames** (Apache 2.0)
-- Motion templates for each engine (Remotion React templates + HyperFrames-native HTML templates)
-- MP4 rendering with queue and progress updates
-- Project, asset, and brand-kit management
+Create Reels, Shorts, and LinkedIn videos with AI scene planning, voiceovers,
+motion templates, and MP4 export — plus multi-speaker audio podcasts.
 
-The app runs as a single Next.js project with API routes and UI in one codebase.
+**Local-first.** Open source. Your projects stay on your machine.
 
-## Security (local-first)
+> App code is **MIT**. Projects may use **HyperFrames** (Apache-2.0) or
+> **Remotion** (separate commercial terms — not OSI). See
+> [Licensing](#licensing-summary) and [docs/LICENSING.md](docs/LICENSING.md).
 
-Reel Studio is built for **trusted localhost use**. Do **not** bind it to the public
-internet without your own auth layer. Docker Compose publishes **`127.0.0.1:3000`**
-only. See [SECURITY.md](SECURITY.md) for the threat model, reporting, and
-`REEL_STRICT_AUTH` / `TRUST_PROXY` options.
+![Reel Studio editor](docs/assets/reel-studio-editor.png)
 
-## Contributors
+![Reel Studio podcasts](docs/assets/reel-studio-podcast.png)
 
-See **[CONTRIBUTORS.md](CONTRIBUTORS.md)** for the full list.
+*[Demo capture guide](docs/DEMO_CAPTURE.md) · [Quick start](#quick-start) · [Roadmap](ROADMAP.md)*
 
-- **[Mohit Kale](https://github.com/mohitkale)** — creator & maintainer
-- **[Cursor](https://cursor.com)** / **[Cursor Agent](https://github.com/cursoragent)** — pair programmer & first AI contributor (security hardening, audio podcasts, MCP tools, workspace UX)
+## From idea to video
 
-Agent-assisted commits are co-authored as `Cursor <cursoragent@cursor.com>` so GitHub’s contributor graph includes [cursoragent](https://github.com/cursoragent).
+1. Paste or write your script
+2. Let AI split it into scenes (or edit manually)
+3. Choose backgrounds and motion templates
+4. Generate or upload a voiceover
+5. Preview in **9:16**, **16:9**, or **1:1**
+6. Render the final MP4 locally
 
-## Licensing
+## Example outputs
 
-**Reel Studio’s own code** is MIT — see [LICENSE](LICENSE). Contributions are
-welcome under the same terms ([CONTRIBUTING.md](CONTRIBUTING.md)).
+Short synthetic demos (content-creation tip, HyperFrames, redistributable assets):
 
-**Important:** several dependencies and optional integrations are **not** MIT.
-**Remotion** (default video engine) is **source-available under the Remotion
-License, not OSI open-source**. Individuals and small teams are often covered
-by Remotion’s Free License; for-profit organizations with 4+ employees typically
-need a paid Remotion Company License. Our MIT grant does **not** waive those
-obligations. Projects can instead use **HyperFrames** (Apache-2.0) for preview
-and MP4 export without Remotion company/automator seats for those projects.
+| Format | Poster | Video |
+| --- | --- | --- |
+| Portrait 9:16 | [![Portrait](docs/assets/examples/portrait-demo.jpg)](docs/assets/examples/portrait-demo.mp4) | [MP4](docs/assets/examples/portrait-demo.mp4) |
+| Landscape 16:9 | [![Landscape](docs/assets/examples/landscape-demo.jpg)](docs/assets/examples/landscape-demo.mp4) | [MP4](docs/assets/examples/landscape-demo.mp4) |
+| Square 1:1 | [![Square](docs/assets/examples/square-demo.jpg)](docs/assets/examples/square-demo.mp4) | [MP4](docs/assets/examples/square-demo.mp4) |
 
-| Component | License / terms |
-| --- | --- |
-| Reel Studio app code, templates, MCP server code | **MIT** |
-| Bundled ambient music (`public/music/`) | **CC0** |
-| **Remotion** (Player, renderer, related packages) | **Remotion License** ([details](https://www.remotion.dev/license)) |
-| **HyperFrames** (`@hyperframes/producer`, optional engine) | **Apache-2.0** |
-| Kokoro TTS (`kokoro-js`) | Apache-2.0 |
-| Unsplash / Jamendo / Cartesia / ElevenLabs / Gemini / OpenAI | Each provider’s own terms (optional keys) |
-| VoiceForge engines (optional) | Per-engine (e.g. XTTS-v2 CPML non-commercial) |
+Audio: [podcast demo](docs/assets/examples/podcast-demo.wav) — *Content Creation Tips* (Maya & Jordan).
 
-Full breakdown, Free vs Company License notes, and a checklist:
-**[docs/LICENSING.md](docs/LICENSING.md)**.
+> If a media file is missing on your clone, regenerate it with
+> [docs/DEMO_CAPTURE.md](docs/DEMO_CAPTURE.md) after `npm run setup`.
 
-## Available Features
+## What you get
 
-### Video Creation
-- **Multi-format support**: Portrait (9:16), Landscape (16:9), Square (1:1)
-- **Script and scene editing**: Scene-by-scene content creation
-- **On-screen vs voice script**: Short display `text` plus optional longer `spokenText` for TTS
-- **AI scene planning**: Automatically adds relevant Unsplash stock backgrounds with varied pan/zoom motion
-- **Style + Energy looks**: Whole-reel Style (`bold-hook`, `clean-story`, `teach-me`, `soft-brand`) and Energy (`calm`, `normal`, `high`); default brand kit is **Coral Harbor**
-- **Dual video engines**: Remotion (React) or HyperFrames (HTML, Apache 2.0) — chosen at project create
-- **Remotion templates**: Kinetic typography, Lottie, 3D, emoji punch, icon grid, quote cards, stat reveal
-- **HyperFrames templates**: Cold open, bold statement, paced list, proof number, pull quote, end card
-- **MP4 rendering**: Queue-based rendering with progress updates (HyperFrames runs in an isolated worker)
-- **Project management**: Organize projects, assets, and brand kits
+### Create
 
-### Voice & Audio
-- **Multiple voice providers**:
-  - **Kokoro** (Apache-2.0): Free, runs entirely in-browser, no API key needed
-  - **Web Speech API**: Instant in-editor preview, no API key needed
-  - **Cartesia**: Premium cloud voices with cloning support (vendor terms)
-  - **ElevenLabs**: Premium cloud voices with extensive library (vendor terms)
-  - **VoiceForge** (optional): Self-hosted cloning; engine licenses vary (see [docs/LICENSING.md](docs/LICENSING.md))
-- **Voice modes**: **Oneshot** (one full-reel take) or **Per-scene** (generate/select clips per scene, then assemble)
-- **Voice takes management**: Generate, compare, and select multiple takes
-- **Caption sync**: Automatic timing alignment with voiceover
-- **Background music**: Bundled CC0 beds; optional Jamendo Creative Commons search; user uploads are your responsibility
+- Script and scene editor
+- AI storyboard planning (optional Gemini / OpenAI)
+- Portrait, landscape, and square formats
+- Stock backgrounds (optional Unsplash) and motion planning
 
-### AI Integration
-- **AI scene generation**: Powered by Google Gemini or OpenAI
-- **Voice script styles**: **Short** (on-screen text only) or **Detailed** (short on-screen + longer spoken narration)
-- **MCP Server**: Model Context Protocol integration for AI tools — video storyboards **and** audio podcasts (see [mcp/README.md](mcp/README.md))
-- **Smart content planning**: AI-assisted storyboard creation
+### Voice
 
-### Developer Experience
-- **Type-safe**: Full TypeScript with strict mode
-- **Modern stack**: Next.js 16, React 19, Tailwind CSS v4
-- **Docker support**: Containerized deployment for isolated environments
-- **Comprehensive tooling**: ESLint, Prettier, Vitest
-- **Local-first**: SQLite database with local asset storage
+- Browser Kokoro (Apache-2.0, no key) and Web Speech preview
+- Cartesia and ElevenLabs (optional keys)
+- Optional self-hosted [VoiceForge](docs/VOICE_PROVIDERS.md)
+- Full-reel or per-scene takes; multi-speaker **podcasts**
 
-## Upcoming Features
+### Design
 
-### Voice Cloning
-- **Local voice cloning**: Standalone project for training custom voice models locally
-- **Voice fine-tuning**: Personalize existing voices with your own samples
-- **Multi-language support**: Extended voice library for global content
-- **Real-time voice conversion**: Transform voice characteristics on-the-fly
+- Motion templates for Remotion and HyperFrames
+- Brand kits, captions, background music (bundled CC0)
+- Style + Energy looks (e.g. clean story, bold hook)
 
-### Enhanced Video Capabilities
-- **Advanced transitions**: More sophisticated scene transitions and effects
-- **3D model integration**: Import and animate custom 3D models
-- **Video overlays**: Picture-in-picture and overlay effects
-- **Advanced text animations**: More kinetic typography options
-- **Custom Lottie support**: Import and use custom Lottie animations
+### Export and automate
 
-### AI & Automation
-- **Auto-generated scripts**: AI-powered script writing from prompts
-- **Smart scene suggestions**: AI recommendations for scene improvements
-- **Batch processing**: Generate multiple videos from templates
-- **Content optimization**: AI suggestions for engagement and retention
+- Local MP4 rendering with queue and progress
+- Docker isolation bound to `127.0.0.1`
+- MCP server for AI-assisted video **and** podcast workflows
 
-### Collaboration & Sharing
-- **Project sharing**: Share projects with team members
-- **Version control**: Built-in version history for projects
-- **Cloud sync**: Optional cloud backup and sync
-- **Collaborative editing**: Real-time collaboration features
+## Video engines
 
-### Performance & Scale
-- **GPU acceleration**: Hardware-accelerated rendering
-- **Distributed rendering**: Scale rendering across multiple machines
-- **Advanced caching**: Intelligent caching for faster renders
-- **Background processing**: Queue management for large batches
+| | HyperFrames | Remotion |
+| --- | --- | --- |
+| Licence | **Apache-2.0** | Remotion License (not OSI) |
+| Templates | HTML motion (`hf-*`) | React compositions |
+| Best for | Open-source-safe demos & forks | Rich React template ecosystem |
 
-### Platform Expansion
-- **Desktop app**: Native desktop applications (Windows, macOS, Linux)
-- **Mobile companion**: Mobile app for quick edits and previews
-- **Plugin system**: Extensible plugin architecture
-- **API access**: REST API for programmatic control
+Demo seeds use **HyperFrames**. Details: [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md).
 
+## Local vs optional cloud
 
-## Tech Stack
+| Feature | Local option | Optional cloud |
+| --- | --- | --- |
+| Voice preview | Web Speech | — |
+| Voice generation | Kokoro / VoiceForge | ElevenLabs, Cartesia |
+| Video render | HyperFrames or Remotion (on your machine) | — |
+| AI planning | Manual | Gemini, OpenAI |
+| Backgrounds | Upload / gradients | Unsplash |
+| Music | Bundled CC0 / upload | Jamendo |
 
-- App: Next.js App Router + TypeScript (strict)
-- UI: Tailwind CSS v4 + Radix-based components + lucide-react
-- Data: TanStack Query + Zod
-- Video: Remotion 4 and/or HyperFrames (`@hyperframes/producer`) — see [docs/LICENSING.md](docs/LICENSING.md)
-- Persistence: Prisma + SQLite
-- Storage: Local disk asset store under `media/`
-- Tooling: ESLint, Prettier, Vitest
-- Node.js: **≥ 22** recommended (required for HyperFrames renders; see `.nvmrc`)
+Full explanation: [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md).
 
-## Quick Start
-
-### 1. Install
+## Quick start
 
 ```bash
-# HyperFrames rendering requires Node 22+
-nvm use   # respects .nvmrc
+git clone https://github.com/mohitkale/reel-studio.git
+cd reel-studio
+nvm use          # Node 22+
 npm install
-```
-
-### 2. Configure environment
-
-```bash
-cp .env.example .env.local
-```
-
-Set only the keys you need. Empty values are fine for local non-provider testing.
-Free, no-key voices work out of the box: **Kokoro** (Apache-2.0) runs entirely in
-your browser, and **Web Speech** gives an instant in-editor preview. Cartesia and
-ElevenLabs keys are optional, for premium cloud voices. On ElevenLabs free/Starter
-plans the app falls back from `wav_44100` to `wav_24000` and resamples to 44.1 kHz
-(Pro+ still gets native 44.1 kHz when allowed).
-
-### 3. Initialize database
-
-```bash
-npm run db:push
-```
-
-Re-run this after pulling changes that touch `prisma/schema.prisma` (e.g.
-`videoEngine` on projects, music fields) so your local SQLite stays in sync.
-
-### 4. Optional demo seed
-
-```bash
-npm run seed:demo-brandkit
-npm run seed:assets
-```
-
-### 5. Run app
-
-```bash
+npm run setup    # .env.local (if missing), DB, demo brand kit, demo video + podcast
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open [http://localhost:3000](http://localhost:3000).
 
-## Run with Docker (isolated)
+Or one shot: `npm run demo` (runs setup, then `npm run dev`).
 
-For an isolated environment that keeps rendering (headless Chromium, FFmpeg,
-native binaries, and CPU-heavy work) off your host machine, run the app in a
-container. This covers both Remotion renders and HyperFrames
-(`@hyperframes/producer` worker). Recommended if you want a hard boundary
-between Reel Studio's external processes and your laptop. Node 22+ is required
-in the image (already set in the Dockerfile).
+No cloud keys are required for the HyperFrames demo project or Kokoro voices.
 
-**Prerequisites:** Docker Desktop (or Docker Engine + Compose v2) running.
+### Manual fallback
 
 ```bash
-# 1. Provide API keys (optional — you can also enter them in Settings later)
-cp .env.example .env.local   # then edit values
+cp .env.example .env.local
+npm run db:push
+npm run seed:demo-brandkit
+npm run seed:demo-project
+npm run seed:demo-podcast
+npm run dev
+```
 
-# 2. Build and start (first run downloads the base image + installs deps)
+### Docker (isolated)
+
+```bash
+cp .env.example .env.local   # optional keys
 docker compose up --build
 ```
 
-Open `http://localhost:3000`. Source is bind-mounted, so edits hot-reload.
-The Compose file binds the published port to **127.0.0.1** so the local-first
-API is not exposed on your LAN by default.
+Compose publishes **`127.0.0.1:3000` only** — not your LAN.
+
+## MCP integration
+
+With the app running, generate a token in **Settings → AI tools / MCP**, then:
 
 ```bash
-docker compose up        # start (after the first build)
-docker compose down      # stop, keeping data
-docker compose down -v   # stop and delete volumes (database, media, deps)
-docker compose logs -f   # follow logs
-docker compose exec app sh   # shell into the container
+npm run mcp
 ```
 
-What the container handles for you:
+See [mcp/README.md](mcp/README.md) for video and podcast tools.
 
-- **Isolation & laptop health** — CPU/RAM are capped (conservative defaults in
-  `docker-compose.yml`: ~2 cores, 6 GB) and render concurrency is limited via
-  `REMOTION_RENDER_CONCURRENCY`. Tune these to your machine.
-- **Linux-native deps** — `node_modules`, the Next.js build cache, the SQLite
-  database and the `media/` store live in named volumes, never mixing with your
-  host's (Windows/macOS) files. Your host `node_modules` is untouched.
-- **Rendering** — Remotion and HyperFrames both use headless Chromium in-process
-  / via the HyperFrames worker, with `--no-sandbox`, so no extra container
-  privileges are required.
+## Security (localhost-first)
 
-> First Remotion render downloads a headless Chromium build (~170 MB) into the
-> deps volume; HyperFrames may download its own Chrome/FFmpeg on first use.
-> Both are cached for subsequent renders.
->
-> After changing dependencies or the `Dockerfile`, rebuild with
-> `docker compose up --build`. If a dependency change isn't picked up, reset the
-> deps volume: `docker compose down -v` then `docker compose up --build`.
+Built for **trusted localhost use**. Do not expose it on the public internet
+without your own auth layer. See [SECURITY.md](SECURITY.md).
 
-## Available Scripts
+## Roadmap
 
-| Script | Purpose |
-| --- | --- |
-| `npm run dev` | Start development server |
-| `npm run build` | Build production app |
-| `npm run start` | Run production app |
-| `npm run lint` | Run ESLint |
-| `npm run typecheck` | TypeScript type-check |
-| `npm run test` | Run Vitest suite |
-| `npm run studio` | Open Remotion Studio |
-| `npm run mcp` | Start the MCP server for AI tools (needs the app running + a token from Settings) |
-| `npm run security:scan` | Scan tracked files for secret patterns |
-| `npm run prepare:hooks` | Enable local git hooks in `.githooks` |
-| `npm run db:push` | Push Prisma schema to SQLite |
-| `npm run seed:assets` | Seed sample assets |
-| `npm run seed:demo-brandkit` | Seed neutral demo brand kit |
+Near-term focus: simpler install, demo mode, more HyperFrames templates,
+captions, export presets, and template authoring docs.
+
+Full list: [ROADMAP.md](ROADMAP.md).
+
+## Contributing
+
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- [CONTRIBUTORS.md](CONTRIBUTORS.md)
+
+### Contributors
+
+- **[Mohit Kale](https://github.com/mohitkale)** — creator & maintainer
+- **[Cursor](https://cursor.com)** / **[Cursor Agent](https://github.com/cursoragent)** — pair programmer & first AI contributor
 
 ## Architecture
 
 ![System architecture](docs/architecture.svg)
 
-Key modules:
-
-1. `src/app`:
-API routes and pages using Next.js App Router.
-Includes **Podcasts** (`/podcasts`) — a voice-only multi-speaker feature
-separate from video projects (characters, AI/JSON scripts, ordered TTS stitch).
-2. `src/library`:
-Repository layer, render orchestration, storage abstraction, sample content.
-HyperFrames export lives in `hyperframes-render.ts` (spawns the worker).
-Podcast audio generation lives in `podcast-take-service.ts`.
-3. `src/engines`:
-Video-engine registry and adapters (`remotion` | `hyperframes`). Engine choice
-is fixed on the project at create time.
-4. `src/providers`:
-Provider registries and concrete AI/voice implementations.
-Podcast script prompts live in `ai/podcast-prompt.ts` (humanised dialogue).
-5. `src/compositions`:
-Remotion-only composition, templates, visuals, and tokens.
-6. `scripts/hyperframes-render-worker.mjs`:
-Isolated Node process that runs `@hyperframes/producer` for HyperFrames MP4s.
-7. `prisma`:
-Database schema and generated client usage.
-
-## Render and Processing Flow
-
 ![Render flow](docs/render-flow.svg)
 
-High-level sequence:
+Stack: Next.js App Router, TypeScript, Prisma + SQLite, Remotion and/or
+HyperFrames, TanStack Query, Zod. Details in the sections below and in
+`src/library/`.
 
-1. User edits scenes and selects/generates a voice take.
-2. Timeline frames are computed from scene timings.
-3. API creates render job and enqueues it.
-4. Render path branches on `Project.videoEngine`:
-   - **Remotion:** bundle composition and call `renderMedia`.
-   - **HyperFrames:** build HTML composition, copy local takes/music into the
-     project as relative `_assets/`, then spawn `hyperframes-render-worker.mjs`
-     (isolated `@hyperframes/producer` session).
-5. Progress is streamed to UI via SSE and persisted with throttling.
-6. Final MP4 is written to `media/renders/` and linked in the renders library.
+### Key modules
 
-## Data Model (Summary)
+1. `src/app` — API routes and UI (including `/podcasts`)
+2. `src/library` — repositories, render and take services, storage
+3. `src/engines` — Remotion / HyperFrames adapters
+4. `src/providers` — AI and voice providers
+5. `src/compositions` — Remotion templates
+6. `scripts/` — setup, seeds, HyperFrames worker
 
-- `Project`: top-level workspace; includes `videoEngine` (`remotion` | `hyperframes`, default `remotion`, set at create)
-- `BrandKit`: palette, fonts, logo, handle, CTA defaults (fresh DBs get **Coral Harbor**)
-- `Script`: timeline container with scenes; `voiceMode` (`oneshot` | `per_scene`); Style/Energy in brand overrides
-- `Scene`: ordered unit with template, on-screen `text`, optional `spokenText`, and content (template ids differ per engine)
-- `SceneVoiceClip`: per-scene voice versions used when `voiceMode` is `per_scene`
-- `VoiceTake`: synthesized voice track + timing JSON (`source`: `oneshot` | `assembled`)
-- `Render`: render job state and output path
-- `Asset`: uploaded media metadata
-- `ProviderSetting`: provider readiness and defaults
+## Available scripts
 
-See `prisma/schema.prisma` for full schema details.
+| Script | Purpose |
+| --- | --- |
+| `npm run setup` | Idempotent first-run setup |
+| `npm run demo` | Setup + start dev server |
+| `npm run dev` | Start development server |
+| `npm run build` / `start` | Production build / run |
+| `npm run lint` / `typecheck` / `test` | Quality checks |
+| `npm run security:scan` | Secret pattern scan |
+| `npm run prepare:hooks` | Enable `.githooks` |
+| `npm run db:push` | Push Prisma schema |
+| `npm run seed:demo-project` | Seed HyperFrames demo reel |
+| `npm run seed:demo-podcast` | Seed short demo podcast |
+| `npm run export:demo-assets` | Render/copy demo MP4s + podcast WAV into `docs/assets` |
+| `npm run seed:demo-brandkit` | Seed Coral Harbor kit |
+| `npm run seed:assets` | Sample SVG/Lottie assets |
+| `npm run mcp` | MCP server |
+| `npm run studio` | Remotion Studio |
 
-## Environment Variables
+## Environment variables
 
-All supported variables are documented in `.env.example`.
+See [`.env.example`](.env.example). Minimum for local non-provider use:
+`DATABASE_URL` only (created by setup).
 
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `DATABASE_URL` | Yes | Prisma SQLite connection string |
-| `CARTESIA_API_KEY` | No | Enable Cartesia voices and synthesis (Kokoro/Web Speech need no key) |
-| `ELEVENLABS_API_KEY` | No | Enable ElevenLabs voices and synthesis (free tier supported via wav fallback) |
-| `VOICEFORGE_SERVICE_URL` | No | Base URL for optional self-hosted VoiceForge cloning (`http://127.0.0.1:8089`) |
-| `VOICEFORGE_API_TOKEN` | No | Optional bearer token when VoiceForge requires auth |
-| `MCP_API_TOKEN` | No | Auto-managed; generate/rotate in Settings → AI tools / MCP (never set by hand) |
-| `GEMINI_API_KEY` | No | Enable Gemini AI planning flows |
-| `OPENAI_API_KEY` | No | Enable OpenAI AI planning flows |
-| `UNSPLASH_ACCESS_KEY` | No | Enable AI-picked stock photo backgrounds (free Unsplash Demo tier) |
-| `JAMENDO_CLIENT_ID` | No | Enable searching Jamendo's 600k+ Creative Commons track library from the Music control (free Client ID) |
-| `REMOTION_RENDER_CONCURRENCY` | No | Override adaptive render concurrency (threads within one render) |
-| `REEL_MAX_CONCURRENT_RENDERS` | No | Max render jobs running at once (default 1; protects small servers) |
-| `SKIP_RENDER_SMOKE` | No | Skip render smoke test when set to `1` |
+## Licensing summary
 
-Minimum local setup for non-provider testing: only `DATABASE_URL`.
+| Component | Terms |
+| --- | --- |
+| Reel Studio app, templates, MCP code | **MIT** |
+| Bundled music (`public/music/`) | **CC0** |
+| **Remotion** | **Remotion License** ([details](https://www.remotion.dev/license)) |
+| **HyperFrames** | **Apache-2.0** |
+| Kokoro TTS | Apache-2.0 |
+| Optional cloud providers | Each vendor’s terms |
+| VoiceForge engines | Per-engine (may be non-commercial) |
 
-## Performance Notes
+Full matrix and checklist: **[docs/LICENSING.md](docs/LICENSING.md)**.
 
-Render speed is hardware-dependent. Current backend defaults include:
+## Additional docs
 
-- Adaptive capped concurrency for Remotion rendering
-- Faster x264 preset for local throughput
-- Render cache tuning for media and offthread video
-- Throttled DB progress writes to avoid SQLite contention
+- [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md)
+- [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md)
+- [docs/VOICE_PROVIDERS.md](docs/VOICE_PROVIDERS.md)
+- [docs/DEMO_CAPTURE.md](docs/DEMO_CAPTURE.md)
+- [docs/TEMPLATE_AUTHORING.md](docs/TEMPLATE_AUTHORING.md)
+- [docs/LICENSING.md](docs/LICENSING.md)
+- [CHANGELOG.md](CHANGELOG.md)
 
-You can override render concurrency with `REMOTION_RENDER_CONCURRENCY`.
+## Maintainer: GitHub repo settings (manual)
 
-## Security and Publishing Checklist
+After merging the launch PR, set in GitHub → Settings:
 
-Before publishing:
+**Description**
 
-1. Confirm no secrets are staged:
+> Local-first AI video studio for turning scripts into Reels, Shorts and LinkedIn videos with voiceovers, motion templates and MP4 export.
 
-```bash
-git status
-git diff --staged
-```
+**Topics:** `ai-video` `video-editor` `short-form-video` `reels` `youtube-shorts` `remotion` `hyperframes` `text-to-video` `ai-voice` `local-first` `nextjs` `typescript` `mcp` `open-source`
 
-2. Confirm no local env files are tracked:
-
-```bash
-git ls-files .env .env.local
-```
-
-3. Run static quality checks:
-
-```bash
-npm run lint
-npm run typecheck
-npm run test
-npm run security:scan
-```
-
-4. Review [docs/LICENSING.md](docs/LICENSING.md) and sample assets for private or third-party licensed content (Remotion, Unsplash, music, VoiceForge engines).
-
-5. Enable local pre-commit secret scanning:
-
-```bash
-npm run prepare:hooks
-```
-
-## Project Structure
-
-```text
-src/
-  app/            # pages + API routes
-  components/     # UI and editor components
-  compositions/   # Remotion composition system
-  engines/        # video engine registry (Remotion + HyperFrames)
-  hooks/          # client data hooks
-  lib/            # shared helpers and DTOs
-  library/        # repositories, render service, storage
-  providers/      # AI and voice provider adapters
-  remotion/       # Remotion root registration
-docs/             # product and architecture docs
-prisma/           # schema and db setup
-scripts/          # seed scripts + HyperFrames render worker
-media/            # local asset and render output (git-ignored)
-```
-
-## Additional Docs
-
-- **Licensing & third-party terms:** [`docs/LICENSING.md`](docs/LICENSING.md)
-- Product build brief: `docs/ai-reel-studio-BRIEF.md`
-- Security policy: `SECURITY.md`
-- Contribution guide: `CONTRIBUTING.md`
-- Contributors: `CONTRIBUTORS.md`
-
+**Social preview:** use `docs/assets/reel-studio-editor.png` (or a custom 1280×640 image).
