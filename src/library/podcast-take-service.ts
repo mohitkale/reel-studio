@@ -207,6 +207,29 @@ export async function generatePodcastTake(
     input.label ??
     `Podcast · ${podcast.characters.length} voices · ${turnCount} turns`;
 
+  // Snapshot unique cast voices actually used (preserve character order).
+  const voiceByKey = new Map<
+    string,
+    {
+      key: string;
+      name: string;
+      providerId: string;
+      voiceId: string;
+      modelId: string | null;
+    }
+  >();
+  for (const c of podcast.characters) {
+    if (!c.providerId || !c.voiceId) continue;
+    voiceByKey.set(c.key, {
+      key: c.key,
+      name: c.name,
+      providerId: c.providerId,
+      voiceId: c.voiceId,
+      modelId: c.modelId ?? null,
+    });
+  }
+  const voices = [...voiceByKey.values()];
+
   return createPodcastTake({
     podcastId: input.podcastId,
     label,
@@ -216,6 +239,7 @@ export async function generatePodcastTake(
     fps: DEFAULT_FPS,
     totalFrames: stitched.totalFrames,
     timeline,
+    voices,
     audioPath: key,
   });
 }

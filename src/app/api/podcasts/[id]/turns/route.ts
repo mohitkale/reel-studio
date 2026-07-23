@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import {
   deleteTurn,
+  insertTurn,
   replaceTurnsFromPlan,
   updateTurnText,
 } from "@/library/repositories/podcasts";
@@ -23,7 +24,13 @@ const patchTurnSchema = z.object({
   text: z.string().trim().min(1).max(4000),
 });
 
-/** POST /api/podcasts/:id/turns — import a full script plan (JSON paste). */
+const insertTurnSchema = z.object({
+  characterId: z.string().min(1),
+  text: z.string().trim().min(1).max(4000),
+  afterTurnId: z.string().min(1).nullable().optional(),
+});
+
+/** POST /api/podcasts/:id/turns — insert one turn, or import a full script plan. */
 export async function POST(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
@@ -31,10 +38,24 @@ export async function POST(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const body = importSchema.parse(await req.json());
-    const podcast = await replaceTurnsFromPlan(id, body.plan, {
-      updateMeta: body.updateMeta ?? false,
-    });
+    const body: unknown = await req.json();
+
+    // Prefer full-plan import when `plan` is present so validation errors are useful.
+    if (
+      body &&
+      typeof body === "object" &&
+      "plan" in body &&
+      (body as { plan?: unknown }).plan != null
+    ) {
+      const parsed = importSchema.parse(body);
+      const podcast = await replaceTurnsFromPlan(id, parsed.plan, {
+        updateMeta: parsed.updateMeta ?? false,
+      });
+      return NextResponse.json({ podcast });
+    }
+
+    const parsed = insertTurnSchema.parse(body);
+    const podcast = await insertTurn(id, parsed);
     return NextResponse.json({ podcast });
   } catch (e) {
     return errorResponse(e);

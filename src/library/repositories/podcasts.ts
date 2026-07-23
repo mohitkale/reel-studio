@@ -323,6 +323,66 @@ export async function updateTurnText(
   return full;
 }
 
+/** Insert a dialogue turn after `afterTurnId` (or append when omitted). */
+export async function insertTurn(
+  podcastId: string,
+  input: {
+    characterId: string;
+    text: string;
+    afterTurnId?: string | null;
+  },
+): Promise<PodcastDTO> {
+  const podcast = await prisma.podcast.findUnique({
+    where: { id: podcastId },
+    include: {
+      characters: true,
+      turns: { orderBy: { order: "asc" } },
+    },
+  });
+  if (!podcast) throw new Error("Podcast not found");
+
+  const character = podcast.characters.find((c) => c.id === input.characterId);
+  if (!character) throw new Error("Character not found on this podcast");
+
+  const text = input.text.trim();
+  if (!text) throw new Error("Dialogue text is required");
+
+  let insertAt = podcast.turns.length;
+  if (input.afterTurnId) {
+    const idx = podcast.turns.findIndex((t) => t.id === input.afterTurnId);
+    if (idx < 0) throw new Error("Anchor turn not found");
+    insertAt = idx + 1;
+  }
+
+  await prisma.$transaction(async (tx) => {
+    // Shift orders for turns at/after insert point (high → low to avoid unique collisions).
+    const toShift = podcast.turns.filter((t) => t.order >= insertAt);
+    for (let i = toShift.length - 1; i >= 0; i--) {
+      const t = toShift[i];
+      await tx.podcastTurn.update({
+        where: { id: t.id },
+        data: { order: t.order + 1 },
+      });
+    }
+    await tx.podcastTurn.create({
+      data: {
+        podcastId,
+        characterId: character.id,
+        order: insertAt,
+        text,
+      },
+    });
+    await tx.podcast.update({
+      where: { id: podcastId },
+      data: { updatedAt: new Date() },
+    });
+  });
+
+  const full = await loadPodcast(podcastId);
+  if (!full) throw new Error("Podcast not found");
+  return full;
+}
+
 export async function deleteTurn(turnId: string): Promise<PodcastDTO> {
   const turn = await prisma.podcastTurn.findUnique({ where: { id: turnId } });
   if (!turn) throw new Error("Turn not found");
@@ -360,6 +420,13 @@ export interface CreatePodcastTakeInput {
   fps: number;
   totalFrames: number;
   timeline: PodcastBeatTiming[];
+  voices: Array<{
+    key: string;
+    name: string;
+    providerId: string;
+    voiceId: string;
+    modelId?: string | null;
+  }>;
   audioPath: string;
 }
 
@@ -376,6 +443,7 @@ export async function createPodcastTake(
       fps: input.fps,
       totalFrames: input.totalFrames,
       timingJson: JSON.stringify(input.timeline),
+      voicesJson: JSON.stringify(input.voices),
       audioPath: input.audioPath,
     },
   });

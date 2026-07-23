@@ -15,6 +15,7 @@ import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { HintTooltip } from "@/components/ui/hint-tooltip";
+import { cn } from "@/lib/utils";
 
 const GENDER_OPTIONS: { value: PodcastGenderDTO; label: string }[] = [
   { value: "male", label: "Male" },
@@ -23,6 +24,25 @@ const GENDER_OPTIONS: { value: PodcastGenderDTO; label: string }[] = [
 ];
 
 const PREVIEW_LINE = "Hi, how are you doing today?";
+
+const CHARACTER_ACCENTS = [
+  {
+    border: "border-l-teal-500",
+    avatar: "bg-teal-600 text-white",
+  },
+  {
+    border: "border-l-indigo-500",
+    avatar: "bg-indigo-600 text-white",
+  },
+  {
+    border: "border-l-amber-500",
+    avatar: "bg-amber-600 text-white",
+  },
+  {
+    border: "border-l-rose-500",
+    avatar: "bg-rose-600 text-white",
+  },
+] as const;
 
 /** Encodes provider + voice (+ optional model) into one combobox value. */
 export function encodeVoiceValue(
@@ -142,16 +162,21 @@ function useGroupedVoiceOptions(gender: PodcastGenderDTO): {
 }
 
 function CharacterRow({
+  index,
   draft,
   onChange,
   onRemove,
   canRemove,
 }: {
+  index: number;
   draft: CharacterDraft;
   onChange: (next: CharacterDraft) => void;
   onRemove: () => void;
   canRemove: boolean;
 }) {
+  const accent = CHARACTER_ACCENTS[index % CHARACTER_ACCENTS.length];
+  const accentBorder = accent.border;
+  const accentAvatar = accent.avatar;
   const { options, loading } = useGroupedVoiceOptions(draft.gender);
   const voiceValue = encodeVoiceValue(
     draft.providerId,
@@ -214,13 +239,42 @@ function CharacterRow({
   }, []);
 
   return (
-    <div className="grid gap-3 rounded-lg border p-3">
+    <div
+      className={cn(
+        "grid gap-3 rounded-xl border-2 border-border bg-background p-3 shadow-sm",
+        "border-l-4",
+        accentBorder,
+      )}
+    >
       <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="secondary">{draft.key || "—"}</Badge>
-          <span className="text-xs text-muted-foreground">
-            JSON id · use this name in dialogue
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span
+            className={cn(
+              "flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
+              accentAvatar,
+            )}
+          >
+            {(draft.name.trim()[0] || "?").toUpperCase()}
           </span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold leading-tight">
+              Character {index + 1}
+              {draft.name.trim() ? (
+                <span className="font-normal text-muted-foreground">
+                  {" "}
+                  · {draft.name}
+                </span>
+              ) : null}
+            </p>
+            <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+              <Badge variant="secondary" className="font-mono text-[10px]">
+                {draft.key || "—"}
+              </Badge>
+              <span className="text-[11px] text-muted-foreground">
+                JSON id for dialogue
+              </span>
+            </div>
+          </div>
         </div>
         {canRemove ? (
           <HintTooltip label="Remove character">
@@ -242,6 +296,7 @@ function CharacterRow({
         <div className="grid gap-1.5">
           <Label>Display name</Label>
           <Input
+            className="bg-card"
             value={draft.name}
             placeholder="e.g. Maya"
             onChange={(e) => {
@@ -268,6 +323,7 @@ function CharacterRow({
               label: g.label,
             }))}
             placeholder="Gender"
+            className="bg-card"
           />
         </div>
       </div>
@@ -275,15 +331,19 @@ function CharacterRow({
       <div className="grid gap-1.5">
         <Label>Character definition</Label>
         <textarea
-          className="min-h-[64px] rounded-md border bg-background px-3 py-2 text-sm"
-          placeholder="Personality, role, tone — used when AI writes their lines"
+          className="min-h-[56px] w-full rounded-md border border-input bg-card px-3 py-2 text-sm shadow-sm"
+          placeholder="Personality, role, tone — shapes how AI writes their lines"
           value={draft.definition}
           onChange={(e) => onChange({ ...draft, definition: e.target.value })}
         />
+        <p className="text-[11px] text-muted-foreground">
+          Used for AI script writing only — does not change how TTS sounds.
+          Pick Voice below for the spoken voice.
+        </p>
       </div>
 
-      <div className="grid gap-1.5">
-        <Label>Voice</Label>
+      <div className="grid gap-1.5 rounded-lg border border-border bg-card p-2.5">
+        <Label>Voice (TTS)</Label>
         <div className="flex gap-2">
           <div className="min-w-0 flex-1">
             <Combobox
@@ -303,6 +363,7 @@ function CharacterRow({
               }
               searchPlaceholder="Search by voice or provider…"
               disabled={loading && options.length === 0}
+              className="bg-background"
             />
           </div>
           <HintTooltip label={`Preview: “${PREVIEW_LINE}”`}>
@@ -323,8 +384,8 @@ function CharacterRow({
           </HintTooltip>
         </div>
         <p className="text-[11px] text-muted-foreground">
-          One searchable list, grouped by provider. Preview caches a short
-          sample for reuse.
+          Audio generation always uses the voice saved here (latest pick when
+          you Generate).
         </p>
       </div>
     </div>
@@ -362,6 +423,7 @@ export function PodcastCharacterEditor({
       {drafts.map((d, i) => (
         <CharacterRow
           key={d.localId}
+          index={i}
           draft={d}
           canRemove={drafts.length > 2}
           onRemove={() => onChange(drafts.filter((_, j) => j !== i))}

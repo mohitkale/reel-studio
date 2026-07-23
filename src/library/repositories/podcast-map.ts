@@ -16,6 +16,7 @@ import { getAssetStore } from "@/library/storage";
 import {
   podcastGenderSchema,
   podcastLengthSchema,
+  podcastTakeVoicesSchema,
   podcastTimelineSchema,
 } from "@/library/podcast-schemas";
 import { parseJsonColumn } from "@/library/schemas";
@@ -69,6 +70,17 @@ export function toPodcastTakeDTO(take: PodcastTake): PodcastTakeDTO {
     podcastTimelineSchema,
     [] as PodcastBeatTimingDTO[],
   );
+  const voices = parseJsonColumn(
+    take.voicesJson ?? "[]",
+    podcastTakeVoicesSchema,
+    [] as PodcastTakeDTO["voices"],
+  ).map((v) => ({
+    key: v.key,
+    name: v.name,
+    providerId: v.providerId,
+    voiceId: v.voiceId,
+    modelId: v.modelId ?? null,
+  }));
   return {
     id: take.id,
     podcastId: take.podcastId,
@@ -79,6 +91,7 @@ export function toPodcastTakeDTO(take: PodcastTake): PodcastTakeDTO {
     fps: take.fps,
     totalFrames: take.totalFrames,
     timeline,
+    voices,
     audioUrl: getAssetStore().url(take.audioPath),
     createdAt: take.createdAt.toISOString(),
   };

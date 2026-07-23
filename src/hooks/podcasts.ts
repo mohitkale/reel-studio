@@ -171,6 +171,21 @@ export function useUpdatePodcastTurn(id: string) {
   });
 }
 
+export function useInsertPodcastTurn(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: {
+      characterId: string;
+      text: string;
+      afterTurnId?: string | null;
+    }) =>
+      apiPost<{ podcast: PodcastDTO }>(`/api/podcasts/${id}/turns`, vars).then(
+        (r) => r.podcast,
+      ),
+    onSuccess: () => invalidatePodcast(qc, id),
+  });
+}
+
 export function useDeletePodcastTurn(id: string) {
   const qc = useQueryClient();
   return useMutation({

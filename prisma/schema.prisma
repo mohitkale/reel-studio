@@ -256,6 +256,9 @@ model PodcastTake {
   totalFrames Int
   /// JSON: [{ turnId, startFrame, durationFrames, text, characterKey? }]
   timingJson  String
+  /// JSON snapshot of cast voices used for this take:
+  /// [{ key, name, providerId, voiceId, modelId? }]
+  voicesJson  String   @default("[]")
   audioPath   String
   createdAt   DateTime @default(now())
 

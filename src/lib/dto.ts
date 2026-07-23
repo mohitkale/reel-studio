@@ -195,6 +195,14 @@ export interface PodcastTurnDTO {
   text: string;
 }
 
+export interface PodcastTakeVoiceDTO {
+  key: string;
+  name: string;
+  providerId: string;
+  voiceId: string;
+  modelId: string | null;
+}
+
 export interface PodcastTakeDTO {
   id: string;
   podcastId: string;
@@ -205,6 +213,8 @@ export interface PodcastTakeDTO {
   fps: number;
   totalFrames: number;
   timeline: PodcastBeatTimingDTO[];
+  /** Cast voices snapshotted at generation time. */
+  voices: PodcastTakeVoiceDTO[];
   audioUrl: string;
   createdAt: string;
 }

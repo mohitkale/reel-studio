@@ -21,6 +21,19 @@ export const podcastBeatTimingSchema = z.object({
 
 export const podcastTimelineSchema = z.array(podcastBeatTimingSchema);
 
+/** Snapshot of a cast voice used when a take was generated. */
+export const podcastTakeVoiceSchema = z.object({
+  key: z.string(),
+  name: z.string(),
+  providerId: z.string(),
+  voiceId: z.string(),
+  modelId: z.string().nullable().optional(),
+});
+
+export const podcastTakeVoicesSchema = z.array(podcastTakeVoiceSchema);
+
+export type PodcastTakeVoice = z.infer<typeof podcastTakeVoiceSchema>;
+
 /** Character shape in AI/JSON scripts (id maps to PodcastCharacter.key). */
 export const podcastScriptCharacterSchema = z.object({
   id: z.string().trim().min(1).max(40),
