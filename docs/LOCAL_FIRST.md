@@ -40,6 +40,6 @@ Nothing is sent for analytics or telemetry. See [SECURITY.md](../SECURITY.md).
 
 ## VoiceForge
 
-[VoiceForge](https://github.com/mohitkale) (separate repo when published) can be
-connected as an optional self-hosted voice backend. It is not required to use
-Reel Studio. Engine licenses inside VoiceForge vary — check that project’s docs.
+[VoiceForge](https://github.com/mohitkale/voiceforge) is an optional self-hosted
+voice cloning backend. It is not required to use Reel Studio. Engine licenses
+inside VoiceForge vary — check that project’s docs.

@@ -39,8 +39,7 @@ Short synthetic demos (content-creation tip, HyperFrames, redistributable assets
 | Landscape 16:9 | [![Landscape](docs/assets/examples/landscape-demo.jpg)](docs/assets/examples/landscape-demo.mp4) | [MP4](docs/assets/examples/landscape-demo.mp4) |
 | Square 1:1 | [![Square](docs/assets/examples/square-demo.jpg)](docs/assets/examples/square-demo.mp4) | [MP4](docs/assets/examples/square-demo.mp4) |
 
-Audio: [podcast demo](docs/assets/examples/podcast-demo.wav) — *Content Creation Tips* (Maya & Jordan).
-
+> Sample clips include on-screen text and voiceover audio in the MP4 itself.
 > If a media file is missing on your clone, regenerate it with
 > [docs/DEMO_CAPTURE.md](docs/DEMO_CAPTURE.md) after `npm run setup`.
 
@@ -57,7 +56,7 @@ Audio: [podcast demo](docs/assets/examples/podcast-demo.wav) — *Content Creati
 
 - Browser Kokoro (Apache-2.0, no key) and Web Speech preview
 - Cartesia and ElevenLabs (optional keys)
-- Optional self-hosted [VoiceForge](docs/VOICE_PROVIDERS.md)
+- Optional self-hosted [VoiceForge](https://github.com/mohitkale/voiceforge)
 - Full-reel or per-scene takes; multi-speaker **podcasts**
 
 ### Design
@@ -219,7 +218,7 @@ See [`.env.example`](.env.example). Minimum for local non-provider use:
 | **HyperFrames** | **Apache-2.0** |
 | Kokoro TTS | Apache-2.0 |
 | Optional cloud providers | Each vendor’s terms |
-| VoiceForge engines | Per-engine (may be non-commercial) |
+| VoiceForge engines ([separate repo](https://github.com/mohitkale/voiceforge)) | Per-engine (may be non-commercial) |
 
 Full matrix and checklist: **[docs/LICENSING.md](docs/LICENSING.md)**.
 

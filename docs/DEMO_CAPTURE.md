@@ -42,12 +42,12 @@ Save as `docs/assets/script-to-video.gif`.
 
 ## Sample MP4s
 
-From a running app (or via scripts once added):
+From a running app (or via `npm run export:demo-assets`):
 
-1. Open each format of the demo project (9:16, 16:9, 1:1).
-2. Generate a take (placeholder silent, or `kokoro-server`).
-3. Render at **draft** or **standard** quality.
-4. Copy outputs from `media/renders/` to:
+1. Open each format of a polished demo project (9:16, 16:9, 1:1).
+2. Generate a real voice take (not silent placeholder).
+3. Render at **standard** quality (or draft for faster iteration).
+4. Copy / compress outputs into:
 
 ```text
 docs/assets/examples/portrait-demo.mp4
@@ -57,15 +57,12 @@ docs/assets/examples/square-demo.mp4
 
 5. Export a poster frame (first or mid frame) as matching `.jpg` files.
 
-Keep clips short (three scenes). Prefer HyperFrames so redistributed demos stay
-on the Apache-2.0 path.
+Keep clips short. Prefer HyperFrames for Apache-2.0-only demos when that matters;
+Remotion demos are fine if licensing for redistributed samples is understood.
 
-## Podcast sample audio
-
-1. Open **Content Creation Tips**.
-2. Generate a take with the seeded Kokoro voices.
-3. Copy the WAV/MP3 from `media/` (or download from the Audio tab) to
-   `docs/assets/examples/podcast-demo.wav`.
+Audio for README demos lives **inside the MP4** — do not commit a separate
+podcast WAV for launch assets. The in-app podcast seed (`npm run seed:demo-podcast`)
+is still useful for local tryouts.
 
 ## Rules
 

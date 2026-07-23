@@ -124,9 +124,10 @@ preview-only and is not used for final MP4 voice tracks.
 
 ## Optional: VoiceForge (separate project)
 
-Voice cloning via VoiceForge is an **optional** HTTP integration
-(`VOICEFORGE_SERVICE_URL`). VoiceForge is a separate repository with its own
-MIT code license and **engine-specific model licenses**.
+Voice cloning via [VoiceForge](https://github.com/mohitkale/voiceforge) is an
+**optional** HTTP integration (`VOICEFORGE_SERVICE_URL`). VoiceForge is a
+separate repository with its own MIT code license and **engine-specific model
+licenses**.
 
 | Engine | Likeness | Speed on CPU | License (typical) | Notes |
 | --- | --- | --- | --- | --- |

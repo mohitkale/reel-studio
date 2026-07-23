@@ -7,7 +7,7 @@
 | **Kokoro server** | Local Node | No | Same model; used for podcast takes / server jobs |
 | **Cartesia** | Cloud | Yes | Vendor commercial terms; cloning available |
 | **ElevenLabs** | Cloud | Yes | Vendor commercial terms; free tier supported with WAV fallback |
-| **VoiceForge** | Self-hosted | Optional token | Separate project; engine licences vary |
+| **VoiceForge** | Self-hosted | Optional token | Separate project: [mohitkale/voiceforge](https://github.com/mohitkale/voiceforge); engine licences vary |
 
 ## Modes (video)
 

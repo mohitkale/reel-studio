@@ -169,12 +169,17 @@ async function main() {
   if (!skipPodcast) {
     try {
       await exportPodcast();
+      console.warn(
+        "\nNote: podcast WAV is for local verification only; README demos use MP4 audio.",
+      );
     } catch (err) {
       console.warn(
         "\nPodcast export failed (Kokoro model download may be needed). Retry later:",
       );
       console.warn(err instanceof Error ? err.message : err);
     }
+  } else {
+    console.log("\nSkipping podcast export (README samples use video MP4 audio).");
   }
 
   console.log("\nDone. Assets under docs/assets/examples/");
