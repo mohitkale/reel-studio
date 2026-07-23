@@ -4,30 +4,24 @@
 [![Node.js](https://img.shields.io/badge/node-%3E%3D22-brightgreen.svg)](https://nodejs.org/)
 [![MCP](https://img.shields.io/badge/MCP-server-blue.svg)](mcp/README.md)
 
-**Turn a script into a complete short-form video locally — with an MCP server for AI agents.**
+**Turn a script into a complete short-form video locally, with an MCP server for AI agents.**
 
 Local-first open-source studio for **Instagram Reels**, **YouTube Shorts**,
-**TikTok-style vertical video**, **Facebook / Meta**, **X (Twitter)**,
-**LinkedIn**, and other social formats (9:16, 16:9, 1:1). AI scene planning,
-voiceovers, motion templates, MP4 export, multi-speaker **podcasts**, and a
-built-in **Model Context Protocol (MCP)** server so Cursor, Claude, and other
-agents can drive production workflows.
+**TikTok**, **Facebook**, **X (Twitter)**, **LinkedIn**, and other social
+formats (9:16, 16:9, 1:1). Build with AI scene planning, voiceovers, motion
+templates, local MP4 export, multi-speaker **podcasts**, and a built-in
+**Model Context Protocol (MCP)** server so tools like Cursor can drive
+production workflows.
 
-**Local-first.** Open source. Your projects stay on your machine.
+**Local-first. Open source. Your projects stay on your machine.**
 
 > App code is **MIT**. Projects may use **HyperFrames** (Apache-2.0) or
-> **Remotion** (separate commercial terms — not OSI). See
+> **Remotion** (separate commercial terms, not OSI). See
 > [Licensing](#licensing-summary) and [docs/LICENSING.md](docs/LICENSING.md).
 
-![Reel Studio editor](docs/assets/reel-studio-editor.png)
+![Reel Studio demo](docs/assets/script-to-video.gif)
 
-![Reel Studio podcasts](docs/assets/reel-studio-podcast.png)
-
-> **GitHub tip:** MP4s do not autoplay in READMEs. Click a poster or MP4 link to
-> open/download the clip. For inline motion, add a short GIF
-> (`docs/assets/script-to-video.gif`) — see [DEMO_CAPTURE.md](docs/DEMO_CAPTURE.md).
-
-*[Demo capture](docs/DEMO_CAPTURE.md) · [MCP guide](mcp/README.md) · [Quick start](#quick-start) · [Roadmap](ROADMAP.md)*
+[Quick start](#quick-start) · [MCP](mcp/README.md) · [Roadmap](ROADMAP.md) · [Contributing](CONTRIBUTING.md)
 
 ## From idea to video
 
@@ -36,22 +30,17 @@ agents can drive production workflows.
 3. Choose backgrounds and motion templates
 4. Generate or upload a voiceover
 5. Preview in **9:16**, **16:9**, or **1:1**
-6. Render the final MP4 locally — or drive steps via **MCP**
+6. Render the final MP4 locally, or drive the flow with **MCP**
 
 ## Example outputs
 
-Sample social clips (on-screen text + voiceover audio inside each MP4):
-
-| Format | Poster | Download |
+| Format | Preview | File |
 | --- | --- | --- |
-| Portrait 9:16 (Reels / Shorts / TikTok / Stories) | [![Portrait](docs/assets/examples/portrait-demo.jpg)](docs/assets/examples/portrait-demo.mp4) | [MP4](docs/assets/examples/portrait-demo.mp4) |
-| Landscape 16:9 (YouTube / X / LinkedIn / Facebook) | [![Landscape](docs/assets/examples/landscape-demo.jpg)](docs/assets/examples/landscape-demo.mp4) | [MP4](docs/assets/examples/landscape-demo.mp4) |
-| Square 1:1 (Instagram / Facebook feed) | [![Square](docs/assets/examples/square-demo.jpg)](docs/assets/examples/square-demo.mp4) | [MP4](docs/assets/examples/square-demo.mp4) |
+| Portrait 9:16 (Reels, Shorts, TikTok, Stories) | [![Portrait](docs/assets/examples/portrait-demo.jpg)](docs/assets/examples/portrait-demo.mp4) | [MP4](docs/assets/examples/portrait-demo.mp4) |
+| Landscape 16:9 (YouTube, X, LinkedIn, Facebook) | [![Landscape](docs/assets/examples/landscape-demo.jpg)](docs/assets/examples/landscape-demo.mp4) | [MP4](docs/assets/examples/landscape-demo.mp4) |
+| Square 1:1 (Instagram, Facebook feed) | [![Square](docs/assets/examples/square-demo.jpg)](docs/assets/examples/square-demo.mp4) | [MP4](docs/assets/examples/square-demo.mp4) |
 
-**Podcast sample (audio):** [Content Creation Tips — MP3](docs/assets/examples/podcast-demo.mp3)
-([WAV](docs/assets/examples/podcast-demo.wav)) — open the file on GitHub to play.
-
-> Regenerate samples with [docs/DEMO_CAPTURE.md](docs/DEMO_CAPTURE.md) after `npm run setup`.
+**Podcast sample:** [MP3](docs/assets/examples/podcast-demo.mp3) · [WAV](docs/assets/examples/podcast-demo.wav)
 
 ## What you get
 
@@ -67,20 +56,19 @@ Sample social clips (on-screen text + voiceover audio inside each MP4):
 - Browser Kokoro (Apache-2.0, no key) and Web Speech preview
 - Cartesia and ElevenLabs (optional keys)
 - Optional self-hosted [VoiceForge](https://github.com/mohitkale/voiceforge)
-- Full-reel or per-scene takes; multi-speaker **podcasts**
+- Full-reel or per-scene takes, plus multi-speaker **podcasts**
 
 ### Design
 
 - Motion templates for Remotion and HyperFrames
 - Brand kits, captions, background music (bundled CC0)
-- Style + Energy looks (e.g. clean story, bold hook)
+- Style and Energy looks (for example clean story, bold hook)
 
 ### Export and automate
 
 - Local MP4 rendering with queue and progress
 - Docker isolation bound to `127.0.0.1`
-- **MCP server** for AI-assisted video **and** podcast workflows ([mcp/README.md](mcp/README.md))
-- Works with agent clients that speak Model Context Protocol (e.g. Cursor)
+- **MCP server** for AI-assisted video and podcast workflows ([mcp/README.md](mcp/README.md))
 
 ## Video engines
 
@@ -88,22 +76,22 @@ Sample social clips (on-screen text + voiceover audio inside each MP4):
 | --- | --- | --- |
 | Licence | **Apache-2.0** | Remotion License (not OSI) |
 | Templates | HTML motion (`hf-*`) | React compositions |
-| Best for | Open-source-safe demos & forks | Rich React template ecosystem |
+| Best for | Open-source-safe demos and forks | Rich React template ecosystem |
 
-Demo seeds use **HyperFrames**. Details: [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md).
+See [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md).
 
 ## Local vs optional cloud
 
 | Feature | Local option | Optional cloud |
 | --- | --- | --- |
-| Voice preview | Web Speech | — |
+| Voice preview | Web Speech | n/a |
 | Voice generation | Kokoro / VoiceForge | ElevenLabs, Cartesia |
-| Video render | HyperFrames or Remotion (on your machine) | — |
+| Video render | HyperFrames or Remotion (on your machine) | n/a |
 | AI planning | Manual | Gemini, OpenAI |
 | Backgrounds | Upload / gradients | Unsplash |
 | Music | Bundled CC0 / upload | Jamendo |
 
-Full explanation: [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md).
+See [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md).
 
 ## Quick start
 
@@ -112,15 +100,14 @@ git clone https://github.com/mohitkale/reel-studio.git
 cd reel-studio
 nvm use          # Node 22+
 npm install
-npm run setup    # .env.local (if missing), DB, demo brand kit, demo video + podcast
+npm run setup
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Or one shot: `npm run demo` (runs setup, then `npm run dev`).
-
-No cloud keys are required for the HyperFrames demo project or Kokoro voices.
+Or run `npm run demo` (setup + dev server). No cloud keys are required for the
+seeded HyperFrames demo or Kokoro voices.
 
 ### Manual fallback
 
@@ -133,14 +120,14 @@ npm run seed:demo-podcast
 npm run dev
 ```
 
-### Docker (isolated)
+### Docker
 
 ```bash
 cp .env.example .env.local   # optional keys
 docker compose up --build
 ```
 
-Compose publishes **`127.0.0.1:3000` only** — not your LAN.
+Compose publishes **`127.0.0.1:3000` only** (not your LAN).
 
 ## MCP integration
 
@@ -150,19 +137,17 @@ With the app running, generate a token in **Settings → AI tools / MCP**, then:
 npm run mcp
 ```
 
-See [mcp/README.md](mcp/README.md) for video and podcast tools.
+Video and podcast tools: [mcp/README.md](mcp/README.md).
 
-## Security (localhost-first)
+## Security
 
-Built for **trusted localhost use**. Do not expose it on the public internet
-without your own auth layer. See [SECURITY.md](SECURITY.md).
+Built for trusted localhost use. Do not expose it on the public internet without
+your own auth layer. See [SECURITY.md](SECURITY.md).
 
 ## Roadmap
 
-Near-term focus: simpler install, demo mode, more HyperFrames templates,
-captions, export presets, and template authoring docs.
-
-Full list: [ROADMAP.md](ROADMAP.md).
+Near-term: simpler install, more HyperFrames templates, caption editing, export
+presets, and template authoring docs. Full list: [ROADMAP.md](ROADMAP.md).
 
 ## Contributing
 
@@ -172,8 +157,8 @@ Full list: [ROADMAP.md](ROADMAP.md).
 
 ### Contributors
 
-- **[Mohit Kale](https://github.com/mohitkale)** — creator & maintainer
-- **[Cursor](https://cursor.com)** / **[Cursor Agent](https://github.com/cursoragent)** — pair programmer & first AI contributor
+- **[Mohit Kale](https://github.com/mohitkale)**: creator and maintainer
+- **[Cursor](https://cursor.com)** / **[Cursor Agent](https://github.com/cursoragent)**: pair programmer and first AI contributor
 
 ## Architecture
 
@@ -182,23 +167,22 @@ Full list: [ROADMAP.md](ROADMAP.md).
 ![Render flow](docs/render-flow.svg)
 
 Stack: Next.js App Router, TypeScript, Prisma + SQLite, Remotion and/or
-HyperFrames, TanStack Query, Zod. Details in the sections below and in
-`src/library/`.
+HyperFrames, TanStack Query, Zod.
 
 ### Key modules
 
-1. `src/app` — API routes and UI (including `/podcasts`)
-2. `src/library` — repositories, render and take services, storage
-3. `src/engines` — Remotion / HyperFrames adapters
-4. `src/providers` — AI and voice providers
-5. `src/compositions` — Remotion templates
-6. `scripts/` — setup, seeds, HyperFrames worker
+1. `src/app`: pages and API routes (including `/podcasts`)
+2. `src/library`: repositories, render and take services, storage
+3. `src/engines`: Remotion / HyperFrames adapters
+4. `src/providers`: AI and voice providers
+5. `src/compositions`: Remotion templates
+6. `scripts/`: setup, seeds, HyperFrames worker
 
 ## Available scripts
 
 | Script | Purpose |
 | --- | --- |
-| `npm run setup` | Idempotent first-run setup |
+| `npm run setup` | First-run setup (safe to re-run) |
 | `npm run demo` | Setup + start dev server |
 | `npm run dev` | Start development server |
 | `npm run build` / `start` | Production build / run |
@@ -208,16 +192,15 @@ HyperFrames, TanStack Query, Zod. Details in the sections below and in
 | `npm run db:push` | Push Prisma schema |
 | `npm run seed:demo-project` | Seed HyperFrames demo reel |
 | `npm run seed:demo-podcast` | Seed short demo podcast |
-| `npm run export:demo-assets` | Render/copy demo MP4s + podcast WAV into `docs/assets` |
-| `npm run seed:demo-brandkit` | Seed Coral Harbor kit |
+| `npm run seed:demo-brandkit` | Seed Coral Harbor brand kit |
 | `npm run seed:assets` | Sample SVG/Lottie assets |
 | `npm run mcp` | MCP server |
 | `npm run studio` | Remotion Studio |
 
 ## Environment variables
 
-See [`.env.example`](.env.example). Minimum for local non-provider use:
-`DATABASE_URL` only (created by setup).
+See [`.env.example`](.env.example). Minimum for local use without cloud
+providers: `DATABASE_URL` (created by setup).
 
 ## Licensing summary
 
@@ -228,29 +211,16 @@ See [`.env.example`](.env.example). Minimum for local non-provider use:
 | **Remotion** | **Remotion License** ([details](https://www.remotion.dev/license)) |
 | **HyperFrames** | **Apache-2.0** |
 | Kokoro TTS | Apache-2.0 |
-| Optional cloud providers | Each vendor’s terms |
-| VoiceForge engines ([separate repo](https://github.com/mohitkale/voiceforge)) | Per-engine (may be non-commercial) |
+| Optional cloud providers | Each vendor's terms |
+| VoiceForge engines ([repo](https://github.com/mohitkale/voiceforge)) | Per-engine (may be non-commercial) |
 
-Full matrix and checklist: **[docs/LICENSING.md](docs/LICENSING.md)**.
+Full matrix: **[docs/LICENSING.md](docs/LICENSING.md)**.
 
-## Additional docs
+## More docs
 
 - [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md)
 - [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md)
 - [docs/VOICE_PROVIDERS.md](docs/VOICE_PROVIDERS.md)
-- [docs/DEMO_CAPTURE.md](docs/DEMO_CAPTURE.md)
 - [docs/TEMPLATE_AUTHORING.md](docs/TEMPLATE_AUTHORING.md)
 - [docs/LICENSING.md](docs/LICENSING.md)
 - [CHANGELOG.md](CHANGELOG.md)
-
-## Maintainer: GitHub repo settings (manual)
-
-After merging the launch PR, set in GitHub → Settings:
-
-**Description**
-
-> Local-first AI video + podcast studio with MCP server — Instagram Reels, YouTube Shorts, TikTok, Facebook, X, LinkedIn; voiceovers, templates, and local MP4 export.
-
-**Topics:** `ai-video` `video-editor` `short-form-video` `instagram-reels` `youtube-shorts` `tiktok` `facebook` `twitter` `linkedin` `reels` `remotion` `hyperframes` `text-to-video` `ai-voice` `podcast` `mcp` `model-context-protocol` `local-first` `nextjs` `typescript` `open-source`
-
-**Social preview:** use `docs/assets/reel-studio-editor.png` (or a custom 1280×640 image).
