@@ -9,6 +9,7 @@ import {
 } from "@/library/repositories/podcasts";
 import { podcastPlanSchema } from "@/library/podcast-schemas";
 import { authorize } from "@/server/auth";
+import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -88,7 +89,9 @@ export async function DELETE(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
-    authorize(req);
+    if (authorize(req) === "mcp") {
+      throw new ProviderError("Deletion is not available via MCP", 403);
+    }
     await ctx.params;
     const body = deleteSchema.parse(await req.json());
     const podcast = await deleteTurn(body.turnId);

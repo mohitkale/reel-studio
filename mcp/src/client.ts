@@ -72,6 +72,8 @@ export const apiPost = <T>(path: string, body?: unknown) =>
   request<T>("POST", path, body ?? {});
 export const apiPatch = <T>(path: string, body?: unknown) =>
   request<T>("PATCH", path, body ?? {});
+export const apiPut = <T>(path: string, body?: unknown) =>
+  request<T>("PUT", path, body ?? {});
 
 /** GET an endpoint that returns plain text (e.g. an SRT/VTT subtitle file). */
 export async function apiGetText(path: string): Promise<string> {

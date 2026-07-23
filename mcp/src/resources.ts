@@ -66,9 +66,38 @@ optional photo **background**.
   3. Use web search (your own tools) to populate up-to-date facts the model may not know, then write them into scenes.
 - \`reorder_scenes\` re-sequences; nothing is ever deleted via MCP.
 
+## Audio podcasts (separate from video projects)
+- Tools: \`list_podcasts\`, \`get_podcast\`, \`create_podcast\`, \`update_podcast\`,
+  \`replace_podcast_characters\` (clears turns), \`update_podcast_characters\` (voices),
+  \`ai_generate_podcast_script\`, \`import_podcast_script\`, \`insert_podcast_turn\`,
+  \`update_podcast_turn\`, \`create_podcast_take\` → \`get_podcast_take_job\`,
+  \`list_podcast_takes\`, \`download_podcast_take\`.
+- Character **definition** shapes AI writing only; **voice** (\`providerId\`/\`voiceId\`)
+  is what TTS uses. Always set voices before \`create_podcast_take\`.
+- Never delete podcasts, turns, or takes via MCP (web UI only).
+
 ## Rendering
 - \`request_render\` only QUEUES a render for human approval; it never starts automatically.
 - The user approves in Reel Studio → Renders. Then poll \`get_render\`; when "done", call \`download_render\`.
+`;
+
+const PODCAST_AUTHORING = `# Reel Studio — podcast authoring rules
+
+Audio-only multi-speaker episodes (not video projects).
+
+## Cast
+- 2–4 characters with stable \`key\` (JSON id), display \`name\`, \`gender\`, optional \`definition\`.
+- \`definition\` = personality for AI scripts only.
+- Assign server TTS voices via \`update_podcast_characters\` (Cartesia / ElevenLabs / VoiceForge / Kokoro Server as configured).
+
+## Script
+- Prefer \`ai_generate_podcast_script\` with a brief + length short|long.
+- Or \`import_podcast_script\` with turns whose \`characterId\` matches Setup keys.
+- Edit with \`insert_podcast_turn\` / \`update_podcast_turn\`. Deleting lines is web-only.
+
+## Audio
+- \`create_podcast_take\` synthesizes each turn with that character's voice, then stitches in order.
+- Poll \`get_podcast_take_job\` until done; use \`download_podcast_take\` with the take's \`audioUrl\`.
 `;
 
 const SCENE_SCHEMA = {
@@ -114,6 +143,25 @@ const TEMPLATE_CATALOG = [
   { id: "emoji-punch", purpose: "Single big emoji punchline; visual = the emoji." },
 ];
 
+const PODCAST_SCHEMA = {
+  length: ["short", "long"],
+  gender: ["male", "female", "neutral"],
+  character: {
+    key: "stable JSON id used in dialogue (e.g. host)",
+    name: "display name",
+    gender: "male|female|neutral",
+    definition: "AI script personality only (not TTS)",
+    providerId: "TTS provider id",
+    voiceId: "provider voice id",
+    modelId: "optional model id or null",
+  },
+  turn: {
+    characterId:
+      "For import_podcast_script: character key. For insert_podcast_turn: PodcastCharacter.id",
+    text: "spoken dialogue, humanised wording (no stage directions)",
+  },
+};
+
 export function registerResources(server: McpServer): void {
   server.registerResource(
     "authoring-rules",
@@ -126,6 +174,22 @@ export function registerResources(server: McpServer): void {
     },
     async (uri) => ({
       contents: [{ uri: uri.href, mimeType: "text/markdown", text: AUTHORING_RULES }],
+    }),
+  );
+
+  server.registerResource(
+    "podcast-authoring-rules",
+    "reel://authoring/podcast",
+    {
+      title: "Podcast authoring rules",
+      description:
+        "How to create multi-speaker audio podcasts via MCP (cast, script, takes).",
+      mimeType: "text/markdown",
+    },
+    async (uri) => ({
+      contents: [
+        { uri: uri.href, mimeType: "text/markdown", text: PODCAST_AUTHORING },
+      ],
     }),
   );
 
@@ -143,6 +207,25 @@ export function registerResources(server: McpServer): void {
           uri: uri.href,
           mimeType: "application/json",
           text: JSON.stringify(SCENE_SCHEMA, null, 2),
+        },
+      ],
+    }),
+  );
+
+  server.registerResource(
+    "podcast-schema",
+    "reel://schema/podcast",
+    {
+      title: "Podcast schema",
+      description: "Field types for podcast cast, turns, and length.",
+      mimeType: "application/json",
+    },
+    async (uri) => ({
+      contents: [
+        {
+          uri: uri.href,
+          mimeType: "application/json",
+          text: JSON.stringify(PODCAST_SCHEMA, null, 2),
         },
       ],
     }),

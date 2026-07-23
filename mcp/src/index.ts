@@ -9,11 +9,12 @@ import { registerResources } from "./resources.js";
 /**
  * Reel Studio MCP server (stdio).
  *
- * Lets external AI tools (Claude Code, Cursor) build and edit storyboards in the
- * running Reel Studio app: create projects, add/edit/reorder scenes, AI-generate
- * scene plans in chunks, create voice takes, and request renders. It NEVER
- * deletes anything, never changes configuration/secrets, and rendering always
- * waits for explicit human approval in the web app.
+ * Lets external AI tools (Claude Code, Cursor) build and edit storyboards and
+ * audio-only podcasts in the running Reel Studio app: create projects/podcasts,
+ * edit scenes or dialogue, AI-generate plans, create voice/podcast takes, and
+ * request video renders. It NEVER deletes anything, never changes
+ * configuration/secrets, and video rendering always waits for explicit human
+ * approval in the web app.
  *
  * Auth: presents REEL_STUDIO_MCP_TOKEN as a bearer token to the REST API.
  */

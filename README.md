@@ -70,7 +70,7 @@ Full breakdown, Free vs Company License notes, and a checklist:
 ### AI Integration
 - **AI scene generation**: Powered by Google Gemini or OpenAI
 - **Voice script styles**: **Short** (on-screen text only) or **Detailed** (short on-screen + longer spoken narration)
-- **MCP Server**: Model Context Protocol integration for AI tools (see [mcp/README.md](mcp/README.md) for oneshot vs per-scene examples)
+- **MCP Server**: Model Context Protocol integration for AI tools — video storyboards **and** audio podcasts (see [mcp/README.md](mcp/README.md))
 - **Smart content planning**: AI-assisted storyboard creation
 
 ### Developer Experience
