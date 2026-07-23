@@ -31,14 +31,32 @@ demo project. Kokoro may download model weights on first podcast take.
 
 Prefer a populated timeline over an empty state.
 
-## Workflow GIF (optional)
+## Workflow GIF (recommended for README)
 
-Record 8–12 seconds: open project → scrub scenes → play preview → open Render.
+GitHub READMEs **do not autoplay MP4**. A short GIF is the reliable inline demo.
 
-Suggested tools: macOS Screenshot toolbar (record), or `ffmpeg` desktop capture.
-Optimize for GitHub (under ~5 MB) without making UI text unreadable.
+1. Record 8–12 seconds of the real app (macOS Screenshot toolbar → Record, or OBS).
+2. Prefer the editor: open demo project → scrub scenes → play preview → Render.
+3. Save the recording (`.mov` / `.mp4`) anywhere, then compress:
 
-Save as `docs/assets/script-to-video.gif`.
+```bash
+# Example: 10s screen recording → README-friendly GIF (~3–5 MB target)
+ffmpeg -y -i ~/Desktop/reel-studio-demo.mov \
+  -vf "fps=12,scale=960:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" \
+  docs/assets/script-to-video.gif
+```
+
+Or ask the maintainer / agent to run the same `ffmpeg` command after you drop the
+recording into the repo (e.g. `docs/assets/raw-demo.mov`).
+
+**Prefer a real app recording over Canva.** Canva is fine for ad creatives outside
+GitHub; for the README, authentic UI builds more trust and matches the product.
+
+Then link it near the top of the README:
+
+```markdown
+![Script to video](docs/assets/script-to-video.gif)
+```
 
 ## Sample MP4s
 
@@ -60,9 +78,15 @@ docs/assets/examples/square-demo.mp4
 Keep clips short. Prefer HyperFrames for Apache-2.0-only demos when that matters;
 Remotion demos are fine if licensing for redistributed samples is understood.
 
-Audio for README demos lives **inside the MP4** — do not commit a separate
-podcast WAV for launch assets. The in-app podcast seed (`npm run seed:demo-podcast`)
-is still useful for local tryouts.
+Audio for video demos lives **inside the MP4**. Also commit a short podcast
+sample for the README:
+
+```text
+docs/assets/examples/podcast-demo.mp3
+docs/assets/examples/podcast-demo.wav
+```
+
+(`npm run export:demo-assets` can generate these; prefer MP3 for GitHub size.)
 
 ## Rules
 

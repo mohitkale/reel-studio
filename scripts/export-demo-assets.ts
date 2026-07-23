@@ -156,9 +156,25 @@ async function exportPodcast() {
   if (!existsSync(abs)) {
     throw new Error(`Podcast audio missing at ${abs} (from ${take.audioUrl})`);
   }
-  const dest = path.join(OUT_DIR, "podcast-demo.wav");
-  copyFileSync(abs, dest);
-  console.log(`  copied ${dest}`);
+  const destMp3 = path.join(OUT_DIR, "podcast-demo.mp3");
+  const destWav = path.join(OUT_DIR, "podcast-demo.wav");
+  const ffMp3 = spawnSync(
+    "ffmpeg",
+    ["-y", "-i", abs, "-codec:a", "libmp3lame", "-q:a", "4", destMp3],
+    { stdio: "inherit" },
+  );
+  if (ffMp3.status !== 0) {
+    copyFileSync(abs, destWav);
+    console.log(`  copied ${destWav} (ffmpeg mp3 skipped)`);
+  } else {
+    console.log(`  copied ${destMp3}`);
+    spawnSync(
+      "ffmpeg",
+      ["-y", "-i", abs, "-acodec", "pcm_s16le", "-ar", "22050", "-ac", "1", destWav],
+      { stdio: "inherit" },
+    );
+    console.log(`  copied ${destWav}`);
+  }
 }
 
 async function main() {

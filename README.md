@@ -2,11 +2,16 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D22-brightgreen.svg)](https://nodejs.org/)
+[![MCP](https://img.shields.io/badge/MCP-server-blue.svg)](mcp/README.md)
 
-**Turn a script into a complete short-form video locally.**
+**Turn a script into a complete short-form video locally — with an MCP server for AI agents.**
 
-Create Reels, Shorts, and LinkedIn videos with AI scene planning, voiceovers,
-motion templates, and MP4 export — plus multi-speaker audio podcasts.
+Local-first open-source studio for **Instagram Reels**, **YouTube Shorts**,
+**TikTok-style vertical video**, **Facebook / Meta**, **X (Twitter)**,
+**LinkedIn**, and other social formats (9:16, 16:9, 1:1). AI scene planning,
+voiceovers, motion templates, MP4 export, multi-speaker **podcasts**, and a
+built-in **Model Context Protocol (MCP)** server so Cursor, Claude, and other
+agents can drive production workflows.
 
 **Local-first.** Open source. Your projects stay on your machine.
 
@@ -18,7 +23,11 @@ motion templates, and MP4 export — plus multi-speaker audio podcasts.
 
 ![Reel Studio podcasts](docs/assets/reel-studio-podcast.png)
 
-*[Demo capture guide](docs/DEMO_CAPTURE.md) · [Quick start](#quick-start) · [Roadmap](ROADMAP.md)*
+> **GitHub tip:** MP4s do not autoplay in READMEs. Click a poster or MP4 link to
+> open/download the clip. For inline motion, add a short GIF
+> (`docs/assets/script-to-video.gif`) — see [DEMO_CAPTURE.md](docs/DEMO_CAPTURE.md).
+
+*[Demo capture](docs/DEMO_CAPTURE.md) · [MCP guide](mcp/README.md) · [Quick start](#quick-start) · [Roadmap](ROADMAP.md)*
 
 ## From idea to video
 
@@ -27,21 +36,22 @@ motion templates, and MP4 export — plus multi-speaker audio podcasts.
 3. Choose backgrounds and motion templates
 4. Generate or upload a voiceover
 5. Preview in **9:16**, **16:9**, or **1:1**
-6. Render the final MP4 locally
+6. Render the final MP4 locally — or drive steps via **MCP**
 
 ## Example outputs
 
-Short synthetic demos (content-creation tip, HyperFrames, redistributable assets):
+Sample social clips (on-screen text + voiceover audio inside each MP4):
 
-| Format | Poster | Video |
+| Format | Poster | Download |
 | --- | --- | --- |
-| Portrait 9:16 | [![Portrait](docs/assets/examples/portrait-demo.jpg)](docs/assets/examples/portrait-demo.mp4) | [MP4](docs/assets/examples/portrait-demo.mp4) |
-| Landscape 16:9 | [![Landscape](docs/assets/examples/landscape-demo.jpg)](docs/assets/examples/landscape-demo.mp4) | [MP4](docs/assets/examples/landscape-demo.mp4) |
-| Square 1:1 | [![Square](docs/assets/examples/square-demo.jpg)](docs/assets/examples/square-demo.mp4) | [MP4](docs/assets/examples/square-demo.mp4) |
+| Portrait 9:16 (Reels / Shorts / TikTok / Stories) | [![Portrait](docs/assets/examples/portrait-demo.jpg)](docs/assets/examples/portrait-demo.mp4) | [MP4](docs/assets/examples/portrait-demo.mp4) |
+| Landscape 16:9 (YouTube / X / LinkedIn / Facebook) | [![Landscape](docs/assets/examples/landscape-demo.jpg)](docs/assets/examples/landscape-demo.mp4) | [MP4](docs/assets/examples/landscape-demo.mp4) |
+| Square 1:1 (Instagram / Facebook feed) | [![Square](docs/assets/examples/square-demo.jpg)](docs/assets/examples/square-demo.mp4) | [MP4](docs/assets/examples/square-demo.mp4) |
 
-> Sample clips include on-screen text and voiceover audio in the MP4 itself.
-> If a media file is missing on your clone, regenerate it with
-> [docs/DEMO_CAPTURE.md](docs/DEMO_CAPTURE.md) after `npm run setup`.
+**Podcast sample (audio):** [Content Creation Tips — MP3](docs/assets/examples/podcast-demo.mp3)
+([WAV](docs/assets/examples/podcast-demo.wav)) — open the file on GitHub to play.
+
+> Regenerate samples with [docs/DEMO_CAPTURE.md](docs/DEMO_CAPTURE.md) after `npm run setup`.
 
 ## What you get
 
@@ -69,7 +79,8 @@ Short synthetic demos (content-creation tip, HyperFrames, redistributable assets
 
 - Local MP4 rendering with queue and progress
 - Docker isolation bound to `127.0.0.1`
-- MCP server for AI-assisted video **and** podcast workflows
+- **MCP server** for AI-assisted video **and** podcast workflows ([mcp/README.md](mcp/README.md))
+- Works with agent clients that speak Model Context Protocol (e.g. Cursor)
 
 ## Video engines
 
@@ -238,8 +249,8 @@ After merging the launch PR, set in GitHub → Settings:
 
 **Description**
 
-> Local-first AI video studio for turning scripts into Reels, Shorts and LinkedIn videos with voiceovers, motion templates and MP4 export.
+> Local-first AI video + podcast studio with MCP server — Instagram Reels, YouTube Shorts, TikTok, Facebook, X, LinkedIn; voiceovers, templates, and local MP4 export.
 
-**Topics:** `ai-video` `video-editor` `short-form-video` `reels` `youtube-shorts` `remotion` `hyperframes` `text-to-video` `ai-voice` `local-first` `nextjs` `typescript` `mcp` `open-source`
+**Topics:** `ai-video` `video-editor` `short-form-video` `instagram-reels` `youtube-shorts` `tiktok` `facebook` `twitter` `linkedin` `reels` `remotion` `hyperframes` `text-to-video` `ai-voice` `podcast` `mcp` `model-context-protocol` `local-first` `nextjs` `typescript` `open-source`
 
 **Social preview:** use `docs/assets/reel-studio-editor.png` (or a custom 1280×640 image).
