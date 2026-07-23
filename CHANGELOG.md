@@ -6,21 +6,23 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+## 0.1.0 - 2026-07-24
+
+First public GitHub release.
+
 ### Added
 
-- `npm run setup` and `npm run demo` for idempotent first-run onboarding
-- Deterministic demo video project and short demo podcast seeds
-- Open-source launch documentation: local-first model, video engines, voice providers
+- Local-first short-form video studio (Remotion and HyperFrames engines)
+- Multi-provider voice (Kokoro, Web Speech, Cartesia, ElevenLabs, VoiceForge)
+- Audio podcasts with multi-speaker TTS
+- MCP server for AI-assisted video and podcast workflows
+- `npm run setup` and `npm run demo` for first-run onboarding
+- Demo video/podcast seeds and sample outputs in the README
+- Open-source launch docs: local-first model, video engines, voice providers
 - Community files: roadmap, code of conduct, issue and PR templates
+- Security hardening for localhost-first operation (`127.0.0.1` Docker bind)
 
 ### Changed
 
 - README restructured around product promise, workflow, and visuals
 - Speculative upcoming-features list replaced by [ROADMAP.md](ROADMAP.md)
-
-## 0.1.0
-
-- Initial open-source release track: local-first short-form video studio
-- Remotion and HyperFrames engines, multi-provider voice, MCP server
-- Audio podcasts with multi-speaker TTS
-- Security hardening for localhost-first operation
