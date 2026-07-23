@@ -4,24 +4,48 @@
 [![Node.js](https://img.shields.io/badge/node-%3E%3D22-brightgreen.svg)](https://nodejs.org/)
 [![MCP](https://img.shields.io/badge/MCP-server-blue.svg)](mcp/README.md)
 
-**Turn a script into a complete short-form video locally, with an MCP server for AI agents.**
+**Turn a script into a complete short-form video locally.**
 
-Local-first open-source studio for **Instagram Reels**, **YouTube Shorts**,
-**TikTok**, **Facebook**, **X (Twitter)**, **LinkedIn**, and other social
-formats (9:16, 16:9, 1:1). Build with AI scene planning, voiceovers, motion
-templates, local MP4 export, multi-speaker **podcasts**, and a built-in
-**Model Context Protocol (MCP)** server so tools like Cursor can drive
-production workflows.
+Create Reels, Shorts, and LinkedIn videos with AI scene planning, voiceovers,
+motion templates, and local MP4 rendering. Use the built-in **MCP server** to
+automate video and podcast workflows from AI tools such as Cursor.
 
-**Local-first. Open source. Your projects stay on your machine.**
+Also supports Instagram, YouTube Shorts, TikTok, Facebook, X (Twitter), and
+other social formats in **9:16**, **16:9**, and **1:1**.
+
+> **Project status: Early public release.** Core editing, demo workflows, and
+> local rendering are available. Expect setup and provider integrations to evolve.
+
+**MIT-licensed app. Local-first.** Projects and renders stay on your machine
+unless you explicitly enable a cloud provider.
 
 > App code is **MIT**. Projects may use **HyperFrames** (Apache-2.0) or
 > **Remotion** (separate commercial terms, not OSI). See
 > [Licensing](#licensing-summary) and [docs/LICENSING.md](docs/LICENSING.md).
 
+<p align="center">
+  <img
+    src="docs/assets/reel-studio-editor.png"
+    alt="Reel Studio editor showing scenes, video preview, voice controls and render options"
+    width="1000"
+  />
+</p>
+
 ![Reel Studio demo](docs/assets/script-to-video.gif)
 
+If Reel Studio helps your workflow, star the repository and tell us which
+template or voice provider you want next.
+
 [Quick start](#quick-start) · [MCP](mcp/README.md) · [Roadmap](ROADMAP.md) · [Contributing](CONTRIBUTING.md)
+
+## Who is this for?
+
+Reel Studio is designed for:
+
+- Developers building programmable video workflows
+- Creators who want local control over projects and rendering
+- Teams experimenting with AI-assisted content production
+- AI-agent users who want to generate videos and podcasts through MCP
 
 ## From idea to video
 
@@ -40,7 +64,7 @@ production workflows.
 | Landscape 16:9 (YouTube, X, LinkedIn, Facebook) | [![Landscape](docs/assets/examples/landscape-demo.jpg)](docs/assets/examples/landscape-demo.mp4) | [MP4](docs/assets/examples/landscape-demo.mp4) |
 | Square 1:1 (Instagram, Facebook feed) | [![Square](docs/assets/examples/square-demo.jpg)](docs/assets/examples/square-demo.mp4) | [MP4](docs/assets/examples/square-demo.mp4) |
 
-**Podcast sample:** [MP3](docs/assets/examples/podcast-demo.mp3) · [WAV](docs/assets/examples/podcast-demo.wav)
+**Podcast sample:** [MP3](docs/assets/examples/podcast-demo.mp3)
 
 ## What you get
 
@@ -76,7 +100,7 @@ production workflows.
 | --- | --- | --- |
 | Licence | **Apache-2.0** | Remotion License (not OSI) |
 | Templates | HTML motion (`hf-*`) | React compositions |
-| Best for | Open-source-safe demos and forks | Rich React template ecosystem |
+| Best for | Apache-2.0 workflows, demos, and forks | Rich React template ecosystem |
 
 See [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md).
 

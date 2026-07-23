@@ -78,15 +78,13 @@ docs/assets/examples/square-demo.mp4
 Keep clips short. Prefer HyperFrames for Apache-2.0-only demos when that matters;
 Remotion demos are fine if licensing for redistributed samples is understood.
 
-Audio for video demos lives **inside the MP4**. Also commit a short podcast
-sample for the README:
+Audio for video demos lives inside the MP4. Also commit a short podcast sample:
 
 ```text
 docs/assets/examples/podcast-demo.mp3
-docs/assets/examples/podcast-demo.wav
 ```
 
-(`npm run export:demo-assets` can generate these; prefer MP3 for GitHub size.)
+(`npm run export:demo-assets` can generate this; prefer MP3 for GitHub size.)
 
 ## Rules
 

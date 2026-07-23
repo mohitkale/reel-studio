@@ -260,7 +260,7 @@ After merging launch docs, set in GitHub → Settings:
 
 - **Description:** Local-first AI video + podcast studio with MCP server for Instagram Reels, YouTube Shorts, TikTok, Facebook, X, LinkedIn; voiceovers, templates, and local MP4 export.
 - **Topics:** `ai-video` `video-editor` `short-form-video` `instagram-reels` `youtube-shorts` `tiktok` `facebook` `twitter` `linkedin` `reels` `remotion` `hyperframes` `text-to-video` `ai-voice` `podcast` `mcp` `model-context-protocol` `local-first` `nextjs` `typescript` `open-source`
-- **Social preview:** `docs/assets/script-to-video.gif` or a 1280×640 still from the demo
+- **Social preview:** `docs/assets/reel-studio-editor.png` or a still from the demo GIF
 
 ## Getting Help
 
