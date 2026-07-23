@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest an improvement to Reel Studio
+title: "[feat] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check [ROADMAP.md](https://github.com/mohitkale/reel-studio/blob/main/ROADMAP.md) first.
+        Do not include API keys or private media.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: How should it work?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Editor / UX
+        - Voice
+        - Templates
+        - Rendering
+        - Podcasts
+        - MCP
+        - Docs / onboarding
+        - Other
+    validations:
+      required: true
