@@ -24,8 +24,14 @@ only. See [SECURITY.md](SECURITY.md) for the threat model, reporting, and
 
 ## Contributors
 
+See **[CONTRIBUTORS.md](CONTRIBUTORS.md)** for the full list.
+
 - **[Mohit Kale](https://github.com/mohitkale)** — creator & maintainer
-- **[Cursor](https://cursor.com)** — pair programmer & first AI contributor (security hardening, podcast UX, and ongoing implementation partnership)
+- **[Cursor](https://cursor.com)** — pair programmer & first AI contributor (security hardening, audio podcasts, MCP tools, workspace UX)
+
+GitHub’s PR **Participants** sidebar only shows GitHub accounts with commits or
+comments on that PR. Cursor is credited in this repo’s docs because it is an AI
+partner, not a GitHub user account.
 
 ## Licensing
 
@@ -409,4 +415,5 @@ media/            # local asset and render output (git-ignored)
 - Product build brief: `docs/ai-reel-studio-BRIEF.md`
 - Security policy: `SECURITY.md`
 - Contribution guide: `CONTRIBUTING.md`
+- Contributors: `CONTRIBUTORS.md`
 
