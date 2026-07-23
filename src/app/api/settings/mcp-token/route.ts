@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import {
   clearMcpToken,
   generateMcpToken,
-  getMcpToken,
   hasMcpToken,
 } from "@/server/secrets";
 import { requireWeb } from "@/server/auth";
@@ -15,23 +14,26 @@ export const dynamic = "force-dynamic";
 /**
  * MCP bearer-token management. Website-only (the token is the one secret a human
  * copies into their AI tool's MCP config) — never exposed to MCP-originated
- * requests. Reveal is safe because the route is same-origin only.
+ * requests.
+ *
+ * Security: GET never returns the raw token (status only). The full token is
+ * returned once from POST (generate/rotate) for the operator to copy.
  */
 
-/** GET - current token status and value (for the human to copy). */
+/** GET - whether a token is configured (never returns the secret). */
 export async function GET(req: Request) {
   try {
     requireWeb(req);
     return NextResponse.json({
       configured: hasMcpToken(),
-      token: getMcpToken() ?? null,
+      token: null,
     });
   } catch (e) {
     return errorResponse(e);
   }
 }
 
-/** POST - generate (or rotate) the MCP token and return it. */
+/** POST - generate (or rotate) the MCP token and return it once. */
 export async function POST(req: Request) {
   try {
     requireWeb(req);

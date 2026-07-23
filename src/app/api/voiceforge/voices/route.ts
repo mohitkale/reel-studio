@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
+import { authorize } from "@/server/auth";
 import {
   isVoiceforgeConfigured,
   voiceforgeAuthHeaders,
@@ -39,6 +40,7 @@ function assertConfigured() {
  */
 export async function POST(req: Request) {
   try {
+    authorize(req);
     assertConfigured();
     const incoming = await req.formData();
     const outgoing = new FormData();

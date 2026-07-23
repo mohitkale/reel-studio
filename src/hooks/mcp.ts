@@ -22,7 +22,8 @@ export function useGenerateMcpToken() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => apiPost<McpTokenState>("/api/settings/mcp-token", {}),
-    onSuccess: (data) => qc.setQueryData(KEY, data),
+    onSuccess: (data) =>
+      qc.setQueryData(KEY, { configured: data.configured, token: null }),
   });
 }
 
@@ -30,6 +31,7 @@ export function useRevokeMcpToken() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => apiDelete<McpTokenState>("/api/settings/mcp-token"),
-    onSuccess: (data) => qc.setQueryData(KEY, data),
+    onSuccess: (data) =>
+      qc.setQueryData(KEY, { configured: data.configured, token: null }),
   });
 }

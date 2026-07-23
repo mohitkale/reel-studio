@@ -15,6 +15,18 @@
 
 The app runs as a single Next.js project with API routes and UI in one codebase.
 
+## Security (local-first)
+
+Reel Studio is built for **trusted localhost use**. Do **not** bind it to the public
+internet without your own auth layer. Docker Compose publishes **`127.0.0.1:3000`**
+only. See [SECURITY.md](SECURITY.md) for the threat model, reporting, and
+`REEL_STRICT_AUTH` / `TRUST_PROXY` options.
+
+## Contributors
+
+- **[Mohit Kale](https://github.com/mohitkale)** — creator & maintainer
+- **[Cursor](https://cursor.com)** — pair programmer & first AI contributor (security hardening, podcast UX, and ongoing implementation partnership)
+
 ## Licensing
 
 **Reel Studio’s own code** is MIT — see [LICENSE](LICENSE). Contributions are
@@ -198,6 +210,8 @@ docker compose up --build
 ```
 
 Open `http://localhost:3000`. Source is bind-mounted, so edits hot-reload.
+The Compose file binds the published port to **127.0.0.1** so the local-first
+API is not exposed on your LAN by default.
 
 ```bash
 docker compose up        # start (after the first build)

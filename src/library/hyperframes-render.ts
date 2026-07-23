@@ -14,6 +14,7 @@ import { spawn } from "node:child_process";
 import type { ReelProps, ReelScene } from "@/compositions/types";
 import { type Orientation, dimsFor } from "@/lib/orientation";
 import { getAssetStore } from "@/library/storage";
+import { sanitizeKey } from "@/library/storage/local-disk";
 import { getScript } from "@/library/repositories/scripts";
 import { listTakes } from "@/library/repositories/takes";
 import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
@@ -24,6 +25,7 @@ import {
   failRender,
 } from "@/library/repositories/renders";
 import { upsertJob } from "@/lib/render-queue";
+import { assertPathInsideRoot } from "@/server/url-safety";
 
 type RenderQuality = "draft" | "standard" | "high";
 
@@ -51,11 +53,19 @@ function localFsPathForUrl(
   const stripLeadingSlash = (p: string) => p.replace(/^\/+/, "");
 
   const fromPathname = (pathname: string): string | null => {
-    if (pathname.startsWith("/media/")) {
-      return path.join(process.cwd(), stripLeadingSlash(pathname));
-    }
-    if (pathname.startsWith("/music/")) {
-      return path.join(process.cwd(), "public", stripLeadingSlash(pathname));
+    try {
+      if (pathname.startsWith("/media/")) {
+        const key = sanitizeKey(stripLeadingSlash(pathname.slice("/media".length)));
+        const mediaRoot = path.join(process.cwd(), "media");
+        return assertPathInsideRoot(mediaRoot, path.join(mediaRoot, key));
+      }
+      if (pathname.startsWith("/music/")) {
+        const key = sanitizeKey(stripLeadingSlash(pathname.slice("/music".length)));
+        const musicRoot = path.join(process.cwd(), "public", "music");
+        return assertPathInsideRoot(musicRoot, path.join(musicRoot, key));
+      }
+    } catch {
+      return null;
     }
     return null;
   };

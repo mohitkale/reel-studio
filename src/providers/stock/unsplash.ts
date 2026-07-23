@@ -80,6 +80,14 @@ export function createUnsplashProvider(): StockProvider {
     // Fire-and-forget; failures are non-fatal.
     trackUsage(image: StockImage): void {
       if (!image.downloadLocation || !key()) return;
+      try {
+        const u = new URL(image.downloadLocation);
+        if (u.protocol !== "https:" || u.hostname !== "api.unsplash.com") {
+          return;
+        }
+      } catch {
+        return;
+      }
       void fetch(image.downloadLocation, {
         headers: { Authorization: `Client-ID ${key()}`, "Accept-Version": "v1" },
       }).catch(() => {});

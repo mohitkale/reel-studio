@@ -4,18 +4,21 @@ import { randomUUID } from "node:crypto";
 
 import { listAssets, createAsset } from "@/library/repositories/assets";
 import { getAssetStore } from "@/library/storage";
-import { requireWeb } from "@/server/auth";
+import { authorize, requireWeb } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/** Hard cap to reduce disk DoS from oversized uploads. */
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 
 const ALLOWED_MIME: Record<string, { type: string; ext: string }> = {
   "image/jpeg": { type: "image", ext: "jpg" },
   "image/png": { type: "image", ext: "png" },
   "image/gif": { type: "image", ext: "gif" },
   "image/webp": { type: "image", ext: "webp" },
-  "image/svg+xml": { type: "image", ext: "svg" },
+  // SVG omitted: scriptable when served as image/svg+xml.
   "application/json": { type: "lottie", ext: "json" },
   "video/mp4": { type: "video", ext: "mp4" },
   "video/webm": { type: "video", ext: "webm" },
@@ -38,6 +41,7 @@ const TYPE_FOLDER: Record<string, string> = {
 
 export async function GET(req: Request) {
   try {
+    authorize(req);
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type") ?? undefined;
     const assets = await listAssets(type);
@@ -50,6 +54,14 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     requireWeb(req);
+    const contentLength = Number(req.headers.get("content-length") ?? "0");
+    if (contentLength > MAX_UPLOAD_BYTES) {
+      return NextResponse.json(
+        { error: `File too large (max ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB)` },
+        { status: 413 },
+      );
+    }
+
     const formData = await req.formData();
     const file = formData.get("file");
     if (!file || typeof file === "string") {
@@ -60,15 +72,22 @@ export async function POST(req: Request) {
     const info = ALLOWED_MIME[mime];
     if (!info) {
       return NextResponse.json(
-        { error: `Unsupported file type: ${mime}` },
+        { error: `Unsupported file type: ${mime || "unknown"}` },
         { status: 400 },
+      );
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    if (buffer.length > MAX_UPLOAD_BYTES) {
+      return NextResponse.json(
+        { error: `File too large (max ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB)` },
+        { status: 413 },
       );
     }
 
     const id = randomUUID();
     const folder = TYPE_FOLDER[info.type] ?? "images";
     const storeKey = path.posix.join("assets", folder, `${id}.${info.ext}`);
-    const buffer = Buffer.from(await file.arrayBuffer());
 
     await getAssetStore().put(storeKey, buffer);
 

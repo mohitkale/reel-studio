@@ -115,6 +115,8 @@ Use clear, descriptive commit messages:
 - ❌ Never include personal credentials in any code or comments
 - ✅ Keep `.env.example` values empty or use placeholder-only values
 - ✅ If a secret is accidentally exposed, rotate it immediately and report it
+- ✅ Read [SECURITY.md](SECURITY.md) — the app is local-first; do not advertise
+  public hosting without additional authentication
 
 ### Local Git Hook (Recommended)
 

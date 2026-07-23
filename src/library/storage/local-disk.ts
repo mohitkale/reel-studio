@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
+import { assertPathInsideRoot } from "@/server/url-safety";
 import { type AssetStore, type StoredAsset } from "./types";
 
 /** Reject keys that could escape the media root via traversal or absolute paths. */
@@ -21,12 +22,13 @@ export class LocalDiskStore implements AssetStore {
   constructor(private readonly root: string) {}
 
   private resolve(key: string): string {
-    return path.join(this.root, sanitizeKey(key));
+    const clean = sanitizeKey(key);
+    return assertPathInsideRoot(this.root, path.join(this.root, clean));
   }
 
   async put(key: string, data: Buffer): Promise<StoredAsset> {
     const clean = sanitizeKey(key);
-    const full = path.join(this.root, clean);
+    const full = this.resolve(clean);
     await fs.mkdir(path.dirname(full), { recursive: true });
     await fs.writeFile(full, data);
     return { key: clean };
