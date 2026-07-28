@@ -75,7 +75,12 @@ export function useSetDefaults() {
       defaultProviderId?: ProviderId;
       modelFor?: ProviderId;
       modelId?: string;
+      /** `null` resets to all Kokoro voices. */
+      kokoroVisibleVoiceIds?: string[] | null;
     }) => apiPost<{ config: AppConfig }>("/api/settings/defaults", vars),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["providers"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["providers"] });
+      qc.invalidateQueries({ queryKey: ["voices"] });
+    },
   });
 }

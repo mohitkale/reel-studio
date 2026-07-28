@@ -22,6 +22,7 @@ import type {
   VoiceTakeDTO,
 } from "@/lib/dto";
 import type { ProviderId } from "@/providers/voice/types";
+import { kokoroLanguageLabel } from "@/providers/voice/kokoro";
 import { voiceforgeEngineHelperText } from "@/providers/voice/voiceforge-engines";
 import { useProviders, useModels, useVoices } from "@/hooks/voice";
 import { VoiceCloneDialog } from "@/components/voice/voice-clone-dialog";
@@ -185,6 +186,8 @@ export function VoiceoverPanel({
   const isVoiceforge = effectiveProvider === "voiceforge";
   const isPreview = selectedStatus?.preview === true; // Web Speech
   const isKokoro = selectedStatus?.runtime === "client" && !isPreview;
+  const isKokoroProvider =
+    effectiveProvider === "kokoro" || effectiveProvider === "kokoro-server";
 
   const { data: voices, isLoading: voicesLoading } = useVoices(effectiveProvider, "");
   const { data: models } = useModels(effectiveProvider);
@@ -223,7 +226,13 @@ export function VoiceoverPanel({
         group: "My voices",
       };
     }),
-    ...library.map((v) => ({ value: v.id, label: v.name, group: "Library" })),
+    ...library.map((v) => ({
+      value: v.id,
+      label: v.name,
+      group: isKokoroProvider
+        ? kokoroLanguageLabel(v.language)
+        : "Library",
+    })),
   ];
   const webVoiceOptions: ComboboxOption[] = webSpeech.voices.map((v) => ({
     value: v.voiceURI,

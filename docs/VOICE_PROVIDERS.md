@@ -3,8 +3,8 @@
 | Provider | Where it runs | API key | Notes |
 | --- | --- | --- | --- |
 | **Web Speech** | Browser | No | Instant preview only |
-| **Kokoro** | Browser (WASM) | No | Apache-2.0; upload takes to the server |
-| **Kokoro server** | Local Node | No | Same model; used for podcast takes / server jobs |
+| **Kokoro** | Browser (WASM) | No | Apache-2.0 Kokoro 82M; 54 voices; upload takes to the server. Visibility of the list is configurable in Settings (default: all). |
+| **Kokoro server** | Local Node | No | Same 82M model + voice list; used for podcast takes / server jobs |
 | **Cartesia** | Cloud | Yes | Vendor commercial terms; cloning available |
 | **ElevenLabs** | Cloud | Yes | Vendor commercial terms; free tier supported with WAV fallback |
 | **VoiceForge** | Self-hosted | Optional token | Separate project: [mohitkale/voiceforge](https://github.com/mohitkale/voiceforge); engine licences vary |

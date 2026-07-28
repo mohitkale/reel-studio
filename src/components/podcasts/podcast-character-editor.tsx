@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import type { PodcastCharacterDTO, PodcastGenderDTO } from "@/lib/dto";
 import type { VoiceSummary } from "@/providers/voice/types";
+import { kokoroLanguageLabel } from "@/providers/voice/kokoro";
 import { useProviders } from "@/hooks/voice";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { Label } from "@/components/ui/label";
@@ -145,10 +146,13 @@ function useGroupedVoiceOptions(gender: PodcastGenderDTO): {
       for (const v of filtered) {
         const engine =
           p.id === "voiceforge" && v.tags?.[0] ? ` · ${v.tags[0]}` : "";
+        const isKokoro = p.id === "kokoro" || p.id === "kokoro-server";
         opts.push({
           value: encodeVoiceValue(p.id, v.id),
           label: `${v.name}${engine}`,
-          group: p.label,
+          group: isKokoro
+            ? `${p.label} · ${kokoroLanguageLabel(v.language)}`
+            : p.label,
         });
       }
     });

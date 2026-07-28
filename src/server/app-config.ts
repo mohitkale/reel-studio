@@ -17,6 +17,11 @@ const CONFIG_FILE = path.join(DATA_DIR, "app-config.json");
 export interface AppConfig {
   defaultProviderId?: ProviderId;
   defaultModel: Partial<Record<ProviderId, string>>;
+  /**
+   * Whitelist of Kokoro voice ids shown in pickers (video + podcast).
+   * `undefined` / omitted / empty = show all 54 voices (the default).
+   */
+  kokoroVisibleVoiceIds?: string[];
 }
 
 const EMPTY: AppConfig = { defaultModel: {} };
@@ -25,7 +30,12 @@ export async function getConfig(): Promise<AppConfig> {
   try {
     const raw = await fs.readFile(CONFIG_FILE, "utf8");
     const parsed = JSON.parse(raw) as Partial<AppConfig>;
-    return { defaultModel: {}, ...parsed };
+    const config: AppConfig = { defaultModel: {}, ...parsed };
+    // Normalize: empty array means "all" so users can't lock themselves out.
+    if (config.kokoroVisibleVoiceIds?.length === 0) {
+      delete config.kokoroVisibleVoiceIds;
+    }
+    return config;
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === "ENOENT") return { ...EMPTY };
     throw e;
@@ -50,6 +60,23 @@ export async function setDefaultModel(
 ): Promise<AppConfig> {
   const config = await getConfig();
   config.defaultModel[id] = modelId;
+  await writeConfig(config);
+  return config;
+}
+
+/**
+ * Set which Kokoro voices appear in pickers.
+ * Pass `null` or an empty array to reset to all voices.
+ */
+export async function setKokoroVisibleVoices(
+  voiceIds: string[] | null,
+): Promise<AppConfig> {
+  const config = await getConfig();
+  if (!voiceIds || voiceIds.length === 0) {
+    delete config.kokoroVisibleVoiceIds;
+  } else {
+    config.kokoroVisibleVoiceIds = [...new Set(voiceIds)];
+  }
   await writeConfig(config);
   return config;
 }

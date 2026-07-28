@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { getProvider, isProviderId } from "@/providers/voice/registry";
+import { filterKokoroVoices } from "@/providers/voice/kokoro";
+import { getConfig } from "@/server/app-config";
 import { errorResponse } from "@/server/api-helpers";
 import { ProviderError } from "@/providers/voice/types";
 
@@ -26,6 +28,18 @@ export async function GET(
     }
 
     const q = req.nextUrl.searchParams.get("q")?.trim() || undefined;
+    // Settings UI can request the unfiltered Kokoro catalog with ?all=1.
+    const showAll = req.nextUrl.searchParams.get("all") === "1";
+
+    if (id === "kokoro" || id === "kokoro-server") {
+      const config = showAll ? null : await getConfig();
+      const voices = filterKokoroVoices({
+        query: q,
+        visibleIds: showAll ? null : config?.kokoroVisibleVoiceIds,
+      });
+      return NextResponse.json({ voices });
+    }
+
     const voices = await provider.listVoices(q);
     return NextResponse.json({ voices });
   } catch (e) {
