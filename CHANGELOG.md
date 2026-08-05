@@ -6,6 +6,21 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+## 0.3.0 - 2026-08-06
+
+### Added
+
+- HyperFrames Director: HF-aware AI templates, one-click auto soundtrack, sparse SFX cues, and Produce reel API/UI
+- Bundled cinematic CC0 SFX pack (`npm run gen:sfx`) with Music panel regenerate/toggle controls
+- Kokoro speaking `speed` on server and browser paths
+- Seed scripts for Next.js 16.3 and Before/After AI psychology demo reels
+
+### Changed
+
+- Default video engine is HyperFrames
+- Catalog stages paint Unsplash photo beds when present; richer native motion (ambient GSAP, count-up proofs, dark cinematic money/chart stages)
+- Prisma Script model includes `sfxEnabled` / `sfxJson` (run `npx prisma db push` after upgrade)
+
 ## 0.2.0 - 2026-08-05
 
 ### Added
