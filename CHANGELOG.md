@@ -6,6 +6,20 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+## 0.2.0 - 2026-08-05
+
+### Added
+
+- Curated HyperFrames catalog blocks (kinetic slam, money count, data chart, app showcase, social/logo outros) with portrait-native preview visuals
+- Full Kokoro 82M voice catalog (54 voices) with language groups and a Settings whitelist
+- Multilingual Kokoro voice support on server and browser paths (including Hindi voice bins)
+- Interview LinkedIn seed scripts and dialogue-aware VO gap timing for multi-character casting
+
+### Changed
+
+- HyperFrames composition and template mapping updated for the curated catalog path
+- Docs for video engines, template authoring, and voice providers
+
 ## 0.1.0 - 2026-07-24
 
 First public GitHub release.
