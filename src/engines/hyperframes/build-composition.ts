@@ -16,6 +16,9 @@ import {
   normalizeStyleId,
 } from "@/compositions/visual-style";
 import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
+import { getCatalogBlockByTemplateId } from "@/engines/hyperframes/catalog/manifest";
+import { buildCatalogSceneBlock } from "@/engines/hyperframes/catalog/build-scene";
+import { NATIVE_CATALOG_STYLES, buildGsapMotionBootScript, buildCinematicClassicVisual } from "@/engines/hyperframes/catalog/native-visuals";
 
 function escapeHtml(value: string): string {
   return value
@@ -74,29 +77,41 @@ function sceneInnerHtml(scene: ReelScene, tokens: BrandTokens): string {
   const visual = scene.visual ? escapeHtml(scene.visual) : "";
   const accent = tokens.accent ?? "#ff6b4a";
   const fg = tokens.foreground ?? "#f8fafc";
+  const speaker =
+    visual &&
+    /^(interviewer|candidate|host|guest)$/i.test(visual.trim())
+      ? visual.trim().toUpperCase()
+      : "";
 
   if (scene.hideText) {
     return `<div class="scene-blank"></div>`;
   }
 
+  const speakerChip = speaker
+    ? `<p class="speaker-chip" style="color:${fg};border-color:${accent}">${escapeHtml(speaker)}</p>`
+    : "";
+
   switch (templateId) {
     case "hf-opener":
       return `
         <div class="tpl tpl-opener">
+          ${speakerChip}
           <div class="accent-bar" style="background:${accent}"></div>
           <p class="opener-text" style="color:${fg}">${textHtml}</p>
         </div>`;
     case "hf-statement":
       return `
         <div class="tpl tpl-statement">
+          ${speakerChip}
           <p class="statement-text" style="color:${fg}">${textHtml}</p>
           <div class="underline" style="background:${accent}"></div>
         </div>`;
     case "hf-list": {
       const items = listItems(scene);
-      const marker = visual || "→";
+      const marker = visual && !speaker ? visual : "→";
       return `
         <div class="tpl tpl-list">
+          ${speakerChip}
           <ul>
             ${items
               .map(
@@ -113,32 +128,40 @@ function sceneInnerHtml(scene: ReelScene, tokens: BrandTokens): string {
     case "hf-stat":
       return `
         <div class="tpl tpl-stat">
+          ${speakerChip}
           <div class="stat-num" style="color:${accent}">${visual || "—"}</div>
           <p class="stat-text" style="color:${fg}">${textHtml}</p>
         </div>`;
     case "hf-quote":
       return `
         <div class="tpl tpl-quote">
+          ${speakerChip}
           <div class="qmark" style="color:${accent}">“</div>
           <p class="quote-text" style="color:${fg}">${textHtml}</p>
-          ${visual ? `<p class="quote-attr" style="color:${fg}">— ${visual}</p>` : ""}
+          ${
+            visual && !speaker
+              ? `<p class="quote-attr" style="color:${fg}">— ${visual}</p>`
+              : ""
+          }
         </div>`;
     case "hf-cta":
       return `
         <div class="tpl tpl-cta">
+          ${speakerChip}
           <p class="cta-text" style="color:${fg}">${textHtml}</p>
           <div class="cta-pill" style="background:${accent};color:#0b0f19">
             ${visual || "Follow"}
           </div>
           ${
             tokens.handle
-              ? `<p class="cta-handle" style="color:${fg}">@${escapeHtml(tokens.handle)}</p>`
+              ? `<p class="cta-handle" style="color:${fg}">@${escapeHtml(tokens.handle.replace(/^@/, ""))}</p>`
               : ""
           }
         </div>`;
     default:
       return `
         <div class="tpl tpl-statement">
+          ${speakerChip}
           <p class="statement-text" style="color:${fg}">${textHtml}</p>
         </div>`;
   }
@@ -174,7 +197,7 @@ function framesToSeconds(frames: number, fps: number): number {
 }
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;700;800&family=Instrument+Serif:ital@0;1&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@500;700;800&family=Instrument+Serif:ital@0;1&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     width: 100%; height: 100%; overflow: hidden;
@@ -251,6 +274,13 @@ const STYLES = `
     padding: 10% 8%;
   }
   .em { color: inherit; box-shadow: inset 0 -0.22em 0 0 var(--accent, #ff6b4a); }
+  .speaker-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 18px; font-weight: 800; letter-spacing: 0.18em;
+    text-transform: uppercase; opacity: 0.8;
+    border: 1px solid; border-radius: 999px;
+    padding: 8px 14px; margin-bottom: 22px;
+  }
   .tpl { width: 100%; max-width: 92%; }
   .tpl-opener .accent-bar {
     width: 72px; height: 8px; border-radius: 999px; margin-bottom: 28px;
@@ -308,20 +338,26 @@ const STYLES = `
     opacity: 0; visibility: hidden;
   }
   .cover.is-active { opacity: 1; visibility: visible; }
+  /* Catalog sub-compositions — portrait-native production visuals */
+  .catalog-scene .catalog-host {
+    position: absolute; inset: 0; z-index: 3;
+    overflow: hidden; pointer-events: none;
+  }
+  ${NATIVE_CATALOG_STYLES}
   /* Style + Energy driven via CSS variables on #root */
   .scene {
     --enter-ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
   .scene.style-crossfade .content {
-    opacity: calc(var(--p, 0) * (1 - var(--exit, 0)));
+    opacity: calc(0.25 + var(--p, 0) * 0.75);
   }
   .scene.style-blur-slide .content {
-    opacity: calc(var(--p, 0) * (1 - var(--exit, 0)));
+    opacity: calc(0.25 + var(--p, 0) * 0.75);
     transform: translateY(calc((1 - var(--p, 0)) * 28px + var(--exit, 0) * -20px));
     filter: blur(calc((1 - var(--p, 0)) * 6px + var(--exit, 0) * 4px));
   }
   .scene.style-accent-flash .content {
-    opacity: calc(var(--p, 0) * (1 - var(--exit, 0)));
+    opacity: calc(0.3 + var(--p, 0) * 0.7);
     transform: scale(calc(0.97 + var(--p, 0) * 0.03));
   }
   .scene.style-accent-flash::after {
@@ -431,10 +467,17 @@ function buildSeekScript(
           pill.style.opacity = show ? '1' : '0';
           pill.style.transform = show ? 'translateY(0)' : 'translateY(16px)';
         }
-        const opener = el.querySelector('.opener-text, .statement-text, .quote-text, .cta-text, .stat-text');
+        const opener = el.querySelector('.opener-text, .statement-text, .quote-text, .cta-text, .stat-text, .prod-kinetic-line, .prod-outro-tag, .prod-social-line, .prod-app-title, .prod-money-line, .prod-chart-line, .prod-yt-sub');
         if (opener) {
-          opener.style.opacity = String(Math.min(1, p * 3));
-          opener.style.transform = 'translateY(' + (1 - Math.min(1, p * 2.5)) * 18 + 'px)';
+          // Become readable immediately — p=0 used to leave the first frame blank.
+          const enter = Math.min(1, Math.max(0.35, p * 4));
+          opener.style.opacity = String(enter);
+          opener.style.transform = 'translateY(' + (1 - Math.min(1, p * 3)) * 14 + 'px)';
+        }
+        const prod = el.querySelector('.prod');
+        if (prod) {
+          const enter = Math.min(1, Math.max(0.45, p * 3.5));
+          prod.style.opacity = String(enter);
         }
       } else {
         const bgVideo = el.querySelector('.bg-video');
@@ -492,6 +535,44 @@ function buildSeekScript(
       progress.style.width = (Math.min(1, t / CFG.totalSeconds) * 100) + '%';
     }
     syncAudio(t);
+    seekCatalogTimelines(t);
+  }
+
+  function seekCatalogTimelines(t) {
+    const tls = window.__timelines || {};
+    // Drive both catalog hosts and cinematic motion stages.
+    const hosts = root.querySelectorAll('[data-catalog-block], [data-motion-scene]');
+    hosts.forEach(function (host) {
+      const start = Number(host.closest('.scene')?.getAttribute('data-start') || host.getAttribute('data-start') || 0);
+      const dur = Number(host.closest('.scene')?.getAttribute('data-duration') || host.getAttribute('data-duration') || 0);
+      const motionId = host.getAttribute('data-motion-scene');
+      const blockId = host.getAttribute('data-catalog-block') || '';
+      const sceneId = host.closest('.scene')?.getAttribute('data-scene-id') || '';
+      const compHost = host.querySelector ? host.querySelector('[data-composition-id]') : null;
+      const compId = (compHost && compHost.getAttribute('data-composition-id')) || blockId;
+      const tl = tls[motionId] || tls[sceneId] || tls[compId] || tls[blockId];
+      if (!tl || typeof tl.seek !== 'function') return;
+      const local = t - start;
+      let tlDur = 0;
+      try { tlDur = typeof tl.duration === 'function' ? Number(tl.duration()) || 0 : Number(tl.duration) || 0; } catch (_) { tlDur = 0; }
+      if (local < 0 || dur <= 0) {
+        try { tl.pause && tl.pause(); tl.seek(0); } catch (_) { /* ignore */ }
+        return;
+      }
+      // Play entrance timelines in real time (not stretched across the whole
+      // scene). Long dialogue beats then hold the settled pose so captions
+      // stay readable instead of looking like blank mood washes.
+      // When paused at the scene head, park on a settled readable pose.
+      let seekTo = local;
+      if (tlDur > 0) {
+        if (!playing && local < 0.06) seekTo = Math.min(tlDur, 1.05);
+        else seekTo = Math.max(0, Math.min(tlDur, local));
+      }
+      try {
+        tl.pause && tl.pause();
+        tl.seek(seekTo);
+      } catch (_) { /* ignore */ }
+    });
   }
 
   // HyperFrames / preview: expose seek API used by player + frame adapters.
@@ -648,8 +729,16 @@ function buildSeekScript(
 
 /**
  * Serialize ReelProps into a standalone HyperFrames HTML document.
+ *
+ * @param inlineCatalog When true (editor preview), embed catalog block markup
+ *   into the host so srcDoc iframes work without a compositions/ folder.
+ *   Producer renders should leave this false and rely on data-composition-src.
  */
-export function buildHyperframesCompositionHtml(props: ReelProps): string {
+export function buildHyperframesCompositionHtml(
+  props: ReelProps,
+  opts: { inlineCatalog?: boolean } = {},
+): string {
+  const inlineCatalog = opts.inlineCatalog === true;
   const fps = props.fps || 30;
   const width = props.width || 1080;
   const height = props.height || 1920;
@@ -690,6 +779,27 @@ export function buildHyperframesCompositionHtml(props: ReelProps): string {
       0.35,
       framesToSeconds(transitionFrames, fps) / Math.max(0.05, duration),
     );
+
+    const catalog = getCatalogBlockByTemplateId(scene.templateId);
+    if (catalog) {
+      const built = buildCatalogSceneBlock({
+        scene,
+        tokens,
+        absoluteStart,
+        duration,
+        exitWindow,
+        transitionClass,
+        accent,
+        motionStiffness,
+        inline: inlineCatalog,
+        backgroundHtml: backgroundLayer(scene, absoluteStart, duration),
+      });
+      if (built) {
+        sceneBlocks.push(built.html);
+        continue;
+      }
+    }
+
     sceneBlocks.push(`
       <section class="scene ${transitionClass}" data-scene-id="${escapeHtml(scene.id)}"
                data-start="${absoluteStart.toFixed(3)}"
@@ -697,8 +807,11 @@ export function buildHyperframesCompositionHtml(props: ReelProps): string {
                data-track-index="1"
                data-exit-window="${exitWindow.toFixed(3)}"
                style="--accent:${accent};--motion-stiffness:${motionStiffness}">
-        ${backgroundLayer(scene, absoluteStart, duration)}
-        <div class="content">${sceneInnerHtml(scene, tokens)}</div>
+        ${buildCinematicClassicVisual({
+          scene,
+          tokens,
+          innerHtml: sceneInnerHtml(scene, tokens),
+        })}
       </section>`);
   }
 
@@ -760,6 +873,7 @@ export function buildHyperframesCompositionHtml(props: ReelProps): string {
       ${audioTags.join("\n")}
     </div>
   </div>
+  ${buildGsapMotionBootScript()}
   ${buildSeekScript(beats, coverSeconds, totalSeconds, fps, hideProgress)}
 </body>
 </html>`;

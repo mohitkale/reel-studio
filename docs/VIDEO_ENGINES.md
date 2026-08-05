@@ -25,7 +25,7 @@ with 4+ employees typically need a Remotion Company License. See
 
 ## Template IDs
 
-**HyperFrames:** `hf-opener`, `hf-statement`, `hf-list`, `hf-stat`, `hf-quote`, `hf-cta`
+**HyperFrames:** classic `hf-opener`, `hf-statement`, `hf-list`, `hf-stat`, `hf-quote`, `hf-cta` plus curated catalog blocks `hf-kinetic-slam`, `hf-money-count`, `hf-data-chart`, `hf-app-showcase`, `hf-logo-outro`, `hf-ig-follow`, `hf-tt-follow`, `hf-yt-lower-third` (vendored from the HyperFrames registry; host uses `data-composition-src`)
 
 **Remotion:** `kinetic`, `lottie`, `three`, `stat-reveal`, `icon-grid`, `quote-card`, `emoji-punch`
 

@@ -139,7 +139,7 @@ export const HyperFramesPlayer = React.forwardRef<
       hideProgressBar,
       styleId,
       energy,
-    });
+    }, { inlineCatalog: true });
   }, [
     scenes,
     timeline,

@@ -6,6 +6,7 @@ import {
   framesFromSeconds,
   stitchBeats,
   type BeatInput,
+  buildDialogueGaps,
 } from "@/lib/audio-timing";
 import { normalizeWavLoudness } from "@/lib/audio-normalize";
 import { makeSilentWav, parseWav } from "@/lib/wav";
@@ -399,6 +400,11 @@ export async function assembleVoiceTake(
   const missing: number[] = [];
   const stale: number[] = [];
   const beats: BeatInput[] = [];
+  const gapScenes: Array<{
+    visual?: string | null;
+    text: string;
+    spokenText?: string | null;
+  }> = [];
   let providerId = "assembled";
   let voiceId = "mixed";
   let modelId: string | undefined;
@@ -419,6 +425,11 @@ export async function assembleVoiceTake(
     }
     const wav = await getAssetStore().get(clip.audioPath);
     beats.push({ sceneId: scene.id, text: spoken, wav });
+    gapScenes.push({
+      visual: scene.visual,
+      text: scene.text,
+      spokenText: scene.spokenText,
+    });
     if (i === 0) {
       providerId = clip.providerId;
       voiceId = clip.voiceId;
@@ -445,7 +456,8 @@ export async function assembleVoiceTake(
     );
   }
 
-  const stitched = stitchBeats(beats, script.fps);
+  const gaps = buildDialogueGaps(gapScenes);
+  const stitched = stitchBeats(beats, script.fps, gaps);
   const wav = isPlaceholder
     ? stitched.wav
     : normalizeWavLoudness(stitched.wav);

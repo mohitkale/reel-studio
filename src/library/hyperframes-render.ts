@@ -19,6 +19,10 @@ import { getScript } from "@/library/repositories/scripts";
 import { listTakes } from "@/library/repositories/takes";
 import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
 import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-composition";
+import { getCatalogBlockByTemplateId } from "@/engines/hyperframes/catalog/manifest";
+import { catalogCompositionFileName } from "@/engines/hyperframes/catalog/build-scene";
+import { personalizeCatalogBlock } from "@/engines/hyperframes/catalog/personalize";
+import { defaultBrandTokens } from "@/compositions/tokens";
 import {
   updateRenderProgress,
   completeRender,
@@ -329,6 +333,33 @@ export async function runHyperframesRender(
       styleId: script.styleId,
       energy: script.energy,
     };
+
+    // Materialize curated catalog blocks as compositions/*.html so the producer
+    // can resolve data-composition-src on the host index.html.
+    const tokens = script.brandTokens ?? defaultBrandTokens;
+    const catalogScenes = scenes.filter((s) =>
+      getCatalogBlockByTemplateId(s.templateId),
+    );
+    if (catalogScenes.length) {
+      const compositionsDir = path.join(projectDir, "compositions");
+      await fs.mkdir(compositionsDir, { recursive: true });
+      for (const scene of catalogScenes) {
+        const meta = getCatalogBlockByTemplateId(scene.templateId);
+        if (!meta) continue;
+        const personalized = personalizeCatalogBlock(meta, {
+          scene,
+          tokens,
+        });
+        await fs.writeFile(
+          path.join(
+            compositionsDir,
+            catalogCompositionFileName(meta.id, scene.id),
+          ),
+          personalized,
+          "utf8",
+        );
+      }
+    }
 
     const html = buildHyperframesCompositionHtml(inputProps);
     await fs.writeFile(path.join(projectDir, "index.html"), html, "utf8");

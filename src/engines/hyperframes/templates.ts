@@ -1,11 +1,12 @@
 /**
  * HyperFrames-native professional template catalog.
- * Distinct look/motion from Remotion templates — HTML + CSS + GSAP strengths.
+ * Includes classic `hf-*` HTML templates plus curated upstream registry blocks.
  */
 
 import type { EngineTemplateMeta } from "@/engines/types";
+import { HF_CATALOG_BLOCKS } from "@/engines/hyperframes/catalog/manifest";
 
-export const HF_TEMPLATES: EngineTemplateMeta[] = [
+const CLASSIC_HF_TEMPLATES: EngineTemplateMeta[] = [
   {
     id: "hf-opener",
     name: "Cold open",
@@ -25,8 +26,7 @@ export const HF_TEMPLATES: EngineTemplateMeta[] = [
   {
     id: "hf-list",
     name: "Paced list",
-    description:
-      "Numbered vertical stack that ticks in one beat at a time.",
+    description: "Numbered vertical stack that ticks in one beat at a time.",
     visualHint: "Bullet or number marker (optional)",
     sampleText: "Write the goal\nPick the right context\nShip the draft",
     sampleEmphasis: [],
@@ -64,7 +64,24 @@ export const HF_TEMPLATES: EngineTemplateMeta[] = [
   },
 ];
 
-export const HF_DEFAULT_TEMPLATE_ID = "hf-opener";
+const CATALOG_HF_TEMPLATES: EngineTemplateMeta[] = HF_CATALOG_BLOCKS.map(
+  (b) => ({
+    id: b.templateId,
+    name: b.name,
+    description: b.description,
+    visualHint: b.visualHint,
+    sampleText: b.sampleText,
+    sampleEmphasis: b.sampleEmphasis,
+    sampleVisual: b.sampleVisual,
+  }),
+);
+
+export const HF_TEMPLATES: EngineTemplateMeta[] = [
+  ...CLASSIC_HF_TEMPLATES,
+  ...CATALOG_HF_TEMPLATES,
+];
+
+export const HF_DEFAULT_TEMPLATE_ID = "hf-kinetic-slam";
 
 export const HF_TEMPLATE_IDS = HF_TEMPLATES.map((t) => t.id) as [
   string,

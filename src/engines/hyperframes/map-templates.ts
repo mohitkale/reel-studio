@@ -1,15 +1,18 @@
 import type { AIScene } from "@/providers/ai/types";
 import type { VideoEngineId } from "@/engines/types";
 
-/** Map Remotion-oriented AI template picks onto the HyperFrames catalog. */
+/**
+ * Map Remotion-oriented AI template picks onto the HyperFrames catalog.
+ * Prefers curated upstream registry blocks for production-grade ads.
+ */
 const REMOTION_TO_HF: Record<string, string> = {
-  kinetic: "hf-statement",
-  lottie: "hf-statement",
-  three: "hf-opener",
-  "stat-reveal": "hf-stat",
+  kinetic: "hf-kinetic-slam",
+  lottie: "hf-app-showcase",
+  three: "hf-app-showcase",
+  "stat-reveal": "hf-money-count",
   "icon-grid": "hf-list",
   "quote-card": "hf-quote",
-  "emoji-punch": "hf-opener",
+  "emoji-punch": "hf-kinetic-slam",
 };
 
 /**
@@ -26,8 +29,12 @@ export function mapScenesToEngineTemplates(
     let templateId =
       REMOTION_TO_HF[scene.templateId] ??
       (scene.templateId.startsWith("hf-") ? scene.templateId : "hf-statement");
-    if (index === 0) templateId = "hf-opener";
-    if (index === scenes.length - 1 && scenes.length > 1) templateId = "hf-cta";
+    if (index === 0) templateId = "hf-kinetic-slam";
+    if (index === scenes.length - 1 && scenes.length > 1) {
+      // Portrait social CTA when the model asked for emoji punch; else logo outro.
+      templateId =
+        scene.templateId === "emoji-punch" ? "hf-ig-follow" : "hf-logo-outro";
+    }
     return {
       ...scene,
       templateId: templateId as AIScene["templateId"],

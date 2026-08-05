@@ -60,6 +60,14 @@ export const PLAN_TEMPLATE_IDS = [
   "hf-stat",
   "hf-quote",
   "hf-cta",
+  "hf-kinetic-slam",
+  "hf-money-count",
+  "hf-data-chart",
+  "hf-app-showcase",
+  "hf-logo-outro",
+  "hf-ig-follow",
+  "hf-tt-follow",
+  "hf-yt-lower-third",
 ] as const;
 
 export const aiSceneSchema = z.object({
