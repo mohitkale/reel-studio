@@ -18,6 +18,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shell/page-header";
 import { ProviderKeyCard } from "@/components/voice/provider-key-card";
+import { KokoroVoicesCard } from "@/components/voice/kokoro-voices-card";
 import { AIProviderCard } from "@/components/ai/ai-provider-card";
 import { StockProviderCard } from "@/components/stock/stock-provider-card";
 import { MusicProviderCard } from "@/components/music/music-provider-card";
@@ -104,6 +105,8 @@ export default function SettingsPage() {
           )}
         </CardContent>
       </Card>
+
+      {data?.config ? <KokoroVoicesCard config={data.config} /> : null}
 
       <Card>
         <CardHeader>

@@ -16,7 +16,7 @@ describe("framesFromSeconds", () => {
 
 describe("estimateSpeechSeconds", () => {
   it("scales with word count and enforces a floor", () => {
-    expect(estimateSpeechSeconds("")).toBeCloseTo(1.2, 5);
+    expect(estimateSpeechSeconds("")).toBeCloseTo(2.0, 5);
     expect(estimateSpeechSeconds(Array(150).fill("word").join(" "))).toBeCloseTo(
       60,
       5,
@@ -42,6 +42,19 @@ describe("stitchBeats", () => {
     // The stitched WAV is real and as long as the sum of beats + gap.
     const info = parseWav(result.wav);
     expect(info.durationSeconds).toBeCloseTo(3.3, 2);
+  });
+
+  it("supports per-transition gap arrays", () => {
+    const beats = [
+      { sceneId: "a", text: "one", wav: makeSilentWav(1) },
+      { sceneId: "b", text: "two", wav: makeSilentWav(1) },
+      { sceneId: "c", text: "three", wav: makeSilentWav(1) },
+    ];
+    const result = stitchBeats(beats, 30, [0.5, 1.0]);
+    expect(result.timeline[0].startFrame).toBe(0);
+    expect(result.timeline[1].startFrame).toBe(45); // 1s + 0.5s
+    expect(result.timeline[2].startFrame).toBe(105); // +1s + 1.0s
+    expect(result.totalFrames).toBe(135); // 3s + 1.5s gaps
   });
 
   it("handles an empty beat list", () => {

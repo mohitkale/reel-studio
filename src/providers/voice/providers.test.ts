@@ -74,10 +74,12 @@ describe("client providers", () => {
     expect(webspeech.synth).toBeUndefined();
   });
 
-  it("kokoro exposes a curated voice catalog; webspeech enumerates client-side", async () => {
+  it("kokoro exposes the full 82M voice catalog; webspeech enumerates client-side", async () => {
     const voices = await getProvider("kokoro").listVoices();
-    expect(voices.length).toBeGreaterThan(0);
-    expect(voices.every((v) => /^[ab][fm]_/.test(v.id))).toBe(true);
+    expect(voices.length).toBe(54);
+    expect(voices.every((v) => /^[a-z]{2}_[a-z]+$/.test(v.id))).toBe(true);
+    expect(voices.some((v) => v.language === "ja")).toBe(true);
+    expect(voices.some((v) => v.language === "zh")).toBe(true);
 
     expect(await getProvider("webspeech").listVoices()).toEqual([]);
   });

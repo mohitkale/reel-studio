@@ -7,6 +7,7 @@ import {
   filterKokoroVoices,
   kokoroModels,
 } from "./kokoro";
+import { enableExtendedKokoroVoices } from "./kokoro-extended-voices";
 import {
   ProviderError,
   type SynthOptions,
@@ -39,6 +40,10 @@ function loadModel(): Promise<KokoroTTS> {
           device: "cpu",
         } as Parameters<typeof KokoroTTS.from_pretrained>[1]),
       )
+      .then((tts) => {
+        enableExtendedKokoroVoices(tts);
+        return tts;
+      })
       .catch((e) => {
         ttsPromise = null; // allow retry
         throw e;

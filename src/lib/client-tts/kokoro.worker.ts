@@ -9,6 +9,7 @@
  */
 import { KokoroTTS } from "kokoro-js";
 
+import { enableExtendedKokoroVoices } from "@/providers/voice/kokoro-extended-voices";
 import {
   resampleLinear,
   encodeWavPcm16,
@@ -54,10 +55,15 @@ function load(): Promise<KokoroTTS> {
       device: "wasm",
       progress_callback: (p: { progress?: number }) =>
         ctx.postMessage({ type: "progress", progress: p?.progress }),
-    } as Parameters<typeof KokoroTTS.from_pretrained>[1]).catch((e) => {
-      ttsPromise = null; // allow retry
-      throw e;
-    });
+    } as Parameters<typeof KokoroTTS.from_pretrained>[1])
+      .then((tts) => {
+        enableExtendedKokoroVoices(tts);
+        return tts;
+      })
+      .catch((e) => {
+        ttsPromise = null; // allow retry
+        throw e;
+      });
   }
   return ttsPromise;
 }

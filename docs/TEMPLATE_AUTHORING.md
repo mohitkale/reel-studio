@@ -7,12 +7,18 @@ Apache-2.0 contributions; use **Remotion** when you need React compositions.
 
 1. Add a template entry in `src/engines/hyperframes/templates.ts`
 2. Implement HTML/CSS/motion in the HyperFrames composition builder
-   (`src/engines/hyperframes/`)
+   (`src/engines/hyperframes/`) **or** vendor a registry block under
+   `src/engines/hyperframes/catalog/blocks/` and register it in
+   `catalog/manifest.ts`, then run `node scripts/embed-hf-catalog.mjs`
 3. Register the id in the engine catalog so the editor picker lists it
 4. Keep templates self-contained (no Unsplash or paid assets required)
 5. Document props: `text`, `spokenText`, `emphasis`, `visual`, layout JSON
 
-Existing ids: `hf-opener`, `hf-statement`, `hf-list`, `hf-stat`, `hf-quote`, `hf-cta`
+Classic ids: `hf-opener`, `hf-statement`, `hf-list`, `hf-stat`, `hf-quote`, `hf-cta`
+
+Curated upstream catalog ids (wired via `data-composition-src`):
+`hf-kinetic-slam`, `hf-money-count`, `hf-data-chart`, `hf-app-showcase`,
+`hf-logo-outro`, `hf-ig-follow`, `hf-tt-follow`, `hf-yt-lower-third`
 
 ## Remotion
 

@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { PodcastTakeDTO } from "@/lib/dto";
 import {
   stitchBeats,
+  DEFAULT_GAP_SECONDS,
   type BeatInput,
 } from "@/lib/audio-timing";
 import { normalizeWavLoudness } from "@/lib/audio-normalize";
@@ -188,7 +189,24 @@ export async function generatePodcastTake(
     sceneCount: beats.length,
   });
 
-  const stitched = stitchBeats(beats, DEFAULT_FPS);
+  const gaps: number[] = keys.slice(0, -1).map((key, i) => {
+    const next = keys[i + 1];
+    if (key !== next) return 0.75;
+    return DEFAULT_GAP_SECONDS;
+  });
+  // Extra breath before reflective / closing turns (narrator-style interviewer lines after dialogue).
+  for (let i = 0; i < gaps.length; i++) {
+    const text = (beats[i + 1]?.text || "").toLowerCase();
+    if (
+      /never happened|learn the fastest|five minutes is enough|rarely enough/.test(
+        text,
+      )
+    ) {
+      gaps[i] = Math.max(gaps[i], 1.25);
+    }
+  }
+
+  const stitched = stitchBeats(beats, DEFAULT_FPS, gaps);
   const wav = normalizeWavLoudness(stitched.wav);
 
   const timeline: PodcastBeatTiming[] = stitched.timeline.map((beat, i) => ({

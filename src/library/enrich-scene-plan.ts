@@ -30,6 +30,14 @@ const MOOD_ONLY_TEMPLATES = new Set<string>([
   "hf-list",
   "hf-quote",
   "hf-cta",
+  "hf-kinetic-slam",
+  "hf-money-count",
+  "hf-data-chart",
+  "hf-app-showcase",
+  "hf-logo-outro",
+  "hf-ig-follow",
+  "hf-tt-follow",
+  "hf-yt-lower-third",
 ]);
 
 /** Default mood when the model omits one — biased by template so beats feel intentional. */
@@ -47,6 +55,14 @@ const TEMPLATE_MOOD: Partial<Record<string, SceneMood>> = {
   "hf-stat": "dramatic",
   "hf-quote": "inspiring",
   "hf-cta": "inspiring",
+  "hf-kinetic-slam": "energetic",
+  "hf-money-count": "dramatic",
+  "hf-data-chart": "tech",
+  "hf-app-showcase": "inspiring",
+  "hf-logo-outro": "inspiring",
+  "hf-ig-follow": "playful",
+  "hf-tt-follow": "playful",
+  "hf-yt-lower-third": "energetic",
 };
 
 /** Rotating stock-photo queries per mood when the model leaves backgroundQuery empty. */
