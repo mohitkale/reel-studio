@@ -78,6 +78,11 @@ export type ReelProps = {
   musicUrl?: string;
   /** Background music level, 0-100. */
   musicVolume?: number;
+  /**
+   * Timed SFX one-shots (absolute content timeline frames, pre-cover).
+   * Cover offset is applied inside the composition via the wrapping Sequence.
+   */
+  sfxCues?: Array<{ url: string; startFrame: number; volume: number }>;
   tokens: BrandTokens;
   /** Optional cover image baked as the reel's opening (thumbnail) frame. */
   coverUrl?: string;

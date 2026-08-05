@@ -159,6 +159,22 @@ function paletteFor(mood?: SceneMood): Palette {
   return (mood && MOOD_PALETTES[mood]) || MOOD_PALETTES.default;
 }
 
+/** Parse a count-up target from visual/text (90%, 10x, $10k). */
+function parseMoneyTargetLocal(visual: string | undefined, text: string): number {
+  const blob = `${visual ?? ""} ${text}`;
+  const m = blob.match(
+    /\$?\s*([\d]{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)\s*([kKmMbB])?/,
+  );
+  if (!m) return 100;
+  let n = Number(m[1].replace(/,/g, ""));
+  if (!Number.isFinite(n)) return 100;
+  const suffix = (m[2] ?? "").toLowerCase();
+  if (suffix === "k") n *= 1_000;
+  if (suffix === "m") n *= 1_000_000;
+  if (suffix === "b") n *= 1_000_000_000;
+  return Math.max(1, Math.round(n));
+}
+
 function speakerLabel(visual?: string): string {
   if (!visual) return "";
   if (/^(interviewer|candidate|host|guest)$/i.test(visual.trim())) {
@@ -374,37 +390,57 @@ export function buildNativeCatalogVisual(args: {
         </div>`;
 
     case "apple-money-count": {
+      // Dark cinematic stage (not cream billboard) so proof beats match tech reels.
       const visual = escapeHtml(scene.visual || "$10,000");
-      const light: Palette = {
-        a: "#f4f1ea",
-        b: "#e8e2d6",
-        c: accent,
-        glow: accent,
-        ink: "#111315",
-        muted: "rgba(17,19,21,0.55)",
-      };
+      const target = parseMoneyTargetLocal(scene.visual, scene.text);
+      const suffix = /%/.test(scene.visual || "")
+        ? "%"
+        : /×|x/i.test(scene.visual || scene.text)
+          ? "×"
+          : "";
       return `
-        ${stageShell(sid, light, "billboard", "fx-money")}
+        ${stageShell(sid, pal, "punch-block", "fx-money")}
           <div class="fx-content">
-            <p class="fx-money-num" style="color:#111">${visual}</p>
-            <p class="fx-money-line" style="color:#222">${textHtml}</p>
+            <p class="fx-kicker" style="color:${accent}">PROOF</p>
+            <p class="fx-money-num" data-count-to="${target}" data-count-suffix="${suffix}" style="color:${pal.ink}">${visual}</p>
+            <p class="fx-money-line" style="color:${pal.ink}">${textHtml}</p>
+            <div class="fx-rule" style="background:${accent}"></div>
           </div>
         </div>`;
     }
 
-    case "data-chart":
+    case "data-chart": {
+      // Prefer explicit items as series; normalize heights to max so bars read as growth.
+      const fromItems = (scene.items ?? [])
+        .map((v) => Number(String(v).replace(/[^\d.]/g, "")))
+        .filter((n) => Number.isFinite(n) && n > 0);
+      const fromBlob =
+        [scene.visual || "", scene.text]
+          .join(" ")
+          .match(/(\d+(?:\.\d+)?)/g)
+          ?.map(Number)
+          .filter((n) => Number.isFinite(n) && n > 0) ?? [];
+      const nums = (fromItems.length >= 3 ? fromItems : fromBlob).slice(0, 6);
+      const max = nums.length ? Math.max(...nums) : 1;
+      const heights =
+        nums.length >= 3
+          ? nums.map(
+              (n) =>
+                `${Math.max(22, Math.min(96, Math.round((n / max) * 96)))}%`,
+            )
+          : ["42%", "58%", "51%", "73%", "88%", "96%"];
+      while (heights.length < 6) heights.push(heights[heights.length - 1] || "60%");
       return `
-        ${stageShell(sid, { ...pal, a: "#f7f5f0", b: "#ebe6dc", ink: "#111", muted: "rgba(17,17,17,0.5)" }, "stack-cards", "fx-chart")}
+        ${stageShell(sid, pal, "terminal", "fx-chart")}
           <div class="fx-content">
-            <p class="fx-chart-title">${escapeHtml(scene.visual || scene.text.slice(0, 48))}</p>
+            <p class="fx-chart-title" style="color:${pal.ink}">${escapeHtml(scene.visual || scene.text.slice(0, 48))}</p>
             <div class="fx-chart-bars">
-              <i style="--h:42%"></i><i style="--h:58%"></i><i style="--h:51%"></i>
-              <i style="--h:73%"></i><i style="--h:88%"></i><i style="--h:96%"></i>
+              ${heights.map((h) => `<i style="--h:${h};background:linear-gradient(180deg, ${accent}, ${pal.b})"></i>`).join("")}
             </div>
-            <p class="fx-chart-line">${textHtml}</p>
+            <p class="fx-chart-line" style="color:${pal.ink}">${textHtml}</p>
           </div>
         </div>`;
-
+    }
     case "app-showcase":
       return `
         ${stageShell(sid, pal, "terminal", "fx-app")}
@@ -488,14 +524,19 @@ export function buildCinematicClassicVisual(args: {
         </div>`;
       break;
     }
-    case "hf-stat":
+    case "hf-stat": {
+      const hasNum = /\d/.test(scene.visual || "");
+      const countAttrs = hasNum
+        ? ` data-count-to="${parseMoneyTargetLocal(scene.visual, scene.text)}" data-count-suffix="${/%/.test(scene.visual || "") ? "%" : /×|x/i.test(scene.visual || "") ? "×" : ""}"`
+        : "";
       body = `
         <div class="fx-dialogue fx-dlg-stat">
           ${chip}
-          <p class="fx-money-num" style="color:${accent}">${escapeHtml(scene.visual || "—")}</p>
+          <p class="fx-money-num"${countAttrs} style="color:${accent}">${escapeHtml(scene.visual || "—")}</p>
           <div class="fx-stack" style="color:${pal.ink}">${lineStackHtml(scene.text, scene.emphasis, 20, "fx-line sans")}</div>
         </div>`;
       break;
+    }
     case "hf-cta":
       body = `
         <div class="fx-dialogue fx-dlg-cta">
@@ -871,7 +912,7 @@ export const NATIVE_CATALOG_STYLES = `
   }
   .fx-chart-title {
     font-family: "Instrument Serif", Georgia, serif; font-size: 36px; margin-bottom: 18px;
-    opacity: 0; transform: translateY(10px); color: #111;
+    opacity: 0; transform: translateY(10px);
   }
   .fx-chart-bars {
     display: flex; align-items: flex-end; gap: 14px; height: 260px; width: min(720px, 86%);
@@ -1010,7 +1051,25 @@ export function buildGsapMotionBootScript(): string {
       if (logo) tl.to(logo, { opacity: 1, scale: 1, duration: 0.55, ease: 'back.out(1.5)' }, 0.15);
       if (pill) tl.to(pill, { opacity: 1, duration: 0.35 }, 0.7);
       if (card) tl.to(card, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.4);
-      if (money) tl.to(money, { opacity: 1, y: 0, duration: 0.55, ease: 'power3.out' }, 0.15);
+      if (money) {
+        tl.fromTo(money, { opacity: 0, y: 36, scale: 0.86 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: 'back.out(1.6)' }, 0.12);
+        var countTo = Number(money.getAttribute('data-count-to') || '0');
+        var countSuffix = money.getAttribute('data-count-suffix') || '';
+        if (countTo > 0 && countTo <= 1000000) {
+          var counter = { v: 0 };
+          tl.to(counter, {
+            v: countTo,
+            duration: 0.9,
+            ease: 'power2.out',
+            onUpdate: function () {
+              var n = Math.round(counter.v);
+              money.textContent = countSuffix === '%' ? (n + '%')
+                : countSuffix === '×' ? (n + '×')
+                : String(n);
+            }
+          }, 0.18);
+        }
+      }
       if (moneyLine) tl.to(moneyLine, { opacity: 1, y: 0, duration: 0.4 }, 0.5);
       if (chartTitle) tl.to(chartTitle, { opacity: 1, y: 0, duration: 0.35 }, 0.1);
       bars.forEach(function (b, i) {
@@ -1018,6 +1077,24 @@ export function buildGsapMotionBootScript(): string {
       });
       if (phone) tl.to(phone, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 0.1);
       if (cta) tl.to(cta, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.5);
+
+      // Ambient life after the entrance so long VO doesn't freeze into a poster.
+      var holdEnd = Math.max(tl.duration(), 1.35);
+      if (scan) {
+        tl.to(scan, { y: '160%', opacity: 0.55, duration: 2.4, ease: 'none', repeat: 2 }, holdEnd * 0.15);
+      }
+      if (deepOrb) {
+        tl.to(deepOrb, { scale: 1.08, duration: 2.2, yoyo: true, repeat: 2, ease: 'sine.inOut' }, holdEnd * 0.2);
+      }
+      slash.forEach(function (el, i) {
+        tl.to(el, { x: i ? 24 : -18, duration: 2.6, yoyo: true, repeat: 1, ease: 'sine.inOut' }, holdEnd * 0.25);
+      });
+      if (beam) {
+        tl.to(beam, { opacity: 0.85, scale: 1.05, duration: 1.8, yoyo: true, repeat: 2, ease: 'sine.inOut' }, holdEnd * 0.2);
+      }
+      if (shine) {
+        tl.to(shine, { x: '18%', duration: 2.4, yoyo: true, repeat: 1, ease: 'sine.inOut' }, 0.4);
+      }
 
       if (tl.duration() < 1.35) tl.to({}, { duration: 1.35 }, 0);
       tl.seek(Math.min(tl.duration(), 1.1));

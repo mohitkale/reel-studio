@@ -19,6 +19,7 @@ import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition, type X264Preset } from "@remotion/renderer";
 import { type ReelProps, type ReelScene, coverFrames } from "@/compositions/types";
 import { type Orientation, dimsFor } from "@/lib/orientation";
+import { resolveReelSfxCues } from "@/lib/sfx-cues";
 import { getAssetStore } from "@/library/storage";
 import { listTakes } from "@/library/repositories/takes";
 import { normalizeTemplateId } from "@/compositions/templates";
@@ -330,6 +331,12 @@ async function runRemotionRender({
       audioUrl: resolved.takeUsable ? absolute(take?.audioUrl) : undefined,
       musicUrl: absolute(script.musicUrl),
       musicVolume: script.musicVolume,
+      sfxCues: resolveReelSfxCues({
+        sfxEnabled: script.sfxEnabled,
+        sfxJson: script.sfxJson,
+        timeline,
+        fps: script.fps,
+      }).map((c) => ({ ...c, url: absolute(c.url)! })),
       coverUrl: absolute(script.coverUrl),
       // script.brandTokens is server-safe (uses serverDefaultTokens, no @remotion/google-fonts).
       // Importing @/compositions/tokens here would pull loadFont() into the Next.js server

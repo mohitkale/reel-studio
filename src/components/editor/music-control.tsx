@@ -5,10 +5,11 @@ import { Music, Loader2, Trash2, Upload, Search, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAssets, useUploadAsset } from "@/hooks/assets";
-import { useSetScriptMusic } from "@/hooks/script";
+import { useAutoSoundtrack, useSetScriptMusic } from "@/hooks/script";
 import { useSearchMusic } from "@/hooks/music";
+import { apiPost } from "@/lib/api-client";
 import { MUSIC_LIBRARY, suggestBundledTrack } from "@/lib/music-library";
-import type { SceneDTO } from "@/lib/dto";
+import type { SceneDTO, ScriptDTO } from "@/lib/dto";
 import type { RemoteMusicTrack } from "@/providers/music/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { HintTooltip } from "@/components/ui/hint-tooltip";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 /** Most common truthy value in a list, or undefined if there isn't one. */
 function mostCommon<T>(values: (T | undefined)[]): T | undefined {
@@ -79,11 +81,15 @@ export function MusicControl({
   scriptId,
   musicUrl,
   musicVolume,
+  sfxEnabled = true,
+  sfxCueCount = 0,
   scenes = [],
 }: {
   scriptId: string;
   musicUrl: string | null;
   musicVolume: number;
+  sfxEnabled?: boolean;
+  sfxCueCount?: number;
   /** Used to auto-suggest a track from the AI's per-scene mood/musicMood hints. */
   scenes?: SceneDTO[];
 }) {
@@ -91,6 +97,19 @@ export function MusicControl({
   const [searchInput, setSearchInput] = React.useState("");
   const [searchQuery, setSearchQuery] = React.useState("");
   const setMusic = useSetScriptMusic(scriptId);
+  const autoSoundtrack = useAutoSoundtrack(scriptId);
+  const qc = useQueryClient();
+  const sfxMut = useMutation({
+    mutationFn: (vars: { force?: boolean; enabled?: boolean }) =>
+      apiPost<{
+        result: { attached: boolean; cueCount?: number; reason?: string };
+        script: ScriptDTO;
+      }>(`/api/scripts/${scriptId}/sfx`, vars),
+    onSuccess: (data) => {
+      qc.setQueryData(["script", scriptId], data.script);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+  });
   const uploadAsset = useUploadAsset();
   const { data: audioAssets } = useAssets("audio");
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -135,7 +154,32 @@ export function MusicControl({
     }
   }
 
-  const busy = uploadAsset.isPending || setMusic.isPending;
+  const busy =
+    uploadAsset.isPending ||
+    setMusic.isPending ||
+    autoSoundtrack.isPending ||
+    sfxMut.isPending;
+
+  function runAutoSoundtrack(force: boolean) {
+    autoSoundtrack.mutate(
+      { force },
+      {
+        onSuccess: (data) => {
+          if (data.result.attached) {
+            toast.success(force ? "Soundtrack regenerated" : "Soundtrack attached", {
+              description: "Bundled track matched to this reel's mood.",
+            });
+          } else if (data.result.reason === "already_set") {
+            toast.message("Music already set", {
+              description: "Use Regenerate to replace it, or Remove first.",
+            });
+          }
+        },
+        onError: (e) =>
+          toast.error(e instanceof Error ? e.message : "Auto soundtrack failed"),
+      },
+    );
+  }
 
   return (
     <>
@@ -164,7 +208,21 @@ export function MusicControl({
           </DialogHeader>
 
           <div className="flex flex-col gap-3">
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="default"
+                className="justify-start"
+                disabled={busy}
+                onClick={() => runAutoSoundtrack(Boolean(musicUrl))}
+              >
+                {autoSoundtrack.isPending ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Wand2 className="size-3.5" />
+                )}
+                {musicUrl ? "Regenerate soundtrack" : "Auto soundtrack"}
+              </Button>
               <Button
                 size="sm"
                 variant="outline"
@@ -172,7 +230,7 @@ export function MusicControl({
                 disabled={busy}
                 onClick={() => fileInputRef.current?.click()}
               >
-                {busy ? (
+                {uploadAsset.isPending ? (
                   <Loader2 className="size-3.5 animate-spin" />
                 ) : (
                   <Upload className="size-3.5" />
@@ -366,6 +424,64 @@ export function MusicControl({
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="grid gap-2 rounded-lg border border-border p-2.5">
+            <Label className="text-xs text-muted-foreground">
+              Sound effects (bundled CC0)
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              {sfxEnabled
+                ? `${sfxCueCount} cue${sfxCueCount === 1 ? "" : "s"} on this reel.`
+                : "SFX are off for this reel."}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={busy}
+                onClick={() =>
+                  sfxMut.mutate(
+                    { force: true, enabled: true },
+                    {
+                      onSuccess: (data) => {
+                        if (data.result.attached) {
+                          toast.success("SFX cues ready", {
+                            description: `${data.result.cueCount ?? 0} template cues attached.`,
+                          });
+                        } else {
+                          toast.message("SFX unchanged");
+                        }
+                      },
+                      onError: (e) =>
+                        toast.error(
+                          e instanceof Error ? e.message : "SFX update failed",
+                        ),
+                    },
+                  )
+                }
+              >
+                {sfxCueCount ? "Regenerate SFX" : "Auto SFX"}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={busy}
+                onClick={() =>
+                  sfxMut.mutate(
+                    { enabled: !sfxEnabled },
+                    {
+                      onSuccess: () =>
+                        toast.message(
+                          sfxEnabled ? "SFX disabled" : "SFX enabled",
+                        ),
+                    },
+                  )
+                }
+              >
+                {sfxEnabled ? "Turn SFX off" : "Turn SFX on"}
+              </Button>
+            </div>
           </div>
 
           <DialogFooter>

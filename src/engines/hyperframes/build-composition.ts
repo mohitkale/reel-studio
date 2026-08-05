@@ -268,6 +268,26 @@ const STYLES = `
   .bg-scrim {
     background: linear-gradient(180deg, rgba(5,7,13,.42) 0%, rgba(5,7,13,.55) 45%, rgba(5,7,13,.88) 100%);
   }
+  /* Stock photo under native stages: let imagery breathe through the mesh. */
+  .scene.has-photo .bg-scrim {
+    background: linear-gradient(180deg, rgba(5,7,13,.55) 0%, rgba(5,7,13,.62) 40%, rgba(5,7,13,.92) 100%);
+    z-index: 1;
+  }
+  .scene.has-photo .fx-stage {
+    background: transparent !important;
+  }
+  .scene.has-photo .fx-void,
+  .scene.has-photo .fx-term-bg,
+  .scene.has-photo .fx-block-a,
+  .scene.has-photo .fx-deep,
+  .scene.has-photo .fx-studio,
+  .scene.has-photo .fx-bill-bg,
+  .scene.has-photo .fx-min-bg {
+    opacity: 0.42;
+  }
+  .scene.has-photo .recipe-editorial .fx-paper {
+    opacity: 0.78;
+  }
   .content {
     position: relative; z-index: 2; flex: 1;
     display: flex; align-items: center; justify-content: center;
@@ -487,11 +507,23 @@ function buildSeekScript(
   }
 
   function syncAudio(time) {
+    const vo = document.getElementById('vo');
+    let voActive = false;
+    if (vo) {
+      const voStart = Number(vo.dataset.start || 0);
+      const voDur = Number(vo.dataset.duration || 0);
+      voActive = time >= voStart && (voDur <= 0 || time < voStart + voDur);
+    }
     document.querySelectorAll('audio').forEach((audio) => {
       const start = Number(audio.dataset.start || 0);
       const duration = Number(audio.dataset.duration || 0);
-      const vol = audio.dataset.volume;
-      if (vol != null && vol !== '') audio.volume = Math.max(0, Math.min(1, Number(vol)));
+      const baseVol = audio.dataset.volume != null && audio.dataset.volume !== ''
+        ? Number(audio.dataset.volume)
+        : 1;
+      // Duck BGM under narration (parity with Remotion musicAt ~0.35×).
+      let vol = baseVol;
+      if (audio.id === 'music' && voActive) vol = baseVol * 0.35;
+      audio.volume = Math.max(0, Math.min(1, vol));
       const local = time - start;
       if (local < 0 || (duration > 0 && local > duration)) {
         if (!audio.paused) audio.pause();
@@ -801,12 +833,13 @@ export function buildHyperframesCompositionHtml(
     }
 
     sceneBlocks.push(`
-      <section class="scene ${transitionClass}" data-scene-id="${escapeHtml(scene.id)}"
+      <section class="scene ${transitionClass}${scene.background?.type === "image" || scene.background?.type === "video" ? " has-photo" : ""}" data-scene-id="${escapeHtml(scene.id)}"
                data-start="${absoluteStart.toFixed(3)}"
                data-duration="${duration.toFixed(3)}"
                data-track-index="1"
                data-exit-window="${exitWindow.toFixed(3)}"
                style="--accent:${accent};--motion-stiffness:${motionStiffness}">
+        ${backgroundLayer(scene, absoluteStart, duration)}
         ${buildCinematicClassicVisual({
           scene,
           tokens,
@@ -830,6 +863,13 @@ export function buildHyperframesCompositionHtml(
     const vol = Math.max(0, Math.min(1, (props.musicVolume ?? 20) / 100));
     audioTags.push(
       `<audio id="music" preload="auto" data-start="0" data-duration="${totalSeconds.toFixed(3)}" data-track-index="11" data-volume="${vol}" src="${escapeHtml(props.musicUrl)}"></audio>`,
+    );
+  }
+  const fpsSafe = Math.max(1, fps);
+  for (const [i, cue] of (props.sfxCues ?? []).entries()) {
+    const startSec = coverSeconds + cue.startFrame / fpsSafe;
+    audioTags.push(
+      `<audio id="sfx-${i}" preload="auto" data-start="${startSec.toFixed(3)}" data-duration="2" data-track-index="${12 + i}" data-volume="${Math.max(0, Math.min(1, cue.volume)).toFixed(3)}" src="${escapeHtml(cue.url)}"></audio>`,
     );
   }
 

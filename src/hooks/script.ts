@@ -126,6 +126,24 @@ export function useSetScriptMusic(scriptId: string) {
   });
 }
 
+/** Auto-attach bundled BGM from scene moods (fill if empty, or force regenerate). */
+export function useAutoSoundtrack(scriptId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars?: { force?: boolean }) =>
+      apiPost<{
+        result:
+          | { attached: true; musicUrl: string; trackId: string }
+          | { attached: false; reason: string };
+        script: ScriptDTO;
+      }>(`/api/scripts/${scriptId}/soundtrack`, vars ?? {}),
+    onSuccess: (data) => {
+      qc.setQueryData(["script", scriptId], data.script);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+  });
+}
+
 /** Update whole-reel Style and/or Energy (live preview). */
 export function useSetScriptVisualStyle(scriptId: string) {
   const qc = useQueryClient();
@@ -425,7 +443,7 @@ async function pollVoiceJob(
   );
 }
 
-function waitForVoiceJob(
+export function waitForVoiceJob(
   scriptId: string,
   jobId: string,
   onProgress?: (progress: VoiceGenerationProgress) => void,
@@ -470,6 +488,50 @@ function waitForVoiceJob(
         (err) => finish(() => reject(err)),
       );
     };
+  });
+}
+
+/** One-click factory: auto BGM + SFX, then VO if the script has no take yet. */
+export function useProduceReel(scriptId: string) {
+  const invalidate = useScriptInvalidator(scriptId);
+  return useMutation({
+    mutationFn: async (vars?: {
+      providerId?: ProviderId;
+      voiceId?: string;
+      startVoice?: boolean;
+      onProgress?: (progress: VoiceGenerationProgress) => void;
+    }) => {
+      const res = await apiPost<{
+        result: {
+          steps: string[];
+          musicAttached: boolean;
+          sfxAttached: boolean;
+          needsVoice: boolean;
+          hadVoiceAlready: boolean;
+          voiceJobId: string | null;
+        };
+        script: ScriptDTO;
+      }>(`/api/scripts/${scriptId}/produce`, {
+        providerId: vars?.providerId,
+        voiceId: vars?.voiceId,
+        startVoice: vars?.startVoice,
+      });
+
+      if (res.result.voiceJobId) {
+        vars?.onProgress?.({
+          status: "queued",
+          scene: 0,
+          sceneCount: 0,
+        });
+        await waitForVoiceJob(
+          scriptId,
+          res.result.voiceJobId,
+          vars?.onProgress,
+        );
+      }
+      return res;
+    },
+    onSuccess: invalidate,
   });
 }
 

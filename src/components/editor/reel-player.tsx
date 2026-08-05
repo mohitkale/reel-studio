@@ -24,6 +24,7 @@ interface ReelPlayerProps {
   audioUrl?: string;
   musicUrl?: string;
   musicVolume?: number;
+  sfxCues?: Array<{ url: string; startFrame: number; volume: number }>;
   autoPlay?: boolean;
   loop?: boolean;
   tokens?: BrandTokens;
@@ -51,6 +52,7 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
       audioUrl,
       musicUrl,
       musicVolume,
+      sfxCues,
       autoPlay,
       loop = true,
       tokens,
@@ -70,6 +72,7 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
         audioUrl,
         musicUrl,
         musicVolume,
+        sfxCues,
         tokens: resolvedTokens,
         coverUrl,
         width,
@@ -86,6 +89,7 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
         audioUrl,
         musicUrl,
         musicVolume,
+        sfxCues,
         resolvedTokens,
         coverUrl,
         width,

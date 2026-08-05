@@ -37,6 +37,8 @@ export interface GenerateTakeInput {
   providerId?: ProviderId;
   voiceId?: string;
   modelId?: string;
+  /** Optional speaking rate for providers that support it (e.g. Kokoro). */
+  speed?: number;
   label?: string;
   onProgress?: (progress: TakeProgress) => void;
 }
@@ -51,7 +53,13 @@ const DEFAULT_SYNTH_CONCURRENCY = 4;
  */
 async function synthesizeScenesConcurrently(
   scenes: { id: string; text: string }[],
-  ctx: { scriptId: string; providerId: string; voiceId: string; modelId?: string },
+  ctx: {
+    scriptId: string;
+    providerId: string;
+    voiceId: string;
+    modelId?: string;
+    speed?: number;
+  },
   synth: (opts: SynthOptions) => Promise<SynthResult>,
   maxConcurrency: number,
   onProgress?: (done: number, total: number, workingOn?: number) => void,
@@ -60,6 +68,11 @@ async function synthesizeScenesConcurrently(
   const results: BeatInput[] = new Array(total);
   let cursor = 0;
   let completed = 0;
+  // Bake speed into the cache key so retunes don't reuse wrong-rate audio.
+  const speedTag =
+    typeof ctx.speed === "number" && Number.isFinite(ctx.speed)
+      ? `\0speed=${ctx.speed}`
+      : "";
 
   async function worker() {
     while (cursor < scenes.length) {
@@ -70,7 +83,7 @@ async function synthesizeScenesConcurrently(
         providerId: ctx.providerId,
         voiceId: ctx.voiceId,
         modelId: ctx.modelId,
-        text: scene.text,
+        text: `${scene.text}${speedTag}`,
       };
       let wav = await getCachedBeatWav(cacheParts);
       if (!wav) {
@@ -79,6 +92,7 @@ async function synthesizeScenesConcurrently(
           voiceId: ctx.voiceId,
           modelId: ctx.modelId,
           text: scene.text,
+          ...(ctx.speed !== undefined ? { speed: ctx.speed } : {}),
         });
         wav = result.wav;
         void setCachedBeatWav({ ...cacheParts, scriptId: ctx.scriptId }, wav);
@@ -158,6 +172,7 @@ export async function generateTake(
         providerId: input.providerId,
         voiceId: input.voiceId,
         modelId: input.modelId,
+        speed: input.speed,
       },
       provider.synth,
       provider.maxConcurrency ?? DEFAULT_SYNTH_CONCURRENCY,

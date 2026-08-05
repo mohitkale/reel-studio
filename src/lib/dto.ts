@@ -99,6 +99,10 @@ export interface ScriptDTO {
   musicUrl: string | null;
   /** Background music level, 0-100. */
   musicVolume: number;
+  /** When false, skip mixing bundled SFX. */
+  sfxEnabled: boolean;
+  /** JSON string of ScriptSfxState, or null when unset. */
+  sfxJson: string | null;
   /** Global default: hide on-screen scene text (per-scene hideText overrides this). */
   hideText: boolean;
   /** Global: hide the top progress bar on every scene. */

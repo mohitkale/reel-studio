@@ -26,6 +26,7 @@ interface EnginePlayerProps {
   audioUrl?: string;
   musicUrl?: string;
   musicVolume?: number;
+  sfxCues?: Array<{ url: string; startFrame: number; volume: number }>;
   autoPlay?: boolean;
   loop?: boolean;
   tokens?: BrandTokens;

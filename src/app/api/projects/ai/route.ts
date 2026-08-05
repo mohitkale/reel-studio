@@ -9,6 +9,8 @@ import {
   resolvePlanVisualStyle,
 } from "@/library/enrich-scene-plan";
 import { resolveSceneBackgrounds } from "@/library/stock-backgrounds";
+import { autoAttachBundledMusic } from "@/library/soundtrack-service";
+import { ensureSfxCues } from "@/library/sfx-service";
 import { orientationSchema, DEFAULT_ORIENTATION } from "@/lib/orientation";
 import { VIDEO_ENGINE_IDS, DEFAULT_VIDEO_ENGINE } from "@/engines/types";
 import { authorize } from "@/server/auth";
@@ -85,6 +87,9 @@ export async function POST(req: Request) {
       videoEngine,
       visualStyle,
     );
+    // One-click soundtrack: attach bundled BGM from scene mood/musicMood.
+    await autoAttachBundledMusic(created.scriptId);
+    await ensureSfxCues(created.scriptId);
     return NextResponse.json({ ...created, plan, visualStyle }, { status: 201 });
   } catch (e) {
     return errorResponse(e);

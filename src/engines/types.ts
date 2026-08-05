@@ -8,7 +8,8 @@ import type { TemplateMeta } from "@/compositions/templates";
 export const VIDEO_ENGINE_IDS = ["remotion", "hyperframes"] as const;
 export type VideoEngineId = (typeof VIDEO_ENGINE_IDS)[number];
 
-export const DEFAULT_VIDEO_ENGINE: VideoEngineId = "remotion";
+/** HyperFrames-first: Apache-2.0 director path is the default for new projects. */
+export const DEFAULT_VIDEO_ENGINE: VideoEngineId = "hyperframes";
 
 export const VIDEO_ENGINE_LABELS: Record<VideoEngineId, string> = {
   remotion: "Remotion",

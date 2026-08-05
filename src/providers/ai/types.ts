@@ -44,9 +44,8 @@ export const sceneMoodSchema = z.enum([
 ]);
 export type SceneMood = z.infer<typeof sceneMoodSchema>;
 
-// Remotion + HyperFrames template ids. AI providers still emit Remotion ids
-// (smaller schema); HyperFrames projects remap via mapScenesToEngineTemplates.
-export const PLAN_TEMPLATE_IDS = [
+/** Remotion template ids the director may emit when videoEngine is remotion. */
+export const REMOTION_PLAN_TEMPLATE_IDS = [
   "kinetic",
   "lottie",
   "three",
@@ -54,6 +53,10 @@ export const PLAN_TEMPLATE_IDS = [
   "icon-grid",
   "quote-card",
   "emoji-punch",
+] as const;
+
+/** HyperFrames template ids the director may emit when videoEngine is hyperframes. */
+export const HF_PLAN_TEMPLATE_IDS = [
   "hf-opener",
   "hf-statement",
   "hf-list",
@@ -69,6 +72,21 @@ export const PLAN_TEMPLATE_IDS = [
   "hf-tt-follow",
   "hf-yt-lower-third",
 ] as const;
+
+/** Union accepted by Zod after either engine-specific schema. */
+export const PLAN_TEMPLATE_IDS = [
+  ...REMOTION_PLAN_TEMPLATE_IDS,
+  ...HF_PLAN_TEMPLATE_IDS,
+] as const;
+
+/** Template enum for provider structured-output schemas. */
+export function planTemplateIdsForEngine(
+  engine?: VideoEngineId,
+): readonly string[] {
+  return engine === "hyperframes"
+    ? HF_PLAN_TEMPLATE_IDS
+    : REMOTION_PLAN_TEMPLATE_IDS;
+}
 
 export const aiSceneSchema = z.object({
   text: z.string().min(1),
@@ -189,7 +207,7 @@ export interface GeneratePlanInput {
   orientation?: Orientation;
   /** Short = same short line on screen + in voice. Detailed = short on-screen text + longer spokenText (~2–3×). Defaults to "short". */
   scriptStyle?: ScriptStyle;
-  /** Target video engine; used for prompt/template mapping. Defaults to remotion. */
+  /** Target video engine; used for prompt/template mapping. Defaults to hyperframes. */
   videoEngine?: VideoEngineId;
   /**
    * When set (not "auto"), the UI chose Style — the model should still return

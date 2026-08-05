@@ -13,9 +13,44 @@ function pickCreativeAngle(): string {
   return CREATIVE_ANGLES[Math.floor(Math.random() * CREATIVE_ANGLES.length)];
 }
 
+function remotionTemplateRules(): string[] {
+  return [
+    "- For each scene pick templateId from: kinetic, lottie, three, stat-reveal, icon-grid, quote-card, emoji-punch.",
+    "  TEMPLATE RULES — follow precisely (wrong layout = unwatchable):",
+    "  • 'stat-reveal': scene centered on ONE number/metric. visual = that number (e.g. '73%', '10x'). Keep supporting text short.",
+    "  • 'icon-grid': ONLY when you have 3 to 5 SHORT tip/step lines (max ~8 words each). REQUIRED: put those lines in the 'items' array; put a short header (2–5 words) in 'text'; set visual to '✓' or '→'. NEVER use icon-grid for a single point, a long paragraph, or 1–2 long sentences. If you only have one idea, use 'kinetic' instead.",
+    "  • 'emoji-punch': short emotional punch / turn; visual = one emoji. Keep text under ~12 words.",
+    "  • 'quote-card': short attributed line; visual = speaker (optional).",
+    "  • 'lottie': one clear process/how-it-works beat — not a wall of text.",
+    "  • 'three': the single hero moment of the video — use EXACTLY once.",
+    "  • 'kinetic': default for one clear spoken idea / hook / insight. Prefer this over a fake checklist.",
+    "  DIVERSITY: 5+ scenes → at least 4 different templates. kinetic ≤ 40% of scenes. Never kinetic more than twice in a row.",
+  ];
+}
+
+function hyperframesTemplateRules(): string[] {
+  return [
+    "- For each scene pick templateId from: hf-kinetic-slam, hf-opener, hf-statement, hf-list, hf-stat, hf-money-count, hf-data-chart, hf-quote, hf-app-showcase, hf-cta, hf-logo-outro, hf-ig-follow, hf-tt-follow, hf-yt-lower-third.",
+    "  TEMPLATE RULES — HyperFrames director (wrong layout = unwatchable):",
+    "  • Scene 1 MUST be 'hf-kinetic-slam' (bold hook caption slam).",
+    "  • Last scene MUST be a CTA: prefer 'hf-logo-outro' or 'hf-ig-follow' (use 'hf-tt-follow' only for TikTok-flavored briefs).",
+    "  • 'hf-money-count': ONE big number/metric. visual = that amount (e.g. '$10k', '73%', '10x').",
+    "  • 'hf-stat': short proof number beat. visual = the number.",
+    "  • 'hf-data-chart': proof-with-trend beat. visual = short chart title; keep text scannable.",
+    "  • 'hf-list': ONLY with 3 to 5 SHORT tip/step lines in 'items' (max ~8 words each); 'text' = short header; visual = '✓' or '→'.",
+    "  • 'hf-quote': short attributed line; visual = speaker (optional).",
+    "  • 'hf-app-showcase': product/process hero beat — use at most once.",
+    "  • 'hf-statement' / 'hf-opener': one clear spoken idea / calm beat between hooks.",
+    "  • 'hf-yt-lower-third': mid-reel identity/subscribe beat — use sparingly (0–1).",
+    "  • 'hf-cta': text end-card when logo/social outros do not fit.",
+    "  DIVERSITY: 5+ scenes → at least 4 different templates. Never repeat the same templateId back-to-back.",
+  ];
+}
+
 /**
  * Shared director prompt. Retention-first, personal "you" voice, and layout
  * rules that keep the video easy on the eyes (no clunky one-item checklists).
+ * Template rules switch with videoEngine (Remotion vs HyperFrames-native).
  */
 export function buildPrompt(input: GeneratePlanInput): {
   system: string;
@@ -24,6 +59,7 @@ export function buildPrompt(input: GeneratePlanInput): {
   const isAppend = input.mode === "append";
   const style = input.scriptStyle ?? "short";
   const isDetailed = style === "detailed";
+  const isHyperframes = input.videoEngine === "hyperframes";
 
   const count = input.sceneCount
     ? `${input.sceneCount}`
@@ -68,8 +104,14 @@ export function buildPrompt(input: GeneratePlanInput): {
       ? `- energy MUST be exactly "${input.energy}".`
       : `- energy: calm, normal, or high. Prefer normal or calm — the video should feel professional and soothing, not frantic. Use high only for explicit hype briefs.`;
 
+  const photoOmit = isHyperframes
+    ? "OMIT for hf-stat, hf-list, hf-quote, hf-cta, hf-kinetic-slam, hf-money-count, hf-data-chart, and social/logo outros — those need clean type, not busy photos."
+    : "OMIT for stat-reveal, icon-grid, quote-card, emoji-punch — those need clean type, not busy photos.";
+
   const system = [
-    `You are a short-form video director for ${aspect}.`,
+    `You are a short-form video director for ${aspect}${
+      isHyperframes ? " using the HyperFrames HTML template catalog" : ""
+    }.`,
     "Viewer reality: they are scrolling. You have ~3 seconds. Sound may be off. Text must be readable. The feel should be personal (talk to 'you') and professional — calm confidence, not shouting ads.",
     `Creative direction for this take: write in the voice of ${pickCreativeAngle()}. Specific beats beat generic advice.`,
     "Rules:",
@@ -81,16 +123,7 @@ export function buildPrompt(input: GeneratePlanInput): {
     structureRule,
     "- Last scene: a clear, low-pressure CTA (try this, save this, follow for more).",
     "- Never use the same templateId for two consecutive scenes.",
-    "- For each scene pick templateId from: kinetic, lottie, three, stat-reveal, icon-grid, quote-card, emoji-punch.",
-    "  TEMPLATE RULES — follow precisely (wrong layout = unwatchable):",
-    "  • 'stat-reveal': scene centered on ONE number/metric. visual = that number (e.g. '73%', '10x'). Keep supporting text short.",
-    "  • 'icon-grid': ONLY when you have 3 to 5 SHORT tip/step lines (max ~8 words each). REQUIRED: put those lines in the 'items' array; put a short header (2–5 words) in 'text'; set visual to '✓' or '→'. NEVER use icon-grid for a single point, a long paragraph, or 1–2 long sentences. If you only have one idea, use 'kinetic' instead.",
-    "  • 'emoji-punch': short emotional punch / turn; visual = one emoji. Keep text under ~12 words.",
-    "  • 'quote-card': short attributed line; visual = speaker (optional).",
-    "  • 'lottie': one clear process/how-it-works beat — not a wall of text.",
-    "  • 'three': the single hero moment of the video — use EXACTLY once.",
-    "  • 'kinetic': default for one clear spoken idea / hook / insight. Prefer this over a fake checklist.",
-    "  DIVERSITY: 5+ scenes → at least 4 different templates. kinetic ≤ 40% of scenes. Never kinetic more than twice in a row.",
+    ...(isHyperframes ? hyperframesTemplateRules() : remotionTemplateRules()),
     "- emphasis: 1–2 short phrases that appear VERBATIM in that scene's text (highlights for the eye).",
     "- visual: only as required above; otherwise omit. Keep it SHORT (a number, one emoji, or a CTA label under ~20 characters).",
     "  LOOK OF THE WHOLE VIDEO:",
@@ -101,7 +134,7 @@ export function buildPrompt(input: GeneratePlanInput): {
     "  • musicMood: 1–3 words, gentle progression (e.g. 'warm lo-fi', 'soft cinematic', 'calm focus'). No whiplash.",
     "  BACKGROUNDS:",
     "  • backgroundQuery: 2–4 literal photo keywords when a photo helps (place, object, atmosphere). Prefer soft, uncluttered subjects.",
-    "  • Use backgroundQuery on ~30–50% of scenes. OMIT for stat-reveal, icon-grid, quote-card, emoji-punch — those need clean type, not busy photos.",
+    `  • Use backgroundQuery on ~30–50% of scenes. ${photoOmit}`,
     "  • effect: ken-burns|pan-left|pan-right|pan-up|pan-down — vary gently; ken-burns for hero beats.",
     `  • Photos crop to ${aspect} — choose subjects that read in that frame.`,
     "- projectName: 2 to 4 words. scriptName: short, human episode title.",

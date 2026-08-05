@@ -69,6 +69,8 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     coverUrl: script.coverUrl,
     musicUrl: script.musicUrl,
     musicVolume: script.musicVolume,
+    sfxEnabled: script.sfxEnabled ?? true,
+    sfxJson: script.sfxJson ?? null,
     hideText: script.hideText,
     hideProgressBar: script.hideProgressBar ?? false,
     styleId: normalizeStyleId(overrides.styleId),
@@ -83,6 +85,8 @@ export async function updateScript(
     coverUrl?: string | null;
     musicUrl?: string | null;
     musicVolume?: number;
+    sfxEnabled?: boolean;
+    sfxJson?: string | null;
     hideText?: boolean;
     hideProgressBar?: boolean;
     styleId?: StyleId;
@@ -97,6 +101,8 @@ export async function updateScript(
     ...(data.musicVolume !== undefined
       ? { musicVolume: Math.max(0, Math.min(100, Math.round(data.musicVolume))) }
       : {}),
+    ...(data.sfxEnabled !== undefined ? { sfxEnabled: data.sfxEnabled } : {}),
+    ...(data.sfxJson !== undefined ? { sfxJson: data.sfxJson || null } : {}),
     ...(data.hideText !== undefined ? { hideText: data.hideText } : {}),
     ...(data.hideProgressBar !== undefined ? { hideProgressBar: data.hideProgressBar } : {}),
     ...(data.voiceMode !== undefined ? { voiceMode: data.voiceMode } : {}),
