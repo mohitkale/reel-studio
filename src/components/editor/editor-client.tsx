@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, Video, Loader2, Sparkles, Undo2, Braces, ChevronDown, Eye, EyeOff, BarChart2, Gauge, Zap, Gem } from "lucide-react";
+import { ArrowLeft, Video, Loader2, Sparkles, Undo2, Braces, ChevronDown, Eye, EyeOff, BarChart2, Gauge, Zap, Gem, Clapperboard } from "lucide-react";
 
 import { ORIENTATIONS, ORIENTATION_LABELS, type Orientation } from "@/lib/orientation";
 import {
@@ -24,6 +24,7 @@ import {
   useSetScriptHideText,
   useSetScriptHideProgressBar,
   useSetScriptVisualStyle,
+  useProduceReel,
 } from "@/hooks/script";
 import type { SceneDTO } from "@/lib/dto";
 import { useCreateRender, useRenderProgress } from "@/hooks/renders";
@@ -40,6 +41,7 @@ import {
 import { estimateTimeline } from "@/lib/preview-timeline";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveSpokenText } from "@/lib/spoken-text";
+import { resolveReelSfxCues } from "@/lib/sfx-cues";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -76,8 +78,10 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   const setHideText = useSetScriptHideText(scriptId);
   const setHideProgressBar = useSetScriptHideProgressBar(scriptId);
   const setVisualStyle = useSetScriptVisualStyle(scriptId);
+  const produceReel = useProduceReel(scriptId);
   const { data: brandKits = [] } = useBrandKits();
   const assignBrandKit = useAssignBrandKit();
+  const [produceLabel, setProduceLabel] = React.useState<string | null>(null);
 
   const [selectedSceneId, setSelectedSceneId] = React.useState<string | null>(null);
   // Take selection persists per-script across refreshes (lazy init from
@@ -199,6 +203,26 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
     ? selectedTakeId
     : (usableTakes[0]?.id ?? null);
 
+  const selectedTake =
+    allTakes.find((t) => t.id === effectiveTakeId) ?? null;
+  const fps = selectedTake?.fps ?? script?.fps ?? 30;
+  const resolved = resolveReelTimeline(sceneTexts, selectedTake, fps);
+  const takeUsable = resolved.takeUsable;
+  const timeline = resolved.timeline;
+  const totalFrames = resolved.totalFrames;
+  const audioUrl = takeUsable && selectedTake ? selectedTake.audioUrl : undefined;
+  const coverFr = coverFrames(fps, !!script?.coverUrl);
+  const sfxCues = React.useMemo(
+    () =>
+      resolveReelSfxCues({
+        sfxEnabled: script?.sfxEnabled ?? true,
+        sfxJson: script?.sfxJson ?? null,
+        timeline,
+        fps,
+      }),
+    [script?.sfxEnabled, script?.sfxJson, timeline, fps],
+  );
+
   function selectTake(id: string) {
     setSelectedTakeId(id);
     setTakeCleared(false);
@@ -258,20 +282,6 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
       </Card>
     );
   }
-
-  const selectedTake = script.takes.find((t) => t.id === effectiveTakeId) ?? null;
-
-  // Reconcile the take with the current scenes by spoken text (see
-  // resolveReelTimeline): non-text edits keep it; a changed script falls back to
-  // estimated timing. Beats are remapped onto current scene ids for rendering.
-  const fps = selectedTake?.fps ?? script.fps;
-  const resolved = resolveReelTimeline(sceneTexts, selectedTake, fps);
-  const takeUsable = resolved.takeUsable;
-  const timeline = resolved.timeline;
-  const totalFrames = resolved.totalFrames;
-  const audioUrl = takeUsable && selectedTake ? selectedTake.audioUrl : undefined;
-  // Full-reel preview holds the cover at the start, shifting everything by this much.
-  const coverFr = coverFrames(fps, !!script.coverUrl);
 
   const sceneBeat = selectedScene
     ? timeline.find((b) => b.sceneId === selectedScene.id)
@@ -471,10 +481,72 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             </HintTooltip>
           )}
           <CoverControl scriptId={scriptId} coverUrl={script.coverUrl} />
+          <HintTooltip
+            label="One-click: attach bundled BGM + SFX, then generate voiceover if missing"
+            side="bottom"
+          >
+            <Button
+              size="sm"
+              variant="default"
+              disabled={produceReel.isPending || scenes.length === 0}
+              onClick={() => {
+                setProduceLabel("Soundtrack…");
+                produceReel.mutate(
+                  {
+                    onProgress: (p) => {
+                      if (p.status === "queued") setProduceLabel("Voice queued…");
+                      else if (p.status === "synthesizing") {
+                        setProduceLabel(
+                          `Voice ${p.scene}/${p.sceneCount || "…"}`,
+                        );
+                      } else if (p.status === "stitching") {
+                        setProduceLabel("Stitching…");
+                      }
+                    },
+                  },
+                  {
+                    onSuccess: (data) => {
+                      setProduceLabel(null);
+                      const bits = [];
+                      if (data.result.musicAttached) bits.push("BGM");
+                      if (data.result.sfxAttached) bits.push("SFX");
+                      if (data.result.voiceJobId || data.result.hadVoiceAlready) {
+                        bits.push("VO");
+                      }
+                      toast.success("Reel produced", {
+                        description:
+                          bits.length > 0
+                            ? `Ready: ${bits.join(" · ")}`
+                            : "Soundtrack already in place.",
+                      });
+                      setPreviewMode("reel");
+                    },
+                    onError: (e) => {
+                      setProduceLabel(null);
+                      toast.error(
+                        e instanceof Error ? e.message : "Produce failed",
+                      );
+                    },
+                  },
+                );
+              }}
+            >
+              {produceReel.isPending ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Clapperboard className="size-3.5" />
+              )}
+              {produceReel.isPending
+                ? produceLabel || "Producing…"
+                : "Produce reel"}
+            </Button>
+          </HintTooltip>
           <MusicControl
             scriptId={scriptId}
             musicUrl={script.musicUrl}
             musicVolume={script.musicVolume}
+            sfxEnabled={script.sfxEnabled}
+            sfxCueCount={sfxCues.length}
             scenes={scenes}
           />
           <HintTooltip
@@ -733,6 +805,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                   audioUrl={audioUrl}
                   musicUrl={script.musicUrl ?? undefined}
                   musicVolume={script.musicVolume}
+                  sfxCues={sfxCues}
                   loop={false}
                   tokens={script.brandTokens}
                   coverUrl={script.coverUrl ?? undefined}

@@ -15,11 +15,11 @@ export function enableExtendedKokoroVoices(tts: KokoroTTS): void {
   patched.add(tts);
 
   const mutable = tts as KokoroTTS & {
-    _validate_voice: (voice: string) => string;
+    _validate_voice: (voice: string) => "a" | "b";
   };
-  mutable._validate_voice = (voice: string) => {
+  mutable._validate_voice = (voice: string): "a" | "b" => {
     if (Object.prototype.hasOwnProperty.call(tts.voices, voice)) {
-      return voice.charAt(0);
+      return voice.charAt(0) === "b" ? "b" : "a";
     }
     return "a";
   };

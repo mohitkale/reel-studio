@@ -55,17 +55,23 @@ function ensureWorker(): Worker {
   return worker;
 }
 
-function synthOne(text: string, voice: string): Promise<string> {
+function synthOne(
+  text: string,
+  voice: string,
+  speed?: number,
+): Promise<string> {
   const w = ensureWorker();
   const id = nextId++;
   return new Promise<string>((resolve, reject) => {
     pending.set(id, { resolve, reject });
-    w.postMessage({ type: "synth", id, text, voice });
+    w.postMessage({ type: "synth", id, text, voice, speed });
   });
 }
 
 export interface GenerateScenesOptions {
   voice: string;
+  /** Optional Kokoro speaking rate (default 1). */
+  speed?: number;
   /** Model-download progress 0..1 (first run only). */
   onModelProgress?: (fraction: number | undefined) => void;
   /** Called before synthesizing each scene with (completed, total). */
@@ -84,7 +90,7 @@ export async function generateScenesToBeats(
     for (let i = 0; i < scenes.length; i++) {
       if (opts.signal?.aborted) throw new DOMException("Cancelled", "AbortError");
       opts.onScene?.(i, scenes.length);
-      const wavBase64 = await synthOne(scenes[i].text, opts.voice);
+      const wavBase64 = await synthOne(scenes[i].text, opts.voice, opts.speed);
       beats.push({ sceneId: scenes[i].id, wavBase64 });
     }
   } finally {

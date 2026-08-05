@@ -110,10 +110,15 @@ export function createKokoroServerProvider(): VoiceProvider {
         );
       }
 
-      const audio = await tts.generate(
-        opts.text,
-        { voice: opts.voiceId } as Parameters<typeof tts.generate>[1],
-      );
+      // Clamp speed to Kokoro's practical range (slightly slow reads more natural).
+      const speed =
+        typeof opts.speed === "number" && Number.isFinite(opts.speed)
+          ? Math.min(1.35, Math.max(0.7, opts.speed))
+          : 1;
+      const audio = await tts.generate(opts.text, {
+        voice: opts.voiceId,
+        speed,
+      } as Parameters<typeof tts.generate>[1]);
       const target = opts.sampleRate ?? TARGET_SAMPLE_RATE;
       const resampled = resampleLinear(audio.audio, audio.sampling_rate, target);
       const wav = pcmToWav(floatToPcm16(resampled), {

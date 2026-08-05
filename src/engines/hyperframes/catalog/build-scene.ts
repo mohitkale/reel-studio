@@ -65,11 +65,13 @@ export function buildCatalogSceneBlock(args: {
   if (!native) return null;
 
   const srcName = `${meta.id}--${args.scene.id}.html`;
-  // Native cinematic stages paint their own mood-colored mesh — skip flat washes.
-  const bg = "";
+  // Prefer real stock photos when present; otherwise keep native mood stages
+  // (flat CSS washes look low-effort under VO).
+  const hasPhoto = /class="bg-photo/.test(args.backgroundHtml);
+  const bg = hasPhoto ? args.backgroundHtml : "";
 
   const html = `
-      <section class="scene catalog-scene ${args.transitionClass}"
+      <section class="scene catalog-scene ${args.transitionClass}${hasPhoto ? " has-photo" : ""}"
                data-scene-id="${escapeHtml(args.scene.id)}"
                data-catalog-block="${escapeHtml(meta.id)}"
                data-start="${args.absoluteStart.toFixed(3)}"

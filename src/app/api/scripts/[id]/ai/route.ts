@@ -76,6 +76,7 @@ export async function POST(
       .join("\n");
 
     const orientation = orientationFromDims(script.width, script.height);
+    const videoEngine = script.videoEngine;
     const raw = await provider.generatePlan({
       mode: body.mode,
       brief: body.brief,
@@ -85,8 +86,12 @@ export async function POST(
       modelId: body.modelId,
       orientation,
       scriptStyle: body.scriptStyle,
+      videoEngine,
     });
-    const plan = { ...raw, scenes: enrichScenePlan(raw.scenes) };
+    const plan = {
+      ...raw,
+      scenes: enrichScenePlan(raw.scenes, videoEngine),
+    };
 
     // Best-effort stock backgrounds (no-op without an Unsplash key).
     const backgrounds = await resolveSceneBackgrounds(plan.scenes, orientation);

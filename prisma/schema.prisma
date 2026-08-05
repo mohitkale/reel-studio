@@ -15,7 +15,7 @@ model Project {
   id          String    @id @default(cuid())
   name        String
   /// Video composition engine: "remotion" | "hyperframes"
-  videoEngine String    @default("remotion")
+  videoEngine String    @default("hyperframes")
   brandKitId  String?
   brandKit    BrandKit? @relation(fields: [brandKitId], references: [id], onDelete: SetNull)
   createdAt   DateTime  @default(now())
@@ -50,6 +50,10 @@ model Script {
   coverUrl       String? // cover/thumbnail image baked as the reel's opening frame
   musicUrl       String? // optional background music, mixed (ducked) under the voiceover
   musicVolume    Int      @default(20) // background music level, 0-100
+  /// When false, skip mixing bundled SFX even if sfxJson has cues.
+  sfxEnabled     Boolean  @default(true)
+  /// JSON: { enabled?: boolean, cues: [{ sceneId, sfxId, offsetSeconds, volume }] }
+  sfxJson        String?
   hideText          Boolean  @default(false) // global default: hide on-screen scene text
   hideProgressBar   Boolean  @default(false) // global: hide the top progress bar
   /// Voice workflow: "oneshot" (full take) | "per_scene" (clip library + assemble)

@@ -307,6 +307,26 @@ export async function runHyperframesRender(
       serverBaseUrl,
     );
 
+    const { resolveReelSfxCues } = await import("@/lib/sfx-cues");
+    const rawSfx = resolveReelSfxCues({
+      sfxEnabled: script.sfxEnabled,
+      sfxJson: script.sfxJson,
+      timeline: resolved.timeline,
+      fps: script.fps,
+    });
+    const sfxCues = await Promise.all(
+      rawSfx.map(async (cue, i) => ({
+        ...cue,
+        url:
+          (await materializeUrl(
+            cue.url.startsWith("http") ? cue.url : `${serverBaseUrl}${cue.url}`,
+            projectDir,
+            `sfx-${i}`,
+            serverBaseUrl,
+          )) ?? cue.url,
+      })),
+    );
+
     const coverUrl = await materializeUrl(
       script.coverUrl
         ? script.coverUrl.startsWith("http")
@@ -327,6 +347,7 @@ export async function runHyperframesRender(
       audioUrl,
       musicUrl,
       musicVolume: script.musicVolume,
+      sfxCues,
       coverUrl,
       tokens: script.brandTokens,
       hideProgressBar: script.hideProgressBar,

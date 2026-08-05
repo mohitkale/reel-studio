@@ -44,6 +44,7 @@ export const ReelComposition = React.memo(function ReelComposition({
   audioUrl,
   musicUrl,
   musicVolume = 20,
+  sfxCues,
   tokens,
   coverUrl,
   hideProgressBar,
@@ -129,6 +130,15 @@ export const ReelComposition = React.memo(function ReelComposition({
             {musicUrl && baseMusic > 0 ? (
               <Audio src={musicUrl} loop volume={musicAt} />
             ) : null}
+            {(sfxCues ?? []).map((cue, i) => (
+              <Sequence
+                key={`sfx-${i}-${cue.startFrame}`}
+                from={cue.startFrame}
+                name={`SFX ${i + 1}`}
+              >
+                <Audio src={cue.url} volume={cue.volume} />
+              </Sequence>
+            ))}
           </Sequence>
         </AbsoluteFill>
       </StageOptionsProvider>

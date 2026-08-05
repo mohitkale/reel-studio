@@ -8,7 +8,7 @@ import {
 import { HF_CATALOG_HTML } from "@/engines/hyperframes/catalog/html";
 
 export interface CatalogPersonalizeContext {
-  scene: Pick<ReelScene, "text" | "visual" | "emphasis">;
+  scene: Pick<ReelScene, "text" | "visual" | "emphasis" | "items">;
   tokens: BrandTokens;
 }
 
@@ -93,12 +93,71 @@ function personalizeMoneyCount(html: string, ctx: CatalogPersonalizeContext): st
   return out;
 }
 
+function parseChartSeries(
+  scene: Pick<ReelScene, "text" | "visual" | "items">,
+): { revenue: number[]; conversion: number[] } {
+  const blob = [
+    scene.visual ?? "",
+    ...(scene.items ?? []),
+    scene.text,
+  ].join(" ");
+  const nums = [...blob.matchAll(/(\d+(?:\.\d+)?)/g)]
+    .map((m) => Number(m[1]))
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .slice(0, 12);
+
+  const revenue: number[] = [];
+  const conversion: number[] = [];
+  if (nums.length >= 6) {
+    for (let i = 0; i < 6; i++) {
+      revenue.push(Math.max(1, Math.round(nums[i] % 40 || nums[i])));
+      conversion.push(
+        Math.max(0.5, Number((nums[i + 6] ?? nums[i] / 5).toFixed(1))),
+      );
+    }
+  } else if (nums.length >= 3) {
+    for (let i = 0; i < 6; i++) {
+      const base = nums[i % nums.length];
+      revenue.push(Math.max(1, Math.round(base * (0.7 + i * 0.12))));
+      conversion.push(Math.max(0.5, Number((base / 8 + i * 0.3).toFixed(1))));
+    }
+  } else {
+    // Deterministic fallback shaped by text length so charts aren't identical.
+    const seed = Math.max(3, scene.text.length % 17);
+    for (let i = 0; i < 6; i++) {
+      revenue.push(8 + ((seed * (i + 3)) % 15));
+      conversion.push(Number((2 + ((seed + i * 7) % 20) / 10).toFixed(1)));
+    }
+  }
+  return { revenue, conversion };
+}
+
 function personalizeDataChart(html: string, ctx: CatalogPersonalizeContext): string {
   const title =
     ctx.scene.visual?.trim() ||
     ctx.scene.text.trim().slice(0, 64) ||
     "Monthly Revenue vs. Conversion Rate";
-  return replaceAll(html, "Monthly Revenue vs. Conversion Rate", title);
+  const { revenue, conversion } = parseChartSeries(ctx.scene);
+  const maxRevenue = Math.max(25, ...revenue) + 3;
+  const maxConversion = Math.max(5, ...conversion) + 0.5;
+  let out = replaceAll(html, "Monthly Revenue vs. Conversion Rate", title);
+  out = out.replace(
+    /const revenueData = \[[^\]]*\];/,
+    `const revenueData = ${JSON.stringify(revenue)};`,
+  );
+  out = out.replace(
+    /const conversionData = \[[^\]]*\];/,
+    `const conversionData = ${JSON.stringify(conversion)};`,
+  );
+  out = out.replace(
+    /const maxRevenue = 25;/,
+    `const maxRevenue = ${maxRevenue};`,
+  );
+  out = out.replace(
+    /const maxConversion = 5;/,
+    `const maxConversion = ${maxConversion};`,
+  );
+  return out;
 }
 
 function personalizeAppShowcase(html: string, ctx: CatalogPersonalizeContext): string {

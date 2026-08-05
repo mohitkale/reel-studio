@@ -15,9 +15,17 @@ const REMOTION_TO_HF: Record<string, string> = {
   "emoji-punch": "hf-kinetic-slam",
 };
 
+const SOCIAL_CTAS = new Set([
+  "hf-ig-follow",
+  "hf-tt-follow",
+  "hf-logo-outro",
+  "hf-cta",
+]);
+
 /**
- * AI providers emit Remotion template ids (stable schema). For HyperFrames
- * projects, remap to the HF-native catalog and force opener/CTA bookends.
+ * Normalize scenes onto the target engine catalog.
+ * When the model already emits `hf-*` ids, keep them (with opener/CTA bookends).
+ * Legacy Remotion ids still remap for older prompts / mixed plans.
  */
 export function mapScenesToEngineTemplates(
   scenes: AIScene[],
@@ -26,14 +34,21 @@ export function mapScenesToEngineTemplates(
   if (engine !== "hyperframes") return scenes;
 
   return scenes.map((scene, index) => {
-    let templateId =
-      REMOTION_TO_HF[scene.templateId] ??
-      (scene.templateId.startsWith("hf-") ? scene.templateId : "hf-statement");
+    let templateId = scene.templateId.startsWith("hf-")
+      ? scene.templateId
+      : (REMOTION_TO_HF[scene.templateId] ?? "hf-statement");
+
     if (index === 0) templateId = "hf-kinetic-slam";
     if (index === scenes.length - 1 && scenes.length > 1) {
-      // Portrait social CTA when the model asked for emoji punch; else logo outro.
-      templateId =
-        scene.templateId === "emoji-punch" ? "hf-ig-follow" : "hf-logo-outro";
+      if (!SOCIAL_CTAS.has(templateId)) {
+        templateId =
+          scene.templateId === "emoji-punch" ||
+          scene.templateId === "hf-ig-follow"
+            ? "hf-ig-follow"
+            : scene.templateId === "hf-tt-follow"
+              ? "hf-tt-follow"
+              : "hf-logo-outro";
+      }
     }
     return {
       ...scene,

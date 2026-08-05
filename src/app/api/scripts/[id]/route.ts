@@ -29,6 +29,8 @@ const patchSchema = z.object({
   coverUrl: z.string().max(2048).nullable().optional(),
   musicUrl: z.string().max(2048).nullable().optional(),
   musicVolume: z.number().int().min(0).max(100).optional(),
+  sfxEnabled: z.boolean().optional(),
+  sfxJson: z.string().max(50_000).nullable().optional(),
   hideText: z.boolean().optional(),
   hideProgressBar: z.boolean().optional(),
   styleId: z.enum(["bold-hook", "clean-story", "teach-me", "soft-brand"]).optional(),

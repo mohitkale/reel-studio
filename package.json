@@ -31,7 +31,8 @@
     "seed:demo-podcast": "tsx scripts/seed-demo-podcast.ts",
     "export:demo-assets": "tsx scripts/export-demo-assets.ts",
     "gen:music": "node scripts/generate-music.mjs",
-    "embed:hf-catalog": "node scripts/embed-hf-catalog.mjs"
+    "embed:hf-catalog": "node scripts/embed-hf-catalog.mjs",
+    "gen:sfx": "node scripts/generate-sfx.mjs"
   },
   "dependencies": {
     "@hyperframes/producer": "^0.7.61",

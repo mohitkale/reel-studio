@@ -9,6 +9,7 @@ import {
 } from "./podcast-types";
 import {
   AIError,
+  planTemplateIdsForEngine,
   scenePlanSchema,
   type AIModel,
   type AIProvider,
@@ -20,70 +21,64 @@ const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 // flash-lite has the most free-tier/availability headroom; full flash often 503s.
 export const GEMINI_DEFAULT_MODEL = "gemini-2.5-flash-lite";
 
-// Gemini responseSchema (OpenAPI subset).
-const RESPONSE_SCHEMA = {
-  type: "object",
-  properties: {
-    projectName: { type: "string" },
-    scriptName: { type: "string" },
-    styleId: {
-      type: "string",
-      enum: ["bold-hook", "clean-story", "teach-me", "soft-brand"],
-    },
-    energy: {
-      type: "string",
-      enum: ["calm", "normal", "high"],
-    },
-    scenes: {
-      // No maxItems here: Gemini's structured-output engine multiplies nested
-      // array bounds by per-item enum sizes into a "states" budget, and a bound
-      // array of multi-enum objects overflows it (HTTP 400). The 20-scene cap is
-      // enforced by the prompt and by scenePlanSchema (.max(20)) instead.
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          text: { type: "string" },
-          spokenText: { type: "string" },
-          templateId: {
-            type: "string",
-            enum: [
-              "kinetic",
-              "lottie",
-              "three",
-              "stat-reveal",
-              "icon-grid",
-              "quote-card",
-              "emoji-punch",
-            ],
+// Gemini responseSchema (OpenAPI subset). Template enum switches with engine.
+function buildResponseSchema(input: GeneratePlanInput) {
+  return {
+    type: "object",
+    properties: {
+      projectName: { type: "string" },
+      scriptName: { type: "string" },
+      styleId: {
+        type: "string",
+        enum: ["bold-hook", "clean-story", "teach-me", "soft-brand"],
+      },
+      energy: {
+        type: "string",
+        enum: ["calm", "normal", "high"],
+      },
+      scenes: {
+        // No maxItems here: Gemini's structured-output engine multiplies nested
+        // array bounds by per-item enum sizes into a "states" budget, and a bound
+        // array of multi-enum objects overflows it (HTTP 400). The 20-scene cap is
+        // enforced by the prompt and by scenePlanSchema (.max(20)) instead.
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            text: { type: "string" },
+            spokenText: { type: "string" },
+            templateId: {
+              type: "string",
+              enum: [...planTemplateIdsForEngine(input.videoEngine)],
+            },
+            emphasis: { type: "array", items: { type: "string" } },
+            visual: { type: "string" },
+            items: { type: "array", items: { type: "string" } },
+            backgroundQuery: { type: "string" },
+            // Plain string (not enum) to keep Gemini's schema state budget small;
+            // aiSceneSchema validates/normalizes it to a real pan effect.
+            effect: { type: "string" },
+            mood: {
+              type: "string",
+              enum: [
+                "energetic",
+                "calm",
+                "dramatic",
+                "playful",
+                "inspiring",
+                "tech",
+                "nature",
+              ],
+            },
+            musicMood: { type: "string" },
           },
-          emphasis: { type: "array", items: { type: "string" } },
-          visual: { type: "string" },
-          items: { type: "array", items: { type: "string" } },
-          backgroundQuery: { type: "string" },
-          // Plain string (not enum) to keep Gemini's schema state budget small;
-          // aiSceneSchema validates/normalizes it to a real pan effect.
-          effect: { type: "string" },
-          mood: {
-            type: "string",
-            enum: [
-              "energetic",
-              "calm",
-              "dramatic",
-              "playful",
-              "inspiring",
-              "tech",
-              "nature",
-            ],
-          },
-          musicMood: { type: "string" },
+          required: ["text", "templateId", "emphasis"],
         },
-        required: ["text", "templateId", "emphasis"],
       },
     },
-  },
-  required: ["projectName", "scriptName", "scenes"],
-};
+    required: ["projectName", "scriptName", "scenes"],
+  };
+}
 
 const PODCAST_RESPONSE_SCHEMA = {
   type: "object",
@@ -166,7 +161,7 @@ export function createGeminiProvider(): AIProvider {
             contents: [{ role: "user", parts: [{ text: user }] }],
             generationConfig: {
               responseMimeType: "application/json",
-              responseSchema: RESPONSE_SCHEMA,
+              responseSchema: buildResponseSchema(input),
               temperature: 0.85,
             },
           }),

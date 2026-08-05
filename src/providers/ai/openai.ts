@@ -9,6 +9,7 @@ import {
 } from "./podcast-types";
 import {
   AIError,
+  planTemplateIdsForEngine,
   scenePlanSchema,
   type AIModel,
   type AIProvider,
@@ -19,73 +20,73 @@ import {
 const API_BASE = "https://api.openai.com/v1";
 export const OPENAI_DEFAULT_MODEL = "gpt-4o-mini";
 
-// OpenAI structured-output schema (strict: every key required, no extras).
-const JSON_SCHEMA = {
-  name: "scene_plan",
-  strict: true,
-  schema: {
-    type: "object",
-    additionalProperties: false,
-    properties: {
-      projectName: { type: "string" },
-      scriptName: { type: "string" },
-      styleId: {
-        type: "string",
-        enum: ["bold-hook", "clean-story", "teach-me", "soft-brand"],
-      },
-      energy: {
-        type: "string",
-        enum: ["calm", "normal", "high"],
-      },
-      scenes: {
-        type: "array",
-        items: {
-          type: "object",
-          additionalProperties: false,
-          properties: {
-            text: { type: "string" },
-            spokenText: { type: "string" },
-            templateId: {
-              type: "string",
-              enum: [
-                "kinetic",
-                "lottie",
-                "three",
-                "stat-reveal",
-                "icon-grid",
-                "quote-card",
-                "emoji-punch",
-              ],
+// OpenAI structured-output schema. Template enum switches with engine.
+function buildJsonSchema(input: GeneratePlanInput) {
+  return {
+    name: "scene_plan",
+    strict: true,
+    schema: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        projectName: { type: "string" },
+        scriptName: { type: "string" },
+        styleId: {
+          type: "string",
+          enum: ["bold-hook", "clean-story", "teach-me", "soft-brand"],
+        },
+        energy: {
+          type: "string",
+          enum: ["calm", "normal", "high"],
+        },
+        scenes: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              text: { type: "string" },
+              spokenText: { type: "string" },
+              templateId: {
+                type: "string",
+                enum: [...planTemplateIdsForEngine(input.videoEngine)],
+              },
+              emphasis: { type: "array", items: { type: "string" } },
+              visual: { type: "string" },
+              items: { type: "array", items: { type: "string" } },
+              backgroundQuery: { type: "string" },
+              effect: {
+                type: "string",
+                enum: [
+                  "ken-burns",
+                  "pan-left",
+                  "pan-right",
+                  "pan-up",
+                  "pan-down",
+                ],
+              },
+              mood: {
+                type: "string",
+                enum: [
+                  "energetic",
+                  "calm",
+                  "dramatic",
+                  "playful",
+                  "inspiring",
+                  "tech",
+                  "nature",
+                ],
+              },
+              musicMood: { type: "string" },
             },
-            emphasis: { type: "array", items: { type: "string" } },
-            visual: { type: "string" },
-            items: { type: "array", items: { type: "string" } },
-            backgroundQuery: { type: "string" },
-            effect: {
-              type: "string",
-              enum: ["ken-burns", "pan-left", "pan-right", "pan-up", "pan-down"],
-            },
-            mood: {
-              type: "string",
-              enum: [
-                "energetic",
-                "calm",
-                "dramatic",
-                "playful",
-                "inspiring",
-                "tech",
-                "nature",
-              ],
-            },
-            musicMood: { type: "string" },
+            required: ["text", "templateId", "emphasis"],
           },
-          required: ["text", "templateId", "emphasis"],
         },
       },
+      required: ["projectName", "scriptName", "styleId", "energy", "scenes"],
     },
-    required: ["projectName", "scriptName", "styleId", "energy", "scenes"],
-  },
-};
+  };
+}
 
 const PODCAST_JSON_SCHEMA = {
   name: "podcast_plan",
@@ -169,7 +170,10 @@ export function createOpenAIProvider(): AIProvider {
               { role: "system", content: system },
               { role: "user", content: user },
             ],
-            response_format: { type: "json_schema", json_schema: JSON_SCHEMA },
+            response_format: {
+              type: "json_schema",
+              json_schema: buildJsonSchema(input),
+            },
           }),
         },
         "openai",

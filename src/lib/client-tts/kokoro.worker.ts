@@ -74,6 +74,7 @@ ctx.onmessage = async (e: MessageEvent) => {
     id?: number;
     text?: string;
     voice?: string;
+    speed?: number;
   };
   if (msg.type !== "synth") return;
 
@@ -84,10 +85,14 @@ ctx.onmessage = async (e: MessageEvent) => {
       wavBase64 = silentWavBase64(0.6);
     } else {
       const tts = await load();
-      const audio = await tts.generate(
-        text,
-        { voice: msg.voice } as Parameters<typeof tts.generate>[1],
-      );
+      const speed =
+        typeof msg.speed === "number" && Number.isFinite(msg.speed)
+          ? Math.min(1.35, Math.max(0.7, msg.speed))
+          : 1;
+      const audio = await tts.generate(text, {
+        voice: msg.voice,
+        speed,
+      } as Parameters<typeof tts.generate>[1]);
       const resampled = resampleLinear(
         audio.audio,
         audio.sampling_rate,

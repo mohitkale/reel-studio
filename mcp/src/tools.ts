@@ -204,14 +204,14 @@ export function registerTools(server: McpServer): void {
     .enum(["remotion", "hyperframes"])
     .optional()
     .describe(
-      "Video composition engine. 'remotion' (default) or 'hyperframes' (Apache-2.0 HTML engine). Fixed at project creation.",
+      "Video composition engine. Defaults to 'hyperframes' (Apache-2.0). Pass 'remotion' for Remotion License compositions. Fixed at project creation.",
     );
 
   server.registerTool(
     "create_project",
     {
       description:
-        "Create a new empty project and its first script. Pass videoEngine='hyperframes' for the commercially open HTML engine.",
+        "Create a new empty project and its first script. Defaults to HyperFrames; pass videoEngine='remotion' for Remotion.",
       inputSchema: {
         name: z.string().trim().min(1).max(120),
         orientation: orientation.optional(),
@@ -284,15 +284,24 @@ export function registerTools(server: McpServer): void {
             id: "hyperframes",
             label: "HyperFrames",
             license: "Apache-2.0",
+            default: true,
             templates: [
+              "hf-kinetic-slam",
               "hf-opener",
               "hf-statement",
               "hf-list",
               "hf-stat",
+              "hf-money-count",
+              "hf-data-chart",
               "hf-quote",
+              "hf-app-showcase",
               "hf-cta",
+              "hf-logo-outro",
+              "hf-ig-follow",
+              "hf-tt-follow",
+              "hf-yt-lower-third",
             ],
-            note: "Renders via self-hosted @hyperframes/producer (Node >= 22). HeyGen hosted MCP is not used.",
+            note: "Default engine. Renders via self-hosted @hyperframes/producer (Node >= 22). Curated catalog + classic templates; HeyGen hosted MCP is not used.",
           },
         ],
       }),

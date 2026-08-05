@@ -44,10 +44,10 @@ import {
 } from "@/components/ui/dialog";
 
 const EXAMPLE_BRIEFS = [
-  "3 mistakes new founders make in their first year",
-  "Why your mornings feel chaotic (and the 2-minute fix)",
-  "One CapCut habit that doubles watch time on Reels",
-  "Stop posting every day — do this weekly instead",
+  "Hook: I wasted 6 months on the wrong habit. Calm teach-me reel — warm lo-fi — 3 fixes + soft CTA.",
+  "Why your mornings feel chaotic (and the 2-minute fix). Soft cinematic mood. Slam hook → proof number → follow CTA.",
+  "One CapCut habit that doubles watch time. Energetic tech vibe. Kinetic slam → chart proof → Instagram follow.",
+  "Stop posting every day — do this weekly instead. Clean-story tone, calm focus music, punchy list + logo outro.",
 ];
 
 export function CreateWithAIDialog() {
