@@ -1,7 +1,7 @@
 import type { BrandTokens } from "@/compositions/tokens";
 import type { ReelScene } from "@/compositions/types";
 import {
-  getCatalogBlockById,
+  getCatalogBlockByTemplateId,
   type HfCatalogBlockId,
   type HfCatalogBlockMeta,
 } from "@/engines/hyperframes/catalog/manifest";
@@ -10,10 +10,6 @@ import { HF_CATALOG_HTML } from "@/engines/hyperframes/catalog/html";
 export interface CatalogPersonalizeContext {
   scene: Pick<ReelScene, "text" | "visual" | "emphasis" | "items">;
   tokens: BrandTokens;
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function replaceAll(haystack: string, needle: string, replacement: string): string {
@@ -278,11 +274,6 @@ export function extractCatalogInlineParts(fullHtml: string): {
 export function resolveCatalogMetaForTemplate(
   templateId: string,
 ): HfCatalogBlockMeta | undefined {
-  // Lazy import cycle avoidance — re-export lookup.
-  const { getCatalogBlockByTemplateId } = require("./manifest") as typeof import("./manifest");
   return getCatalogBlockByTemplateId(templateId);
 }
 
-// Prefer static import for callers; keep require only for the helper above out.
-void getCatalogBlockById;
-void escapeRegExp;

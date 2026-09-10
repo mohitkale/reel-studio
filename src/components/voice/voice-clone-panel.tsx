@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Mic, Square, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -159,10 +159,16 @@ export function VoiceClonePanel({
   const autoStopRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const previewUrlRef = React.useRef<string | null>(null);
 
-  const [engines, setEngines] = React.useState<VoiceforgeEngine[]>([]);
-  const [enginesLoading, setEnginesLoading] = React.useState(false);
+  const enginesQuery = useQuery({
+    queryKey: ["voiceforge-engines"],
+    queryFn: () => apiGet<{ engines: VoiceforgeEngine[] }>("/api/voiceforge/engines"),
+    enabled: configured,
+  });
+  const engines = enginesQuery.data?.engines ?? [];
+  const enginesLoading = enginesQuery.isFetching;
   const [name, setName] = React.useState("");
-  const [engineId, setEngineId] = React.useState("");
+  const [engineOverride, setEngineId] = React.useState("");
+  const engineId = engineOverride || pickDefaultEngine(engines, preferredEngineId);
   const [tier, setTier] = React.useState<"instant" | "high_fidelity">("instant");
   const [consent, setConsent] = React.useState(false);
   const [audioFile, setAudioFile] = React.useState<File | null>(null);
@@ -174,20 +180,10 @@ export function VoiceClonePanel({
   const [progressMessage, setProgressMessage] = React.useState("");
 
   React.useEffect(() => {
-    if (!configured) return;
-    setEnginesLoading(true);
-    void apiGet<{ engines: VoiceforgeEngine[] }>("/api/voiceforge/engines")
-      .then(({ engines: list }) => {
-        setEngines(list);
-        setEngineId(pickDefaultEngine(list, preferredEngineId));
-      })
-      .catch((e) =>
-        toast.error("Could not load VoiceForge engines", {
-          description: (e as Error).message,
-        }),
-      )
-      .finally(() => setEnginesLoading(false));
-  }, [configured, preferredEngineId]);
+    if (enginesQuery.error) toast.error("Could not load VoiceForge engines", {
+      description: enginesQuery.error.message,
+    });
+  }, [enginesQuery.error]);
 
   React.useEffect(() => {
     return () => {

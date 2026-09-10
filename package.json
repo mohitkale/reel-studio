@@ -32,7 +32,9 @@
     "export:demo-assets": "tsx scripts/export-demo-assets.ts",
     "gen:music": "node scripts/generate-music.mjs",
     "embed:hf-catalog": "node scripts/embed-hf-catalog.mjs",
-    "gen:sfx": "node scripts/generate-sfx.mjs"
+    "gen:sfx": "node scripts/generate-sfx.mjs",
+    "test:unit": "vitest run --exclude src/lib/render-smoke.test.ts",
+    "test:render": "tsx scripts/render-regression.ts"
   },
   "dependencies": {
     "@hyperframes/producer": "^0.7.61",

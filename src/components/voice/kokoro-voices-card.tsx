@@ -33,14 +33,15 @@ function normalizeSelection(
 }
 
 export function KokoroVoicesCard({ config }: { config: AppConfig }) {
+  // A changed server selection starts a new draft without effect-driven updates.
+  return <KokoroVoicesForm key={JSON.stringify(config.kokoroVisibleVoiceIds ?? [])} config={config} />;
+}
+
+function KokoroVoicesForm({ config }: { config: AppConfig }) {
   const save = useSetDefaults();
   const [selected, setSelected] = React.useState(() =>
     normalizeSelection(config.kokoroVisibleVoiceIds),
   );
-
-  React.useEffect(() => {
-    setSelected(normalizeSelection(config.kokoroVisibleVoiceIds));
-  }, [config.kokoroVisibleVoiceIds]);
 
   const allSelected = selected.size === KOKORO_VOICE_IDS.length;
   const dirty =

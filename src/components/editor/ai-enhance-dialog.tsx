@@ -58,21 +58,14 @@ export function AIEnhanceDialog({
   const enhance = useEnhanceScript(scriptId);
 
   const [mode, setMode] = React.useState<"rewrite" | "append">("rewrite");
-  const [brief, setBrief] = React.useState("");
+  const [briefOverride, setBrief] = React.useState<string | null>(null);
+  const brief = briefOverride ?? (scriptName !== "Untitled script" ? scriptName : "");
   const [providerId, setProviderId] = React.useState<AIProviderId | undefined>();
   const [sceneCount, setSceneCount] = React.useState<string>("auto");
   const [scriptStyle, setScriptStyle] = React.useState<ScriptStyle>("short");
 
   const configured = (providers ?? []).filter((p) => p.configured);
   const effectiveProvider = providerId ?? configured[0]?.id;
-
-  // Pre-fill brief from existing scenes when switching to append or on open
-  React.useEffect(() => {
-    if (open && !brief) {
-      setBrief(scriptName !== "Untitled script" ? scriptName : "");
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
 
   function submit() {
     const trimmed = brief.trim();
@@ -172,7 +165,7 @@ export function AIEnhanceDialog({
             )}
             {mode === "append" && scenes.length > 0 && (
               <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
-                New scenes will be added after your existing {scenes.length}. An <strong>Undo</strong> button will appear so you can roll back if the result isn't right.
+                New scenes will be added after your existing {scenes.length}. An <strong>Undo</strong> button will appear so you can roll back if the result isn&apos;t right.
               </p>
             )}
 

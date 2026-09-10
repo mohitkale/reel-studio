@@ -248,3 +248,7 @@ Full matrix: **[docs/LICENSING.md](docs/LICENSING.md)**.
 - [docs/TEMPLATE_AUTHORING.md](docs/TEMPLATE_AUTHORING.md)
 - [docs/LICENSING.md](docs/LICENSING.md)
 - [CHANGELOG.md](CHANGELOG.md)
+
+### Production regression checks
+
+`npm run test:unit` runs credential-free unit tests. `npm run test:render` renders a legacy fixture through both engines and saves local artifacts in `.artifacts/render-regression/`. Rendering requires Chromium and may download it on the first run. The manual Quality workflow retains these artifacts for inspection.
