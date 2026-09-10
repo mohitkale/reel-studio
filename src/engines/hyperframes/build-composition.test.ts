@@ -123,6 +123,34 @@ describe("buildHyperframesCompositionHtml", () => {
     expect(html).toContain("gsap.timeline");
     expect(html).toContain('data-recipe="void-slash"');
   });
+
+  it("supports a local motion runtime for offline producer renders", () => {
+    const html = buildHyperframesCompositionHtml(
+      {
+        scenes: [
+          {
+            id: "hook",
+            templateId: "hf-opener",
+            text: "Local motion runtime.",
+            emphasis: ["Local"],
+          },
+        ],
+        timeline: [{ sceneId: "hook", startFrame: 0, durationFrames: 30 }],
+        width: 1080,
+        height: 1920,
+        fps: 30,
+        tokens: defaultBrandTokens,
+      },
+      {
+        producerMode: true,
+        runtimeUrl: "/_runtime/gsap.min.js",
+      },
+    );
+
+    expect(html).toContain('src="/_runtime/gsap.min.js"');
+    expect(html).not.toContain("cdn.jsdelivr.net");
+    expect(html).not.toContain("requestAnimationFrame");
+  });
 });
 
 describe("mapScenesToEngineTemplates", () => {

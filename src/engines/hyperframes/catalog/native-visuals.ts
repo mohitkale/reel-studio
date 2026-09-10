@@ -67,7 +67,7 @@ function lineStackHtml(
   return packLines(text, maxChars, maxWordsPerLine)
     .map(
       (line, i) =>
-        `<div class="${lineClass}" data-li="${i}"><span class="fx-line-inner">${emphasize(line, emphasis)}</span></div>`,
+        `<div class="${lineClass}" data-li="${i}"><span class="fx-line-inner" data-layout-allow-overflow>${emphasize(line, emphasis)}</span></div>`,
     )
     .join("");
 }
@@ -223,7 +223,7 @@ function stageShell(
     case "lower-third":
       return `<div ${common}>
         <div class="fx-studio"></div>
-        <div class="fx-studio-beam" aria-hidden="true"></div>
+        <div class="fx-studio-beam" data-layout-allow-overflow aria-hidden="true"></div>
         <div class="fx-floor-glow" aria-hidden="true"></div>
         <div class="fx-grain"></div>
         <div class="fx-letterbox top"></div>
@@ -264,7 +264,7 @@ function stageShell(
     case "social-plate":
       return `<div ${common}>
         <div class="fx-social-bg"></div>
-        <div class="fx-social-blob" aria-hidden="true"></div>
+        <div class="fx-social-blob" data-layout-allow-overflow aria-hidden="true"></div>
         <div class="fx-grain"></div>`;
 
     default:
@@ -948,9 +948,11 @@ export const NATIVE_CATALOG_STYLES = `
 /**
  * GSAP boot: line-reveal timelines (no mid-word translate collisions).
  */
-export function buildGsapMotionBootScript(): string {
+export function buildGsapMotionBootScript(
+  runtimeUrl = "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js",
+): string {
   return `
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script src="${escapeHtml(runtimeUrl)}"></script>
 <script>
 (function () {
   function revealFallback() {
@@ -962,6 +964,9 @@ export function buildGsapMotionBootScript(): string {
   function boot() {
     if (!window.gsap) { revealFallback(); return; }
     window.__timelines = window.__timelines || {};
+    var compositionRoot = document.querySelector('[data-composition-id]');
+    var compositionId = compositionRoot && compositionRoot.getAttribute('data-composition-id');
+    var compositionTimelines = [];
     document.querySelectorAll('[data-motion-scene]').forEach(function (stage) {
       var id = stage.getAttribute('data-motion-scene');
       if (!id) return;
@@ -1001,7 +1006,7 @@ export function buildGsapMotionBootScript(): string {
 
       // Recipe-specific backgrounds
       if (recipe === 'void-slash') {
-        letterbox.forEach(function (el) { tl.to(el, { scaleY: 1, duration: 0.35, ease: 'power3.out' }, 0); });
+        letterbox.forEach(function (el) { tl.fromTo(el, { scaleY: 0 }, { scaleY: 1, duration: 0.35, ease: 'power3.out', overwrite: 'auto' }, 0); });
         var panel = stage.querySelector('.fx-void-panel');
         if (panel) tl.fromTo(panel, { xPercent: -55 }, { xPercent: -8, duration: 0.75, ease: 'power3.out' }, 0);
         slash.forEach(function (el, i) {
@@ -1010,17 +1015,17 @@ export function buildGsapMotionBootScript(): string {
         });
       }
       if (recipe === 'editorial') {
-        if (paperRule) tl.to(paperRule, { scaleX: 1, duration: 0.5, ease: 'power2.out' }, 0.05);
-        if (corner) tl.to(corner, { opacity: 1, x: 0, y: 0, duration: 0.55, ease: 'power2.out' }, 0.2);
+        if (paperRule) tl.fromTo(paperRule, { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: 'power2.out' }, 0.05);
+        if (corner) tl.fromTo(corner, { opacity: 0, x: 12, y: 12 }, { opacity: 1, x: 0, y: 0, duration: 0.55, ease: 'power2.out' }, 0.2);
       }
       if (recipe === 'lower-third') {
-        if (beam) tl.to(beam, { opacity: 1, scale: 1, duration: 0.8, ease: 'power2.out' }, 0);
+        if (beam) tl.fromTo(beam, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.8, ease: 'power2.out' }, 0);
         if (floor) tl.to(floor, { opacity: 1, duration: 0.7 }, 0.1);
-        letterbox.forEach(function (el) { tl.to(el, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 0); });
-        if (plate) tl.to(plate, { opacity: 1, x: 0, duration: 0.55, ease: 'power3.out' }, 0.15);
+        letterbox.forEach(function (el) { tl.fromTo(el, { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: 'power2.out', overwrite: 'auto' }, 0); });
+        if (plate) tl.fromTo(plate, { opacity: 0, x: -48 }, { opacity: 1, x: 0, duration: 0.55, ease: 'power3.out' }, 0.15);
       }
       if (recipe === 'punch-block') {
-        if (blockB) tl.to(blockB, { scaleX: 1, duration: 0.45, ease: 'power4.inOut' }, 0);
+        if (blockB) tl.fromTo(blockB, { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: 'power4.inOut' }, 0);
         if (flash) {
           tl.to(flash, { opacity: 0.55, duration: 0.08 }, 0.4);
           tl.to(flash, { opacity: 0, duration: 0.25 }, 0.5);
@@ -1032,25 +1037,25 @@ export function buildGsapMotionBootScript(): string {
       }
       if (recipe === 'stack-cards' && deepOrb) tl.to(deepOrb, { opacity: 1, duration: 0.8 }, 0);
       if (recipe === 'billboard' && shine) tl.to(shine, { opacity: 0.7, duration: 0.9, ease: 'power2.out' }, 0);
-      if (recipe === 'minimal-mark' && ring) tl.to(ring, { opacity: 0.5, scale: 1, duration: 0.8, ease: 'power2.out' }, 0.1);
+      if (recipe === 'minimal-mark' && ring) tl.fromTo(ring, { opacity: 0, scale: 0.7 }, { opacity: 0.5, scale: 1, duration: 0.8, ease: 'power2.out' }, 0.1);
       if (recipe === 'social-plate' && blob) tl.to(blob, { opacity: 0.8, duration: 0.7 }, 0);
 
-      if (chip) tl.to(chip, { opacity: 1, y: 0, duration: 0.28, ease: 'power2.out' }, 0.12);
-      if (qmark) tl.to(qmark, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.15);
-      if (kicker) tl.to(kicker, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }, 0.1);
+      if (chip) tl.fromTo(chip, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.28, ease: 'power2.out' }, 0.12);
+      if (qmark) tl.fromTo(qmark, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.15);
+      if (kicker) tl.fromTo(kicker, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }, 0.1);
 
       // Line reveals — clipped, never overlapping
       lines.forEach(function (inner, i) {
         tl.to(inner, { y: '0%', duration: 0.42, ease: 'power3.out' }, 0.22 + i * 0.1);
       });
 
-      if (rule) tl.to(rule, { scaleX: 1, duration: 0.4, ease: 'power3.out' }, Math.max(0.55, 0.22 + lines.length * 0.1));
+      if (rule) tl.fromTo(rule, { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: 'power3.out' }, Math.max(0.55, 0.22 + lines.length * 0.1));
       checks.forEach(function (item, i) {
-        tl.to(item, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.25 + i * 0.16);
+        tl.fromTo(item, { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.25 + i * 0.16);
       });
-      if (logo) tl.to(logo, { opacity: 1, scale: 1, duration: 0.55, ease: 'back.out(1.5)' }, 0.15);
+      if (logo) tl.fromTo(logo, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.55, ease: 'back.out(1.5)' }, 0.15);
       if (pill) tl.to(pill, { opacity: 1, duration: 0.35 }, 0.7);
-      if (card) tl.to(card, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.4);
+      if (card) tl.fromTo(card, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.4);
       if (money) {
         tl.fromTo(money, { opacity: 0, y: 36, scale: 0.86 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: 'back.out(1.6)' }, 0.12);
         var countTo = Number(money.getAttribute('data-count-to') || '0');
@@ -1070,13 +1075,13 @@ export function buildGsapMotionBootScript(): string {
           }, 0.18);
         }
       }
-      if (moneyLine) tl.to(moneyLine, { opacity: 1, y: 0, duration: 0.4 }, 0.5);
-      if (chartTitle) tl.to(chartTitle, { opacity: 1, y: 0, duration: 0.35 }, 0.1);
+      if (moneyLine) tl.fromTo(moneyLine, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4 }, 0.5);
+      if (chartTitle) tl.fromTo(chartTitle, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.35 }, 0.1);
       bars.forEach(function (b, i) {
-        tl.to(b, { scaleY: 1, duration: 0.5, ease: 'power3.out' }, 0.25 + i * 0.07);
+        tl.fromTo(b, { scaleY: 0.08 }, { scaleY: 1, duration: 0.5, ease: 'power3.out' }, 0.25 + i * 0.07);
       });
-      if (phone) tl.to(phone, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 0.1);
-      if (cta) tl.to(cta, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.5);
+      if (phone) tl.fromTo(phone, { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 0.1);
+      if (cta) tl.fromTo(cta, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.5);
 
       // Ambient life after the entrance so long VO doesn't freeze into a poster.
       var holdEnd = Math.max(tl.duration(), 1.35);
@@ -1099,7 +1104,26 @@ export function buildGsapMotionBootScript(): string {
       if (tl.duration() < 1.35) tl.to({}, { duration: 1.35 }, 0);
       tl.seek(Math.min(tl.duration(), 1.1));
       window.__timelines[id] = tl;
+      var scene = stage.closest('[data-start]');
+      var sceneStart = Number(scene && scene.getAttribute('data-start') || 0);
+      compositionTimelines.push({ timeline: tl, start: Math.max(0, sceneStart) });
     });
+
+    // Producer 0.8 drives the timeline registered under the composition ID.
+    // Keep per-scene timelines available for the editor while composing them
+    // into one seekable root timeline for deterministic frame capture.
+    if (compositionId) {
+      var rootTimeline = gsap.timeline({ paused: true });
+      compositionTimelines.forEach(function (entry) {
+        rootTimeline.add(entry.timeline, entry.start);
+      });
+      var authoredDuration = Number(compositionRoot.getAttribute('data-duration') || 0);
+      if (authoredDuration > rootTimeline.duration()) {
+        rootTimeline.to({}, { duration: authoredDuration }, 0);
+      }
+      rootTimeline.seek(0);
+      window.__timelines[compositionId] = rootTimeline;
+    }
   }
   if (document.readyState === 'complete') boot();
   else window.addEventListener('load', boot);

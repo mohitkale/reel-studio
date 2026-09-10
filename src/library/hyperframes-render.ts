@@ -33,6 +33,14 @@ import { assertPathInsideRoot } from "@/server/url-safety";
 
 type RenderQuality = "draft" | "standard" | "high";
 
+const GSAP_CDN_URL =
+  "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js";
+const GSAP_RENDER_URL = "/_runtime/gsap.min.js";
+
+function localizeGsapRuntime(html: string): string {
+  return html.replaceAll(GSAP_CDN_URL, GSAP_RENDER_URL);
+}
+
 export interface HyperframesRenderOptions {
   renderId: string;
   scriptId: string;
@@ -50,21 +58,22 @@ export interface HyperframesRenderOptions {
  * Map a media URL to a path on disk under this app (media/ or public/).
  * Returns null for true remote URLs that HyperFrames should fetch itself.
  */
-function localFsPathForUrl(
-  url: string,
-  serverBaseUrl: string,
-): string | null {
+function localFsPathForUrl(url: string, serverBaseUrl: string): string | null {
   const stripLeadingSlash = (p: string) => p.replace(/^\/+/, "");
 
   const fromPathname = (pathname: string): string | null => {
     try {
       if (pathname.startsWith("/media/")) {
-        const key = sanitizeKey(stripLeadingSlash(pathname.slice("/media".length)));
+        const key = sanitizeKey(
+          stripLeadingSlash(pathname.slice("/media".length)),
+        );
         const mediaRoot = path.join(process.cwd(), "media");
         return assertPathInsideRoot(mediaRoot, path.join(mediaRoot, key));
       }
       if (pathname.startsWith("/music/")) {
-        const key = sanitizeKey(stripLeadingSlash(pathname.slice("/music".length)));
+        const key = sanitizeKey(
+          stripLeadingSlash(pathname.slice("/music".length)),
+        );
         const musicRoot = path.join(process.cwd(), "public", "music");
         return assertPathInsideRoot(musicRoot, path.join(musicRoot, key));
       }
@@ -120,7 +129,11 @@ async function materializeUrl(
     return `_assets/${destName}`;
   }
 
-  if (url.startsWith("https://") || url.startsWith("data:") || url.startsWith("blob:")) {
+  if (
+    url.startsWith("https://") ||
+    url.startsWith("data:") ||
+    url.startsWith("blob:")
+  ) {
     return url;
   }
 
@@ -149,7 +162,13 @@ function runWorker(args: {
     );
     const child = spawn(
       process.execPath,
-      [worker, args.projectDir, args.outputPath, String(args.fps), args.quality],
+      [
+        worker,
+        args.projectDir,
+        args.outputPath,
+        String(args.fps),
+        args.quality,
+      ],
       {
         cwd: process.cwd(),
         env: process.env,
@@ -191,7 +210,9 @@ function runWorker(args: {
           stderr
             .split(/\r?\n/)
             .map((l) => l.trim())
-            .find((l) => /audio_processing_failed|RenderQualityError|Error:/i.test(l)) ||
+            .find((l) =>
+              /audio_processing_failed|RenderQualityError|Error:/i.test(l),
+            ) ||
           stderr.slice(0, 400);
         reject(
           new Error(
@@ -355,6 +376,13 @@ export async function runHyperframesRender(
       energy: script.energy,
     };
 
+    const runtimeDir = path.join(projectDir, "_runtime");
+    await fs.mkdir(runtimeDir, { recursive: true });
+    await fs.copyFile(
+      path.join(process.cwd(), "node_modules", "gsap", "dist", "gsap.min.js"),
+      path.join(runtimeDir, "gsap.min.js"),
+    );
+
     // Materialize curated catalog blocks as compositions/*.html so the producer
     // can resolve data-composition-src on the host index.html.
     const tokens = script.brandTokens ?? defaultBrandTokens;
@@ -376,13 +404,16 @@ export async function runHyperframesRender(
             compositionsDir,
             catalogCompositionFileName(meta.id, scene.id),
           ),
-          personalized,
+          localizeGsapRuntime(personalized),
           "utf8",
         );
       }
     }
 
-    const html = buildHyperframesCompositionHtml(inputProps);
+    const html = buildHyperframesCompositionHtml(inputProps, {
+      producerMode: true,
+      runtimeUrl: GSAP_RENDER_URL,
+    });
     await fs.writeFile(path.join(projectDir, "index.html"), html, "utf8");
 
     const store = getAssetStore();
@@ -404,7 +435,9 @@ export async function runHyperframesRender(
         const capped = Math.min(0.99, Math.max(0.02, pct));
         progress(capped, "rendering");
         if (Math.round(capped * 100) % 5 === 0) {
-          console.log(`[render:hf] Job ${renderId}: ${Math.round(capped * 100)}%`);
+          console.log(
+            `[render:hf] Job ${renderId}: ${Math.round(capped * 100)}%`,
+          );
         }
       },
     });

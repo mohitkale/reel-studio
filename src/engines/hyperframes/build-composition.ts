@@ -4,7 +4,12 @@
  */
 
 import type { BrandTokens } from "@/compositions/tokens";
-import type { ReelBeat, ReelProps, ReelScene, SceneMood } from "@/compositions/types";
+import type {
+  ReelBeat,
+  ReelProps,
+  ReelScene,
+  SceneMood,
+} from "@/compositions/types";
 import { coverFrames } from "@/compositions/types";
 import {
   DEFAULT_ENERGY_ID,
@@ -18,7 +23,11 @@ import {
 import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
 import { getCatalogBlockByTemplateId } from "@/engines/hyperframes/catalog/manifest";
 import { buildCatalogSceneBlock } from "@/engines/hyperframes/catalog/build-scene";
-import { NATIVE_CATALOG_STYLES, buildGsapMotionBootScript, buildCinematicClassicVisual } from "@/engines/hyperframes/catalog/native-visuals";
+import {
+  NATIVE_CATALOG_STYLES,
+  buildGsapMotionBootScript,
+  buildCinematicClassicVisual,
+} from "@/engines/hyperframes/catalog/native-visuals";
 
 function escapeHtml(value: string): string {
   return value
@@ -78,8 +87,7 @@ function sceneInnerHtml(scene: ReelScene, tokens: BrandTokens): string {
   const accent = tokens.accent ?? "#ff6b4a";
   const fg = tokens.foreground ?? "#f8fafc";
   const speaker =
-    visual &&
-    /^(interviewer|candidate|host|guest)$/i.test(visual.trim())
+    visual && /^(interviewer|candidate|host|guest)$/i.test(visual.trim())
       ? visual.trim().toUpperCase()
       : "";
 
@@ -197,7 +205,10 @@ function framesToSeconds(frames: number, fps: number): number {
 }
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@500;700;800&family=Instrument+Serif:ital@0;1&display=swap');
+  @font-face { font-family: "DM Sans"; src: local("Arial"); }
+  @font-face { font-family: "Anton"; src: local("Impact"); }
+  @font-face { font-family: "Instrument Serif"; src: local("Georgia"); }
+  @font-face { font-family: "Impact"; src: local("Impact"); }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     width: 100%; height: 100%; overflow: hidden;
@@ -226,9 +237,8 @@ const STYLES = `
    */
   .scene {
     position: absolute; inset: 0; display: flex; align-items: stretch;
-    justify-content: stretch; opacity: 1; visibility: hidden;
+    justify-content: stretch; opacity: 1;
   }
-  .scene.is-active { visibility: visible; }
   .bg-mood, .bg-photo, .bg-video, .bg-scrim {
     position: absolute; inset: 0;
   }
@@ -419,7 +429,13 @@ function buildSeekScript(
   fps: number,
   hideProgressBar: boolean,
 ): string {
-  const payload = JSON.stringify({ beats, coverSeconds, totalSeconds, fps, hideProgressBar });
+  const payload = JSON.stringify({
+    beats,
+    coverSeconds,
+    totalSeconds,
+    fps,
+    hideProgressBar,
+  });
   return `
 <script>
 (function () {
@@ -768,7 +784,11 @@ function buildSeekScript(
  */
 export function buildHyperframesCompositionHtml(
   props: ReelProps,
-  opts: { inlineCatalog?: boolean } = {},
+  opts: {
+    inlineCatalog?: boolean;
+    producerMode?: boolean;
+    runtimeUrl?: string;
+  } = {},
 ): string {
   const inlineCatalog = opts.inlineCatalog === true;
   const fps = props.fps || 30;
@@ -833,7 +853,7 @@ export function buildHyperframesCompositionHtml(
     }
 
     sceneBlocks.push(`
-      <section class="scene ${transitionClass}${scene.background?.type === "image" || scene.background?.type === "video" ? " has-photo" : ""}" data-scene-id="${escapeHtml(scene.id)}"
+      <section id="scene-${escapeHtml(scene.id)}" class="clip scene ${transitionClass}${scene.background?.type === "image" || scene.background?.type === "video" ? " has-photo" : ""}" data-scene-id="${escapeHtml(scene.id)}"
                data-start="${absoluteStart.toFixed(3)}"
                data-duration="${duration.toFixed(3)}"
                data-track-index="1"
@@ -892,15 +912,16 @@ export function buildHyperframesCompositionHtml(
   <style>${STYLES}</style>
 </head>
 <body>
-  <div id="fit-wrap">
+  <div id="fit-wrap"
+       data-composition-id="reel"
+       data-no-timeline
+       data-start="0"
+       data-duration="${totalSeconds.toFixed(3)}"
+       data-width="${width}"
+       data-height="${height}"
+       data-fps="${fps}"
+       style="width:${width}px;height:${height}px">
     <div id="root"
-         data-composition-id="reel"
-         data-no-timeline
-         data-start="0"
-         data-duration="${totalSeconds.toFixed(3)}"
-         data-width="${width}"
-         data-height="${height}"
-         data-fps="${fps}"
          data-total-frames="${totalFrames}"
          data-style="${styleId}"
          data-energy="${energy}"
@@ -913,8 +934,8 @@ export function buildHyperframesCompositionHtml(
       ${audioTags.join("\n")}
     </div>
   </div>
-  ${buildGsapMotionBootScript()}
-  ${buildSeekScript(beats, coverSeconds, totalSeconds, fps, hideProgress)}
+  ${buildGsapMotionBootScript(opts.runtimeUrl)}
+  ${opts.producerMode ? "" : buildSeekScript(beats, coverSeconds, totalSeconds, fps, hideProgress)}
 </body>
 </html>`;
 }

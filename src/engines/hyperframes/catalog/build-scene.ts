@@ -71,7 +71,7 @@ export function buildCatalogSceneBlock(args: {
   const bg = hasPhoto ? args.backgroundHtml : "";
 
   const html = `
-      <section class="scene catalog-scene ${args.transitionClass}${hasPhoto ? " has-photo" : ""}"
+      <section id="scene-${escapeHtml(args.scene.id)}" class="clip scene catalog-scene ${args.transitionClass}${hasPhoto ? " has-photo" : ""}"
                data-scene-id="${escapeHtml(args.scene.id)}"
                data-catalog-block="${escapeHtml(meta.id)}"
                data-start="${args.absoluteStart.toFixed(3)}"
