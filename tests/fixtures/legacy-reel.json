@@ -1,0 +1,48 @@
+{
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "styleId": "clean-story",
+  "energy": "normal",
+  "tokens": {
+    "background": "#161823",
+    "backgroundAccent": "#262939",
+    "foreground": "#ffffff",
+    "muted": "#adb0c2",
+    "accent": "#ff6b4a",
+    "accentSecondary": "#ffd166",
+    "accentForeground": "#161823",
+    "handle": "@example",
+    "fontFamily": "Arial, sans-serif",
+    "radius": 20
+  },
+  "scenes": [
+    {
+      "id": "hook",
+      "templateId": "hf-opener",
+      "text": "Create something useful.",
+      "emphasis": [
+        "useful"
+      ]
+    },
+    {
+      "id": "close",
+      "templateId": "hf-cta",
+      "text": "Make your next video.",
+      "emphasis": [],
+      "visual": "Try it"
+    }
+  ],
+  "timeline": [
+    {
+      "sceneId": "hook",
+      "startFrame": 0,
+      "durationFrames": 45
+    },
+    {
+      "sceneId": "close",
+      "startFrame": 45,
+      "durationFrames": 45
+    }
+  ]
+}

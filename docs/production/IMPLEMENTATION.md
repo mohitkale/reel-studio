@@ -1,0 +1,56 @@
+# Premium production implementation
+
+Branch: `codex/premium-production`. Base: `3bd4582` (v0.3.0).
+Commit actual completion dates. Preserve existing projects, media, engine IDs and API behavior.
+
+## Release contract
+
+Local-first; six presets on both engines; deterministic and optional AI creation; durable production; voice/podcast/captions; opt-in unattended MCP; three ratios and batches of up to ten inputs. No hosted accounts, paid generative media, social publishing, or arbitrary executable AI compositions.
+
+## Execution
+
+Work in the numbered order. For each task, record acceptance evidence and commit SHA below. Gates after 7, 11, 17, 24 and 28 must pass before proceeding. Run typecheck, relevant tests, lint and secret scan; build and render matrix at gates. Never weaken checks to accept an upgrade.
+
+- [ ] 01. Baseline, frozen package inventory, regression fixtures. Depends on baseline. Evidence/SHA: pending.
+- [ ] 02. CI and both-engine render harness. Depends on 1. Evidence/SHA: pending.
+- [ ] 03. Node, Next, React and framework upgrade. Depends on 2. Evidence/SHA: pending.
+- [ ] 04. Prisma upgrade and safe migration baseline. Depends on 3. Evidence/SHA: pending.
+- [ ] 05. HyperFrames runtime compatibility. Depends on 4. Evidence/SHA: pending.
+- [ ] 06. Remotion synchronized upgrade. Depends on 5. Evidence/SHA: pending.
+- [ ] 07. Remaining packages and first compatibility gate. Depends on 6. Evidence/SHA: pending.
+- [ ] 08. Versioned production contracts. Depends on 7. Evidence/SHA: pending.
+- [ ] 09. Catalog provenance and version retention. Depends on 8. Evidence/SHA: pending.
+- [ ] 10. Shared layout and media inputs. Depends on 9. Evidence/SHA: pending.
+- [ ] 11. Chart correctness and safe personalization. Depends on 10. Evidence/SHA: pending.
+- [ ] 12. Product Launch preset. Depends on 11. Evidence/SHA: pending.
+- [ ] 13. Editorial Explainer preset. Depends on 12. Evidence/SHA: pending.
+- [ ] 14. Creator Punch preset. Depends on 13. Evidence/SHA: pending.
+- [ ] 15. Data Story preset. Depends on 14. Evidence/SHA: pending.
+- [ ] 16. Developer Demo preset. Depends on 15. Evidence/SHA: pending.
+- [ ] 17. Cinematic Brand preset. Depends on 16. Evidence/SHA: pending.
+- [ ] 18. Persistent production worker. Depends on 17. Evidence/SHA: pending.
+- [ ] 19. Complete video orchestration. Depends on 18. Evidence/SHA: pending.
+- [ ] 20. Creation wizard and deterministic/source planning. Depends on 19. Evidence/SHA: pending.
+- [ ] 21. AI planning and selective regeneration. Depends on 20. Evidence/SHA: pending.
+- [ ] 22. Editable captions and local transcription. Depends on 21. Evidence/SHA: pending.
+- [ ] 23. Audio mixing and podcast caching. Depends on 22. Evidence/SHA: pending.
+- [ ] 24. Podcast presets, chapters and audiograms. Depends on 23. Evidence/SHA: pending.
+- [ ] 25. Scoped MCP automation. Depends on 24. Evidence/SHA: pending.
+- [ ] 26. Batch jobs and format variants. Depends on 25. Evidence/SHA: pending.
+- [ ] 27. Setup, diagnostics and gallery. Depends on 26. Evidence/SHA: pending.
+- [ ] 28. Release validation and documentation. Depends on 27. Evidence/SHA: pending.
+
+## Baseline
+
+- Clean checkout on main before branch creation.
+- Node 24.18.1; npm 11.16.0.
+- Typecheck and secret scan passed in initial review.
+- 99 non-render tests passed; render smoke deliberately excluded from this initial fast pass.
+- Lint: five existing errors (effect state updates in three UI components, one JSX apostrophe, one require import) and four warnings. Resolve before gate 7.
+- Full package inventory: `dependencies.json`; targets freeze when audit completes.
+
+## Acceptance matrix
+
+Fresh install and populated v0.3 database upgrade; both engines and legacy templates; six presets × three ratios × three briefs; no-key demo; voice and scene-clip workflows; podcast partial regeneration; captions provenance; restart/idempotency/cancellation; MCP old approvals and opted-in unattended execution; batch partial failure; real decodable audio/video artifacts; local/offline media; safe URL ingestion.
+
+Do not mark the release complete until these checks have evidence.
