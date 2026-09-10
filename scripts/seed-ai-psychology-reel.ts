@@ -14,7 +14,7 @@ loadEnv({ path: ".env.local" });
 loadEnv();
 
 async function main() {
-  const { PrismaClient } = await import("@prisma/client");
+  const { createPrismaClient } = await import("../src/library/prisma-client");
   const { createProjectFromPlan } = await import(
     "../src/library/repositories/projects"
   );
@@ -30,7 +30,7 @@ async function main() {
   const { getStockProvider } = await import("../src/providers/stock/registry");
   type ScenePlan = import("../src/providers/ai/types").ScenePlan;
 
-  const prisma = new PrismaClient();
+  const prisma = createPrismaClient();
 
   const TITLE = "Before AI vs After AI: your defaults changed";
   const SCRIPT = "Same brain. Different defaults.";

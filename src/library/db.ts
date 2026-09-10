@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "./prisma-client";
+import type { PrismaClient } from "@prisma/client";
 
 /**
  * Prisma client singleton. In dev, Next.js hot-reloads modules repeatedly; we
@@ -14,9 +15,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createClient(): PrismaClient {
-  return new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
-  });
+  return createPrismaClient();
 }
 
 function getClient(): PrismaClient {

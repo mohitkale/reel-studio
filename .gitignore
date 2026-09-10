@@ -55,3 +55,6 @@ next-env.d.ts
 
 # Local production validation artifacts
 .artifacts/
+
+# Consistent SQLite migration snapshots
+*.db.backup-*

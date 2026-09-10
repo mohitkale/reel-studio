@@ -11,6 +11,8 @@
 */
 
 :root {
+  --font-geist-sans: "Geist Variable";
+  --font-geist-mono: "Geist Mono Variable";
   color-scheme: light;
   --radius: 0.65rem;
 

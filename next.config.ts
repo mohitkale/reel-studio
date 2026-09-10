@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   // Remotion renderer and bundler contain native binaries that must run in Node.js;
   // exclude them from the Next.js bundle so they are required at runtime instead.
   serverExternalPackages: [
+    "@prisma/client",
+    "@prisma/adapter-better-sqlite3",
+    "better-sqlite3",
     "@remotion/renderer",
     "@remotion/bundler",
     "@remotion/compositor-win32-x64-msvc",

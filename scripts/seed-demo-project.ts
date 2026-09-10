@@ -9,7 +9,7 @@
  *   npx tsx scripts/seed-demo-project.ts --all-formats
  */
 
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/library/prisma-client";
 
 import {
   DEMO_VIDEO_PROJECT_NAME,
@@ -17,7 +17,7 @@ import {
   DEMO_VIDEO_SCRIPT_NAME,
 } from "../src/library/demo-content";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 const FORMATS: { suffix: string; width: number; height: number }[] = [
   { suffix: "", width: 1080, height: 1920 }, // portrait

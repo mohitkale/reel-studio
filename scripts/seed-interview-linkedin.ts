@@ -4,7 +4,7 @@
  * Usage: npx tsx scripts/seed-interview-linkedin.ts
  */
 
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/library/prisma-client";
 
 import {
   INTERVIEW_PROJECT_NAME,
@@ -12,7 +12,7 @@ import {
   INTERVIEW_SCRIPT_NAME,
 } from "../src/library/interview-linkedin-content";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function ensureBrandKitId(): Promise<string | null> {
   const kit =

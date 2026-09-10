@@ -11,10 +11,10 @@ Local-first; six presets on both engines; deterministic and optional AI creation
 
 Work in the numbered order. For each task, record acceptance evidence and commit SHA below. Gates after 7, 11, 17, 24 and 28 must pass before proceeding. Run typecheck, relevant tests, lint and secret scan; build and render matrix at gates. Never weaken checks to accept an upgrade.
 
-- [ ] 01. Baseline, frozen package inventory, regression fixtures. Depends on baseline. Evidence/SHA: pending.
-- [ ] 02. CI and both-engine render harness. Depends on 1. Evidence/SHA: pending.
-- [ ] 03. Node, Next, React and framework upgrade. Depends on 2. Evidence/SHA: pending.
-- [ ] 04. Prisma upgrade and safe migration baseline. Depends on 3. Evidence/SHA: pending.
+- [x] 01. Baseline, frozen package inventory, regression fixtures. Evidence: `d241004`.
+- [x] 02. CI and both-engine render harness. Evidence: `ea60641`; both engines encoded baseline MP4s and exposed a HyperFrames visibility regression.
+- [x] 03. Node, Next, React and framework upgrade. Evidence: Next 16.3.4 production build, typecheck, lint and unit tests pass; commit recorded with task 04 because the lockfile and Prisma adapter migration are atomic.
+- [x] 04. Prisma upgrade and safe migration baseline. Evidence: Prisma 7.10 migration, fresh/legacy database tests, populated demo seed, backup and drift rejection; SHA pending this commit.
 - [ ] 05. HyperFrames runtime compatibility. Depends on 4. Evidence/SHA: pending.
 - [ ] 06. Remotion synchronized upgrade. Depends on 5. Evidence/SHA: pending.
 - [ ] 07. Remaining packages and first compatibility gate. Depends on 6. Evidence/SHA: pending.

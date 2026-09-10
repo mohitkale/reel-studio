@@ -10,7 +10,7 @@
  * Usage: npx tsx scripts/seed-nextjs-163-reel.ts
  */
 
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/library/prisma-client";
 
 import { createProjectFromPlan } from "../src/library/repositories/projects";
 import { updateScript } from "../src/library/repositories/scripts";
@@ -19,7 +19,7 @@ import { ensureSfxCues } from "../src/library/sfx-service";
 import { generateTake } from "../src/library/take-service";
 import type { ScenePlan } from "../src/providers/ai/types";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 const TITLE = "Next.js 16.3: Leaner memory, faster builds";
 const SCRIPT = "Leaner. Faster. Still Next.";

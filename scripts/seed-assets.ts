@@ -8,9 +8,9 @@
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/library/prisma-client";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 const MEDIA_ROOT = path.join(process.cwd(), "media");
 
 // ---------------------------------------------------------------------------

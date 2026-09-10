@@ -1,7 +1,7 @@
 # Reel Studio
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D22-brightgreen.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/node-24_LTS-brightgreen.svg)](https://nodejs.org/)
 [![MCP](https://img.shields.io/badge/MCP-server-blue.svg)](mcp/README.md)
 
 **Turn a script into a complete short-form video locally.**
@@ -122,7 +122,7 @@ See [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md).
 ```bash
 git clone https://github.com/mohitkale/reel-studio.git
 cd reel-studio
-nvm use          # Node 22+
+nvm use          # Node 24 LTS
 npm install
 npm run setup
 npm run dev
@@ -137,7 +137,7 @@ seeded HyperFrames demo or Kokoro voices.
 
 ```bash
 cp .env.example .env.local
-npm run db:push
+npm run db:migrate
 npm run seed:demo-brandkit
 npm run seed:demo-project
 npm run seed:demo-podcast
@@ -213,7 +213,7 @@ HyperFrames, TanStack Query, Zod.
 | `npm run lint` / `typecheck` / `test` | Quality checks |
 | `npm run security:scan` | Secret pattern scan |
 | `npm run prepare:hooks` | Enable `.githooks` |
-| `npm run db:push` | Push Prisma schema |
+| `npm run db:migrate` | Push Prisma schema |
 | `npm run seed:demo-project` | Seed HyperFrames demo reel |
 | `npm run seed:demo-podcast` | Seed short demo podcast |
 | `npm run seed:demo-brandkit` | Seed Coral Harbor brand kit |
@@ -252,3 +252,7 @@ Full matrix: **[docs/LICENSING.md](docs/LICENSING.md)**.
 ### Production regression checks
 
 `npm run test:unit` runs credential-free unit tests. `npm run test:render` renders a legacy fixture through both engines and saves local artifacts in `.artifacts/render-regression/`. Rendering requires Chromium and may download it on the first run. The manual Quality workflow retains these artifacts for inspection.
+
+### Database upgrades
+
+Stop the app before running `npm run db:migrate`. Existing recognized v0.3.0 databases are backed up beside the SQLite file and baselined before versioned migrations run. Unknown schemas are rejected. Relative `file:./dev.db` URLs continue to resolve under `prisma/`. To roll back, stop the app, restore the matching backup and application version together, and keep the media directory. Setup and Docker use this migration path.
