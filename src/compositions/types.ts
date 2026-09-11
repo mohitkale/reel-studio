@@ -1,8 +1,10 @@
 import type { BrandTokens } from "./tokens";
 import type { EnergyId, StyleId } from "./visual-style";
+import type { ProductionLayout } from "@/production/layout";
 
 /** Image pan/zoom animations available for a background image. */
-export type PanEffect = "ken-burns" | "pan-left" | "pan-right" | "pan-up" | "pan-down";
+export type PanEffect =
+  "ken-burns" | "pan-left" | "pan-right" | "pan-up" | "pan-down";
 
 /**
  * Emotional/visual tone a scene can carry, mirrored from src/library/schemas.ts.
@@ -102,6 +104,8 @@ export type ReelProps = {
   styleId?: StyleId;
   /** Cut / text snappiness. Defaults to normal. */
   energy?: EnergyId;
+  /** Resolved safe areas shared by preview and export for this exact canvas. */
+  layout?: ProductionLayout;
 };
 
 export const REEL_WIDTH = 1080;

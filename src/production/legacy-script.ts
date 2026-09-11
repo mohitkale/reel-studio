@@ -248,6 +248,9 @@ export function productionSpecFromLegacyScript(
       timingSource: "estimated",
       cues: [],
     },
+    presentation: {
+      hideProgressBar: script.hideProgressBar,
+    },
     audio: {
       musicAssetRef: script.musicUrl ? "asset:music" : undefined,
       musicVolume: script.musicVolume / 100,

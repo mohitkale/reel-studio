@@ -14,6 +14,7 @@ import {
   DEFAULT_STYLE_ID,
   getStyleChrome,
 } from "./visual-style";
+import { resolveProductionLayout } from "@/production/layout";
 
 /**
  * Static cover/thumbnail frame shown at the very start of the reel. The image is
@@ -22,8 +23,13 @@ import {
  */
 function CoverFrame({ url, tokens }: { url: string; tokens: BrandTokens }) {
   return (
-    <AbsoluteFill style={{ backgroundColor: tokens.background, overflow: "hidden" }}>
-      <Img src={url} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+    <AbsoluteFill
+      style={{ backgroundColor: tokens.background, overflow: "hidden" }}
+    >
+      <Img
+        src={url}
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+      />
     </AbsoluteFill>
   );
 }
@@ -51,8 +57,10 @@ export const ReelComposition = React.memo(function ReelComposition({
   previewQuality = "standard",
   styleId = DEFAULT_STYLE_ID,
   energy = DEFAULT_ENERGY_ID,
+  layout,
 }: ReelProps) {
-  const { fps } = useVideoConfig();
+  const { fps, width, height } = useVideoConfig();
+  const resolvedLayout = layout ?? resolveProductionLayout({ width, height });
   const sceneById = new Map(scenes.map((s) => [s.id, s]));
   const cover = coverFrames(fps, Boolean(coverUrl));
   const chrome = getStyleChrome(styleId);
@@ -72,7 +80,11 @@ export const ReelComposition = React.memo(function ReelComposition({
 
   return (
     <VisualStyleProvider styleId={styleId} energy={energy} fps={fps}>
-      <StageOptionsProvider showProgressBar={showProgressBar} quality={previewQuality}>
+      <StageOptionsProvider
+        showProgressBar={showProgressBar}
+        quality={previewQuality}
+        layout={resolvedLayout}
+      >
         <AbsoluteFill
           style={{
             backgroundColor: tokens.background,

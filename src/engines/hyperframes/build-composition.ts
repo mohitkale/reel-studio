@@ -28,6 +28,7 @@ import {
   buildGsapMotionBootScript,
   buildCinematicClassicVisual,
 } from "@/engines/hyperframes/catalog/native-visuals";
+import { resolveProductionLayout } from "@/production/layout";
 
 function escapeHtml(value: string): string {
   return value
@@ -301,7 +302,7 @@ const STYLES = `
   .content {
     position: relative; z-index: 2; flex: 1;
     display: flex; align-items: center; justify-content: center;
-    padding: 10% 8%;
+    padding: var(--safe-top, 10%) var(--safe-right, 8%) var(--safe-bottom, 10%) var(--safe-left, 8%);
   }
   .em { color: inherit; box-shadow: inset 0 -0.22em 0 0 var(--accent, #ff6b4a); }
   .speaker-chip {
@@ -311,7 +312,7 @@ const STYLES = `
     border: 1px solid; border-radius: 999px;
     padding: 8px 14px; margin-bottom: 22px;
   }
-  .tpl { width: 100%; max-width: 92%; }
+  .tpl { width: 100%; max-width: min(92%, var(--content-max-width, 92%)); }
   .tpl-opener .accent-bar {
     width: 72px; height: 8px; border-radius: 999px; margin-bottom: 28px;
     transform: scaleX(0); transform-origin: left;
@@ -794,6 +795,7 @@ export function buildHyperframesCompositionHtml(
   const fps = props.fps || 30;
   const width = props.width || 1080;
   const height = props.height || 1920;
+  const layout = props.layout ?? resolveProductionLayout({ width, height });
   const tokens = props.tokens;
   const accent = tokens.accent ?? "#ff6b4a";
   const cover = coverFrames(fps, Boolean(props.coverUrl));
@@ -927,7 +929,8 @@ export function buildHyperframesCompositionHtml(
          data-energy="${energy}"
          data-hide-progress="${hideProgress ? "1" : "0"}"
          data-grain="${grainAttr}"
-         style="width:${width}px;height:${height}px;--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness}">
+         data-orientation="${layout.orientation}"
+         style="width:${width}px;height:${height}px;--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}">
       ${coverBlock}
       ${progress}
       ${sceneBlocks.join("\n")}

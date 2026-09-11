@@ -46,3 +46,16 @@ narration are recorded explicitly and cannot be mistaken for ready audio.
 Schema validation rejects duplicate IDs or scene positions, dangling media
 references, incompatible output formats, malformed chart series, out-of-range
 scene/caption timing and inconsistent total duration.
+
+## Layout and media resolution
+
+`resolveProductionComposition` is the handoff to preview and export. It maps a
+validated snapshot into one `ReelProps` object, including resolved asset URLs and
+format-specific layout values. Browser previews can map an asset to an app URL;
+render workers can map the same asset to a local materialized path without
+changing scene, timing or style decisions.
+
+Portrait, landscape and square each have explicit safe areas, content/caption
+widths, caption and brand insets, progress-bar size and type scale. Both engines
+consume these values. Format variants must resolve the source content again for
+their canvas; they must not crop a previously rendered video.

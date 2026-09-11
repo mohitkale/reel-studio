@@ -227,6 +227,9 @@ export const productionSpecSchema = z
       ]),
       cues: z.array(captionCueSchema),
     }),
+    presentation: z.object({
+      hideProgressBar: z.boolean(),
+    }),
     audio: z.object({
       musicAssetRef: assetIdSchema.optional(),
       musicVolume: z.number().min(0).max(1),
