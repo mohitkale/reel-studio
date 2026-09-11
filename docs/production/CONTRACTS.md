@@ -148,3 +148,15 @@ apply a vignette, subtle texture and readable foreground treatment.
 
 Run `npm run test:render:cinematic-brand` for the credential-free 12-second
 fixture. The bundled hero image is embedded locally for deterministic rendering.
+
+## Durable production jobs
+
+Production jobs store an immutable JSON input snapshot and a unique idempotency
+key in SQLite. Workers claim queued jobs with an expiring lease, extend it with
+heartbeats, and can recover work after a crashed worker's lease expires. Queued
+jobs cancel immediately; running jobs receive a cooperative cancellation flag.
+Steps, ordered events and output records survive web or worker restarts.
+
+The shared pipeline step keys are validate, plan, resolve media, synthesize
+audio, time content, prepare composition, render/export and verify artifacts.
+Task 19 connects these durable records to complete video orchestration.
