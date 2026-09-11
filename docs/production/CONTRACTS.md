@@ -88,3 +88,16 @@ The credential-free acceptance fixture uses the bundled dashboard screenshot at
 `public/samples/product-launch-dashboard.svg`. Run
 `npm run test:render:product-launch` to render and inspect all five roles through
 both engines.
+
+## Editorial Explainer 1.0.0
+
+Editorial Explainer carries headline, explanation, diagram, quote and summary
+roles into the shared composition input. Both engines render a responsive
+paper-inspired system with readable typography, restrained emphasis, labeled
+diagram steps and optional quote attribution. Remotion calculates composition
+duration from the supplied scene timeline, so longer editorial sequences are not
+clipped by a fixed root duration.
+
+The credential-free acceptance fixture contains five editorial scenes and no
+remote assets. Run `npm run test:render:editorial` to render the complete
+12-second sequence through both engines.

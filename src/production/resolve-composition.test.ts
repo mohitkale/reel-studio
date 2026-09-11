@@ -11,7 +11,9 @@ import {
   type ProductionSpec,
 } from "@/production/spec";
 import productLaunchFixture from "../../tests/fixtures/product-launch-reel.json";
+import editorialExplainerFixture from "../../tests/fixtures/editorial-explainer-reel.json";
 import type { ReelProps } from "@/compositions/types";
+import { reelDurationFrames } from "@/compositions/types";
 
 function productionSpec(
   engineId: VideoEngineId,
@@ -192,5 +194,30 @@ describe("resolved production composition", () => {
         "Product Launch screenshot demos require an image or video asset",
       );
     }
+  });
+
+  it("renders the complete Editorial Explainer role sequence in HyperFrames", () => {
+    const html = buildHyperframesCompositionHtml(
+      editorialExplainerFixture as ReelProps,
+    );
+
+    expect(
+      html.match(/data-production-preset="editorial-explainer"/g),
+    ).toHaveLength(5);
+    for (const role of [
+      "headline",
+      "explanation",
+      "diagram",
+      "quote",
+      "summary",
+    ]) {
+      expect(html).toContain(`data-scene-role="${role}"`);
+    }
+    expect(html).toContain("ed-diagram");
+    expect(html).toContain("ed-quote");
+    expect(html).toContain("Editorial principle");
+    expect(reelDurationFrames(editorialExplainerFixture as ReelProps)).toBe(
+      360,
+    );
   });
 });

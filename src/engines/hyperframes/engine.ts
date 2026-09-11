@@ -24,7 +24,7 @@ function rolesForTemplate(templateId: string): readonly ProductionSceneRole[] {
   if (/app-showcase/.test(templateId))
     return ["screenshot-demo", "feature", "hero"];
   if (/list/.test(templateId))
-    return ["tip", "feature", "comparison", "summary"];
+    return ["tip", "feature", "comparison", "diagram", "summary"];
   if (/opener|kinetic/.test(templateId))
     return ["hook", "headline", "emphasis"];
   return ["explanation", "feature", "payoff"];

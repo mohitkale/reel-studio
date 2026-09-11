@@ -1,0 +1,85 @@
+{
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "styleId": "teach-me",
+  "energy": "calm",
+  "preset": { "id": "editorial-explainer", "version": "1.0.0" },
+  "tokens": {
+    "background": "#F3EFE6",
+    "backgroundAccent": "#E8DFCE",
+    "foreground": "#201D18",
+    "muted": "#6D6559",
+    "accent": "#A33E24",
+    "accentSecondary": "#D88A56",
+    "accentForeground": "#FFFAF0",
+    "handle": "@reelstudio",
+    "fontFamily": "Georgia, serif",
+    "radius": 8
+  },
+  "scenes": [
+    {
+      "id": "editorial-headline",
+      "role": "headline",
+      "templateId": "hf-opener",
+      "text": "Why a good first cut makes creative work easier.",
+      "emphasis": ["good first cut"],
+      "order": 0
+    },
+    {
+      "id": "editorial-explanation",
+      "role": "explanation",
+      "templateId": "hf-statement",
+      "text": "A complete draft gives you something concrete to judge, refine, and approve.",
+      "emphasis": ["concrete"],
+      "order": 1
+    },
+    {
+      "id": "editorial-diagram",
+      "role": "diagram",
+      "templateId": "hf-list",
+      "text": "The production loop stays simple.",
+      "emphasis": ["simple"],
+      "items": [
+        "Provide the source",
+        "Choose a visual system",
+        "Produce a first cut",
+        "Refine what matters"
+      ],
+      "order": 2
+    },
+    {
+      "id": "editorial-quote",
+      "role": "quote",
+      "templateId": "hf-quote",
+      "text": "Clarity arrives faster when the whole story is visible.",
+      "emphasis": [],
+      "visual": "Editorial principle",
+      "order": 3
+    },
+    {
+      "id": "editorial-summary",
+      "role": "summary",
+      "templateId": "hf-list",
+      "text": "Start complete. Then make it unmistakably yours.",
+      "emphasis": ["unmistakably yours"],
+      "items": [
+        "Review the story",
+        "Lock the strongest moments",
+        "Export every format"
+      ],
+      "order": 4
+    }
+  ],
+  "timeline": [
+    { "sceneId": "editorial-headline", "startFrame": 0, "durationFrames": 60 },
+    {
+      "sceneId": "editorial-explanation",
+      "startFrame": 60,
+      "durationFrames": 75
+    },
+    { "sceneId": "editorial-diagram", "startFrame": 135, "durationFrames": 75 },
+    { "sceneId": "editorial-quote", "startFrame": 210, "durationFrames": 75 },
+    { "sceneId": "editorial-summary", "startFrame": 285, "durationFrames": 75 }
+  ]
+}

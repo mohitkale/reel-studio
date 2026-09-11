@@ -5,6 +5,7 @@ import {
   REEL_FPS,
   REEL_HEIGHT,
   REEL_WIDTH,
+  reelDurationFrames,
   type ReelProps,
 } from "../compositions/types";
 import { defaultBrandTokens } from "../compositions/tokens";
@@ -59,6 +60,7 @@ export const RemotionRoot: React.FC = () => {
         width: props.width ?? REEL_WIDTH,
         height: props.height ?? REEL_HEIGHT,
         fps: props.fps ?? REEL_FPS,
+        durationInFrames: reelDurationFrames(props),
       })}
     />
   );

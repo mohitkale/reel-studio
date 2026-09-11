@@ -139,3 +139,16 @@ export const COVER_DURATION_SECONDS = 1.5;
 export function coverFrames(fps: number, hasCover: boolean): number {
   return hasCover ? Math.round(fps * COVER_DURATION_SECONDS) : 0;
 }
+
+/** Total composition length for dynamic Remotion metadata and engine exports. */
+export function reelDurationFrames(
+  props: Pick<ReelProps, "timeline" | "coverUrl" | "fps">,
+): number {
+  const fps = props.fps ?? REEL_FPS;
+  const content = props.timeline.reduce(
+    (max, beat) =>
+      Math.max(max, beat.startFrame + Math.max(1, beat.durationFrames)),
+    0,
+  );
+  return Math.max(1, content + coverFrames(fps, Boolean(props.coverUrl)));
+}

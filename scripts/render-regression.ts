@@ -11,6 +11,7 @@ import {
 } from "@remotion/renderer";
 import fixture from "../tests/fixtures/legacy-reel.json";
 import productLaunchFixture from "../tests/fixtures/product-launch-reel.json";
+import editorialExplainerFixture from "../tests/fixtures/editorial-explainer-reel.json";
 import type { ReelProps } from "../src/compositions/types";
 import { TEMPLATES } from "../src/compositions/templates";
 import { buildHyperframesCompositionHtml } from "../src/engines/hyperframes/build-composition";
@@ -19,13 +20,25 @@ import { remotionWebpackOverride } from "../src/remotion/webpack-override";
 async function main() {
   const run = promisify(execFile);
   const args = process.argv.slice(2);
-  const renderProductLaunch = args.includes("--product-launch");
+  const presetArg = args.find((arg) => arg.startsWith("--preset="));
+  const presetId = args.includes("--product-launch")
+    ? "product-launch"
+    : presetArg?.slice("--preset=".length);
+  const presetFixtures: Record<string, unknown> = {
+    "product-launch": productLaunchFixture,
+    "editorial-explainer": editorialExplainerFixture,
+  };
+  if (presetId && !presetFixtures[presetId]) {
+    throw new Error(`Unknown render fixture preset: ${presetId}`);
+  }
+  const renderPreset = Boolean(presetId);
+  const renderProductLaunch = presetId === "product-launch";
   const output = path.resolve(
     ".artifacts/render-regression",
-    renderProductLaunch ? "product-launch" : "legacy",
+    presetId ?? "legacy",
   );
   await mkdir(output, { recursive: true });
-  const engines = args.filter((arg) => arg !== "--product-launch");
+  const engines = args.filter((arg) => !arg.startsWith("--"));
   const selected = engines.length ? engines : ["hyperframes", "remotion"];
   if (
     selected.some((engine) => !["hyperframes", "remotion"].includes(engine))
@@ -39,10 +52,11 @@ async function main() {
         )
       ).toString("base64")}`
     : undefined;
+  const selectedFixture = presetId ? presetFixtures[presetId] : fixture;
   const props = (
     renderProductLaunch
       ? {
-          ...productLaunchFixture,
+          ...(selectedFixture as typeof productLaunchFixture),
           scenes: productLaunchFixture.scenes.map((scene) => ({
             ...scene,
             background: scene.background
@@ -50,7 +64,7 @@ async function main() {
               : undefined,
           })),
         }
-      : fixture
+      : selectedFixture
   ) as ReelProps;
   const expectedFrames = props.timeline.reduce(
     (max, beat) => Math.max(max, beat.startFrame + beat.durationFrames),
@@ -107,8 +121,8 @@ async function main() {
       ])
     ).stdout;
     const yMax = Number(stats.match(/lavfi\.signalstats\.YMAX=(\d+)/)?.[1]);
-    const yLow = Number(stats.match(/lavfi\.signalstats\.YLOW=(\d+)/)?.[1]);
-    if (!Number.isFinite(yMax) || !Number.isFinite(yLow) || yMax - yLow < 120) {
+    const yMin = Number(stats.match(/lavfi\.signalstats\.YMIN=(\d+)/)?.[1]);
+    if (!Number.isFinite(yMax) || !Number.isFinite(yMin) || yMax - yMin < 120) {
       throw new Error(`${engine}: sampled frame has no visible foreground`);
     }
   }
@@ -137,7 +151,7 @@ async function main() {
       );
       process.stdout.write(result.stdout);
     } else {
-      const inputProps: ReelProps = renderProductLaunch
+      const inputProps: ReelProps = renderPreset
         ? props
         : {
             ...props,
@@ -157,14 +171,14 @@ async function main() {
       });
       await renderMedia({
         serveUrl,
-        composition: { ...composition, durationInFrames: expectedFrames },
+        composition,
         inputProps,
         outputLocation: mp4,
         codec: "h264",
         concurrency: 2,
         logLevel: "error",
       });
-      const stillFrames = renderProductLaunch
+      const stillFrames = renderPreset
         ? props.timeline.flatMap((beat) => [
             beat.startFrame,
             beat.startFrame + Math.floor(beat.durationFrames / 2),
@@ -180,7 +194,7 @@ async function main() {
           logLevel: "error",
         });
       }
-      for (const template of renderProductLaunch ? [] : TEMPLATES) {
+      for (const template of renderPreset ? [] : TEMPLATES) {
         const templateProps: ReelProps = {
           ...props,
           scenes: props.scenes.map((scene) => ({
