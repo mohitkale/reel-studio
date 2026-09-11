@@ -32,6 +32,7 @@
     "export:demo-assets": "tsx scripts/export-demo-assets.ts",
     "gen:music": "node scripts/generate-music.mjs",
     "embed:hf-catalog": "node scripts/embed-hf-catalog.mjs",
+    "import:hf-catalog": "tsx scripts/import-hf-catalog.ts",
     "gen:sfx": "node scripts/generate-sfx.mjs",
     "test:unit": "vitest run --exclude src/lib/render-smoke.test.ts",
     "test:render": "tsx scripts/render-regression.ts",

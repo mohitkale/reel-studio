@@ -1,0 +1,797 @@
+{
+  "schemaVersion": 1,
+  "source": "https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry",
+  "sourceRevision": "c93c7654033282e1a66a662a39fb10b8ed273b7d",
+  "registryChecksum": "sha256:3692dcdd030d212e4665892856361ee672ce7f5e9ae7c0eea6e7398646d62830",
+  "items": [
+    {
+      "name": "app-showcase",
+      "type": "block",
+      "templateId": "hf-app-showcase-v1",
+      "title": "App Showcase",
+      "description": "Fitness app product showcase with three floating smartphone screens",
+      "tags": [
+        "showcase",
+        "app",
+        "3d"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "App Showcase from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "duration": 5.5,
+      "registryDependencies": [],
+      "presets": [
+        "product-launch"
+      ],
+      "supportedLayouts": [
+        "landscape"
+      ],
+      "registryItemChecksum": "sha256:c1cc7ac0ec8d959e2c27b2178d770aa9df126967f8e4f866876a9c6053d690dc",
+      "files": [
+        {
+          "path": "blocks/app-showcase/app-showcase.html",
+          "target": "compositions/app-showcase.html",
+          "type": "hyperframes:composition",
+          "checksum": "sha256:c7e1b4d8ec2a2c1f70a8ed67a147ba5c4985074eb475d611b2bec6d921b10ade",
+          "bytes": 32362
+        }
+      ]
+    },
+    {
+      "name": "ui-3d-reveal",
+      "type": "block",
+      "templateId": "hf-ui-3d-reveal-v1",
+      "title": "3D UI Reveal",
+      "description": "Perspective 3D reveal animation for UI elements",
+      "tags": [
+        "showcase",
+        "3d",
+        "reveal"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "3D UI Reveal from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "duration": 13,
+      "registryDependencies": [],
+      "presets": [
+        "product-launch",
+        "cinematic-brand"
+      ],
+      "supportedLayouts": [
+        "landscape"
+      ],
+      "registryItemChecksum": "sha256:3d0c1a9a070c7390721c8332ae8cab2f600409869455cf41ce8a0b885f87ac08",
+      "files": [
+        {
+          "path": "blocks/ui-3d-reveal/ui-3d-reveal.html",
+          "target": "compositions/ui-3d-reveal.html",
+          "type": "hyperframes:composition",
+          "checksum": "sha256:fbb3f7960686a1f5932bfd07b105c3029cdd898f113911be662e6bc36892e993",
+          "bytes": 100522
+        }
+      ]
+    },
+    {
+      "name": "data-chart",
+      "type": "block",
+      "templateId": "hf-data-chart-v1",
+      "title": "Data Chart",
+      "description": "Animated bar + line chart with staggered reveal, NYT-style typography, and value labels",
+      "tags": [
+        "data",
+        "chart",
+        "statistics"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Data Chart from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "duration": 15,
+      "registryDependencies": [],
+      "presets": [
+        "data-story"
+      ],
+      "supportedLayouts": [
+        "landscape"
+      ],
+      "registryItemChecksum": "sha256:606685b75bd4755e45d816fbfc5221f95cbdb5d7d32b51cd0c3a03921143f4e0",
+      "files": [
+        {
+          "path": "blocks/data-chart/data-chart.html",
+          "target": "compositions/data-chart.html",
+          "type": "hyperframes:composition",
+          "checksum": "sha256:02ccb24bfa21850d19c2842853256a3c47d5fd25dc746d6b99986bef268bf027",
+          "bytes": 13870
+        }
+      ]
+    },
+    {
+      "name": "flowchart",
+      "type": "block",
+      "templateId": "hf-flowchart-v1",
+      "title": "Flowchart",
+      "description": "Animated decision tree with SVG connectors, sticky-note nodes, cursor interaction, and typing correction",
+      "tags": [
+        "diagram",
+        "flowchart",
+        "interactive"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Flowchart from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "duration": 12,
+      "registryDependencies": [],
+      "presets": [
+        "editorial-explainer",
+        "developer-demo"
+      ],
+      "supportedLayouts": [
+        "landscape"
+      ],
+      "registryItemChecksum": "sha256:52d6d3f50e2bc50c72ec923e3c0260e2687b59c78c1ffcdce340a8ba58223424",
+      "files": [
+        {
+          "path": "blocks/flowchart/flowchart.html",
+          "target": "compositions/flowchart.html",
+          "type": "hyperframes:composition",
+          "checksum": "sha256:c5432d04f4f720de031377a35fbf07f1c2cbee72b04b40f7b79b0e26f5fd63bc",
+          "bytes": 13886
+        }
+      ]
+    },
+    {
+      "name": "code-diff",
+      "type": "block",
+      "templateId": "hf-code-diff-v1",
+      "title": "Code Diff",
+      "description": "An edit shown as a colored diff — removed lines collapse in red, added lines expand in green.",
+      "tags": [
+        "code",
+        "code-animation",
+        "diff",
+        "developer"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Code Diff from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "duration": 6,
+      "registryDependencies": [],
+      "presets": [
+        "developer-demo"
+      ],
+      "supportedLayouts": [
+        "landscape"
+      ],
+      "registryItemChecksum": "sha256:e68d7c12d89c91e908ef331f394523e4f98af5d939a94d018fb57bc8bb45e260",
+      "files": [
+        {
+          "path": "blocks/code-diff/code-diff.html",
+          "target": "compositions/code-diff.html",
+          "type": "hyperframes:composition",
+          "checksum": "sha256:5356890fec4947e384b044d7dda3d03601432125a4ce60087caac0e3639d9d93",
+          "bytes": 26936
+        }
+      ]
+    },
+    {
+      "name": "code-snippet-dark-modern",
+      "type": "block",
+      "templateId": "hf-code-modern-v1",
+      "title": "Code Snippet - Dark Modern",
+      "description": "VS Code workbench with per-character typing animation in the Dark Modern theme. Full editor chrome with activity bar, sidebar, tabs, terminal, and status bar.",
+      "tags": [
+        "code",
+        "developer",
+        "showcase",
+        "vscode"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Code Snippet - Dark Modern from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "duration": 11,
+      "registryDependencies": [],
+      "presets": [
+        "developer-demo"
+      ],
+      "supportedLayouts": [
+        "landscape"
+      ],
+      "registryItemChecksum": "sha256:2be2cf9e83775f0d68f2bcab1528f3cabb35a7f847baeec27842864101cded80",
+      "files": [
+        {
+          "path": "blocks/code-snippet-dark-modern/code-snippet-dark-modern.html",
+          "target": "compositions/code-snippet-dark-modern.html",
+          "type": "hyperframes:composition",
+          "checksum": "sha256:314ea4ab481fb60cfe6a51560fea65c69a72477c0cf4bb5d8616c046daf66e2f",
+          "bytes": 39997
+        },
+        {
+          "path": "blocks/code-snippet-dark-modern/background.jpeg",
+          "target": "assets/background.jpeg",
+          "type": "hyperframes:asset",
+          "checksum": "sha256:056cc5ffda649bc6ca15568722d808e09fca72f0a9865e215b76101ee86e38e5",
+          "bytes": 436888
+        }
+      ]
+    },
+    {
+      "name": "logo-outro",
+      "type": "block",
+      "templateId": "hf-logo-outro-v1",
+      "title": "Logo Outro",
+      "description": "Cinematic logo reveal with piece-by-piece assembly, glow bloom, tagline fade-in, and URL pill",
+      "tags": [
+        "branding",
+        "outro",
+        "logo"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Logo Outro from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "dimensions": {
+        "width": 1920,
+        "height": 1080
+      },
+      "duration": 6,
+      "registryDependencies": [],
+      "presets": [
+        "product-launch",
+        "cinematic-brand"
+      ],
+      "supportedLayouts": [
+        "landscape"
+      ],
+      "registryItemChecksum": "sha256:9b440ac721abf50b9776405466240de13866288cc4d93e464b78ef5d5312c40a",
+      "files": [
+        {
+          "path": "blocks/logo-outro/logo-outro.html",
+          "target": "compositions/logo-outro.html",
+          "type": "hyperframes:composition",
+          "checksum": "sha256:b3ed1e2dbdbe1f4a36bcf11e8a75f1f7eca7c29e5f75e86628fd8922629364ff",
+          "bytes": 6892
+        }
+      ]
+    },
+    {
+      "name": "notes-reveal",
+      "type": "block",
+      "templateId": "hf-notes-reveal-v1",
+      "title": "Notes Reveal",
+      "description": "A personal note is typed character by character in a notes app - caret riding every letter, the page scrolling up on measured settle curves as each line lands - then cuts to a hand-lettered paper card with a marker headline and a ticked checklist",
+      "tags": [
+        "showcase",
+        "mock-ui",
+        "notes",
+        "typing",
+        "vertical",
+        "ad-template"
+      ],
+      "author": "Miao Yang",
+      "license": "Apache-2.0",
+      "attribution": "Notes Reveal by Miao Yang (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "dimensions": {
+        "width": 1080,
+        "height": 1920
+      },
+      "duration": 24.85,
+      "registryDependencies": [],
+      "presets": [
+        "editorial-explainer",
+        "creator-punch"
+      ],
+      "supportedLayouts": [
+        "landscape"
+      ],
+      "registryItemChecksum": "sha256:cd36456fbcec78aafb461f23308956625be0fd4034ebf26494016a19d1bd9a99",
+      "files": [
+        {
+          "path": "blocks/notes-reveal/notes-reveal.html",
+          "target": "compositions/notes-reveal.html",
+          "type": "hyperframes:composition",
+          "checksum": "sha256:b607a8fb14db5da3eec3cebd455723338dbe52ccae5dffe0d9c0c71ae9b86622",
+          "bytes": 59707
+        },
+        {
+          "path": "blocks/notes-reveal/assets/permanent-marker-400.woff2",
+          "target": "assets/permanent-marker-400.woff2",
+          "type": "hyperframes:asset",
+          "checksum": "sha256:8963f64fa28dc4aea162405d784baa23ff6499df554d9b4cdee898e28d19cca4",
+          "bytes": 30112
+        },
+        {
+          "path": "blocks/notes-reveal/assets/courier-prime-400.woff2",
+          "target": "assets/courier-prime-400.woff2",
+          "type": "hyperframes:asset",
+          "checksum": "sha256:a634cb9e7783af7e66d17e1dae9c859b8748da8174641b53d68b3b05de8ebce9",
+          "bytes": 15604
+        },
+        {
+          "path": "blocks/notes-reveal/assets/courier-prime-700.woff2",
+          "target": "assets/courier-prime-700.woff2",
+          "type": "hyperframes:asset",
+          "checksum": "sha256:654a1d16c0b027ead89781bd3a4360d7f0af17a3ddf78c287d0e1843c6bca8d7",
+          "bytes": 16204
+        },
+        {
+          "path": "blocks/notes-reveal/assets/hyperframes-logo-black.svg",
+          "target": "assets/hyperframes-logo-black.svg",
+          "type": "hyperframes:asset",
+          "checksum": "sha256:dc156e7c21b474746c2ff3b651b96c90eb44745cc88252f0f36c140faf63cb59",
+          "bytes": 7245
+        },
+        {
+          "path": "blocks/notes-reveal/TEMPLATE.md",
+          "target": "TEMPLATE.md",
+          "type": "hyperframes:asset",
+          "checksum": "sha256:13920d158edb7d5500482794636a32e9954c1a57329d75448aad2e2ac25de31e",
+          "bytes": 3210
+        }
+      ]
+    },
+    {
+      "name": "browser-device-stage",
+      "type": "component",
+      "title": "Browser Device Stage",
+      "description": "A generic app surface in token-native device chrome (browser, window, or phone). The screen is a slot for caller img/video/HTML with a token-styled skeleton default; one settle entrance, a readable hold, and an optional screen swap.",
+      "tags": [
+        "stage",
+        "product-demo",
+        "device",
+        "browser",
+        "phone",
+        "slot",
+        "chrome"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Browser Device Stage from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "registryDependencies": [],
+      "presets": [
+        "product-launch",
+        "developer-demo"
+      ],
+      "supportedLayouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "registryItemChecksum": "sha256:1fe166f10005e59380400b8bb799364343d73b10bb2a94923c8fe47473c3bcd2",
+      "files": [
+        {
+          "path": "components/browser-device-stage/browser-device-stage.html",
+          "target": "compositions/components/browser-device-stage.html",
+          "type": "hyperframes:snippet",
+          "checksum": "sha256:59b20814d38bf58ec1c6c7727ed954e89e9f38a7392eddf6d266ce586bad6764",
+          "bytes": 24680
+        }
+      ]
+    },
+    {
+      "name": "before-after-wipe",
+      "type": "component",
+      "title": "Before After Wipe",
+      "description": "Two full-bleed content slots compare before and after states as a persistent divider wipes the after layer over the before layer and rests at a configurable split. Callers fill the named before/after slot panels; token-styled defaults render when a slot is left empty.",
+      "tags": [
+        "prop",
+        "ui-props",
+        "compare",
+        "holdable",
+        "before-after",
+        "wipe",
+        "slots"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Before After Wipe from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "registryDependencies": [],
+      "presets": [
+        "product-launch",
+        "data-story"
+      ],
+      "supportedLayouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "registryItemChecksum": "sha256:7b1927e8c2f7368e5d3af755cd1be00425124246bbf64b391e0465905431c87b",
+      "files": [
+        {
+          "path": "components/before-after-wipe/before-after-wipe.html",
+          "target": "compositions/components/before-after-wipe.html",
+          "type": "hyperframes:snippet",
+          "checksum": "sha256:c04e8bf1bfbcec71d0921a03a786cc09e660732428aa04bf79036a30b7755e09",
+          "bytes": 19440
+        }
+      ]
+    },
+    {
+      "name": "caption-editorial-emphasis",
+      "type": "component",
+      "title": "Editorial Emphasis",
+      "description": "Dual-font system with dramatic size contrast for emphasis words",
+      "tags": [
+        "captions",
+        "caption-style",
+        "editorial",
+        "typography",
+        "emphasis"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Editorial Emphasis from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "registryDependencies": [],
+      "presets": [
+        "editorial-explainer"
+      ],
+      "supportedLayouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "registryItemChecksum": "sha256:9ddbc86a0cec3b22fdd2ae9600b4d4d7e06822dda7ad730358924a92b33c243c",
+      "files": [
+        {
+          "path": "components/caption-editorial-emphasis/caption-editorial-emphasis.html",
+          "target": "compositions/components/caption-editorial-emphasis.html",
+          "type": "hyperframes:snippet",
+          "checksum": "sha256:6144571b6c73dbdec282284fe2277d3c958e15cddaf362295ba9cca02e705d1c",
+          "bytes": 12117
+        }
+      ]
+    },
+    {
+      "name": "caption-pill-karaoke",
+      "type": "component",
+      "title": "Pill Karaoke",
+      "description": "Pill-shaped container with per-word karaoke color highlight",
+      "tags": [
+        "captions",
+        "caption-style",
+        "karaoke",
+        "pill"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Pill Karaoke from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "registryDependencies": [],
+      "presets": [
+        "creator-punch"
+      ],
+      "supportedLayouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "registryItemChecksum": "sha256:80dea198e8b91a1f77693eee30ba45632fa4974444d9ff866e082bff30253390",
+      "files": [
+        {
+          "path": "components/caption-pill-karaoke/caption-pill-karaoke.html",
+          "target": "compositions/components/caption-pill-karaoke.html",
+          "type": "hyperframes:snippet",
+          "checksum": "sha256:cdbbc72af7fbac440c0bf5750cf9e3d4ded20f26588b00ac79399342ca60b3e3",
+          "bytes": 13113
+        }
+      ]
+    },
+    {
+      "name": "caption-texture",
+      "type": "component",
+      "title": "Texture",
+      "description": "Flowing texture mask over large uppercase text — ships with 6 textures (lava, marble, metal, wood, concrete, rock), configurable via the texture variable",
+      "tags": [
+        "captions",
+        "caption-style",
+        "texture",
+        "mask"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Texture from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "registryDependencies": [],
+      "presets": [
+        "cinematic-brand"
+      ],
+      "supportedLayouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "registryItemChecksum": "sha256:a517bab95a57639c70c98d8be43e4f59a01a5a7ccce7a811d44900ddfa80765f",
+      "files": [
+        {
+          "path": "components/caption-texture/caption-texture.html",
+          "target": "compositions/components/caption-texture.html",
+          "type": "hyperframes:snippet",
+          "checksum": "sha256:472df187ffbe3e9ef04ce5bc53208da49b3abfc706531f44828e87045b4ebcad",
+          "bytes": 7082
+        },
+        {
+          "path": "components/caption-texture/lava.png",
+          "target": "compositions/components/lava.png",
+          "type": "hyperframes:asset",
+          "checksum": "sha256:a921282ec9f570e2e2d7591dd72c284ff054613fa370f8981090332924e2ce5c",
+          "bytes": 74455
+        },
+        {
+          "path": "components/caption-texture/marble-012.png",
+          "target": "compositions/components/marble-012.png",
+          "type": "hyperframes:asset",
+          "checksum": "sha256:a0429791f03a0ee265ede7c11f802db3e3077fd783d5e7e1061c7e3da770a018",
+          "bytes": 95146
+        },
+        {
+          "path": "components/caption-texture/metal-046-b.png",
+          "target": "compositions/components/metal-046-b.png",
+          "type": "hyperframes:asset",
+          "checksum": "sha256:8d2f2ff3544fa96155f4bb89d376953f11b1723f13d3110af6f9af07c659ab1b",
+          "bytes": 100739
+        },
+        {
+          "path": "components/caption-texture/wood-066.png",
+          "target": "compositions/components/wood-066.png",
+          "type": "hyperframes:asset",
+          "checksum": "sha256:ee2b237151cebee29c18aba3deea089592be20e92694c5a84f4b6e086df1689d",
+          "bytes": 83931
+        },
+        {
+          "path": "components/caption-texture/concrete-042-a.png",
+          "target": "compositions/components/concrete-042-a.png",
+          "type": "hyperframes:asset",
+          "checksum": "sha256:8ee5f31943e9ada8286b2e847eeb9a64a4bff3a8732efff54776bc5c1c6b8176",
+          "bytes": 86364
+        },
+        {
+          "path": "components/caption-texture/rock-058.png",
+          "target": "compositions/components/rock-058.png",
+          "type": "hyperframes:asset",
+          "checksum": "sha256:e3da7340588b79b7772b0b9fa13c2458038467e9c0b3b0d62c9536db92c95e6d",
+          "bytes": 80268
+        }
+      ]
+    },
+    {
+      "name": "beat-accent",
+      "type": "component",
+      "title": "Beat Accent",
+      "description": "A single music-hit sting: impact flash, micro scale-pulse on the subject, immediate decay.",
+      "tags": [
+        "motion-primitive",
+        "effects",
+        "burst",
+        "sting",
+        "emphasize",
+        "impact"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Beat Accent from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "registryDependencies": [],
+      "presets": [
+        "creator-punch"
+      ],
+      "supportedLayouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "registryItemChecksum": "sha256:0662763a70d609a9349dd70d9261fc8d6f2a12eb5d88abeef4824315e3719ec7",
+      "files": [
+        {
+          "path": "components/beat-accent/beat-accent.html",
+          "target": "compositions/components/beat-accent.html",
+          "type": "hyperframes:snippet",
+          "checksum": "sha256:e72f8d23d81459b88e841b5ab9cb3eaf9b4a1a3047f1ab830bf48f769897dfdc",
+          "bytes": 12754
+        }
+      ]
+    },
+    {
+      "name": "grain-overlay",
+      "type": "component",
+      "title": "Grain Overlay",
+      "description": "Animated film grain texture overlay using CSS keyframes — adds warmth and analog character to any composition",
+      "tags": [
+        "texture",
+        "grain",
+        "overlay",
+        "film"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Grain Overlay from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "registryDependencies": [],
+      "presets": [
+        "editorial-explainer",
+        "cinematic-brand"
+      ],
+      "supportedLayouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "registryItemChecksum": "sha256:bd0c8976bc2cf7c6ed6aae3a64023c73e61505b604dfba97220ed27bbca0e897",
+      "files": [
+        {
+          "path": "components/grain-overlay/grain-overlay.html",
+          "target": "compositions/components/grain-overlay.html",
+          "type": "hyperframes:snippet",
+          "checksum": "sha256:97a0da8f26feca9574abcf08b8186cef10ea4819b2aeabc30547ae16ed9ae80d",
+          "bytes": 1818
+        }
+      ]
+    },
+    {
+      "name": "simulated-cursor",
+      "type": "component",
+      "title": "Simulated Cursor",
+      "description": "A lightweight cursor pointer and click pulse for product walkthroughs and agent UI demos",
+      "tags": [
+        "video-primitive",
+        "motion-primitive",
+        "cursor",
+        "ui",
+        "walkthrough"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Simulated Cursor from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "registryDependencies": [],
+      "presets": [
+        "product-launch",
+        "developer-demo"
+      ],
+      "supportedLayouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "registryItemChecksum": "sha256:8b83f0162bc1d16641b2b6244dd9ac77bc4c73e1be300808f44e403c9a9bf342",
+      "files": [
+        {
+          "path": "components/simulated-cursor/simulated-cursor.html",
+          "target": "compositions/components/simulated-cursor.html",
+          "type": "hyperframes:snippet",
+          "checksum": "sha256:ea72f5eacad0b15b3ecb77ea5266b4aa173abcb6ca9c1a9924b8a3c1f726efd3",
+          "bytes": 6555
+        }
+      ]
+    },
+    {
+      "name": "animated-bar-chart",
+      "type": "component",
+      "title": "Animated Bar Chart",
+      "description": "A compact data card with deterministic bar growth and value callouts.",
+      "tags": [
+        "data"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Animated Bar Chart from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "registryDependencies": [],
+      "presets": [
+        "data-story"
+      ],
+      "supportedLayouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "registryItemChecksum": "sha256:8803c6702b9718c3ceec3b02ef63cb9df5cd49e05d3b9d3abaf025507bbbdd86",
+      "files": [
+        {
+          "path": "components/animated-bar-chart/animated-bar-chart.html",
+          "target": "compositions/components/animated-bar-chart.html",
+          "type": "hyperframes:snippet",
+          "checksum": "sha256:ceae5ee442ace07edfc115ed509982805c311e0c57a07517d3c95e1d60c898f2",
+          "bytes": 2778
+        }
+      ]
+    },
+    {
+      "name": "typewriter",
+      "type": "component",
+      "title": "Typewriter",
+      "description": "Character-by-character text reveal with a deterministic blinking cursor.",
+      "tags": [
+        "video-primitive",
+        "motion-primitive",
+        "typography"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Typewriter from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "registryDependencies": [],
+      "presets": [
+        "developer-demo"
+      ],
+      "supportedLayouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "registryItemChecksum": "sha256:0962e500db4533f34d0071cddedc8dd10fa4bee3f4e662245feed569d73428c5",
+      "files": [
+        {
+          "path": "components/typewriter/typewriter.html",
+          "target": "compositions/components/typewriter.html",
+          "type": "hyperframes:snippet",
+          "checksum": "sha256:98b1a2780a8ce480309af4ff9773b50742a2ce6fc05f0f7307aa3f5434436379",
+          "bytes": 4853
+        }
+      ]
+    },
+    {
+      "name": "vignette",
+      "type": "component",
+      "title": "Vignette",
+      "description": "Cinematic radial vignette overlay using a pure-CSS gradient — darkens the edges to pull focus toward the center",
+      "tags": [
+        "vignette",
+        "overlay",
+        "cinematic",
+        "effect"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Vignette from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "registryDependencies": [],
+      "presets": [
+        "cinematic-brand"
+      ],
+      "supportedLayouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "registryItemChecksum": "sha256:f3b57510f11983f0aa28453ef17a559941e686e0c947438843c5622305c2fe0f",
+      "files": [
+        {
+          "path": "components/vignette/vignette.html",
+          "target": "compositions/components/vignette.html",
+          "type": "hyperframes:snippet",
+          "checksum": "sha256:b825476ca7bb89c0afbd6f1157b9813ac6a1ac82e9aa13a7cecd7ae305ebb2d5",
+          "bytes": 1491
+        }
+      ]
+    },
+    {
+      "name": "shimmer-sweep",
+      "type": "component",
+      "title": "Shimmer Sweep",
+      "description": "Animated light sweep across text or elements using a CSS gradient mask — ideal for AI accents and premium reveals",
+      "tags": [
+        "text",
+        "shimmer",
+        "highlight",
+        "effect"
+      ],
+      "license": "Apache-2.0",
+      "attribution": "Shimmer Sweep from the HyperFrames catalog (https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry)",
+      "registryDependencies": [],
+      "presets": [
+        "product-launch",
+        "cinematic-brand"
+      ],
+      "supportedLayouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "registryItemChecksum": "sha256:e064e27a69b1622c925c706f868e0134478ae4e411376425142c118d0492a130",
+      "files": [
+        {
+          "path": "components/shimmer-sweep/shimmer-sweep.html",
+          "target": "compositions/components/shimmer-sweep.html",
+          "type": "hyperframes:snippet",
+          "checksum": "sha256:0358db4e2ec9137c65771e17139741a13e2c12a37be5688fc6cfede9a718d8d6",
+          "bytes": 1917
+        }
+      ]
+    }
+  ]
+}

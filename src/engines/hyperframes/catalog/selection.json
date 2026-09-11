@@ -1,0 +1,135 @@
+{
+  "source": "https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry",
+  "revision": "c93c7654033282e1a66a662a39fb10b8ed273b7d",
+  "license": "Apache-2.0",
+  "items": [
+    {
+      "name": "app-showcase",
+      "type": "block",
+      "templateId": "hf-app-showcase-v1",
+      "presets": ["product-launch"],
+      "layouts": ["landscape"]
+    },
+    {
+      "name": "ui-3d-reveal",
+      "type": "block",
+      "templateId": "hf-ui-3d-reveal-v1",
+      "presets": ["product-launch", "cinematic-brand"],
+      "layouts": ["landscape"]
+    },
+    {
+      "name": "data-chart",
+      "type": "block",
+      "templateId": "hf-data-chart-v1",
+      "presets": ["data-story"],
+      "layouts": ["landscape"]
+    },
+    {
+      "name": "flowchart",
+      "type": "block",
+      "templateId": "hf-flowchart-v1",
+      "presets": ["editorial-explainer", "developer-demo"],
+      "layouts": ["landscape"]
+    },
+    {
+      "name": "code-diff",
+      "type": "block",
+      "templateId": "hf-code-diff-v1",
+      "presets": ["developer-demo"],
+      "layouts": ["landscape"]
+    },
+    {
+      "name": "code-snippet-dark-modern",
+      "type": "block",
+      "templateId": "hf-code-modern-v1",
+      "presets": ["developer-demo"],
+      "layouts": ["landscape"]
+    },
+    {
+      "name": "logo-outro",
+      "type": "block",
+      "templateId": "hf-logo-outro-v1",
+      "presets": ["product-launch", "cinematic-brand"],
+      "layouts": ["landscape"]
+    },
+    {
+      "name": "notes-reveal",
+      "type": "block",
+      "templateId": "hf-notes-reveal-v1",
+      "presets": ["editorial-explainer", "creator-punch"],
+      "layouts": ["landscape"]
+    },
+    {
+      "name": "browser-device-stage",
+      "type": "component",
+      "presets": ["product-launch", "developer-demo"],
+      "layouts": ["portrait", "landscape", "square"]
+    },
+    {
+      "name": "before-after-wipe",
+      "type": "component",
+      "presets": ["product-launch", "data-story"],
+      "layouts": ["portrait", "landscape", "square"]
+    },
+    {
+      "name": "caption-editorial-emphasis",
+      "type": "component",
+      "presets": ["editorial-explainer"],
+      "layouts": ["portrait", "landscape", "square"]
+    },
+    {
+      "name": "caption-pill-karaoke",
+      "type": "component",
+      "presets": ["creator-punch"],
+      "layouts": ["portrait", "landscape", "square"]
+    },
+    {
+      "name": "caption-texture",
+      "type": "component",
+      "presets": ["cinematic-brand"],
+      "layouts": ["portrait", "landscape", "square"]
+    },
+    {
+      "name": "beat-accent",
+      "type": "component",
+      "presets": ["creator-punch"],
+      "layouts": ["portrait", "landscape", "square"]
+    },
+    {
+      "name": "grain-overlay",
+      "type": "component",
+      "presets": ["editorial-explainer", "cinematic-brand"],
+      "layouts": ["portrait", "landscape", "square"]
+    },
+    {
+      "name": "simulated-cursor",
+      "type": "component",
+      "presets": ["product-launch", "developer-demo"],
+      "layouts": ["portrait", "landscape", "square"]
+    },
+    {
+      "name": "animated-bar-chart",
+      "type": "component",
+      "presets": ["data-story"],
+      "layouts": ["portrait", "landscape", "square"]
+    },
+    {
+      "name": "typewriter",
+      "type": "component",
+      "presets": ["developer-demo"],
+      "layouts": ["portrait", "landscape", "square"]
+    },
+    {
+      "name": "vignette",
+      "type": "component",
+      "presets": ["cinematic-brand"],
+      "layouts": ["portrait", "landscape", "square"]
+    },
+    {
+      "name": "shimmer-sweep",
+      "type": "component",
+      "presets": ["product-launch", "cinematic-brand"],
+      "layouts": ["portrait", "landscape", "square"]
+    }
+  ]
+}
