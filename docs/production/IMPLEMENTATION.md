@@ -16,8 +16,8 @@ Work in the numbered order. For each task, record acceptance evidence and commit
 - [x] 03. Node, Next, React and framework upgrade. Evidence: Next 16.3.4 production build, typecheck, lint and unit tests pass; commit recorded with task 04 because the lockfile and Prisma adapter migration are atomic.
 - [x] 04. Prisma upgrade and safe migration baseline. Evidence: Prisma 7.10 migration, fresh/legacy database tests, populated demo seed, backup and drift rejection; `36a4ef1`.
 - [x] 05. HyperFrames runtime compatibility. Depends on 4. Evidence: producer 0.8.33 and CLI 0.8.27; clean CLI contract/layout/contrast validation; locally bundled GSAP; real dual-engine MP4 regression with visible foreground and a seekable root timeline. SHA: `5c0aa88`.
-- [x] 06. Remotion synchronized upgrade. Depends on 5. Evidence: all Remotion packages at 4.0.523 and Zod 4.5.4; `remotion versions`, typecheck, lint and 105 unit tests pass; real H.264 render exercises Three.js and Lottie; still matrix covers all seven legacy templates. SHA: this commit.
-- [ ] 07. Remaining packages and first compatibility gate. Depends on 6. Evidence/SHA: pending.
+- [x] 06. Remotion synchronized upgrade. Depends on 5. Evidence: all Remotion packages at 4.0.523 and Zod 4.5.4; `remotion versions`, typecheck, lint and 105 unit tests pass; real H.264 render exercises Three.js and Lottie; still matrix covers all seven legacy templates. SHA: `79de198`.
+- [x] 07. Remaining packages and first compatibility gate. Depends on 6. Evidence: exact direct pins; clean `npm ci`; valid peer tree; zero-warning lint; typecheck; 106 tests; Next production build; real dual-engine renders and seven-template still matrix; secret scan. Compatibility and advisory exceptions are recorded in `UPGRADES.md`. SHA: this commit.
 - [ ] 08. Versioned production contracts. Depends on 7. Evidence/SHA: pending.
 - [ ] 09. Catalog provenance and version retention. Depends on 8. Evidence/SHA: pending.
 - [ ] 10. Shared layout and media inputs. Depends on 9. Evidence/SHA: pending.
@@ -47,6 +47,7 @@ Work in the numbered order. For each task, record acceptance evidence and commit
 - Typecheck and secret scan passed in initial review.
 - 99 non-render tests passed; render smoke deliberately excluded from this initial fast pass.
 - Lint: five existing errors (effect state updates in three UI components, one JSX apostrophe, one require import) and four warnings. Resolve before gate 7.
+- Gate 1: all baseline lint errors and warnings are resolved; the complete clean-install validation matrix passes.
 - Full package inventory: `dependencies.json`; targets freeze when audit completes.
 
 ## Acceptance matrix

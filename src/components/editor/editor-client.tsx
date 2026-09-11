@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Video, Loader2, Sparkles, Undo2, Braces, ChevronDown, Eye, EyeOff, BarChart2, Gauge, Zap, Gem, Clapperboard } from "lucide-react";
 
 import { ORIENTATIONS, ORIENTATION_LABELS, type Orientation } from "@/lib/orientation";
@@ -67,6 +68,7 @@ const TAKE_CLEARED = "__cleared__";
 const takeKey = (scriptId: string) => `reel-studio:selected-take:${scriptId}`;
 
 export function EditorClient({ scriptId }: { scriptId: string }) {
+  const router = useRouter();
   const { data: script, isLoading, isError, error } = useScript(scriptId);
 
   const addScene = useAddScene(scriptId);
@@ -182,7 +184,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             order: selectedScene.order,
           }
         : null,
-    [selectedScene, script?.hideText, scenes, videoEngine],
+    [selectedScene, script?.hideText, videoEngine],
   );
   // A take stays valid as long as its spoken text still matches the script
   // (resolveReelTimeline matches by text, so background/template/effect edits
@@ -338,9 +340,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             description: "Track progress on the Renders page.",
             action: {
               label: "View",
-              onClick: () => {
-                window.location.href = "/renders";
-              },
+              onClick: () => router.push("/renders"),
             },
           });
         },

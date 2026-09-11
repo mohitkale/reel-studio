@@ -6,7 +6,7 @@ import { z } from "zod";
 import { listSceneClipsForScene } from "@/library/repositories/scene-clips";
 import { generateSceneClip } from "@/library/scene-voice-service";
 import { PROVIDER_IDS } from "@/providers/voice/types";
-import { getVoiceJob, upsertVoiceJob } from "@/lib/voice-queue";
+import { upsertVoiceJob } from "@/lib/voice-queue";
 import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 

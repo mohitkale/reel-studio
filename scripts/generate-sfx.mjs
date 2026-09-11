@@ -80,27 +80,6 @@ function noise(n, seed) {
   return out;
 }
 
-function envADSR(n, a, d, s, r) {
-  const out = new Float64Array(n);
-  const aN = Math.max(1, Math.floor(a * SR));
-  const dN = Math.max(1, Math.floor(d * SR));
-  const rN = Math.max(1, Math.floor(r * SR));
-  const sustainStart = aN + dN;
-  const releaseStart = Math.max(sustainStart, n - rN);
-  for (let i = 0; i < n; i++) {
-    if (i < aN) out[i] = i / aN;
-    else if (i < sustainStart) {
-      const t = (i - aN) / dN;
-      out[i] = 1 - (1 - s) * t;
-    } else if (i < releaseStart) out[i] = s;
-    else {
-      const t = (i - releaseStart) / Math.max(1, n - releaseStart);
-      out[i] = s * (1 - t);
-    }
-  }
-  return out;
-}
-
 /** Soft cinematic air whoosh — band-swept noise, not a beep. */
 function whoosh(dur = 0.62) {
   const n = Math.floor(SR * dur);
@@ -117,7 +96,8 @@ function whoosh(dur = 0.62) {
     // Subtle pitchy grit under the air.
     phase += (180 + 420 * t) / SR;
     const grit = Math.sin(2 * Math.PI * phase) * 0.04 * (1 - t);
-    out[i] = (air[i] * 0.75 * bright + body[i] * 0.35 * (1 - t * 0.5) + grit) * env;
+    out[i] =
+      (air[i] * 0.75 * bright + body[i] * 0.35 * (1 - t * 0.5) + grit) * env;
   }
   return normalize(Array.from(out), 0.68);
 }
