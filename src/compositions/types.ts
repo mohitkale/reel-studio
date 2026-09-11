@@ -34,6 +34,19 @@ export interface SceneBackground {
   muted?: boolean;
 }
 
+export interface SceneChartSeries {
+  label: string;
+  values: number[];
+  unit?: string;
+}
+
+/** User-supplied chart data. Renderers must never synthesize missing values. */
+export interface SceneChartData {
+  labels: string[];
+  series: SceneChartSeries[];
+  sourceAttribution?: string;
+}
+
 /** A scene as the video engine consumes it (template + text + emphasis + optional visual). */
 export interface ReelScene {
   id: string;
@@ -45,6 +58,7 @@ export interface ReelScene {
   background?: SceneBackground;
   /** Explicit list items for list/checklist templates (overrides text splitting). */
   items?: string[];
+  chart?: SceneChartData;
   /** When true, suppress the on-screen text/visual and show just the background. */
   hideText?: boolean;
   /** Emotional/visual tone; picks the dynamic background treatment when there's no photo/video background. */

@@ -61,6 +61,16 @@ export function resolveProductionComposition(
       emphasis: [...scene.emphasis],
       visual: scene.visual,
       items: scene.items ? [...scene.items] : undefined,
+      chart: scene.chart
+        ? {
+            ...scene.chart,
+            labels: [...scene.chart.labels],
+            series: scene.chart.series.map((series) => ({
+              ...series,
+              values: [...series.values],
+            })),
+          }
+        : undefined,
       background: backgroundAsset
         ? {
             type: backgroundAsset.type as "image" | "video",

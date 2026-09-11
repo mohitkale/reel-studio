@@ -30,21 +30,14 @@ function packLines(
   maxChars = 18,
   maxWordsPerLine = 99,
 ): string[] {
-  const words = text
-    .replace(/\n+/g, " ")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
+  const words = text.replace(/\n+/g, " ").trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return [];
   const lines: string[] = [];
   let cur = "";
   let curWords = 0;
   for (const w of words) {
     const next = cur ? `${cur} ${w}` : w;
-    if (
-      cur &&
-      (next.length > maxChars || curWords >= maxWordsPerLine)
-    ) {
+    if (cur && (next.length > maxChars || curWords >= maxWordsPerLine)) {
       lines.push(cur);
       cur = w;
       curWords = 1;
@@ -160,19 +153,18 @@ function paletteFor(mood?: SceneMood): Palette {
 }
 
 /** Parse a count-up target from visual/text (90%, 10x, $10k). */
-function parseMoneyTargetLocal(visual: string | undefined, text: string): number {
-  const blob = `${visual ?? ""} ${text}`;
-  const m = blob.match(
+function parseMoneyTargetLocal(visual: string | undefined): number | null {
+  const m = visual?.match(
     /\$?\s*([\d]{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)\s*([kKmMbB])?/,
   );
-  if (!m) return 100;
+  if (!m) return null;
   let n = Number(m[1].replace(/,/g, ""));
-  if (!Number.isFinite(n)) return 100;
+  if (!Number.isFinite(n)) return null;
   const suffix = (m[2] ?? "").toLowerCase();
   if (suffix === "k") n *= 1_000;
   if (suffix === "m") n *= 1_000_000;
   if (suffix === "b") n *= 1_000_000_000;
-  return Math.max(1, Math.round(n));
+  return Math.max(0, Math.round(n));
 }
 
 function speakerLabel(visual?: string): string {
@@ -328,7 +320,10 @@ export function buildNativeCatalogVisual(args: {
   const pal = paletteFor(scene.mood);
   const accent = tokens.accent ?? pal.c;
   const handle = tokens.handle?.replace(/^@/, "") || "yourbrand";
-  const textHtml = emphasize(scene.text, scene.emphasis).replace(/\n/g, "<br/>");
+  const textHtml = emphasize(scene.text, scene.emphasis).replace(
+    /\n/g,
+    "<br/>",
+  );
   const lines = lineStackHtml(scene.text, scene.emphasis, 12, "fx-line", 3);
   const sid = scene.id;
   const recipe = recipeForTemplate(meta.id, scene.mood);
@@ -344,15 +339,17 @@ export function buildNativeCatalogVisual(args: {
           </div>
         </div>`;
 
-    case "logo-outro":
+    case "logo-outro": {
+      const domain = scene.visual?.trim();
       return `
         ${stageShell(sid, pal, "minimal-mark", "fx-outro")}
           <div class="fx-content">
             <div class="fx-logo-mark" style="border-color:${accent};color:${pal.ink}">${escapeHtml(handle.slice(0, 1).toUpperCase())}</div>
             <div class="fx-stack outro-stack" style="color:${pal.ink}">${lineStackHtml(scene.text, scene.emphasis, 22, "fx-line serif")}</div>
-            <p class="fx-pill" style="color:${pal.ink}">${escapeHtml(scene.visual || `${handle}.com`)}</p>
+            ${domain ? `<p class="fx-pill" style="color:${pal.ink}">${escapeHtml(domain)}</p>` : ""}
           </div>
         </div>`;
+    }
 
     case "instagram-follow":
     case "tiktok-follow": {
@@ -391,8 +388,8 @@ export function buildNativeCatalogVisual(args: {
 
     case "apple-money-count": {
       // Dark cinematic stage (not cream billboard) so proof beats match tech reels.
-      const visual = escapeHtml(scene.visual || "$10,000");
-      const target = parseMoneyTargetLocal(scene.visual, scene.text);
+      const visual = escapeHtml(scene.visual || "—");
+      const target = parseMoneyTargetLocal(scene.visual);
       const suffix = /%/.test(scene.visual || "")
         ? "%"
         : /×|x/i.test(scene.visual || scene.text)
@@ -402,7 +399,7 @@ export function buildNativeCatalogVisual(args: {
         ${stageShell(sid, pal, "punch-block", "fx-money")}
           <div class="fx-content">
             <p class="fx-kicker" style="color:${accent}">PROOF</p>
-            <p class="fx-money-num" data-count-to="${target}" data-count-suffix="${suffix}" style="color:${pal.ink}">${visual}</p>
+            <p class="fx-money-num"${target === null ? "" : ` data-count-to="${target}" data-count-suffix="${suffix}"`} style="color:${pal.ink}">${visual}</p>
             <p class="fx-money-line" style="color:${pal.ink}">${textHtml}</p>
             <div class="fx-rule" style="background:${accent}"></div>
           </div>
@@ -410,34 +407,35 @@ export function buildNativeCatalogVisual(args: {
     }
 
     case "data-chart": {
-      // Prefer explicit items as series; normalize heights to max so bars read as growth.
-      const fromItems = (scene.items ?? [])
-        .map((v) => Number(String(v).replace(/[^\d.]/g, "")))
-        .filter((n) => Number.isFinite(n) && n > 0);
-      const fromBlob =
-        [scene.visual || "", scene.text]
-          .join(" ")
-          .match(/(\d+(?:\.\d+)?)/g)
-          ?.map(Number)
-          .filter((n) => Number.isFinite(n) && n > 0) ?? [];
-      const nums = (fromItems.length >= 3 ? fromItems : fromBlob).slice(0, 6);
-      const max = nums.length ? Math.max(...nums) : 1;
-      const heights =
-        nums.length >= 3
-          ? nums.map(
-              (n) =>
-                `${Math.max(22, Math.min(96, Math.round((n / max) * 96)))}%`,
-            )
-          : ["42%", "58%", "51%", "73%", "88%", "96%"];
-      while (heights.length < 6) heights.push(heights[heights.length - 1] || "60%");
+      const chart = scene.chart;
+      if (!chart) return null;
+      const series = chart.series[0];
+      const values = series.values.slice(0, 8);
+      const maxMagnitude = Math.max(
+        1,
+        ...values.map((value) => Math.abs(value)),
+      );
+      const bars = values.map((value, index) => {
+        const height = Math.max(
+          8,
+          Math.round((Math.abs(value) / maxMagnitude) * 96),
+        );
+        const unit = series.unit ?? "";
+        return `<div class="fx-chart-bar" aria-label="${escapeHtml(`${chart.labels[index]}: ${value}${unit}`)}">
+          <b style="color:${pal.ink}">${escapeHtml(`${value}${unit}`)}</b>
+          <i style="--h:${height}%;background:linear-gradient(180deg, ${accent}, ${pal.b})"></i>
+          <span>${escapeHtml(chart.labels[index])}</span>
+        </div>`;
+      });
       return `
         ${stageShell(sid, pal, "terminal", "fx-chart")}
           <div class="fx-content">
             <p class="fx-chart-title" style="color:${pal.ink}">${escapeHtml(scene.visual || scene.text.slice(0, 48))}</p>
             <div class="fx-chart-bars">
-              ${heights.map((h) => `<i style="--h:${h};background:linear-gradient(180deg, ${accent}, ${pal.b})"></i>`).join("")}
+              ${bars.join("")}
             </div>
             <p class="fx-chart-line" style="color:${pal.ink}">${textHtml}</p>
+            ${chart.sourceAttribution ? `<p class="fx-chart-source">${escapeHtml(chart.sourceAttribution)}</p>` : ""}
           </div>
         </div>`;
     }
@@ -472,7 +470,10 @@ export function buildCinematicClassicVisual(args: {
   const pal = paletteFor(scene.mood);
   const accent = tokens.accent ?? pal.c;
   const speaker = speakerLabel(scene.visual);
-  const textHtml = emphasize(scene.text, scene.emphasis).replace(/\n/g, "<br/>");
+  const textHtml = emphasize(scene.text, scene.emphasis).replace(
+    /\n/g,
+    "<br/>",
+  );
   const sid = scene.id;
   const tpl = scene.templateId || "hf-statement";
   const recipe = recipeForTemplate(tpl, scene.mood);
@@ -525,9 +526,10 @@ export function buildCinematicClassicVisual(args: {
       break;
     }
     case "hf-stat": {
-      const hasNum = /\d/.test(scene.visual || "");
+      const target = parseMoneyTargetLocal(scene.visual);
+      const hasNum = target !== null;
       const countAttrs = hasNum
-        ? ` data-count-to="${parseMoneyTargetLocal(scene.visual, scene.text)}" data-count-suffix="${/%/.test(scene.visual || "") ? "%" : /×|x/i.test(scene.visual || "") ? "×" : ""}"`
+        ? ` data-count-to="${target}" data-count-suffix="${/%/.test(scene.visual || "") ? "%" : /×|x/i.test(scene.visual || "") ? "×" : ""}"`
         : "";
       body = `
         <div class="fx-dialogue fx-dlg-stat">
@@ -915,14 +917,21 @@ export const NATIVE_CATALOG_STYLES = `
     opacity: 0; transform: translateY(10px);
   }
   .fx-chart-bars {
-    display: flex; align-items: flex-end; gap: 14px; height: 260px; width: min(720px, 86%);
+    display: flex; align-items: stretch; gap: 14px; height: 300px; width: min(760px, 90%);
     margin-bottom: 20px;
   }
+  .fx-chart-bar {
+    flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    gap: 8px; color: rgba(255,255,255,.72); font-size: 15px; text-align: center;
+  }
+  .fx-chart-bar b { font-size: 17px; white-space: nowrap; }
+  .fx-chart-bar span { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .fx-chart-bars i {
-    flex: 1; height: var(--h); border-radius: 10px 10px 4px 4px; display: block;
+    width: 100%; height: var(--h); border-radius: 10px 10px 4px 4px; display: block;
     background: linear-gradient(180deg, var(--fx-c), #333);
     transform: scaleY(0.08); transform-origin: bottom;
   }
+  .fx-chart-source { max-width: 760px; font-size: 14px; opacity: .62; }
   .fx-phone {
     width: 250px; height: 500px; border-radius: 34px; padding: 12px; margin-bottom: 26px;
     background: linear-gradient(160deg, #444, #111); box-shadow: 0 36px 80px rgba(0,0,0,0.5);

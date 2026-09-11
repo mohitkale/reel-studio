@@ -42,10 +42,12 @@ function legacyVisualBackground(visual: string | null): SceneBackground | null {
 
 export function toSceneDTO(scene: Scene): SceneDTO {
   const config = parseJsonColumn(scene.layoutJson, sceneConfigSchema, {});
-  const legacy = config.background ? null : legacyVisualBackground(scene.visual);
+  const legacy = config.background
+    ? null
+    : legacyVisualBackground(scene.visual);
   const background = config.background ?? legacy ?? undefined;
   // Hide the legacy image JSON from the visual field once promoted to background.
-  const visual = legacy ? undefined : scene.visual ?? undefined;
+  const visual = legacy ? undefined : (scene.visual ?? undefined);
 
   return {
     id: scene.id,
@@ -58,6 +60,7 @@ export function toSceneDTO(scene: Scene): SceneDTO {
     visual,
     background,
     items: config.items && config.items.length ? config.items : undefined,
+    chart: config.chart,
     hideText: scene.hideText ?? null,
     mood: config.mood ?? inferSceneMood(scene.templateId, scene.order),
     musicMood: config.musicMood,

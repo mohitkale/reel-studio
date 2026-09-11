@@ -222,6 +222,7 @@ export function productionSpecFromLegacyScript(
         emphasis: [...scene.emphasis],
         visual: scene.visual,
         items: scene.items ? [...scene.items] : undefined,
+        chart: scene.chart,
         assetRefs: backgroundAsset ? [backgroundAsset] : [],
         timing: {
           startFrame: timing.startFrame,

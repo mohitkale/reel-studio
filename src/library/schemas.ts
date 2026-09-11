@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { assertSafeMediaUrl } from "@/lib/media-url-safety";
+import { productionChartDataSchema } from "@/production/spec";
 
 /** Zod schemas for JSON-shaped DB columns and API inputs. */
 
@@ -32,17 +33,23 @@ export const fontsSchema = z.object({
   fontFamily: z.string().optional(),
 });
 
-export const ctaDefaultsSchema = z.object({ isDefault: z.boolean().optional() }).passthrough();
+export const ctaDefaultsSchema = z
+  .object({ isDefault: z.boolean().optional() })
+  .passthrough();
 
 /** Whole-reel Style + Energy stored in Script.brandOverrides JSON. */
 export const visualStyleSchema = z.object({
-  styleId: z.enum(["bold-hook", "clean-story", "teach-me", "soft-brand"]).optional(),
+  styleId: z
+    .enum(["bold-hook", "clean-story", "teach-me", "soft-brand"])
+    .optional(),
   energy: z.enum(["calm", "normal", "high"]).optional(),
 });
 
 export const brandOverridesSchema = z
   .object({
-    styleId: z.enum(["bold-hook", "clean-story", "teach-me", "soft-brand"]).optional(),
+    styleId: z
+      .enum(["bold-hook", "clean-story", "teach-me", "soft-brand"])
+      .optional(),
     energy: z.enum(["calm", "normal", "high"]).optional(),
   })
   .passthrough();
@@ -92,6 +99,7 @@ export const sceneMoodSchema = z.enum([
 export const sceneConfigSchema = z.object({
   background: sceneBackgroundSchema.optional(),
   items: z.array(z.string()).optional(),
+  chart: productionChartDataSchema.optional(),
   /** Emotional/visual tone, drives the dynamic background treatment + music. */
   mood: sceneMoodSchema.optional(),
   /** Free-text music vibe hint (e.g. "uplifting lo-fi"), used for auto music suggestions. */

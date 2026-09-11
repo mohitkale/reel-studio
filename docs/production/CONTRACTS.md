@@ -59,3 +59,18 @@ Portrait, landscape and square each have explicit safe areas, content/caption
 widths, caption and brand insets, progress-bar size and type scale. Both engines
 consume these values. Format variants must resolve the source content again for
 their canvas; they must not crop a previously rendered video.
+
+## Factual data and catalog personalization
+
+Charts accept structured labels, finite values, series labels, units and optional
+source attribution. The same structure is stored in scene layout data and carried
+through AI plans, JSON import/export, undo snapshots, production specifications
+and both renderer inputs. A chart layout without that structure resolves to a
+non-data statement; narration copy is never mined for values. Count-up templates
+likewise require an explicit numeric visual.
+
+Catalog demos are treated as source material rather than production content.
+Data-bound blocks render through validated native adapters, so example people,
+metrics, URLs and app screens cannot leak into an export. User-controlled values
+inserted into catalog markup or script literals are encoded for their destination,
+and logo cards display a domain only when one was supplied explicitly.

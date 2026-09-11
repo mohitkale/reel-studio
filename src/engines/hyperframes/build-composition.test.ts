@@ -151,6 +151,91 @@ describe("buildHyperframesCompositionHtml", () => {
     expect(html).not.toContain("cdn.jsdelivr.net");
     expect(html).not.toContain("requestAnimationFrame");
   });
+
+  it("renders only supplied chart values and attribution", () => {
+    const html = buildHyperframesCompositionHtml({
+      scenes: [
+        {
+          id: "chart",
+          templateId: "hf-data-chart",
+          text: "Activation rose after launch.",
+          visual: "Activation by week",
+          emphasis: [],
+          chart: {
+            labels: ["Week 1", "Week 2", "Week 3"],
+            series: [{ label: "Activation", values: [42, 57, 63], unit: "%" }],
+            sourceAttribution: "Source: audited product analytics",
+          },
+        },
+      ],
+      timeline: [{ sceneId: "chart", startFrame: 0, durationFrames: 90 }],
+      width: 1080,
+      height: 1920,
+      fps: 30,
+      tokens: defaultBrandTokens,
+    });
+
+    expect(html).toContain('data-catalog-block="data-chart"');
+    expect(html).toContain("Week 1");
+    expect(html).toContain("42%");
+    expect(html).toContain("audited product analytics");
+    expect(html).not.toContain("Monthly Revenue vs. Conversion Rate");
+    expect(html).not.toContain("Internal analytics");
+  });
+
+  it("falls back to a statement when chart or metric inputs are missing", () => {
+    const html = buildHyperframesCompositionHtml({
+      scenes: [
+        {
+          id: "chart",
+          templateId: "hf-data-chart",
+          text: "Retention is improving without a verified data series.",
+          emphasis: [],
+        },
+        {
+          id: "money",
+          templateId: "hf-money-count",
+          text: "Customers are saving more time.",
+          emphasis: [],
+        },
+      ],
+      timeline: [
+        { sceneId: "chart", startFrame: 0, durationFrames: 60 },
+        { sceneId: "money", startFrame: 60, durationFrames: 60 },
+      ],
+      width: 1080,
+      height: 1920,
+      fps: 30,
+      tokens: defaultBrandTokens,
+    });
+
+    expect(html).not.toContain('data-catalog-block="data-chart"');
+    expect(html).not.toContain('data-catalog-block="apple-money-count"');
+    expect(html).not.toContain("$10,000");
+    expect(html).toContain("Retention");
+    expect(html).toContain("Customers");
+  });
+
+  it("does not infer a website from a brand handle", () => {
+    const html = buildHyperframesCompositionHtml({
+      scenes: [
+        {
+          id: "outro",
+          templateId: "hf-logo-outro",
+          text: "Create your next release.",
+          emphasis: [],
+        },
+      ],
+      timeline: [{ sceneId: "outro", startFrame: 0, durationFrames: 60 }],
+      width: 1080,
+      height: 1920,
+      fps: 30,
+      tokens: { ...defaultBrandTokens, handle: "acme" },
+    });
+
+    expect(html).not.toContain("acme.com");
+    expect(html).not.toContain("figma.com");
+  });
 });
 
 describe("mapScenesToEngineTemplates", () => {
@@ -167,7 +252,7 @@ describe("mapScenesToEngineTemplates", () => {
     );
   });
 
-  it("maps remotion picks onto hyperframes catalog bookends", () => {
+  it("maps remotion picks by capability without rewriting scene positions", () => {
     const scenes = [
       { text: "Hook", templateId: "kinetic", emphasis: [] },
       { text: "Stat", templateId: "stat-reveal", emphasis: [], visual: "10x" },
@@ -177,7 +262,7 @@ describe("mapScenesToEngineTemplates", () => {
     expect(mapped.map((s) => s.templateId)).toEqual([
       "hf-kinetic-slam",
       "hf-money-count",
-      "hf-ig-follow",
+      "hf-kinetic-slam",
     ]);
   });
 });
@@ -191,5 +276,46 @@ describe("personalizeCatalogHtml", () => {
     expect(html).toContain("@acme");
     expect(html).toContain("acme");
     expect(html).not.toContain("@heygen_official");
+  });
+
+  it("escapes user values inserted into markup", () => {
+    const attack = '</script><script data-owned="true">alert(1)</script>';
+    const html = personalizeCatalogHtml("instagram-follow", {
+      scene: { text: "Follow us", visual: attack, emphasis: [] },
+      tokens: { ...defaultBrandTokens, handle: attack },
+    });
+
+    expect(html).not.toContain(attack);
+    expect(html).not.toContain('<script data-owned="true">');
+    expect(html).toContain("&lt;/script&gt;");
+  });
+
+  it("escapes kinetic words embedded in executable script", () => {
+    const html = personalizeCatalogHtml("caption-kinetic-slam", {
+      scene: {
+        text: "Ship </script><script>alert(1)</script> safely",
+        emphasis: [],
+      },
+      tokens: defaultBrandTokens,
+    });
+
+    expect(html).not.toContain("</script><script>alert(1)</script>");
+    expect(html).toContain("Ship");
+  });
+
+  it("rejects data-bound catalog blocks without factual inputs", () => {
+    expect(() =>
+      personalizeCatalogHtml("data-chart", {
+        scene: { text: "Revenue increased", emphasis: [] },
+        tokens: defaultBrandTokens,
+      }),
+    ).toThrow("structured chart data");
+
+    expect(() =>
+      personalizeCatalogHtml("apple-money-count", {
+        scene: { text: "Revenue increased", emphasis: [] },
+        tokens: defaultBrandTokens,
+      }),
+    ).toThrow("explicit numeric visual");
   });
 });

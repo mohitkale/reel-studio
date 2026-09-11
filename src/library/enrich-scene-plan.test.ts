@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { enrichScenePlan, repairChecklistScene } from "./enrich-scene-plan";
+import {
+  enrichScenePlan,
+  repairChecklistScene,
+  repairDataScene,
+} from "./enrich-scene-plan";
 import type { AIScene } from "@/providers/ai/types";
 
-function scene(partial: Partial<AIScene> & Pick<AIScene, "text" | "templateId">): AIScene {
+function scene(
+  partial: Partial<AIScene> & Pick<AIScene, "text" | "templateId">,
+): AIScene {
   return {
     emphasis: [],
     ...partial,
@@ -44,7 +50,11 @@ describe("repairChecklistScene", () => {
       scene({
         templateId: "icon-grid",
         text: "Do this",
-        items: ["Talk to five users", "Ship a tiny test", "Measure real intent"],
+        items: [
+          "Talk to five users",
+          "Ship a tiny test",
+          "Measure real intent",
+        ],
         visual: "✓",
       }),
     );
@@ -65,5 +75,48 @@ describe("enrichScenePlan", () => {
       "remotion",
     );
     expect(out[0].templateId).toBe("kinetic");
+  });
+});
+
+describe("repairDataScene", () => {
+  it("demotes a chart when no structured values were supplied", () => {
+    const fixed = repairDataScene(
+      scene({
+        templateId: "hf-data-chart",
+        text: "Retention improved after the onboarding change.",
+      }),
+    );
+
+    expect(fixed.templateId).toBe("hf-statement");
+    expect(fixed.chart).toBeUndefined();
+  });
+
+  it("keeps a chart whose labels and values are explicit", () => {
+    const fixed = repairDataScene(
+      scene({
+        templateId: "hf-data-chart",
+        text: "Weekly activation",
+        chart: {
+          labels: ["Week 1", "Week 2"],
+          series: [{ label: "Activation", values: [42, 57], unit: "%" }],
+          sourceAttribution: "Product analytics export",
+        },
+      }),
+    );
+
+    expect(fixed.templateId).toBe("hf-data-chart");
+    expect(fixed.chart?.series[0].values).toEqual([42, 57]);
+  });
+
+  it("does not derive a metric from narration copy", () => {
+    const fixed = repairDataScene(
+      scene({
+        templateId: "hf-money-count",
+        text: "More than 10,000 people asked for this feature.",
+      }),
+    );
+
+    expect(fixed.templateId).toBe("hf-statement");
+    expect(fixed.visual).toBeUndefined();
   });
 });

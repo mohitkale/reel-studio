@@ -1,11 +1,11 @@
 /** Plain data shapes returned by the API and consumed by the client (no Prisma types). */
 
 import type { BrandTokens } from "@/compositions/tokens";
-import type { SceneBackground } from "@/compositions/types";
+import type { SceneBackground, SceneChartData } from "@/compositions/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { VideoEngineId } from "@/engines/types";
 
-export type { SceneBackground };
+export type { SceneBackground, SceneChartData };
 export type { VideoEngineId };
 
 export interface BeatTimingDTO {
@@ -34,6 +34,8 @@ export interface SceneDTO {
   visual?: string;
   background?: SceneBackground;
   items?: string[];
+  /** Explicit labels and values for chart templates; never inferred from prose. */
+  chart?: SceneChartData;
   /** Per-scene override for on-screen text. null = inherit the script default. */
   hideText: boolean | null;
   /** Emotional/visual tone (AI-suggested or manually set); drives dynamic backgrounds + music. */
@@ -150,12 +152,7 @@ export interface RenderDTO {
   voiceTakeId: string | null;
   name: string | null;
   status:
-    | "pending_approval"
-    | "queued"
-    | "bundling"
-    | "rendering"
-    | "done"
-    | "error";
+    "pending_approval" | "queued" | "bundling" | "rendering" | "done" | "error";
   /** Speed/resolution tradeoff used for this job. */
   quality: "draft" | "standard" | "high";
   progress: number;

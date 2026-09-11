@@ -297,6 +297,7 @@ export async function runHyperframesRender(
             ? { ...s.background, url: bgUrl ?? s.background.url }
             : undefined,
           items: s.items,
+          chart: s.chart,
           hideText: s.hideText ?? script.hideText,
           mood: s.mood as ReelScene["mood"],
           order: s.order,

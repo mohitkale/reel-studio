@@ -7,7 +7,11 @@ import {
   type EnergyId,
   type StyleId,
 } from "@/compositions/visual-style";
-import { type Orientation, DEFAULT_ORIENTATION, dimsFor } from "@/lib/orientation";
+import {
+  type Orientation,
+  DEFAULT_ORIENTATION,
+  dimsFor,
+} from "@/lib/orientation";
 import {
   DEFAULT_VIDEO_ENGINE,
   type VideoEngineId,
@@ -121,6 +125,7 @@ export async function createProjectFromPlan(
               if (scene.mood) config.mood = scene.mood;
               if (scene.musicMood) config.musicMood = scene.musicMood;
               if (scene.items?.length) config.items = scene.items;
+              if (scene.chart) config.chart = scene.chart;
               return {
                 order,
                 templateId: scene.templateId || fallbackTemplate,

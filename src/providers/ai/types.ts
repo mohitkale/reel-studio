@@ -1,13 +1,11 @@
 import { z } from "zod";
+import { productionChartDataSchema } from "@/production/spec";
 
 import type { Orientation } from "@/lib/orientation";
 import type { VideoEngineId } from "@/engines/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import { stripMarkdown } from "@/lib/strip-markdown";
-import type {
-  GeneratePodcastPlanInput,
-  PodcastPlan,
-} from "./podcast-types";
+import type { GeneratePodcastPlanInput, PodcastPlan } from "./podcast-types";
 
 /**
  * AI "director" contract. Mirrors the voice provider factory: the app talks only
@@ -111,6 +109,8 @@ export const aiSceneSchema = z.object({
     }),
   /** Short checklist rows for icon-grid (2–5 items, ~8 words each). */
   items: z.array(z.string().trim().min(1).max(80)).max(5).optional(),
+  /** Exact user/source-provided chart values. Omit instead of inventing data. */
+  chart: productionChartDataSchema.optional(),
   /** 2-4 concrete visual keywords for a stock photo background, when one fits. */
   backgroundQuery: z.string().trim().min(2).max(80).optional(),
   /**
@@ -138,13 +138,11 @@ function sanitizeAiScene(scene: z.infer<typeof aiSceneSchema>): AIScene {
   // Drop spokenText when empty or identical to on-screen text (inherit).
   const spokenText =
     spokenRaw && spokenRaw !== text.trim() ? spokenRaw : undefined;
-  const emphasis = scene.emphasis
-    .map(stripMarkdown)
-    .filter((phrase) => {
-      if (!phrase.length) return false;
-      // Highlights can appear in on-screen or spoken copy.
-      return text.includes(phrase) || (spokenText?.includes(phrase) ?? false);
-    });
+  const emphasis = scene.emphasis.map(stripMarkdown).filter((phrase) => {
+    if (!phrase.length) return false;
+    // Highlights can appear in on-screen or spoken copy.
+    return text.includes(phrase) || (spokenText?.includes(phrase) ?? false);
+  });
   const items = scene.items
     ?.map(stripMarkdown)
     .map((s) => s.trim())

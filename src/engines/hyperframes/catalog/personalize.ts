@@ -8,13 +8,26 @@ import {
 import { HF_CATALOG_HTML } from "@/engines/hyperframes/catalog/html";
 
 export interface CatalogPersonalizeContext {
-  scene: Pick<ReelScene, "text" | "visual" | "emphasis" | "items">;
+  scene: Pick<ReelScene, "text" | "visual" | "emphasis" | "items" | "chart">;
   tokens: BrandTokens;
 }
 
-function replaceAll(haystack: string, needle: string, replacement: string): string {
+function replaceAll(
+  haystack: string,
+  needle: string,
+  replacement: string,
+): string {
   if (!needle) return haystack;
   return haystack.split(needle).join(replacement);
+}
+
+function safeScriptJson(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }
 
 function brandName(tokens: BrandTokens, fallback: string): string {
@@ -29,12 +42,11 @@ function handleAt(tokens: BrandTokens, fallback: string): string {
   return handle.startsWith("@") ? handle : `@${handle}`;
 }
 
-function domainPill(tokens: BrandTokens, visual: string | undefined, fallback: string): string {
+function domainPill(visual: string | undefined): string {
   const fromVisual = visual?.trim();
-  if (fromVisual) return fromVisual.replace(/^https?:\/\//, "").replace(/\/$/, "");
-  const handle = tokens.handle?.trim();
-  if (handle) return `${handle.replace(/^@/, "")}.com`;
-  return fallback;
+  if (fromVisual)
+    return fromVisual.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  return "";
 }
 
 /** Build a WORDS array literal for kinetic slam from scene text. */
@@ -50,18 +62,21 @@ function kineticWordsLiteral(text: string): string {
   const items = list.map((w, i) => {
     const start = Number((i * step).toFixed(2));
     const end = Number((start + step * 0.9).toFixed(2));
-    const safe = JSON.stringify(w);
+    const safe = safeScriptJson(w);
     return `          { text: ${safe}, start: ${start}, end: ${end} }`;
   });
   return `[\n${items.join(",\n")}\n        ]`;
 }
 
-function parseMoneyTarget(visual: string | undefined, text: string): number {
-  const blob = `${visual ?? ""} ${text}`;
-  const m = blob.match(/\$?\s*([\d]{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)\s*([kKmMbB])?/);
-  if (!m) return 10000;
+function parseMoneyTarget(visual: string | undefined): number {
+  const m = visual?.match(
+    /\$?\s*([\d]{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)\s*([kKmMbB])?/,
+  );
+  if (!m) throw new Error("Money count requires an explicit numeric visual");
   let n = Number(m[1].replace(/,/g, ""));
-  if (!Number.isFinite(n)) return 10000;
+  if (!Number.isFinite(n)) {
+    throw new Error("Money count visual must contain a finite number");
+  }
   const suffix = (m[2] ?? "").toLowerCase();
   if (suffix === "k") n *= 1_000;
   if (suffix === "m") n *= 1_000_000;
@@ -69,81 +84,56 @@ function parseMoneyTarget(visual: string | undefined, text: string): number {
   return Math.max(1, Math.round(n));
 }
 
-function personalizeKineticSlam(html: string, ctx: CatalogPersonalizeContext): string {
+function personalizeKineticSlam(
+  html: string,
+  ctx: CatalogPersonalizeContext,
+): string {
   const literal = kineticWordsLiteral(ctx.scene.text);
-  return html.replace(
-    /var WORDS = \[[\s\S]*?\];/,
-    `var WORDS = ${literal};`,
-  );
+  return html.replace(/var WORDS = \[[\s\S]*?\];/, `var WORDS = ${literal};`);
 }
 
-function personalizeMoneyCount(html: string, ctx: CatalogPersonalizeContext): string {
-  const target = parseMoneyTarget(ctx.scene.visual, ctx.scene.text);
+function personalizeMoneyCount(
+  html: string,
+  ctx: CatalogPersonalizeContext,
+): string {
+  const target = parseMoneyTarget(ctx.scene.visual);
   let out = html;
-  out = out.replace(
-    /Math\.min\(10000, value\)/g,
-    `Math.min(${target}, value)`,
-  );
+  out = out.replace(/Math\.min\(10000, value\)/g, `Math.min(${target}, value)`);
   out = out.replace(/value:\s*10000/g, `value: ${target}`);
   out = out.replace(/renderAmount\(10000\)/g, `renderAmount(${target})`);
   return out;
 }
 
-function parseChartSeries(
-  scene: Pick<ReelScene, "text" | "visual" | "items">,
-): { revenue: number[]; conversion: number[] } {
-  const blob = [
-    scene.visual ?? "",
-    ...(scene.items ?? []),
-    scene.text,
-  ].join(" ");
-  const nums = [...blob.matchAll(/(\d+(?:\.\d+)?)/g)]
-    .map((m) => Number(m[1]))
-    .filter((n) => Number.isFinite(n) && n > 0)
-    .slice(0, 12);
-
-  const revenue: number[] = [];
-  const conversion: number[] = [];
-  if (nums.length >= 6) {
-    for (let i = 0; i < 6; i++) {
-      revenue.push(Math.max(1, Math.round(nums[i] % 40 || nums[i])));
-      conversion.push(
-        Math.max(0.5, Number((nums[i + 6] ?? nums[i] / 5).toFixed(1))),
-      );
-    }
-  } else if (nums.length >= 3) {
-    for (let i = 0; i < 6; i++) {
-      const base = nums[i % nums.length];
-      revenue.push(Math.max(1, Math.round(base * (0.7 + i * 0.12))));
-      conversion.push(Math.max(0.5, Number((base / 8 + i * 0.3).toFixed(1))));
-    }
-  } else {
-    // Deterministic fallback shaped by text length so charts aren't identical.
-    const seed = Math.max(3, scene.text.length % 17);
-    for (let i = 0; i < 6; i++) {
-      revenue.push(8 + ((seed * (i + 3)) % 15));
-      conversion.push(Number((2 + ((seed + i * 7) % 20) / 10).toFixed(1)));
-    }
-  }
-  return { revenue, conversion };
-}
-
-function personalizeDataChart(html: string, ctx: CatalogPersonalizeContext): string {
+function personalizeDataChart(
+  html: string,
+  ctx: CatalogPersonalizeContext,
+): string {
+  const chart = ctx.scene.chart;
+  if (!chart) throw new Error("Data chart requires structured chart data");
   const title =
     ctx.scene.visual?.trim() ||
     ctx.scene.text.trim().slice(0, 64) ||
-    "Monthly Revenue vs. Conversion Rate";
-  const { revenue, conversion } = parseChartSeries(ctx.scene);
+    "Data overview";
+  const revenue = chart.series[0].values;
+  const conversion = chart.series[1]?.values ?? chart.series[0].values;
   const maxRevenue = Math.max(25, ...revenue) + 3;
   const maxConversion = Math.max(5, ...conversion) + 0.5;
-  let out = replaceAll(html, "Monthly Revenue vs. Conversion Rate", title);
+  let out = replaceAll(
+    html,
+    "Monthly Revenue vs. Conversion Rate",
+    escapeHtmlText(title),
+  );
+  out = out.replace(
+    /const months = \[[^\]]*\];/,
+    `const months = ${safeScriptJson(chart.labels)};`,
+  );
   out = out.replace(
     /const revenueData = \[[^\]]*\];/,
-    `const revenueData = ${JSON.stringify(revenue)};`,
+    `const revenueData = ${safeScriptJson(revenue)};`,
   );
   out = out.replace(
     /const conversionData = \[[^\]]*\];/,
-    `const conversionData = ${JSON.stringify(conversion)};`,
+    `const conversionData = ${safeScriptJson(conversion)};`,
   );
   out = out.replace(
     /const maxRevenue = 25;/,
@@ -156,51 +146,75 @@ function personalizeDataChart(html: string, ctx: CatalogPersonalizeContext): str
   return out;
 }
 
-function personalizeAppShowcase(html: string, ctx: CatalogPersonalizeContext): string {
-  const headline = ctx.scene.text.trim().slice(0, 48) || "Unleash Full Potential";
+function personalizeAppShowcase(
+  html: string,
+  ctx: CatalogPersonalizeContext,
+): string {
+  const headline =
+    ctx.scene.text.trim().slice(0, 48) || "Unleash Full Potential";
   const cta = ctx.scene.visual?.trim() || "START NOW";
-  let out = replaceAll(html, "Unleash Full Potential", headline);
-  out = replaceAll(out, "START NOW", cta);
+  let out = replaceAll(
+    html,
+    "Unleash Full Potential",
+    escapeHtmlText(headline),
+  );
+  out = replaceAll(out, "START NOW", escapeHtmlText(cta));
   return out;
 }
 
-function personalizeLogoOutro(html: string, ctx: CatalogPersonalizeContext): string {
+function personalizeLogoOutro(
+  html: string,
+  ctx: CatalogPersonalizeContext,
+): string {
   const tagline =
     ctx.scene.text.trim().slice(0, 80) || "Nothing great is made alone.";
-  const pill = domainPill(ctx.tokens, ctx.scene.visual, "figma.com");
-  const name = brandName(ctx.tokens, "Logo Outro");
-  let out = replaceAll(html, "Nothing great is made alone.", tagline);
-  out = replaceAll(out, "figma.com", pill);
+  const pill = domainPill(ctx.scene.visual);
+  const name = brandName(ctx.tokens, "yourbrand");
+  let out = replaceAll(
+    html,
+    "Nothing great is made alone.",
+    escapeHtmlText(tagline),
+  );
+  out = replaceAll(out, "figma.com", escapeHtmlText(pill));
   // Title text node used as logo label in the demo.
   out = out.replace(/>Logo Outro</g, `>${escapeHtmlText(name)}<`);
   return out;
 }
 
-function personalizeInstagram(html: string, ctx: CatalogPersonalizeContext): string {
-  const name = brandName(ctx.tokens, "HeyGen");
-  const handle = handleAt(ctx.tokens, "@heygen_official");
+function personalizeInstagram(
+  html: string,
+  ctx: CatalogPersonalizeContext,
+): string {
+  const name = brandName(ctx.tokens, "yourbrand");
+  const handle = handleAt(ctx.tokens, "@yourbrand");
   const cta = ctx.scene.visual?.trim() || "Follow";
-  let out = replaceAll(html, "@heygen_official", handle);
-  out = replaceAll(out, "HeyGen", name);
+  let out = replaceAll(html, "@heygen_official", escapeHtmlText(handle));
+  out = replaceAll(out, "HeyGen", escapeHtmlText(name));
   // Only replace the primary Follow label in the button (keep "Following").
   out = out.replace(/>Follow</g, `>${escapeHtmlText(cta)}<`);
   return out;
 }
 
-function personalizeTiktok(html: string, ctx: CatalogPersonalizeContext): string {
-  const name = brandName(ctx.tokens, "HeyGen");
-  const handle = handleAt(ctx.tokens, "@heygen.com");
+function personalizeTiktok(
+  html: string,
+  ctx: CatalogPersonalizeContext,
+): string {
+  const name = brandName(ctx.tokens, "yourbrand");
+  const handle = handleAt(ctx.tokens, "@yourbrand");
   const cta = ctx.scene.visual?.trim() || "Follow";
-  let out = replaceAll(html, "@heygen.com", handle);
-  out = replaceAll(out, "HeyGen", name);
+  let out = replaceAll(html, "@heygen.com", escapeHtmlText(handle));
+  out = replaceAll(out, "HeyGen", escapeHtmlText(name));
   out = out.replace(/>Follow</g, `>${escapeHtmlText(cta)}<`);
   return out;
 }
 
-function personalizeYtLowerThird(html: string, ctx: CatalogPersonalizeContext): string {
-  const name = brandName(ctx.tokens, "HeyGen");
+function personalizeYtLowerThird(
+  html: string,
+  ctx: CatalogPersonalizeContext,
+): string {
+  const name = brandName(ctx.tokens, "yourbrand");
   const cta = ctx.scene.visual?.trim() || "Subscribe";
-  let out = replaceAll(html, "HeyGen", name);
+  let out = replaceAll(html, "HeyGen", escapeHtmlText(name));
   out = out.replace(/>Subscribe</g, `>${escapeHtmlText(cta)}<`);
   return out;
 }
@@ -260,7 +274,9 @@ export function extractCatalogInlineParts(fullHtml: string): {
   const styles = [...fullHtml.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)]
     .map((m) => m[1])
     .join("\n");
-  const scripts = [...fullHtml.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)]
+  const scripts = [
+    ...fullHtml.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi),
+  ]
     .map((m) => m[1])
     .join("\n;\n");
   const bodyMatch = fullHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
@@ -276,4 +292,3 @@ export function resolveCatalogMetaForTemplate(
 ): HfCatalogBlockMeta | undefined {
   return getCatalogBlockByTemplateId(templateId);
 }
-

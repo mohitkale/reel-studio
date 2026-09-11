@@ -1,4 +1,4 @@
-import type { SceneDTO, SceneBackground } from "@/lib/dto";
+import type { SceneDTO, SceneBackground, SceneChartData } from "@/lib/dto";
 import { defaultTemplateIdForEngine } from "@/engines/registry";
 import { isVideoEngineId, DEFAULT_VIDEO_ENGINE } from "@/engines/types";
 import { prisma } from "@/library/db";
@@ -46,6 +46,8 @@ export async function updateScene(
     visual?: string | null;
     background?: SceneBackground | null;
     items?: string[] | null;
+    /** Structured chart values; null clears them. */
+    chart?: SceneChartData | null;
     /** null = inherit script default, true/false = explicit per-scene override. */
     hideText?: boolean | null;
     /** Emotional/visual tone; null clears it back to the deterministic per-scene default. */
@@ -56,12 +58,13 @@ export async function updateScene(
     selectedVoiceClipId?: string | null;
   },
 ): Promise<SceneDTO> {
-  // background/items/mood/musicMood all live together in the layoutJson config
+  // Structured scene options live together in the layoutJson config
   // blob; merge so updating one never clobbers the others.
   let layoutJson: string | undefined;
   if (
     data.background !== undefined ||
     data.items !== undefined ||
+    data.chart !== undefined ||
     data.mood !== undefined ||
     data.musicMood !== undefined
   ) {
@@ -78,6 +81,10 @@ export async function updateScene(
       if (data.items === null || data.items.length === 0) delete config.items;
       else config.items = data.items;
     }
+    if (data.chart !== undefined) {
+      if (data.chart === null) delete config.chart;
+      else config.chart = data.chart;
+    }
     if (data.mood !== undefined) {
       if (data.mood === null) delete config.mood;
       else config.mood = data.mood as typeof config.mood;
@@ -89,7 +96,10 @@ export async function updateScene(
     layoutJson = Object.keys(config).length ? JSON.stringify(config) : "";
   }
 
-  if (data.selectedVoiceClipId !== undefined && data.selectedVoiceClipId !== null) {
+  if (
+    data.selectedVoiceClipId !== undefined &&
+    data.selectedVoiceClipId !== null
+  ) {
     const clip = await prisma.sceneVoiceClip.findUnique({
       where: { id: data.selectedVoiceClipId },
       select: { sceneId: true },
@@ -103,13 +113,12 @@ export async function updateScene(
     where: { id },
     data: {
       text: data.text,
-      spokenText:
-        data.spokenText !== undefined ? data.spokenText : undefined,
+      spokenText: data.spokenText !== undefined ? data.spokenText : undefined,
       templateId: data.templateId,
       emphasis:
         data.emphasis !== undefined ? JSON.stringify(data.emphasis) : undefined,
       visual: data.visual !== undefined ? (data.visual ?? null) : undefined,
-      layoutJson: layoutJson !== undefined ? (layoutJson || null) : undefined,
+      layoutJson: layoutJson !== undefined ? layoutJson || null : undefined,
       hideText: data.hideText !== undefined ? data.hideText : undefined,
       selectedVoiceClipId:
         data.selectedVoiceClipId !== undefined

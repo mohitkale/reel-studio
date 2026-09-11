@@ -22,9 +22,9 @@ function remotionTemplateRules(): string[] {
     "  • 'emoji-punch': short emotional punch / turn; visual = one emoji. Keep text under ~12 words.",
     "  • 'quote-card': short attributed line; visual = speaker (optional).",
     "  • 'lottie': one clear process/how-it-works beat — not a wall of text.",
-    "  • 'three': the single hero moment of the video — use EXACTLY once.",
+    "  • 'three': an optional hero moment when spatial depth helps the idea.",
     "  • 'kinetic': default for one clear spoken idea / hook / insight. Prefer this over a fake checklist.",
-    "  DIVERSITY: 5+ scenes → at least 4 different templates. kinetic ≤ 40% of scenes. Never kinetic more than twice in a row.",
+    "  Choose layouts by content fit. Repeating a clear layout is better than forced variety.",
   ];
 }
 
@@ -32,18 +32,18 @@ function hyperframesTemplateRules(): string[] {
   return [
     "- For each scene pick templateId from: hf-kinetic-slam, hf-opener, hf-statement, hf-list, hf-stat, hf-money-count, hf-data-chart, hf-quote, hf-app-showcase, hf-cta, hf-logo-outro, hf-ig-follow, hf-tt-follow, hf-yt-lower-third.",
     "  TEMPLATE RULES — HyperFrames director (wrong layout = unwatchable):",
-    "  • Scene 1 MUST be 'hf-kinetic-slam' (bold hook caption slam).",
-    "  • Last scene MUST be a CTA: prefer 'hf-logo-outro' or 'hf-ig-follow' (use 'hf-tt-follow' only for TikTok-flavored briefs).",
+    "  • Open with the layout that makes the supplied idea clearest; use 'hf-kinetic-slam' only when a caption slam fits.",
+    "  • For an explicit CTA, prefer 'hf-logo-outro' or 'hf-ig-follow' (use 'hf-tt-follow' only for TikTok-flavored briefs).",
     "  • 'hf-money-count': ONE big number/metric. visual = that amount (e.g. '$10k', '73%', '10x').",
     "  • 'hf-stat': short proof number beat. visual = the number.",
-    "  • 'hf-data-chart': proof-with-trend beat. visual = short chart title; keep text scannable.",
+    "  • 'hf-data-chart': use only when the brief supplies exact chart data. Return chart.labels plus chart.series values of matching length and optional units/sourceAttribution. Never estimate or invent values; otherwise choose hf-statement.",
     "  • 'hf-list': ONLY with 3 to 5 SHORT tip/step lines in 'items' (max ~8 words each); 'text' = short header; visual = '✓' or '→'.",
     "  • 'hf-quote': short attributed line; visual = speaker (optional).",
     "  • 'hf-app-showcase': product/process hero beat — use at most once.",
     "  • 'hf-statement' / 'hf-opener': one clear spoken idea / calm beat between hooks.",
     "  • 'hf-yt-lower-third': mid-reel identity/subscribe beat — use sparingly (0–1).",
     "  • 'hf-cta': text end-card when logo/social outros do not fit.",
-    "  DIVERSITY: 5+ scenes → at least 4 different templates. Never repeat the same templateId back-to-back.",
+    "  Choose layouts by content fit. Repeating a clear layout is better than forced variety.",
   ];
 }
 
@@ -119,13 +119,13 @@ export function buildPrompt(input: GeneratePlanInput): {
     "- NEVER use markdown in any field. Scene text and spokenText are spoken aloud — plain words only.",
     lengthRule,
     countRule,
-    "- Scene 1 MUST hook with one of: (1) a bold but believable claim to the viewer, (2) a surprising number, (3) 'Stop doing X' with a kinder fix promised, (4) a direct question about their life, (5) a pain they feel today — said warmly, not mocked.",
+    "- Open with the clearest useful idea for the brief. A bold claim, supplied number, direct question, or current pain can work when supported by the source.",
     structureRule,
-    "- Last scene: a clear, low-pressure CTA (try this, save this, follow for more).",
-    "- Never use the same templateId for two consecutive scenes.",
+    "- When the brief calls for an action, end with a clear, low-pressure CTA (try this, save this, follow for more).",
     ...(isHyperframes ? hyperframesTemplateRules() : remotionTemplateRules()),
     "- emphasis: 1–2 short phrases that appear VERBATIM in that scene's text (highlights for the eye).",
     "- visual: only as required above; otherwise omit. Keep it SHORT (a number, one emoji, or a CTA label under ~20 characters).",
+    "- Never invent statistics, chart values, testimonials, URLs, customers, or product results. Use only facts in the brief or supplied source; choose a non-data layout when facts are missing.",
     "  LOOK OF THE WHOLE VIDEO:",
     styleLock,
     energyLock,
@@ -152,7 +152,8 @@ export function buildPrompt(input: GeneratePlanInput): {
       : "";
     user = `Rewrite this short video to feel more personal, clearer, and harder to scroll past. Strong hook in scene 1. Keep the tone professional and soothing — not shouty.\n\nTopic: ${input.brief}${ctx}`;
   } else {
-    const startNum = input.existingSceneCount != null ? input.existingSceneCount + 1 : "next";
+    const startNum =
+      input.existingSceneCount != null ? input.existingSceneCount + 1 : "next";
     const ctx = input.existingContext
       ? `\n\nExisting scenes (do NOT repeat these):\n${input.existingContext}`
       : "";

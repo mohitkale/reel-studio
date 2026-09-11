@@ -10,7 +10,7 @@ import { enrichScenePlan } from "@/library/enrich-scene-plan";
 import { orientationFromDims } from "@/lib/orientation";
 import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
-import type { SceneBackground } from "@/compositions/types";
+import type { SceneBackground, SceneChartData } from "@/compositions/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,13 +28,19 @@ const bodySchema = z.object({
 /** Build the Scene.layoutJson payload from a resolved background + AI mood hints. */
 function layoutJsonFor(
   background: SceneBackground | undefined,
-  scene: { mood?: string; musicMood?: string; items?: string[] },
+  scene: {
+    mood?: string;
+    musicMood?: string;
+    items?: string[];
+    chart?: SceneChartData;
+  },
 ): string | null {
   const config: Record<string, unknown> = {};
   if (background) config.background = background;
   if (scene.mood) config.mood = scene.mood;
   if (scene.musicMood) config.musicMood = scene.musicMood;
   if (scene.items?.length) config.items = scene.items;
+  if (scene.chart) config.chart = scene.chart;
   return Object.keys(config).length ? JSON.stringify(config) : null;
 }
 

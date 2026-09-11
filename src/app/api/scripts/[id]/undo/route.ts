@@ -5,6 +5,7 @@ import { prisma } from "@/library/db";
 import { getScript } from "@/library/repositories/scripts";
 import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
+import { productionChartDataSchema } from "@/production/spec";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,6 +39,7 @@ const snapshotSchema = z.object({
       visual: z.string().nullable(),
       background: backgroundSchema.nullable().optional(),
       items: z.array(z.string().max(280)).max(24).optional(),
+      chart: productionChartDataSchema.optional(),
       mood: sceneMoodSchema.optional(),
       musicMood: z.string().max(60).optional(),
     }),
@@ -47,12 +49,14 @@ const snapshotSchema = z.object({
 function layoutJsonFor(scene: {
   background?: z.infer<typeof backgroundSchema> | null;
   items?: string[];
+  chart?: z.infer<typeof productionChartDataSchema>;
   mood?: string;
   musicMood?: string;
 }): string | null {
   const config: Record<string, unknown> = {};
   if (scene.background) config.background = scene.background;
   if (scene.items && scene.items.length) config.items = scene.items;
+  if (scene.chart) config.chart = scene.chart;
   if (scene.mood) config.mood = scene.mood;
   if (scene.musicMood) config.musicMood = scene.musicMood;
   return Object.keys(config).length ? JSON.stringify(config) : null;

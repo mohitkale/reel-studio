@@ -8,6 +8,7 @@ import type {
   ScriptDTO,
   SceneDTO,
   SceneBackground,
+  SceneChartData,
   VoiceTakeDTO,
   VoiceMode,
 } from "@/lib/dto";
@@ -38,7 +39,9 @@ export function useProjects() {
   return useQuery({
     queryKey: ["projects"],
     queryFn: () =>
-      apiGet<{ projects: ProjectDTO[] }>("/api/projects").then((r) => r.projects),
+      apiGet<{ projects: ProjectDTO[] }>("/api/projects").then(
+        (r) => r.projects,
+      ),
   });
 }
 
@@ -89,7 +92,8 @@ export function useSetScriptCover(scriptId: string) {
     onMutate: async (coverUrl) => {
       await qc.cancelQueries({ queryKey: ["script", scriptId] });
       const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
-      if (prev) qc.setQueryData<ScriptDTO>(["script", scriptId], { ...prev, coverUrl });
+      if (prev)
+        qc.setQueryData<ScriptDTO>(["script", scriptId], { ...prev, coverUrl });
       return { prev };
     },
     onError: (_e, _v, ctx) => {
@@ -178,7 +182,11 @@ export function useSetScriptHideProgressBar(scriptId: string) {
     onMutate: async (hideProgressBar) => {
       await qc.cancelQueries({ queryKey: ["script", scriptId] });
       const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
-      if (prev) qc.setQueryData<ScriptDTO>(["script", scriptId], { ...prev, hideProgressBar });
+      if (prev)
+        qc.setQueryData<ScriptDTO>(["script", scriptId], {
+          ...prev,
+          hideProgressBar,
+        });
       return { prev };
     },
     onError: (_e, _v, ctx) => {
@@ -197,7 +205,8 @@ export function useSetScriptHideText(scriptId: string) {
     onMutate: async (hideText) => {
       await qc.cancelQueries({ queryKey: ["script", scriptId] });
       const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
-      if (prev) qc.setQueryData<ScriptDTO>(["script", scriptId], { ...prev, hideText });
+      if (prev)
+        qc.setQueryData<ScriptDTO>(["script", scriptId], { ...prev, hideText });
       return { prev };
     },
     onError: (_e, _v, ctx) => {
@@ -216,7 +225,11 @@ export function useSetVoiceMode(scriptId: string) {
     onMutate: async (voiceMode) => {
       await qc.cancelQueries({ queryKey: ["script", scriptId] });
       const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
-      if (prev) qc.setQueryData<ScriptDTO>(["script", scriptId], { ...prev, voiceMode });
+      if (prev)
+        qc.setQueryData<ScriptDTO>(["script", scriptId], {
+          ...prev,
+          voiceMode,
+        });
       return { prev };
     },
     onError: (_e, _v, ctx) => {
@@ -311,7 +324,10 @@ export function useUpdateScene(scriptId: string) {
         if (prev) {
           qc.setQueryData<ScriptDTO>(["script", scriptId], {
             ...prev,
-            takes: [data.take!, ...prev.takes.filter((t) => t.id !== data.take!.id)],
+            takes: [
+              data.take!,
+              ...prev.takes.filter((t) => t.id !== data.take!.id),
+            ],
           });
         }
       }
@@ -430,7 +446,11 @@ async function pollVoiceJob(
         throw new Error(job.error || "Voice generation failed");
       }
     } catch (e) {
-      if (e instanceof Error && e.message !== "Job not found" && !e.message.includes("Voice generation failed")) {
+      if (
+        e instanceof Error &&
+        e.message !== "Job not found" &&
+        !e.message.includes("Voice generation failed")
+      ) {
         // Transient network blip while VoiceForge is still working — keep polling.
         continue;
       }
@@ -559,20 +579,23 @@ export function useEnhanceScript(scriptId: string) {
 export function useImportScenes(scriptId: string) {
   const invalidate = useScriptInvalidator(scriptId);
   return useMutation({
-    mutationFn: (scenes: {
-      templateId: string | null;
-      text: string;
-      spokenText?: string | null;
-      emphasis: string[];
-      visual: string | null;
-      background?: SceneBackground | null;
-      items?: string[];
-      mood?: string;
-      musicMood?: string;
-    }[]) =>
-      apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/undo`, { scenes }).then(
-        (r) => r.script,
-      ),
+    mutationFn: (
+      scenes: {
+        templateId: string | null;
+        text: string;
+        spokenText?: string | null;
+        emphasis: string[];
+        visual: string | null;
+        background?: SceneBackground | null;
+        items?: string[];
+        chart?: SceneChartData;
+        mood?: string;
+        musicMood?: string;
+      }[],
+    ) =>
+      apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/undo`, {
+        scenes,
+      }).then((r) => r.script),
     onSuccess: invalidate,
   });
 }
@@ -580,20 +603,23 @@ export function useImportScenes(scriptId: string) {
 export function useUndoScript(scriptId: string) {
   const invalidate = useScriptInvalidator(scriptId);
   return useMutation({
-    mutationFn: (scenes: {
-      templateId: string | null;
-      text: string;
-      spokenText?: string | null;
-      emphasis: string[];
-      visual: string | null;
-      background?: SceneBackground | null;
-      items?: string[];
-      mood?: string;
-      musicMood?: string;
-    }[]) =>
-      apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/undo`, { scenes }).then(
-        (r) => r.script,
-      ),
+    mutationFn: (
+      scenes: {
+        templateId: string | null;
+        text: string;
+        spokenText?: string | null;
+        emphasis: string[];
+        visual: string | null;
+        background?: SceneBackground | null;
+        items?: string[];
+        chart?: SceneChartData;
+        mood?: string;
+        musicMood?: string;
+      }[],
+    ) =>
+      apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/undo`, {
+        scenes,
+      }).then((r) => r.script),
     onSuccess: invalidate,
   });
 }
