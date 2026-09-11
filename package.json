@@ -36,6 +36,7 @@
     "gen:sfx": "node scripts/generate-sfx.mjs",
     "test:unit": "vitest run --exclude src/lib/render-smoke.test.ts",
     "test:render": "tsx scripts/render-regression.ts",
+    "test:render:product-launch": "tsx scripts/render-regression.ts --product-launch",
     "db:migrate": "node scripts/migrate-database.mjs"
   },
   "dependencies": {

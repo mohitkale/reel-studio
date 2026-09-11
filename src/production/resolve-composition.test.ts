@@ -10,6 +10,8 @@ import {
   productionSpecSchema,
   type ProductionSpec,
 } from "@/production/spec";
+import productLaunchFixture from "../../tests/fixtures/product-launch-reel.json";
+import type { ReelProps } from "@/compositions/types";
 
 function productionSpec(
   engineId: VideoEngineId,
@@ -108,6 +110,11 @@ describe("resolved production composition", () => {
         expect(resolved.layout.orientation).toBe(orientation);
         expect(resolved.layout).toMatchObject(dimensions);
         expect(resolved.reelProps.layout).toBe(resolved.layout);
+        expect(resolved.reelProps.preset).toEqual({
+          id: "product-launch",
+          version: "1.0.0",
+        });
+        expect(resolved.reelProps.scenes[0].role).toBe("hook");
         expect(resolved.reelProps.width).toBe(dimensions.width);
         expect(resolved.reelProps.height).toBe(dimensions.height);
         expect(resolved.reelProps.scenes[0].background?.url).toBe(
@@ -149,5 +156,41 @@ describe("resolved production composition", () => {
     expect(
       resolveProductionComposition(spec).reelProps.audioUrl,
     ).toBeUndefined();
+  });
+
+  it("renders the complete Product Launch role sequence in HyperFrames", () => {
+    const html = buildHyperframesCompositionHtml(
+      productLaunchFixture as ReelProps,
+    );
+
+    expect(html.match(/data-production-preset="product-launch"/g)).toHaveLength(
+      5,
+    );
+    for (const role of [
+      "hook",
+      "screenshot-demo",
+      "feature",
+      "comparison",
+      "cta",
+    ]) {
+      expect(html).toContain(`data-scene-role="${role}"`);
+    }
+    expect(html).toContain("product-launch-dashboard.svg");
+    expect(html).toContain("pl-device");
+    expect(html).toContain("Start creating");
+  });
+
+  it("rejects a Product Launch screenshot scene without supplied media", () => {
+    const spec = productionSpec("hyperframes", "portrait");
+    spec.scenes[0].role = "screenshot-demo";
+    spec.scenes[0].assetRefs = [];
+
+    const result = productionSpecSchema.safeParse(spec);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.map((issue) => issue.message)).toContain(
+        "Product Launch screenshot demos require an image or video asset",
+      );
+    }
   });
 });

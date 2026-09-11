@@ -74,3 +74,17 @@ Data-bound blocks render through validated native adapters, so example people,
 metrics, URLs and app screens cannot leak into an export. User-controlled values
 inserted into catalog markup or script literals are encoded for their destination,
 and logo cards display a domain only when one was supplied explicitly.
+
+## Product Launch 1.0.0
+
+Product Launch carries hook, screenshot demo, feature, comparison and CTA roles
+into both renderer inputs. HyperFrames uses a seekable HTML treatment and
+Remotion uses a responsive React treatment, while the copy, media, timing and
+brand snapshot stay shared. Screenshot demos require a supplied image or video.
+Feature and comparison cards display only supplied item copy, and CTA buttons
+appear only when an explicit action label is present.
+
+The credential-free acceptance fixture uses the bundled dashboard screenshot at
+`public/samples/product-launch-dashboard.svg`. Run
+`npm run test:render:product-launch` to render and inspect all five roles through
+both engines.

@@ -1,6 +1,8 @@
 import type { BrandTokens } from "./tokens";
 import type { EnergyId, StyleId } from "./visual-style";
 import type { ProductionLayout } from "@/production/layout";
+import type { ProductionPresetId } from "@/production/presets";
+import type { ProductionSceneRole } from "@/production/roles";
 
 /** Image pan/zoom animations available for a background image. */
 export type PanEffect =
@@ -59,6 +61,8 @@ export interface ReelScene {
   /** Explicit list items for list/checklist templates (overrides text splitting). */
   items?: string[];
   chart?: SceneChartData;
+  /** Engine-independent purpose used by versioned production presets. */
+  role?: ProductionSceneRole;
   /** When true, suppress the on-screen text/visual and show just the background. */
   hideText?: boolean;
   /** Emotional/visual tone; picks the dynamic background treatment when there's no photo/video background. */
@@ -120,6 +124,8 @@ export type ReelProps = {
   energy?: EnergyId;
   /** Resolved safe areas shared by preview and export for this exact canvas. */
   layout?: ProductionLayout;
+  /** Versioned preset identity retained by both preview and export. */
+  preset?: { id: ProductionPresetId; version: string };
 };
 
 export const REEL_WIDTH = 1080;

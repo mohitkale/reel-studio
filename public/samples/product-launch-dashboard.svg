@@ -1,0 +1,43 @@
+<svg width="1440" height="900" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1440" height="900" rx="28" fill="#F5F7FB"/>
+  <rect width="246" height="900" fill="#0B1221"/>
+  <rect x="34" y="36" width="42" height="42" rx="12" fill="#7C5CFF"/>
+  <text x="92" y="67" fill="white" font-family="Arial" font-size="24" font-weight="700">Reel Studio</text>
+  <g fill="#8791A7" font-family="Arial" font-size="18">
+    <text x="40" y="154">Overview</text><text x="40" y="210">Productions</text><text x="40" y="266">Templates</text><text x="40" y="322">Brand kits</text>
+  </g>
+  <rect x="24" y="116" width="198" height="56" rx="14" fill="#171F32"/>
+  <text x="40" y="151" fill="white" font-family="Arial" font-size="18" font-weight="700">Overview</text>
+  <text x="298" y="82" fill="#131827" font-family="Arial" font-size="34" font-weight="700">Good morning, creator</text>
+  <text x="298" y="118" fill="#697386" font-family="Arial" font-size="18">Your production workspace is ready.</text>
+  <rect x="1178" y="54" width="214" height="52" rx="26" fill="#7C5CFF"/>
+  <text x="1218" y="86" fill="white" font-family="Arial" font-size="17" font-weight="700">New production</text>
+  <g>
+    <rect x="298" y="166" width="328" height="154" rx="22" fill="white"/>
+    <rect x="650" y="166" width="328" height="154" rx="22" fill="white"/>
+    <rect x="1002" y="166" width="390" height="154" rx="22" fill="white"/>
+    <g fill="#697386" font-family="Arial" font-size="16"><text x="326" y="205">VIDEOS PRODUCED</text><text x="678" y="205">TIME SAVED</text><text x="1030" y="205">ACTIVE FORMATS</text></g>
+    <g fill="#131827" font-family="Arial" font-size="48" font-weight="700"><text x="326" y="276">24</text><text x="678" y="276">8.4h</text><text x="1030" y="276">3</text></g>
+  </g>
+  <rect x="298" y="350" width="1094" height="494" rx="24" fill="white"/>
+  <text x="330" y="402" fill="#131827" font-family="Arial" font-size="24" font-weight="700">Recent productions</text>
+  <g>
+    <rect x="330" y="438" width="310" height="330" rx="20" fill="#151A2B"/>
+    <rect x="354" y="462" width="262" height="172" rx="14" fill="url(#cardA)"/>
+    <text x="354" y="680" fill="white" font-family="Arial" font-size="20" font-weight="700">Product launch reel</text>
+    <text x="354" y="714" fill="#A7AFC1" font-family="Arial" font-size="15">9:16 · HyperFrames</text>
+    <rect x="674" y="438" width="310" height="330" rx="20" fill="#151A2B"/>
+    <rect x="698" y="462" width="262" height="172" rx="14" fill="url(#cardB)"/>
+    <text x="698" y="680" fill="white" font-family="Arial" font-size="20" font-weight="700">Editorial explainer</text>
+    <text x="698" y="714" fill="#A7AFC1" font-family="Arial" font-size="15">16:9 · Remotion</text>
+    <rect x="1018" y="438" width="342" height="330" rx="20" fill="#151A2B"/>
+    <rect x="1042" y="462" width="294" height="172" rx="14" fill="url(#cardC)"/>
+    <text x="1042" y="680" fill="white" font-family="Arial" font-size="20" font-weight="700">Podcast audiogram</text>
+    <text x="1042" y="714" fill="#A7AFC1" font-family="Arial" font-size="15">1:1 · Ready</text>
+  </g>
+  <defs>
+    <linearGradient id="cardA" x1="354" y1="462" x2="616" y2="634"><stop stop-color="#7C5CFF"/><stop offset="1" stop-color="#FF6B4A"/></linearGradient>
+    <linearGradient id="cardB" x1="698" y1="462" x2="960" y2="634"><stop stop-color="#1D9BF0"/><stop offset="1" stop-color="#22C55E"/></linearGradient>
+    <linearGradient id="cardC" x1="1042" y1="462" x2="1336" y2="634"><stop stop-color="#EF5DA8"/><stop offset="1" stop-color="#F7B955"/></linearGradient>
+  </defs>
+</svg>

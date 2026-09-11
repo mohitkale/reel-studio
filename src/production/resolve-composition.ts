@@ -71,6 +71,7 @@ export function resolveProductionComposition(
             })),
           }
         : undefined,
+      role: scene.role,
       background: backgroundAsset
         ? {
             type: backgroundAsset.type as "image" | "video",
@@ -114,6 +115,10 @@ export function resolveProductionComposition(
     styleId: spec.brand.styleId,
     energy: spec.brand.energy,
     layout,
+    preset:
+      spec.preset.id === "legacy"
+        ? undefined
+        : { id: spec.preset.id, version: spec.preset.version },
   };
 
   return {

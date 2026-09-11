@@ -3,7 +3,10 @@ import { z } from "zod";
 import { ENERGY_IDS, STYLE_IDS } from "@/compositions/visual-style";
 import { VIDEO_ENGINE_IDS } from "@/engines/types";
 import { ORIENTATIONS } from "@/lib/orientation";
-import { productionPresetIdSchema } from "@/production/presets";
+import {
+  getProductionPreset,
+  productionPresetIdSchema,
+} from "@/production/presets";
 import { productionSceneRoleSchema } from "@/production/roles";
 
 export const PRODUCTION_SPEC_VERSION = 1 as const;
@@ -250,6 +253,7 @@ export const productionSpecSchema = z
   })
   .superRefine((spec, ctx) => {
     const assetIds = new Set<string>();
+    const assetsById = new Map<string, ProductionAsset>();
     for (const [index, asset] of spec.assets.entries()) {
       if (assetIds.has(asset.id)) {
         ctx.addIssue({
@@ -259,6 +263,19 @@ export const productionSpecSchema = z
         });
       }
       assetIds.add(asset.id);
+      assetsById.set(asset.id, asset);
+    }
+
+    const resolvedPreset =
+      spec.preset.id === LEGACY_PRESET_ID
+        ? undefined
+        : getProductionPreset(spec.preset.id, spec.preset.version);
+    if (spec.preset.id !== LEGACY_PRESET_ID && !resolvedPreset) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["preset"],
+        message: `Unknown preset version: ${spec.preset.id}@${spec.preset.version}`,
+      });
     }
 
     const sceneIds = new Set<string>();
@@ -305,6 +322,30 @@ export const productionSpecSchema = z
             message: `Unknown asset reference: ${assetRef}`,
           });
         }
+      }
+
+      if (resolvedPreset && !resolvedPreset.sceneRoles.includes(scene.role)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["scenes", index, "role"],
+          message: `${scene.role} is not supported by ${resolvedPreset.name}`,
+        });
+      }
+
+      if (
+        spec.preset.id === "product-launch" &&
+        scene.role === "screenshot-demo" &&
+        !scene.assetRefs.some((ref) => {
+          const asset = assetsById.get(ref);
+          return asset?.type === "image" || asset?.type === "video";
+        })
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["scenes", index, "assetRefs"],
+          message:
+            "Product Launch screenshot demos require an image or video asset",
+        });
       }
     }
 

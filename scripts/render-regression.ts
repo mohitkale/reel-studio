@@ -1,5 +1,5 @@
 /** Real, credential-free renders for both engines. Outputs stay in .artifacts. */
-import { copyFile, mkdir, writeFile, stat } from "node:fs/promises";
+import { copyFile, mkdir, readFile, writeFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -10,6 +10,7 @@ import {
   selectComposition,
 } from "@remotion/renderer";
 import fixture from "../tests/fixtures/legacy-reel.json";
+import productLaunchFixture from "../tests/fixtures/product-launch-reel.json";
 import type { ReelProps } from "../src/compositions/types";
 import { TEMPLATES } from "../src/compositions/templates";
 import { buildHyperframesCompositionHtml } from "../src/engines/hyperframes/build-composition";
@@ -17,16 +18,44 @@ import { remotionWebpackOverride } from "../src/remotion/webpack-override";
 
 async function main() {
   const run = promisify(execFile);
-  const output = path.resolve(".artifacts/render-regression");
+  const args = process.argv.slice(2);
+  const renderProductLaunch = args.includes("--product-launch");
+  const output = path.resolve(
+    ".artifacts/render-regression",
+    renderProductLaunch ? "product-launch" : "legacy",
+  );
   await mkdir(output, { recursive: true });
-  const engines = process.argv.slice(2);
+  const engines = args.filter((arg) => arg !== "--product-launch");
   const selected = engines.length ? engines : ["hyperframes", "remotion"];
   if (
     selected.some((engine) => !["hyperframes", "remotion"].includes(engine))
   ) {
     throw new Error("Expected hyperframes and/or remotion");
   }
-  const props = fixture as ReelProps;
+  const productAssetDataUrl = renderProductLaunch
+    ? `data:image/svg+xml;base64,${(
+        await readFile(
+          path.resolve("public/samples/product-launch-dashboard.svg"),
+        )
+      ).toString("base64")}`
+    : undefined;
+  const props = (
+    renderProductLaunch
+      ? {
+          ...productLaunchFixture,
+          scenes: productLaunchFixture.scenes.map((scene) => ({
+            ...scene,
+            background: scene.background
+              ? { ...scene.background, url: productAssetDataUrl! }
+              : undefined,
+          })),
+        }
+      : fixture
+  ) as ReelProps;
+  const expectedFrames = props.timeline.reduce(
+    (max, beat) => Math.max(max, beat.startFrame + beat.durationFrames),
+    1,
+  );
   async function verifyForeground(mp4: string, engine: string) {
     const probe = JSON.parse(
       (
@@ -45,9 +74,9 @@ async function main() {
     );
     if (
       probe.streams?.[0]?.codec_name !== "h264" ||
-      probe.streams[0].width !== 1080 ||
-      probe.streams[0].height !== 1920 ||
-      Number(probe.format?.duration) < 2.9
+      probe.streams[0].width !== props.width ||
+      probe.streams[0].height !== props.height ||
+      Number(probe.format?.duration) < expectedFrames / (props.fps ?? 30) - 0.2
     ) {
       throw new Error(`${engine}: unexpected output metadata`);
     }
@@ -108,13 +137,15 @@ async function main() {
       );
       process.stdout.write(result.stdout);
     } else {
-      const inputProps: ReelProps = {
-        ...props,
-        scenes: props.scenes.map((scene, index) => ({
-          ...scene,
-          templateId: index === 0 ? "three" : "lottie",
-        })),
-      };
+      const inputProps: ReelProps = renderProductLaunch
+        ? props
+        : {
+            ...props,
+            scenes: props.scenes.map((scene, index) => ({
+              ...scene,
+              templateId: index === 0 ? "three" : "lottie",
+            })),
+          };
       const serveUrl = await bundle({
         entryPoint: path.resolve("src/remotion/index.ts"),
         webpackOverride: remotionWebpackOverride,
@@ -126,14 +157,20 @@ async function main() {
       });
       await renderMedia({
         serveUrl,
-        composition: { ...composition, durationInFrames: 90 },
+        composition: { ...composition, durationInFrames: expectedFrames },
         inputProps,
         outputLocation: mp4,
         codec: "h264",
         concurrency: 2,
         logLevel: "error",
       });
-      for (const frame of [0, 22, 44, 45, 67, 89]) {
+      const stillFrames = renderProductLaunch
+        ? props.timeline.flatMap((beat) => [
+            beat.startFrame,
+            beat.startFrame + Math.floor(beat.durationFrames / 2),
+          ])
+        : [0, 22, 44, 45, 67, 89];
+      for (const frame of stillFrames) {
         await renderStill({
           serveUrl,
           composition,
@@ -143,7 +180,7 @@ async function main() {
           logLevel: "error",
         });
       }
-      for (const template of TEMPLATES) {
+      for (const template of renderProductLaunch ? [] : TEMPLATES) {
         const templateProps: ReelProps = {
           ...props,
           scenes: props.scenes.map((scene) => ({

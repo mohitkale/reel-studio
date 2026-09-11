@@ -15,6 +15,7 @@ import {
   getStyleChrome,
 } from "./visual-style";
 import { resolveProductionLayout } from "@/production/layout";
+import { getPresetSceneComponent } from "./presets/registry";
 
 /**
  * Static cover/thumbnail frame shown at the very start of the reel. The image is
@@ -58,6 +59,7 @@ export const ReelComposition = React.memo(function ReelComposition({
   styleId = DEFAULT_STYLE_ID,
   energy = DEFAULT_ENERGY_ID,
   layout,
+  preset,
 }: ReelProps) {
   const { fps, width, height } = useVideoConfig();
   const resolvedLayout = layout ?? resolveProductionLayout({ width, height });
@@ -102,7 +104,9 @@ export const ReelComposition = React.memo(function ReelComposition({
             {timeline.map((beat, i) => {
               const scene = sceneById.get(beat.sceneId);
               if (!scene) return null;
-              const Template = getTemplateComponent(scene.templateId);
+              const Template =
+                getPresetSceneComponent(preset?.id) ??
+                getTemplateComponent(scene.templateId);
               // Hold each scene until the next one starts so the inter-beat audio gap
               // never shows a black frame. The last scene uses its own duration.
               const next = timeline[i + 1];

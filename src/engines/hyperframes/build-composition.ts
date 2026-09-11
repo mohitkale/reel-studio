@@ -29,6 +29,10 @@ import {
   buildCinematicClassicVisual,
 } from "@/engines/hyperframes/catalog/native-visuals";
 import { resolveProductionLayout } from "@/production/layout";
+import {
+  buildProductLaunchScene,
+  PRODUCT_LAUNCH_STYLES,
+} from "@/engines/hyperframes/presets/product-launch";
 
 function escapeHtml(value: string): string {
   return value
@@ -834,6 +838,22 @@ export function buildHyperframesCompositionHtml(
       framesToSeconds(transitionFrames, fps) / Math.max(0.05, duration),
     );
 
+    if (props.preset?.id === "product-launch") {
+      const presetScene = buildProductLaunchScene({
+        scene,
+        tokens,
+        absoluteStart,
+        duration,
+        exitWindow,
+        transitionClass,
+        motionStiffness,
+      });
+      if (presetScene) {
+        sceneBlocks.push(presetScene);
+        continue;
+      }
+    }
+
     const catalog = getCatalogBlockByTemplateId(scene.templateId);
     if (catalog) {
       const built = buildCatalogSceneBlock({
@@ -911,7 +931,7 @@ export function buildHyperframesCompositionHtml(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reel Studio · HyperFrames</title>
-  <style>${STYLES}</style>
+  <style>${STYLES}${PRODUCT_LAUNCH_STYLES}</style>
 </head>
 <body>
   <div id="fit-wrap"
