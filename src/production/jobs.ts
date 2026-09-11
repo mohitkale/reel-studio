@@ -32,6 +32,18 @@ export const enqueueProductionJobSchema = z.object({
 });
 export type EnqueueProductionJob = z.input<typeof enqueueProductionJobSchema>;
 
+export const videoProductionJobInputSchema = z.object({
+  renderId: z.string().min(1),
+  scriptId: z.string().min(1),
+  voiceTakeId: z.string().min(1).optional(),
+  orientation: z.enum(["portrait", "landscape", "square"]).optional(),
+  quality: z.enum(["draft", "standard", "high"]).default("standard"),
+  serverBaseUrl: z.url().default("http://localhost:3000"),
+});
+export type VideoProductionJobInput = z.infer<
+  typeof videoProductionJobInputSchema
+>;
+
 export interface ClaimedProductionJob {
   id: string;
   kind: string;

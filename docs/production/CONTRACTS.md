@@ -159,4 +159,8 @@ Steps, ordered events and output records survive web or worker restarts.
 
 The shared pipeline step keys are validate, plan, resolve media, synthesize
 audio, time content, prepare composition, render/export and verify artifacts.
-Task 19 connects these durable records to complete video orchestration.
+The production worker is available through `npm run production:worker`. Video
+jobs pass through all eight stages and reuse the existing engine-aware render
+service. A job cannot succeed until `ffprobe` confirms a decodable MP4 with
+positive dimensions and duration, and an audio stream when the chosen take
+requires one. The verified artifact is stored with SHA-256 and media metadata.

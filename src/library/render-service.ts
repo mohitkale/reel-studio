@@ -212,6 +212,18 @@ async function runRender(opts: StartRenderOptions): Promise<void> {
   await runRemotionRender(opts);
 }
 
+/** Await the existing renderer and surface its persisted terminal state. */
+export async function runRenderNow(opts: StartRenderOptions): Promise<void> {
+  await runRender(opts);
+  const { getRender } = await import("@/library/repositories/renders");
+  const render = await getRender(opts.renderId);
+  if (!render || render.status !== "done" || !render.outputUrl) {
+    throw new Error(
+      render?.error || `Render ${opts.renderId} did not produce an artifact`,
+    );
+  }
+}
+
 async function runRemotionRender({
   renderId,
   scriptId,

@@ -249,3 +249,27 @@ export async function listProductionJobEvents(jobId: string, afterId = 0) {
     take: 250,
   });
 }
+
+export async function addProductionJobOutput(
+  jobId: string,
+  output: {
+    kind: string;
+    format: string;
+    path: string;
+    checksum?: string;
+    metadata?: unknown;
+  },
+  db: PrismaClient = prisma,
+) {
+  return db.productionJobOutput.create({
+    data: {
+      jobId,
+      kind: output.kind,
+      format: output.format,
+      path: output.path,
+      checksum: output.checksum,
+      metadataJson:
+        output.metadata === undefined ? null : json(output.metadata),
+    },
+  });
+}
