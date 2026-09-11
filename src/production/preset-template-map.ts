@@ -63,6 +63,20 @@ export const PRESET_TEMPLATE_MAP: PresetTemplateMap = {
       cta: "emoji-punch",
     },
   },
+  "data-story": {
+    hyperframes: {
+      metric: "hf-stat",
+      chart: "hf-data-chart",
+      comparison: "hf-data-chart",
+      takeaway: "hf-stat",
+    },
+    remotion: {
+      metric: "stat-reveal",
+      chart: "stat-reveal",
+      comparison: "stat-reveal",
+      takeaway: "stat-reveal",
+    },
+  },
 };
 
 export function getPresetTemplateId(args: {

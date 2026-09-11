@@ -113,3 +113,15 @@ item copy is supplied.
 Run `npm run test:render:creator-punch` for the credential-free 10-second
 portrait fixture. The render gate inspects role boundaries and verifies the
 complete H.264 output from both engines.
+
+## Data Story 1.0.0
+
+Data Story carries metric, chart, comparison and takeaway roles into both
+engines. Metric scenes require an explicit display value. Chart and comparison
+scenes require structured labels and series values, with optional units and
+source attribution. Both renderers scale bars from the supplied values and
+display the exact supplied labels; they never infer numbers from narration.
+
+Run `npm run test:render:data-story` for a credential-free 10.5-second fixture
+covering a metric, four-point chart, two-point comparison and takeaway. The
+fixture values and attribution are asserted in the composition contract test.

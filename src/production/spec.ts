@@ -347,6 +347,30 @@ export const productionSpecSchema = z
             "Product Launch screenshot demos require an image or video asset",
         });
       }
+
+      if (
+        spec.preset.id === "data-story" &&
+        scene.role === "metric" &&
+        !scene.visual?.trim()
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["scenes", index, "visual"],
+          message: "Data Story metrics require an explicit display value",
+        });
+      }
+
+      if (
+        spec.preset.id === "data-story" &&
+        (scene.role === "chart" || scene.role === "comparison") &&
+        !scene.chart
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["scenes", index, "chart"],
+          message: `Data Story ${scene.role} scenes require structured chart data`,
+        });
+      }
     }
 
     const captionIds = new Set<string>();

@@ -13,6 +13,10 @@ import {
   buildCreatorPunchScene,
   CREATOR_PUNCH_STYLES,
 } from "@/engines/hyperframes/presets/creator-punch";
+import {
+  buildDataStoryScene,
+  DATA_STORY_STYLES,
+} from "@/engines/hyperframes/presets/data-story";
 
 export interface HyperframesPresetSceneArgs {
   scene: ReelScene;
@@ -33,6 +37,7 @@ const BUILDERS: Partial<
   "product-launch": buildProductLaunchScene,
   "editorial-explainer": buildEditorialExplainerScene,
   "creator-punch": buildCreatorPunchScene,
+  "data-story": buildDataStoryScene,
 };
 
 export function buildHyperframesPresetScene(
@@ -42,4 +47,4 @@ export function buildHyperframesPresetScene(
   return BUILDERS[presetId]?.(args) ?? null;
 }
 
-export const HYPERFRAMES_PRESET_STYLES = `${PRODUCT_LAUNCH_STYLES}${EDITORIAL_EXPLAINER_STYLES}${CREATOR_PUNCH_STYLES}`;
+export const HYPERFRAMES_PRESET_STYLES = `${PRODUCT_LAUNCH_STYLES}${EDITORIAL_EXPLAINER_STYLES}${CREATOR_PUNCH_STYLES}${DATA_STORY_STYLES}`;

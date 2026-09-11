@@ -13,6 +13,7 @@ import {
 import productLaunchFixture from "../../tests/fixtures/product-launch-reel.json";
 import editorialExplainerFixture from "../../tests/fixtures/editorial-explainer-reel.json";
 import creatorPunchFixture from "../../tests/fixtures/creator-punch-reel.json";
+import dataStoryFixture from "../../tests/fixtures/data-story-reel.json";
 import type { ReelProps } from "@/compositions/types";
 import { reelDurationFrames } from "@/compositions/types";
 
@@ -236,5 +237,36 @@ describe("resolved production composition", () => {
     expect(html).toContain("cp-tips");
     expect(html).toContain("Create your first cut");
     expect(reelDurationFrames(creatorPunchFixture as ReelProps)).toBe(300);
+  });
+
+  it("renders supplied Data Story values and attribution without substitution", () => {
+    const html = buildHyperframesCompositionHtml(dataStoryFixture as ReelProps);
+
+    expect(html.match(/data-production-preset="data-story"/g)).toHaveLength(4);
+    for (const role of ["metric", "chart", "comparison", "takeaway"]) {
+      expect(html).toContain(`data-scene-role="${role}"`);
+    }
+    for (const value of ["72%", "8", "12", "15", "21", "18", "6"]) {
+      expect(html).toContain(value);
+    }
+    expect(html).toContain("Reel Studio demo fixture");
+    expect(reelDurationFrames(dataStoryFixture as ReelProps)).toBe(315);
+  });
+
+  it("rejects Data Story metric and chart roles without explicit data", () => {
+    const missingMetric = productionSpec("remotion", "portrait");
+    missingMetric.preset = { id: "data-story", version: "1.0.0" };
+    missingMetric.scenes[0].role = "metric";
+    delete missingMetric.scenes[0].visual;
+    expect(productionSpecSchema.safeParse(missingMetric).success).toBe(false);
+
+    missingMetric.scenes[0].role = "chart";
+    const result = productionSpecSchema.safeParse(missingMetric);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.map((issue) => issue.message)).toContain(
+        "Data Story chart scenes require structured chart data",
+      );
+    }
   });
 });

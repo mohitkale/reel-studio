@@ -1,0 +1,75 @@
+{
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "styleId": "teach-me",
+  "energy": "normal",
+  "preset": { "id": "data-story", "version": "1.0.0" },
+  "tokens": {
+    "background": "#07131D",
+    "backgroundAccent": "#102836",
+    "foreground": "#F4FBFF",
+    "muted": "#9FB4C1",
+    "accent": "#46E6B0",
+    "accentSecondary": "#3A8DFF",
+    "accentForeground": "#07131D",
+    "handle": "@reelstudio",
+    "fontFamily": "Inter, sans-serif",
+    "radius": 12
+  },
+  "scenes": [
+    {
+      "id": "data-metric",
+      "role": "metric",
+      "templateId": "hf-stat",
+      "text": "of sample projects reached a reviewable first cut in one session.",
+      "emphasis": ["one session"],
+      "visual": "72%",
+      "order": 0
+    },
+    {
+      "id": "data-chart",
+      "role": "chart",
+      "templateId": "hf-data-chart",
+      "text": "Completed exports rose across four weekly production cycles.",
+      "emphasis": ["rose"],
+      "chart": {
+        "labels": ["W1", "W2", "W3", "W4"],
+        "series": [
+          { "label": "Exports", "values": [8, 12, 15, 21], "unit": "" }
+        ],
+        "sourceAttribution": "Reel Studio demo fixture"
+      },
+      "order": 1
+    },
+    {
+      "id": "data-comparison",
+      "role": "comparison",
+      "templateId": "hf-data-chart",
+      "text": "Template-guided production used fewer setup minutes.",
+      "emphasis": ["fewer setup minutes"],
+      "chart": {
+        "labels": ["Manual", "Preset"],
+        "series": [
+          { "label": "Setup time", "values": [18, 6], "unit": " min" }
+        ],
+        "sourceAttribution": "Reel Studio demo fixture"
+      },
+      "order": 2
+    },
+    {
+      "id": "data-takeaway",
+      "role": "takeaway",
+      "templateId": "hf-stat",
+      "text": "A repeatable system turns more ideas into finished work.",
+      "emphasis": ["finished work"],
+      "order": 3
+    }
+  ],
+  "timeline": [
+    { "sceneId": "data-metric", "startFrame": 0, "durationFrames": 75 },
+    { "sceneId": "data-chart", "startFrame": 75, "durationFrames": 90 },
+    { "sceneId": "data-comparison", "startFrame": 165, "durationFrames": 75 },
+    { "sceneId": "data-takeaway", "startFrame": 240, "durationFrames": 75 }
+  ]
+}

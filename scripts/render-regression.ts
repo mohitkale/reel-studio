@@ -13,6 +13,7 @@ import fixture from "../tests/fixtures/legacy-reel.json";
 import productLaunchFixture from "../tests/fixtures/product-launch-reel.json";
 import editorialExplainerFixture from "../tests/fixtures/editorial-explainer-reel.json";
 import creatorPunchFixture from "../tests/fixtures/creator-punch-reel.json";
+import dataStoryFixture from "../tests/fixtures/data-story-reel.json";
 import type { ReelProps } from "../src/compositions/types";
 import { TEMPLATES } from "../src/compositions/templates";
 import { buildHyperframesCompositionHtml } from "../src/engines/hyperframes/build-composition";
@@ -29,6 +30,7 @@ async function main() {
     "product-launch": productLaunchFixture,
     "editorial-explainer": editorialExplainerFixture,
     "creator-punch": creatorPunchFixture,
+    "data-story": dataStoryFixture,
   };
   if (presetId && !presetFixtures[presetId]) {
     throw new Error(`Unknown render fixture preset: ${presetId}`);
