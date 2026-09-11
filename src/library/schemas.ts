@@ -98,7 +98,7 @@ export const sceneConfigSchema = z.object({
   musicMood: z.string().max(60).optional(),
 });
 
-export const metaSchema = z.record(z.unknown());
+export const metaSchema = z.record(z.string(), z.unknown());
 
 /** Parse a JSON string column, falling back to a default on null/invalid. */
 export function parseJsonColumn<T>(

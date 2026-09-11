@@ -8,6 +8,12 @@ The frozen registry inventory is in `dependencies.json`. Install targets exclude
 - HyperFrames: producer 0.8.33 and CLI 0.8.27 are the compatible published targets. GSAP 3.14.2 is pinned and copied into each render workspace so frame capture does not fetch its motion runtime from the network.
 - Remotion family: all direct packages target exactly 4.0.523.
 
+## Remotion 4.0.523
+
+All nine Remotion packages are pinned to the same exact release and the compatible Studio Zod version is pinned to 4.5.4. Zod 4 record schemas now declare their key schema explicitly, while the AI scene input type continues to accept an omitted optional visual without weakening parsed output validation.
+
+The credential-free render regression encodes a Three.js-to-Lottie MP4 and renders a representative still from every registered legacy template. Each still selects its composition with the matching input props because Remotion stores calculated, resolved props on the selected composition; reusing a composition selected for different props would test the wrong template.
+
 ## Baseline render finding
 
 Both engines encoded three-second H.264 fixtures before upgrades. HyperFrames at 0.7.61 produced a background-only sampled frame; this is an existing visual failure, not an accepted baseline. The HyperFrames compatibility task must fix it before the first milestone passes.

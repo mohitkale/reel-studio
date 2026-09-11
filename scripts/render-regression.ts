@@ -11,6 +11,7 @@ import {
 } from "@remotion/renderer";
 import fixture from "../tests/fixtures/legacy-reel.json";
 import type { ReelProps } from "../src/compositions/types";
+import { TEMPLATES } from "../src/compositions/templates";
 import { buildHyperframesCompositionHtml } from "../src/engines/hyperframes/build-composition";
 import { remotionWebpackOverride } from "../src/remotion/webpack-override";
 
@@ -109,9 +110,9 @@ async function main() {
     } else {
       const inputProps: ReelProps = {
         ...props,
-        scenes: props.scenes.map((scene) => ({
+        scenes: props.scenes.map((scene, index) => ({
           ...scene,
-          templateId: "kinetic",
+          templateId: index === 0 ? "three" : "lottie",
         })),
       };
       const serveUrl = await bundle({
@@ -139,6 +140,28 @@ async function main() {
           inputProps,
           frame,
           output: path.join(output, `remotion-${frame}.png`),
+          logLevel: "error",
+        });
+      }
+      for (const template of TEMPLATES) {
+        const templateProps: ReelProps = {
+          ...props,
+          scenes: props.scenes.map((scene) => ({
+            ...scene,
+            templateId: template.id,
+          })),
+        };
+        const templateComposition = await selectComposition({
+          serveUrl,
+          id: "Reel",
+          inputProps: templateProps,
+        });
+        await renderStill({
+          serveUrl,
+          composition: templateComposition,
+          inputProps: templateProps,
+          frame: 30,
+          output: path.join(output, `remotion-template-${template.id}.png`),
           logLevel: "error",
         });
       }

@@ -15,8 +15,8 @@ Work in the numbered order. For each task, record acceptance evidence and commit
 - [x] 02. CI and both-engine render harness. Evidence: `ea60641`; both engines encoded baseline MP4s and exposed a HyperFrames visibility regression.
 - [x] 03. Node, Next, React and framework upgrade. Evidence: Next 16.3.4 production build, typecheck, lint and unit tests pass; commit recorded with task 04 because the lockfile and Prisma adapter migration are atomic.
 - [x] 04. Prisma upgrade and safe migration baseline. Evidence: Prisma 7.10 migration, fresh/legacy database tests, populated demo seed, backup and drift rejection; `36a4ef1`.
-- [x] 05. HyperFrames runtime compatibility. Depends on 4. Evidence: producer 0.8.33 and CLI 0.8.27; clean CLI contract/layout/contrast validation; locally bundled GSAP; real dual-engine MP4 regression with visible foreground and a seekable root timeline. SHA: this commit.
-- [ ] 06. Remotion synchronized upgrade. Depends on 5. Evidence/SHA: pending.
+- [x] 05. HyperFrames runtime compatibility. Depends on 4. Evidence: producer 0.8.33 and CLI 0.8.27; clean CLI contract/layout/contrast validation; locally bundled GSAP; real dual-engine MP4 regression with visible foreground and a seekable root timeline. SHA: `5c0aa88`.
+- [x] 06. Remotion synchronized upgrade. Depends on 5. Evidence: all Remotion packages at 4.0.523 and Zod 4.5.4; `remotion versions`, typecheck, lint and 105 unit tests pass; real H.264 render exercises Three.js and Lottie; still matrix covers all seven legacy templates. SHA: this commit.
 - [ ] 07. Remaining packages and first compatibility gate. Depends on 6. Evidence/SHA: pending.
 - [ ] 08. Versioned production contracts. Depends on 7. Evidence/SHA: pending.
 - [ ] 09. Catalog provenance and version retention. Depends on 8. Evidence/SHA: pending.

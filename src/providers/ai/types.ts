@@ -190,7 +190,10 @@ export const scenePlanSchema = z
     scenes: plan.scenes.map(sanitizeAiScene),
   }));
 
-export type AIScene = z.infer<typeof aiSceneSchema>;
+type ParsedAIScene = z.infer<typeof aiSceneSchema>;
+export type AIScene = Omit<ParsedAIScene, "visual"> & {
+  visual?: ParsedAIScene["visual"];
+};
 export type ScenePlan = z.infer<typeof scenePlanSchema>;
 
 export interface GeneratePlanInput {

@@ -13,7 +13,7 @@ import { errorResponse } from "@/server/api-helpers";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const colorRecord = z.record(z.string().regex(/^#[0-9a-fA-F]{6}$/));
+const colorRecord = z.record(z.string(), z.string().regex(/^#[0-9a-fA-F]{6}$/));
 
 const patchSchema = z.object({
   name: z.string().min(1).max(80).optional(),
