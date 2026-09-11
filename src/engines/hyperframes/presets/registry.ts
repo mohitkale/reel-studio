@@ -9,6 +9,10 @@ import {
   EDITORIAL_EXPLAINER_STYLES,
 } from "@/engines/hyperframes/presets/editorial-explainer";
 import type { ProductionPresetId } from "@/production/presets";
+import {
+  buildCreatorPunchScene,
+  CREATOR_PUNCH_STYLES,
+} from "@/engines/hyperframes/presets/creator-punch";
 
 export interface HyperframesPresetSceneArgs {
   scene: ReelScene;
@@ -28,6 +32,7 @@ const BUILDERS: Partial<
 > = {
   "product-launch": buildProductLaunchScene,
   "editorial-explainer": buildEditorialExplainerScene,
+  "creator-punch": buildCreatorPunchScene,
 };
 
 export function buildHyperframesPresetScene(
@@ -37,4 +42,4 @@ export function buildHyperframesPresetScene(
   return BUILDERS[presetId]?.(args) ?? null;
 }
 
-export const HYPERFRAMES_PRESET_STYLES = `${PRODUCT_LAUNCH_STYLES}${EDITORIAL_EXPLAINER_STYLES}`;
+export const HYPERFRAMES_PRESET_STYLES = `${PRODUCT_LAUNCH_STYLES}${EDITORIAL_EXPLAINER_STYLES}${CREATOR_PUNCH_STYLES}`;

@@ -12,6 +12,7 @@ import {
 } from "@/production/spec";
 import productLaunchFixture from "../../tests/fixtures/product-launch-reel.json";
 import editorialExplainerFixture from "../../tests/fixtures/editorial-explainer-reel.json";
+import creatorPunchFixture from "../../tests/fixtures/creator-punch-reel.json";
 import type { ReelProps } from "@/compositions/types";
 import { reelDurationFrames } from "@/compositions/types";
 
@@ -219,5 +220,21 @@ describe("resolved production composition", () => {
     expect(reelDurationFrames(editorialExplainerFixture as ReelProps)).toBe(
       360,
     );
+  });
+
+  it("renders the complete Creator Punch role sequence in HyperFrames", () => {
+    const html = buildHyperframesCompositionHtml(
+      creatorPunchFixture as ReelProps,
+    );
+
+    expect(html.match(/data-production-preset="creator-punch"/g)).toHaveLength(
+      5,
+    );
+    for (const role of ["hook", "tip", "emphasis", "payoff", "cta"]) {
+      expect(html).toContain(`data-scene-role="${role}"`);
+    }
+    expect(html).toContain("cp-tips");
+    expect(html).toContain("Create your first cut");
+    expect(reelDurationFrames(creatorPunchFixture as ReelProps)).toBe(300);
   });
 });

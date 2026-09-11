@@ -47,6 +47,22 @@ export const PRESET_TEMPLATE_MAP: PresetTemplateMap = {
       summary: "icon-grid",
     },
   },
+  "creator-punch": {
+    hyperframes: {
+      hook: "hf-kinetic-slam",
+      tip: "hf-list",
+      emphasis: "hf-kinetic-slam",
+      payoff: "hf-statement",
+      cta: "hf-logo-outro",
+    },
+    remotion: {
+      hook: "emoji-punch",
+      tip: "icon-grid",
+      emphasis: "emoji-punch",
+      payoff: "kinetic",
+      cta: "emoji-punch",
+    },
+  },
 };
 
 export function getPresetTemplateId(args: {

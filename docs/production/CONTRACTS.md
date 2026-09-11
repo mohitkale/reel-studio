@@ -101,3 +101,15 @@ clipped by a fixed root duration.
 The credential-free acceptance fixture contains five editorial scenes and no
 remote assets. Run `npm run test:render:editorial` to render the complete
 12-second sequence through both engines.
+
+## Creator Punch 1.0.0
+
+Creator Punch carries hook, tip, emphasis, payoff and CTA roles into both
+engines. The renderers use high-contrast creator typography, selective visual
+symbols, beat-oriented entrances and responsive tip cards while preserving the
+same copy, timing and brand snapshot. The CTA label appears only when explicit
+item copy is supplied.
+
+Run `npm run test:render:creator-punch` for the credential-free 10-second
+portrait fixture. The render gate inspects role boundaries and verifies the
+complete H.264 output from both engines.

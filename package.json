@@ -38,6 +38,7 @@
     "test:render": "tsx scripts/render-regression.ts",
     "test:render:product-launch": "tsx scripts/render-regression.ts --product-launch",
     "test:render:editorial": "tsx scripts/render-regression.ts --preset=editorial-explainer",
+    "test:render:creator-punch": "tsx scripts/render-regression.ts --preset=creator-punch",
     "db:migrate": "node scripts/migrate-database.mjs"
   },
   "dependencies": {
