@@ -361,6 +361,22 @@ export const productionSpecSchema = z
       }
 
       if (
+        spec.preset.id === "developer-demo" &&
+        scene.role === "browser" &&
+        !scene.assetRefs.some((ref) => {
+          const asset = assetsById.get(ref);
+          return asset?.type === "image" || asset?.type === "video";
+        })
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["scenes", index, "assetRefs"],
+          message:
+            "Developer Demo browser scenes require an image or video asset",
+        });
+      }
+
+      if (
         spec.preset.id === "data-story" &&
         (scene.role === "chart" || scene.role === "comparison") &&
         !scene.chart

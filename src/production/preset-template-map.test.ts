@@ -5,6 +5,7 @@ import { ProductLaunchScene } from "@/compositions/presets/product-launch";
 import { EditorialExplainerScene } from "@/compositions/presets/editorial-explainer";
 import { CreatorPunchScene } from "@/compositions/presets/creator-punch";
 import { DataStoryScene } from "@/compositions/presets/data-story";
+import { DeveloperDemoScene } from "@/compositions/presets/developer-demo";
 import { getPresetSceneComponent } from "@/compositions/presets/registry";
 import { getProductionPreset } from "@/production/presets";
 import { getPresetTemplateId } from "@/production/preset-template-map";
@@ -112,5 +113,30 @@ describe("Data Story renderer adapters", () => {
 
   it("registers the Remotion preset renderer", () => {
     expect(getPresetSceneComponent("data-story")).toBe(DataStoryScene);
+  });
+});
+
+describe("Developer Demo renderer adapters", () => {
+  it("maps every role to a compatible template on both engines", () => {
+    const preset = getProductionPreset("developer-demo");
+    expect(preset).toBeDefined();
+    for (const engineId of ["hyperframes", "remotion"] as const) {
+      const engine = getVideoEngine(engineId);
+      for (const role of preset!.sceneRoles) {
+        const templateId = getPresetTemplateId({
+          presetId: "developer-demo",
+          engineId,
+          role,
+        });
+        expect(templateId).toBeDefined();
+        expect(engine.capabilities.templates[templateId!].sceneRoles).toContain(
+          role,
+        );
+      }
+    }
+  });
+
+  it("registers the Remotion preset renderer", () => {
+    expect(getPresetSceneComponent("developer-demo")).toBe(DeveloperDemoScene);
   });
 });

@@ -14,6 +14,7 @@ import productLaunchFixture from "../../tests/fixtures/product-launch-reel.json"
 import editorialExplainerFixture from "../../tests/fixtures/editorial-explainer-reel.json";
 import creatorPunchFixture from "../../tests/fixtures/creator-punch-reel.json";
 import dataStoryFixture from "../../tests/fixtures/data-story-reel.json";
+import developerDemoFixture from "../../tests/fixtures/developer-demo-reel.json";
 import type { ReelProps } from "@/compositions/types";
 import { reelDurationFrames } from "@/compositions/types";
 
@@ -266,6 +267,37 @@ describe("resolved production composition", () => {
     if (!result.success) {
       expect(result.error.issues.map((issue) => issue.message)).toContain(
         "Data Story chart scenes require structured chart data",
+      );
+    }
+  });
+
+  it("renders escaped Developer Demo code, diff, terminal, browser, and CTA roles", () => {
+    const html = buildHyperframesCompositionHtml(
+      developerDemoFixture as ReelProps,
+    );
+    expect(html.match(/data-production-preset="developer-demo"/g)).toHaveLength(
+      5,
+    );
+    for (const role of ["code", "diff", "terminal", "browser", "cta"]) {
+      expect(html).toContain(`data-scene-role="${role}"`);
+    }
+    expect(html).toContain("const production = schema.parse(input);");
+    expect(html).toContain("change.diff");
+    expect(html).toContain("developer-demo-browser.svg");
+    expect(html).toContain("npm run produce");
+    expect(reelDurationFrames(developerDemoFixture as ReelProps)).toBe(360);
+  });
+
+  it("rejects a Developer Demo browser scene without supplied media", () => {
+    const spec = productionSpec("hyperframes", "portrait");
+    spec.preset = { id: "developer-demo", version: "1.0.0" };
+    spec.scenes[0].role = "browser";
+    spec.scenes[0].assetRefs = [];
+    const result = productionSpecSchema.safeParse(spec);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.map((issue) => issue.message)).toContain(
+        "Developer Demo browser scenes require an image or video asset",
       );
     }
   });

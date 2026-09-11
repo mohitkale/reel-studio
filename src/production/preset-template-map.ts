@@ -77,6 +77,22 @@ export const PRESET_TEMPLATE_MAP: PresetTemplateMap = {
       takeaway: "stat-reveal",
     },
   },
+  "developer-demo": {
+    hyperframes: {
+      code: "hf-statement",
+      diff: "hf-statement",
+      terminal: "hf-statement",
+      browser: "hf-app-showcase",
+      cta: "hf-logo-outro",
+    },
+    remotion: {
+      code: "kinetic",
+      diff: "kinetic",
+      terminal: "kinetic",
+      browser: "lottie",
+      cta: "kinetic",
+    },
+  },
 };
 
 export function getPresetTemplateId(args: {

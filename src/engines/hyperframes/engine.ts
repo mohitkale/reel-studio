@@ -15,6 +15,8 @@ import {
 } from "@/production/roles";
 
 function rolesForTemplate(templateId: string): readonly ProductionSceneRole[] {
+  if (templateId === "hf-statement")
+    return ["explanation", "feature", "payoff", "code", "diff", "terminal"];
   if (/logo/.test(templateId)) return ["logo", "cta"];
   if (/cta|follow|lower-third/.test(templateId)) return ["cta"];
   if (/data-chart/.test(templateId)) return ["chart", "comparison"];
@@ -22,7 +24,7 @@ function rolesForTemplate(templateId: string): readonly ProductionSceneRole[] {
     return ["metric", "comparison", "takeaway"];
   if (/quote/.test(templateId)) return ["quote", "testimonial"];
   if (/app-showcase/.test(templateId))
-    return ["screenshot-demo", "feature", "hero"];
+    return ["screenshot-demo", "feature", "hero", "browser"];
   if (/list/.test(templateId))
     return ["tip", "feature", "comparison", "diagram", "summary"];
   if (/opener|kinetic/.test(templateId))

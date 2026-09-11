@@ -15,8 +15,18 @@ import {
 } from "@/production/roles";
 
 const roleMap: Record<string, readonly ProductionSceneRole[]> = {
-  kinetic: ["hook", "headline", "explanation", "emphasis", "payoff", "cta"],
-  lottie: ["explanation", "diagram", "feature", "screenshot-demo"],
+  kinetic: [
+    "hook",
+    "headline",
+    "explanation",
+    "emphasis",
+    "payoff",
+    "cta",
+    "code",
+    "diff",
+    "terminal",
+  ],
+  lottie: ["explanation", "diagram", "feature", "screenshot-demo", "browser"],
   three: ["hook", "hero", "feature"],
   "stat-reveal": ["metric", "chart", "comparison", "takeaway"],
   "icon-grid": ["feature", "tip", "comparison", "summary"],

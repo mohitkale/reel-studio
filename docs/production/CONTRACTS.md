@@ -125,3 +125,15 @@ display the exact supplied labels; they never infer numbers from narration.
 Run `npm run test:render:data-story` for a credential-free 10.5-second fixture
 covering a metric, four-point chart, two-point comparison and takeaway. The
 fixture values and attribution are asserted in the composition contract test.
+
+## Developer Demo 1.0.0
+
+Developer Demo carries code, diff, terminal, browser and CTA roles into both
+engines. Code-like content is supplied as scene items and encoded as text before
+rendering. Diff rows preserve explicit `+` and `-` markers, while browser proof
+requires a supplied image or video asset. The adapters do not execute displayed
+commands or source code.
+
+Run `npm run test:render:developer-demo` for a credential-free 12-second
+fixture. It embeds the bundled browser dashboard as a local data URL so the
+render remains offline and deterministic.
