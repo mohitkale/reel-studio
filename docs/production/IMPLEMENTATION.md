@@ -17,8 +17,8 @@ Work in the numbered order. For each task, record acceptance evidence and commit
 - [x] 04. Prisma upgrade and safe migration baseline. Evidence: Prisma 7.10 migration, fresh/legacy database tests, populated demo seed, backup and drift rejection; `36a4ef1`.
 - [x] 05. HyperFrames runtime compatibility. Depends on 4. Evidence: producer 0.8.33 and CLI 0.8.27; clean CLI contract/layout/contrast validation; locally bundled GSAP; real dual-engine MP4 regression with visible foreground and a seekable root timeline. SHA: `5c0aa88`.
 - [x] 06. Remotion synchronized upgrade. Depends on 5. Evidence: all Remotion packages at 4.0.523 and Zod 4.5.4; `remotion versions`, typecheck, lint and 105 unit tests pass; real H.264 render exercises Three.js and Lottie; still matrix covers all seven legacy templates. SHA: `79de198`.
-- [x] 07. Remaining packages and first compatibility gate. Depends on 6. Evidence: exact direct pins; clean `npm ci`; valid peer tree; zero-warning lint; typecheck; 106 tests; Next production build; real dual-engine renders and seven-template still matrix; secret scan. Compatibility and advisory exceptions are recorded in `UPGRADES.md`. SHA: this commit.
-- [ ] 08. Versioned production contracts. Depends on 7. Evidence/SHA: pending.
+- [x] 07. Remaining packages and first compatibility gate. Depends on 6. Evidence: exact direct pins; clean `npm ci`; valid peer tree; zero-warning lint; typecheck; 106 tests; Next production build; real dual-engine renders and seven-template still matrix; secret scan. Compatibility and advisory exceptions are recorded in `UPGRADES.md`. SHA: `3650ddd`.
+- [x] 08. Versioned production contracts. Depends on 7. Evidence: immutable Zod production snapshot, six versioned preset definitions, both-engine template capability metadata, legacy project mapping and focused invariant tests. SHA: this commit.
 - [ ] 09. Catalog provenance and version retention. Depends on 8. Evidence/SHA: pending.
 - [ ] 10. Shared layout and media inputs. Depends on 9. Evidence/SHA: pending.
 - [ ] 11. Chart correctness and safe personalization. Depends on 10. Evidence/SHA: pending.

@@ -4,6 +4,8 @@
  */
 
 import type { TemplateMeta } from "@/compositions/templates";
+import type { Orientation } from "@/lib/orientation";
+import type { ProductionSceneRole } from "@/production/roles";
 
 export const VIDEO_ENGINE_IDS = ["remotion", "hyperframes"] as const;
 export type VideoEngineId = (typeof VIDEO_ENGINE_IDS)[number];
@@ -25,11 +27,30 @@ export const VIDEO_ENGINE_DESCRIPTIONS: Record<VideoEngineId, string> = {
 
 export type EngineTemplateMeta = TemplateMeta;
 
+export type EngineTemplateInput =
+  "displayText" | "narrationText" | "visual" | "items" | "asset" | "chartData";
+
+export interface EngineTemplateCapabilities {
+  templateId: string;
+  version: string;
+  aspectRatios: readonly Orientation[];
+  sceneRoles: readonly ProductionSceneRole[];
+  requiredInputs: readonly EngineTemplateInput[];
+  effects: readonly string[];
+}
+
+export interface VideoEngineCapabilities {
+  aspectRatios: readonly Orientation[];
+  sceneRoles: readonly ProductionSceneRole[];
+  templates: Readonly<Record<string, EngineTemplateCapabilities>>;
+}
+
 export interface VideoEngine {
   id: VideoEngineId;
   label: string;
   description: string;
   defaultTemplateId: string;
+  capabilities: VideoEngineCapabilities;
   listTemplates(): EngineTemplateMeta[];
   normalizeTemplateId(id: string): string;
 }
