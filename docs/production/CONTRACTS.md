@@ -137,3 +137,14 @@ commands or source code.
 Run `npm run test:render:developer-demo` for a credential-free 12-second
 fixture. It embeds the bundled browser dashboard as a local data URL so the
 render remains offline and deterministic.
+
+## Cinematic Brand 1.0.0
+
+Cinematic Brand carries hero, feature, testimonial and logo roles into both
+engines. Hero scenes require a supplied image or video asset. Testimonial text
+and attribution must be supplied explicitly, while the logo close uses the
+provided short mark and brand snapshot. Motion stays measured and the adapters
+apply a vignette, subtle texture and readable foreground treatment.
+
+Run `npm run test:render:cinematic-brand` for the credential-free 12-second
+fixture. The bundled hero image is embedded locally for deterministic rendering.

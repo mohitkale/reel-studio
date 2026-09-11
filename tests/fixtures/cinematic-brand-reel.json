@@ -1,0 +1,76 @@
+{
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "styleId": "soft-brand",
+  "energy": "calm",
+  "preset": { "id": "cinematic-brand", "version": "1.0.0" },
+  "tokens": {
+    "background": "#080808",
+    "backgroundAccent": "#211A16",
+    "foreground": "#FFF8ED",
+    "muted": "#C7BBAA",
+    "accent": "#E5C28E",
+    "accentSecondary": "#8B6547",
+    "accentForeground": "#080808",
+    "handle": "@reelstudio",
+    "fontFamily": "Georgia, serif",
+    "radius": 6
+  },
+  "scenes": [
+    {
+      "id": "brand-hero",
+      "role": "hero",
+      "templateId": "hf-app-showcase",
+      "text": "Craft deserves a story with room to breathe.",
+      "emphasis": ["room to breathe"],
+      "background": {
+        "type": "image",
+        "url": "/samples/cinematic-brand-hero.svg",
+        "effect": "ken-burns"
+      },
+      "mood": "dramatic",
+      "order": 0
+    },
+    {
+      "id": "brand-feature",
+      "role": "feature",
+      "templateId": "hf-list",
+      "text": "A complete visual language, resolved before the first frame.",
+      "emphasis": ["complete visual language"],
+      "items": [
+        "Measured movement",
+        "Tactile typography",
+        "Quiet, confident sound"
+      ],
+      "mood": "inspiring",
+      "order": 1
+    },
+    {
+      "id": "brand-testimonial",
+      "role": "testimonial",
+      "templateId": "hf-quote",
+      "text": "The first cut already felt considered, coherent, and ready to share.",
+      "emphasis": [],
+      "visual": "Sample creative review",
+      "mood": "calm",
+      "order": 2
+    },
+    {
+      "id": "brand-logo",
+      "role": "logo",
+      "templateId": "hf-logo-outro",
+      "text": "Reel Studio. Make the idea visible.",
+      "emphasis": ["Make the idea visible"],
+      "visual": "RS",
+      "mood": "dramatic",
+      "order": 3
+    }
+  ],
+  "timeline": [
+    { "sceneId": "brand-hero", "startFrame": 0, "durationFrames": 105 },
+    { "sceneId": "brand-feature", "startFrame": 105, "durationFrames": 90 },
+    { "sceneId": "brand-testimonial", "startFrame": 195, "durationFrames": 90 },
+    { "sceneId": "brand-logo", "startFrame": 285, "durationFrames": 75 }
+  ]
+}

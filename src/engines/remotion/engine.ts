@@ -27,7 +27,7 @@ const roleMap: Record<string, readonly ProductionSceneRole[]> = {
     "terminal",
   ],
   lottie: ["explanation", "diagram", "feature", "screenshot-demo", "browser"],
-  three: ["hook", "hero", "feature"],
+  three: ["hook", "hero", "feature", "logo"],
   "stat-reveal": ["metric", "chart", "comparison", "takeaway"],
   "icon-grid": ["feature", "tip", "comparison", "summary"],
   "quote-card": ["quote", "testimonial"],

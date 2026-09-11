@@ -15,6 +15,7 @@ import editorialExplainerFixture from "../../tests/fixtures/editorial-explainer-
 import creatorPunchFixture from "../../tests/fixtures/creator-punch-reel.json";
 import dataStoryFixture from "../../tests/fixtures/data-story-reel.json";
 import developerDemoFixture from "../../tests/fixtures/developer-demo-reel.json";
+import cinematicBrandFixture from "../../tests/fixtures/cinematic-brand-reel.json";
 import type { ReelProps } from "@/compositions/types";
 import { reelDurationFrames } from "@/compositions/types";
 
@@ -298,6 +299,36 @@ describe("resolved production composition", () => {
     if (!result.success) {
       expect(result.error.issues.map((issue) => issue.message)).toContain(
         "Developer Demo browser scenes require an image or video asset",
+      );
+    }
+  });
+
+  it("renders the complete Cinematic Brand role sequence", () => {
+    const html = buildHyperframesCompositionHtml(
+      cinematicBrandFixture as ReelProps,
+    );
+    expect(
+      html.match(/data-production-preset="cinematic-brand"/g),
+    ).toHaveLength(4);
+    for (const role of ["hero", "feature", "testimonial", "logo"]) {
+      expect(html).toContain(`data-scene-role="${role}"`);
+    }
+    expect(html).toContain("cinematic-brand-hero.svg");
+    expect(html).toContain("Sample creative review");
+    expect(html).toContain("cb-mark");
+    expect(reelDurationFrames(cinematicBrandFixture as ReelProps)).toBe(360);
+  });
+
+  it("rejects a Cinematic Brand hero without supplied media", () => {
+    const spec = productionSpec("remotion", "portrait");
+    spec.preset = { id: "cinematic-brand", version: "1.0.0" };
+    spec.scenes[0].role = "hero";
+    spec.scenes[0].assetRefs = [];
+    const result = productionSpecSchema.safeParse(spec);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.map((issue) => issue.message)).toContain(
+        "Cinematic Brand hero scenes require an image or video asset",
       );
     }
   });

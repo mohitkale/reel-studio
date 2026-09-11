@@ -41,6 +41,7 @@
     "test:render:creator-punch": "tsx scripts/render-regression.ts --preset=creator-punch",
     "test:render:data-story": "tsx scripts/render-regression.ts --preset=data-story",
     "test:render:developer-demo": "tsx scripts/render-regression.ts --preset=developer-demo",
+    "test:render:cinematic-brand": "tsx scripts/render-regression.ts --preset=cinematic-brand",
     "db:migrate": "node scripts/migrate-database.mjs"
   },
   "dependencies": {

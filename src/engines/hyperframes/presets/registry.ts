@@ -21,6 +21,10 @@ import {
   buildDeveloperDemoScene,
   DEVELOPER_DEMO_STYLES,
 } from "@/engines/hyperframes/presets/developer-demo";
+import {
+  buildCinematicBrandScene,
+  CINEMATIC_BRAND_STYLES,
+} from "@/engines/hyperframes/presets/cinematic-brand";
 
 export interface HyperframesPresetSceneArgs {
   scene: ReelScene;
@@ -43,6 +47,7 @@ const BUILDERS: Partial<
   "creator-punch": buildCreatorPunchScene,
   "data-story": buildDataStoryScene,
   "developer-demo": buildDeveloperDemoScene,
+  "cinematic-brand": buildCinematicBrandScene,
 };
 
 export function buildHyperframesPresetScene(
@@ -52,4 +57,4 @@ export function buildHyperframesPresetScene(
   return BUILDERS[presetId]?.(args) ?? null;
 }
 
-export const HYPERFRAMES_PRESET_STYLES = `${PRODUCT_LAUNCH_STYLES}${EDITORIAL_EXPLAINER_STYLES}${CREATOR_PUNCH_STYLES}${DATA_STORY_STYLES}${DEVELOPER_DEMO_STYLES}`;
+export const HYPERFRAMES_PRESET_STYLES = `${PRODUCT_LAUNCH_STYLES}${EDITORIAL_EXPLAINER_STYLES}${CREATOR_PUNCH_STYLES}${DATA_STORY_STYLES}${DEVELOPER_DEMO_STYLES}${CINEMATIC_BRAND_STYLES}`;

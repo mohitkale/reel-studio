@@ -15,6 +15,7 @@ import editorialExplainerFixture from "../tests/fixtures/editorial-explainer-ree
 import creatorPunchFixture from "../tests/fixtures/creator-punch-reel.json";
 import dataStoryFixture from "../tests/fixtures/data-story-reel.json";
 import developerDemoFixture from "../tests/fixtures/developer-demo-reel.json";
+import cinematicBrandFixture from "../tests/fixtures/cinematic-brand-reel.json";
 import type { ReelProps } from "../src/compositions/types";
 import { TEMPLATES } from "../src/compositions/templates";
 import { buildHyperframesCompositionHtml } from "../src/engines/hyperframes/build-composition";
@@ -33,6 +34,7 @@ async function main() {
     "creator-punch": creatorPunchFixture,
     "data-story": dataStoryFixture,
     "developer-demo": developerDemoFixture,
+    "cinematic-brand": cinematicBrandFixture,
   };
   if (presetId && !presetFixtures[presetId]) {
     throw new Error(`Unknown render fixture preset: ${presetId}`);
@@ -40,6 +42,7 @@ async function main() {
   const renderPreset = Boolean(presetId);
   const renderProductLaunch = presetId === "product-launch";
   const renderDeveloperDemo = presetId === "developer-demo";
+  const renderCinematicBrand = presetId === "cinematic-brand";
   const output = path.resolve(
     ".artifacts/render-regression",
     presetId ?? "legacy",
@@ -66,9 +69,14 @@ async function main() {
         )
       ).toString("base64")}`
     : undefined;
+  const cinematicAssetDataUrl = renderCinematicBrand
+    ? `data:image/svg+xml;base64,${(
+        await readFile(path.resolve("public/samples/cinematic-brand-hero.svg"))
+      ).toString("base64")}`
+    : undefined;
   const selectedFixture = presetId ? presetFixtures[presetId] : fixture;
   const props = (
-    renderProductLaunch || renderDeveloperDemo
+    renderProductLaunch || renderDeveloperDemo || renderCinematicBrand
       ? {
           ...(selectedFixture as ReelProps),
           scenes: (selectedFixture as ReelProps).scenes.map((scene) => ({
@@ -78,7 +86,9 @@ async function main() {
                   ...scene.background,
                   url: renderProductLaunch
                     ? productAssetDataUrl!
-                    : developerAssetDataUrl!,
+                    : renderDeveloperDemo
+                      ? developerAssetDataUrl!
+                      : cinematicAssetDataUrl!,
                 }
               : undefined,
           })),

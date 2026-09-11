@@ -93,6 +93,20 @@ export const PRESET_TEMPLATE_MAP: PresetTemplateMap = {
       cta: "kinetic",
     },
   },
+  "cinematic-brand": {
+    hyperframes: {
+      hero: "hf-app-showcase",
+      feature: "hf-list",
+      testimonial: "hf-quote",
+      logo: "hf-logo-outro",
+    },
+    remotion: {
+      hero: "three",
+      feature: "icon-grid",
+      testimonial: "quote-card",
+      logo: "three",
+    },
+  },
 };
 
 export function getPresetTemplateId(args: {
