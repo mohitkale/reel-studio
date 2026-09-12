@@ -75,7 +75,7 @@ async function main() {
       ).toString("base64")}`
     : undefined;
   const selectedFixture = presetId ? presetFixtures[presetId] : fixture;
-  const props = (
+  const fixtureProps = (
     renderProductLaunch || renderDeveloperDemo || renderCinematicBrand
       ? {
           ...(selectedFixture as ReelProps),
@@ -95,6 +95,21 @@ async function main() {
         }
       : selectedFixture
   ) as ReelProps;
+  const props: ReelProps = {
+    ...fixtureProps,
+    captions: fixtureProps.captions ?? {
+      enabled: true,
+      timingSource: "imported",
+      cues: [
+        {
+          id: "regression-caption",
+          startFrame: 15,
+          endFrame: 75,
+          text: "Editable subtitles render separately from scene copy.",
+        },
+      ],
+    },
+  };
   const expectedFrames = props.timeline.reduce(
     (max, beat) => Math.max(max, beat.startFrame + beat.durationFrames),
     1,

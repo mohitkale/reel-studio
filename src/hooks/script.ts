@@ -7,6 +7,7 @@ import type {
   ProjectDTO,
   ScriptDTO,
   SceneDTO,
+  CaptionTrackDTO,
   SceneBackground,
   SceneChartData,
   VoiceTakeDTO,
@@ -89,6 +90,87 @@ export function useScript(scriptId: string) {
       apiGet<{ script: ScriptDTO }>(`/api/scripts/${scriptId}`).then(
         (r) => r.script,
       ),
+  });
+}
+
+export interface LocalTranscriptionStatus {
+  available: boolean;
+  binary: string | null;
+  model: string | null;
+  reason: string | null;
+}
+
+export function useLocalTranscriptionStatus(enabled = true) {
+  return useQuery({
+    queryKey: ["local-transcription-status"],
+    queryFn: () =>
+      apiGet<{ status: LocalTranscriptionStatus }>(
+        "/api/local-transcription/status",
+      ).then((result) => result.status),
+    enabled,
+    staleTime: 30_000,
+  });
+}
+
+export function useReplaceCaptions(scriptId: string) {
+  const invalidate = useScriptInvalidator(scriptId);
+  return useMutation({
+    mutationFn: (
+      input:
+        | { action: "estimate"; takeId?: string; trackId?: string }
+        | {
+            action: "import";
+            format: "srt" | "vtt";
+            content: string;
+            label?: string;
+            language?: string;
+          }
+        | {
+            action: "transcribe";
+            takeId: string;
+            trackId?: string;
+            language?: string;
+          },
+    ) =>
+      apiPost<{ track: CaptionTrackDTO }>(
+        `/api/scripts/${scriptId}/captions`,
+        input,
+      ).then((result) => result.track),
+    onSuccess: invalidate,
+  });
+}
+
+export function useSetCaptionTrackEnabled(scriptId: string) {
+  const invalidate = useScriptInvalidator(scriptId);
+  return useMutation({
+    mutationFn: (input: { trackId: string; enabled: boolean }) =>
+      apiPost<{ track: CaptionTrackDTO }>(`/api/scripts/${scriptId}/captions`, {
+        action: "set_enabled",
+        ...input,
+      }).then((result) => result.track),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateCaptionCue(scriptId: string) {
+  const invalidate = useScriptInvalidator(scriptId);
+  return useMutation({
+    mutationFn: (input: {
+      cueId: string;
+      text?: string;
+      startFrame?: number;
+      endFrame?: number;
+    }) =>
+      apiSend<{ track: CaptionTrackDTO }>(
+        `/api/scripts/${scriptId}/captions/${input.cueId}`,
+        "PATCH",
+        {
+          text: input.text,
+          startFrame: input.startFrame,
+          endFrame: input.endFrame,
+        },
+      ).then((result) => result.track),
+    onSuccess: invalidate,
   });
 }
 

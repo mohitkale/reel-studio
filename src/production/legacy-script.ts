@@ -56,6 +56,7 @@ function contentHash(script: ScriptDTO): string {
     styleId: script.styleId,
     energy: script.energy,
     productionPreset: script.productionPreset,
+    captionTracks: script.captionTracks,
   };
   return `sha256:${createHash("sha256").update(stableJson(content)).digest("hex")}`;
 }
@@ -253,7 +254,7 @@ export function productionSpecFromLegacyScript(
       modelId: take?.modelId,
       audioAssetRef: take ? `asset:narration:${take.id}` : undefined,
     },
-    captions: {
+    captions: script.captionTracks?.find((track) => track.enabled) ?? {
       enabled: false,
       timingSource: "estimated",
       cues: [],

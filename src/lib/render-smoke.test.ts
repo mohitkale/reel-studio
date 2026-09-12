@@ -16,16 +16,20 @@ import fs from "node:fs/promises";
 const SKIP = process.env.SKIP_RENDER_SMOKE === "1";
 
 describe.skipIf(SKIP)("render smoke", () => {
-  it("renders a 3s reel composition to MP4 without errors", { timeout: 300_000 }, async () => {
+  it(
+    "renders a 3s reel composition to MP4 without errors",
+    { timeout: 300_000 },
+    async () => {
       // Dynamic imports so the test file doesn't pull server deps into jsdom tests.
       const { bundle } = await import("@remotion/bundler");
-      const { renderMedia, selectComposition } = await import("@remotion/renderer");
+      const { renderMedia, selectComposition } =
+        await import("@remotion/renderer");
 
-      const entryPoint = path.resolve(
-        process.cwd(),
-        "src/remotion/index.ts",
+      const entryPoint = path.resolve(process.cwd(), "src/remotion/index.ts");
+      const outputPath = path.join(
+        os.tmpdir(),
+        `render-smoke-${Date.now()}.mp4`,
       );
-      const outputPath = path.join(os.tmpdir(), `render-smoke-${Date.now()}.mp4`);
 
       // Bundle (cached on subsequent runs by OS tmpdir presence, not by this test).
       const serveUrl = await bundle({
@@ -38,10 +42,27 @@ describe.skipIf(SKIP)("render smoke", () => {
 
       const inputProps = {
         scenes: [
-          { id: "s1", templateId: "kinetic", text: "Smoke test scene.", emphasis: ["Smoke test"] },
+          {
+            id: "s1",
+            templateId: "kinetic",
+            text: "Smoke test scene.",
+            emphasis: ["Smoke test"],
+          },
         ],
         timeline: [{ sceneId: "s1", startFrame: 0, durationFrames: 90 }],
         tokens: defaultBrandTokens,
+        captions: {
+          enabled: true,
+          timingSource: "imported",
+          cues: [
+            {
+              id: "caption-1",
+              startFrame: 10,
+              endFrame: 75,
+              text: "Rendered subtitle",
+            },
+          ],
+        },
       };
 
       const composition = await selectComposition({
@@ -65,5 +86,6 @@ describe.skipIf(SKIP)("render smoke", () => {
       expect(stat.size).toBeGreaterThan(10_000); // non-empty MP4
 
       await fs.unlink(outputPath).catch(() => {});
-  });
+    },
+  );
 });

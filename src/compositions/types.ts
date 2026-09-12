@@ -78,6 +78,18 @@ export interface ReelBeat {
   durationFrames: number;
 }
 
+export interface ReelCaptionCue {
+  id: string;
+  startFrame: number;
+  endFrame: number;
+  text: string;
+  words?: Array<{
+    text: string;
+    startFrame: number;
+    endFrame: number;
+  }>;
+}
+
 /** Props every template component receives. */
 export interface TemplateProps {
   scene: ReelScene;
@@ -103,6 +115,12 @@ export type ReelProps = {
    * Cover offset is applied inside the composition via the wrapping Sequence.
    */
   sfxCues?: Array<{ url: string; startFrame: number; volume: number }>;
+  /** Editable subtitle track on the content timeline, separate from scene copy. */
+  captions?: {
+    enabled: boolean;
+    timingSource: "provider" | "local-transcription" | "estimated" | "imported";
+    cues: ReelCaptionCue[];
+  };
   tokens: BrandTokens;
   /** Optional cover image baked as the reel's opening (thumbnail) frame. */
   coverUrl?: string;

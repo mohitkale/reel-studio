@@ -8,11 +8,21 @@
  */
 
 export type CaptionFormat = "srt" | "vtt";
+export type CaptionTimingSource =
+  "provider" | "local-transcription" | "estimated" | "imported";
+
+export interface CaptionWord {
+  text: string;
+  startFrame: number;
+  endFrame: number;
+}
 
 export interface CaptionCue {
+  id?: string;
   startFrame: number;
   endFrame: number;
   text: string;
+  words?: CaptionWord[];
 }
 
 function pad(n: number, len = 2): string {
@@ -38,6 +48,74 @@ export function framesToTimestamp(
 /** Collapse internal whitespace/newlines so a cue is clean subtitle text. */
 function cleanText(text: string): string {
   return text.trim().replace(/\s+/g, " ");
+}
+
+function timestampToFrames(value: string, fps: number): number {
+  const match = value
+    .trim()
+    .match(/^(?:(\d{1,3}):)?(\d{1,2}):(\d{2})[,.](\d{3})$/);
+  if (!match) throw new Error(`Invalid caption timestamp: ${value}`);
+  const hours = Number(match[1] ?? 0);
+  const minutes = Number(match[2]);
+  const seconds = Number(match[3]);
+  const milliseconds = Number(match[4]);
+  if (minutes > 59 || seconds > 59) {
+    throw new Error(`Invalid caption timestamp: ${value}`);
+  }
+  return Math.max(
+    0,
+    Math.round(
+      (hours * 3600 + minutes * 60 + seconds + milliseconds / 1000) * fps,
+    ),
+  );
+}
+
+/** Parse user-supplied SRT or WebVTT into frame-based editable cues. */
+export function parseCaptions(
+  source: string,
+  fps: number,
+  format?: CaptionFormat,
+): CaptionCue[] {
+  if (!Number.isFinite(fps) || fps <= 0)
+    throw new Error("FPS must be positive");
+  const normalized = source
+    .replace(/^\uFEFF/, "")
+    .replace(/\r\n?/g, "\n")
+    .trim();
+  const detected = format ?? (normalized.startsWith("WEBVTT") ? "vtt" : "srt");
+  const body =
+    detected === "vtt"
+      ? normalized.replace(/^WEBVTT[^\n]*\n?/, "").trim()
+      : normalized;
+  if (!body) return [];
+
+  return body
+    .split(/\n{2,}/)
+    .map((block) => {
+      const lines = block.split("\n");
+      if (detected === "srt" && /^\d+$/.test(lines[0]?.trim() ?? "")) {
+        lines.shift();
+      } else if (
+        detected === "vtt" &&
+        lines.length > 1 &&
+        !lines[0]?.includes("-->")
+      ) {
+        lines.shift();
+      }
+      const timing = lines.shift();
+      const match = timing?.match(/^\s*([^\s]+)\s+-->\s+([^\s]+)(?:\s+.*)?$/);
+      if (!match)
+        throw new Error("Caption block is missing a valid time range");
+      const startFrame = timestampToFrames(match[1]!, fps);
+      const endFrame = timestampToFrames(match[2]!, fps);
+      const text = cleanText(lines.join(" "));
+      if (!text) throw new Error("Caption cue text cannot be empty");
+      if (endFrame <= startFrame) {
+        throw new Error("Caption cue must end after it starts");
+      }
+      return { startFrame, endFrame, text };
+    })
+    .sort((a, b) => a.startFrame - b.startFrame);
 }
 
 /** Build an SRT or WebVTT document from cues (skips empty / zero-length cues). */

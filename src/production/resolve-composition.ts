@@ -119,6 +119,14 @@ export function resolveProductionComposition(
       spec.preset.id === "legacy"
         ? undefined
         : { id: spec.preset.id, version: spec.preset.version },
+    captions: {
+      enabled: spec.captions.enabled,
+      timingSource: spec.captions.timingSource,
+      cues: spec.captions.cues.map((cue) => ({
+        ...cue,
+        words: cue.words?.map((word) => ({ ...word })),
+      })),
+    },
   };
 
   return {

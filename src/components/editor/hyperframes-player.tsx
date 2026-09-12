@@ -7,6 +7,7 @@ import {
   REEL_WIDTH,
   REEL_HEIGHT,
   type ReelBeat,
+  type ReelProps,
   type ReelScene,
 } from "@/compositions/types";
 import { defaultBrandTokens, type BrandTokens } from "@/compositions/tokens";
@@ -34,6 +35,7 @@ interface HyperFramesPlayerProps {
   musicUrl?: string;
   musicVolume?: number;
   sfxCues?: Array<{ url: string; startFrame: number; volume: number }>;
+  captions?: ReelProps["captions"];
   autoPlay?: boolean;
   loop?: boolean;
   tokens?: BrandTokens;
@@ -99,6 +101,7 @@ export const HyperFramesPlayer = React.forwardRef<
     musicUrl,
     musicVolume,
     sfxCues,
+    captions,
     autoPlay,
     loop = true,
     tokens,
@@ -147,6 +150,7 @@ export const HyperFramesPlayer = React.forwardRef<
           ...c,
           url: toAbsoluteUrl(c.url) ?? c.url,
         })),
+        captions,
         tokens: resolvedTokens,
         coverUrl: toAbsoluteUrl(coverUrl),
         width,
@@ -166,6 +170,7 @@ export const HyperFramesPlayer = React.forwardRef<
     musicUrl,
     musicVolume,
     sfxCues,
+    captions,
     resolvedTokens,
     coverUrl,
     width,

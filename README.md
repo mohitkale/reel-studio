@@ -85,7 +85,7 @@ Reel Studio is designed for:
 ### Design
 
 - Motion templates for Remotion and HyperFrames
-- Brand kits, captions, background music (bundled CC0)
+- Brand kits, editable SRT/VTT captions, background music (bundled CC0)
 - Style and Energy looks (for example clean story, bold hook)
 
 ### Export and automate
@@ -114,6 +114,12 @@ See [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md).
 | AI planning | Manual | Gemini, OpenAI |
 | Backgrounds | Upload / gradients | Unsplash |
 | Music | Bundled CC0 / upload | Jamendo |
+
+Caption timing can come from an imported SRT/VTT file, provider timing, or the
+scene timeline. For optional offline speech alignment, install
+[whisper.cpp](https://github.com/ggml-org/whisper.cpp) and set
+`WHISPER_CPP_BIN` plus `WHISPER_CPP_MODEL` in `.env.local`. The caption editor
+and deterministic timing work without whisper.cpp.
 
 See [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md).
 

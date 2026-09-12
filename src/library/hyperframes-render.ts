@@ -377,6 +377,7 @@ export async function runHyperframesRender(
       styleId: script.styleId,
       energy: script.energy,
       preset: script.productionPreset,
+      captions: script.captionTracks?.find((track) => track.enabled),
     };
 
     const runtimeDir = path.join(projectDir, "_runtime");

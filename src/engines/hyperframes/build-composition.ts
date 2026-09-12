@@ -447,6 +447,7 @@ function buildSeekScript(
   const CFG = ${payload};
   const root = document.getElementById('root');
   const scenes = Array.from(document.querySelectorAll('.scene'));
+  const subtitles = Array.from(document.querySelectorAll('.rs-subtitle'));
   const cover = document.querySelector('.cover');
   const progress = document.querySelector('.progress');
   const byId = Object.fromEntries(scenes.map((el) => [el.dataset.sceneId, el]));
@@ -463,6 +464,16 @@ function buildSeekScript(
     document.querySelectorAll('.bg-photo').forEach((photo) => {
       const start = Number(photo.dataset.start || 0);
       syncBgPhoto(photo, time - start);
+    });
+  }
+
+  function syncSubtitles(time) {
+    subtitles.forEach(function (subtitle) {
+      const start = Number(subtitle.getAttribute('data-start') || 0);
+      const duration = Number(subtitle.getAttribute('data-duration') || 0);
+      const active = time >= start && time < start + duration;
+      subtitle.style.opacity = active ? '1' : '0';
+      subtitle.style.visibility = active ? 'visible' : 'hidden';
     });
   }
 
@@ -565,6 +576,7 @@ function buildSeekScript(
     const t = Math.max(0, Math.min(CFG.totalSeconds, time));
     root._t = t;
     syncAllBgPhotos(t);
+    syncSubtitles(t);
     if (cover) {
       const inCover = CFG.coverSeconds > 0 && t < CFG.coverSeconds;
       cover.classList.toggle('is-active', inCover);
@@ -923,6 +935,18 @@ export function buildHyperframesCompositionHtml(
     ? ""
     : `<div class="progress" style="background:${accent}"></div>`;
 
+  const captionBlocks =
+    props.captions?.enabled === true
+      ? props.captions.cues
+          .map((cue, index) => {
+            const start = coverSeconds + cue.startFrame / fpsSafe;
+            const duration =
+              Math.max(1, cue.endFrame - cue.startFrame) / fpsSafe;
+            return `<div class="clip rs-subtitle" data-start="${start.toFixed(3)}" data-duration="${duration.toFixed(3)}" data-track-index="20" aria-label="Subtitle ${index + 1}"><span>${escapeHtml(cue.text)}</span></div>`;
+          })
+          .join("\n")
+      : "";
+
   const grainAttr = chrome.grainOpacity > 0 ? "1" : "0";
 
   return `<!DOCTYPE html>
@@ -931,7 +955,10 @@ export function buildHyperframesCompositionHtml(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reel Studio · HyperFrames</title>
-  <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}</style>
+  <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}
+    .rs-subtitle{position:absolute;z-index:50;left:var(--safe-left);right:var(--safe-right);bottom:var(--caption-bottom);display:flex;justify-content:center;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
+    .rs-subtitle>span{max-width:var(--caption-max-width);padding:.42em .68em;border-radius:18px;background:rgba(8,10,16,.82);color:#fff;font:700 calc(38px * var(--type-scale))/1.18 var(--font,system-ui,sans-serif);text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.28)}
+  </style>
 </head>
 <body>
   <div id="fit-wrap"
@@ -954,6 +981,7 @@ export function buildHyperframesCompositionHtml(
       ${coverBlock}
       ${progress}
       ${sceneBlocks.join("\n")}
+      ${captionBlocks}
       ${audioTags.join("\n")}
     </div>
   </div>

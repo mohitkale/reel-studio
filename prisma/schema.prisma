@@ -60,12 +60,45 @@ model Script {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  scenes     Scene[]
-  takes      VoiceTake[]
-  voiceClips SceneVoiceClip[]
-  renders    Render[]
+  scenes        Scene[]
+  takes         VoiceTake[]
+  voiceClips    SceneVoiceClip[]
+  renders       Render[]
+  captionTracks CaptionTrack[]
 
   @@index([projectId])
+}
+
+/// Editable subtitle track with explicit timing provenance.
+model CaptionTrack {
+  id           String   @id @default(cuid())
+  scriptId     String
+  script       Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  label        String   @default("Subtitles")
+  language     String   @default("en")
+  timingSource String   @default("estimated")
+  enabled      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  cues CaptionCue[]
+
+  @@index([scriptId, updatedAt])
+}
+
+model CaptionCue {
+  id         String       @id @default(cuid())
+  trackId    String
+  track      CaptionTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  order      Int
+  startFrame Int
+  endFrame   Int
+  text       String
+  wordsJson  String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([trackId, order])
 }
 
 model Scene {

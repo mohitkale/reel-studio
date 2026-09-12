@@ -16,6 +16,7 @@ import {
 } from "./visual-style";
 import { resolveProductionLayout } from "@/production/layout";
 import { getPresetSceneComponent } from "./presets/registry";
+import { SubtitleOverlay } from "./components/subtitle-overlay";
 
 /**
  * Static cover/thumbnail frame shown at the very start of the reel. The image is
@@ -60,6 +61,7 @@ export const ReelComposition = React.memo(function ReelComposition({
   energy = DEFAULT_ENERGY_ID,
   layout,
   preset,
+  captions,
 }: ReelProps) {
   const { fps, width, height } = useVideoConfig();
   const resolvedLayout = layout ?? resolveProductionLayout({ width, height });
@@ -155,6 +157,13 @@ export const ReelComposition = React.memo(function ReelComposition({
                 <Audio src={cue.url} volume={cue.volume} />
               </Sequence>
             ))}
+            {captions ? (
+              <SubtitleOverlay
+                captions={captions}
+                tokens={tokens}
+                layout={resolvedLayout}
+              />
+            ) : null}
           </Sequence>
         </AbsoluteFill>
       </StageOptionsProvider>

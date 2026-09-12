@@ -6,6 +6,7 @@ import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { VideoEngineId } from "@/engines/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
+import type { CaptionTimingSource, CaptionWord } from "@/lib/captions";
 
 export type { SceneBackground, SceneChartData };
 export type { VideoEngineId };
@@ -122,6 +123,27 @@ export interface ScriptDTO {
   energy: EnergyId;
   /** Versioned preset snapshot; absent for legacy and manually empty projects. */
   productionPreset?: { id: ProductionPresetId; version: string };
+  captionTracks?: CaptionTrackDTO[];
+}
+
+export interface CaptionCueDTO {
+  id: string;
+  order: number;
+  startFrame: number;
+  endFrame: number;
+  text: string;
+  words?: CaptionWord[];
+}
+
+export interface CaptionTrackDTO {
+  id: string;
+  scriptId: string;
+  label: string;
+  language: string;
+  timingSource: CaptionTimingSource;
+  enabled: boolean;
+  cues: CaptionCueDTO[];
+  updatedAt: string;
 }
 
 export interface ProjectDTO {

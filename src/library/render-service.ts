@@ -383,6 +383,7 @@ async function runRemotionRender({
       styleId: script.styleId,
       energy: script.energy,
       preset: script.productionPreset,
+      captions: script.captionTracks?.find((track) => track.enabled),
     };
 
     // Cover is held at the start, lengthening the video by that many frames.

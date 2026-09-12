@@ -21,6 +21,7 @@ import {
 } from "@/library/schemas";
 import { resolveBrandTokens, getDefaultBrandKit } from "./brandkits";
 import { toSceneDTO, toTakeDTO, toVoiceClipDTO } from "./map";
+import { listCaptionTracks } from "./captions";
 
 function resolveEngine(value: string | null | undefined): VideoEngineId {
   return value && isVideoEngineId(value) ? value : DEFAULT_VIDEO_ENGINE;
@@ -44,6 +45,7 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
   if (!script) return null;
 
   const brandKit = script.project.brandKit ?? (await getDefaultBrandKit());
+  const captionTracks = await listCaptionTracks(id);
   const overrides = parseJsonColumn(
     script.brandOverrides,
     brandOverridesSchema,
@@ -76,6 +78,7 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     styleId: normalizeStyleId(overrides.styleId),
     energy: normalizeEnergyId(overrides.energy),
     productionPreset: overrides.productionPreset,
+    captionTracks,
   };
 }
 

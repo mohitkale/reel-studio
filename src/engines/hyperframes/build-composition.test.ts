@@ -56,6 +56,43 @@ describe("buildHyperframesCompositionHtml", () => {
     expect(html).toContain('class="em"');
   });
 
+  it("renders editable subtitles as a separate timed track", () => {
+    const html = buildHyperframesCompositionHtml({
+      scenes: [
+        {
+          id: "s1",
+          templateId: "hf-opener",
+          text: "Headline stays here.",
+          emphasis: [],
+        },
+      ],
+      timeline: [{ sceneId: "s1", startFrame: 0, durationFrames: 90 }],
+      width: 1080,
+      height: 1920,
+      fps: 30,
+      tokens: defaultBrandTokens,
+      captions: {
+        enabled: true,
+        timingSource: "imported",
+        cues: [
+          {
+            id: "cue-1",
+            startFrame: 15,
+            endFrame: 60,
+            text: "Spoken <copy> is escaped.",
+          },
+        ],
+      },
+    });
+
+    expect(html).toContain("rs-subtitle");
+    expect(html).toContain('data-start="0.500"');
+    expect(html).toContain('data-duration="1.500"');
+    expect(html).toContain("Spoken &lt;copy&gt; is escaped.");
+    expect(html).toContain("Headline stays here.");
+    expect(html).toContain("syncSubtitles(t)");
+  });
+
   it("wires catalog templates with portrait-native production visuals", () => {
     const html = buildHyperframesCompositionHtml({
       scenes: [

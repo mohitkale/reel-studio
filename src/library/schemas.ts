@@ -16,6 +16,23 @@ export const beatTimingSchema = z.object({
 
 export const timelineSchema = z.array(beatTimingSchema);
 
+export const captionTimingSourceSchema = z.enum([
+  "provider",
+  "local-transcription",
+  "estimated",
+  "imported",
+]);
+export const captionWordSchema = z
+  .object({
+    text: z.string().trim().min(1).max(240),
+    startFrame: z.number().int().nonnegative(),
+    endFrame: z.number().int().positive(),
+  })
+  .refine((word) => word.endFrame > word.startFrame, {
+    message: "Caption word must end after it starts",
+  });
+export const captionWordsSchema = z.array(captionWordSchema).max(500);
+
 export const voiceModeSchema = z.enum(["oneshot", "per_scene"]);
 export const voiceTakeSourceSchema = z.enum(["oneshot", "assembled"]);
 

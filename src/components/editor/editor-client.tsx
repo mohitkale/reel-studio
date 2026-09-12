@@ -705,6 +705,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
           <CaptionsMenu
             scriptId={scriptId}
             takeId={effectiveTakeId}
+            tracks={script.captionTracks ?? []}
+            fps={script.fps}
             disabled={scenes.length === 0}
           />
           <HintTooltip
@@ -903,6 +905,9 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                   musicUrl={script.musicUrl ?? undefined}
                   musicVolume={script.musicVolume}
                   sfxCues={sfxCues}
+                  captions={script.captionTracks?.find(
+                    (track) => track.enabled,
+                  )}
                   loop={false}
                   tokens={script.brandTokens}
                   coverUrl={script.coverUrl ?? undefined}

@@ -8,6 +8,7 @@ import {
   REEL_WIDTH,
   REEL_HEIGHT,
   type ReelBeat,
+  type ReelProps,
   type ReelScene,
 } from "@/compositions/types";
 import { defaultBrandTokens, type BrandTokens } from "@/compositions/tokens";
@@ -26,6 +27,7 @@ interface ReelPlayerProps {
   musicUrl?: string;
   musicVolume?: number;
   sfxCues?: Array<{ url: string; startFrame: number; volume: number }>;
+  captions?: ReelProps["captions"];
   autoPlay?: boolean;
   loop?: boolean;
   tokens?: BrandTokens;
@@ -55,6 +57,7 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
       musicUrl,
       musicVolume,
       sfxCues,
+      captions,
       autoPlay,
       loop = true,
       tokens,
@@ -76,6 +79,7 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
         musicUrl,
         musicVolume,
         sfxCues,
+        captions,
         tokens: resolvedTokens,
         coverUrl,
         width,
@@ -94,6 +98,7 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
         musicUrl,
         musicVolume,
         sfxCues,
+        captions,
         resolvedTokens,
         coverUrl,
         width,

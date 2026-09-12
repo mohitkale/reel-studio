@@ -8,21 +8,52 @@ import { databaseUrl, loadLocalEnvironment } from "./database-url.mjs";
 
 const baseline = "20260910000100_baseline";
 
+function withoutPhysicalColumnId(row) {
+  const normalized = { ...row };
+  delete normalized.cid;
+  return normalized;
+}
+
 /** Compare schema structure, not user data or SQLite's SQL whitespace. */
 export function schemaSignature(db) {
-  const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name != '_prisma_migrations' ORDER BY name").all();
-  return JSON.stringify(tables.map(({ name }) => {
-    const quote = `'${name.replaceAll("'", "''")}'`;
-    return {
-      name,
-      columns: db.prepare(`PRAGMA table_info(${quote})`).all(),
-      foreignKeys: db.prepare(`PRAGMA foreign_key_list(${quote})`).all(),
-      indexes: db.prepare(`PRAGMA index_list(${quote})`).all().map(({ name: index, unique, origin, partial }) => ({
-        name: index, unique, origin, partial,
-        columns: db.prepare(`PRAGMA index_info('${index.replaceAll("'", "''")}')`).all(),
-      })).sort((a, b) => a.name.localeCompare(b.name)),
-    };
-  }));
+  const tables = db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name != '_prisma_migrations' ORDER BY name",
+    )
+    .all();
+  return JSON.stringify(
+    tables.map(({ name }) => {
+      const quote = `'${name.replaceAll("'", "''")}'`;
+      const columns = db
+        .prepare(`PRAGMA table_info(${quote})`)
+        .all()
+        .map(withoutPhysicalColumnId)
+        .sort((a, b) => a.name.localeCompare(b.name));
+      const indexes = db
+        .prepare(`PRAGMA index_list(${quote})`)
+        .all()
+        .map(({ name: index, unique, origin, partial }) => ({
+          name: index,
+          unique,
+          origin,
+          partial,
+          columns: db
+            .prepare(`PRAGMA index_info('${index.replaceAll("'", "''")}')`)
+            .all()
+            .map(withoutPhysicalColumnId),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      return {
+        name,
+        // `prisma db push` may append a newly introduced column while a generated
+        // baseline places it in model order. Column order does not change SQLite
+        // semantics, so compare definitions by name and omit the physical cid.
+        columns,
+        foreignKeys: db.prepare(`PRAGMA foreign_key_list(${quote})`).all(),
+        indexes,
+      };
+    }),
+  );
 }
 
 export function inspectAndBackup(filename) {
