@@ -80,7 +80,8 @@ Reel Studio is designed for:
 - Browser Kokoro (Apache-2.0, no key) and Web Speech preview
 - Cartesia and ElevenLabs (optional keys)
 - Optional self-hosted [VoiceForge](https://github.com/mohitkale/voiceforge)
-- Full-reel or per-scene takes, plus multi-speaker **podcasts**
+- Full-reel or per-scene takes, plus cached multi-speaker **podcasts**
+- Selective podcast turn regeneration and production WAV/MP3 downloads
 
 ### Design
 

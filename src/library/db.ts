@@ -11,7 +11,10 @@ import type { PrismaClient } from "@prisma/client";
  * Server-only. Access goes through the repository layer, not directly.
  */
 const globalForPrisma = globalThis as unknown as {
-  prisma?: PrismaClient & { podcast?: unknown };
+  prisma?: PrismaClient & {
+    podcast?: unknown;
+    podcastTurnAudioBeat?: unknown;
+  };
 };
 
 function createClient(): PrismaClient {
@@ -22,7 +25,7 @@ function getClient(): PrismaClient {
   const existing = globalForPrisma.prisma;
   if (existing) {
     // Hot-reload after `prisma generate` can leave a stale client without new models.
-    if (existing.podcast == null) {
+    if (existing.podcast == null || existing.podcastTurnAudioBeat == null) {
       void existing.$disconnect().catch(() => undefined);
       const fresh = createClient();
       globalForPrisma.prisma = fresh;

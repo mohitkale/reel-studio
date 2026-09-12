@@ -25,10 +25,7 @@ async function apiPut<T>(url: string, body: unknown): Promise<T> {
   return json as T;
 }
 
-function invalidatePodcast(
-  qc: ReturnType<typeof useQueryClient>,
-  id?: string,
-) {
+function invalidatePodcast(qc: ReturnType<typeof useQueryClient>, id?: string) {
   void qc.invalidateQueries({ queryKey: ["podcasts"] });
   if (id) void qc.invalidateQueries({ queryKey: ["podcast", id] });
 }
@@ -93,16 +90,18 @@ export function useDeletePodcast() {
 export function useReplaceCharacters(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (characters: {
-      id?: string;
-      key?: string;
-      name: string;
-      gender: PodcastGenderDTO;
-      definition?: string;
-      providerId?: string;
-      voiceId?: string;
-      modelId?: string | null;
-    }[]) =>
+    mutationFn: (
+      characters: {
+        id?: string;
+        key?: string;
+        name: string;
+        gender: PodcastGenderDTO;
+        definition?: string;
+        providerId?: string;
+        voiceId?: string;
+        modelId?: string | null;
+      }[],
+    ) =>
       apiPut<{ podcast: PodcastDTO }>(`/api/podcasts/${id}/characters`, {
         characters,
       }).then((r) => r.podcast),
@@ -211,6 +210,8 @@ export type PodcastGenerationProgress = {
   scene: number;
   sceneCount: number;
   workingOn?: number | null;
+  cached?: number;
+  generated?: number;
 };
 
 type PodcastJobPayload = PodcastGenerationProgress & {
@@ -243,6 +244,8 @@ async function pollPodcastJob(
         scene: number;
         sceneCount: number;
         workingOn?: number | null;
+        cached?: number;
+        generated?: number;
         error: string | null;
         podcastTake: PodcastTakeDTO | null;
       };
@@ -253,6 +256,8 @@ async function pollPodcastJob(
         scene: job.scene,
         sceneCount: job.sceneCount,
         workingOn: job.workingOn ?? null,
+        cached: job.cached ?? 0,
+        generated: job.generated ?? 0,
         error: job.error,
         podcastTake: job.podcastTake,
       },
@@ -318,11 +323,11 @@ export function useGeneratePodcastTake(podcastId: string) {
   return useMutation({
     mutationFn: (vars?: {
       onProgress?: (p: PodcastGenerationProgress) => void;
+      regenerateTurnIds?: string[];
     }) =>
-      apiPost<{ jobId: string }>(
-        `/api/podcasts/${podcastId}/takes`,
-        {},
-      ).then(({ jobId }) =>
+      apiPost<{ jobId: string }>(`/api/podcasts/${podcastId}/takes`, {
+        regenerateTurnIds: vars?.regenerateTurnIds,
+      }).then(({ jobId }) =>
         waitForPodcastJob(podcastId, jobId, vars?.onProgress),
       ),
     onSuccess: () => invalidatePodcast(qc, podcastId),
@@ -335,5 +340,15 @@ export function useDeletePodcastTake(podcastId: string) {
     mutationFn: (takeId: string) =>
       apiDelete<{ ok: boolean }>(`/api/podcast-takes/${takeId}`),
     onSuccess: () => invalidatePodcast(qc, podcastId),
+  });
+}
+
+export function usePreparePodcastExport() {
+  return useMutation({
+    mutationFn: (vars: { takeId: string; format: "wav" | "mp3" }) =>
+      apiPost<{ format: "wav" | "mp3"; url: string }>(
+        `/api/podcast-takes/${vars.takeId}/exports`,
+        { format: vars.format },
+      ),
   });
 }

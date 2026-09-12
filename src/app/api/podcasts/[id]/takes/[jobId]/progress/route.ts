@@ -1,4 +1,8 @@
-import { getVoiceJob, subscribeToVoiceJob, type VoiceJob } from "@/lib/voice-queue";
+import {
+  getVoiceJob,
+  subscribeToVoiceJob,
+  type VoiceJob,
+} from "@/lib/voice-queue";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -68,6 +72,8 @@ function toPayload(job: VoiceJob) {
     scene: job.scene,
     sceneCount: job.sceneCount,
     workingOn: job.workingOn ?? null,
+    cached: job.cached ?? 0,
+    generated: job.generated ?? 0,
     error: job.error ?? null,
     podcastTake: job.podcastTake ?? null,
   };

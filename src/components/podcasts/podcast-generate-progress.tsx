@@ -162,15 +162,15 @@ export function PodcastGenerateProgress({
   }, [startedAt]);
 
   return (
-    <div className="grid w-full gap-2 rounded-lg border bg-muted/30 p-3">
+    <div className="bg-muted/30 grid w-full gap-2 rounded-lg border p-3">
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
         <span className="font-medium">{display.label}</span>
-        <span className="tabular-nums text-muted-foreground">
+        <span className="text-muted-foreground tabular-nums">
           {Math.floor(display.percent)}%
         </span>
       </div>
       <div
-        className="h-2.5 w-full overflow-hidden rounded-full bg-muted"
+        className="bg-muted h-2.5 w-full overflow-hidden rounded-full"
         role="progressbar"
         aria-valuenow={Math.floor(display.percent)}
         aria-valuemin={0}
@@ -178,26 +178,34 @@ export function PodcastGenerateProgress({
         aria-label="Podcast audio generation progress"
       >
         <div
-          className="h-full rounded-full bg-primary transition-[width] duration-200 ease-linear"
+          className="bg-primary h-full rounded-full transition-[width] duration-200 ease-linear"
           style={{ width: `${display.percent}%` }}
         />
       </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+      <div className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1 text-xs">
+        {(progress.cached ?? 0) + (progress.generated ?? 0) > 0 ? (
+          <span>
+            Reused/generated{" "}
+            <span className="text-foreground tabular-nums">
+              {progress.cached ?? 0}/{progress.generated ?? 0}
+            </span>
+          </span>
+        ) : null}
         <span>
           Chunks{" "}
-          <span className="tabular-nums text-foreground">
+          <span className="text-foreground tabular-nums">
             {display.stitching ? display.total : display.done}/{display.total}
           </span>
         </span>
         <span>
           Speed{" "}
-          <span className="tabular-nums text-foreground">
+          <span className="text-foreground tabular-nums">
             {display.avgMs > 0 ? formatSpeed(display.avgMs) : "calibrating…"}
           </span>
         </span>
         <span>
           ETA{" "}
-          <span className="tabular-nums text-foreground">
+          <span className="text-foreground tabular-nums">
             {display.etaMs != null ? formatEta(display.etaMs) : "—"}
           </span>
         </span>

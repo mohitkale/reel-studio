@@ -93,6 +93,7 @@ export function toPodcastTakeDTO(take: PodcastTake): PodcastTakeDTO {
     timeline,
     voices,
     audioUrl: getAssetStore().url(take.audioPath),
+    mp3Url: take.mp3Path ? getAssetStore().url(take.mp3Path) : null,
     createdAt: take.createdAt.toISOString(),
   };
 }

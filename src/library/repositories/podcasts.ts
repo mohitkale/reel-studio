@@ -153,9 +153,22 @@ export async function updatePodcastMeta(
 
 export async function deletePodcast(id: string): Promise<void> {
   const takes = await prisma.podcastTake.findMany({ where: { podcastId: id } });
+  const cachedTurns = await prisma.podcastTurnAudioBeat.findMany({
+    where: { podcastId: id },
+    select: { audioPath: true },
+  });
   await prisma.podcast.delete({ where: { id } });
   await Promise.all(
-    takes.map((t) => getAssetStore().delete(t.audioPath).catch(() => undefined)),
+    [
+      ...takes.flatMap((take) => [take.audioPath, take.mp3Path]),
+      ...cachedTurns.map((beat) => beat.audioPath),
+    ]
+      .filter((path): path is string => Boolean(path))
+      .map((path) =>
+        getAssetStore()
+          .delete(path)
+          .catch(() => undefined),
+      ),
   );
 }
 
@@ -181,7 +194,9 @@ export async function replaceCharacters(
 
   const keys: string[] = [];
   const normalized = characters.map((c, order) => {
-    let key = (c.key?.trim() || slugKey(c.name, `speaker-${order + 1}`)).toLowerCase();
+    let key = (
+      c.key?.trim() || slugKey(c.name, `speaker-${order + 1}`)
+    ).toLowerCase();
     if (keys.includes(key)) key = `${key}-${order + 1}`;
     keys.push(key);
     return {
@@ -196,6 +211,10 @@ export async function replaceCharacters(
     };
   });
 
+  const cachedPaths = await prisma.podcastTurnAudioBeat.findMany({
+    where: { podcastId },
+    select: { audioPath: true },
+  });
   await prisma.$transaction(async (tx) => {
     await tx.podcastTurn.deleteMany({ where: { podcastId } });
     await tx.podcastCharacter.deleteMany({ where: { podcastId } });
@@ -207,6 +226,13 @@ export async function replaceCharacters(
       data: { updatedAt: new Date() },
     });
   });
+  await Promise.all(
+    cachedPaths.map(({ audioPath }) =>
+      getAssetStore()
+        .delete(audioPath)
+        .catch(() => undefined),
+    ),
+  );
 
   const full = await loadPodcast(podcastId);
   if (!full) throw new Error("Podcast not found");
@@ -272,6 +298,10 @@ export async function replaceTurnsFromPlan(
     }
   }
 
+  const cachedPaths = await prisma.podcastTurnAudioBeat.findMany({
+    where: { podcastId },
+    select: { audioPath: true },
+  });
   await prisma.$transaction(async (tx) => {
     await tx.podcastTurn.deleteMany({ where: { podcastId } });
     await tx.podcastTurn.createMany({
@@ -300,6 +330,13 @@ export async function replaceTurnsFromPlan(
       });
     }
   });
+  await Promise.all(
+    cachedPaths.map(({ audioPath }) =>
+      getAssetStore()
+        .delete(audioPath)
+        .catch(() => undefined),
+    ),
+  );
 
   const full = await loadPodcast(podcastId);
   if (!full) throw new Error("Podcast not found");
@@ -384,7 +421,10 @@ export async function insertTurn(
 }
 
 export async function deleteTurn(turnId: string): Promise<PodcastDTO> {
-  const turn = await prisma.podcastTurn.findUnique({ where: { id: turnId } });
+  const turn = await prisma.podcastTurn.findUnique({
+    where: { id: turnId },
+    include: { audioBeats: { select: { audioPath: true } } },
+  });
   if (!turn) throw new Error("Turn not found");
   const podcastId = turn.podcastId;
   await prisma.$transaction(async (tx) => {
@@ -406,6 +446,13 @@ export async function deleteTurn(turnId: string): Promise<PodcastDTO> {
       data: { updatedAt: new Date() },
     });
   });
+  await Promise.all(
+    turn.audioBeats.map(({ audioPath }) =>
+      getAssetStore()
+        .delete(audioPath)
+        .catch(() => undefined),
+    ),
+  );
   const full = await loadPodcast(podcastId);
   if (!full) throw new Error("Podcast not found");
   return full;
@@ -428,6 +475,7 @@ export interface CreatePodcastTakeInput {
     modelId?: string | null;
   }>;
   audioPath: string;
+  mp3Path?: string;
 }
 
 export async function createPodcastTake(
@@ -445,6 +493,7 @@ export async function createPodcastTake(
       timingJson: JSON.stringify(input.timeline),
       voicesJson: JSON.stringify(input.voices),
       audioPath: input.audioPath,
+      mp3Path: input.mp3Path,
     },
   });
   await prisma.podcast.update({
@@ -469,4 +518,5 @@ export async function deletePodcastTake(id: string): Promise<void> {
   if (!take) return;
   await prisma.podcastTake.delete({ where: { id } });
   await getAssetStore().delete(take.audioPath);
+  if (take.mp3Path) await getAssetStore().delete(take.mp3Path);
 }

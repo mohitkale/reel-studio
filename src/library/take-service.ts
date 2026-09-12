@@ -7,7 +7,7 @@ import {
   type BeatInput,
 } from "@/lib/audio-timing";
 import { makeSilentWav, parseWav } from "@/lib/wav";
-import { normalizeWavLoudness } from "@/lib/audio-normalize";
+import { finalizeSpeechWav } from "@/lib/audio-production";
 import { getProvider } from "@/providers/voice/registry";
 import {
   ProviderError,
@@ -27,7 +27,12 @@ import { resolveSpokenText } from "@/lib/spoken-text";
 
 /** Reported as scenes finish synthesizing (cache hit or fresh call) or when stitching starts. */
 export type TakeProgress =
-  | { phase: "synthesizing"; scene: number; sceneCount: number; workingOn?: number }
+  | {
+      phase: "synthesizing";
+      scene: number;
+      sceneCount: number;
+      workingOn?: number;
+    }
   | { phase: "stitching"; scene: number; sceneCount: number };
 
 export interface GenerateTakeInput {
@@ -104,7 +109,10 @@ async function synthesizeScenesConcurrently(
   }
 
   await Promise.all(
-    Array.from({ length: Math.min(maxConcurrency, scenes.length || 1) }, worker),
+    Array.from(
+      { length: Math.min(maxConcurrency, scenes.length || 1) },
+      worker,
+    ),
   );
   return results;
 }
@@ -123,7 +131,10 @@ export async function generateTake(
   });
   if (!script) throw new ProviderError("Script not found", 404);
   if (script.scenes.length === 0) {
-    throw new ProviderError("Add at least one scene before generating a take", 400);
+    throw new ProviderError(
+      "Add at least one scene before generating a take",
+      400,
+    );
   }
 
   const fps = script.fps;
@@ -131,7 +142,11 @@ export async function generateTake(
   let label = input.label;
 
   if (input.placeholder) {
-    input.onProgress?.({ phase: "synthesizing", scene: 0, sceneCount: script.scenes.length });
+    input.onProgress?.({
+      phase: "synthesizing",
+      scene: 0,
+      sceneCount: script.scenes.length,
+    });
     for (const scene of script.scenes) {
       const spoken = resolveSpokenText(scene);
       beats.push({
@@ -185,15 +200,20 @@ export async function generateTake(
         }),
     );
     beats.push(...synthesized);
-    label = label ?? `${provider.label}${input.modelId ? ` · ${input.modelId}` : ""}`;
+    label =
+      label ?? `${provider.label}${input.modelId ? ` · ${input.modelId}` : ""}`;
   }
 
-  input.onProgress?.({ phase: "stitching", scene: beats.length, sceneCount: beats.length });
+  input.onProgress?.({
+    phase: "stitching",
+    scene: beats.length,
+    sceneCount: beats.length,
+  });
   const stitched = stitchBeats(beats, fps);
   // Even out per-provider/voice level differences (no-op for silent placeholders).
   const wav = input.placeholder
     ? stitched.wav
-    : normalizeWavLoudness(stitched.wav);
+    : finalizeSpeechWav(stitched.wav).wav;
 
   const key = `takes/${randomUUID()}.wav`;
   await getAssetStore().put(key, wav);
@@ -244,7 +264,10 @@ export async function createTakeFromBeats(
   });
   if (!script) throw new ProviderError("Script not found", 404);
   if (script.scenes.length === 0) {
-    throw new ProviderError("Add at least one scene before generating a take", 400);
+    throw new ProviderError(
+      "Add at least one scene before generating a take",
+      400,
+    );
   }
 
   const byScene = new Map(input.beats.map((b) => [b.sceneId, b.wav]));
@@ -264,7 +287,7 @@ export async function createTakeFromBeats(
 
   const stitched = stitchBeats(beats, script.fps);
   const key = `takes/${randomUUID()}.wav`;
-  await getAssetStore().put(key, normalizeWavLoudness(stitched.wav));
+  await getAssetStore().put(key, finalizeSpeechWav(stitched.wav).wav);
 
   return createTake({
     scriptId: input.scriptId,

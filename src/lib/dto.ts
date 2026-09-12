@@ -248,6 +248,7 @@ export interface PodcastTakeDTO {
   /** Cast voices snapshotted at generation time. */
   voices: PodcastTakeVoiceDTO[];
   audioUrl: string;
+  mp3Url: string | null;
   createdAt: string;
 }
 

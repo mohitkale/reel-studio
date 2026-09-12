@@ -23,6 +23,7 @@ ENV NODE_ENV=development \
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
      ca-certificates \
+     ffmpeg \
      fonts-liberation \
      libnss3 \
      libdbus-1-3 \

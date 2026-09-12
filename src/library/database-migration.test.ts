@@ -180,4 +180,48 @@ describe("SQLite migration preparation", () => {
       rmSync(directory, { recursive: true, force: true });
     }
   });
+
+  it("adds podcast turn caching and MP3 metadata without changing saved takes", () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      db.exec(
+        readFileSync(
+          "prisma/migrations/20260910000100_baseline/migration.sql",
+          "utf8",
+        ),
+      );
+      db.exec(`
+        INSERT INTO Podcast (id,title,updatedAt) VALUES ('podcast','Saved episode',CURRENT_TIMESTAMP);
+        INSERT INTO PodcastCharacter (id,podcastId,key,name,"order",updatedAt)
+          VALUES ('host','podcast','host','Host',0,CURRENT_TIMESTAMP);
+        INSERT INTO PodcastTurn (id,podcastId,characterId,"order",text,updatedAt)
+          VALUES ('turn','podcast','host',0,'Existing line',CURRENT_TIMESTAMP);
+        INSERT INTO PodcastTake (id,podcastId,providerId,voiceId,totalFrames,timingJson,audioPath)
+          VALUES ('take','podcast','kokoro-server','af_bella',30,'[]','podcast-takes/existing.wav');
+      `);
+      db.exec(
+        readFileSync(
+          "prisma/migrations/20260912000200_audio_production/migration.sql",
+          "utf8",
+        ),
+      );
+      expect(
+        db
+          .prepare("SELECT audioPath, mp3Path FROM PodcastTake WHERE id='take'")
+          .get(),
+      ).toEqual({
+        audioPath: "podcast-takes/existing.wav",
+        mp3Path: null,
+      });
+      expect(
+        db
+          .prepare(
+            "SELECT COUNT(*) AS count FROM sqlite_master WHERE type='table' AND name='PodcastTurnAudioBeat'",
+          )
+          .get()?.count,
+      ).toBe(1);
+    } finally {
+      db.close();
+    }
+  });
 });

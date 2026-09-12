@@ -33,6 +33,7 @@ import {
   buildHyperframesPresetScene,
   HYPERFRAMES_PRESET_STYLES,
 } from "@/engines/hyperframes/presets/registry";
+import { buildAudioMixPlan, type AudioMixPlan } from "@/lib/audio-mix";
 
 function escapeHtml(value: string): string {
   return value
@@ -433,6 +434,7 @@ function buildSeekScript(
   totalSeconds: number,
   fps: number,
   hideProgressBar: boolean,
+  audioMix: AudioMixPlan,
 ): string {
   const payload = JSON.stringify({
     beats,
@@ -440,6 +442,7 @@ function buildSeekScript(
     totalSeconds,
     fps,
     hideProgressBar,
+    audioMix,
   });
   return `
 <script>
@@ -539,24 +542,31 @@ function buildSeekScript(
   }
 
   function syncAudio(time) {
-    const vo = document.getElementById('vo');
-    let voActive = false;
-    if (vo) {
-      const voStart = Number(vo.dataset.start || 0);
-      const voDur = Number(vo.dataset.duration || 0);
-      voActive = time >= voStart && (voDur <= 0 || time < voStart + voDur);
-    }
+    const frame = Math.max(0, Math.round(time * CFG.fps));
+    const narrated = CFG.audioMix.narration.some(function (range) {
+      return frame >= range.startFrame && frame < range.endFrame;
+    });
     document.querySelectorAll('audio').forEach((audio) => {
       const start = Number(audio.dataset.start || 0);
       const duration = Number(audio.dataset.duration || 0);
       const baseVol = audio.dataset.volume != null && audio.dataset.volume !== ''
         ? Number(audio.dataset.volume)
         : 1;
-      // Duck BGM under narration (parity with Remotion musicAt ~0.35×).
-      let vol = baseVol;
-      if (audio.id === 'music' && voActive) vol = baseVol * 0.35;
-      audio.volume = Math.max(0, Math.min(1, vol));
       const local = time - start;
+      let vol = baseVol;
+      if (audio.dataset.role === 'music') {
+        const fadeFrames = CFG.audioMix.fadeFrames;
+        const fadeIn = fadeFrames > 0 ? Math.min(1, frame / fadeFrames) : 1;
+        const remaining = Math.max(0, CFG.audioMix.totalFrames - frame);
+        const fadeOut = fadeFrames > 0 ? Math.min(1, remaining / fadeFrames) : 1;
+        vol = baseVol * Math.min(fadeIn, fadeOut) * (narrated ? CFG.audioMix.duckRatio : 1);
+      } else if (audio.dataset.role === 'sfx') {
+        const fade = 0.08;
+        const fadeIn = Math.min(1, Math.max(0, local) / fade);
+        const fadeOut = Math.min(1, Math.max(0, duration - local) / fade);
+        vol = baseVol * Math.min(fadeIn, fadeOut);
+      }
+      audio.volume = Math.max(0, Math.min(1, vol));
       if (local < 0 || (duration > 0 && local > duration)) {
         if (!audio.paused) audio.pause();
         return;
@@ -906,24 +916,35 @@ export function buildHyperframesCompositionHtml(
     beats.reduce((max, b) => Math.max(max, b.start + b.duration), 0) || 1;
   const totalSeconds = contentDuration + coverSeconds;
   const totalFrames = Math.max(1, Math.round(totalSeconds * fps));
+  const audioMix = buildAudioMixPlan({
+    fps,
+    totalFrames,
+    musicVolume: props.musicVolume,
+    narration: props.audioUrl
+      ? props.timeline.map((beat) => ({
+          startFrame: cover + beat.startFrame,
+          durationFrames: beat.durationFrames,
+        }))
+      : [],
+  });
 
   const audioTags: string[] = [];
   if (props.audioUrl) {
     audioTags.push(
-      `<audio id="vo" preload="auto" data-start="${coverSeconds.toFixed(3)}" data-duration="${contentDuration.toFixed(3)}" data-track-index="10" src="${escapeHtml(props.audioUrl)}"></audio>`,
+      `<audio id="vo" preload="auto" data-role="voice" data-start="${coverSeconds.toFixed(3)}" data-duration="${contentDuration.toFixed(3)}" data-track-index="10" src="${escapeHtml(props.audioUrl)}"></audio>`,
     );
   }
   if (props.musicUrl) {
     const vol = Math.max(0, Math.min(1, (props.musicVolume ?? 20) / 100));
     audioTags.push(
-      `<audio id="music" preload="auto" data-start="0" data-duration="${totalSeconds.toFixed(3)}" data-track-index="11" data-volume="${vol}" src="${escapeHtml(props.musicUrl)}"></audio>`,
+      `<audio id="music" preload="auto" data-role="music" data-start="0" data-duration="${totalSeconds.toFixed(3)}" data-track-index="11" data-volume="${vol}" data-fade-in="${audioMix.fadeFrames}" data-fade-out="${audioMix.fadeFrames}" src="${escapeHtml(props.musicUrl)}"></audio>`,
     );
   }
   const fpsSafe = Math.max(1, fps);
   for (const [i, cue] of (props.sfxCues ?? []).entries()) {
     const startSec = coverSeconds + cue.startFrame / fpsSafe;
     audioTags.push(
-      `<audio id="sfx-${i}" preload="auto" data-start="${startSec.toFixed(3)}" data-duration="2" data-track-index="${12 + i}" data-volume="${Math.max(0, Math.min(1, cue.volume)).toFixed(3)}" src="${escapeHtml(cue.url)}"></audio>`,
+      `<audio id="sfx-${i}" preload="auto" data-role="sfx" data-start="${startSec.toFixed(3)}" data-duration="2" data-track-index="${12 + i}" data-volume="${Math.max(0, Math.min(1, cue.volume)).toFixed(3)}" src="${escapeHtml(cue.url)}"></audio>`,
     );
   }
 
@@ -986,7 +1007,7 @@ export function buildHyperframesCompositionHtml(
     </div>
   </div>
   ${buildGsapMotionBootScript(opts.runtimeUrl)}
-  ${opts.producerMode ? "" : buildSeekScript(beats, coverSeconds, totalSeconds, fps, hideProgress)}
+  ${opts.producerMode ? "" : buildSeekScript(beats, coverSeconds, totalSeconds, fps, hideProgress, audioMix)}
 </body>
 </html>`;
 }

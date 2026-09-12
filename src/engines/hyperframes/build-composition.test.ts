@@ -93,6 +93,35 @@ describe("buildHyperframesCompositionHtml", () => {
     expect(html).toContain("syncSubtitles(t)");
   });
 
+  it("serializes the shared fade, ducking, and SFX mix contract", () => {
+    const html = buildHyperframesCompositionHtml({
+      scenes: [
+        {
+          id: "s1",
+          templateId: "hf-opener",
+          text: "Audio stays clear.",
+          emphasis: [],
+        },
+      ],
+      timeline: [{ sceneId: "s1", startFrame: 30, durationFrames: 60 }],
+      width: 1080,
+      height: 1920,
+      fps: 30,
+      tokens: defaultBrandTokens,
+      audioUrl: "/media/takes/voice.wav",
+      musicUrl: "/music/tech-minimal.wav",
+      musicVolume: 40,
+      sfxCues: [{ url: "/sfx/pop.wav", startFrame: 45, volume: 0.3 }],
+    });
+
+    expect(html).toContain('data-role="voice"');
+    expect(html).toContain('data-role="music"');
+    expect(html).toContain('data-role="sfx"');
+    expect(html).toContain('data-fade-in="11"');
+    expect(html).toContain('"duckRatio":0.35');
+    expect(html).toContain('"startFrame":30,"endFrame":90');
+  });
+
   it("wires catalog templates with portrait-native production visuals", () => {
     const html = buildHyperframesCompositionHtml({
       scenes: [

@@ -17,6 +17,11 @@ import {
 import { resolveProductionLayout } from "@/production/layout";
 import { getPresetSceneComponent } from "./presets/registry";
 import { SubtitleOverlay } from "./components/subtitle-overlay";
+import {
+  buildAudioMixPlan,
+  clipVolumeAtFrame,
+  musicVolumeAtFrame,
+} from "@/lib/audio-mix";
 
 /**
  * Static cover/thumbnail frame shown at the very start of the reel. The image is
@@ -63,7 +68,7 @@ export const ReelComposition = React.memo(function ReelComposition({
   preset,
   captions,
 }: ReelProps) {
-  const { fps, width, height } = useVideoConfig();
+  const { fps, width, height, durationInFrames } = useVideoConfig();
   const resolvedLayout = layout ?? resolveProductionLayout({ width, height });
   const sceneById = new Map(scenes.map((s) => [s.id, s]));
   const cover = coverFrames(fps, Boolean(coverUrl));
@@ -72,15 +77,17 @@ export const ReelComposition = React.memo(function ReelComposition({
   const showProgressBar =
     hideProgressBar === true ? false : !chrome.preferHideProgressBar;
 
-  // Background music level (0-1). When there's a voiceover, duck the music while
-  // a scene is being spoken so narration stays clear; lift it in the gaps.
-  const baseMusic = Math.max(0, Math.min(1, musicVolume / 100));
-  const isVoiced = (frame: number) =>
-    timeline.some(
-      (b) => frame >= b.startFrame && frame < b.startFrame + b.durationFrames,
-    );
-  const musicAt = (frame: number) =>
-    audioUrl && isVoiced(frame) ? baseMusic * 0.35 : baseMusic;
+  const audioMix = buildAudioMixPlan({
+    fps,
+    totalFrames: durationInFrames,
+    musicVolume,
+    narration: audioUrl
+      ? timeline.map((beat) => ({
+          startFrame: cover + beat.startFrame,
+          durationFrames: beat.durationFrames,
+        }))
+      : [],
+  });
 
   return (
     <VisualStyleProvider styleId={styleId} energy={energy} fps={fps}>
@@ -99,6 +106,14 @@ export const ReelComposition = React.memo(function ReelComposition({
             <Sequence durationInFrames={cover} name="Cover">
               <CoverFrame url={coverUrl} tokens={tokens} />
             </Sequence>
+          ) : null}
+
+          {musicUrl && audioMix.musicVolume > 0 ? (
+            <Audio
+              src={musicUrl}
+              loop
+              volume={(frame) => musicVolumeAtFrame(frame, audioMix)}
+            />
           ) : null}
 
           {/* Everything after the cover is offset by `cover` via this wrapping Sequence. */}
@@ -145,16 +160,23 @@ export const ReelComposition = React.memo(function ReelComposition({
               );
             })}
             {audioUrl ? <Audio src={audioUrl} /> : null}
-            {musicUrl && baseMusic > 0 ? (
-              <Audio src={musicUrl} loop volume={musicAt} />
-            ) : null}
             {(sfxCues ?? []).map((cue, i) => (
               <Sequence
                 key={`sfx-${i}-${cue.startFrame}`}
                 from={cue.startFrame}
                 name={`SFX ${i + 1}`}
               >
-                <Audio src={cue.url} volume={cue.volume} />
+                <Audio
+                  src={cue.url}
+                  volume={(frame) =>
+                    clipVolumeAtFrame(
+                      frame,
+                      fps * 2,
+                      cue.volume,
+                      Math.round(fps * 0.08),
+                    )
+                  }
+                />
               </Sequence>
             ))}
             {captions ? (

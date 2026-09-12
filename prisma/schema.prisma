@@ -347,7 +347,28 @@ model PodcastTurn {
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
+  audioBeats PodcastTurnAudioBeat[]
+
   @@index([podcastId, order])
+}
+
+/// Content-addressed synthesized audio for a podcast turn. Editing text or a
+/// cast voice naturally misses this cache while unchanged turns remain reusable.
+model PodcastTurnAudioBeat {
+  id         String      @id @default(cuid())
+  podcastId  String
+  turnId     String
+  turn       PodcastTurn @relation(fields: [turnId], references: [id], onDelete: Cascade)
+  providerId String
+  voiceId    String
+  modelId    String      @default("")
+  textHash   String
+  audioPath  String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@unique([turnId, providerId, voiceId, modelId, textHash])
+  @@index([podcastId])
 }
 
 model PodcastTake {
@@ -367,6 +388,8 @@ model PodcastTake {
   /// [{ key, name, providerId, voiceId, modelId? }]
   voicesJson  String   @default("[]")
   audioPath   String
+  /// Optional production MP3 generated from the final normalized WAV.
+  mp3Path     String?
   createdAt   DateTime @default(now())
 
   @@index([podcastId])
