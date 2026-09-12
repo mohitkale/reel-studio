@@ -6,6 +6,7 @@ import {
   type PodcastLength,
   type PodcastPlan,
 } from "@/library/podcast-schemas";
+import type { PodcastPresetId } from "@/library/podcast-presets";
 
 export const podcastAiCharacterSchema = z.object({
   id: z.string().trim().min(1).max(40),
@@ -22,7 +23,7 @@ export const podcastAiTurnSchema = z.object({
 export const podcastAiPlanSchema = z.object({
   title: z.string().trim().min(1).max(120).optional(),
   description: z.string().trim().max(2000).optional(),
-  characters: z.array(podcastAiCharacterSchema).min(2).max(4).optional(),
+  characters: z.array(podcastAiCharacterSchema).min(1).max(4).optional(),
   turns: z.array(podcastAiTurnSchema).min(2).max(120),
 });
 
@@ -40,6 +41,7 @@ export interface GeneratePodcastPlanInput {
   brief: string;
   length: PodcastLength;
   characters: PodcastCharacterContext[];
+  presetId?: PodcastPresetId;
   modelId?: string;
 }
 

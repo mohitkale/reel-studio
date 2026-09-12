@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import {
-  createPodcast,
-  listPodcasts,
-} from "@/library/repositories/podcasts";
+import { createPodcast, listPodcasts } from "@/library/repositories/podcasts";
 import { podcastLengthSchema } from "@/library/podcast-schemas";
+import { podcastPresetIdSchema } from "@/library/podcast-presets";
 import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
@@ -16,6 +14,7 @@ const createSchema = z.object({
   title: z.string().trim().min(1).max(120).optional(),
   description: z.string().trim().max(2000).optional(),
   length: podcastLengthSchema.optional(),
+  presetId: podcastPresetIdSchema.optional(),
 });
 
 export async function GET() {

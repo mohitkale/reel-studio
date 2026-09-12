@@ -58,11 +58,11 @@ Reel Studio is designed for:
 
 ## Example outputs
 
-| Format | Preview | File |
-| --- | --- | --- |
-| Portrait 9:16 (Reels, Shorts, TikTok, Stories) | [![Portrait](docs/assets/examples/portrait-demo.jpg)](docs/assets/examples/portrait-demo.mp4) | [MP4](docs/assets/examples/portrait-demo.mp4) |
+| Format                                          | Preview                                                                                          | File                                           |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| Portrait 9:16 (Reels, Shorts, TikTok, Stories)  | [![Portrait](docs/assets/examples/portrait-demo.jpg)](docs/assets/examples/portrait-demo.mp4)    | [MP4](docs/assets/examples/portrait-demo.mp4)  |
 | Landscape 16:9 (YouTube, X, LinkedIn, Facebook) | [![Landscape](docs/assets/examples/landscape-demo.jpg)](docs/assets/examples/landscape-demo.mp4) | [MP4](docs/assets/examples/landscape-demo.mp4) |
-| Square 1:1 (Instagram, Facebook feed) | [![Square](docs/assets/examples/square-demo.jpg)](docs/assets/examples/square-demo.mp4) | [MP4](docs/assets/examples/square-demo.mp4) |
+| Square 1:1 (Instagram, Facebook feed)           | [![Square](docs/assets/examples/square-demo.jpg)](docs/assets/examples/square-demo.mp4)          | [MP4](docs/assets/examples/square-demo.mp4)    |
 
 **Podcast sample:** [MP3](docs/assets/examples/podcast-demo.mp3)
 
@@ -80,8 +80,9 @@ Reel Studio is designed for:
 - Browser Kokoro (Apache-2.0, no key) and Web Speech preview
 - Cartesia and ElevenLabs (optional keys)
 - Optional self-hosted [VoiceForge](https://github.com/mohitkale/voiceforge)
-- Full-reel or per-scene takes, plus cached multi-speaker **podcasts**
-- Selective podcast turn regeneration and production WAV/MP3 downloads
+- Full-reel or per-scene takes, plus cached **solo, two-host, and interview podcasts**
+- Selective podcast turn regeneration, production WAV/MP3, transcript and chapter exports
+- One-click portrait, square, or landscape **audiograms** from selected timed turns
 
 ### Design
 
@@ -97,24 +98,24 @@ Reel Studio is designed for:
 
 ## Video engines
 
-| | HyperFrames | Remotion |
-| --- | --- | --- |
-| Licence | **Apache-2.0** | Remotion License (not OSI) |
-| Templates | HTML motion (`hf-*`) | React compositions |
-| Best for | Apache-2.0 workflows, demos, and forks | Rich React template ecosystem |
+|           | HyperFrames                            | Remotion                      |
+| --------- | -------------------------------------- | ----------------------------- |
+| Licence   | **Apache-2.0**                         | Remotion License (not OSI)    |
+| Templates | HTML motion (`hf-*`)                   | React compositions            |
+| Best for  | Apache-2.0 workflows, demos, and forks | Rich React template ecosystem |
 
 See [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md).
 
 ## Local vs optional cloud
 
-| Feature | Local option | Optional cloud |
-| --- | --- | --- |
-| Voice preview | Web Speech | n/a |
-| Voice generation | Kokoro / VoiceForge | ElevenLabs, Cartesia |
-| Video render | HyperFrames or Remotion (on your machine) | n/a |
-| AI planning | Manual | Gemini, OpenAI |
-| Backgrounds | Upload / gradients | Unsplash |
-| Music | Bundled CC0 / upload | Jamendo |
+| Feature          | Local option                              | Optional cloud       |
+| ---------------- | ----------------------------------------- | -------------------- |
+| Voice preview    | Web Speech                                | n/a                  |
+| Voice generation | Kokoro / VoiceForge                       | ElevenLabs, Cartesia |
+| Video render     | HyperFrames or Remotion (on your machine) | n/a                  |
+| AI planning      | Manual                                    | Gemini, OpenAI       |
+| Backgrounds      | Upload / gradients                        | Unsplash             |
+| Music            | Bundled CC0 / upload                      | Jamendo              |
 
 Caption timing can come from an imported SRT/VTT file, provider timing, or the
 scene timeline. For optional offline speech alignment, install
@@ -211,22 +212,23 @@ HyperFrames, TanStack Query, Zod.
 
 ## Available scripts
 
-| Script | Purpose |
-| --- | --- |
-| `npm run setup` | First-run setup (safe to re-run) |
-| `npm run demo` | Setup + start dev server |
-| `npm run dev` | Start development server |
-| `npm run build` / `start` | Production build / run |
-| `npm run lint` / `typecheck` / `test` | Quality checks |
-| `npm run security:scan` | Secret pattern scan |
-| `npm run prepare:hooks` | Enable `.githooks` |
-| `npm run db:migrate` | Push Prisma schema |
-| `npm run seed:demo-project` | Seed HyperFrames demo reel |
-| `npm run seed:demo-podcast` | Seed short demo podcast |
-| `npm run seed:demo-brandkit` | Seed Coral Harbor brand kit |
-| `npm run seed:assets` | Sample SVG/Lottie assets |
-| `npm run mcp` | MCP server |
-| `npm run studio` | Remotion Studio |
+| Script                                        | Purpose                                     |
+| --------------------------------------------- | ------------------------------------------- |
+| `npm run setup`                               | First-run setup (safe to re-run)            |
+| `npm run demo`                                | Setup + start dev server                    |
+| `npm run dev`                                 | Start development server                    |
+| `npm run build` / `start`                     | Production build / run                      |
+| `npm run lint` / `typecheck` / `test`         | Quality checks                              |
+| `npm run security:scan`                       | Secret pattern scan                         |
+| `npm run prepare:hooks`                       | Enable `.githooks`                          |
+| `npm run db:migrate`                          | Push Prisma schema                          |
+| `npm run seed:demo-project`                   | Seed HyperFrames demo reel                  |
+| `npm run seed:demo-podcast`                   | Seed short demo podcast                     |
+| `npm run test:podcast-audiogram -- <take-id>` | Render and verify a podcast-to-video sample |
+| `npm run seed:demo-brandkit`                  | Seed Coral Harbor brand kit                 |
+| `npm run seed:assets`                         | Sample SVG/Lottie assets                    |
+| `npm run mcp`                                 | MCP server                                  |
+| `npm run studio`                              | Remotion Studio                             |
 
 ## Environment variables
 
@@ -235,15 +237,15 @@ providers: `DATABASE_URL` (created by setup).
 
 ## Licensing summary
 
-| Component | Terms |
-| --- | --- |
-| Reel Studio app, templates, MCP code | **MIT** |
-| Bundled music (`public/music/`) | **CC0** |
-| **Remotion** | **Remotion License** ([details](https://www.remotion.dev/license)) |
-| **HyperFrames** | **Apache-2.0** |
-| Kokoro TTS | Apache-2.0 |
-| Optional cloud providers | Each vendor's terms |
-| VoiceForge engines ([repo](https://github.com/mohitkale/voiceforge)) | Per-engine (may be non-commercial) |
+| Component                                                            | Terms                                                              |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Reel Studio app, templates, MCP code                                 | **MIT**                                                            |
+| Bundled music (`public/music/`)                                      | **CC0**                                                            |
+| **Remotion**                                                         | **Remotion License** ([details](https://www.remotion.dev/license)) |
+| **HyperFrames**                                                      | **Apache-2.0**                                                     |
+| Kokoro TTS                                                           | Apache-2.0                                                         |
+| Optional cloud providers                                             | Each vendor's terms                                                |
+| VoiceForge engines ([repo](https://github.com/mohitkale/voiceforge)) | Per-engine (may be non-commercial)                                 |
 
 Full matrix: **[docs/LICENSING.md](docs/LICENSING.md)**.
 

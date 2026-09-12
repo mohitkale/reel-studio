@@ -1,11 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import type { PodcastTakeDTO } from "@/lib/dto";
-import {
-  stitchBeats,
-  DEFAULT_GAP_SECONDS,
-  type BeatInput,
-} from "@/lib/audio-timing";
+import { stitchBeats, type BeatInput } from "@/lib/audio-timing";
 import { finalizeSpeechWav, transcodeWavToMp3 } from "@/lib/audio-production";
 import { getProvider } from "@/providers/voice/registry";
 import {
@@ -22,6 +18,10 @@ import {
   getCachedPodcastTurnWav,
   setCachedPodcastTurnWav,
 } from "@/library/podcast-audio-cache";
+import {
+  derivePodcastChapters,
+  resolvePodcastPreset,
+} from "@/library/podcast-presets";
 
 export type PodcastTakeProgress =
   | {
@@ -252,10 +252,11 @@ export async function generatePodcastTake(
     sceneCount: beats.length,
   });
 
+  const preset = resolvePodcastPreset(podcast.presetId);
   const gaps: number[] = keys.slice(0, -1).map((key, i) => {
     const next = keys[i + 1];
-    if (key !== next) return 0.75;
-    return DEFAULT_GAP_SECONDS;
+    if (key !== next) return preset.pacing.speakerChangeGapSeconds;
+    return preset.pacing.sameSpeakerGapSeconds;
   });
   // Extra breath before reflective / closing turns (narrator-style interviewer lines after dialogue).
   for (let i = 0; i < gaps.length; i++) {
@@ -279,6 +280,7 @@ export async function generatePodcastTake(
     text: beat.text,
     characterKey: keys[i],
   }));
+  const chapters = derivePodcastChapters(timeline, DEFAULT_FPS);
 
   const key = `podcast-takes/${randomUUID()}.wav`;
   await getAssetStore().put(key, wav);
@@ -331,6 +333,7 @@ export async function generatePodcastTake(
     fps: DEFAULT_FPS,
     totalFrames: stitched.totalFrames,
     timeline,
+    chapters,
     voices,
     audioPath: key,
     mp3Path,

@@ -304,6 +304,8 @@ model Podcast {
   description String   @default("")
   /// Target length hint for AI/JSON: "short" (~2-3 min) | "long" (~5-10 min)
   length      String   @default("short")
+  /// "solo-narration" | "two-host-discussion" | "interview"
+  presetId    String   @default("two-host-discussion")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -372,25 +374,27 @@ model PodcastTurnAudioBeat {
 }
 
 model PodcastTake {
-  id          String   @id @default(cuid())
-  podcastId   String
-  podcast     Podcast  @relation(fields: [podcastId], references: [id], onDelete: Cascade)
-  label       String?
+  id           String   @id @default(cuid())
+  podcastId    String
+  podcast      Podcast  @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  label        String?
   /// Metadata from first character voice used (mixed takes use multiple voices).
-  providerId  String
-  voiceId     String
-  modelId     String?
-  fps         Int      @default(30)
-  totalFrames Int
+  providerId   String
+  voiceId      String
+  modelId      String?
+  fps          Int      @default(30)
+  totalFrames  Int
   /// JSON: [{ turnId, startFrame, durationFrames, text, characterKey? }]
-  timingJson  String
+  timingJson   String
+  /// Deterministic chapters derived from turn boundaries at generation time.
+  chaptersJson String   @default("[]")
   /// JSON snapshot of cast voices used for this take:
   /// [{ key, name, providerId, voiceId, modelId? }]
-  voicesJson  String   @default("[]")
-  audioPath   String
+  voicesJson   String   @default("[]")
+  audioPath    String
   /// Optional production MP3 generated from the final normalized WAV.
-  mp3Path     String?
-  createdAt   DateTime @default(now())
+  mp3Path      String?
+  createdAt    DateTime @default(now())
 
   @@index([podcastId])
 }

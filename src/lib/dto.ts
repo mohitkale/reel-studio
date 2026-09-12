@@ -203,6 +203,15 @@ export interface PodcastBeatTimingDTO {
   characterKey?: string;
 }
 
+export interface PodcastChapterDTO {
+  id: string;
+  title: string;
+  startFrame: number;
+  endFrame: number;
+  startTurnId: string;
+  endTurnId: string;
+}
+
 export interface PodcastCharacterDTO {
   id: string;
   podcastId: string;
@@ -245,6 +254,7 @@ export interface PodcastTakeDTO {
   fps: number;
   totalFrames: number;
   timeline: PodcastBeatTimingDTO[];
+  chapters: PodcastChapterDTO[];
   /** Cast voices snapshotted at generation time. */
   voices: PodcastTakeVoiceDTO[];
   audioUrl: string;
@@ -257,6 +267,7 @@ export interface PodcastSummaryDTO {
   title: string;
   description: string;
   length: PodcastLengthDTO;
+  presetId: "solo-narration" | "two-host-discussion" | "interview";
   characterCount: number;
   turnCount: number;
   takeCount: number;
@@ -269,9 +280,25 @@ export interface PodcastDTO {
   title: string;
   description: string;
   length: PodcastLengthDTO;
+  presetId: "solo-narration" | "two-host-discussion" | "interview";
   characters: PodcastCharacterDTO[];
   turns: PodcastTurnDTO[];
   takes: PodcastTakeDTO[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PodcastAudiogramJobDTO {
+  id: string;
+  state:
+    | "queued"
+    | "running"
+    | "awaiting_approval"
+    | "succeeded"
+    | "failed"
+    | "canceled";
+  progress: number;
+  activeStep: string | null;
+  error: string | null;
+  outputUrl: string | null;
 }

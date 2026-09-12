@@ -15,11 +15,13 @@ import type {
 import { getAssetStore } from "@/library/storage";
 import {
   podcastGenderSchema,
+  podcastChaptersSchema,
   podcastLengthSchema,
   podcastTakeVoicesSchema,
   podcastTimelineSchema,
 } from "@/library/podcast-schemas";
 import { parseJsonColumn } from "@/library/schemas";
+import { derivePodcastChapters } from "@/library/podcast-presets";
 
 type TurnWithCharacter = PodcastTurn & {
   character: PodcastCharacter;
@@ -81,6 +83,15 @@ export function toPodcastTakeDTO(take: PodcastTake): PodcastTakeDTO {
     voiceId: v.voiceId,
     modelId: v.modelId ?? null,
   }));
+  const savedChapters = parseJsonColumn(
+    take.chaptersJson ?? "[]",
+    podcastChaptersSchema,
+    [] as PodcastTakeDTO["chapters"],
+  );
+  const chapters =
+    savedChapters.length > 0
+      ? savedChapters
+      : derivePodcastChapters(timeline, take.fps);
   return {
     id: take.id,
     podcastId: take.podcastId,
@@ -91,6 +102,7 @@ export function toPodcastTakeDTO(take: PodcastTake): PodcastTakeDTO {
     fps: take.fps,
     totalFrames: take.totalFrames,
     timeline,
+    chapters,
     voices,
     audioUrl: getAssetStore().url(take.audioPath),
     mp3Url: take.mp3Path ? getAssetStore().url(take.mp3Path) : null,

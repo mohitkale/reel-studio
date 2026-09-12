@@ -15,6 +15,7 @@ export function buildPodcastJsonPrompt(
       : "2 to 3 minutes when spoken (~300 to 450 words total)";
   const turnHint =
     length === "long" ? "About 24 to 60 turns." : "About 12 to 28 turns.";
+  const isSolo = characters.length === 1;
 
   const host =
     characters.find((c) => /host/i.test(c.key) || /host/i.test(c.name)) ??
@@ -28,20 +29,31 @@ export function buildPodcastJsonPrompt(
     gender: c.gender,
   }));
 
-  const sampleTurns = [
-    {
-      characterId: host?.key ?? "host",
-      text: `Hey everyone — welcome in. I'm ${host?.name ?? "the host"}, and today I'm joined by ${guest?.name ?? "my guest"}. We're diving into something I've been sitting with…`,
-    },
-    {
-      characterId: guest?.key ?? "guest",
-      text: `Thanks ${host?.name ?? "host"} — glad to be here. Where do you want to start?`,
-    },
-    {
-      characterId: host?.key ?? "host",
-      text: `…and that's our wrap. ${guest?.name ?? "Friend"}, thank you so much. Take care out there.`,
-    },
-  ];
+  const sampleTurns = isSolo
+    ? [
+        {
+          characterId: host?.key ?? "narrator",
+          text: "Today, we're breaking down one idea you can use right away…",
+        },
+        {
+          characterId: host?.key ?? "narrator",
+          text: "Here's the practical takeaway to remember.",
+        },
+      ]
+    : [
+        {
+          characterId: host?.key ?? "host",
+          text: `Hey everyone — welcome in. I'm ${host?.name ?? "the host"}, and today I'm joined by ${guest?.name ?? "my guest"}. We're diving into something I've been sitting with…`,
+        },
+        {
+          characterId: guest?.key ?? "guest",
+          text: `Thanks ${host?.name ?? "host"} — glad to be here. Where do you want to start?`,
+        },
+        {
+          characterId: host?.key ?? "host",
+          text: `…and that's our wrap. ${guest?.name ?? "Friend"}, thank you so much. Take care out there.`,
+        },
+      ];
 
   const sample = JSON.stringify(
     {
@@ -88,8 +100,11 @@ FIELD GUIDE:
   • Use real names in the dialogue for a personal feel.
 
 STORY RULES:
-- First turns: host introduces the panel BY NAME and the topic.
-- Last turns: host closing note, thank guests BY NAME, warm goodbye.
+${
+  isSolo
+    ? "- One narrator carries every turn. Never invent a guest, co-host, interview, or panel.\n- First turns introduce the topic directly; last turns give a practical takeaway and a natural sign-off."
+    : "- First turns: host introduces the panel BY NAME and the topic.\n- Last turns: host closing note, thank guests BY NAME, warm goodbye."
+}
 - Sequence matters — turns are spoken in array order.
 
 Example of the exact output shape:
@@ -102,6 +117,7 @@ TOPIC: <replace with your podcast idea, audience, and tone>`;
 export function buildSamplePodcastJson(
   characters: PodcastCharacterDTO[],
 ): string {
+  const isSolo = characters.length === 1;
   const host =
     characters.find((c) => /host/i.test(c.key) || /host/i.test(c.name)) ??
     characters[0];
@@ -116,20 +132,31 @@ export function buildSamplePodcastJson(
         name: c.name,
         gender: c.gender,
       })),
-      turns: [
-        {
-          characterId: host?.key ?? "host",
-          text: `Hey everyone — welcome in. I'm ${host?.name ?? "the host"}, and today I'm joined by ${guest?.name ?? "my guest"}.`,
-        },
-        {
-          characterId: guest?.key ?? "guest",
-          text: `Thanks ${host?.name ?? "host"} — glad to be here.`,
-        },
-        {
-          characterId: host?.key ?? "host",
-          text: `That's a wrap. ${guest?.name ?? "Friend"}, thank you. Take care.`,
-        },
-      ],
+      turns: isSolo
+        ? [
+            {
+              characterId: host?.key ?? "narrator",
+              text: "Today, we're breaking down one useful idea…",
+            },
+            {
+              characterId: host?.key ?? "narrator",
+              text: "Here's the practical takeaway to keep.",
+            },
+          ]
+        : [
+            {
+              characterId: host?.key ?? "host",
+              text: `Hey everyone — welcome in. I'm ${host?.name ?? "the host"}, and today I'm joined by ${guest?.name ?? "my guest"}.`,
+            },
+            {
+              characterId: guest?.key ?? "guest",
+              text: `Thanks ${host?.name ?? "host"} — glad to be here.`,
+            },
+            {
+              characterId: host?.key ?? "host",
+              text: `That's a wrap. ${guest?.name ?? "Friend"}, thank you. Take care.`,
+            },
+          ],
     },
     null,
     2,

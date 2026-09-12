@@ -24,7 +24,7 @@ const characterSchema = z.object({
 });
 
 const putSchema = z.object({
-  characters: z.array(characterSchema).min(2).max(4),
+  characters: z.array(characterSchema).min(1).max(4),
 });
 
 const patchSchema = z.object({

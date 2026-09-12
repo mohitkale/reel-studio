@@ -273,3 +273,13 @@ export async function addProductionJobOutput(
     },
   });
 }
+
+export async function getProductionJob(id: string) {
+  return prisma.productionJob.findUnique({
+    where: { id },
+    include: {
+      steps: { orderBy: { createdAt: "asc" } },
+      outputs: { orderBy: { createdAt: "asc" } },
+    },
+  });
+}

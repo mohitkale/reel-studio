@@ -127,6 +127,13 @@ async function ensureBundle(onStatus: (msg: string) => void): Promise<string> {
   return result;
 }
 
+/** Share the cached application bundle with other supervised Remotion outputs. */
+export function getRemotionServeUrl(
+  onStatus: (message: string) => void = () => undefined,
+): Promise<string> {
+  return ensureBundle(onStatus);
+}
+
 export interface StartRenderOptions {
   renderId: string;
   scriptId: string;

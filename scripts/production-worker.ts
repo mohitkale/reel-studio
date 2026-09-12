@@ -1,7 +1,7 @@
 import { hostname } from "node:os";
 
 import { runProductionWorkerOnce } from "../src/library/production-worker";
-import { executeVideoProductionJob } from "../src/library/video-production-orchestrator";
+import { executeProductionJob } from "../src/library/production-job-executor";
 
 const workerId = `${hostname()}:${process.pid}`;
 let stopping = false;
@@ -17,11 +17,7 @@ async function main() {
   while (!stopping) {
     const result = await runProductionWorkerOnce({
       workerId,
-      execute: async (job, context) => {
-        if (job.kind !== "video")
-          throw new Error(`Unsupported production kind: ${job.kind}`);
-        await executeVideoProductionJob(job, context);
-      },
+      execute: executeProductionJob,
     });
     if (result === "idle")
       await new Promise((resolve) => setTimeout(resolve, 750));

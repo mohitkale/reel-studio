@@ -224,4 +224,43 @@ describe("SQLite migration preparation", () => {
       db.close();
     }
   });
+
+  it("adds podcast formats and chapter snapshots without restyling saved episodes", () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      db.exec(
+        readFileSync(
+          "prisma/migrations/20260910000100_baseline/migration.sql",
+          "utf8",
+        ),
+      );
+      db.exec(`
+        INSERT INTO Podcast (id,title,updatedAt) VALUES ('podcast','Saved episode',CURRENT_TIMESTAMP);
+        INSERT INTO PodcastTake (id,podcastId,providerId,voiceId,totalFrames,timingJson,audioPath)
+          VALUES ('take','podcast','kokoro-server','af_bella',30,'[]','podcast-takes/existing.wav');
+      `);
+      db.exec(
+        readFileSync(
+          "prisma/migrations/20260912000200_audio_production/migration.sql",
+          "utf8",
+        ),
+      );
+      db.exec(
+        readFileSync(
+          "prisma/migrations/20260912000300_podcast_production/migration.sql",
+          "utf8",
+        ),
+      );
+      expect(
+        db.prepare("SELECT presetId FROM Podcast WHERE id='podcast'").get(),
+      ).toEqual({ presetId: "two-host-discussion" });
+      expect(
+        db
+          .prepare("SELECT chaptersJson FROM PodcastTake WHERE id='take'")
+          .get(),
+      ).toEqual({ chaptersJson: "[]" });
+    } finally {
+      db.close();
+    }
+  });
 });

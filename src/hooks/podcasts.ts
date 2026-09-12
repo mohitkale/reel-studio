@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api-client";
 import type {
   PodcastDTO,
+  PodcastAudiogramJobDTO,
   PodcastGenderDTO,
   PodcastLengthDTO,
   PodcastSummaryDTO,
@@ -13,6 +14,7 @@ import type {
 import type { PodcastPlan } from "@/library/podcast-schemas";
 import type { AIProviderId } from "@/providers/ai/types";
 import type { VoiceJobStatus } from "@/lib/voice-queue";
+import type { PodcastPresetId } from "@/library/podcast-presets";
 
 async function apiPut<T>(url: string, body: unknown): Promise<T> {
   const res = await fetch(url, {
@@ -58,6 +60,7 @@ export function useCreatePodcast() {
       title?: string;
       description?: string;
       length?: PodcastLengthDTO;
+      presetId?: PodcastPresetId;
     }) => apiPost<PodcastDTO>("/api/podcasts", vars ?? {}),
     onSuccess: () => invalidatePodcast(qc),
   });
@@ -70,6 +73,7 @@ export function useUpdatePodcast(id: string) {
       title?: string;
       description?: string;
       length?: PodcastLengthDTO;
+      presetId?: PodcastPresetId;
     }) =>
       apiPatch<{ podcast: PodcastDTO }>(`/api/podcasts/${id}`, vars).then(
         (r) => r.podcast,
@@ -138,6 +142,7 @@ export function useGeneratePodcastScript(id: string) {
       modelId?: string;
       brief: string;
       length?: PodcastLengthDTO;
+      presetId?: PodcastPresetId;
       updateMeta?: boolean;
     }) =>
       apiPost<{ podcast: PodcastDTO; plan: PodcastPlan }>(
@@ -350,5 +355,42 @@ export function usePreparePodcastExport() {
         `/api/podcast-takes/${vars.takeId}/exports`,
         { format: vars.format },
       ),
+  });
+}
+
+export function useGeneratePodcastAudiogram() {
+  return useMutation({
+    mutationFn: async (vars: {
+      takeId: string;
+      startTurnId: string;
+      endTurnId: string;
+      orientation: "portrait" | "landscape" | "square";
+      quality?: "draft" | "standard" | "high";
+      onProgress?: (job: PodcastAudiogramJobDTO) => void;
+    }) => {
+      const { jobId } = await apiPost<{ jobId: string }>(
+        `/api/podcast-takes/${vars.takeId}/audiograms`,
+        {
+          startTurnId: vars.startTurnId,
+          endTurnId: vars.endTurnId,
+          orientation: vars.orientation,
+          quality: vars.quality ?? "standard",
+          idempotencyKey: `audiogram:${crypto.randomUUID()}`,
+        },
+      );
+      const deadline = Date.now() + 20 * 60 * 1000;
+      while (Date.now() < deadline) {
+        const { job } = await apiGet<{ job: PodcastAudiogramJobDTO }>(
+          `/api/podcast-audiograms/${jobId}`,
+        );
+        vars.onProgress?.(job);
+        if (job.state === "succeeded" && job.outputUrl) return job;
+        if (["failed", "canceled"].includes(job.state)) {
+          throw new Error(job.error || `Audiogram ${job.state}`);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+      throw new Error("Audiogram generation timed out after 20 minutes");
+    },
   });
 }

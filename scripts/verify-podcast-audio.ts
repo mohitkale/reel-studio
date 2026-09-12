@@ -13,6 +13,7 @@ const sqlite = new DatabaseSync(filename);
 for (const migration of [
   "20260910000100_baseline",
   "20260912000200_audio_production",
+  "20260912000300_podcast_production",
 ]) {
   sqlite.exec(
     readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),

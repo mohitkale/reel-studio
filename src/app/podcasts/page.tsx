@@ -11,7 +11,10 @@ import {
   useDeletePodcast,
   usePodcasts,
 } from "@/hooks/podcasts";
-import { LISTING_GRID_6_CARDS, type ListingViewMode } from "@/lib/listing-layout";
+import {
+  LISTING_GRID_6_CARDS,
+  type ListingViewMode,
+} from "@/lib/listing-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +25,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/shell/page-header";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ViewModeToggle } from "@/components/ui/view-mode-toggle";
+import {
+  PODCAST_PRESETS,
+  type PodcastPresetId,
+} from "@/library/podcast-presets";
 import {
   Dialog,
   DialogClose,
@@ -37,12 +44,15 @@ function NewPodcastDialog() {
   const router = useRouter();
   const create = useCreatePodcast();
   const [title, setTitle] = React.useState("");
+  const [presetId, setPresetId] = React.useState<PodcastPresetId>(
+    "two-host-discussion",
+  );
   const [open, setOpen] = React.useState(false);
 
   function submit() {
     const trimmed = title.trim() || "Untitled podcast";
     create.mutate(
-      { title: trimmed, length: "short" },
+      { title: trimmed, length: "short", presetId },
       {
         onSuccess: (podcast) => {
           setOpen(false);
@@ -70,8 +80,8 @@ function NewPodcastDialog() {
         <DialogHeader>
           <DialogTitle>New podcast</DialogTitle>
           <DialogDescription>
-            Voice-only episode. You&apos;ll set characters, script, and voices
-            next.
+            Start with a production-ready format, then add your topic and
+            voices.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-2">
@@ -86,6 +96,30 @@ function NewPodcastDialog() {
             }}
           />
         </div>
+        <fieldset className="grid gap-2">
+          <legend className="text-sm font-medium">Format</legend>
+          <div className="grid gap-2">
+            {Object.values(PODCAST_PRESETS).map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                className={`rounded-lg border p-3 text-left transition-colors ${
+                  presetId === preset.id
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:bg-muted/40"
+                }`}
+                onClick={() => setPresetId(preset.id)}
+              >
+                <span className="block text-sm font-medium">
+                  {preset.label}
+                </span>
+                <span className="text-muted-foreground mt-0.5 block text-xs">
+                  {preset.description}
+                </span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="ghost">Cancel</Button>
@@ -136,14 +170,19 @@ export default function PodcastsPage() {
           {podcasts.map((p) => (
             <Card key={p.id} className="overflow-hidden">
               <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center">
-                <div className="flex h-14 w-full shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary/15 to-secondary text-primary sm:w-24">
+                <div className="from-primary/15 to-secondary text-primary flex h-14 w-full shrink-0 items-center justify-center rounded-md bg-gradient-to-br sm:w-24">
                   <Mic className="size-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="truncate font-medium leading-tight">{p.title}</h3>
+                  <h3 className="truncate leading-tight font-medium">
+                    {p.title}
+                  </h3>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">{p.length}</Badge>
-                    <span className="text-xs text-muted-foreground">
+                    <Badge variant="outline">
+                      {PODCAST_PRESETS[p.presetId].label}
+                    </Badge>
+                    <span className="text-muted-foreground text-xs">
                       {p.characterCount} voices · {p.turnCount} turns ·{" "}
                       {p.takeCount} takes
                     </span>
@@ -172,18 +211,21 @@ export default function PodcastsPage() {
           {podcasts.map((p) => (
             <Card key={p.id} className="group flex flex-col">
               <CardContent className="flex flex-1 flex-col gap-3 p-4">
-                <div className="flex aspect-video items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 to-secondary text-primary">
+                <div className="from-primary/15 to-secondary text-primary flex aspect-video items-center justify-center rounded-lg bg-gradient-to-br">
                   <Mic className="size-7" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="line-clamp-2 text-sm font-medium leading-tight">
+                  <h3 className="line-clamp-2 text-sm leading-tight font-medium">
                     {p.title}
                   </h3>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5">
                     <Badge variant="secondary" className="text-[10px]">
                       {p.length}
                     </Badge>
-                    <span className="text-[10px] text-muted-foreground">
+                    <Badge variant="outline" className="text-[10px]">
+                      {PODCAST_PRESETS[p.presetId].label}
+                    </Badge>
+                    <span className="text-muted-foreground text-[10px]">
                       {p.turnCount} turns · {p.takeCount} takes
                     </span>
                   </div>

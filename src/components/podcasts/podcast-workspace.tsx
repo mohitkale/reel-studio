@@ -21,6 +21,10 @@ import type {
 } from "@/lib/dto";
 import type { AIProviderId } from "@/providers/ai/types";
 import {
+  PODCAST_PRESETS,
+  type PodcastPresetId,
+} from "@/library/podcast-presets";
+import {
   useDeletePodcastTake,
   useDeletePodcastTurn,
   useGeneratePodcastScript,
@@ -58,6 +62,7 @@ import { PodcastJsonDialog } from "./podcast-json-dialog";
 import { PodcastGenerateProgress } from "./podcast-generate-progress";
 import { CompactTurnRow } from "./compact-turn-row";
 import { AddDialogueComposer } from "./add-dialogue-composer";
+import { PodcastAudiogramControls } from "./podcast-audiogram-controls";
 import {
   PodcastCharacterEditor,
   charactersToDrafts,
@@ -183,6 +188,7 @@ export function PodcastWorkspace({ podcast }: { podcast: PodcastDTO }) {
     podcast.turns.map((t) => t.id).join(","),
     podcast.title,
     podcast.length,
+    podcast.presetId,
   ].join("::");
   return <PodcastWorkspaceForm key={formKey} podcast={podcast} />;
 }
@@ -227,6 +233,9 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
   const [title, setTitle] = React.useState(podcast.title);
   const [description, setDescription] = React.useState(podcast.description);
   const [length, setLength] = React.useState<PodcastLengthDTO>(podcast.length);
+  const [presetId, setPresetId] = React.useState<PodcastPresetId>(
+    podcast.presetId,
+  );
   const [drafts, setDrafts] = React.useState(() =>
     charactersToDrafts(podcast.characters),
   );
@@ -241,7 +250,12 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
 
   function saveMeta() {
     updateMeta.mutate(
-      { title: title.trim() || "Untitled podcast", description, length },
+      {
+        title: title.trim() || "Untitled podcast",
+        description,
+        length,
+        presetId,
+      },
       {
         onSuccess: () => toast.success("Podcast saved"),
         onError: (e) =>
@@ -312,12 +326,30 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
       toast.error("Add a short topic or brief first");
       return;
     }
+    if (castChanged) {
+      toast.error("Save the updated cast before generating a script");
+      setTab("setup");
+      return;
+    }
+    if (presetId === "solo-narration" && drafts.length !== 1) {
+      toast.error("Solo narration needs one character", {
+        description: "Remove the extra speakers and save the cast first.",
+      });
+      setTab("setup");
+      return;
+    }
+    if (presetId !== "solo-narration" && drafts.length < 2) {
+      toast.error("This format needs at least two characters");
+      setTab("setup");
+      return;
+    }
     generateScript.mutate(
       {
         providerId: effectiveAi,
         modelId: aiModelId || undefined,
         brief: brief.trim(),
         length,
+        presetId,
         updateMeta: true,
       },
       {
@@ -540,6 +572,25 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
+              </div>
+              <div className="grid gap-1.5">
+                <Label>Production format</Label>
+                <Combobox
+                  value={presetId}
+                  onChange={(value) => setPresetId(value as PodcastPresetId)}
+                  options={Object.values(PODCAST_PRESETS).map((preset) => ({
+                    value: preset.id,
+                    label: preset.label,
+                  }))}
+                  className="bg-background"
+                />
+                <p className="text-muted-foreground text-xs">
+                  {PODCAST_PRESETS[presetId].description}
+                </p>
+                <p className="text-muted-foreground text-[11px]">
+                  Solo uses one character; discussions and interviews use two or
+                  more. Edit the cast beside this card when changing formats.
+                </p>
               </div>
               <div className="flex flex-wrap items-end justify-between gap-2">
                 <div className="grid gap-1.5">
@@ -934,6 +985,30 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                       </div>
                     </div>
                     <PodcastTakePlayer src={take.audioUrl} speed={speed} />
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <Button asChild type="button" size="sm" variant="outline">
+                        <a
+                          href={`/api/podcast-takes/${take.id}/transcript?format=transcript`}
+                          download
+                        >
+                          Transcript
+                        </a>
+                      </Button>
+                      <Button asChild type="button" size="sm" variant="outline">
+                        <a
+                          href={`/api/podcast-takes/${take.id}/transcript?format=chapters`}
+                          download
+                        >
+                          Chapters JSON
+                        </a>
+                      </Button>
+                      {take.chapters.map((chapter) => (
+                        <Badge key={chapter.id} variant="secondary">
+                          {chapter.title}
+                        </Badge>
+                      ))}
+                    </div>
+                    <PodcastAudiogramControls take={take} />
                   </li>
                 );
               })}

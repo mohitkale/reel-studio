@@ -44,6 +44,17 @@ export type VideoProductionJobInput = z.infer<
   typeof videoProductionJobInputSchema
 >;
 
+export const audiogramProductionJobInputSchema = z.object({
+  takeId: z.string().min(1),
+  startTurnId: z.string().min(1),
+  endTurnId: z.string().min(1),
+  orientation: z.enum(["portrait", "landscape", "square"]).default("portrait"),
+  quality: z.enum(["draft", "standard", "high"]).default("standard"),
+});
+export type AudiogramProductionJobInput = z.infer<
+  typeof audiogramProductionJobInputSchema
+>;
+
 export interface ClaimedProductionJob {
   id: string;
   kind: string;
