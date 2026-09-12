@@ -11,6 +11,7 @@ import { inferSceneMood } from "@/library/enrich-scene-plan";
 import { getAssetStore } from "@/library/storage";
 import {
   emphasisSchema,
+  assetRefsSchema,
   parseJsonColumn,
   sceneConfigSchema,
   timelineSchema,
@@ -65,6 +66,8 @@ export function toSceneDTO(scene: Scene): SceneDTO {
     mood: config.mood ?? inferSceneMood(scene.templateId, scene.order),
     musicMood: config.musicMood,
     selectedVoiceClipId: scene.selectedVoiceClipId ?? null,
+    role: config.role,
+    assetRefs: parseJsonColumn(scene.assetRefs, assetRefsSchema, []),
   };
 }
 

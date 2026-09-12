@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import { assertSafeMediaUrl } from "@/lib/media-url-safety";
 import { productionChartDataSchema } from "@/production/spec";
+import { productionPresetIdSchema } from "@/production/presets";
+import { productionSceneRoleSchema } from "@/production/roles";
 
 /** Zod schemas for JSON-shaped DB columns and API inputs. */
 
@@ -51,6 +53,20 @@ export const brandOverridesSchema = z
       .enum(["bold-hook", "clean-story", "teach-me", "soft-brand"])
       .optional(),
     energy: z.enum(["calm", "normal", "high"]).optional(),
+    productionPreset: z
+      .object({
+        id: productionPresetIdSchema,
+        version: z.string().regex(/^\d+\.\d+\.\d+$/),
+      })
+      .optional(),
+    creationSource: z
+      .object({
+        kind: z.enum(["text", "url", "upload"]),
+        url: z.string().url().optional(),
+        assetIds: z.array(z.string().min(1).max(160)).max(20).optional(),
+      })
+      .optional(),
+    creationOutputType: z.enum(["video", "voiceover"]).optional(),
   })
   .passthrough();
 
@@ -104,7 +120,11 @@ export const sceneConfigSchema = z.object({
   mood: sceneMoodSchema.optional(),
   /** Free-text music vibe hint (e.g. "uplifting lo-fi"), used for auto music suggestions. */
   musicMood: z.string().max(60).optional(),
+  /** Engine-independent production role retained when the scene is edited. */
+  role: productionSceneRoleSchema.optional(),
 });
+
+export const assetRefsSchema = z.array(z.string().min(1).max(160)).max(20);
 
 export const metaSchema = z.record(z.string(), z.unknown());
 

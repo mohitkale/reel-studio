@@ -6,6 +6,7 @@ import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveReelSfxCues } from "@/lib/sfx-cues";
 import { resolveSpokenText } from "@/lib/spoken-text";
 import { getVideoEngine } from "@/engines/registry";
+import { CURRENT_HF_CATALOG_REVISION } from "@/engines/hyperframes/catalog/versions";
 import type { ProductionSceneRole } from "@/production/roles";
 import {
   LEGACY_PRESET_ID,
@@ -54,6 +55,7 @@ function contentHash(script: ScriptDTO): string {
     hideProgressBar: script.hideProgressBar,
     styleId: script.styleId,
     energy: script.energy,
+    productionPreset: script.productionPreset,
   };
   return `sha256:${createHash("sha256").update(stableJson(content)).digest("hex")}`;
 }
@@ -160,6 +162,10 @@ export function productionSpecFromLegacyScript(
   });
 
   const orientation = orientationFromDims(script.width, script.height);
+  const preset = script.productionPreset ?? {
+    id: LEGACY_PRESET_ID,
+    version: LEGACY_PRESET_VERSION,
+  };
   const coverFrames = script.coverUrl ? Math.round(script.fps * 1.5) : 0;
   const defaultOutputs: ProductionOutput[] = [
     {
@@ -172,7 +178,7 @@ export function productionSpecFromLegacyScript(
 
   return productionSpecSchema.parse({
     schemaVersion: PRODUCTION_SPEC_VERSION,
-    id: `legacy:${script.id}:${options.sourceRevision}`,
+    id: `${script.productionPreset ? "production" : "legacy"}:${script.id}:${options.sourceRevision}`,
     createdAt: options.createdAt ?? new Date().toISOString(),
     productionKind: "video",
     source: {
@@ -184,11 +190,14 @@ export function productionSpecFromLegacyScript(
     engine: {
       id: script.videoEngine,
       adapterVersion: "1.0.0",
-      catalogRevision: "builtin-v0.3.0",
+      catalogRevision:
+        script.videoEngine === "hyperframes"
+          ? CURRENT_HF_CATALOG_REVISION
+          : "builtin-remotion-current",
     },
     preset: {
-      id: LEGACY_PRESET_ID,
-      version: LEGACY_PRESET_VERSION,
+      id: preset.id,
+      version: preset.version,
     },
     brand: {
       brandKitId: script.brandKitId,
@@ -211,11 +220,11 @@ export function productionSpecFromLegacyScript(
       return {
         id: scene.id,
         order: scene.order,
-        role: inferLegacyRole(scene.templateId),
+        role: scene.role ?? inferLegacyRole(scene.templateId),
         template: {
           sourceId: scene.templateId,
           resolvedId: engine.normalizeTemplateId(scene.templateId),
-          version: LEGACY_PRESET_VERSION,
+          version: preset.version,
         },
         displayText: scene.text,
         narrationText: resolveSpokenText(scene),

@@ -6,8 +6,15 @@ import { useRouter } from "next/navigation";
 import { Plus, Clapperboard, Trash2, FileVideo } from "lucide-react";
 import { toast } from "sonner";
 
-import { useProjects, useCreateProject, useDeleteProject } from "@/hooks/script";
-import { LISTING_GRID_6_CARDS, type ListingViewMode } from "@/lib/listing-layout";
+import {
+  useProjects,
+  useCreateProject,
+  useDeleteProject,
+} from "@/hooks/script";
+import {
+  LISTING_GRID_6_CARDS,
+  type ListingViewMode,
+} from "@/lib/listing-layout";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +41,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/shell/page-header";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CreateWithAIDialog } from "@/components/projects/create-with-ai-dialog";
+import { CreationWizard } from "@/components/projects/creation-wizard";
 import { ViewModeToggle } from "@/components/ui/view-mode-toggle";
 import {
   Dialog,
@@ -80,7 +88,7 @@ function NewProjectDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button variant="outline">
           <Plus />
           New project
         </Button>
@@ -106,12 +114,12 @@ function NewProjectDialog() {
                     onClick={() => setVideoEngine(id)}
                     className={
                       selected
-                        ? "rounded-lg border border-primary bg-primary/5 p-3 text-left"
-                        : "rounded-lg border p-3 text-left hover:bg-muted/40"
+                        ? "border-primary bg-primary/5 rounded-lg border p-3 text-left"
+                        : "hover:bg-muted/40 rounded-lg border p-3 text-left"
                     }
                   >
                     <div className="font-medium">{VIDEO_ENGINE_LABELS[id]}</div>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="text-muted-foreground mt-1 text-xs">
                       {VIDEO_ENGINE_DESCRIPTIONS[id]}
                     </p>
                   </button>
@@ -173,8 +181,9 @@ export default function ProjectsPage() {
         actions={
           <>
             <ViewModeToggle value={view} onChange={setView} label="Projects" />
-            <CreateWithAIDialog />
             <NewProjectDialog />
+            <CreateWithAIDialog />
+            <CreationWizard />
           </>
         }
       />
@@ -204,28 +213,30 @@ export default function ProjectsPage() {
           {projects.map((p) => (
             <Card key={p.id} className="overflow-hidden">
               <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center">
-                <div className="flex h-14 w-full shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary/15 to-secondary text-primary sm:w-24">
+                <div className="from-primary/15 to-secondary text-primary flex h-14 w-full shrink-0 items-center justify-center rounded-md bg-gradient-to-br sm:w-24">
                   <FileVideo className="size-5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="truncate font-medium leading-tight">{p.name}</h3>
+                    <h3 className="truncate leading-tight font-medium">
+                      {p.name}
+                    </h3>
                     <EngineBadge engine={p.videoEngine} />
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">{p.sceneCount} scenes</Badge>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       {p.scriptCount} script{p.scriptCount === 1 ? "" : "s"}
                     </span>
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <Button
-                    asChild
-                    size="sm"
-                    disabled={!p.firstScriptId}
-                  >
-                    <Link href={p.firstScriptId ? `/editor/${p.firstScriptId}` : "#"}>
+                  <Button asChild size="sm" disabled={!p.firstScriptId}>
+                    <Link
+                      href={
+                        p.firstScriptId ? `/editor/${p.firstScriptId}` : "#"
+                      }
+                    >
                       Open editor
                     </Link>
                   </Button>
@@ -248,21 +259,21 @@ export default function ProjectsPage() {
           {projects.map((p) => (
             <Card key={p.id} className="group flex flex-col">
               <CardContent className="flex flex-1 flex-col gap-3 p-4">
-                <div className="relative flex aspect-video items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 to-secondary text-primary">
+                <div className="from-primary/15 to-secondary text-primary relative flex aspect-video items-center justify-center rounded-lg bg-gradient-to-br">
                   <FileVideo className="size-7" />
-                  <div className="absolute left-2 top-2">
+                  <div className="absolute top-2 left-2">
                     <EngineBadge engine={p.videoEngine} />
                   </div>
                 </div>
                 <div className="flex-1">
-                  <h3 className="line-clamp-2 text-sm font-medium leading-tight">
+                  <h3 className="line-clamp-2 text-sm leading-tight font-medium">
                     {p.name}
                   </h3>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5">
                     <Badge variant="secondary" className="text-[10px]">
                       {p.sceneCount} scenes
                     </Badge>
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-muted-foreground text-[10px]">
                       {p.scriptCount} script{p.scriptCount === 1 ? "" : "s"}
                     </span>
                   </div>
@@ -271,10 +282,17 @@ export default function ProjectsPage() {
                   <Button
                     asChild
                     size="sm"
-                    className={cn("flex-1", !p.firstScriptId && "pointer-events-none opacity-50")}
+                    className={cn(
+                      "flex-1",
+                      !p.firstScriptId && "pointer-events-none opacity-50",
+                    )}
                     disabled={!p.firstScriptId}
                   >
-                    <Link href={p.firstScriptId ? `/editor/${p.firstScriptId}` : "#"}>
+                    <Link
+                      href={
+                        p.firstScriptId ? `/editor/${p.firstScriptId}` : "#"
+                      }
+                    >
                       Open
                     </Link>
                   </Button>

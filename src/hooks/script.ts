@@ -17,6 +17,7 @@ import type { Orientation } from "@/lib/orientation";
 import type { VideoEngineId } from "@/engines/types";
 import type { ScriptStyle } from "@/providers/ai/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
+import type { ManualCreationInput } from "@/production/manual-planner";
 
 async function apiSend<T>(
   url: string,
@@ -54,6 +55,19 @@ export function useCreateProject() {
       videoEngine?: VideoEngineId;
     }) =>
       apiPost<{ projectId: string; scriptId: string }>("/api/projects", vars),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
+  });
+}
+
+export function useCreateManualProduction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ManualCreationInput) =>
+      apiPost<{
+        projectId: string;
+        scriptId: string;
+        warnings: string[];
+      }>("/api/projects/manual", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
   });
 }

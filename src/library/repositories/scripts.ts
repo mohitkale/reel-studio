@@ -43,7 +43,7 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
   });
   if (!script) return null;
 
-  const brandKit = script.project.brandKit ?? await getDefaultBrandKit();
+  const brandKit = script.project.brandKit ?? (await getDefaultBrandKit());
   const overrides = parseJsonColumn(
     script.brandOverrides,
     brandOverridesSchema,
@@ -75,6 +75,7 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     hideProgressBar: script.hideProgressBar ?? false,
     styleId: normalizeStyleId(overrides.styleId),
     energy: normalizeEnergyId(overrides.energy),
+    productionPreset: overrides.productionPreset,
   };
 }
 
@@ -99,12 +100,16 @@ export async function updateScript(
     ...(data.coverUrl !== undefined ? { coverUrl: data.coverUrl || null } : {}),
     ...(data.musicUrl !== undefined ? { musicUrl: data.musicUrl || null } : {}),
     ...(data.musicVolume !== undefined
-      ? { musicVolume: Math.max(0, Math.min(100, Math.round(data.musicVolume))) }
+      ? {
+          musicVolume: Math.max(0, Math.min(100, Math.round(data.musicVolume))),
+        }
       : {}),
     ...(data.sfxEnabled !== undefined ? { sfxEnabled: data.sfxEnabled } : {}),
     ...(data.sfxJson !== undefined ? { sfxJson: data.sfxJson || null } : {}),
     ...(data.hideText !== undefined ? { hideText: data.hideText } : {}),
-    ...(data.hideProgressBar !== undefined ? { hideProgressBar: data.hideProgressBar } : {}),
+    ...(data.hideProgressBar !== undefined
+      ? { hideProgressBar: data.hideProgressBar }
+      : {}),
     ...(data.voiceMode !== undefined ? { voiceMode: data.voiceMode } : {}),
   };
 

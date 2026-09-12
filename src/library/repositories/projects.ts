@@ -1,6 +1,8 @@
 import type { ProjectDTO } from "@/lib/dto";
 import type { ScenePlan } from "@/providers/ai/types";
 import type { SceneBackground } from "@/compositions/types";
+import type { ProductionPresetId } from "@/production/presets";
+import type { ProductionSceneRole } from "@/production/roles";
 import {
   DEFAULT_ENERGY_ID,
   DEFAULT_STYLE_ID,
@@ -99,24 +101,54 @@ export async function createProjectFromPlan(
   backgrounds: (SceneBackground | undefined)[] = [],
   videoEngine: VideoEngineId = DEFAULT_VIDEO_ENGINE,
   visualStyle?: { styleId?: StyleId; energy?: EnergyId },
+  production?: {
+    brandKitId?: string | null;
+    preset?: { id: ProductionPresetId; version: string };
+    roles?: ProductionSceneRole[];
+    assetRefs?: string[][];
+    voiceMode?: "oneshot" | "per_scene";
+    outputType?: "video" | "voiceover";
+    creationSource?: {
+      kind: "text" | "url" | "upload";
+      url?: string;
+      assetIds?: string[];
+    };
+  },
 ): Promise<{ projectId: string; scriptId: string }> {
   const { width, height } = dimsFor(orientation);
   const engine = resolveEngine(videoEngine);
   const fallbackTemplate = defaultTemplateIdForEngine(engine);
   const defaultKit = await getDefaultBrandKit();
+  const brandKitId =
+    production?.brandKitId === undefined
+      ? (defaultKit?.id ?? null)
+      : production.brandKitId;
   const styleId = visualStyle?.styleId ?? plan.styleId ?? DEFAULT_STYLE_ID;
   const energy = visualStyle?.energy ?? plan.energy ?? DEFAULT_ENERGY_ID;
   const project = await prisma.project.create({
     data: {
       name: plan.projectName,
       videoEngine: engine,
-      brandKitId: defaultKit?.id ?? null,
+      brandKitId,
       scripts: {
         create: {
           name: plan.scriptName,
           width,
           height,
-          brandOverrides: JSON.stringify({ styleId, energy }),
+          brandOverrides: JSON.stringify({
+            styleId,
+            energy,
+            ...(production?.preset
+              ? { productionPreset: production.preset }
+              : {}),
+            ...(production?.creationSource
+              ? { creationSource: production.creationSource }
+              : {}),
+            ...(production?.outputType
+              ? { creationOutputType: production.outputType }
+              : {}),
+          }),
+          voiceMode: production?.voiceMode ?? "oneshot",
           scenes: {
             create: plan.scenes.map((scene, order) => {
               const background = backgrounds[order];
@@ -126,6 +158,8 @@ export async function createProjectFromPlan(
               if (scene.musicMood) config.musicMood = scene.musicMood;
               if (scene.items?.length) config.items = scene.items;
               if (scene.chart) config.chart = scene.chart;
+              const role = production?.roles?.[order];
+              if (role) config.role = role;
               return {
                 order,
                 templateId: scene.templateId || fallbackTemplate,
@@ -137,6 +171,9 @@ export async function createProjectFromPlan(
                 visual: scene.visual ?? null,
                 layoutJson: Object.keys(config).length
                   ? JSON.stringify(config)
+                  : null,
+                assetRefs: production?.assetRefs?.[order]?.length
+                  ? JSON.stringify(production.assetRefs[order])
                   : null,
               };
             }),

@@ -4,6 +4,8 @@ import type { BrandTokens } from "@/compositions/tokens";
 import type { SceneBackground, SceneChartData } from "@/compositions/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { VideoEngineId } from "@/engines/types";
+import type { ProductionPresetId } from "@/production/presets";
+import type { ProductionSceneRole } from "@/production/roles";
 
 export type { SceneBackground, SceneChartData };
 export type { VideoEngineId };
@@ -44,6 +46,10 @@ export interface SceneDTO {
   musicMood?: string;
   /** Active SceneVoiceClip in per_scene mode; null = none selected. */
   selectedVoiceClipId: string | null;
+  /** Engine-independent role selected by a versioned production preset. */
+  role?: ProductionSceneRole;
+  /** Uploaded assets retained by id for reproducible planning and regeneration. */
+  assetRefs?: string[];
 }
 
 export interface SceneVoiceClipDTO {
@@ -113,6 +119,8 @@ export interface ScriptDTO {
   styleId: StyleId;
   /** How fast and punchy cuts/text feel. */
   energy: EnergyId;
+  /** Versioned preset snapshot; absent for legacy and manually empty projects. */
+  productionPreset?: { id: ProductionPresetId; version: string };
 }
 
 export interface ProjectDTO {

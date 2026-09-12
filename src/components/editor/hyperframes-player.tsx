@@ -11,6 +11,7 @@ import {
 } from "@/compositions/types";
 import { defaultBrandTokens, type BrandTokens } from "@/compositions/tokens";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
+import type { ProductionPresetId } from "@/production/presets";
 import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-composition";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ interface HyperFramesPlayerProps {
   previewQuality?: "standard" | "draft";
   styleId?: StyleId;
   energy?: EnergyId;
+  preset?: { id: ProductionPresetId; version: string };
 }
 
 function formatClock(seconds: number): string {
@@ -104,6 +106,7 @@ export const HyperFramesPlayer = React.forwardRef<
     hideProgressBar,
     styleId,
     energy,
+    preset,
   },
   ref,
 ) {
@@ -118,34 +121,44 @@ export const HyperFramesPlayer = React.forwardRef<
   const [ready, setReady] = React.useState(false);
   const resolvedTokens = tokens ?? defaultBrandTokens;
 
-  const durationSec = Math.max(1 / Math.max(1, fps), totalFrames / Math.max(1, fps));
+  const durationSec = Math.max(
+    1 / Math.max(1, fps),
+    totalFrames / Math.max(1, fps),
+  );
 
   const html = React.useMemo(() => {
     const absScenes = scenes.map((scene) => ({
       ...scene,
       background: scene.background
-        ? { ...scene.background, url: toAbsoluteUrl(scene.background.url) ?? scene.background.url }
+        ? {
+            ...scene.background,
+            url: toAbsoluteUrl(scene.background.url) ?? scene.background.url,
+          }
         : undefined,
     }));
-    return buildHyperframesCompositionHtml({
-      scenes: absScenes,
-      timeline,
-      audioUrl: toAbsoluteUrl(audioUrl),
-      musicUrl: toAbsoluteUrl(musicUrl),
-      musicVolume,
-      sfxCues: (sfxCues ?? []).map((c) => ({
-        ...c,
-        url: toAbsoluteUrl(c.url) ?? c.url,
-      })),
-      tokens: resolvedTokens,
-      coverUrl: toAbsoluteUrl(coverUrl),
-      width,
-      height,
-      fps,
-      hideProgressBar,
-      styleId,
-      energy,
-    }, { inlineCatalog: true });
+    return buildHyperframesCompositionHtml(
+      {
+        scenes: absScenes,
+        timeline,
+        audioUrl: toAbsoluteUrl(audioUrl),
+        musicUrl: toAbsoluteUrl(musicUrl),
+        musicVolume,
+        sfxCues: (sfxCues ?? []).map((c) => ({
+          ...c,
+          url: toAbsoluteUrl(c.url) ?? c.url,
+        })),
+        tokens: resolvedTokens,
+        coverUrl: toAbsoluteUrl(coverUrl),
+        width,
+        height,
+        fps,
+        hideProgressBar,
+        styleId,
+        energy,
+        preset,
+      },
+      { inlineCatalog: true },
+    );
   }, [
     scenes,
     timeline,
@@ -161,6 +174,7 @@ export const HyperFramesPlayer = React.forwardRef<
     hideProgressBar,
     styleId,
     energy,
+    preset,
   ]);
 
   const seekIframe = React.useCallback((seconds: number) => {
@@ -289,7 +303,7 @@ export const HyperFramesPlayer = React.forwardRef<
   if (scenes.length === 0) {
     return (
       <div
-        className={`mx-auto flex w-full ${frameClass} items-center justify-center rounded-2xl border border-dashed text-center text-sm text-muted-foreground`}
+        className={`mx-auto flex w-full ${frameClass} text-muted-foreground items-center justify-center rounded-2xl border border-dashed text-center text-sm`}
         style={{ aspectRatio }}
       >
         Add a scene to preview
@@ -348,7 +362,7 @@ export const HyperFramesPlayer = React.forwardRef<
           step={1 / Math.max(1, fps)}
           value={currentTime}
           aria-label="Seek"
-          className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-700 accent-primary"
+          className="accent-primary h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-zinc-700"
           style={{
             background: `linear-gradient(to right, var(--primary) ${progressPct}%, rgb(63 63 70) ${progressPct}%)`,
           }}
@@ -359,7 +373,7 @@ export const HyperFramesPlayer = React.forwardRef<
           }}
         />
 
-        <span className="shrink-0 tabular-nums text-[11px] text-zinc-400">
+        <span className="shrink-0 text-[11px] text-zinc-400 tabular-nums">
           {formatClock(currentTime)} / {formatClock(durationSec)}
         </span>
 

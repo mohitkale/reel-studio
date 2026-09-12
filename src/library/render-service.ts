@@ -355,6 +355,7 @@ async function runRemotionRender({
           : undefined,
         items: s.items,
         chart: s.chart,
+        role: s.role,
         // Per-scene override wins; otherwise the script-wide default.
         hideText: s.hideText ?? script.hideText,
         mood: s.mood as ReelScene["mood"],
@@ -381,6 +382,7 @@ async function runRemotionRender({
       hideProgressBar: script.hideProgressBar,
       styleId: script.styleId,
       energy: script.energy,
+      preset: script.productionPreset,
     };
 
     // Cover is held at the start, lengthening the video by that many frames.

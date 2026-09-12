@@ -12,6 +12,7 @@ import {
 } from "@/compositions/types";
 import { defaultBrandTokens, type BrandTokens } from "@/compositions/tokens";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
+import type { ProductionPresetId } from "@/production/presets";
 
 interface ReelPlayerProps {
   scenes: ReelScene[];
@@ -34,6 +35,7 @@ interface ReelPlayerProps {
   previewQuality?: "standard" | "draft";
   styleId?: StyleId;
   energy?: EnergyId;
+  preset?: { id: ProductionPresetId; version: string };
 }
 
 /** Live Remotion preview of the reel, driven by the scene templates + timeline.
@@ -61,6 +63,7 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
       previewQuality = "standard",
       styleId,
       energy,
+      preset,
     },
     ref,
   ) {
@@ -82,6 +85,7 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
         previewQuality,
         styleId,
         energy,
+        preset,
       }),
       [
         scenes,
@@ -99,6 +103,7 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
         previewQuality,
         styleId,
         energy,
+        preset,
       ],
     );
 
@@ -110,7 +115,7 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
     if (scenes.length === 0) {
       return (
         <div
-          className={`mx-auto flex w-full ${frameClass} items-center justify-center rounded-2xl border border-dashed text-center text-sm text-muted-foreground`}
+          className={`mx-auto flex w-full ${frameClass} text-muted-foreground items-center justify-center rounded-2xl border border-dashed text-center text-sm`}
           style={{ aspectRatio }}
         >
           Add a scene to preview
@@ -119,7 +124,9 @@ export const ReelPlayer = React.forwardRef<PlayerRef, ReelPlayerProps>(
     }
 
     return (
-      <div className={`mx-auto w-full ${frameClass} overflow-hidden rounded-2xl border shadow-sm`}>
+      <div
+        className={`mx-auto w-full ${frameClass} overflow-hidden rounded-2xl border shadow-sm`}
+      >
         <Player
           ref={ref}
           component={ReelComposition}

@@ -1,5 +1,23 @@
 # Production contracts
 
+## Deterministic project creation
+
+`POST /api/projects/manual` creates an editable project without an AI provider.
+The validated request selects an output type, source (`text` or a public article
+`url`), production preset, engine, orientation, brand kit, narration workflow,
+and optional uploaded asset IDs. The response returns the project and script IDs,
+the resolved preset, and any readable-copy warnings.
+
+Public URL ingestion accepts bounded HTML or plain text responses. It validates
+every redirect and DNS answer, connects only through a public address, rejects
+local/private networks and nonstandard ports, and fails when source copy exceeds
+the planner limit instead of silently truncating it.
+
+The deterministic planner retains complete source passages in `spokenText` and
+uses shorter `text` only when needed for readable on-screen composition. It never
+creates chart values. A Data Story created from prose uses a non-chart takeaway
+role until structured values are supplied.
+
 Production jobs consume a validated, immutable `ProductionSpec` from
 `src/production/spec.ts`. Version 1 records the source revision and content hash,
 engine adapter and catalog revision, preset version, resolved brand values, canvas,

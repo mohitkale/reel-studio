@@ -298,6 +298,7 @@ export async function runHyperframesRender(
             : undefined,
           items: s.items,
           chart: s.chart,
+          role: s.role,
           hideText: s.hideText ?? script.hideText,
           mood: s.mood as ReelScene["mood"],
           order: s.order,
@@ -375,6 +376,7 @@ export async function runHyperframesRender(
       hideProgressBar: script.hideProgressBar,
       styleId: script.styleId,
       energy: script.energy,
+      preset: script.productionPreset,
     };
 
     const runtimeDir = path.join(projectDir, "_runtime");

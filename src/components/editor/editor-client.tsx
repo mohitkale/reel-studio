@@ -187,6 +187,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
         background: s.background,
         items: s.items,
         chart: s.chart,
+        role: s.role,
         // Per-scene override wins; otherwise the script-wide default.
         hideText: s.hideText ?? script?.hideText,
         mood: s.mood as ReelScene["mood"],
@@ -210,6 +211,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             background: selectedScene.background,
             items: selectedScene.items,
             chart: selectedScene.chart,
+            role: selectedScene.role,
             hideText: selectedScene.hideText ?? script?.hideText,
             mood: selectedScene.mood as ReelScene["mood"],
             order: selectedScene.order,
@@ -857,6 +859,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     previewQuality={previewQuality}
                     styleId={script.styleId}
                     energy={script.energy}
+                    preset={script.productionPreset}
                   />
                 ) : (
                   <EnginePlayer
@@ -870,6 +873,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     tokens={script.brandTokens}
                     styleId={script.styleId}
                     energy={script.energy}
+                    preset={script.productionPreset}
                   />
                 )}
                 <p className="text-muted-foreground mt-3 text-center text-xs">
@@ -899,6 +903,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                   previewQuality={previewQuality}
                   styleId={script.styleId}
                   energy={script.energy}
+                  preset={script.productionPreset}
                 />
                 <p className="text-muted-foreground mt-3 text-center text-xs">
                   {takeUsable
