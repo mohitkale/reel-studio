@@ -4,6 +4,7 @@ import { VIDEO_ENGINE_IDS, type VideoEngineId } from "@/engines/types";
 import { defaultTemplateIdForEngine } from "@/engines/registry";
 import { ORIENTATIONS } from "@/lib/orientation";
 import { getPresetTemplateId } from "@/production/preset-template-map";
+import { resolvePresetRoles } from "@/production/ai-preset-plan";
 import {
   getProductionPreset,
   productionPresetIdSchema,
@@ -117,34 +118,6 @@ function displayCopy(narration: string): { text: string; shortened: boolean } {
   return { text: `${text}…`, shortened: true };
 }
 
-function rolesForPreset(
-  presetId: ProductionPresetId,
-  count: number,
-  hasVisualAsset: boolean,
-): ProductionSceneRole[] {
-  const preset = getProductionPreset(presetId);
-  if (!preset) throw new Error(`Unknown production preset: ${presetId}`);
-  let candidates = [...preset.sceneRoles];
-  if (!hasVisualAsset) {
-    candidates = candidates.filter(
-      (role) =>
-        role !== "screenshot-demo" && role !== "browser" && role !== "hero",
-    );
-  }
-  // Automatic prose planning never invents structured data.
-  if (presetId === "data-story") candidates = ["takeaway"];
-  if (!candidates.length) candidates = [...preset.sceneRoles];
-
-  return Array.from({ length: count }, (_, index) => {
-    if (index === 0) return candidates[0]!;
-    if (index === count - 1) return candidates[candidates.length - 1]!;
-    return (
-      candidates[1 + ((index - 1) % Math.max(1, candidates.length - 2))] ??
-      candidates[0]!
-    );
-  });
-}
-
 export function createDeterministicProductionPlan(args: {
   name: string;
   text: string;
@@ -155,11 +128,9 @@ export function createDeterministicProductionPlan(args: {
   const preset = getProductionPreset(args.presetId);
   if (!preset) throw new Error(`Unknown production preset: ${args.presetId}`);
   const segments = segmentSourceText(args.text);
-  const roles = rolesForPreset(
-    args.presetId,
-    segments.length,
-    args.hasVisualAsset,
-  );
+  const roles = resolvePresetRoles(args.presetId, segments.length, {
+    hasVisualAsset: args.hasVisualAsset,
+  });
   let shortened = false;
   const scenes = segments.map((narration, index) => {
     const display = displayCopy(narration);

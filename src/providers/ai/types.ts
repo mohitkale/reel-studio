@@ -4,6 +4,7 @@ import { productionChartDataSchema } from "@/production/spec";
 import type { Orientation } from "@/lib/orientation";
 import type { VideoEngineId } from "@/engines/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
+import type { ProductionPresetId } from "@/production/presets";
 import { stripMarkdown } from "@/lib/strip-markdown";
 import type { GeneratePodcastPlanInput, PodcastPlan } from "./podcast-types";
 
@@ -195,7 +196,7 @@ export type AIScene = Omit<ParsedAIScene, "visual"> & {
 export type ScenePlan = z.infer<typeof scenePlanSchema>;
 
 export interface GeneratePlanInput {
-  mode: "idea" | "story" | "rewrite" | "append";
+  mode: "idea" | "story" | "rewrite" | "append" | "hook_variants";
   /** The one-line idea (mode "idea") or the full text/story (mode "story"). */
   brief: string;
   sceneCount?: number;
@@ -217,6 +218,10 @@ export interface GeneratePlanInput {
   styleId?: StyleId | "auto";
   /** When set (not "auto"), the UI chose Energy — enrichment will force it. */
   energy?: EnergyId | "auto";
+  /** Constrain template choices to this versioned production preset. */
+  productionPresetId?: ProductionPresetId;
+  /** One-based existing scene positions replaced by a selective rewrite. */
+  replacementSceneNumbers?: number[];
 }
 
 export interface AIModel {

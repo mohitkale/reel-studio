@@ -78,7 +78,7 @@ export function StyleEnergyControls({
           <PickCard
             active={styleId === "auto"}
             title="Auto"
-            description="Let AI pick the best look for your topic."
+            description="Use the production preset's recommended look."
             onClick={() => onStyleChange("auto")}
           />
         ) : null}
@@ -129,8 +129,8 @@ export function StyleEnergyControls({
         </div>
         {allowAuto ? (
           <p className="text-[11px] text-muted-foreground">
-            Tip: leave Style on <strong className="font-medium text-foreground">Bold Hook</strong> and
-            Energy on <strong className="font-medium text-foreground">Normal</strong> for most growth content.
+            Auto follows the content and the selected production preset. Choose
+            a value here only when you want to override it.
           </p>
         ) : null}
       </div>

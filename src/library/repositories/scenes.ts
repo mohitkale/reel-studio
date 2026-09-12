@@ -4,6 +4,7 @@ import { isVideoEngineId, DEFAULT_VIDEO_ENGINE } from "@/engines/types";
 import { prisma } from "@/library/db";
 import { ProviderError } from "@/providers/voice/types";
 import { sceneConfigSchema, parseJsonColumn } from "../schemas";
+import type { SceneLocks } from "../schemas";
 import { toSceneDTO } from "./map";
 
 export async function addScene(
@@ -56,6 +57,7 @@ export async function updateScene(
     musicMood?: string | null;
     /** Active clip in per_scene mode; null clears selection. */
     selectedVoiceClipId?: string | null;
+    locks?: SceneLocks;
   },
 ): Promise<SceneDTO> {
   // Structured scene options live together in the layoutJson config
@@ -66,7 +68,8 @@ export async function updateScene(
     data.items !== undefined ||
     data.chart !== undefined ||
     data.mood !== undefined ||
-    data.musicMood !== undefined
+    data.musicMood !== undefined ||
+    data.locks !== undefined
   ) {
     const current = await prisma.scene.findUnique({
       where: { id },
@@ -93,6 +96,7 @@ export async function updateScene(
       if (data.musicMood === null) delete config.musicMood;
       else config.musicMood = data.musicMood;
     }
+    if (data.locks !== undefined) config.locks = data.locks;
     layoutJson = Object.keys(config).length ? JSON.stringify(config) : "";
   }
 

@@ -16,12 +16,19 @@ import {
   type GeneratePlanInput,
   type ScenePlan,
 } from "./types";
+import { allowedPresetTemplateIds } from "@/production/ai-preset-plan";
 
 const API_BASE = "https://api.openai.com/v1";
 export const OPENAI_DEFAULT_MODEL = "gpt-4o-mini";
 
 // OpenAI structured-output schema. Template enum switches with engine.
 function buildJsonSchema(input: GeneratePlanInput) {
+  const templateIds = input.productionPresetId
+    ? allowedPresetTemplateIds(
+        input.productionPresetId,
+        input.videoEngine ?? "remotion",
+      )
+    : [...planTemplateIdsForEngine(input.videoEngine)];
   return {
     name: "scene_plan",
     strict: true,
@@ -49,7 +56,7 @@ function buildJsonSchema(input: GeneratePlanInput) {
               spokenText: { type: "string" },
               templateId: {
                 type: "string",
-                enum: [...planTemplateIdsForEngine(input.videoEngine)],
+                enum: templateIds,
               },
               emphasis: { type: "array", items: { type: "string" } },
               visual: { type: "string" },
@@ -183,7 +190,8 @@ export function createOpenAIProvider(): AIProvider {
         choices?: { message?: { content?: string } }[];
       };
       const text = json.choices?.[0]?.message?.content ?? "";
-      if (!text) throw new AIError("OpenAI returned an empty response", 502, "openai");
+      if (!text)
+        throw new AIError("OpenAI returned an empty response", 502, "openai");
 
       let parsed: unknown;
       try {

@@ -50,6 +50,7 @@ export interface SceneDTO {
   role?: ProductionSceneRole;
   /** Uploaded assets retained by id for reproducible planning and regeneration. */
   assetRefs?: string[];
+  locks?: { copy: boolean; assets: boolean; scene: boolean };
 }
 
 export interface SceneVoiceClipDTO {

@@ -1,4 +1,6 @@
 import type { GeneratePlanInput } from "./types";
+import { allowedPresetTemplateIds } from "@/production/ai-preset-plan";
+import { getProductionPreset } from "@/production/presets";
 
 // Rotated on every call to vary voice without changing the product rules below.
 const CREATIVE_ANGLES = [
@@ -57,17 +59,21 @@ export function buildPrompt(input: GeneratePlanInput): {
   user: string;
 } {
   const isAppend = input.mode === "append";
+  const isRewrite = input.mode === "rewrite";
+  const isHookVariants = input.mode === "hook_variants";
   const style = input.scriptStyle ?? "short";
   const isDetailed = style === "detailed";
   const isHyperframes = input.videoEngine === "hyperframes";
 
   const count = input.sceneCount
     ? `${input.sceneCount}`
-    : isAppend
-      ? "3 to 5"
-      : isDetailed
-        ? "between 6 and 20"
-        : "between 5 and 12";
+    : isHookVariants
+      ? "3"
+      : isAppend
+        ? "3 to 5"
+        : isDetailed
+          ? "between 6 and 20"
+          : "between 5 and 12";
 
   const orientation = input.orientation ?? "portrait";
   const ASPECT: Record<typeof orientation, string> = {
@@ -77,9 +83,13 @@ export function buildPrompt(input: GeneratePlanInput): {
   };
   const aspect = ASPECT[orientation];
 
-  const countRule = isAppend
-    ? `- Output ONLY the ${count} NEW scenes you are adding. Do NOT repeat or include any existing scenes in your JSON output.`
-    : `- Use ${count} scenes total. If the user's brief explicitly requests a specific number, honour it (max 20).`;
+  const countRule = isHookVariants
+    ? `- Output exactly ${count} alternative opening scenes. Each scene is a distinct option for the same first beat.`
+    : isAppend
+      ? `- Output ONLY the ${count} NEW scenes you are adding. Do NOT repeat or include any existing scenes in your JSON output.`
+      : isRewrite && input.replacementSceneNumbers?.length
+        ? `- Output exactly ${input.replacementSceneNumbers.length} replacement scenes for positions ${input.replacementSceneNumbers.join(", ")}, in that order. Do not return locked or unselected scenes.`
+        : `- Use ${count} scenes total. If the user's brief explicitly requests a specific number, honour it (max 20).`;
 
   const lengthRule = isDetailed
     ? "- Each scene has TWO copy fields: (1) 'text' = short ON-SCREEN line (about 12 to 18 words, easy to read at a glance). (2) 'spokenText' = the VOICEOVER script, about 2 to 3 times longer than 'text' (about 30 to 55 words, 2 to 3 spoken sentences). spokenText expands the same beat with one concrete detail, example, or number — never filler. emphasis phrases should appear in 'text' (preferred) or 'spokenText'."
@@ -108,6 +118,16 @@ export function buildPrompt(input: GeneratePlanInput): {
     ? "OMIT for hf-stat, hf-list, hf-quote, hf-cta, hf-kinetic-slam, hf-money-count, hf-data-chart, and social/logo outros — those need clean type, not busy photos."
     : "OMIT for stat-reveal, icon-grid, quote-card, emoji-punch — those need clean type, not busy photos.";
 
+  const preset = input.productionPresetId
+    ? getProductionPreset(input.productionPresetId)
+    : undefined;
+  const presetRule = preset
+    ? `- Production preset is ${preset.name}. Use only these capability-mapped templates: ${allowedPresetTemplateIds(
+        preset.id,
+        input.videoEngine ?? "remotion",
+      ).join(", ")}. Choose by content fit.`
+    : undefined;
+
   const system = [
     `You are a short-form video director for ${aspect}${
       isHyperframes ? " using the HyperFrames HTML template catalog" : ""
@@ -119,6 +139,7 @@ export function buildPrompt(input: GeneratePlanInput): {
     "- NEVER use markdown in any field. Scene text and spokenText are spoken aloud — plain words only.",
     lengthRule,
     countRule,
+    ...(presetRule ? [presetRule] : []),
     "- Open with the clearest useful idea for the brief. A bold claim, supplied number, direct question, or current pain can work when supported by the source.",
     structureRule,
     "- When the brief calls for an action, end with a clear, low-pressure CTA (try this, save this, follow for more).",
@@ -148,9 +169,17 @@ export function buildPrompt(input: GeneratePlanInput): {
     user = `Turn this into a calm, professional short-form scene plan. Keep the human voice; tighten for spoken delivery:\n\n${input.brief}`;
   } else if (input.mode === "rewrite") {
     const ctx = input.existingContext
-      ? `\n\nExisting scenes for context (rewrite entirely — don't just paraphrase):\n${input.existingContext}`
+      ? `\n\nExisting scenes and lock state for context:\n${input.existingContext}`
       : "";
-    user = `Rewrite this short video to feel more personal, clearer, and harder to scroll past. Strong hook in scene 1. Keep the tone professional and soothing — not shouty.\n\nTopic: ${input.brief}${ctx}`;
+    const positions = input.replacementSceneNumbers?.length
+      ? ` Replace only scene positions ${input.replacementSceneNumbers.join(", ")} and return exactly ${input.replacementSceneNumbers.length} replacement scenes in that order.`
+      : "";
+    user = `Rewrite the requested parts of this short video to feel more personal and clear.${positions} Preserve supplied facts and keep the tone professional and soothing.\n\nTopic: ${input.brief}${ctx}`;
+  } else if (input.mode === "hook_variants") {
+    const ctx = input.existingContext
+      ? `\n\nCurrent opening for context:\n${input.existingContext}`
+      : "";
+    user = `Create three materially different opening options for this video. Use a direct benefit, a useful question, and a source-grounded observation. Do not invent claims or repeat the same sentence pattern.\n\nTopic: ${input.brief}${ctx}`;
   } else {
     const startNum =
       input.existingSceneCount != null ? input.existingSceneCount + 1 : "next";

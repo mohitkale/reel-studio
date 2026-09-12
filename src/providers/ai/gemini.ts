@@ -16,6 +16,7 @@ import {
   type GeneratePlanInput,
   type ScenePlan,
 } from "./types";
+import { allowedPresetTemplateIds } from "@/production/ai-preset-plan";
 
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 // flash-lite has the most free-tier/availability headroom; full flash often 503s.
@@ -23,6 +24,12 @@ export const GEMINI_DEFAULT_MODEL = "gemini-2.5-flash-lite";
 
 // Gemini responseSchema (OpenAPI subset). Template enum switches with engine.
 function buildResponseSchema(input: GeneratePlanInput) {
+  const templateIds = input.productionPresetId
+    ? allowedPresetTemplateIds(
+        input.productionPresetId,
+        input.videoEngine ?? "remotion",
+      )
+    : [...planTemplateIdsForEngine(input.videoEngine)];
   return {
     type: "object",
     properties: {
@@ -49,7 +56,7 @@ function buildResponseSchema(input: GeneratePlanInput) {
             spokenText: { type: "string" },
             templateId: {
               type: "string",
-              enum: [...planTemplateIdsForEngine(input.videoEngine)],
+              enum: templateIds,
             },
             emphasis: { type: "array", items: { type: "string" } },
             visual: { type: "string" },
@@ -176,7 +183,8 @@ export function createGeminiProvider(): AIProvider {
         json.candidates?.[0]?.content?.parts
           ?.map((p) => p.text ?? "")
           .join("") ?? "";
-      if (!text) throw new AIError("Gemini returned an empty response", 502, "gemini");
+      if (!text)
+        throw new AIError("Gemini returned an empty response", 502, "gemini");
 
       let parsed: unknown;
       try {

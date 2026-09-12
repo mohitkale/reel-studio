@@ -51,6 +51,9 @@ const patchSchema = z.object({
   musicMood: z.string().max(60).nullable().optional(),
   // Active per-scene voice clip; null clears selection.
   selectedVoiceClipId: z.string().nullable().optional(),
+  locks: z
+    .object({ copy: z.boolean(), assets: z.boolean(), scene: z.boolean() })
+    .optional(),
 });
 
 export async function PATCH(

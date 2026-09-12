@@ -520,8 +520,10 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                 onClick={() =>
                   undoScript.mutate(
                     undoSnapshot.map((s) => ({
+                      id: s.id,
                       templateId: s.templateId,
                       text: s.text,
+                      spokenText: s.spokenText,
                       emphasis: s.emphasis,
                       visual: s.visual ?? null,
                       background: s.background ?? null,
@@ -529,6 +531,11 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                       mood: s.mood,
                       musicMood: s.musicMood,
                       chart: s.chart,
+                      role: s.role,
+                      assetRefs: s.assetRefs,
+                      locks: s.locks,
+                      hideText: s.hideText,
+                      selectedVoiceClipId: s.selectedVoiceClipId,
                     })),
                     {
                       onSuccess: () => {

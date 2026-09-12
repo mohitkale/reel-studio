@@ -111,6 +111,18 @@ export const sceneMoodSchema = z.enum([
   "nature",
 ]);
 
+export const sceneLocksSchema = z.object({
+  copy: z.boolean(),
+  assets: z.boolean(),
+  scene: z.boolean(),
+});
+export type SceneLocks = z.infer<typeof sceneLocksSchema>;
+export const DEFAULT_SCENE_LOCKS: SceneLocks = {
+  copy: false,
+  assets: false,
+  scene: false,
+};
+
 /** Per-scene config stored in the Scene.layoutJson column. */
 export const sceneConfigSchema = z.object({
   background: sceneBackgroundSchema.optional(),
@@ -122,6 +134,8 @@ export const sceneConfigSchema = z.object({
   musicMood: z.string().max(60).optional(),
   /** Engine-independent production role retained when the scene is edited. */
   role: productionSceneRoleSchema.optional(),
+  /** Selective regeneration controls. */
+  locks: sceneLocksSchema.optional(),
 });
 
 export const assetRefsSchema = z.array(z.string().min(1).max(160)).max(20);

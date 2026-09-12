@@ -15,7 +15,7 @@ import type {
 import type { ProviderId } from "@/providers/voice/types";
 import type { Orientation } from "@/lib/orientation";
 import type { VideoEngineId } from "@/engines/types";
-import type { ScriptStyle } from "@/providers/ai/types";
+import type { AIScene, ScriptStyle } from "@/providers/ai/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { ManualCreationInput } from "@/production/manual-planner";
 
@@ -276,10 +276,12 @@ export function useUpdateScene(scriptId: string) {
       visual?: string | null;
       background?: SceneBackground | null;
       items?: string[] | null;
+      chart?: SceneChartData | null;
       hideText?: boolean | null;
       mood?: string | null;
       musicMood?: string | null;
       selectedVoiceClipId?: string | null;
+      locks?: { copy: boolean; assets: boolean; scene: boolean };
     }) =>
       apiSend<{ scene: SceneDTO; take?: VoiceTakeDTO | null }>(
         `/api/scenes/${vars.id}`,
@@ -316,12 +318,22 @@ export function useUpdateScene(scriptId: string) {
                   ...(vars.items !== undefined
                     ? { items: vars.items ?? undefined }
                     : {}),
+                  ...(vars.chart !== undefined
+                    ? { chart: vars.chart ?? undefined }
+                    : {}),
                   ...(vars.hideText !== undefined
                     ? { hideText: vars.hideText }
+                    : {}),
+                  ...(vars.mood !== undefined
+                    ? { mood: vars.mood ?? undefined }
+                    : {}),
+                  ...(vars.musicMood !== undefined
+                    ? { musicMood: vars.musicMood ?? undefined }
                     : {}),
                   ...(vars.selectedVoiceClipId !== undefined
                     ? { selectedVoiceClipId: vars.selectedVoiceClipId }
                     : {}),
+                  ...(vars.locks !== undefined ? { locks: vars.locks } : {}),
                 }
               : s,
           ),
@@ -574,14 +586,17 @@ export function useEnhanceScript(scriptId: string) {
   return useMutation({
     mutationFn: (vars: {
       providerId: string;
-      mode: "rewrite" | "append";
+      mode: "rewrite" | "append" | "hook_variants";
       brief: string;
       sceneCount?: number;
+      sceneIds?: string[];
       scriptStyle?: ScriptStyle;
     }) =>
-      apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/ai`, vars).then(
-        (r) => r.script,
-      ),
+      apiPost<{
+        script: ScriptDTO;
+        alternatives?: AIScene[];
+        changedSceneIds?: string[];
+      }>(`/api/scripts/${scriptId}/ai`, vars),
     onSuccess: invalidate,
   });
 }
@@ -595,6 +610,7 @@ export function useImportScenes(scriptId: string) {
   return useMutation({
     mutationFn: (
       scenes: {
+        id?: string;
         templateId: string | null;
         text: string;
         spokenText?: string | null;
@@ -605,6 +621,11 @@ export function useImportScenes(scriptId: string) {
         chart?: SceneChartData;
         mood?: string;
         musicMood?: string;
+        role?: SceneDTO["role"];
+        assetRefs?: string[];
+        locks?: SceneDTO["locks"];
+        hideText?: boolean | null;
+        selectedVoiceClipId?: string | null;
       }[],
     ) =>
       apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/undo`, {
@@ -619,6 +640,7 @@ export function useUndoScript(scriptId: string) {
   return useMutation({
     mutationFn: (
       scenes: {
+        id?: string;
         templateId: string | null;
         text: string;
         spokenText?: string | null;
@@ -629,6 +651,11 @@ export function useUndoScript(scriptId: string) {
         chart?: SceneChartData;
         mood?: string;
         musicMood?: string;
+        role?: SceneDTO["role"];
+        assetRefs?: string[];
+        locks?: SceneDTO["locks"];
+        hideText?: boolean | null;
+        selectedVoiceClipId?: string | null;
       }[],
     ) =>
       apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/undo`, {
