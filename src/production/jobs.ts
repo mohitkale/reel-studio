@@ -29,6 +29,7 @@ export const enqueueProductionJobSchema = z.object({
   idempotencyKey: z.string().min(8).max(240),
   inputSnapshot: z.unknown(),
   priority: z.number().int().min(-100).max(100).default(0),
+  state: z.enum(["queued", "awaiting_approval"]).default("queued"),
 });
 export type EnqueueProductionJob = z.input<typeof enqueueProductionJobSchema>;
 
@@ -54,6 +55,30 @@ export const audiogramProductionJobInputSchema = z.object({
 export type AudiogramProductionJobInput = z.infer<
   typeof audiogramProductionJobInputSchema
 >;
+
+export const audioProductionJobInputSchema = z.object({
+  scriptId: z.string().min(1),
+  providerId: z
+    .enum([
+      "kokoro",
+      "kokoro-server",
+      "webspeech",
+      "cartesia",
+      "elevenlabs",
+      "voiceforge",
+    ])
+    .optional(),
+  voiceId: z.string().min(1).optional(),
+  modelId: z.string().min(1).optional(),
+  placeholder: z.boolean().default(false),
+  label: z.string().min(1).max(120).optional(),
+});
+
+export const podcastProductionJobInputSchema = z.object({
+  podcastId: z.string().min(1),
+  regenerateTurnIds: z.array(z.string().min(1)).max(120).optional(),
+  label: z.string().min(1).max(120).optional(),
+});
 
 export interface ClaimedProductionJob {
   id: string;

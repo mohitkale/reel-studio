@@ -63,7 +63,7 @@ export default function SettingsPage() {
                   onClick={() => setTheme(opt.value)}
                   aria-pressed={active}
                   className={cn(
-                    "inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "focus-visible:ring-ring inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none",
                     active
                       ? "bg-secondary text-secondary-foreground"
                       : "text-muted-foreground hover:text-foreground",
@@ -94,7 +94,9 @@ export default function SettingsPage() {
             </div>
           ) : (
             data.providers
-              .filter((status) => status.runtime === "server" && !status.keyless)
+              .filter(
+                (status) => status.runtime === "server" && !status.keyless,
+              )
               .map((status) => (
                 <ProviderKeyCard
                   key={status.id}
@@ -136,8 +138,9 @@ export default function SettingsPage() {
           <CardTitle className="text-base">Stock images (optional)</CardTitle>
           <CardDescription>
             Add a free Unsplash Access Key so the AI director can place relevant
-            stock photo backgrounds on scenes. Generation works without it; those
-            scenes simply keep the clean branded look. Photos remain under the{" "}
+            stock photo backgrounds on scenes. Generation works without it;
+            those scenes simply keep the clean branded look. Photos remain under
+            the{" "}
             <a
               href="https://unsplash.com/license"
               target="_blank"
@@ -190,9 +193,9 @@ export default function SettingsPage() {
           <CardTitle className="text-base">AI tools / MCP (optional)</CardTitle>
           <CardDescription>
             Generate a token so external AI agents can create and edit
-            storyboards through the MCP server. They can do everything except
-            delete or change configuration, and any render waits for your
-            approval on the Renders page.
+            storyboards through the MCP server. Keep the legacy token for its
+            established approval flow, or mint named production tokens with
+            explicit provider, duration, batch and paid-usage limits.
           </CardDescription>
         </CardHeader>
         <CardContent>

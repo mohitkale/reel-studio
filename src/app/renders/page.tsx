@@ -1,10 +1,32 @@
 "use client";
 
 import * as React from "react";
-import { ListVideo, Download, AlertCircle, CheckCircle2, Loader2, Clock, RefreshCcw, Maximize2, Trash2, Pencil, Check, X, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  ListVideo,
+  Download,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  Clock,
+  RefreshCcw,
+  Maximize2,
+  Trash2,
+  Pencil,
+  Check,
+  X,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
 
-import { useRenders, useRenderProgress, useCreateRender, useRenameRender, useDeleteRender, useApproveRender } from "@/hooks/renders";
+import {
+  useRenders,
+  useRenderProgress,
+  useCreateRender,
+  useRenameRender,
+  useDeleteRender,
+  useApproveRender,
+} from "@/hooks/renders";
 import { useScript } from "@/hooks/script";
 import type { RenderDTO } from "@/lib/dto";
 import { PageHeader } from "@/components/shell/page-header";
@@ -15,8 +37,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { LISTING_GRID_6_CARDS } from "@/lib/listing-layout";
+import { ProductionJobList } from "@/components/production/production-job-list";
 
-const STATUS_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const STATUS_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   pending_approval: ShieldCheck,
   queued: Clock,
   bundling: Loader2,
@@ -62,17 +88,20 @@ function PendingApprovalPanel({
     approve.mutate(render.id, {
       onSuccess: (updated) => {
         onApproved(updated);
-        toast.success("Render approved", { description: "The job is now running." });
+        toast.success("Render approved", {
+          description: "The job is now running.",
+        });
       },
-      onError: (e) => toast.error("Could not approve", { description: (e as Error).message }),
+      onError: (e) =>
+        toast.error("Could not approve", { description: (e as Error).message }),
     });
   }
 
   return (
     <div className="space-y-3">
-      <div className="flex items-start gap-2 rounded-lg bg-muted/50 px-3 py-2">
-        <Sparkles className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-        <p className="text-xs text-muted-foreground">
+      <div className="bg-muted/50 flex items-start gap-2 rounded-lg px-3 py-2">
+        <Sparkles className="text-muted-foreground mt-0.5 size-3.5 shrink-0" />
+        <p className="text-muted-foreground text-xs">
           An AI tool requested this render via MCP. Review the storyboard, then
           approve to generate the video.
         </p>
@@ -86,12 +115,12 @@ function PendingApprovalPanel({
           </p>
           <ol className="space-y-1">
             {script.scenes.slice(0, 4).map((s, i) => (
-              <li key={s.id} className="truncate text-xs text-muted-foreground">
+              <li key={s.id} className="text-muted-foreground truncate text-xs">
                 {i + 1}. {s.text || <span className="italic">empty scene</span>}
               </li>
             ))}
             {script.scenes.length > 4 && (
-              <li className="text-xs text-muted-foreground">
+              <li className="text-muted-foreground text-xs">
                 +{script.scenes.length - 4} more…
               </li>
             )}
@@ -120,7 +149,7 @@ function PendingApprovalPanel({
 
 function ProgressBar({ value }: { value: number }) {
   return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+    <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
       <div
         className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-400 transition-all duration-300"
         style={{ width: `${Math.round(value * 100)}%` }}
@@ -133,14 +162,17 @@ function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
-  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  if (h > 0)
+    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 /** Rough "~Xs left" estimate from elapsed time and current progress. */
 function formatEta(elapsedMs: number, progress: number): string | null {
   if (progress < 0.03 || progress >= 1) return null;
-  const remainingSeconds = Math.round((elapsedMs / 1000) * ((1 - progress) / progress));
+  const remainingSeconds = Math.round(
+    (elapsedMs / 1000) * ((1 - progress) / progress),
+  );
   if (!Number.isFinite(remainingSeconds) || remainingSeconds < 0) return null;
   if (remainingSeconds < 5) return "almost done";
   return `~${formatDuration(remainingSeconds)} left`;
@@ -160,7 +192,9 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
   const [duration, setDuration] = React.useState<number | null>(null);
   // First time we observe "rendering" (not "queued"/"bundling"), used to
   // derive a rough ETA from elapsed time and current progress.
-  const [renderStartedAt, setRenderStartedAt] = React.useState<number | null>(null);
+  const [renderStartedAt, setRenderStartedAt] = React.useState<number | null>(
+    null,
+  );
   const [eta, setEta] = React.useState<string | null>(null);
   const nameRef = React.useRef<HTMLInputElement>(null);
   const createRender = useCreateRender();
@@ -169,7 +203,12 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
   const handleUpdate = React.useCallback(
-    (data: { progress: number; status: string; error: string | null; outputUrl: string | null }) => {
+    (data: {
+      progress: number;
+      status: string;
+      error: string | null;
+      outputUrl: string | null;
+    }) => {
       if (data.status === "rendering") {
         setRenderStartedAt((prev) => prev ?? Date.now());
       }
@@ -189,7 +228,8 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
   // ever displayed while render.status === "rendering".
   React.useEffect(() => {
     if (render.status !== "rendering" || renderStartedAt === null) return;
-    const tick = () => setEta(formatEta(Date.now() - renderStartedAt, render.progress));
+    const tick = () =>
+      setEta(formatEta(Date.now() - renderStartedAt, render.progress));
     const kickoff = setTimeout(tick, 0);
     const id = setInterval(tick, 1000);
     return () => {
@@ -198,11 +238,15 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
     };
   }, [render.status, render.progress, renderStartedAt]);
 
-  const isActive = render.status === "queued" || render.status === "bundling" || render.status === "rendering";
+  const isActive =
+    render.status === "queued" ||
+    render.status === "bundling" ||
+    render.status === "rendering";
   useRenderProgress(isActive ? render.id : null, handleUpdate);
 
   const Icon = STATUS_ICONS[render.status] ?? Clock;
-  const isSpinner = render.status === "bundling" || render.status === "rendering";
+  const isSpinner =
+    render.status === "bundling" || render.status === "rendering";
   const displayName = render.name ?? `Render ${render.id.slice(-8)}`;
 
   function startRename() {
@@ -254,26 +298,39 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
                       if (e.key === "Escape") cancelRename();
                     }}
                     onBlur={commitRename}
-                    className="flex-1 truncate rounded border border-border bg-background px-2 py-0.5 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="border-border bg-background focus:ring-primary flex-1 truncate rounded border px-2 py-0.5 text-sm font-medium focus:ring-1 focus:outline-none"
                     placeholder={`Render ${render.id.slice(-8)}`}
                     maxLength={120}
                   />
-                  <button onMouseDown={(e) => e.preventDefault()} onClick={commitRename} className="rounded p-0.5 hover:bg-accent" aria-label="Save name"><Check className="size-3.5 text-primary" /></button>
-                  <button onClick={cancelRename} className="rounded p-0.5 hover:bg-accent" aria-label="Cancel rename"><X className="size-3.5 text-muted-foreground" /></button>
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={commitRename}
+                    className="hover:bg-accent rounded p-0.5"
+                    aria-label="Save name"
+                  >
+                    <Check className="text-primary size-3.5" />
+                  </button>
+                  <button
+                    onClick={cancelRename}
+                    className="hover:bg-accent rounded p-0.5"
+                    aria-label="Cancel rename"
+                  >
+                    <X className="text-muted-foreground size-3.5" />
+                  </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-1 group">
+                <div className="group flex items-center gap-1">
                   <p className="truncate text-sm font-medium">{displayName}</p>
                   <button
                     onClick={startRename}
-                    className="rounded p-0.5 opacity-0 group-hover:opacity-100 hover:bg-accent transition-opacity"
+                    className="hover:bg-accent rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
                     aria-label="Rename render"
                   >
-                    <Pencil className="size-3 text-muted-foreground" />
+                    <Pencil className="text-muted-foreground size-3" />
                   </button>
                 </div>
               )}
-              <p className="truncate whitespace-nowrap text-xs text-muted-foreground">
+              <p className="text-muted-foreground truncate text-xs whitespace-nowrap">
                 {new Date(render.createdAt).toLocaleString(undefined, {
                   day: "2-digit",
                   month: "2-digit",
@@ -290,14 +347,19 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
                     {QUALITY_LABEL[render.quality] ?? render.quality}
                   </Badge>
                 )}
-                <Badge variant={STATUS_COLOR[render.status] ?? "secondary"} className="shrink-0 gap-1.5">
-                  <Icon className={`size-3 ${isSpinner ? "animate-spin" : ""}`} />
+                <Badge
+                  variant={STATUS_COLOR[render.status] ?? "secondary"}
+                  className="shrink-0 gap-1.5"
+                >
+                  <Icon
+                    className={`size-3 ${isSpinner ? "animate-spin" : ""}`}
+                  />
                   {STATUS_LABEL[render.status] ?? render.status}
                 </Badge>
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="size-7 text-muted-foreground hover:text-destructive"
+                  className="text-muted-foreground hover:text-destructive size-7"
                   aria-label="Delete render"
                   onClick={() => setConfirmDelete(true)}
                 >
@@ -311,7 +373,11 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
             <PendingApprovalPanel
               render={render}
               onApproved={(updated) =>
-                setRender((prev) => ({ ...prev, status: updated.status, progress: updated.progress }))
+                setRender((prev) => ({
+                  ...prev,
+                  status: updated.status,
+                  progress: updated.progress,
+                }))
               }
             />
           )}
@@ -320,12 +386,13 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
             <div className="space-y-1">
               <ProgressBar value={render.progress} />
               {render.status === "bundling" && (
-                <p className="text-xs text-muted-foreground">
-                  Compiling the video composition (first render only -- downloads Chromium if needed).
+                <p className="text-muted-foreground text-xs">
+                  Compiling the video composition (first render only --
+                  downloads Chromium if needed).
                 </p>
               )}
               {render.status === "rendering" && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {Math.round(render.progress * 100)}% rendered
                   {eta ? ` · ${eta}` : ""}
                 </p>
@@ -350,7 +417,7 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
                   }
                 />
                 {/* Overlay: fullscreen + download (visible on hover) */}
-                <div className="pointer-events-none absolute right-0 top-0 flex items-center gap-1 p-2 opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="pointer-events-none absolute top-0 right-0 flex items-center gap-1 p-2 opacity-0 transition-opacity group-hover:opacity-100">
                   <button
                     className="pointer-events-auto rounded-md bg-black/60 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/80"
                     onClick={requestFullscreen}
@@ -369,7 +436,7 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
                 </div>
               </div>
               {duration !== null && (
-                <p className="text-center text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-center text-xs">
                   {formatDuration(duration)}
                 </p>
               )}
@@ -379,7 +446,7 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
           {render.status === "error" && (
             <div className="space-y-2">
               {render.error && (
-                <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                <p className="bg-destructive/10 text-destructive rounded-lg px-3 py-2 text-xs">
                   {render.error}
                 </p>
               )}
@@ -392,7 +459,9 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
                   createRender.mutate({
                     scriptId: render.scriptId,
                     voiceTakeId: render.voiceTakeId ?? undefined,
-                    ...(render.quality !== "standard" ? { quality: render.quality } : {}),
+                    ...(render.quality !== "standard"
+                      ? { quality: render.quality }
+                      : {}),
                   })
                 }
               >
@@ -414,8 +483,9 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
         title="Delete render?"
         description={
           <p>
-            The MP4 file will be permanently deleted. Your project, scenes, and voice takes are not
-            affected — renders are standalone exports. To remove project content, open the project.
+            The MP4 file will be permanently deleted. Your project, scenes, and
+            voice takes are not affected — renders are standalone exports. To
+            remove project content, open the project.
           </p>
         }
         confirmLabel="Delete render"
@@ -443,6 +513,8 @@ export default function RendersPage() {
         title="Renders"
         description="Track render jobs and download finished MP4 videos."
       />
+
+      <ProductionJobList />
 
       {isLoading ? (
         <div className={LISTING_GRID_6_CARDS}>

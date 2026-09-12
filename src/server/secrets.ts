@@ -1,11 +1,22 @@
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
 import { type ProviderId, PROVIDER_IDS } from "@/providers/voice/types";
 import { type AIProviderId, AI_PROVIDER_IDS } from "@/providers/ai/types";
-import { type StockProviderId, STOCK_PROVIDER_IDS } from "@/providers/stock/types";
-import { type MusicProviderId, MUSIC_PROVIDER_IDS } from "@/providers/music/types";
+import {
+  type StockProviderId,
+  STOCK_PROVIDER_IDS,
+} from "@/providers/stock/types";
+import {
+  type MusicProviderId,
+  MUSIC_PROVIDER_IDS,
+} from "@/providers/music/types";
+import {
+  createMcpTokenSchema,
+  mcpNamedTokenRecordSchema,
+  type McpNamedTokenRecord,
+} from "@/production/mcp-access";
 
 /**
  * Server-only secret management. API keys live in a git-ignored .env.local at
@@ -140,6 +151,7 @@ export function setMusicKey(id: MusicProviderId, value: string): Promise<void> {
 /* MCP server token */
 
 const MCP_ENV_KEY = "MCP_API_TOKEN";
+const MCP_NAMED_ENV_KEY = "MCP_NAMED_TOKENS";
 
 /** The bearer token external AI tools present to authenticate MCP-originated calls. */
 export function getMcpToken(): string | undefined {
@@ -161,4 +173,97 @@ export async function generateMcpToken(): Promise<string> {
 /** Remove the MCP token, disabling MCP-originated access until regenerated. */
 export function clearMcpToken(): Promise<void> {
   return writeEnvKey(MCP_ENV_KEY, "");
+}
+
+function hashMcpToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+function namedMcpTokens(): McpNamedTokenRecord[] {
+  const raw = process.env[MCP_NAMED_ENV_KEY]?.trim();
+  if (!raw) return [];
+  try {
+    return mcpNamedTokenRecordSchema.array().parse(JSON.parse(raw));
+  } catch {
+    return [];
+  }
+}
+
+function saveNamedMcpTokens(records: McpNamedTokenRecord[]): Promise<void> {
+  return writeEnvKey(MCP_NAMED_ENV_KEY, JSON.stringify(records));
+}
+
+export function listNamedMcpTokens(): Omit<McpNamedTokenRecord, "tokenHash">[] {
+  return namedMcpTokens().map((record) => ({
+    id: record.id,
+    name: record.name,
+    scopes: record.scopes,
+    allowedProviders: record.allowedProviders,
+    paidProviders: record.paidProviders,
+    maxDurationSeconds: record.maxDurationSeconds,
+    maxBatchSize: record.maxBatchSize,
+    paidRequestLimit: record.paidRequestLimit,
+    paidRequestsUsed: record.paidRequestsUsed,
+    createdAt: record.createdAt,
+    lastUsedAt: record.lastUsedAt,
+  }));
+}
+
+export function findNamedMcpToken(
+  token: string,
+): McpNamedTokenRecord | undefined {
+  const hash = hashMcpToken(token);
+  return namedMcpTokens().find((record) => record.tokenHash === hash);
+}
+
+/** Create a named, least-privilege MCP token. The raw token is returned once. */
+export async function generateNamedMcpToken(input: unknown) {
+  const parsed = createMcpTokenSchema.parse(input);
+  const id = randomUUID();
+  const token = `rs_mcp_${id}.${randomBytes(32).toString("base64url")}`;
+  const record: McpNamedTokenRecord = {
+    id,
+    name: parsed.name,
+    tokenHash: hashMcpToken(token),
+    ...parsed.policy,
+    paidRequestsUsed: 0,
+    createdAt: new Date().toISOString(),
+    lastUsedAt: null,
+  };
+  await saveNamedMcpTokens([...namedMcpTokens(), record]);
+  return {
+    token,
+    record: listNamedMcpTokens().find((item) => item.id === id)!,
+  };
+}
+
+export async function revokeNamedMcpToken(id: string): Promise<boolean> {
+  const records = namedMcpTokens();
+  const next = records.filter((record) => record.id !== id);
+  if (next.length === records.length) return false;
+  await saveNamedMcpTokens(next);
+  return true;
+}
+
+let namedTokenWrite = Promise.resolve();
+
+/** Reserve one unknown-price paid provider request before it starts. */
+export async function reserveNamedMcpPaidRequest(id: string): Promise<boolean> {
+  let reserved = false;
+  namedTokenWrite = namedTokenWrite.then(async () => {
+    const records = namedMcpTokens();
+    const index = records.findIndex((record) => record.id === id);
+    if (index < 0) return;
+    const record = records[index];
+    if (record.paidRequestsUsed >= record.paidRequestLimit) return;
+    records[index] = {
+      ...record,
+      paidRequestsUsed: record.paidRequestsUsed + 1,
+      lastUsedAt: new Date().toISOString(),
+    };
+    await saveNamedMcpTokens(records);
+    reserved = true;
+  });
+  await namedTokenWrite;
+  return reserved;
 }

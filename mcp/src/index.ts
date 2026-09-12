@@ -12,9 +12,9 @@ import { registerResources } from "./resources.js";
  * Lets external AI tools (Claude Code, Cursor) build and edit storyboards and
  * audio-only podcasts in the running Reel Studio app: create projects/podcasts,
  * edit scenes or dialogue, AI-generate plans, create voice/podcast takes, and
- * request video renders. It NEVER deletes anything, never changes
- * configuration/secrets, and video rendering always waits for explicit human
- * approval in the web app.
+ * request durable video, audio, podcast, and audiogram productions. It NEVER
+ * deletes content or changes configuration/secrets. Legacy tokens keep the
+ * human render gate; named scoped tokens may opt into bounded unattended renders.
  *
  * Auth: presents REEL_STUDIO_MCP_TOKEN as a bearer token to the REST API.
  */

@@ -8,9 +8,11 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createPrismaClient } from "@/library/prisma-client";
 import {
   claimProductionJob,
+  approveProductionJob,
   enqueueProductionJob,
   heartbeatProductionJob,
   requestProductionJobCancellation,
+  retryProductionJob,
 } from "@/library/repositories/production-jobs";
 
 describe("durable production jobs", () => {
@@ -112,5 +114,39 @@ describe("durable production jobs", () => {
     const canceled = await requestProductionJobCancellation(job.id, client);
     expect(canceled?.state).toBe("canceled");
     expect(await claimProductionJob({ workerId: "worker" }, client)).toBeNull();
+  });
+
+  it("keeps approval-gated jobs unclaimable until a web approval", async () => {
+    const job = await enqueueProductionJob(
+      {
+        kind: "video",
+        state: "awaiting_approval",
+        idempotencyKey: "approval-request",
+        inputSnapshot: { scriptId: "script" },
+      },
+      client,
+    );
+    expect(await claimProductionJob({ workerId: "worker" }, client)).toBeNull();
+    expect((await approveProductionJob(job.id, client))?.state).toBe("queued");
+    expect((await claimProductionJob({ workerId: "worker" }, client))?.id).toBe(
+      job.id,
+    );
+  });
+
+  it("retries failed and canceled jobs with the same immutable input", async () => {
+    const job = await enqueueProductionJob(
+      {
+        kind: "audio",
+        idempotencyKey: "retry-request",
+        inputSnapshot: { scriptId: "script" },
+      },
+      client,
+    );
+    await requestProductionJobCancellation(job.id, client);
+    const retried = await retryProductionJob(job.id, client);
+    expect(retried).toMatchObject({ state: "queued", cancelRequested: false });
+    expect(
+      (await claimProductionJob({ workerId: "worker" }, client))?.inputSnapshot,
+    ).toEqual({ scriptId: "script" });
   });
 });

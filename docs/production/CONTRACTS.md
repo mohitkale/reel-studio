@@ -182,3 +182,29 @@ jobs pass through all eight stages and reuse the existing engine-aware render
 service. A job cannot succeed until `ffprobe` confirms a decodable MP4 with
 positive dimensions and duration, and an audio stream when the chosen take
 requires one. The verified artifact is stored with SHA-256 and media metadata.
+
+## Scoped MCP production automation
+
+REST and MCP call the same production service and Zod request contracts. The
+service accepts video, audio, podcast and audiogram jobs, validates referenced
+records before queuing work, applies an idempotency key and stores an immutable
+input snapshot. The public production surface consists of preset discovery, job
+submission and listing, status and reconnectable events, approval, retry,
+cancellation and verified artifact download endpoints. Existing MCP tools and
+the legacy audio-only `/produce` route keep their established behavior.
+
+Named MCP tokens are stored in git-ignored local configuration with only a
+SHA-256 token hash. A token policy grants explicit studio read/write, production
+submission, automatic rendering, cancellation and artifact-read scopes. It also
+sets provider allowlists, a maximum production duration, a batch limit and a
+finite paid-request allowance. Video and audiogram jobs require browser approval
+unless a named token explicitly grants automatic rendering. A paid provider
+requires both allowlisting and an explicit paid allowance; unknown-price work
+waits for approval instead of being retried speculatively. Provider and quota
+checks also protect the existing paid generation routes.
+
+The launch limits are three minutes for video and standalone audio, ten minutes
+for podcasts and 90 seconds for audiograms. Legacy tokens retain their current
+approval flow. MCP has no secret-management, project-deletion or executable-code
+capability, and the server never returns a named token after its one-time
+creation response.

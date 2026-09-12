@@ -13,7 +13,7 @@ import { autoAttachBundledMusic } from "@/library/soundtrack-service";
 import { ensureSfxCues } from "@/library/sfx-service";
 import { orientationSchema, DEFAULT_ORIENTATION } from "@/lib/orientation";
 import { VIDEO_ENGINE_IDS, DEFAULT_VIDEO_ENGINE } from "@/engines/types";
-import { authorize } from "@/server/auth";
+import { authorizeProviderRequest } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 import {
   getProductionPreset,
@@ -46,8 +46,8 @@ const bodySchema = z.object({
 /** POST /api/projects/ai - generate a scene plan from a brief and create the project. */
 export async function POST(req: Request) {
   try {
-    authorize(req);
     const body = bodySchema.parse(await req.json());
+    await authorizeProviderRequest(req, [body.providerId]);
     if (!isAIProviderId(body.providerId)) {
       throw new AIError(`Unknown AI provider "${body.providerId}"`, 404);
     }

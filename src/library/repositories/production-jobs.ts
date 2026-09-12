@@ -31,6 +31,7 @@ export async function enqueueProductionJob(
     return await db.productionJob.create({
       data: {
         kind: data.kind,
+        state: data.state,
         idempotencyKey: data.idempotencyKey,
         inputSnapshot: json(data.inputSnapshot),
         priority: data.priority,
@@ -281,5 +282,71 @@ export async function getProductionJob(id: string) {
       steps: { orderBy: { createdAt: "asc" } },
       outputs: { orderBy: { createdAt: "asc" } },
     },
+  });
+}
+
+export async function getProductionJobByIdempotencyKey(idempotencyKey: string) {
+  return prisma.productionJob.findUnique({
+    where: { idempotencyKey },
+    include: {
+      steps: { orderBy: { createdAt: "asc" } },
+      outputs: { orderBy: { createdAt: "asc" } },
+    },
+  });
+}
+
+export async function listProductionJobs(limit = 50) {
+  return prisma.productionJob.findMany({
+    orderBy: { createdAt: "desc" },
+    take: Math.max(1, Math.min(100, limit)),
+    include: {
+      steps: { orderBy: { createdAt: "asc" } },
+      outputs: { orderBy: { createdAt: "asc" } },
+    },
+  });
+}
+
+export async function approveProductionJob(
+  id: string,
+  db: PrismaClient = prisma,
+) {
+  return db.$transaction(async (tx) => {
+    const updated = await tx.productionJob.updateMany({
+      where: { id, state: "awaiting_approval" },
+      data: { state: "queued", error: null },
+    });
+    if (updated.count !== 1) return null;
+    await tx.productionJobEvent.create({
+      data: { jobId: id, type: "approved" },
+    });
+    return tx.productionJob.findUnique({ where: { id } });
+  });
+}
+
+export async function retryProductionJob(
+  id: string,
+  db: PrismaClient = prisma,
+) {
+  return db.$transaction(async (tx) => {
+    const job = await tx.productionJob.findUnique({ where: { id } });
+    if (!job || !["failed", "canceled"].includes(job.state)) return null;
+    await tx.productionJobStep.deleteMany({ where: { jobId: id } });
+    const updated = await tx.productionJob.update({
+      where: { id },
+      data: {
+        state: "queued",
+        cancelRequested: false,
+        leaseOwner: null,
+        leaseExpiresAt: null,
+        heartbeatAt: null,
+        error: null,
+        startedAt: null,
+        finishedAt: null,
+      },
+    });
+    await tx.productionJobEvent.create({
+      data: { jobId: id, type: "retried" },
+    });
+    return updated;
   });
 }

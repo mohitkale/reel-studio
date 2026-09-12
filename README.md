@@ -163,7 +163,8 @@ Compose publishes **`127.0.0.1:3000` only** (not your LAN).
 
 ## MCP integration
 
-With the app running, generate a token in **Settings → AI tools / MCP**, then:
+With the app running, generate a legacy approval token or a named scoped token in
+**Settings → AI tools / MCP**, then:
 
 ```bash
 npm run mcp

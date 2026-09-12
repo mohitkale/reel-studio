@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     "better-sqlite3",
     "@remotion/renderer",
     "@remotion/bundler",
+    "remotion",
     "@remotion/compositor-win32-x64-msvc",
     "@hyperframes/producer",
     "@hyperframes/engine",

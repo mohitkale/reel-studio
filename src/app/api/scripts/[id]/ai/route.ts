@@ -27,7 +27,7 @@ import {
   type AIScene,
 } from "@/providers/ai/types";
 import { errorResponse } from "@/server/api-helpers";
-import { authorize } from "@/server/auth";
+import { authorizeProviderRequest } from "@/server/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -86,9 +86,9 @@ export async function POST(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
-    authorize(req);
     const { id: scriptId } = await ctx.params;
     const body = bodySchema.parse(await req.json());
+    await authorizeProviderRequest(req, [body.providerId]);
 
     if (!isAIProviderId(body.providerId)) {
       throw new AIError(`Unknown AI provider "${body.providerId}"`, 404);
