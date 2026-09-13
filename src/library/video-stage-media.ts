@@ -1,6 +1,6 @@
 import { parseSfxState } from "@/lib/sfx-cues";
-import { getSfxClip } from "@/lib/sfx-library";
-import { createHash } from "node:crypto";
+import { getSfxClip, SFX_LIBRARY } from "@/lib/sfx-library";
+import { createHash, randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { assertSafeMediaUrl } from "@/lib/media-url-safety";
@@ -8,8 +8,21 @@ import { sanitizeKey } from "@/library/storage/local-disk";
 import { assertProductionActive } from "@/library/production-cancellation";
 import type { VideoSnapshot } from "@/production/video-snapshot";
 
+function canonical(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value && typeof value === "object")
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([, item]) => item !== undefined)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, item]) => [key, canonical(item)]),
+    );
+  return value;
+}
 export const videoStageHash = (value: unknown) =>
-  createHash("sha256").update(JSON.stringify(value)).digest("hex");
+  createHash("sha256")
+    .update(JSON.stringify(canonical(value)))
+    .digest("hex");
 
 /** Freeze selected local assets, retaining compliant remote URLs without downloading. */
 export async function resolveVideoStageMedia(
@@ -25,7 +38,7 @@ export async function resolveVideoStageMedia(
   const resolve = async (url: string | null): Promise<string | null> => {
     if (!url) return null;
     assertProductionActive();
-    if (!url.startsWith("/sfx/")) assertSafeMediaUrl(url);
+    if (!SFX_LIBRARY.some((clip) => clip.url === url)) assertSafeMediaUrl(url);
     const parsed = new URL(url, baseUrl);
     const local =
       !url.startsWith("http") || parsed.origin === new URL(baseUrl).origin;
@@ -47,13 +60,21 @@ export async function resolveVideoStageMedia(
     await fs.mkdir(path.join(process.cwd(), "media", "production-assets"), {
       recursive: true,
     });
-    await fs
-      .writeFile(path.join(process.cwd(), "media", target), data, {
-        flag: "wx",
-      })
-      .catch((error: NodeJS.ErrnoException) => {
-        if (error.code !== "EEXIST") throw error;
-      });
+    const destination = path.join(process.cwd(), "media", target);
+    const temporary = `${destination}.${randomUUID()}.tmp`;
+    try {
+      // Atomic replacement also repairs a cache file truncated by a hard crash.
+      const cached = await fs.readFile(destination).catch(() => null);
+      if (
+        !cached ||
+        createHash("sha256").update(cached).digest("hex") !== checksum
+      ) {
+        await fs.writeFile(temporary, data, { flag: "wx" });
+        await fs.rename(temporary, destination);
+      }
+    } finally {
+      await fs.rm(temporary, { force: true });
+    }
     const resolvedUrl = `/media/${target}`;
     assets.push({ url, resolvedUrl, checksum });
     return resolvedUrl;

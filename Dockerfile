@@ -55,6 +55,9 @@ COPY package.json package-lock.json* ./
 COPY prisma ./prisma
 COPY prisma.config.ts ./
 COPY scripts/database-url.mjs ./scripts/database-url.mjs
+# The shipped Kokoro server explicitly uses the CPU device. Avoid downloading
+# unrelated multi-gigabyte CUDA execution providers into this CPU dev image.
+ARG ONNXRUNTIME_NODE_INSTALL_CUDA=skip
 RUN npm ci
 
 # Copy the rest of the source. At runtime docker-compose bind-mounts the host

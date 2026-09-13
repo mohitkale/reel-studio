@@ -5,6 +5,7 @@ import { promisify } from "node:util";
 import { DatabaseSync } from "node:sqlite";
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { tmpdir } from "node:os";
 
 async function main() {
   const directory = path.resolve(
@@ -46,6 +47,11 @@ async function main() {
       .map((line) => Number(line.trim().split(/\s+/)[0]));
   };
   const baselinePids = new Set(await renderPids());
+  const browserProfiles = async () =>
+    (await readdir(tmpdir())).filter((name) =>
+      name.startsWith("puppeteer_dev_chrome_profile-"),
+    );
+  const baselineProfiles = new Set(await browserProfiles());
   const evidence: unknown[] = [];
   try {
     for (const engine of ["remotion", "hyperframes"] as const) {
@@ -147,6 +153,13 @@ async function main() {
             (await renderPids()).filter((pid) => !baselinePids.has(pid)),
             [],
             "No renderer children may survive cancellation",
+          );
+          assert.deepEqual(
+            (await browserProfiles()).filter(
+              (name) => !baselineProfiles.has(name),
+            ),
+            [],
+            "Temporary browser profiles must be cleaned up",
           );
           assert.ok(requested, "Cancellation must occur during rendering");
           assert.equal(saved.outputs.length, 0);

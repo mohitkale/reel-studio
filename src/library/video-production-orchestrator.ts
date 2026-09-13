@@ -74,15 +74,27 @@ export async function verifyProductionMp4(
     ],
     { signal: productionSignal() },
   );
-  const probe = JSON.parse(stdout) as {
-    streams?: Array<Record<string, unknown>>;
-    format?: { duration?: string };
-  };
+  const probe = z
+    .object({
+      streams: z.array(
+        z.object({
+          codec_type: z.string(),
+          codec_name: z.string().optional(),
+          width: z.number().optional(),
+          height: z.number().optional(),
+          duration: z.string().optional(),
+        }),
+      ),
+      format: z.object({ duration: z.coerce.number().finite().positive() }),
+    })
+    .parse(JSON.parse(stdout));
   const video = probe.streams?.find((stream) => stream.codec_type === "video");
   const audio = probe.streams?.find((stream) => stream.codec_type === "audio");
   if (
     !video ||
+    !Number.isFinite(video.width) ||
     Number(video.width) < 1 ||
+    !Number.isFinite(video.height) ||
     Number(video.height) < 1 ||
     Number(probe.format?.duration) <= 0
   )
@@ -151,6 +163,7 @@ const audioSchema = z.object({
   durationSeconds: z.number().nonnegative(),
 });
 const artifactSchema = z.object({
+  checksum: z.string(),
   path: z.string(),
   expectsAudio: z.boolean(),
 });
@@ -304,7 +317,15 @@ export async function executeVideoProductionJob(
     );
     const timing = await stage(
       "time_content",
-      { audio, captions: media.snapshot.script.captionTracks },
+      {
+        audio,
+        captions: media.snapshot.script.captionTracks,
+        scenes: media.snapshot.script.scenes.map((scene) => ({
+          id: scene.id,
+          text: resolveSpokenText(scene),
+        })),
+        fps: media.snapshot.script.fps,
+      },
       timingSchema,
       async () => {
         for (const track of media.snapshot.script.captionTracks ?? [])
@@ -364,12 +385,23 @@ export async function executeVideoProductionJob(
           prepared: composition,
         });
         const artifact = await dependencies.artifact(input.renderId);
-        return { ...artifact, expectsAudio: prepared.timing.takeUsable };
+        const verified = await dependencies.verify(
+          artifact.path,
+          prepared.timing.takeUsable,
+        );
+        return {
+          ...artifact,
+          checksum: z.string().parse(verified.checksum),
+          expectsAudio: prepared.timing.takeUsable,
+        };
       },
       async (artifact) => {
         try {
-          await dependencies.verify(artifact.path, artifact.expectsAudio);
-          return true;
+          const verified = await dependencies.verify(
+            artifact.path,
+            artifact.expectsAudio,
+          );
+          return verified.checksum === artifact.checksum;
         } catch {
           return false;
         }

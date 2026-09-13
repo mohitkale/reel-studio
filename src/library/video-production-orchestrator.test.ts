@@ -125,7 +125,7 @@ describe("video production orchestration", () => {
           ...stageDependencies,
           render,
           artifact: async () => ({ path: "unused", expectsAudio: false }),
-          verify: async () => ({}),
+          verify: async () => ({ checksum: "sha256:fixture" }),
           step: vi.fn(async () => ({}) as never),
           output: vi.fn(async () => ({}) as never),
         },
@@ -168,6 +168,7 @@ describe("video production orchestration", () => {
       .fn()
       .mockRejectedValueOnce(new Error("encoder interrupted"))
       .mockResolvedValue(undefined);
+    let artifactChecksum = "sha256:verified";
     const deps = {
       capture,
       media,
@@ -187,7 +188,7 @@ describe("video production orchestration", () => {
         return {} as never;
       },
       artifact: async () => ({ path: "/tmp/result.mp4", expectsAudio: false }),
-      verify: async () => ({ checksum: "sha256:verified" }),
+      verify: async () => ({ checksum: artifactChecksum }),
       output: vi.fn(async () => ({}) as never),
     };
     const context = {
@@ -208,6 +209,29 @@ describe("video production orchestration", () => {
     expect(render.mock.calls[1][0].snapshot.script.name).toBe("Fixture");
     await executeVideoProductionJob({ ...job, attempt: 3 }, context, deps);
     expect(render).toHaveBeenCalledTimes(2);
+    artifactChecksum = "sha256:replaced";
+    await executeVideoProductionJob({ ...job, attempt: 4 }, context, deps);
+    expect(render).toHaveBeenCalledTimes(3);
+    const previousTiming = rows.get("time_content")?.detailJson;
+    const revised = structuredClone(snapshot);
+    revised.script.scenes[0].text =
+      "A longer revised narration must invalidate silent timing. ".repeat(10);
+    await executeVideoProductionJob(
+      {
+        ...job,
+        attempt: 4,
+        inputSnapshot: {
+          renderId: "render-1",
+          scriptId: "script-1",
+          snapshot: revised,
+        },
+      },
+      context,
+      deps,
+    );
+    expect(render).toHaveBeenCalledTimes(4);
+    expect(rows.get("time_content")?.detailJson).not.toBe(previousTiming);
+
     for (const row of rows.values()) {
       expect(row.cacheKey).toHaveLength(64);
       expect(JSON.parse(row.detailJson)).not.toBeNull();
@@ -234,7 +258,7 @@ describe("video production orchestration", () => {
           ...stageDependencies,
           render: async () => undefined,
           artifact: async () => ({ path: "unused", expectsAudio: false }),
-          verify: async () => ({}),
+          verify: async () => ({ checksum: "sha256:fixture" }),
           output,
           step: async (_id, key, value) => {
             if (key === target && value.state === "running") controller.abort();
@@ -267,6 +291,9 @@ describe("video production orchestration", () => {
         "media",
         resolved.snapshot.script.musicUrl!.slice(7),
       );
+      await fs.writeFile(copied, "truncated cache");
+      await resolveVideoStageMedia(input, "http://localhost:3000");
+      expect(await fs.readFile(copied)).toEqual(content);
       await fs.writeFile(source, "edited later");
       expect(await fs.readFile(copied)).toEqual(content);
       expect(resolved.snapshot.script.coverUrl).toBe(input.script.coverUrl);

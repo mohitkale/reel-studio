@@ -373,3 +373,7 @@ cancellation through both engines. It creates a fresh test database and evidence
 under `.artifacts/`, checks every persisted stage, and verifies renderer children
 and partial output files are gone after cancellation. It uses installed local
 rendering tools and does not modify existing project rows.
+
+The Docker image uses the existing CPU Kokoro provider and skips optional ONNX
+CUDA binary downloads during dependency installation. It does not install GPU
+drivers or change host configuration.
