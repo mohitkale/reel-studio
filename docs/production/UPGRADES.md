@@ -27,7 +27,10 @@ Vitest 5 uses an `.mts` configuration so Vite loads its ESM syntax without the C
 
 ## Advisory review after safe fixes
 
-`npm audit fix` removed every compatible advisory, including the critical `tar` issue. Ten findings remain: one low, two moderate, and seven high. None has a compatible upstream resolution in the validated graph:
+`npm audit fix` removed every compatible advisory, including the critical `tar`
+issue. The September 13, 2026 release audit reports nine dependency findings:
+one low, one moderate, and seven high. None has a compatible upstream resolution
+in the validated graph:
 
 - HyperFrames CLI 0.8.27 depends on affected `adm-zip`; no fix is published. This is a development/catalog tool, not an application request path.
 - Prisma 7.10.0 includes affected `deepmerge-ts` and `mysql2`. Reel Studio uses SQLite, so the MySQL authentication and compression paths are not used. npm's proposed fix is an incompatible downgrade to Prisma 6.19.3.
