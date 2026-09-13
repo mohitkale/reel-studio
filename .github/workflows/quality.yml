@@ -18,6 +18,7 @@ jobs:
       - run: npm run lint
       - run: npm run test:unit
       - run: npm run security:scan
+      - run: npm run release:check
       - run: npm run build
         env:
           DATABASE_URL: file:./ci.db
@@ -31,9 +32,11 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm run test:render
+      - run: npm run release:matrix
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: render-regression
-          path: .artifacts/render-regression
+          path: |
+            .artifacts/render-regression
+            .artifacts/release-matrix

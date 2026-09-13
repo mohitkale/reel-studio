@@ -4,17 +4,18 @@
 [![Node.js](https://img.shields.io/badge/node-24_LTS-brightgreen.svg)](https://nodejs.org/)
 [![MCP](https://img.shields.io/badge/MCP-server-blue.svg)](mcp/README.md)
 
-**Turn a script into a complete short-form video locally.**
+**Turn a brief, script, screenshot, recording, or podcast into finished local content.**
 
-Create Reels, Shorts, and LinkedIn videos with AI scene planning, voiceovers,
-motion templates, and local MP4 rendering. Use the built-in **MCP server** to
-automate video and podcast workflows from AI tools such as Cursor.
+Create Reels, Shorts, explainers, voiceovers, podcasts, and audiograms with a
+guided production flow, six production presets, optional AI, and local media
+rendering. Use the built-in **MCP server** for bounded unattended production.
 
 Also supports Instagram, YouTube Shorts, TikTok, Facebook, X (Twitter), and
 other social formats in **9:16**, **16:9**, and **1:1**.
 
-> **Project status: Early public release.** Core editing, demo workflows, and
-> local rendering are available. Expect setup and provider integrations to evolve.
+> **Project status: 0.4 local production release.** The credential-free path,
+> both render engines, durable jobs, and the advertised example matrix are
+> release-tested. Provider integrations remain optional and may evolve.
 
 **MIT-licensed app. Local-first.** Projects and renders stay on your machine
 unless you explicitly enable a cloud provider.
@@ -36,7 +37,7 @@ unless you explicitly enable a cloud provider.
 If Reel Studio helps your workflow, star the repository and tell us which
 template or voice provider you want next.
 
-[Quick start](#quick-start) · [Creator guide](docs/CREATOR_GUIDE.md) · [MCP](mcp/README.md) · [Roadmap](ROADMAP.md) · [Contributing](CONTRIBUTING.md)
+[Quick start](#quick-start) · [Creator guide](docs/CREATOR_GUIDE.md) · [Walkthroughs](docs/WALKTHROUGHS.md) · [MCP](mcp/README.md) · [Roadmap](ROADMAP.md) · [Contributing](CONTRIBUTING.md)
 
 ## Who is this for?
 
@@ -49,12 +50,11 @@ Reel Studio is designed for:
 
 ## From idea to video
 
-1. Paste or write your script
-2. Let AI split it into scenes (or edit manually)
-3. Choose backgrounds and motion templates
-4. Generate or upload a voiceover
-5. Preview in **9:16**, **16:9**, or **1:1**
-6. Render the final MP4 locally, or drive the flow with **MCP**
+1. Choose video, voiceover, podcast, or audiogram
+2. Paste a brief or script, import a public page, or upload local media
+3. Choose one of six production presets, a brand kit, voice, and canvas
+4. Review the deterministic or AI-assisted draft and lock approved material
+5. Produce locally and download verified media, captions, and transcripts
 
 ## Example outputs
 
@@ -70,10 +70,12 @@ Reel Studio is designed for:
 
 ### Create
 
-- Script and scene editor
-- AI storyboard planning (optional Gemini / OpenAI)
-- Portrait, landscape, and square formats
-- Stock backgrounds (optional Unsplash) and motion planning
+- Four-step production wizard plus the full scene editor
+- Deterministic no-key planning and optional Gemini / OpenAI planning
+- Product Launch, Editorial Explainer, Creator Punch, Data Story, Developer Demo,
+  and Cinematic Brand presets
+- Native portrait, landscape, and square layouts in both engines
+- Uploaded media, bounded public-page text import, or optional Unsplash backgrounds
 
 ### Voice
 
@@ -94,6 +96,7 @@ Reel Studio is designed for:
 ### Export and automate
 
 - Local MP4 rendering with queue and progress
+- Durable restart-safe jobs, bounded batches, cancellation, and verified artifacts
 - Docker isolation bound to `127.0.0.1`
 - **MCP server** for AI-assisted video and podcast workflows ([mcp/README.md](mcp/README.md))
 
@@ -224,6 +227,8 @@ HyperFrames, TanStack Query, Zod.
 | `npm run demo`                                | Setup + start dev server                    |
 | `npm run doctor`                              | Check the local production runtime          |
 | `npm run sample:export`                       | Render a credential-free sample MP4         |
+| `npm run release:check`                       | Run the fast 0.4 release contract checks    |
+| `npm run release:matrix`                      | Render all 36 preset/engine/format outputs  |
 | `npm run dev`                                 | Start development server                    |
 | `npm run build` / `start`                     | Production build / run                      |
 | `npm run lint` / `typecheck` / `test`         | Quality checks                              |
@@ -262,6 +267,7 @@ Full matrix: **[docs/LICENSING.md](docs/LICENSING.md)**.
 
 - [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md)
 - [docs/CREATOR_GUIDE.md](docs/CREATOR_GUIDE.md)
+- [docs/WALKTHROUGHS.md](docs/WALKTHROUGHS.md)
 - [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md)
 - [docs/VOICE_PROVIDERS.md](docs/VOICE_PROVIDERS.md)
 - [docs/TEMPLATE_AUTHORING.md](docs/TEMPLATE_AUTHORING.md)
@@ -270,7 +276,7 @@ Full matrix: **[docs/LICENSING.md](docs/LICENSING.md)**.
 
 ### Production regression checks
 
-`npm run test:unit` runs credential-free unit tests. `npm run test:render` renders a legacy fixture through both engines and saves local artifacts in `.artifacts/render-regression/`. Rendering requires Chromium and may download it on the first run. The manual Quality workflow retains these artifacts for inspection.
+`npm run test:unit` runs credential-free unit tests. `npm run test:render` renders a legacy fixture through both engines. `npm run release:matrix` renders all six presets through both engines in portrait, landscape, and square layouts. Artifacts stay under `.artifacts/`; the manual Quality workflow retains them for inspection. Rendering requires Chromium and may download it during initial setup. Composition fonts and motion runtime files are bundled locally before frame rendering.
 
 ### Database upgrades
 

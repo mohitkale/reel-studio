@@ -34,6 +34,7 @@ import {
   HYPERFRAMES_PRESET_STYLES,
 } from "@/engines/hyperframes/presets/registry";
 import { buildAudioMixPlan, type AudioMixPlan } from "@/lib/audio-mix";
+import { localizeHyperframesRenderFonts } from "@/engines/hyperframes/render-fonts";
 
 function escapeHtml(value: string): string {
   return value
@@ -970,7 +971,7 @@ export function buildHyperframesCompositionHtml(
 
   const grainAttr = chrome.grainOpacity > 0 ? "1" : "0";
 
-  return `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -1010,6 +1011,7 @@ export function buildHyperframesCompositionHtml(
   ${opts.producerMode ? "" : buildSeekScript(beats, coverSeconds, totalSeconds, fps, hideProgress, audioMix)}
 </body>
 </html>`;
+  return opts.producerMode ? localizeHyperframesRenderFonts(html) : html;
 }
 
 export function compositionTotalFrames(props: ReelProps): number {

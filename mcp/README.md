@@ -111,6 +111,43 @@ audiogram rows default to separately reflowed portrait, square, and landscape
 outputs. Poll `get_production_batch`; partial failures keep successful files and
 `download_production_batch` returns a tar.gz bundle with a JSON manifest.
 
+A bounded automatic video request looks like this after a project exists:
+
+```json
+{
+  "kind": "video",
+  "scriptId": "<script-id>",
+  "orientation": "portrait",
+  "quality": "standard",
+  "runMode": "automatic",
+  "idempotencyKey": "launch-demo-v1-portrait"
+}
+```
+
+Create a named token with `production:create`, `production:read`,
+`production:download`, and `production:automatic` only when the caller should
+render without browser approval. Set its allowed providers, maximum duration,
+batch size, and paid-request budget in **Settings → AI tools / MCP**. Server-side
+checks also apply to compatibility routes.
+
+For independent format variants, call `produce_batch`:
+
+```json
+{
+  "idempotencyKey": "launch-formats-v1",
+  "runMode": "automatic",
+  "rows": [
+    {
+      "key": "launch",
+      "kind": "video",
+      "scriptId": "<script-id>",
+      "orientations": ["portrait", "landscape", "square"],
+      "quality": "standard"
+    }
+  ]
+}
+```
+
 ### Podcast
 
 1. `create_podcast` → `update_podcast_characters` (set TTS voices).

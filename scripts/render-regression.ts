@@ -20,11 +20,22 @@ import type { ReelProps } from "../src/compositions/types";
 import { TEMPLATES } from "../src/compositions/templates";
 import { buildHyperframesCompositionHtml } from "../src/engines/hyperframes/build-composition";
 import { remotionWebpackOverride } from "../src/remotion/webpack-override";
+import { HYPERFRAMES_RENDER_FONT_FILES } from "../src/engines/hyperframes/render-fonts";
+import {
+  ORIENTATIONS,
+  dimsFor,
+  type Orientation,
+} from "../src/lib/orientation";
 
 async function main() {
   const run = promisify(execFile);
   const args = process.argv.slice(2);
   const presetArg = args.find((arg) => arg.startsWith("--preset="));
+  const orientationArg = args.find((arg) => arg.startsWith("--orientation="));
+  const orientation = orientationArg?.slice("--orientation=".length);
+  if (orientation && !ORIENTATIONS.includes(orientation as Orientation)) {
+    throw new Error(`Unknown orientation: ${orientation}`);
+  }
   const presetId = args.includes("--product-launch")
     ? "product-launch"
     : presetArg?.slice("--preset=".length);
@@ -43,10 +54,13 @@ async function main() {
   const renderProductLaunch = presetId === "product-launch";
   const renderDeveloperDemo = presetId === "developer-demo";
   const renderCinematicBrand = presetId === "cinematic-brand";
-  const output = path.resolve(
-    ".artifacts/render-regression",
-    presetId ?? "legacy",
-  );
+  const output = orientation
+    ? path.resolve(
+        ".artifacts/render-regression",
+        presetId ?? "legacy",
+        orientation,
+      )
+    : path.resolve(".artifacts/render-regression", presetId ?? "legacy");
   await mkdir(output, { recursive: true });
   const engines = args.filter((arg) => !arg.startsWith("--"));
   const selected = engines.length ? engines : ["hyperframes", "remotion"];
@@ -95,8 +109,12 @@ async function main() {
         }
       : selectedFixture
   ) as ReelProps;
+  const dimensions = orientation
+    ? dimsFor(orientation as Orientation)
+    : { width: fixtureProps.width, height: fixtureProps.height };
   const props: ReelProps = {
     ...fixtureProps,
+    ...dimensions,
     captions: fixtureProps.captions ?? {
       enabled: true,
       timingSource: "imported",
@@ -181,6 +199,22 @@ async function main() {
         path.resolve("node_modules/gsap/dist/gsap.min.js"),
         path.join(runtime, "gsap.min.js"),
       );
+      await Promise.all([
+        copyFile(
+          path.resolve(
+            "node_modules/@fontsource-variable/geist/files",
+            HYPERFRAMES_RENDER_FONT_FILES.sans,
+          ),
+          path.join(runtime, HYPERFRAMES_RENDER_FONT_FILES.sans),
+        ),
+        copyFile(
+          path.resolve(
+            "node_modules/@fontsource-variable/geist-mono/files",
+            HYPERFRAMES_RENDER_FONT_FILES.mono,
+          ),
+          path.join(runtime, HYPERFRAMES_RENDER_FONT_FILES.mono),
+        ),
+      ]);
       await writeFile(
         path.join(project, "index.html"),
         buildHyperframesCompositionHtml(props, {

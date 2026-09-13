@@ -1,6 +1,6 @@
 {
   "name": "reel-studio",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "license": "MIT",
   "engines": {
@@ -28,6 +28,8 @@
     "demo": "node scripts/demo.mjs",
     "doctor": "tsx scripts/doctor.ts",
     "sample:export": "tsx scripts/export-sample.ts",
+    "release:check": "tsx scripts/release-check.ts",
+    "release:matrix": "tsx scripts/release-render-matrix.ts",
     "seed:gallery": "node scripts/seed-gallery-assets.mjs",
     "seed:assets": "tsx scripts/seed-assets.ts",
     "seed:demo-brandkit": "tsx scripts/seed-demo-brandkit.ts",

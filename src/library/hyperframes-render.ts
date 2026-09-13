@@ -30,6 +30,10 @@ import {
 } from "@/library/repositories/renders";
 import { upsertJob } from "@/lib/render-queue";
 import { assertPathInsideRoot } from "@/server/url-safety";
+import {
+  HYPERFRAMES_RENDER_FONT_FILES,
+  localizeHyperframesRenderFonts,
+} from "@/engines/hyperframes/render-fonts";
 
 type RenderQuality = "draft" | "standard" | "high";
 
@@ -386,6 +390,30 @@ export async function runHyperframesRender(
       path.join(process.cwd(), "node_modules", "gsap", "dist", "gsap.min.js"),
       path.join(runtimeDir, "gsap.min.js"),
     );
+    await Promise.all([
+      fs.copyFile(
+        path.join(
+          process.cwd(),
+          "node_modules",
+          "@fontsource-variable",
+          "geist",
+          "files",
+          HYPERFRAMES_RENDER_FONT_FILES.sans,
+        ),
+        path.join(runtimeDir, HYPERFRAMES_RENDER_FONT_FILES.sans),
+      ),
+      fs.copyFile(
+        path.join(
+          process.cwd(),
+          "node_modules",
+          "@fontsource-variable",
+          "geist-mono",
+          "files",
+          HYPERFRAMES_RENDER_FONT_FILES.mono,
+        ),
+        path.join(runtimeDir, HYPERFRAMES_RENDER_FONT_FILES.mono),
+      ),
+    ]);
 
     // Materialize curated catalog blocks as compositions/*.html so the producer
     // can resolve data-composition-src on the host index.html.
@@ -408,7 +436,7 @@ export async function runHyperframesRender(
             compositionsDir,
             catalogCompositionFileName(meta.id, scene.id),
           ),
-          localizeGsapRuntime(personalized),
+          localizeHyperframesRenderFonts(localizeGsapRuntime(personalized)),
           "utf8",
         );
       }

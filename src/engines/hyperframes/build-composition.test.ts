@@ -214,7 +214,11 @@ describe("buildHyperframesCompositionHtml", () => {
     );
 
     expect(html).toContain('src="/_runtime/gsap.min.js"');
+    expect(html).toContain("data-reel-local-fonts");
+    expect(html).toContain("/_runtime/geist-latin-wght-normal.woff2");
+    expect(html).toContain("/_runtime/geist-mono-latin-wght-normal.woff2");
     expect(html).not.toContain("cdn.jsdelivr.net");
+    expect(html).not.toContain("fonts.googleapis.com");
     expect(html).not.toContain("requestAnimationFrame");
   });
 

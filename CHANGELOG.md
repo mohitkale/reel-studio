@@ -6,6 +6,40 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+## 0.4.0 - 2026-09-13
+
+### Added
+
+- Four-step production wizard for text, bounded public-page imports, and uploaded image, video, or audio sources
+- Six versioned production presets across HyperFrames and Remotion: Product Launch, Editorial Explainer, Creator Punch, Data Story, Developer Demo, and Cinematic Brand
+- Durable SQLite-backed production and batch jobs with progress events, leases, recovery, cancellation, retries, artifact verification, and independently reflowed format variants
+- Editable caption tracks with SRT/VTT import and export, timing provenance, and optional local whisper.cpp transcription
+- Solo, two-host, and interview podcast presets with turn caching, selective regeneration, WAV/MP3, transcripts, chapters, and audiograms
+- Shared REST/MCP production schemas, scoped automation tokens, provider and duration limits, approval controls, and downloadable output bundles
+- Local diagnostics, curated output gallery, creator guide, reproducible walkthroughs, and credential-free sample export
+
+### Changed
+
+- Upgraded all compatible direct packages and standardized the supported runtime on Node.js 24 LTS
+- Upgraded HyperFrames producer to 0.8.33 and synchronized all Remotion packages at 4.0.523
+- Replaced `db push` upgrades with recognized, backed-up, versioned SQLite migrations
+- Snapshotted preset, catalog, brand, media, timing, and renderer metadata so saved output remains reproducible
+- Centralized audio mixing, narration reuse, subtitles, safe areas, and engine-independent production planning
+
+### Fixed
+
+- Prevented missing chart values, invented proof, catalog placeholders, and executable substitutions from entering automatic productions
+- Made HyperFrames timelines seekable with stable instance IDs and matching preview/export inputs
+- Bundled render fonts and motion runtime assets locally so frame rendering does not fetch them from remote CDNs
+- Preserved successful batch outputs and unchanged podcast or scene audio across partial regeneration and retry
+
+### Security
+
+- Blocked public-page ingestion from loopback, local, and private network destinations after every redirect
+- Enforced production scopes and paid-provider limits across both current and compatibility API routes
+
+See [the upgrade notes](docs/production/UPGRADES.md) and [release validation](docs/production/RELEASE_VALIDATION.md).
+
 ## 0.3.0 - 2026-08-06
 
 ### Added
