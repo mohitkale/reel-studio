@@ -79,7 +79,13 @@ function ChoiceCard({
   );
 }
 
-export function CreationWizard() {
+export function CreationWizard({
+  initialPresetId = "product-launch",
+  trigger,
+}: {
+  initialPresetId?: ProductionPresetId;
+  trigger?: React.ReactElement;
+} = {}) {
   const router = useRouter();
   const create = useCreateManualProduction();
   const upload = useUploadAsset();
@@ -93,7 +99,7 @@ export function CreationWizard() {
   const [url, setUrl] = React.useState("");
   const [files, setFiles] = React.useState<File[]>([]);
   const [presetId, setPresetId] =
-    React.useState<ProductionPresetId>("product-launch");
+    React.useState<ProductionPresetId>(initialPresetId);
   const [orientation, setOrientation] =
     React.useState<Orientation>(DEFAULT_ORIENTATION);
   const [videoEngine, setVideoEngine] =
@@ -119,7 +125,7 @@ export function CreationWizard() {
     setText("");
     setUrl("");
     setFiles([]);
-    setPresetId("product-launch");
+    setPresetId(initialPresetId);
     setOrientation(DEFAULT_ORIENTATION);
     setVideoEngine(DEFAULT_VIDEO_ENGINE);
     setBrandKitId("");
@@ -179,10 +185,12 @@ export function CreationWizard() {
       }}
     >
       <DialogTrigger asChild>
-        <Button>
-          <WandSparkles />
-          Create production
-        </Button>
+        {trigger ?? (
+          <Button>
+            <WandSparkles />
+            Create production
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-h-[92vh] max-w-2xl overflow-y-auto">
         <DialogHeader>

@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useTheme } from "next-themes";
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Activity, Monitor, Moon, Sun } from "lucide-react";
 
 import { useMounted } from "@/hooks/use-mounted";
 import { useProviders } from "@/hooks/voice";
@@ -16,6 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shell/page-header";
 import { ProviderKeyCard } from "@/components/voice/provider-key-card";
 import { KokoroVoicesCard } from "@/components/voice/kokoro-voices-card";
@@ -43,8 +45,26 @@ export default function SettingsPage() {
     <div className="space-y-8">
       <PageHeader
         title="Settings"
-        description="Manage voice providers, API keys and appearance."
+        description="Manage the local runtime, providers, API keys and appearance."
       />
+
+      <Card>
+        <CardHeader className="sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+          <div className="space-y-1.5">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Activity className="text-primary size-4" />
+              Production readiness
+            </CardTitle>
+            <CardDescription>
+              Check Node, SQLite, FFmpeg, media storage, catalog assets, and
+              optional local transcription.
+            </CardDescription>
+          </div>
+          <Button asChild variant="outline">
+            <Link href="/diagnostics">Run system check</Link>
+          </Button>
+        </CardHeader>
+      </Card>
 
       <Card>
         <CardHeader>

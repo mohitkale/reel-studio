@@ -231,3 +231,26 @@ Completed outputs can be downloaded as a streamed tar.gz bundle. Its
 states, while binary entries include only verified successful artifacts. The
 archive endpoint applies the artifact-read scope and rejects files outside the
 local media store.
+
+## First-run diagnostics and gallery
+
+`npm run setup` is idempotent for an existing environment and applies recognized
+versioned database migrations before seeding the local examples. It installs
+bundled gallery assets under the existing media store and finishes by running the
+same diagnostics exposed at `GET /api/diagnostics` and the Diagnostics page.
+
+Node 24, the current SQLite schema, writable media storage, FFmpeg, ffprobe and a
+non-empty HyperFrames catalog are required for production readiness. Low free
+space, missing gallery previews and missing whisper.cpp configuration are visible
+warnings. Optional checks cannot falsely mark the core renderer unavailable.
+
+The Gallery page plays only bundled, locally served output artifacts. It provides
+portrait, landscape, square and podcast evidence plus an entry point for every
+versioned production preset. Each entry preselects the preset in the normal
+creation wizard; the resulting draft still passes through the shared validated
+manual-production service.
+
+`npm run sample:export` uses the seeded HyperFrames project and a local
+placeholder take, performs a real draft render, waits for artifact verification
+and prints the resulting absolute MP4 path. The placeholder proves the local
+pipeline but is visibly separate from production-ready narration.

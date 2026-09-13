@@ -36,7 +36,7 @@ unless you explicitly enable a cloud provider.
 If Reel Studio helps your workflow, star the repository and tell us which
 template or voice provider you want next.
 
-[Quick start](#quick-start) · [MCP](mcp/README.md) · [Roadmap](ROADMAP.md) · [Contributing](CONTRIBUTING.md)
+[Quick start](#quick-start) · [Creator guide](docs/CREATOR_GUIDE.md) · [MCP](mcp/README.md) · [Roadmap](ROADMAP.md) · [Contributing](CONTRIBUTING.md)
 
 ## Who is this for?
 
@@ -140,7 +140,9 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000).
 
 Or run `npm run demo` (setup + dev server). No cloud keys are required for the
-seeded HyperFrames demo or Kokoro voices.
+seeded HyperFrames demo or Kokoro voices. Open **Gallery** for bundled examples,
+or run `npm run sample:export` for a credential-free local MP4. Run
+`npm run doctor` whenever you want to verify the production runtime.
 
 ### Manual fallback
 
@@ -150,6 +152,7 @@ npm run db:migrate
 npm run seed:demo-brandkit
 npm run seed:demo-project
 npm run seed:demo-podcast
+npm run seed:gallery
 npm run dev
 ```
 
@@ -180,8 +183,9 @@ your own auth layer. See [SECURITY.md](SECURITY.md).
 
 ## Roadmap
 
-Near-term: simpler install, more HyperFrames templates, caption editing, export
-presets, and template authoring docs. Full list: [ROADMAP.md](ROADMAP.md).
+The current production release includes six cross-engine presets, editable
+captions, durable jobs, podcast and audiogram workflows, scoped MCP automation,
+and format-aware batches. Follow planned work in [ROADMAP.md](ROADMAP.md).
 
 ## Contributing
 
@@ -218,12 +222,15 @@ HyperFrames, TanStack Query, Zod.
 | --------------------------------------------- | ------------------------------------------- |
 | `npm run setup`                               | First-run setup (safe to re-run)            |
 | `npm run demo`                                | Setup + start dev server                    |
+| `npm run doctor`                              | Check the local production runtime          |
+| `npm run sample:export`                       | Render a credential-free sample MP4         |
 | `npm run dev`                                 | Start development server                    |
 | `npm run build` / `start`                     | Production build / run                      |
 | `npm run lint` / `typecheck` / `test`         | Quality checks                              |
 | `npm run security:scan`                       | Secret pattern scan                         |
 | `npm run prepare:hooks`                       | Enable `.githooks`                          |
-| `npm run db:migrate`                          | Push Prisma schema                          |
+| `npm run db:migrate`                          | Safely apply versioned database migrations  |
+| `npm run seed:gallery`                        | Install bundled examples into local media   |
 | `npm run seed:demo-project`                   | Seed HyperFrames demo reel                  |
 | `npm run seed:demo-podcast`                   | Seed short demo podcast                     |
 | `npm run test:podcast-audiogram -- <take-id>` | Render and verify a podcast-to-video sample |
@@ -254,6 +261,7 @@ Full matrix: **[docs/LICENSING.md](docs/LICENSING.md)**.
 ## More docs
 
 - [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md)
+- [docs/CREATOR_GUIDE.md](docs/CREATOR_GUIDE.md)
 - [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md)
 - [docs/VOICE_PROVIDERS.md](docs/VOICE_PROVIDERS.md)
 - [docs/TEMPLATE_AUTHORING.md](docs/TEMPLATE_AUTHORING.md)
