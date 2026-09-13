@@ -16,6 +16,7 @@ services:
       target: dev
     image: reel-studio-dev
     container_name: reel-studio
+    stop_grace_period: 20s
     init: true # proper PID 1 so Chromium/ffmpeg child processes are reaped
     ports:
       # Bind to loopback only — do not expose the unauthenticated local-first

@@ -7,9 +7,9 @@
     "node": ">=24.15.0 <25"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/supervise.mjs dev",
     "build": "next build --webpack",
-    "start": "next start",
+    "start": "node scripts/supervise.mjs start",
     "lint": "eslint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

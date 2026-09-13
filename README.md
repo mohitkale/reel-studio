@@ -343,3 +343,16 @@ Full matrix: **[docs/LICENSING.md](docs/LICENSING.md)**.
 ### Database upgrades
 
 Stop the app before running `npm run db:migrate`. Existing recognized v0.3.0 databases are backed up beside the SQLite file and baselined before versioned migrations run. Unknown schemas are rejected. Relative `file:./dev.db` URLs continue to resolve under `prisma/`. To roll back, stop the app, restore the matching backup and application version together, and keep the media directory. Setup and Docker use this migration path.
+
+### Supervised production worker
+
+`npm run dev` and `npm run start` launch Next.js and the durable production worker
+under one supervisor. Build first with `npm run build` for production. Docker
+uses the same launcher. Both processes inherit the same Next.js environment
+configuration and SQLite URL. Do not launch another worker for the normal setup.
+Worker crashes are logged and restarted with bounded backoff (five attempts);
+a web crash or exhausted restart budget stops the pair with a nonzero exit.
+Ctrl+C/SIGTERM stops both, with a ten-second forced shutdown bound. Durable
+leases recover interrupted work. `npm run production:worker` remains available
+for explicitly managed deployments; routes retain their fallback when the app
+is launched directly without the supervisor.

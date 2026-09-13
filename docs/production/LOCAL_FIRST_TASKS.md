@@ -10,7 +10,7 @@ Existing AGENTS.md and AI_GUIDELINES.md provide the shared Codex instructions.
 
 | Task | Implementation and acceptance                                                                                       | State       | Completion SHA |
 | ---- | ------------------------------------------------------------------------------------------------------------------- | ----------- | -------------- |
-| 1    | Freeze installed/locked exact dependencies, API and license policies, source URLs and baseline fixtures             | In progress | Pending        |
+| 1    | Freeze installed/locked exact dependencies, API and license policies, source URLs and baseline fixtures             | Complete | `0e917f2`        |
 | 2    | Supervise web/worker in dev, production and Docker; test signals, crash visibility and restart                      | Pending     | Pending        |
 | 3    | Propagate abort into both render engines and supported encoders; test child termination, scratch cleanup and leases | Pending     | Pending        |
 | 4    | Persist concrete stage outputs and invalidation keys; test immutable inputs, cache reuse and restart                | Pending     | Pending        |
@@ -76,3 +76,5 @@ Task 1: parsed every direct installed manifest and lock entry; exact versions
 match with no prerelease targets. Read installed Next.js CLI and after() docs.
 Completion SHAs are recorded by the next local ledger commit to avoid self-SHA
 references. Actual Git timestamps are used without overrides.
+
+Task 2 focused evidence: supervision and durable-job suites passed (9 tests).

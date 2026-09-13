@@ -14,11 +14,15 @@ export interface ProductionJobExecution {
 export async function runProductionWorkerOnce(args: {
   workerId: string;
   leaseMs?: number;
+  /** Route fallback is disabled under the normal supervised launcher. */
+  supervised?: boolean;
   execute: (
     job: ClaimedProductionJob,
     context: ProductionJobExecution,
   ) => Promise<void>;
 }): Promise<"idle" | "succeeded" | "failed" | "canceled"> {
+  if (process.env.REEL_SUPERVISED_WORKER === "1" && !args.supervised)
+    return "idle";
   const leaseMs = args.leaseMs ?? 30_000;
   const job = await claimProductionJob({ workerId: args.workerId, leaseMs });
   if (!job) return "idle";

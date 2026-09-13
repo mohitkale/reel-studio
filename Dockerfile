@@ -67,7 +67,7 @@ USER node
 
 EXPOSE 3000
 
-# Entrypoint prepares Prisma (generate + db push) before starting the server.
+# Entrypoint prepares Prisma and migrations before supervising web + worker.
 # Invoked via `sh` so it works even when the bind-mounted script lacks the
 # executable bit (common on Windows hosts).
 ENTRYPOINT ["sh", "/app/docker/entrypoint.sh"]

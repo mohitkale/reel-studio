@@ -17,6 +17,7 @@ async function main() {
   while (!stopping) {
     const result = await runProductionWorkerOnce({
       workerId,
+      supervised: true,
       execute: executeProductionJob,
     });
     if (result === "idle")
