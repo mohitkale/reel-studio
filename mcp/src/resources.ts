@@ -82,6 +82,8 @@ optional photo **background**.
 - Poll \`get_production_job\` or use cursor-based \`get_production_job_events\`.
 - Legacy tokens keep the existing human gate for video renders. A named token can render unattended only when its operator enables \`production:automatic\`.
 - Failed/canceled jobs can be retried; active jobs can be canceled. Use \`download_production_artifact\` for verified outputs.
+- \`produce_batch\` accepts up to ten rows. Video/audiogram rows default to portrait, square, and landscape reflows from the source composition; they are never cropped from one finished video.
+- Poll \`get_production_batch\`, retry only incomplete items with \`retry_production_batch\`, and retrieve completed results plus a failure manifest with \`download_production_batch\`.
 - The older \`request_render\` / \`get_render\` / \`download_render\` flow remains supported.
 `;
 

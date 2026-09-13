@@ -60,6 +60,32 @@ const sceneMood = z.enum([
 ]);
 /** Server-side TTS providers MCP can drive without browser upload. */
 const serverVoiceProvider = z.enum(["cartesia", "elevenlabs", "voiceforge"]);
+const productionVoiceProvider = z.enum([
+  "kokoro",
+  "kokoro-server",
+  "webspeech",
+  "cartesia",
+  "elevenlabs",
+  "voiceforge",
+]);
+const productionBatchRow = z.object({
+  key: z.string().min(1).max(80).optional(),
+  label: z.string().min(1).max(120).optional(),
+  kind: z.enum(["video", "audio", "podcast", "audiogram"]),
+  scriptId: z.string().min(1).optional(),
+  voiceTakeId: z.string().min(1).optional(),
+  podcastId: z.string().min(1).optional(),
+  takeId: z.string().min(1).optional(),
+  startTurnId: z.string().min(1).optional(),
+  endTurnId: z.string().min(1).optional(),
+  orientations: z.array(orientation).min(1).max(3).optional(),
+  quality: z.enum(["draft", "standard", "high"]).optional(),
+  providerId: productionVoiceProvider.optional(),
+  voiceId: z.string().min(1).optional(),
+  modelId: z.string().min(1).optional(),
+  placeholder: z.boolean().optional(),
+  regenerateTurnIds: z.array(z.string().min(1)).max(120).optional(),
+});
 
 const backgroundShape = z.object({
   type: z.enum(["image", "video"]),
@@ -337,6 +363,93 @@ export function registerTools(server: McpServer): void {
         approvalUrl: response.approvalUrl
           ? absoluteUrl(response.approvalUrl)
           : undefined,
+      });
+    }),
+  );
+
+  server.registerTool(
+    "produce_batch",
+    {
+      description:
+        "Submit up to ten JSON rows to the durable production queue. Video and audiogram rows default to independent portrait, square, and landscape reflows. Successful outputs survive partial failure.",
+      inputSchema: {
+        idempotencyKey: z.string().min(8).max(120).optional(),
+        rows: z.array(productionBatchRow).min(1).max(10),
+        runMode: z.enum(["automatic", "approval"]).optional(),
+        priority: z.number().int().min(-100).max(100).optional(),
+      },
+    },
+    guard(async (args) => {
+      const response = await apiPost<{
+        batch: { id: string; state: string; bundleUrl: string };
+        approvalUrl?: string;
+      }>("/api/production-batches", {
+        ...args,
+        idempotencyKey: args.idempotencyKey ?? `mcp-batch:${randomUUID()}`,
+      });
+      return ok({
+        ...response,
+        approvalUrl: response.approvalUrl
+          ? absoluteUrl(response.approvalUrl)
+          : undefined,
+        bundleUrl: absoluteUrl(response.batch.bundleUrl),
+      });
+    }),
+  );
+
+  server.registerTool(
+    "get_production_batch",
+    {
+      description:
+        "Get aggregate and per-item status for a durable production batch, including partial failures and completed artifacts.",
+      inputSchema: { batchId: z.string().min(1) },
+    },
+    guard(async ({ batchId }) =>
+      ok(await apiGet(`/api/production-batches/${encode(batchId)}`)),
+    ),
+  );
+
+  server.registerTool(
+    "cancel_production_batch",
+    {
+      description:
+        "Cancel every queued or active item in a production batch while preserving completed outputs.",
+      inputSchema: { batchId: z.string().min(1) },
+    },
+    guard(async ({ batchId }) =>
+      ok(
+        await apiPost(`/api/production-batches/${encode(batchId)}/cancel`, {}),
+      ),
+    ),
+  );
+
+  server.registerTool(
+    "retry_production_batch",
+    {
+      description:
+        "Retry only failed, canceled, or previously invalid items. Successful batch outputs are retained.",
+      inputSchema: { batchId: z.string().min(1) },
+    },
+    guard(async ({ batchId }) =>
+      ok(await apiPost(`/api/production-batches/${encode(batchId)}/retry`, {})),
+    ),
+  );
+
+  server.registerTool(
+    "download_production_batch",
+    {
+      description:
+        "Return the authenticated tar.gz bundle URL for completed artifacts plus a manifest describing failed or pending items.",
+      inputSchema: { batchId: z.string().min(1) },
+    },
+    guard(async ({ batchId }) => {
+      const response = await apiGet<{
+        batch: { bundleUrl: string; state: string; items: unknown[] };
+      }>(`/api/production-batches/${encode(batchId)}`);
+      return ok({
+        state: response.batch.state,
+        items: response.batch.items,
+        bundleUrl: absoluteUrl(response.batch.bundleUrl),
       });
     }),
   );

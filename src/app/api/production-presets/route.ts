@@ -22,9 +22,11 @@ export async function GET(req: Request) {
       })),
       limits: {
         videoSeconds: 180,
+        audioSeconds: 180,
         podcastSeconds: 600,
         audiogramSeconds: 90,
         batchItems: 10,
+        batchFormatVariants: 3,
       },
     });
   } catch (error) {

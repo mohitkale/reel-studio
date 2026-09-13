@@ -243,13 +243,47 @@ model ProductionJob {
   updatedAt       DateTime  @updatedAt
   startedAt       DateTime?
   finishedAt      DateTime?
+  batchItemId     String?   @unique
 
-  steps   ProductionJobStep[]
-  events  ProductionJobEvent[]
-  outputs ProductionJobOutput[]
+  steps     ProductionJobStep[]
+  events    ProductionJobEvent[]
+  outputs   ProductionJobOutput[]
+  batchItem ProductionBatchItem?  @relation(fields: [batchItemId], references: [id], onDelete: SetNull)
 
   @@index([state, priority, createdAt])
   @@index([leaseExpiresAt])
+}
+
+model ProductionBatch {
+  id              String   @id @default(cuid())
+  idempotencyKey  String   @unique
+  requestSnapshot String
+  priority        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  items ProductionBatchItem[]
+
+  @@index([createdAt])
+}
+
+model ProductionBatchItem {
+  id              String          @id @default(cuid())
+  batchId         String
+  batch           ProductionBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  rowIndex        Int
+  variantIndex    Int
+  label           String?
+  orientation     String?
+  requestSnapshot String
+  validationError String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  job ProductionJob?
+
+  @@unique([batchId, rowIndex, variantIndex])
+  @@index([batchId, rowIndex])
 }
 
 model ProductionJobStep {

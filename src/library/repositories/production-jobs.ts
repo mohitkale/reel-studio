@@ -35,6 +35,7 @@ export async function enqueueProductionJob(
         idempotencyKey: data.idempotencyKey,
         inputSnapshot: json(data.inputSnapshot),
         priority: data.priority,
+        batchItemId: data.batchItemId,
       },
     });
   } catch (error) {

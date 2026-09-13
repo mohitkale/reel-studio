@@ -83,6 +83,7 @@ Reel Studio is designed for:
 - Full-reel or per-scene takes, plus cached **solo, two-host, and interview podcasts**
 - Selective podcast turn regeneration, production WAV/MP3, transcript and chapter exports
 - One-click portrait, square, or landscape **audiograms** from selected timed turns
+- Durable JSON batches with independent portrait, square and landscape reflows, partial-failure recovery and downloadable bundles
 
 ### Design
 

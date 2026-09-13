@@ -208,3 +208,26 @@ for podcasts and 90 seconds for audiograms. Legacy tokens retain their current
 approval flow. MCP has no secret-management, project-deletion or executable-code
 capability, and the server never returns a named token after its one-time
 creation response.
+
+## Batch production and format variants
+
+`POST /api/production-batches` accepts one to ten validated rows. Audio and
+podcast rows create one durable child job. Video and audiogram rows accept an
+explicit orientation list and default to portrait, landscape and square. Each
+orientation starts from the source script, media, timing and production preset,
+then resolves its own canvas and safe areas; no variant crops pixels from another
+completed video.
+
+The batch and its item snapshots are immutable and independently idempotent.
+Aggregate state is derived from child jobs, including `partial_failure` when at
+least one output succeeds and another fails or is canceled. Batch approval,
+cancellation and retry affect only eligible children. Retrying a partial batch
+does not recreate or overwrite successful jobs and outputs. Named MCP tokens are
+limited by their configured row count, and the release-wide maximum is ten input
+rows with at most three orientation variants per visual row.
+
+Completed outputs can be downloaded as a streamed tar.gz bundle. Its
+`manifest.json` records every row and variant, including errors and pending
+states, while binary entries include only verified successful artifacts. The
+archive endpoint applies the artifact-read scope and rejects files outside the
+local media store.

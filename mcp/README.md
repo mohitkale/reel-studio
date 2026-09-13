@@ -59,7 +59,8 @@ touches the database directly. By design it can do everything an editor can
 - **Compatibility render flow:** `request_render`, `download_render`
 - **Durable production:** `produce_content`, `get_production_job`,
   `get_production_job_events`, `cancel_production_job`, `retry_production_job`,
-  `download_production_artifact`
+  `download_production_artifact`, `produce_batch`, `get_production_batch`,
+  `cancel_production_batch`, `retry_production_batch`, `download_production_batch`
 
 ### Audio podcasts
 
@@ -104,6 +105,11 @@ TTS always uses each scene’s `spokenText ?? text`.
 4. `produce_content` → poll `get_production_job` →
    `download_production_artifact`. A legacy or approval-only token pauses video
    jobs until the operator approves them on the Renders page.
+
+For repeat production, `produce_batch` accepts up to ten JSON rows. Video and
+audiogram rows default to separately reflowed portrait, square, and landscape
+outputs. Poll `get_production_batch`; partial failures keep successful files and
+`download_production_batch` returns a tar.gz bundle with a JSON manifest.
 
 ### Podcast
 

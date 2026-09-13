@@ -152,6 +152,7 @@ export async function submitProduction(args: {
   request: ProduceContentRequest;
   auth: RequestAuthorization;
   serverBaseUrl: string;
+  batchItemId?: string;
 }) {
   const duplicate = await getProductionJobByIdempotencyKey(
     args.request.idempotencyKey,
@@ -239,6 +240,7 @@ export async function submitProduction(args: {
     idempotencyKey: args.request.idempotencyKey,
     priority: args.request.priority,
     inputSnapshot: resolved.inputSnapshot,
+    batchItemId: args.batchItemId,
   });
   await appendProductionJobEvent(job.id, "submitted", {
     origin: args.auth.origin,

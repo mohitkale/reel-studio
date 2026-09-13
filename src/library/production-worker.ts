@@ -47,3 +47,24 @@ export async function runProductionWorkerOnce(args: {
     clearInterval(timer);
   }
 }
+
+export async function drainProductionQueue(args: {
+  workerId: string;
+  execute: (
+    job: ClaimedProductionJob,
+    context: ProductionJobExecution,
+  ) => Promise<void>;
+  maxJobs?: number;
+}) {
+  const maxJobs = Math.max(1, Math.min(100, args.maxJobs ?? 50));
+  let completed = 0;
+  while (completed < maxJobs) {
+    const ran = await runProductionWorkerOnce({
+      workerId: `${args.workerId}:${completed + 1}`,
+      execute: args.execute,
+    });
+    if (ran === "idle") break;
+    completed += 1;
+  }
+  return completed;
+}

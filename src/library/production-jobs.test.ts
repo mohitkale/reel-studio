@@ -36,6 +36,12 @@ describe("durable production jobs", () => {
         "utf8",
       ),
     );
+    sqlite.exec(
+      readFileSync(
+        "prisma/migrations/20260913000100_production_batches/migration.sql",
+        "utf8",
+      ),
+    );
     sqlite.close();
     previous = process.env.DATABASE_URL;
     process.env.DATABASE_URL = `file:${filename}`;

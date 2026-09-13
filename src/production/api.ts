@@ -5,6 +5,7 @@ import { PROVIDER_IDS } from "@/providers/voice/types";
 
 export const productionQualitySchema = z.enum(["draft", "standard", "high"]);
 export const productionRunModeSchema = z.enum(["automatic", "approval"]);
+export const voiceProviderIdSchema = z.enum(PROVIDER_IDS);
 
 const common = {
   idempotencyKey: z.string().min(8).max(240),
@@ -25,7 +26,7 @@ export const produceContentRequestSchema = z.discriminatedUnion("kind", [
     ...common,
     kind: z.literal("audio"),
     scriptId: z.string().min(1),
-    providerId: z.enum(PROVIDER_IDS).optional(),
+    providerId: voiceProviderIdSchema.optional(),
     voiceId: z.string().min(1).optional(),
     modelId: z.string().min(1).optional(),
     placeholder: z.boolean().default(false),

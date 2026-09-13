@@ -30,6 +30,7 @@ export const enqueueProductionJobSchema = z.object({
   inputSnapshot: z.unknown(),
   priority: z.number().int().min(-100).max(100).default(0),
   state: z.enum(["queued", "awaiting_approval"]).default("queued"),
+  batchItemId: z.string().min(1).optional(),
 });
 export type EnqueueProductionJob = z.input<typeof enqueueProductionJobSchema>;
 

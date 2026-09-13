@@ -38,6 +38,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { LISTING_GRID_6_CARDS } from "@/lib/listing-layout";
 import { ProductionJobList } from "@/components/production/production-job-list";
+import { ProductionBatchList } from "@/components/production/production-batch-list";
 
 const STATUS_ICONS: Record<
   string,
@@ -514,6 +515,7 @@ export default function RendersPage() {
         description="Track render jobs and download finished MP4 videos."
       />
 
+      <ProductionBatchList />
       <ProductionJobList />
 
       {isLoading ? (
