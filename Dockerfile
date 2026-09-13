@@ -25,6 +25,7 @@ RUN apt-get update \
      ca-certificates \
      ffmpeg \
      procps \
+     unzip \
      fonts-liberation \
      libnss3 \
      libdbus-1-3 \
@@ -75,4 +76,5 @@ EXPOSE 3000
 # Invoked via `sh` so it works even when the bind-mounted script lacks the
 # executable bit (common on Windows hosts).
 ENTRYPOINT ["sh", "/app/docker/entrypoint.sh"]
-CMD ["npm", "run", "dev"]
+# Run the supervisor directly so Docker SIGTERM reaches its shutdown handler.
+CMD ["node", "scripts/supervise.mjs", "dev"]

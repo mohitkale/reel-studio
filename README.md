@@ -374,6 +374,8 @@ under `.artifacts/`, checks every persisted stage, and verifies renderer childre
 and partial output files are gone after cancellation. It uses installed local
 rendering tools and does not modify existing project rows.
 
-The Docker image uses the existing CPU Kokoro provider and skips optional ONNX
-CUDA binary downloads during dependency installation. It does not install GPU
+The Docker image includes `procps` for renderer process-tree cleanup and `unzip`
+for Chromium archive extraction. Its default command starts the supervisor directly
+so container stop signals reach both children. It uses the existing CPU Kokoro provider and
+skips optional ONNX CUDA binary downloads during dependency installation. It does not install GPU
 drivers or change host configuration.
