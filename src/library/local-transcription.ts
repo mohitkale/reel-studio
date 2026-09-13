@@ -1,3 +1,7 @@
+import {
+  assertProductionActive,
+  cancelChild,
+} from "@/library/production-cancellation";
 import { constants } from "node:fs";
 import { access, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -74,11 +78,14 @@ export async function getLocalTranscriptionStatus(): Promise<LocalTranscriptionS
 }
 
 function runWhisper(binary: string, args: string[]): Promise<void> {
+  assertProductionActive();
   return new Promise((resolve, reject) => {
     const child = spawn(binary, args, {
       shell: false,
+      detached: process.platform !== "win32",
       stdio: ["ignore", "ignore", "pipe"],
     });
+    cancelChild(child);
     let stderr = "";
     child.stderr.setEncoding("utf8");
     child.stderr.on("data", (chunk: string) => {

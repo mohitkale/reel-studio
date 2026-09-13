@@ -1,3 +1,7 @@
+import {
+  assertProductionActive,
+  cancelChild,
+} from "@/library/production-cancellation";
 /**
  * Server-side HyperFrames render path. Builds HTML, then runs
  * @hyperframes/producer in an isolated child process so Puppeteer / producer
@@ -159,6 +163,7 @@ function runWorker(args: {
   quality: RenderQuality;
   onProgress: (pct: number) => void;
 }): Promise<void> {
+  assertProductionActive();
   return new Promise((resolve, reject) => {
     const worker = path.join(
       process.cwd(),
@@ -174,12 +179,14 @@ function runWorker(args: {
         args.quality,
       ],
       {
+        detached: process.platform !== "win32",
         cwd: process.cwd(),
         env: process.env,
         stdio: ["ignore", "pipe", "pipe"],
       },
     );
 
+    cancelChild(child);
     let stderr = "";
     let hfError = "";
     child.stdout.on("data", (buf: Buffer) => {
@@ -474,6 +481,7 @@ export async function runHyperframesRender(
       },
     });
 
+    assertProductionActive();
     await completeRender(renderId, outputKey);
     upsertJob({
       id: renderId,
@@ -485,9 +493,18 @@ export async function runHyperframesRender(
 
     await fs.rm(projectDir, { recursive: true, force: true }).catch(() => {});
   } catch (err) {
+    await fs.rm(
+      path.join(process.cwd(), "media", "renders", `render-${renderId}.mp4`),
+      { force: true },
+    );
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[render:hf] Job", renderId, "failed:", msg);
     await failRender(renderId, msg).catch(() => {});
     upsertJob({ id: renderId, progress: 0, status: "error", error: msg });
+  } finally {
+    await fs.rm(path.join(process.cwd(), "media", "hf-work", renderId), {
+      recursive: true,
+      force: true,
+    });
   }
 }

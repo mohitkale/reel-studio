@@ -1,3 +1,4 @@
+import { productionSignal } from "@/library/production-cancellation";
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
 import { promises as fs } from "node:fs";
@@ -37,17 +38,21 @@ export async function verifyProductionMp4(
 ) {
   const stats = await fs.stat(filePath);
   if (stats.size < 10_000) throw new Error("Rendered MP4 is empty");
-  const { stdout } = await promisify(execFile)("ffprobe", [
-    "-v",
-    "error",
-    "-show_entries",
-    "stream=codec_type,codec_name,width,height,duration",
-    "-show_entries",
-    "format=duration",
-    "-of",
-    "json",
-    filePath,
-  ]);
+  const { stdout } = await promisify(execFile)(
+    "ffprobe",
+    [
+      "-v",
+      "error",
+      "-show_entries",
+      "stream=codec_type,codec_name,width,height,duration",
+      "-show_entries",
+      "format=duration",
+      "-of",
+      "json",
+      filePath,
+    ],
+    { signal: productionSignal() },
+  );
   const probe = JSON.parse(stdout) as {
     streams?: Array<Record<string, unknown>>;
     format?: { duration?: string };

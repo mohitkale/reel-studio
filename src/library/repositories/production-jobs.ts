@@ -57,6 +57,39 @@ export async function claimProductionJob(
 ): Promise<ClaimedProductionJob | null> {
   const now = args.now ?? new Date();
   const leaseExpiresAt = new Date(now.getTime() + (args.leaseMs ?? 30_000));
+  // A dead owner cannot acknowledge cancellation. Do not leave these running.
+  await db.productionJob.updateMany({
+    where: {
+      state: "running",
+      cancelRequested: true,
+      leaseExpiresAt: { lt: now },
+    },
+    data: {
+      state: "canceled",
+      finishedAt: now,
+      leaseOwner: null,
+      leaseExpiresAt: null,
+      heartbeatAt: null,
+    },
+  });
+  // Audio/podcast providers may have charged before the worker died. Require
+  // explicit retry rather than replaying an uncertain external operation.
+  await db.productionJob.updateMany({
+    where: {
+      state: "running",
+      kind: { in: ["audio", "podcast"] },
+      leaseExpiresAt: { lt: now },
+    },
+    data: {
+      state: "failed",
+      error:
+        "Worker interrupted provider work; inspect outputs before explicit retry",
+      finishedAt: now,
+      leaseOwner: null,
+      leaseExpiresAt: null,
+      heartbeatAt: null,
+    },
+  });
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const candidate = await db.productionJob.findFirst({
       where: {

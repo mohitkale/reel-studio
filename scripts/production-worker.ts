@@ -5,11 +5,14 @@ import { executeProductionJob } from "../src/library/production-job-executor";
 
 const workerId = `${hostname()}:${process.pid}`;
 let stopping = false;
+const shutdown = new AbortController();
 process.once("SIGINT", () => {
   stopping = true;
+  shutdown.abort();
 });
 process.once("SIGTERM", () => {
   stopping = true;
+  shutdown.abort();
 });
 
 async function main() {
@@ -18,6 +21,7 @@ async function main() {
     const result = await runProductionWorkerOnce({
       workerId,
       supervised: true,
+      signal: shutdown.signal,
       execute: executeProductionJob,
     });
     if (result === "idle")

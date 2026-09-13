@@ -1,3 +1,4 @@
+import { cancelableRemotion } from "@/library/production-cancellation";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 
@@ -88,23 +89,31 @@ export async function executeAudiogramProductionJob(
     high: { scale: 4 / 3, x264Preset: "medium" as const, crf: 16 },
   }[input.quality];
   await assertActive(context);
-  await renderMedia({
-    composition: {
-      ...composition,
-      durationInFrames: plan.props.durationInFrames,
-    },
-    serveUrl,
-    codec: "h264",
-    outputLocation: outputPath,
-    inputProps: plan.props,
-    scale: quality.scale,
-    x264Preset: quality.x264Preset,
-    crf: quality.crf,
-    imageFormat: "jpeg",
-    pixelFormat: "yuv420p",
-    hardwareAcceleration: "if-possible",
-    timeoutInMilliseconds: 300_000,
-    logLevel: "error",
+  await cancelableRemotion(
+    (cancelSignal) =>
+      renderMedia({
+        cancelSignal,
+        composition: {
+          ...composition,
+          durationInFrames: plan.props.durationInFrames,
+        },
+        serveUrl,
+        codec: "h264",
+        outputLocation: outputPath,
+        inputProps: plan.props,
+        scale: quality.scale,
+        x264Preset: quality.x264Preset,
+        crf: quality.crf,
+        imageFormat: "jpeg",
+        pixelFormat: "yuv420p",
+        hardwareAcceleration: "if-possible",
+        timeoutInMilliseconds: 300_000,
+        logLevel: "error",
+      }),
+    context.signal,
+  ).catch(async (error: unknown) => {
+    await fs.rm(outputPath, { force: true });
+    throw error;
   });
   await upsertProductionJobStep(job.id, "render_export", {
     state: "succeeded",

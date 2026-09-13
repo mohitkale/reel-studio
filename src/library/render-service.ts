@@ -1,3 +1,7 @@
+import {
+  assertProductionActive,
+  cancelableRemotion,
+} from "@/library/production-cancellation";
 /**
  * Server-side render service. Bundles the Remotion composition once (cached in
  * memory), then calls renderMedia for each job. Node.js only -- never import
@@ -421,32 +425,36 @@ async function runRemotionRender({
       Math.min(4, Math.floor(concurrency / 2)),
     );
 
-    await renderMedia({
-      composition: { ...composition, durationInFrames: fullDuration },
-      serveUrl,
-      codec: "h264",
-      outputLocation: outputPath,
-      inputProps,
-      scale: outputScale,
-      imageFormat: "jpeg",
-      pixelFormat: "yuv420p",
-      concurrency,
-      x264Preset: qualityPreset.x264Preset,
-      crf: qualityPreset.crf,
-      offthreadVideoThreads,
-      offthreadVideoCacheSizeInBytes: 512 * 1024 * 1024,
-      mediaCacheSizeInBytes: 512 * 1024 * 1024,
-      hardwareAcceleration: "if-possible",
-      timeoutInMilliseconds: 300_000,
-      logLevel: "error",
-      onProgress: ({ progress: p }) => {
-        const pct = Math.round(p * 100) / 100;
-        progress(pct, "rendering");
-        if (Math.round(pct * 100) % 5 === 0) {
-          console.log(`[render] Job ${renderId}: ${Math.round(pct * 100)}%`);
-        }
-      },
-    });
+    assertProductionActive();
+    await cancelableRemotion((cancelSignal) =>
+      renderMedia({
+        cancelSignal,
+        composition: { ...composition, durationInFrames: fullDuration },
+        serveUrl,
+        codec: "h264",
+        outputLocation: outputPath,
+        inputProps,
+        scale: outputScale,
+        imageFormat: "jpeg",
+        pixelFormat: "yuv420p",
+        concurrency,
+        x264Preset: qualityPreset.x264Preset,
+        crf: qualityPreset.crf,
+        offthreadVideoThreads,
+        offthreadVideoCacheSizeInBytes: 512 * 1024 * 1024,
+        mediaCacheSizeInBytes: 512 * 1024 * 1024,
+        hardwareAcceleration: "if-possible",
+        timeoutInMilliseconds: 300_000,
+        logLevel: "error",
+        onProgress: ({ progress: p }) => {
+          const pct = Math.round(p * 100) / 100;
+          progress(pct, "rendering");
+          if (Math.round(pct * 100) % 5 === 0) {
+            console.log(`[render] Job ${renderId}: ${Math.round(pct * 100)}%`);
+          }
+        },
+      }),
+    );
 
     // 6. Mark done.
     await completeRender(renderId, outputKey);
@@ -458,6 +466,10 @@ async function runRemotionRender({
     });
     console.log("[render] Job", renderId, "complete:", outputPath);
   } catch (err) {
+    await fs.rm(
+      path.join(process.cwd(), "media", "renders", `render-${renderId}.mp4`),
+      { force: true },
+    );
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[render] Job", renderId, "failed:", msg);
     await failRender(renderId, msg).catch(() => {});
