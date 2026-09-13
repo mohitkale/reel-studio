@@ -1,0 +1,457 @@
+{
+  "capturedAt": "2026-09-13T16:06:16.042Z",
+  "base": "5e6a4b74599ffa51cb3fc8e504db2fbba2ae713a",
+  "branch": "feat/production-worker-reliability",
+  "node": "v24.18.1",
+  "lockfileSha256": "ad76cba672748bb4681593bb5d7c124158b18f2950d929eb122ab33d016c037b",
+  "policy": "Retain exact installed stable targets for PR 1; upgrades belong to their assigned PR.",
+  "packages": [
+    {
+      "name": "@fontsource-variable/geist",
+      "target": "5.3.0",
+      "installed": "5.3.0",
+      "license": "OFL-1.1",
+      "source": "https://registry.npmjs.org/@fontsource-variable/geist/5.3.0",
+      "integrity": "sha512-j0m+vLQuG5XAYoHtGCVu0spvlGreR3EzpECUVzkFmI1mTVnAO38l/NEPDCFgZ177JxzYJCLSmTQibIiYPilGrA=="
+    },
+    {
+      "name": "@fontsource-variable/geist-mono",
+      "target": "5.3.0",
+      "installed": "5.3.0",
+      "license": "OFL-1.1",
+      "source": "https://registry.npmjs.org/@fontsource-variable/geist-mono/5.3.0",
+      "integrity": "sha512-vBbuwDEo9AkrqADMXOrlAR3DFcJi4/JxeuU43FoiQERnNwsfXNnvxvReZG02cQKmyk4DZkZdBZX3oTDvy2zBAw=="
+    },
+    {
+      "name": "@hyperframes/producer",
+      "target": "0.8.33",
+      "installed": "0.8.33",
+      "source": "https://registry.npmjs.org/@hyperframes/producer/0.8.33",
+      "integrity": "sha512-tGfcEVwq5T62MmgC1YoqJ2eRmxgnEa516Ua9JzNfFgUkI8AqDBG+O+xvfzD8xYxEozhmL+8kYb1wOIzbojpESQ=="
+    },
+    {
+      "name": "@prisma/adapter-better-sqlite3",
+      "target": "7.10.0",
+      "installed": "7.10.0",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/@prisma/adapter-better-sqlite3/7.10.0",
+      "integrity": "sha512-lqEUP9aTaJ0aDbIIrr/jmCqmkmmoAB5i7xeK6LLOTIxrOeK9KDLJDjtlqKKxAQulSwk5fNSshor8Az1QNZdI5Q=="
+    },
+    {
+      "name": "@prisma/client",
+      "target": "7.10.0",
+      "installed": "7.10.0",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/@prisma/client/7.10.0",
+      "integrity": "sha512-Ubw/QS9JGIBSBUsyxAUQuK/Jcu0Tsva7le7QbLd91Kix9yJvYDdj5QkwgEbbZniH80dd+sziQcALPc+HnvQC8Q=="
+    },
+    {
+      "name": "@radix-ui/react-dialog",
+      "target": "1.1.23",
+      "installed": "1.1.23",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@radix-ui/react-dialog/1.1.23",
+      "integrity": "sha512-Ksw4WeROkO4rC9k/onilX/Ao2Cr1ku1unMNH+XSCcP4jSXYu7HDsg9n4ojMjVb22XpYjAQ9qfrFlVbru1vXDUA=="
+    },
+    {
+      "name": "@radix-ui/react-dropdown-menu",
+      "target": "2.1.24",
+      "installed": "2.1.24",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@radix-ui/react-dropdown-menu/2.1.24",
+      "integrity": "sha512-geq8l2rJkxvkXsT9RMgtUE3P8pITFpTsvYpbySi1IH4fZEABD/Gp85myayFgxk0ktljGMJnCbeFkyTusvSvv7g=="
+    },
+    {
+      "name": "@radix-ui/react-label",
+      "target": "2.1.15",
+      "installed": "2.1.15",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@radix-ui/react-label/2.1.15",
+      "integrity": "sha512-o/rdYEwZTTo5tjknnPeyQFU45kUC4i/XyeDPP+HGyi6XqpOP6Zf5Ya5vh/Yfe9Id5JiuWnnAx2XqIeD3UYZt0g=="
+    },
+    {
+      "name": "@radix-ui/react-separator",
+      "target": "1.1.15",
+      "installed": "1.1.15",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@radix-ui/react-separator/1.1.15",
+      "integrity": "sha512-jOLO4lssEzWpoDu7G+Ze4VjwMRUBt291pnZD0gmalREZipnTX3wadQo7Fy48GCTfe14/YRN6rw/rOJqrE85Wxw=="
+    },
+    {
+      "name": "@radix-ui/react-slot",
+      "target": "1.3.3",
+      "installed": "1.3.3",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@radix-ui/react-slot/1.3.3",
+      "integrity": "sha512-qx7oqnYbxnK9kYI9m317qmFmEgo6ywqWvbTogdj7cL9p3/yx4M48p7Rnw5z3H890cL/ow/EeWJsuTykeZVXP5Q=="
+    },
+    {
+      "name": "@radix-ui/react-tabs",
+      "target": "1.1.21",
+      "installed": "1.1.21",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@radix-ui/react-tabs/1.1.21",
+      "integrity": "sha512-UKxJlZid7FVtsk/WTxj4i4uSEgj2Au+KBbS7SQyTlzMhhn+86Cz3tISZdTa87bfEfcuvZezf2ZsxD4xuEKtkog=="
+    },
+    {
+      "name": "@radix-ui/react-tooltip",
+      "target": "1.2.16",
+      "installed": "1.2.16",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@radix-ui/react-tooltip/1.2.16",
+      "integrity": "sha512-6EamKFRRnlpdadndbZ6LMwycfwkwPte1B42hs6QA0gYhjaOKqW4PZ4pjaW9UrlDX5eVt/OjncE7BFTPL5nmZhg=="
+    },
+    {
+      "name": "@remotion/bundler",
+      "target": "4.0.523",
+      "installed": "4.0.523",
+      "license": "SEE LICENSE IN LICENSE.md",
+      "source": "https://registry.npmjs.org/@remotion/bundler/4.0.523",
+      "integrity": "sha512-pmurneo2B4+uqzc9ytbxYRQxBObVVvKvuYIcksyiy7TRluNU61Uh4ZKBRofbhI4kQtxrZGXGqjPZukAWUaV8AA=="
+    },
+    {
+      "name": "@remotion/cli",
+      "target": "4.0.523",
+      "installed": "4.0.523",
+      "license": "SEE LICENSE IN LICENSE.md",
+      "source": "https://registry.npmjs.org/@remotion/cli/4.0.523",
+      "integrity": "sha512-+i0G9PAE7aNZT9F9V3oIEeciG1txvhlhd3mgrbZYxUC/nVsK5pgJNSgVaHpxpjPr9dg8bvCIoGAoghsA1x9ZqQ=="
+    },
+    {
+      "name": "@remotion/google-fonts",
+      "target": "4.0.523",
+      "installed": "4.0.523",
+      "license": "SEE LICENSE IN LICENSE.md",
+      "source": "https://registry.npmjs.org/@remotion/google-fonts/4.0.523",
+      "integrity": "sha512-XECkNxGJRz559uVbEEz3sMGaol4HBaU8XZuYqhuZAMjqrm2/ZkemheHR4EQYlpuu0/oT9or91KMaOmSen4Yqpw=="
+    },
+    {
+      "name": "@remotion/lottie",
+      "target": "4.0.523",
+      "installed": "4.0.523",
+      "license": "SEE LICENSE IN LICENSE.md",
+      "source": "https://registry.npmjs.org/@remotion/lottie/4.0.523",
+      "integrity": "sha512-DoBFVpxoGngWj9xjDNYJuKq2UG6ttoFM5v3O6wsfFqkJrQ/LEmVHkDdrJixA6UKQP1m/G6oZ2bAD2C2y4qMtNw=="
+    },
+    {
+      "name": "@remotion/player",
+      "target": "4.0.523",
+      "installed": "4.0.523",
+      "license": "SEE LICENSE IN LICENSE.md",
+      "source": "https://registry.npmjs.org/@remotion/player/4.0.523",
+      "integrity": "sha512-k9A8TCh5IRWaIIQBcw9ELIMi9Gf/IVapU1UNJI3XWpYXB2nYjyrEPvY2nh7YQnocNHbPpc8S4yfNPKlooUu8GA=="
+    },
+    {
+      "name": "@remotion/renderer",
+      "target": "4.0.523",
+      "installed": "4.0.523",
+      "license": "SEE LICENSE IN LICENSE.md",
+      "source": "https://registry.npmjs.org/@remotion/renderer/4.0.523",
+      "integrity": "sha512-ZkKCh5RBXPZOvR+nGYSItjLSMKYgn1fr2qimAdeJqmAaFKo9W6Dl4QXZizL4SsadcxyEH/ka5kpsbAQ43wedyw=="
+    },
+    {
+      "name": "@remotion/three",
+      "target": "4.0.523",
+      "installed": "4.0.523",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@remotion/three/4.0.523",
+      "integrity": "sha512-fUxFvpl3IHUZ1L+VzbCIzX5gP+vPTmzvqUUdTEav+IUMG0uj71SaNY32FWQbUqdBWquao3hxYz0IyeSE9rGSSA=="
+    },
+    {
+      "name": "@remotion/transitions",
+      "target": "4.0.523",
+      "installed": "4.0.523",
+      "license": "UNLICENSED",
+      "source": "https://registry.npmjs.org/@remotion/transitions/4.0.523",
+      "integrity": "sha512-o2ITgGWWxvnEyJyypwYe/5avFNDtpLH3wiCHTB6ncs8Z01pzkT0ocN2n78HFVmdsdrN8nLiPGw1r2vtnD/8p4Q=="
+    },
+    {
+      "name": "@tanstack/react-query",
+      "target": "5.102.8",
+      "installed": "5.102.8",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tanstack/react-query/5.102.8",
+      "integrity": "sha512-TYBea4OuXWD7MhaSHq069TWbFe7rcwWN6kzT7JF0OKi1K6c1gTv2IzD6A6ExJsCMozdkqBWeuIUZmu4KQg0O5A=="
+    },
+    {
+      "name": "@types/three",
+      "target": "0.185.4",
+      "installed": "0.185.4",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/three/0.185.4",
+      "integrity": "sha512-gAsBIC07NIFrxjbf7tH2t71c38uulFfk/RFoC7FNBSjMRAQ8J1x/RBvusX0N5PJouaYFJawXQqfCQ0RKUx/1nA=="
+    },
+    {
+      "name": "class-variance-authority",
+      "target": "0.7.1",
+      "installed": "0.7.1",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/class-variance-authority/0.7.1",
+      "integrity": "sha512-Ka+9Trutv7G8M6WT6SeiRWz792K5qEqIGEGzXKhAE6xOWAY6pPH8U+9IY3oCMv6kqTmLsv7Xh/2w2RigkePMsg=="
+    },
+    {
+      "name": "clsx",
+      "target": "2.1.1",
+      "installed": "2.1.1",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/clsx/2.1.1",
+      "integrity": "sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA=="
+    },
+    {
+      "name": "esbuild",
+      "target": "0.25.12",
+      "installed": "0.25.12",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/esbuild/0.25.12",
+      "integrity": "sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg=="
+    },
+    {
+      "name": "gsap",
+      "target": "3.14.2",
+      "installed": "3.14.2",
+      "license": "Standard 'no charge' license: https://gsap.com/standard-license.",
+      "source": "https://registry.npmjs.org/gsap/3.14.2",
+      "integrity": "sha512-P8/mMxVLU7o4+55+1TCnQrPmgjPKnwkzkXOK1asnR9Jg2lna4tEY5qBJjMmAaOBDDZWtlRjBXjLa0w53G/uBLA=="
+    },
+    {
+      "name": "kokoro-js",
+      "target": "1.2.1",
+      "installed": "1.2.1",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/kokoro-js/1.2.1",
+      "integrity": "sha512-oq0HZJWis3t8lERkMJh84WLU86dpYD0EuBPtqYnLlQzyFP1OkyBRDcweAqCfhNOpltyN9j/azp1H6uuC47gShw=="
+    },
+    {
+      "name": "lucide-react",
+      "target": "1.44.0",
+      "installed": "1.44.0",
+      "license": "ISC",
+      "source": "https://registry.npmjs.org/lucide-react/1.44.0",
+      "integrity": "sha512-2egNApH4hX4j/qdCgRublh88+9u3mEhz9iSlW5ckm4kaQEqZbXbMr0l5u5JZLy8nmWRx2dbHGQkEDYz6C9aCgw=="
+    },
+    {
+      "name": "next",
+      "target": "16.3.4",
+      "installed": "16.3.4",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/next/16.3.4",
+      "integrity": "sha512-/Ztf6CeRH+ejEXUrYtqI4gkS66eFIHuSwqi60RgcpWKodxFZx2/dqVCMKBwILfAHXQ+F1b1vAudgj3mnxqtoIA=="
+    },
+    {
+      "name": "next-themes",
+      "target": "0.4.6",
+      "installed": "0.4.6",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/next-themes/0.4.6",
+      "integrity": "sha512-pZvgD5L0IEvX5/9GWyHMf3m8BKiVQwsCMHfoFosXtXBMnaS0ZnIJ9ST4b4NqLVKDEm8QBxoNNGNaBv2JNF6XNA=="
+    },
+    {
+      "name": "prisma",
+      "target": "7.10.0",
+      "installed": "7.10.0",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/prisma/7.10.0",
+      "integrity": "sha512-o0ornyJOWgygVAzGCpr8PdXV8EJLHyVGDDUr/voBQt8Azzw8cYTByzzPGcA/m4tCkPcnJA8raEOv2CslsKhPEw=="
+    },
+    {
+      "name": "react",
+      "target": "19.2.8",
+      "installed": "19.2.8",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/react/19.2.8",
+      "integrity": "sha512-PWaYA1L/q9u2u7xYQi+Y3L3Yfnie7XyLeaJICV1MGD6LprsBxcAqGjYyr0eY3p+QdsA+x/Irkt4Qif8D63+Sbw=="
+    },
+    {
+      "name": "react-dom",
+      "target": "19.2.8",
+      "installed": "19.2.8",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/react-dom/19.2.8",
+      "integrity": "sha512-rVprimfGBG3DR+Tq0IQG2DT5PxKth1WIGDmj5yPmlzr4YBe7uyE+Du4oVqTDXZSHGGGXRtTJEGSSePyQCMBglQ=="
+    },
+    {
+      "name": "remotion",
+      "target": "4.0.523",
+      "installed": "4.0.523",
+      "license": "SEE LICENSE IN LICENSE.md",
+      "source": "https://registry.npmjs.org/remotion/4.0.523",
+      "integrity": "sha512-dtDmkgFNsy9Dbh4EdyFwa53/UC3EpAhV1VvAPjzNbijqaEDCuALF7jnycOe/grex8DKB64NGUP6PaCrs5dcDOw=="
+    },
+    {
+      "name": "sonner",
+      "target": "2.0.8",
+      "installed": "2.0.8",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/sonner/2.0.8",
+      "integrity": "sha512-UM/ByIoFra8yzV75n1o0Puu0bw5U/9UNnDacrJNspekBewIfsQ3D6ez1nvlWpt7aTsO6rujQtifBpycwIivqlg=="
+    },
+    {
+      "name": "tailwind-merge",
+      "target": "3.6.0",
+      "installed": "3.6.0",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/tailwind-merge/3.6.0",
+      "integrity": "sha512-uxL7qAVQriqRQPAyK3pj66VqskWqoZ37PW94jwOTwNfq/z9oyu1V+eqrZqtR2+fCiXdYOZe/Modt8GtvqNzu+w=="
+    },
+    {
+      "name": "three",
+      "target": "0.186.0",
+      "installed": "0.186.0",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/three/0.186.0",
+      "integrity": "sha512-cr/fIM2ddMSVbYVgkfD4jLJv7Fh/8ZTjvo+7gQeSVGUZHxpx9FDwoL5iC7hUz/LiRA8wMbqfnb90xKfm1/HHkQ=="
+    },
+    {
+      "name": "zod",
+      "target": "4.5.4",
+      "installed": "4.5.4",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/zod/4.5.4",
+      "integrity": "sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA=="
+    },
+    {
+      "name": "@modelcontextprotocol/sdk",
+      "target": "1.30.0",
+      "installed": "1.30.0",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@modelcontextprotocol/sdk/1.30.0",
+      "integrity": "sha512-xKd8OIzlqNzcqcNumGAa6g+PW2kjD5vrpcKOnfldAUPP3j7lnqMPwlTXQm8gF+UwH72z0lqaRbjr9hqGz0eITA=="
+    },
+    {
+      "name": "@tailwindcss/postcss",
+      "target": "4.3.3",
+      "installed": "4.3.3",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@tailwindcss/postcss/4.3.3",
+      "integrity": "sha512-JTSZZGQi1AyKirbLN3azmjVzef92tcX7h+iSqPdaeStyFpGpDlKvvpxeOE8njhbUanbRwr3z8DyzhICWnMtQeg=="
+    },
+    {
+      "name": "@types/node",
+      "target": "24.13.4",
+      "installed": "24.13.4",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/node/24.13.4",
+      "integrity": "sha512-YJ7EqCstVTzIr0fMr7qul/977en+pQHrfmuKIo6Zr9i75Be21dr3MovcfvGtyvi2HAUrRerWps5sMO9I7WaxDw=="
+    },
+    {
+      "name": "@types/react",
+      "target": "19.3.0",
+      "installed": "19.3.0",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/react/19.3.0",
+      "integrity": "sha512-N0rFCuH9YoxG9/m61l9MfpJKfmLOVU0em7ipIz6TRgSSkvReLB9vL85GB+yr8Bs5leqpvg96JSwF4ZS1s4viQg=="
+    },
+    {
+      "name": "@types/react-dom",
+      "target": "19.3.0",
+      "installed": "19.3.0",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@types/react-dom/19.3.0",
+      "integrity": "sha512-ZI7bU42mZXXKHn/qNLEw2IrbiINU7X5+vfgdixBHkCNpYWXjKgfQ/P+uyGb5CjOLB9UcnTeg3rylQtV2hym44Q=="
+    },
+    {
+      "name": "@vitejs/plugin-react",
+      "target": "5.2.0",
+      "installed": "5.2.0",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/@vitejs/plugin-react/5.2.0",
+      "integrity": "sha512-YmKkfhOAi3wsB1PhJq5Scj3GXMn3WvtQ/JC0xoopuHoXSdmtdStOpFrYaT1kie2YgFBcIe64ROzMYRjCrYOdYw=="
+    },
+    {
+      "name": "eslint",
+      "target": "9.39.5",
+      "installed": "9.39.5",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/eslint/9.39.5",
+      "integrity": "sha512-DgZS62aPLXKlnxILS/AYCoRvHaZeXceIzlXPkkGGzJWSow1aEk0lbTlxUSlyjC8jcaKxAdOnTDz+o1JFSBsyjw=="
+    },
+    {
+      "name": "eslint-config-next",
+      "target": "16.3.4",
+      "installed": "16.3.4",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/eslint-config-next/16.3.4",
+      "integrity": "sha512-35/8RM10huEL9vlr8hUZMERMENHBrnyHN3ZZkF9efSgzGaqK34jIqry44A956//zriUhUAUW0XSkcolhrryqAA=="
+    },
+    {
+      "name": "hyperframes",
+      "target": "0.8.27",
+      "installed": "0.8.27",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/hyperframes/0.8.27",
+      "integrity": "sha512-P+n3HF/wcjHX1if8NCtBeLx+WgoSF/xSzWqISnnd8r/migXz6mOhhq1EpesIqAsGi2KHlM+SAPa2PKNZT3RZgw=="
+    },
+    {
+      "name": "jsdom",
+      "target": "30.0.1",
+      "installed": "30.0.1",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/jsdom/30.0.1",
+      "integrity": "sha512-52v7mUVUfNQVYYqE1lcdaymWL0njO7lTLUog6ZvW2U5KsbiLk/GnZlVJ+qx0xfNJZ6Gn+KSpPNE52vurbxZwrA=="
+    },
+    {
+      "name": "prettier",
+      "target": "3.9.6",
+      "installed": "3.9.6",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/prettier/3.9.6",
+      "integrity": "sha512-OpN0zzVdiaiAhxpuuj5efpIS4sY9j7bY6uR5mnj5yPzGkdkjNKSJeUThPb60Jw29QuAZgA4o+/iB49kFiaBX6g=="
+    },
+    {
+      "name": "prettier-plugin-tailwindcss",
+      "target": "0.8.1",
+      "installed": "0.8.1",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/prettier-plugin-tailwindcss/0.8.1",
+      "integrity": "sha512-iaFMYqDsE4ffdDkn5qup0j5f2aCEBFZrdrZnvu9QKTlWx/iGPeQ4HHu7b7fCPMxeo9nwQBiOAh2nSypdFYWJkw=="
+    },
+    {
+      "name": "tailwindcss",
+      "target": "4.3.3",
+      "installed": "4.3.3",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/tailwindcss/4.3.3",
+      "integrity": "sha512-gOhV3P7ufE62QDGg1zVaTgCR+EtPv92k2nIhVcVKcLmxT1sUBsQGhnZj175j+MqRt4zLF7ic+sCYjfhxMxj7YQ=="
+    },
+    {
+      "name": "tsx",
+      "target": "4.23.13",
+      "installed": "4.23.13",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/tsx/4.23.13",
+      "integrity": "sha512-BL5MGkRln6aDYhb0xbQlEAGw743BaZYWdbWtdJOBriYJboKgUUYCadFp2/FpBBZquBC/ezNBn7wMMPx7FDZUDw=="
+    },
+    {
+      "name": "tw-animate-css",
+      "target": "1.4.0",
+      "installed": "1.4.0",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/tw-animate-css/1.4.0",
+      "integrity": "sha512-7bziOlRqH0hJx80h/3mbicLW7o8qLsH5+RaLR2t+OHM3D0JlWGODQKQ4cxbK7WlvmUxpcj6Kgu6EKqjrGFe3QQ=="
+    },
+    {
+      "name": "typescript",
+      "target": "6.0.3",
+      "installed": "6.0.3",
+      "license": "Apache-2.0",
+      "source": "https://registry.npmjs.org/typescript/6.0.3",
+      "integrity": "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="
+    },
+    {
+      "name": "vite",
+      "target": "7.3.5",
+      "installed": "7.3.5",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/vite/7.3.5",
+      "integrity": "sha512-KuOaNhcnGFN2zIPGA7wRmzF+lJA1sea7rHq17aiJ++9lzY1WWG6Jpwqwe1KNbRVPIqHmr8GLYx7jbrQcN/7/ww=="
+    },
+    {
+      "name": "vitest",
+      "target": "5.0.0",
+      "installed": "5.0.0",
+      "license": "MIT",
+      "source": "https://registry.npmjs.org/vitest/5.0.0",
+      "integrity": "sha512-gpsMNoRhMjMktVxPtstOH4/PJuPyovVaMDr4oDilXaGH1EcqM2OE96SoHT2VIQ6fTGtTjqmHDrEu2X9RQiXf8Q=="
+    }
+  ]
+}
