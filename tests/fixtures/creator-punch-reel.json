@@ -1,0 +1,80 @@
+{
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "styleId": "bold-hook",
+  "energy": "high",
+  "preset": { "id": "creator-punch", "version": "1.0.0" },
+  "tokens": {
+    "background": "#0B0712",
+    "backgroundAccent": "#241032",
+    "foreground": "#FFFAF7",
+    "muted": "#C9BDD6",
+    "accent": "#E8FF45",
+    "accentSecondary": "#FF4FB8",
+    "accentForeground": "#0B0712",
+    "handle": "@reelstudio",
+    "fontFamily": "Inter, sans-serif",
+    "radius": 18
+  },
+  "scenes": [
+    {
+      "id": "creator-hook",
+      "role": "hook",
+      "templateId": "hf-kinetic-slam",
+      "text": "Your first three seconds decide everything.",
+      "emphasis": ["three seconds"],
+      "visual": "⚡",
+      "order": 0
+    },
+    {
+      "id": "creator-tip",
+      "role": "tip",
+      "templateId": "hf-list",
+      "text": "Build every short around one clear promise.",
+      "emphasis": ["one clear promise"],
+      "items": [
+        "Lead with the outcome",
+        "Show proof early",
+        "Cut every detour",
+        "End with one action"
+      ],
+      "order": 1
+    },
+    {
+      "id": "creator-emphasis",
+      "role": "emphasis",
+      "templateId": "hf-kinetic-slam",
+      "text": "Specific beats clever. Every time.",
+      "emphasis": ["Specific"],
+      "visual": "🎯",
+      "order": 2
+    },
+    {
+      "id": "creator-payoff",
+      "role": "payoff",
+      "templateId": "hf-statement",
+      "text": "Now the audience knows why they should keep watching.",
+      "emphasis": ["keep watching"],
+      "visual": "👀",
+      "order": 3
+    },
+    {
+      "id": "creator-cta",
+      "role": "cta",
+      "templateId": "hf-logo-outro",
+      "text": "Make the next post impossible to skip.",
+      "emphasis": ["impossible to skip"],
+      "items": ["Create your first cut"],
+      "visual": "✦",
+      "order": 4
+    }
+  ],
+  "timeline": [
+    { "sceneId": "creator-hook", "startFrame": 0, "durationFrames": 48 },
+    { "sceneId": "creator-tip", "startFrame": 48, "durationFrames": 72 },
+    { "sceneId": "creator-emphasis", "startFrame": 120, "durationFrames": 48 },
+    { "sceneId": "creator-payoff", "startFrame": 168, "durationFrames": 60 },
+    { "sceneId": "creator-cta", "startFrame": 228, "durationFrames": 72 }
+  ]
+}

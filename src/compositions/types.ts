@@ -1,8 +1,12 @@
 import type { BrandTokens } from "./tokens";
 import type { EnergyId, StyleId } from "./visual-style";
+import type { ProductionLayout } from "@/production/layout";
+import type { ProductionPresetId } from "@/production/presets";
+import type { ProductionSceneRole } from "@/production/roles";
 
 /** Image pan/zoom animations available for a background image. */
-export type PanEffect = "ken-burns" | "pan-left" | "pan-right" | "pan-up" | "pan-down";
+export type PanEffect =
+  "ken-burns" | "pan-left" | "pan-right" | "pan-up" | "pan-down";
 
 /**
  * Emotional/visual tone a scene can carry, mirrored from src/library/schemas.ts.
@@ -32,6 +36,19 @@ export interface SceneBackground {
   muted?: boolean;
 }
 
+export interface SceneChartSeries {
+  label: string;
+  values: number[];
+  unit?: string;
+}
+
+/** User-supplied chart data. Renderers must never synthesize missing values. */
+export interface SceneChartData {
+  labels: string[];
+  series: SceneChartSeries[];
+  sourceAttribution?: string;
+}
+
 /** A scene as the video engine consumes it (template + text + emphasis + optional visual). */
 export interface ReelScene {
   id: string;
@@ -43,6 +60,9 @@ export interface ReelScene {
   background?: SceneBackground;
   /** Explicit list items for list/checklist templates (overrides text splitting). */
   items?: string[];
+  chart?: SceneChartData;
+  /** Engine-independent purpose used by versioned production presets. */
+  role?: ProductionSceneRole;
   /** When true, suppress the on-screen text/visual and show just the background. */
   hideText?: boolean;
   /** Emotional/visual tone; picks the dynamic background treatment when there's no photo/video background. */
@@ -56,6 +76,18 @@ export interface ReelBeat {
   sceneId: string;
   startFrame: number;
   durationFrames: number;
+}
+
+export interface ReelCaptionCue {
+  id: string;
+  startFrame: number;
+  endFrame: number;
+  text: string;
+  words?: Array<{
+    text: string;
+    startFrame: number;
+    endFrame: number;
+  }>;
 }
 
 /** Props every template component receives. */
@@ -83,6 +115,12 @@ export type ReelProps = {
    * Cover offset is applied inside the composition via the wrapping Sequence.
    */
   sfxCues?: Array<{ url: string; startFrame: number; volume: number }>;
+  /** Editable subtitle track on the content timeline, separate from scene copy. */
+  captions?: {
+    enabled: boolean;
+    timingSource: "provider" | "local-transcription" | "estimated" | "imported";
+    cues: ReelCaptionCue[];
+  };
   tokens: BrandTokens;
   /** Optional cover image baked as the reel's opening (thumbnail) frame. */
   coverUrl?: string;
@@ -102,6 +140,10 @@ export type ReelProps = {
   styleId?: StyleId;
   /** Cut / text snappiness. Defaults to normal. */
   energy?: EnergyId;
+  /** Resolved safe areas shared by preview and export for this exact canvas. */
+  layout?: ProductionLayout;
+  /** Versioned preset identity retained by both preview and export. */
+  preset?: { id: ProductionPresetId; version: string };
 };
 
 export const REEL_WIDTH = 1080;
@@ -114,4 +156,17 @@ export const COVER_DURATION_SECONDS = 1.5;
 /** Cover hold length in frames for a given fps (0 when no cover). */
 export function coverFrames(fps: number, hasCover: boolean): number {
   return hasCover ? Math.round(fps * COVER_DURATION_SECONDS) : 0;
+}
+
+/** Total composition length for dynamic Remotion metadata and engine exports. */
+export function reelDurationFrames(
+  props: Pick<ReelProps, "timeline" | "coverUrl" | "fps">,
+): number {
+  const fps = props.fps ?? REEL_FPS;
+  const content = props.timeline.reduce(
+    (max, beat) =>
+      Math.max(max, beat.startFrame + Math.max(1, beat.durationFrames)),
+    0,
+  );
+  return Math.max(1, content + coverFrames(fps, Boolean(props.coverUrl)));
 }

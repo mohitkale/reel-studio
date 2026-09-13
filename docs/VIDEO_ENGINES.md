@@ -2,14 +2,14 @@
 
 Reel Studio supports two engines per project (chosen at create time).
 
-| | **HyperFrames** | **Remotion** |
-| --- | --- | --- |
-| Licence | Apache-2.0 | Remotion License (source-available, not OSI) |
-| Templates | HTML + CSS + motion (`hf-*`) | React compositions |
-| Preview | Local HyperFrames preview | Remotion Player |
-| Export | Isolated producer worker → MP4 | `renderMedia` → MP4 |
-| Node | Node 22+ recommended | Node 22+ recommended |
-| Best for | Open-source-safe workflows, HTML templates | Rich React ecosystem, existing Remotion skills |
+|           | **HyperFrames**                            | **Remotion**                                   |
+| --------- | ------------------------------------------ | ---------------------------------------------- |
+| Licence   | Apache-2.0                                 | Remotion License (source-available, not OSI)   |
+| Templates | HTML + CSS + motion (`hf-*`)               | React compositions                             |
+| Preview   | Local HyperFrames preview                  | Remotion Player                                |
+| Export    | Isolated producer worker → MP4             | `renderMedia` → MP4                            |
+| Node      | Node 24 LTS                                | Node 24 LTS                                    |
+| Best for  | Open-source-safe workflows, HTML templates | Rich React ecosystem, existing Remotion skills |
 
 ## Recommendation for open-source demos
 
@@ -30,3 +30,22 @@ with 4+ employees typically need a Remotion Company License. See
 **Remotion:** `kinetic`, `lottie`, `three`, `stat-reveal`, `icon-grid`, `quote-card`, `emoji-punch`
 
 Registration lives in `src/engines/` and `src/compositions/`.
+
+## Production presets
+
+Product Launch, Editorial Explainer, Creator Punch, Data Story, Developer Demo,
+and Cinematic Brand sit above the engine templates. A versioned production
+snapshot resolves each scene role to an engine-supported template before preview
+or export. Existing projects retain their selected engine and legacy template
+IDs; new projects default to HyperFrames.
+
+Both engines implement each preset with the same copy, source media, timing,
+brand snapshot, caption track, and safe-area rules. Their visual effects can
+differ because HyperFrames renders deterministic HTML while Remotion renders
+React compositions. Portrait, landscape, and square are native layouts in each
+adapter rather than crops of a completed video.
+
+HyperFrames render workspaces contain local GSAP and WOFF2 files. The producer
+does not need a font or motion-runtime CDN while capturing frames. Catalog
+blocks and components are tracked separately with their upstream revision,
+checksum, dependencies, attribution, layouts, and retained version.

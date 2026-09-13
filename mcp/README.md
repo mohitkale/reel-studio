@@ -1,8 +1,8 @@
 # Reel Studio MCP server
 
 A stdio [Model Context Protocol](https://modelcontextprotocol.io) server that lets
-external AI tools (Claude Code, Cursor, etc.) build and edit **video storyboards**
-and **audio-only podcasts** in a running Reel Studio app.
+external AI tools build and edit **video storyboards**, **audio**, **podcasts**, and
+**audiograms** in a running Reel Studio app.
 
 It talks to the app **only over its REST API** with a bearer token — it never
 touches the database directly. By design it can do everything an editor can
@@ -10,8 +10,9 @@ touches the database directly. By design it can do everything an editor can
 
 - ❌ delete anything (projects, scenes, takes, renders, podcasts, dialogue turns)
 - ❌ change configuration or secrets (API keys, defaults — website only)
-- ⏸️ start a **video** render — `request_render` only _queues_ a render that a human must
-  **approve in the web app** (Renders → "Approve & Render")
+- ⏸️ legacy tokens keep video rendering behind web approval
+- ✅ named scoped tokens can opt into bounded unattended rendering, with provider,
+  duration, batch, and finite paid-request limits
 - ✅ podcast audio generation **does** run when you call `create_podcast_take`
   (same as the web Generate button; costs TTS credits)
 
@@ -47,7 +48,7 @@ touches the database directly. By design it can do everything an editor can
 
 ### Video storyboards
 
-- **Read:** `list_projects`, `list_video_engines`, `get_script`, `list_takes`,
+- **Read:** `list_projects`, `list_video_engines`, `list_production_presets`, `get_script`, `list_takes`,
   `list_scene_clips`, `get_captions`, `list_renders`, `get_render`,
   `list_voice_providers`, `list_voices`, `list_voice_models`, `list_ai_providers`
 - **Create / edit:** `create_project`, `ai_create_project`, `assign_brand_kit`,
@@ -55,7 +56,11 @@ touches the database directly. By design it can do everything an editor can
   `ai_generate_scenes`, `create_voice_take`, `get_voice_job`,
   `generate_scene_clips`, `get_scene_clips_job`, `assemble_scene_clips`,
   `rename_take`, `rename_render`
-- **Render (human-gated):** `request_render`, `download_render`
+- **Compatibility render flow:** `request_render`, `download_render`
+- **Durable production:** `produce_content`, `get_production_job`,
+  `get_production_job_events`, `cancel_production_job`, `retry_production_job`,
+  `download_production_artifact`, `produce_batch`, `get_production_batch`,
+  `cancel_production_batch`, `retry_production_batch`, `download_production_batch`
 
 ### Audio podcasts
 
@@ -67,16 +72,16 @@ touches the database directly. By design it can do everything an editor can
 - **Audio:** `create_podcast_take`, `get_podcast_take_job`, `download_podcast_take`
 
 `create_project` / `ai_create_project` accept optional `videoEngine`
-(`remotion` | `hyperframes`, default `remotion`). Engine is fixed at creation.
+(`remotion` | `hyperframes`, default `hyperframes`). Engine is fixed at creation.
 Call `list_video_engines` first to see each engine’s template catalog
 (Remotion vs `hf-*` HyperFrames templates).
 
 ### Voice: oneshot vs per-scene (video)
 
-| Mode | How to set | Generate audio |
-| --- | --- | --- |
-| `oneshot` (default) | omit or `update_script({ voiceMode: "oneshot" })` | `create_voice_take` → `get_voice_job` |
-| `per_scene` | `update_script({ voiceMode: "per_scene" })` | `generate_scene_clips` → `get_scene_clips_job` → optional `assemble_scene_clips` |
+| Mode                | How to set                                        | Generate audio                                                                   |
+| ------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `oneshot` (default) | omit or `update_script({ voiceMode: "oneshot" })` | `create_voice_take` → `get_voice_job`                                            |
+| `per_scene`         | `update_script({ voiceMode: "per_scene" })`       | `generate_scene_clips` → `get_scene_clips_job` → optional `assemble_scene_clips` |
 
 TTS always uses each scene’s `spokenText ?? text`.
 
@@ -97,8 +102,51 @@ TTS always uses each scene’s `spokenText ?? text`.
 1. Optionally `list_video_engines`, then `ai_create_project` / `create_project`.
 2. `ai_generate_scenes` with mode `append` (or `add_scene` / `update_scene`).
 3. Add narration (oneshot **or** per-scene).
-4. `request_render` → ask the user to approve in the web app → poll `get_render`
-   → `download_render`.
+4. `produce_content` → poll `get_production_job` →
+   `download_production_artifact`. A legacy or approval-only token pauses video
+   jobs until the operator approves them on the Renders page.
+
+For repeat production, `produce_batch` accepts up to ten JSON rows. Video and
+audiogram rows default to separately reflowed portrait, square, and landscape
+outputs. Poll `get_production_batch`; partial failures keep successful files and
+`download_production_batch` returns a tar.gz bundle with a JSON manifest.
+
+A bounded automatic video request looks like this after a project exists:
+
+```json
+{
+  "kind": "video",
+  "scriptId": "<script-id>",
+  "orientation": "portrait",
+  "quality": "standard",
+  "runMode": "automatic",
+  "idempotencyKey": "launch-demo-v1-portrait"
+}
+```
+
+Create a named token with `production:create`, `production:read`,
+`production:download`, and `production:automatic` only when the caller should
+render without browser approval. Set its allowed providers, maximum duration,
+batch size, and paid-request budget in **Settings → AI tools / MCP**. Server-side
+checks also apply to compatibility routes.
+
+For independent format variants, call `produce_batch`:
+
+```json
+{
+  "idempotencyKey": "launch-formats-v1",
+  "runMode": "automatic",
+  "rows": [
+    {
+      "key": "launch",
+      "kind": "video",
+      "scriptId": "<script-id>",
+      "orientations": ["portrait", "landscape", "square"],
+      "quality": "standard"
+    }
+  ]
+}
+```
 
 ### Podcast
 

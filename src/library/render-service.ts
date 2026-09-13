@@ -16,8 +16,16 @@ import path from "node:path";
 import { promises as fs } from "node:fs";
 import { cpus } from "node:os";
 import { bundle } from "@remotion/bundler";
-import { renderMedia, selectComposition, type X264Preset } from "@remotion/renderer";
-import { type ReelProps, type ReelScene, coverFrames } from "@/compositions/types";
+import {
+  renderMedia,
+  selectComposition,
+  type X264Preset,
+} from "@remotion/renderer";
+import {
+  type ReelProps,
+  type ReelScene,
+  coverFrames,
+} from "@/compositions/types";
 import { type Orientation, dimsFor } from "@/lib/orientation";
 import { resolveReelSfxCues } from "@/lib/sfx-cues";
 import { getAssetStore } from "@/library/storage";
@@ -91,20 +99,17 @@ function resolveRenderConcurrency(): number {
 let bundlePath: string | null = null;
 let bundlePromise: Promise<string> | null = null;
 
-const ENTRY_POINT = path.resolve(
-  process.cwd(),
-  "src/remotion/index.ts",
-);
+const ENTRY_POINT = path.resolve(process.cwd(), "src/remotion/index.ts");
 
-async function ensureBundle(
-  onStatus: (msg: string) => void,
-): Promise<string> {
+async function ensureBundle(onStatus: (msg: string) => void): Promise<string> {
   if (bundlePath) return bundlePath;
   if (bundlePromise) return bundlePromise;
 
   bundlePromise = (async () => {
     onStatus("bundling");
-    console.log("[render] Bundling Remotion composition (first render only)...");
+    console.log(
+      "[render] Bundling Remotion composition (first render only)...",
+    );
     const out = await bundle({
       entryPoint: ENTRY_POINT,
       webpackOverride: remotionWebpackOverride,
@@ -120,6 +125,13 @@ async function ensureBundle(
   const result = await bundlePromise;
   bundlePromise = null; // allow retry on failure
   return result;
+}
+
+/** Share the cached application bundle with other supervised Remotion outputs. */
+export function getRemotionServeUrl(
+  onStatus: (message: string) => void = () => undefined,
+): Promise<string> {
+  return ensureBundle(onStatus);
 }
 
 export interface StartRenderOptions {
@@ -164,7 +176,11 @@ function pumpRenderQueue(): void {
     activeRenders += 1;
     void runRender(opts)
       .catch((err) => {
-        console.error("[render] Unhandled error in render job", opts.renderId, err);
+        console.error(
+          "[render] Unhandled error in render job",
+          opts.renderId,
+          err,
+        );
       })
       .finally(() => {
         activeRenders -= 1;
@@ -180,7 +196,10 @@ function pumpRenderQueue(): void {
  */
 export function startRender(opts: StartRenderOptions): void {
   pendingRenders.push(opts);
-  if (pendingRenders.length > 1 || activeRenders >= resolveMaxConcurrentRenders()) {
+  if (
+    pendingRenders.length > 1 ||
+    activeRenders >= resolveMaxConcurrentRenders()
+  ) {
     console.log(
       `[render] Job ${opts.renderId} queued (${activeRenders} running, ${pendingRenders.length} waiting)`,
     );
@@ -192,11 +211,24 @@ async function runRender(opts: StartRenderOptions): Promise<void> {
   // Dispatch by project video engine before entering the Remotion path.
   const script = await getScript(opts.scriptId);
   if (script?.videoEngine === "hyperframes") {
-    const { runHyperframesRender } = await import("@/library/hyperframes-render");
+    const { runHyperframesRender } =
+      await import("@/library/hyperframes-render");
     await runHyperframesRender(opts);
     return;
   }
   await runRemotionRender(opts);
+}
+
+/** Await the existing renderer and surface its persisted terminal state. */
+export async function runRenderNow(opts: StartRenderOptions): Promise<void> {
+  await runRender(opts);
+  const { getRender } = await import("@/library/repositories/renders");
+  const render = await getRender(opts.renderId);
+  if (!render || render.status !== "done" || !render.outputUrl) {
+    throw new Error(
+      render?.error || `Render ${opts.renderId} did not produce an artifact`,
+    );
+  }
 }
 
 async function runRemotionRender({
@@ -210,7 +242,8 @@ async function runRemotionRender({
   const qualityPreset = QUALITY_PRESETS[quality];
   let lastPersistedAt = 0;
   let lastPersistedProgress = -1;
-  let lastPersistedStatus: "queued" | "bundling" | "rendering" | "done" | "error" = "queued";
+  let lastPersistedStatus:
+    "queued" | "bundling" | "rendering" | "done" | "error" = "queued";
   let persistInFlight = false;
   let pendingPersist: {
     progress: number;
@@ -240,7 +273,10 @@ async function runRemotionRender({
   ) => {
     const now = Date.now();
     const shouldForce =
-      status !== "rendering" || p <= 0 || p >= 1 || status !== lastPersistedStatus;
+      status !== "rendering" ||
+      p <= 0 ||
+      p >= 1 ||
+      status !== lastPersistedStatus;
     const progressDelta = Math.abs(p - lastPersistedProgress);
     const dueByTime = now - lastPersistedAt >= MIN_PROGRESS_PERSIST_INTERVAL_MS;
     const dueByProgress = progressDelta >= MIN_PROGRESS_PERSIST_DELTA;
@@ -279,7 +315,9 @@ async function runRemotionRender({
     if (!script) throw new Error(`Script ${scriptId} not found`);
 
     const takes = voiceTakeId
-      ? await listTakes(scriptId).then((ts) => ts.filter((t) => t.id === voiceTakeId))
+      ? await listTakes(scriptId).then((ts) =>
+          ts.filter((t) => t.id === voiceTakeId),
+        )
       : [];
     const take = takes[0] ?? null;
 
@@ -299,7 +337,11 @@ async function runRemotionRender({
     // webpack dev server) can fetch them — relative URLs resolve against that
     // server, not Next.js.
     const absolute = (url?: string | null) =>
-      url ? (url.startsWith("http") ? url : `${serverBaseUrl}${url}`) : undefined;
+      url
+        ? url.startsWith("http")
+          ? url
+          : `${serverBaseUrl}${url}`
+        : undefined;
 
     // Repurpose: render at the requested orientation's canvas instead of the
     // script's own. The composition reads width/height from these input props.
@@ -319,6 +361,8 @@ async function runRemotionRender({
           ? { ...s.background, url: absolute(s.background.url)! }
           : undefined,
         items: s.items,
+        chart: s.chart,
+        role: s.role,
         // Per-scene override wins; otherwise the script-wide default.
         hideText: s.hideText ?? script.hideText,
         mood: s.mood as ReelScene["mood"],
@@ -345,6 +389,8 @@ async function runRemotionRender({
       hideProgressBar: script.hideProgressBar,
       styleId: script.styleId,
       energy: script.energy,
+      preset: script.productionPreset,
+      captions: script.captionTracks?.find((track) => track.enabled),
     };
 
     // Cover is held at the start, lengthening the video by that many frames.
@@ -370,7 +416,10 @@ async function runRemotionRender({
     // Use adaptive concurrency with an upper cap. Very high concurrency can
     // degrade throughput due to memory pressure and context switching.
     const concurrency = resolveRenderConcurrency();
-    const offthreadVideoThreads = Math.max(2, Math.min(4, Math.floor(concurrency / 2)));
+    const offthreadVideoThreads = Math.max(
+      2,
+      Math.min(4, Math.floor(concurrency / 2)),
+    );
 
     await renderMedia({
       composition: { ...composition, durationInFrames: fullDuration },
@@ -401,7 +450,12 @@ async function runRemotionRender({
 
     // 6. Mark done.
     await completeRender(renderId, outputKey);
-    upsertJob({ id: renderId, progress: 1, status: "done", outputUrl: store.url(outputKey) });
+    upsertJob({
+      id: renderId,
+      progress: 1,
+      status: "done",
+      outputUrl: store.url(outputKey),
+    });
     console.log("[render] Job", renderId, "complete:", outputPath);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

@@ -1,13 +1,12 @@
 import { z } from "zod";
+import { productionChartDataSchema } from "@/production/spec";
 
 import type { Orientation } from "@/lib/orientation";
 import type { VideoEngineId } from "@/engines/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
+import type { ProductionPresetId } from "@/production/presets";
 import { stripMarkdown } from "@/lib/strip-markdown";
-import type {
-  GeneratePodcastPlanInput,
-  PodcastPlan,
-} from "./podcast-types";
+import type { GeneratePodcastPlanInput, PodcastPlan } from "./podcast-types";
 
 /**
  * AI "director" contract. Mirrors the voice provider factory: the app talks only
@@ -111,6 +110,8 @@ export const aiSceneSchema = z.object({
     }),
   /** Short checklist rows for icon-grid (2–5 items, ~8 words each). */
   items: z.array(z.string().trim().min(1).max(80)).max(5).optional(),
+  /** Exact user/source-provided chart values. Omit instead of inventing data. */
+  chart: productionChartDataSchema.optional(),
   /** 2-4 concrete visual keywords for a stock photo background, when one fits. */
   backgroundQuery: z.string().trim().min(2).max(80).optional(),
   /**
@@ -138,13 +139,11 @@ function sanitizeAiScene(scene: z.infer<typeof aiSceneSchema>): AIScene {
   // Drop spokenText when empty or identical to on-screen text (inherit).
   const spokenText =
     spokenRaw && spokenRaw !== text.trim() ? spokenRaw : undefined;
-  const emphasis = scene.emphasis
-    .map(stripMarkdown)
-    .filter((phrase) => {
-      if (!phrase.length) return false;
-      // Highlights can appear in on-screen or spoken copy.
-      return text.includes(phrase) || (spokenText?.includes(phrase) ?? false);
-    });
+  const emphasis = scene.emphasis.map(stripMarkdown).filter((phrase) => {
+    if (!phrase.length) return false;
+    // Highlights can appear in on-screen or spoken copy.
+    return text.includes(phrase) || (spokenText?.includes(phrase) ?? false);
+  });
   const items = scene.items
     ?.map(stripMarkdown)
     .map((s) => s.trim())
@@ -190,11 +189,14 @@ export const scenePlanSchema = z
     scenes: plan.scenes.map(sanitizeAiScene),
   }));
 
-export type AIScene = z.infer<typeof aiSceneSchema>;
+type ParsedAIScene = z.infer<typeof aiSceneSchema>;
+export type AIScene = Omit<ParsedAIScene, "visual"> & {
+  visual?: ParsedAIScene["visual"];
+};
 export type ScenePlan = z.infer<typeof scenePlanSchema>;
 
 export interface GeneratePlanInput {
-  mode: "idea" | "story" | "rewrite" | "append";
+  mode: "idea" | "story" | "rewrite" | "append" | "hook_variants";
   /** The one-line idea (mode "idea") or the full text/story (mode "story"). */
   brief: string;
   sceneCount?: number;
@@ -216,6 +218,10 @@ export interface GeneratePlanInput {
   styleId?: StyleId | "auto";
   /** When set (not "auto"), the UI chose Energy — enrichment will force it. */
   energy?: EnergyId | "auto";
+  /** Constrain template choices to this versioned production preset. */
+  productionPresetId?: ProductionPresetId;
+  /** One-based existing scene positions replaced by a selective rewrite. */
+  replacementSceneNumbers?: number[];
 }
 
 export interface AIModel {

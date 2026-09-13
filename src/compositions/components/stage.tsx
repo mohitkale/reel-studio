@@ -13,8 +13,15 @@ import {
 
 import type { BrandTokens } from "../tokens";
 import type { PanEffect, SceneBackground } from "../types";
-import { DynamicBackground, pickBackgroundTreatment } from "./background-treatments";
+import {
+  DynamicBackground,
+  pickBackgroundTreatment,
+} from "./background-treatments";
 import { useVisualStyle } from "./visual-style-context";
+import {
+  resolveProductionLayout,
+  type ProductionLayout,
+} from "@/production/layout";
 
 /**
  * CSS `backgroundImage` (used for the Ken Burns/pan effect) isn't tracked by
@@ -41,7 +48,11 @@ function usePreloadedBackgroundImage(url: string | undefined): void {
   }, [url]);
 }
 
-function imageTransform(effect: PanEffect, frame: number, duration: number): string {
+function imageTransform(
+  effect: PanEffect,
+  frame: number,
+  duration: number,
+): string {
   const t = interpolate(frame, [0, Math.max(1, duration)], [0, 1], {
     extrapolateRight: "clamp",
   });
@@ -79,7 +90,9 @@ const SceneBackgroundLayer = React.memo(function SceneBackgroundLayer({
   // background changes — no setState-in-effect needed.
   const [failedUrl, setFailedUrl] = React.useState<string | null>(null);
   const videoFailed = failedUrl === background.url;
-  usePreloadedBackgroundImage(background.type === "image" ? background.url : undefined);
+  usePreloadedBackgroundImage(
+    background.type === "image" ? background.url : undefined,
+  );
 
   return (
     <>
@@ -188,9 +201,11 @@ const Grain = React.memo(function Grain({ opacity }: { opacity: number }) {
 const StageOptionsContext = React.createContext<{
   showProgressBar: boolean;
   quality: "standard" | "draft";
+  layout: ProductionLayout | null;
 }>({
   showProgressBar: true,
   quality: "standard",
+  layout: null,
 });
 
 export function useStageOptions() {
@@ -200,30 +215,39 @@ export function useStageOptions() {
 export function StageOptionsProvider({
   showProgressBar = true,
   quality = "standard",
+  layout,
   children,
 }: {
   showProgressBar?: boolean;
   quality?: "standard" | "draft";
+  layout?: ProductionLayout;
   children: React.ReactNode;
 }) {
   const value = React.useMemo(
-    () => ({ showProgressBar, quality }),
-    [showProgressBar, quality],
+    () => ({ showProgressBar, quality, layout: layout ?? null }),
+    [showProgressBar, quality, layout],
   );
   return (
-    <StageOptionsContext.Provider value={value}>{children}</StageOptionsContext.Provider>
+    <StageOptionsContext.Provider value={value}>
+      {children}
+    </StageOptionsContext.Provider>
   );
 }
 
 /** Thin top progress bar reflecting how far through the scene we are. */
 function ProgressBar({ tokens }: { tokens: BrandTokens }) {
-  const { showProgressBar } = React.useContext(StageOptionsContext);
+  const { showProgressBar, layout } = React.useContext(StageOptionsContext);
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
-  const progress = interpolate(frame, [0, Math.max(1, durationInFrames - 1)], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const progress = interpolate(
+    frame,
+    [0, Math.max(1, durationInFrames - 1)],
+    [0, 1],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    },
+  );
   if (!showProgressBar) return null;
   return (
     <div
@@ -232,7 +256,7 @@ function ProgressBar({ tokens }: { tokens: BrandTokens }) {
         top: 0,
         left: 0,
         right: 0,
-        height: 8,
+        height: layout?.progressBarHeight ?? 8,
         background: "rgba(255,255,255,0.12)",
       }}
     >
@@ -248,12 +272,17 @@ function ProgressBar({ tokens }: { tokens: BrandTokens }) {
   );
 }
 
-const BrandBug = React.memo(function BrandBug({ tokens }: { tokens: BrandTokens }) {
+const BrandBug = React.memo(function BrandBug({
+  tokens,
+}: {
+  tokens: BrandTokens;
+}) {
+  const { layout } = React.useContext(StageOptionsContext);
   return (
     <div
       style={{
         position: "absolute",
-        bottom: 64,
+        bottom: layout?.brandInsetBottom ?? 64,
         left: 0,
         right: 0,
         display: "flex",
@@ -307,7 +336,9 @@ export const Stage = React.memo(function Stage({
   /** Scene position, used to vary the treatment deterministically when `mood` is unset. */
   treatmentSeed?: number;
 }) {
-  const { quality } = useStageOptions();
+  const { quality, layout: configuredLayout } = useStageOptions();
+  const { width, height } = useVideoConfig();
+  const layout = configuredLayout ?? resolveProductionLayout({ width, height });
   const { chrome } = useVisualStyle();
   const hasBackground = Boolean(background?.url);
   const computedBackdrop = hasBackground ? (
@@ -327,9 +358,15 @@ export const Stage = React.memo(function Stage({
   return (
     <AbsoluteFill style={{ fontFamily: tokens.fontFamily, overflow: "hidden" }}>
       {showAnimatedLighting ? (
-        <AnimatedBackground tokens={tokens} mood={mood} treatmentSeed={treatmentSeed} />
+        <AnimatedBackground
+          tokens={tokens}
+          mood={mood}
+          treatmentSeed={treatmentSeed}
+        />
       ) : null}
-      {computedBackdrop ? <AbsoluteFill>{computedBackdrop}</AbsoluteFill> : null}
+      {computedBackdrop ? (
+        <AbsoluteFill>{computedBackdrop}</AbsoluteFill>
+      ) : null}
       {quality === "draft" ? null : <Grain opacity={chrome.grainOpacity} />}
       {/* Vignette — strength follows Style */}
       <AbsoluteFill
@@ -339,7 +376,7 @@ export const Stage = React.memo(function Stage({
       />
       <AbsoluteFill
         style={{
-          padding: "150px 96px 220px",
+          padding: `${layout.safeArea.top}px ${layout.safeArea.right}px ${layout.safeArea.bottom}px ${layout.safeArea.left}px`,
           ...contentStyle,
         }}
       >

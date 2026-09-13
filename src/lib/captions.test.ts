@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { buildCaptions, framesToTimestamp } from "./captions";
+import { buildCaptions, framesToTimestamp, parseCaptions } from "./captions";
 
 describe("framesToTimestamp", () => {
   it("formats frames as HH:MM:SS with the right millisecond separator", () => {
@@ -51,5 +51,35 @@ describe("buildCaptions", () => {
   it("returns just the header for VTT with no usable cues", () => {
     expect(buildCaptions([], 30, "vtt")).toBe("WEBVTT\n\n");
     expect(buildCaptions([], 30, "srt")).toBe("");
+  });
+});
+
+describe("parseCaptions", () => {
+  it("imports SRT into frame-based editable cues", () => {
+    expect(
+      parseCaptions(
+        "1\r\n00:00:00,500 --> 00:00:02,000\r\nHello\r\nworld\r\n",
+        30,
+        "srt",
+      ),
+    ).toEqual([{ startFrame: 15, endFrame: 60, text: "Hello world" }]);
+  });
+
+  it("imports WebVTT identifiers and timing settings", () => {
+    expect(
+      parseCaptions(
+        "WEBVTT\n\nintro\n00:01.000 --> 00:02.500 align:start\nA clear opening.\n",
+        24,
+      ),
+    ).toEqual([{ startFrame: 24, endFrame: 60, text: "A clear opening." }]);
+  });
+
+  it("rejects malformed or reversed cue ranges", () => {
+    expect(() =>
+      parseCaptions("1\n00:00:03,000 --> 00:00:02,000\nWrong way\n", 30),
+    ).toThrow("must end after");
+    expect(() => parseCaptions("missing timing", 30)).toThrow(
+      "missing a valid time range",
+    );
   });
 });

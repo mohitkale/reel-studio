@@ -6,6 +6,7 @@ import { assembleVoiceTake } from "@/library/scene-voice-service";
 import { authorize } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
+import { productionChartDataSchema } from "@/production/spec";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,6 +41,8 @@ const patchSchema = z.object({
   background: backgroundSchema.nullable().optional(),
   // List items for list/checklist templates; null/empty clears them.
   items: z.array(z.string().max(280)).max(24).nullable().optional(),
+  // Exact labels and values for a chart; null clears chart data.
+  chart: productionChartDataSchema.nullable().optional(),
   // Per-scene text visibility override; null = inherit the script default.
   hideText: z.boolean().nullable().optional(),
   // Emotional/visual tone driving the dynamic background treatment; null clears it.
@@ -48,6 +51,9 @@ const patchSchema = z.object({
   musicMood: z.string().max(60).nullable().optional(),
   // Active per-scene voice clip; null clears selection.
   selectedVoiceClipId: z.string().nullable().optional(),
+  locks: z
+    .object({ copy: z.boolean(), assets: z.boolean(), scene: z.boolean() })
+    .optional(),
 });
 
 export async function PATCH(
@@ -61,7 +67,10 @@ export async function PATCH(
     const scene = await updateScene(id, body);
 
     let take = null;
-    if (body.selectedVoiceClipId !== undefined && body.selectedVoiceClipId !== null) {
+    if (
+      body.selectedVoiceClipId !== undefined &&
+      body.selectedVoiceClipId !== null
+    ) {
       try {
         take = await assembleVoiceTake(scene.scriptId);
       } catch {

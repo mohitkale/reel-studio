@@ -76,17 +76,24 @@ optional photo **background**.
   is what TTS uses. Always set voices before \`create_podcast_take\`.
 - Never delete podcasts, turns, or takes via MCP (web UI only).
 
-## Rendering
-- \`request_render\` only QUEUES a render for human approval; it never starts automatically.
-- The user approves in Reel Studio → Renders. Then poll \`get_render\`; when "done", call \`download_render\`.
+## Complete production
+- Discover current presets and engine capabilities with \`list_production_presets\`.
+- \`produce_content\` starts a durable video, audio, podcast, or audiogram job.
+- Poll \`get_production_job\` or use cursor-based \`get_production_job_events\`.
+- Legacy tokens keep the existing human gate for video renders. A named token can render unattended only when its operator enables \`production:automatic\`.
+- Failed/canceled jobs can be retried; active jobs can be canceled. Use \`download_production_artifact\` for verified outputs.
+- \`produce_batch\` accepts up to ten rows. Video/audiogram rows default to portrait, square, and landscape reflows from the source composition; they are never cropped from one finished video.
+- Poll \`get_production_batch\`, retry only incomplete items with \`retry_production_batch\`, and retrieve completed results plus a failure manifest with \`download_production_batch\`.
+- The older \`request_render\` / \`get_render\` / \`download_render\` flow remains supported.
 `;
 
 const PODCAST_AUTHORING = `# Reel Studio — podcast authoring rules
 
-Audio-only multi-speaker episodes (not video projects).
+Audio-first solo or multi-speaker episodes (separate from video projects).
 
 ## Cast
-- 2–4 characters with stable \`key\` (JSON id), display \`name\`, \`gender\`, optional \`definition\`.
+- 1–4 characters with stable \`key\` (JSON id), display \`name\`, \`gender\`, optional \`definition\`.
+- Presets: \`solo-narration\` (exactly one voice), \`two-host-discussion\`, or \`interview\`.
 - \`definition\` = personality for AI scripts only.
 - Assign server TTS voices via \`update_podcast_characters\` (Cartesia / ElevenLabs / VoiceForge / Kokoro Server as configured).
 
@@ -116,13 +123,16 @@ const SCENE_SCHEMA = {
       "string <= 4000 chars, or null to clear — longer voiceover; TTS uses spokenText ?? text",
     templateId: "one of templateIds",
     emphasis: "string[] — phrases appearing verbatim in text or spokenText",
-    visual: "string <= 2048 chars, or null to clear (emoji/stat/label; keep short)",
+    visual:
+      "string <= 2048 chars, or null to clear (emoji/stat/label; keep short)",
     background:
       "{ type: 'image'|'video', url: string<=2048, effect?: 'ken-burns'|'pan-left'|'pan-right'|'pan-up'|'pan-down', muted?: boolean } or null",
     items: "string[] (<=24, each <=280) for list/checklist templates, or null",
     mood: "one of energetic|calm|dramatic|playful|inspiring|tech|nature, or null — drives the dynamic background when there's no photo background",
-    musicMood: "string <= 60 chars (e.g. 'uplifting lo-fi'), or null — music vibe hint for auto suggestions",
-    selectedVoiceClipId: "string or null — active SceneVoiceClip in per_scene mode",
+    musicMood:
+      "string <= 60 chars (e.g. 'uplifting lo-fi'), or null — music vibe hint for auto suggestions",
+    selectedVoiceClipId:
+      "string or null — active SceneVoiceClip in per_scene mode",
   },
   script: {
     styleId: ["bold-hook", "clean-story", "teach-me", "soft-brand"],
@@ -134,13 +144,31 @@ const SCENE_SCHEMA = {
 };
 
 const TEMPLATE_CATALOG = [
-  { id: "kinetic", purpose: "Punchy headline text reveal — the default workhorse." },
-  { id: "lottie", purpose: "Explainer / process step with a vector animation." },
+  {
+    id: "kinetic",
+    purpose: "Punchy headline text reveal — the default workhorse.",
+  },
+  {
+    id: "lottie",
+    purpose: "Explainer / process step with a vector animation.",
+  },
   { id: "three", purpose: "Bold 3D hero moment (use at most once)." },
-  { id: "stat-reveal", purpose: "Big stat/number reveal; visual = the number." },
-  { id: "icon-grid", purpose: "Checklist or tips; visual = a bullet emoji; use items." },
-  { id: "quote-card", purpose: "Quote or testimonial; visual = optional attribution." },
-  { id: "emoji-punch", purpose: "Single big emoji punchline; visual = the emoji." },
+  {
+    id: "stat-reveal",
+    purpose: "Big stat/number reveal; visual = the number.",
+  },
+  {
+    id: "icon-grid",
+    purpose: "Checklist or tips; visual = a bullet emoji; use items.",
+  },
+  {
+    id: "quote-card",
+    purpose: "Quote or testimonial; visual = optional attribution.",
+  },
+  {
+    id: "emoji-punch",
+    purpose: "Single big emoji punchline; visual = the emoji.",
+  },
 ];
 
 const PODCAST_SCHEMA = {
@@ -173,7 +201,9 @@ export function registerResources(server: McpServer): void {
       mimeType: "text/markdown",
     },
     async (uri) => ({
-      contents: [{ uri: uri.href, mimeType: "text/markdown", text: AUTHORING_RULES }],
+      contents: [
+        { uri: uri.href, mimeType: "text/markdown", text: AUTHORING_RULES },
+      ],
     }),
   );
 

@@ -7,9 +7,9 @@
  * Run once: npm run seed:demo-brandkit
  */
 
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/library/prisma-client";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 const CORAL_HARBOR_NAME = "Coral Harbor";
 const DEMO_PALETTE = {

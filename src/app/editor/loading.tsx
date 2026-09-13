@@ -1,5 +1,7 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeaderSkeleton, CardGridSkeleton } from "@/components/shell/page-skeleton";
+import {
+  PageHeaderSkeleton,
+  CardGridSkeleton,
+} from "@/components/shell/page-skeleton";
 
 export default function Loading() {
   return (

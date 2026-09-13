@@ -8,13 +8,13 @@
 # (@hyperframes/producer worker, also Chromium/FFmpeg). CPU-heavy renders
 # never touch the laptop directly.
 #
-# Node 22 matches the host toolchain and is required for HyperFrames.
+# Node 24 matches the host toolchain and is required for HyperFrames.
 # Debian (bookworm) is used rather than Alpine because headless Chromium needs
 # glibc + the system libs installed below. Chrome runs with --no-sandbox and
 # --disable-dev-shm-usage, so the container needs no extra capabilities and
 # can run as a non-root user.
 # ----------------------------------------------------------------------------
-FROM node:22-bookworm-slim AS dev
+FROM node:24-bookworm-slim AS dev
 
 ENV NODE_ENV=development \
     NEXT_TELEMETRY_DISABLED=1
@@ -23,6 +23,7 @@ ENV NODE_ENV=development \
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
      ca-certificates \
+     ffmpeg \
      fonts-liberation \
      libnss3 \
      libdbus-1-3 \
@@ -51,6 +52,8 @@ WORKDIR /app
 # `prisma generate`, which needs the schema.
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma
+COPY prisma.config.ts ./
+COPY scripts/database-url.mjs ./scripts/database-url.mjs
 RUN npm ci
 
 # Copy the rest of the source. At runtime docker-compose bind-mounts the host

@@ -5,7 +5,7 @@ How to regenerate open-source launch visuals from the real app.
 ## Prerequisites
 
 ```bash
-nvm use   # Node 22+
+nvm use   # Node 24 LTS
 npm install
 npm run setup
 npm run dev
@@ -14,13 +14,18 @@ npm run dev
 Open `http://localhost:3000`. No cloud API keys are required for the HyperFrames
 demo project. Kokoro may download model weights on first podcast take.
 
+Run `npm run doctor` before capture. `npm run sample:export` provides a quick
+credential-free proof that the local HyperFrames export path is working.
+
 ## Seeded demos
 
-| Asset | How to open |
-| --- | --- |
-| Video project | Projects → **Content Creation in 30 Seconds** |
-| All formats | `npm run seed:demo-project -- --all-formats` |
-| Podcast | Podcasts → **Content Creation Tips** |
+| Asset                  | How to open                                   |
+| ---------------------- | --------------------------------------------- |
+| Video project          | Projects → **Content Creation in 30 Seconds** |
+| All formats            | `npm run seed:demo-project -- --all-formats`  |
+| Podcast                | Podcasts → **Content Creation Tips**          |
+| Bundled output gallery | Gallery in the sidebar                        |
+| Runtime checks         | Settings → **Run system check**               |
 
 ## Screenshots
 

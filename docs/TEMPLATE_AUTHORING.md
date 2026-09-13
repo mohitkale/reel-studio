@@ -20,6 +20,14 @@ Curated upstream catalog ids (wired via `data-composition-src`):
 `hf-kinetic-slam`, `hf-money-count`, `hf-data-chart`, `hf-app-showcase`,
 `hf-logo-outro`, `hf-ig-follow`, `hf-tt-follow`, `hf-yt-lower-third`
 
+The premium catalog snapshot is selected in
+`src/engines/hyperframes/catalog/selection.json` and imported with
+`npm run import:hf-catalog`. The selection pins a full upstream Git revision.
+The importer validates registry item types, paths and metadata, stores blocks and
+components separately, downloads declared assets and records SHA-256 checksums.
+Never change an imported revision in place; add a version and retain the earlier
+directory for projects that reference it.
+
 ## Remotion
 
 1. Add metadata in `src/compositions/templates.ts`

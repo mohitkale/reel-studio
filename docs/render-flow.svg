@@ -46,7 +46,7 @@
 
   <rect class="step" x="620" y="320" width="500" height="150" />
   <text class="label" x="642" y="360">5b. HyperFrames path</text>
-  <text class="small" x="642" y="388">Build HTML composition (Node 22+)</text>
+  <text class="small" x="642" y="388">Build HTML composition (Node 24 LTS)</text>
   <text class="small" x="642" y="408">Copy local media into _assets/</text>
   <text class="small" x="642" y="428">Spawn hyperframes-render-worker</text>
 

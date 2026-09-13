@@ -27,9 +27,9 @@ function run(cmd, args, label) {
 }
 
 const major = Number(process.versions.node.split(".")[0]);
-if (!Number.isFinite(major) || major < 22) {
+if (!Number.isFinite(major) || major !== 24) {
   console.error(
-    `Node.js 22+ is required (found ${process.version}). Use \`nvm use\` or upgrade Node.`,
+    `Node.js 24 LTS is required (found ${process.version}). Use \`nvm use\` or upgrade Node.`,
   );
   process.exit(1);
 }
@@ -47,15 +47,26 @@ if (!existsSync(envLocal)) {
 }
 
 run("npx", ["prisma", "generate"], "Generate Prisma client");
-run("npx", ["prisma", "db", "push"], "Initialize SQLite database");
-run("npx", ["tsx", "scripts/seed-demo-brandkit.ts"], "Seed Coral Harbor brand kit");
+run("node", ["scripts/migrate-database.mjs"], "Migrate SQLite database safely");
+run(
+  "npx",
+  ["tsx", "scripts/seed-demo-brandkit.ts"],
+  "Seed Coral Harbor brand kit",
+);
 run("npx", ["tsx", "scripts/seed-demo-project.ts"], "Seed demo video project");
 run("npx", ["tsx", "scripts/seed-demo-podcast.ts"], "Seed demo podcast");
+run(
+  "node",
+  ["scripts/seed-gallery-assets.mjs"],
+  "Install local gallery previews",
+);
 
 const withAssets = process.argv.includes("--assets");
 if (withAssets) {
   run("npx", ["tsx", "scripts/seed-assets.ts"], "Seed sample assets");
 }
+
+run("npx", ["tsx", "scripts/doctor.ts"], "Verify local production runtime");
 
 console.log(`
 Setup complete.
@@ -63,6 +74,7 @@ Setup complete.
 Next:
   npm run dev
   Open http://localhost:3000
+  npm run sample:export     # create a credential-free local MP4
 
 Optional:
   npm run setup -- --assets   # also seed sample SVG/Lottie assets

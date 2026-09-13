@@ -67,13 +67,37 @@ const TEMPLATE_MOOD: Partial<Record<string, SceneMood>> = {
 
 /** Rotating stock-photo queries per mood when the model leaves backgroundQuery empty. */
 const MOOD_STOCK_QUERIES: Record<SceneMood, string[]> = {
-  dramatic: ["stormy dark sky", "moody cinematic city", "dramatic mountain clouds"],
+  dramatic: [
+    "stormy dark sky",
+    "moody cinematic city",
+    "dramatic mountain clouds",
+  ],
   energetic: ["dynamic motion blur", "bright urban energy", "sunrise action"],
-  calm: ["soft morning light", "peaceful nature lake", "minimal calm workspace"],
-  playful: ["colorful abstract fun", "bright playful pattern", "whimsical pastel"],
-  inspiring: ["golden hour horizon", "mountain sunrise vista", "open road journey"],
-  tech: ["modern technology abstract", "futuristic digital grid", "sleek office glass"],
-  nature: ["green forest sunlight", "ocean waves nature", "mountain meadow landscape"],
+  calm: [
+    "soft morning light",
+    "peaceful nature lake",
+    "minimal calm workspace",
+  ],
+  playful: [
+    "colorful abstract fun",
+    "bright playful pattern",
+    "whimsical pastel",
+  ],
+  inspiring: [
+    "golden hour horizon",
+    "mountain sunrise vista",
+    "open road journey",
+  ],
+  tech: [
+    "modern technology abstract",
+    "futuristic digital grid",
+    "sleek office glass",
+  ],
+  nature: [
+    "green forest sunlight",
+    "ocean waves nature",
+    "mountain meadow landscape",
+  ],
 };
 
 const STOP_WORDS = new Set([
@@ -155,10 +179,7 @@ function keywordsFromText(text: string): string | undefined {
   return undefined;
 }
 
-export function inferSceneMood(
-  templateId: string,
-  order: number,
-): SceneMood {
+export function inferSceneMood(templateId: string, order: number): SceneMood {
   const mood = TEMPLATE_MOOD[templateId];
   return mood ?? MOODS[((order % MOODS.length) + MOODS.length) % MOODS.length];
 }
@@ -167,7 +188,11 @@ function defaultMood(scene: AIScene, index: number): SceneMood {
   return inferSceneMood(scene.templateId, index);
 }
 
-function defaultBackgroundQuery(scene: AIScene, mood: SceneMood, index: number): string {
+function defaultBackgroundQuery(
+  scene: AIScene,
+  mood: SceneMood,
+  index: number,
+): string {
   return (
     keywordsFromText(scene.text) ??
     MOOD_STOCK_QUERIES[mood][index % MOOD_STOCK_QUERIES[mood].length]
@@ -222,6 +247,34 @@ export function repairChecklistScene(scene: AIScene): AIScene {
   };
 }
 
+function hasExplicitMetric(value: string | undefined): boolean {
+  return Boolean(
+    value && /[-+]?\d+(?:[.,]\d+)*(?:\s*[%×xkKmMbB])?/.test(value),
+  );
+}
+
+/** Data layouts are selected only when their factual inputs are present. */
+export function repairDataScene(scene: AIScene): AIScene {
+  if (scene.templateId === "hf-data-chart" && !scene.chart) {
+    return { ...scene, templateId: "hf-statement", chart: undefined };
+  }
+  if (
+    (scene.templateId === "hf-money-count" ||
+      scene.templateId === "stat-reveal" ||
+      scene.templateId === "hf-stat") &&
+    !hasExplicitMetric(scene.visual)
+  ) {
+    return {
+      ...scene,
+      templateId: scene.templateId.startsWith("hf-")
+        ? "hf-statement"
+        : "kinetic",
+      visual: undefined,
+    };
+  }
+  return scene;
+}
+
 /**
  * Fill gaps the model often leaves: every scene gets a mood, a stock-photo
  * query, and a pan effect so AI generation never lands on a plain empty gradient.
@@ -232,9 +285,9 @@ export function enrichScenePlan(
   scenes: AIScene[],
   videoEngine: VideoEngineId = "remotion",
 ): AIScene[] {
-  const mapped = mapScenesToEngineTemplates(scenes, videoEngine).map(
-    repairChecklistScene,
-  );
+  const mapped = mapScenesToEngineTemplates(scenes, videoEngine)
+    .map(repairChecklistScene)
+    .map(repairDataScene);
   return mapped.map((scene, index) => {
     // Prefer calmer moods for text-heavy beats so the eye can rest.
     const moodBias =
@@ -249,10 +302,10 @@ export function enrichScenePlan(
       Boolean(scene.backgroundQuery?.trim()) ||
       !MOOD_ONLY_TEMPLATES.has(scene.templateId);
     const backgroundQuery = wantsPhoto
-      ? scene.backgroundQuery?.trim() || defaultBackgroundQuery(scene, mood, index)
+      ? scene.backgroundQuery?.trim() ||
+        defaultBackgroundQuery(scene, mood, index)
       : undefined;
-    const effect =
-      scene.effect ?? PAN_EFFECTS[index % PAN_EFFECTS.length];
+    const effect = scene.effect ?? PAN_EFFECTS[index % PAN_EFFECTS.length];
 
     return {
       ...scene,

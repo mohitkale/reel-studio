@@ -5,7 +5,7 @@
  *   npx tsx scripts/seed-demo-podcast.ts
  */
 
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/library/prisma-client";
 
 import {
   DEMO_PODCAST_DESCRIPTION,
@@ -13,7 +13,7 @@ import {
   DEMO_PODCAST_TURNS,
 } from "../src/library/demo-content";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function main() {
   let podcast = await prisma.podcast.findFirst({

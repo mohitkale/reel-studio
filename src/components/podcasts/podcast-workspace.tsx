@@ -14,14 +14,23 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import type { PodcastDTO, PodcastLengthDTO, PodcastTakeVoiceDTO } from "@/lib/dto";
+import type {
+  PodcastDTO,
+  PodcastLengthDTO,
+  PodcastTakeVoiceDTO,
+} from "@/lib/dto";
 import type { AIProviderId } from "@/providers/ai/types";
+import {
+  PODCAST_PRESETS,
+  type PodcastPresetId,
+} from "@/library/podcast-presets";
 import {
   useDeletePodcastTake,
   useDeletePodcastTurn,
   useGeneratePodcastScript,
   useGeneratePodcastTake,
   useInsertPodcastTurn,
+  usePreparePodcastExport,
   useReplaceCharacters,
   useUpdateCharacterVoices,
   useUpdatePodcast,
@@ -53,6 +62,7 @@ import { PodcastJsonDialog } from "./podcast-json-dialog";
 import { PodcastGenerateProgress } from "./podcast-generate-progress";
 import { CompactTurnRow } from "./compact-turn-row";
 import { AddDialogueComposer } from "./add-dialogue-composer";
+import { PodcastAudiogramControls } from "./podcast-audiogram-controls";
 import {
   PodcastCharacterEditor,
   charactersToDrafts,
@@ -83,8 +93,10 @@ function SpeedSlider({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex min-w-[9.5rem] max-w-[14rem] flex-1 items-center gap-2">
-      <Label className="shrink-0 text-[11px] text-muted-foreground">Speed</Label>
+    <div className="flex max-w-[14rem] min-w-[9.5rem] flex-1 items-center gap-2">
+      <Label className="text-muted-foreground shrink-0 text-[11px]">
+        Speed
+      </Label>
       <input
         type="range"
         min={PLAYBACK_SPEED_MIN}
@@ -93,10 +105,10 @@ function SpeedSlider({
         value={value}
         disabled={disabled}
         aria-label="Playback speed"
-        className="h-1.5 w-full min-w-0 accent-primary disabled:opacity-50"
+        className="accent-primary h-1.5 w-full min-w-0 disabled:opacity-50"
         onChange={(e) => onChange(Number(e.target.value))}
       />
-      <span className="w-9 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+      <span className="text-muted-foreground w-9 shrink-0 text-right text-xs tabular-nums">
         {formatSpeedLabel(value)}
       </span>
     </div>
@@ -118,7 +130,7 @@ function VoicesUsedTooltip({
         align="start"
         className="max-w-sm space-y-1.5 text-left font-normal"
       >
-        <p className="text-[11px] font-semibold uppercase tracking-wide opacity-80">
+        <p className="text-[11px] font-semibold tracking-wide uppercase opacity-80">
           Voices used in this take
         </p>
         {voices.length === 0 ? (
@@ -145,13 +157,7 @@ function VoicesUsedTooltip({
   );
 }
 
-function PodcastTakePlayer({
-  src,
-  speed,
-}: {
-  src: string;
-  speed: number;
-}) {
+function PodcastTakePlayer({ src, speed }: { src: string; speed: number }) {
   const ref = React.useRef<HTMLAudioElement>(null);
   React.useEffect(() => {
     const el = ref.current;
@@ -182,6 +188,7 @@ export function PodcastWorkspace({ podcast }: { podcast: PodcastDTO }) {
     podcast.turns.map((t) => t.id).join(","),
     podcast.title,
     podcast.length,
+    podcast.presetId,
   ].join("::");
   return <PodcastWorkspaceForm key={formKey} podcast={podcast} />;
 }
@@ -196,14 +203,15 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
   const updateTurn = useUpdatePodcastTurn(podcast.id);
   const insertTurn = useInsertPodcastTurn(podcast.id);
   const deleteTurn = useDeletePodcastTurn(podcast.id);
+  const prepareExport = usePreparePodcastExport();
 
   const { data: aiProviders } = useAIProviders();
   const configuredAi = (aiProviders ?? []).filter((p) => p.configured);
   const [aiProviderId, setAiProviderId] = React.useState<AIProviderId | "">(
     () => configuredAi[0]?.id ?? "",
   );
-  const effectiveAi =
-    (aiProviderId || configuredAi[0]?.id || "") as AIProviderId | "";
+  const effectiveAi = (aiProviderId || configuredAi[0]?.id || "") as
+    AIProviderId | "";
   const { data: aiModels } = useAIModels(effectiveAi || undefined);
   const [aiModelId, setAiModelId] = React.useState("");
   const [brief, setBrief] = React.useState("");
@@ -225,6 +233,9 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
   const [title, setTitle] = React.useState(podcast.title);
   const [description, setDescription] = React.useState(podcast.description);
   const [length, setLength] = React.useState<PodcastLengthDTO>(podcast.length);
+  const [presetId, setPresetId] = React.useState<PodcastPresetId>(
+    podcast.presetId,
+  );
   const [drafts, setDrafts] = React.useState(() =>
     charactersToDrafts(podcast.characters),
   );
@@ -239,7 +250,12 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
 
   function saveMeta() {
     updateMeta.mutate(
-      { title: title.trim() || "Untitled podcast", description, length },
+      {
+        title: title.trim() || "Untitled podcast",
+        description,
+        length,
+        presetId,
+      },
       {
         onSuccess: () => toast.success("Podcast saved"),
         onError: (e) =>
@@ -310,12 +326,30 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
       toast.error("Add a short topic or brief first");
       return;
     }
+    if (castChanged) {
+      toast.error("Save the updated cast before generating a script");
+      setTab("setup");
+      return;
+    }
+    if (presetId === "solo-narration" && drafts.length !== 1) {
+      toast.error("Solo narration needs one character", {
+        description: "Remove the extra speakers and save the cast first.",
+      });
+      setTab("setup");
+      return;
+    }
+    if (presetId !== "solo-narration" && drafts.length < 2) {
+      toast.error("This format needs at least two characters");
+      setTab("setup");
+      return;
+    }
     generateScript.mutate(
       {
         providerId: effectiveAi,
         modelId: aiModelId || undefined,
         brief: brief.trim(),
         length,
+        presetId,
         updateMeta: true,
       },
       {
@@ -331,7 +365,7 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
     );
   }
 
-  async function runAudio() {
+  async function runAudio(regenerateTurnIds?: string[]) {
     const missing = drafts.filter((d) => !d.providerId || !d.voiceId);
     if (missing.length) {
       toast.error(`Pick a voice for: ${missing.map((m) => m.name).join(", ")}`);
@@ -366,10 +400,17 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
         scene: 0,
         sceneCount: podcast.turns.length,
       });
-      await generateTake.mutateAsync({ onProgress: setProgress });
+      await generateTake.mutateAsync({
+        onProgress: setProgress,
+        regenerateTurnIds,
+      });
       setProgress(null);
       setGenerateStartedAt(null);
-      toast.success("Podcast audio ready");
+      toast.success(
+        regenerateTurnIds?.length
+          ? "Selected turn regenerated; unchanged turns reused"
+          : "Podcast audio ready",
+      );
     } catch (e) {
       setProgress(null);
       setGenerateStartedAt(null);
@@ -402,6 +443,29 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
     } catch (e) {
       toast.error("Download failed", {
         description: (e as Error).message,
+      });
+    } finally {
+      setDownloadingId(null);
+    }
+  }
+
+  async function handleMp3Download(takeId: string) {
+    setDownloadingId(takeId);
+    try {
+      const prepared = await prepareExport.mutateAsync({
+        takeId,
+        format: "mp3",
+      });
+      const link = document.createElement("a");
+      link.href = prepared.url;
+      link.download = `${podcast.title.replace(/[^\w\-]+/g, "_") || "podcast"}.mp3`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success("MP3 download started");
+    } catch (error) {
+      toast.error("MP3 export failed", {
+        description: (error as Error).message,
       });
     } finally {
       setDownloadingId(null);
@@ -484,10 +548,10 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
           className="mt-0 min-h-0 flex-1 overflow-y-auto data-[state=inactive]:hidden"
         >
           <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)] xl:items-start">
-            <section className="grid gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
+            <section className="border-border bg-card grid gap-3 rounded-xl border p-4 shadow-sm">
               <div>
                 <h2 className="text-sm font-semibold">Episode details</h2>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Title, description, and target length
                 </p>
               </div>
@@ -509,10 +573,29 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                   onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
+              <div className="grid gap-1.5">
+                <Label>Production format</Label>
+                <Combobox
+                  value={presetId}
+                  onChange={(value) => setPresetId(value as PodcastPresetId)}
+                  options={Object.values(PODCAST_PRESETS).map((preset) => ({
+                    value: preset.id,
+                    label: preset.label,
+                  }))}
+                  className="bg-background"
+                />
+                <p className="text-muted-foreground text-xs">
+                  {PODCAST_PRESETS[presetId].description}
+                </p>
+                <p className="text-muted-foreground text-[11px]">
+                  Solo uses one character; discussions and interviews use two or
+                  more. Edit the cast beside this card when changing formats.
+                </p>
+              </div>
               <div className="flex flex-wrap items-end justify-between gap-2">
                 <div className="grid gap-1.5">
                   <Label>Length</Label>
-                  <div className="inline-flex rounded-lg border border-border bg-muted/50 p-0.5">
+                  <div className="border-border bg-muted/50 inline-flex rounded-lg border p-0.5">
                     {(
                       [
                         { id: "short", label: "Short" },
@@ -548,11 +631,11 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
               </div>
             </section>
 
-            <section className="grid gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
+            <section className="border-border bg-card grid gap-3 rounded-xl border p-4 shadow-sm">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h2 className="text-sm font-semibold">Characters & voices</h2>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     Cast, persona notes, and TTS voice for each speaker
                   </p>
                 </div>
@@ -579,10 +662,10 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
           value="script"
           className="mt-0 flex min-h-0 flex-1 flex-col gap-3 overflow-hidden data-[state=inactive]:hidden"
         >
-          <section className="shrink-0 rounded-xl border border-border bg-card p-3 shadow-sm sm:p-4">
+          <section className="border-border bg-card shrink-0 rounded-xl border p-3 shadow-sm sm:p-4">
             <div className="mb-2">
               <h2 className="text-sm font-semibold">Generate script</h2>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 AI from a brief, or paste structured JSON
               </p>
             </div>
@@ -650,11 +733,11 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
             />
           </section>
 
-          <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-            <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
+          <section className="border-border bg-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-sm">
+            <div className="border-border flex shrink-0 items-center justify-between border-b px-3 py-2">
               <div>
                 <h2 className="text-sm font-semibold">Dialogue</h2>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Click a line to edit · hover for full text · + between lines
                   to insert
                 </p>
@@ -664,7 +747,7 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
             <div className="min-h-0 flex-1 overflow-y-auto p-2">
               {podcast.turns.length === 0 ? (
                 <div className="grid gap-3 p-2">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     No turns yet. Generate with AI, paste JSON, or add the first
                     line below.
                   </p>
@@ -710,6 +793,7 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                             onSuccess: () => toast.info("Turn removed"),
                           })
                         }
+                        onRegenerate={() => void runAudio([t.id])}
                       />
                       {insertAfterId === t.id ? (
                         <li className="list-none space-y-1.5 py-1">
@@ -745,7 +829,7 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                           <button
                             type="button"
                             disabled={busy || insertTurn.isPending}
-                            className="absolute inset-x-10 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center gap-1 rounded-full border border-dashed border-transparent py-0.5 text-[10px] text-transparent transition-colors hover:border-border hover:bg-background hover:text-muted-foreground group-hover/insert:border-border group-hover/insert:bg-background group-hover/insert:text-muted-foreground"
+                            className="hover:border-border hover:bg-background hover:text-muted-foreground group-hover/insert:border-border group-hover/insert:bg-background group-hover/insert:text-muted-foreground absolute inset-x-10 top-1/2 z-10 flex -translate-y-1/2 items-center justify-center gap-1 rounded-full border border-dashed border-transparent py-0.5 text-[10px] text-transparent transition-colors"
                             onClick={() => setInsertAfterId(t.id)}
                           >
                             + Insert line here
@@ -780,7 +864,7 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
           value="audio"
           className="mt-0 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto data-[state=inactive]:hidden"
         >
-          <section className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-sm">
+          <section className="border-border bg-card flex flex-wrap items-center gap-3 rounded-xl border p-3 shadow-sm">
             <Button
               type="button"
               onClick={() => void runAudio()}
@@ -794,15 +878,15 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
               Generate podcast audio
             </Button>
             {podcast.turns.length > 0 ? (
-              <span className="text-xs text-muted-foreground">
-                Stitches {podcast.turns.length} turns in order · set speed per
-                take below
+              <span className="text-muted-foreground text-xs">
+                Reuses unchanged turns, then stitches {podcast.turns.length} in
+                order · set speed per take below
               </span>
             ) : null}
           </section>
 
           {podcast.takes.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-border bg-card/50 p-6 text-sm text-muted-foreground">
+            <p className="border-border bg-card/50 text-muted-foreground rounded-xl border border-dashed p-6 text-sm">
               No takes yet. Generate podcast audio to hear the full episode.
             </p>
           ) : (
@@ -812,15 +896,15 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                 return (
                   <li
                     key={take.id}
-                    className="grid gap-2 rounded-xl border border-border bg-card p-3 shadow-sm sm:p-4"
+                    className="border-border bg-card grid gap-2 rounded-xl border p-3 shadow-sm sm:p-4"
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <VoicesUsedTooltip voices={take.voices ?? []}>
                         <button
                           type="button"
-                          className="flex min-w-0 flex-1 items-center gap-2 rounded-md text-left hover:bg-muted/40"
+                          className="hover:bg-muted/40 flex min-w-0 flex-1 items-center gap-2 rounded-md text-left"
                         >
-                          <Volume2 className="size-4 shrink-0 text-muted-foreground" />
+                          <Volume2 className="text-muted-foreground size-4 shrink-0" />
                           <span className="min-w-0 flex-1 truncate text-sm font-medium">
                             {take.label || "Take"}
                           </span>
@@ -840,7 +924,10 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                           onChange={(s) => setSpeedFor(take.id, s)}
                           disabled={downloadingId === take.id}
                         />
-                        <Badge variant="secondary" className="shrink-0 tabular-nums">
+                        <Badge
+                          variant="secondary"
+                          className="shrink-0 tabular-nums"
+                        >
                           {formatDuration(take.totalFrames, take.fps)}
                         </Badge>
                         <HintTooltip
@@ -854,15 +941,11 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                             type="button"
                             size="icon"
                             variant="ghost"
-                            className="size-8 bg-transparent text-muted-foreground hover:bg-transparent hover:text-foreground"
+                            className="text-muted-foreground hover:text-foreground size-8 bg-transparent hover:bg-transparent"
                             aria-label="Download WAV"
                             disabled={downloadingId === take.id}
                             onClick={() =>
-                              void handleDownload(
-                                take.id,
-                                take.audioUrl,
-                                speed,
-                              )
+                              void handleDownload(take.id, take.audioUrl, speed)
                             }
                           >
                             {downloadingId === take.id ? (
@@ -872,11 +955,23 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                             )}
                           </Button>
                         </HintTooltip>
+                        <HintTooltip label="Download production MP3">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            disabled={downloadingId === take.id}
+                            className="text-muted-foreground hover:text-foreground h-8 bg-transparent px-2 text-xs hover:bg-transparent"
+                            onClick={() => void handleMp3Download(take.id)}
+                          >
+                            MP3
+                          </Button>
+                        </HintTooltip>
                         <HintTooltip label="Delete this take">
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="size-8 bg-transparent text-muted-foreground hover:bg-transparent hover:text-destructive"
+                            className="text-muted-foreground hover:text-destructive size-8 bg-transparent hover:bg-transparent"
                             aria-label="Delete take"
                             onClick={() =>
                               deleteTake.mutate(take.id, {
@@ -890,6 +985,30 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                       </div>
                     </div>
                     <PodcastTakePlayer src={take.audioUrl} speed={speed} />
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <Button asChild type="button" size="sm" variant="outline">
+                        <a
+                          href={`/api/podcast-takes/${take.id}/transcript?format=transcript`}
+                          download
+                        >
+                          Transcript
+                        </a>
+                      </Button>
+                      <Button asChild type="button" size="sm" variant="outline">
+                        <a
+                          href={`/api/podcast-takes/${take.id}/transcript?format=chapters`}
+                          download
+                        >
+                          Chapters JSON
+                        </a>
+                      </Button>
+                      {take.chapters.map((chapter) => (
+                        <Badge key={chapter.id} variant="secondary">
+                          {chapter.title}
+                        </Badge>
+                      ))}
+                    </div>
+                    <PodcastAudiogramControls take={take} />
                   </li>
                 );
               })}

@@ -1,7 +1,17 @@
 import { timingSafeEqual } from "node:crypto";
 
-import { getMcpToken } from "@/server/secrets";
+import {
+  findNamedMcpToken,
+  getMcpToken,
+  reserveNamedMcpPaidRequest,
+} from "@/server/secrets";
 import { ProviderError } from "@/providers/voice/types";
+import {
+  hasMcpScope,
+  providerPolicyDecision,
+  type McpNamedTokenRecord,
+  type McpScope,
+} from "@/production/mcp-access";
 
 /**
  * Request authorization for API route handlers.
@@ -21,6 +31,10 @@ import { ProviderError } from "@/providers/voice/types";
  * REEL_STRICT_AUTH=1 to require a token even on loopback.
  */
 export type RequestOrigin = "web" | "mcp";
+export type RequestAuthorization =
+  | { origin: "web"; token: null }
+  | { origin: "mcp"; token: { kind: "legacy" } }
+  | { origin: "mcp"; token: { kind: "named"; record: McpNamedTokenRecord } };
 
 function constantTimeEquals(a: string, b: string): boolean {
   const ab = Buffer.from(a);
@@ -64,7 +78,12 @@ export function requestHostname(req: Request): string {
 
 export function isLoopbackHostname(hostname: string): boolean {
   const h = hostname.replace(/^\[|\]$/g, "").toLowerCase();
-  return h === "localhost" || h === "127.0.0.1" || h === "::1" || h === "0:0:0:0:0:0:0:1";
+  return (
+    h === "localhost" ||
+    h === "127.0.0.1" ||
+    h === "::1" ||
+    h === "0:0:0:0:0:0:0:1"
+  );
 }
 
 export function isLoopbackRequest(req: Request): boolean {
@@ -108,15 +127,70 @@ function isSameOrigin(req: Request): boolean {
  * Authorize a mutating or sensitive request. Throws `ProviderError(401)` if
  * neither a valid MCP token nor a same-origin / loopback web request is detected.
  */
-export function authorize(req: Request): RequestOrigin {
+export function authorizeRequest(
+  req: Request,
+  requiredScope?: McpScope,
+): RequestAuthorization {
   const token = bearerToken(req);
   if (token) {
     const expected = getMcpToken();
-    if (expected && constantTimeEquals(token, expected)) return "mcp";
+    if (expected && constantTimeEquals(token, expected)) {
+      return { origin: "mcp", token: { kind: "legacy" } };
+    }
+    const named = findNamedMcpToken(token);
+    if (named) {
+      if (requiredScope && !hasMcpScope(named, requiredScope)) {
+        throw new ProviderError(
+          `This MCP token does not grant ${requiredScope}`,
+          403,
+        );
+      }
+      return { origin: "mcp", token: { kind: "named", record: named } };
+    }
     throw new ProviderError("Invalid MCP token", 401);
   }
-  if (isSameOrigin(req)) return "web";
+  if (isSameOrigin(req)) return { origin: "web", token: null };
   throw new ProviderError("Unauthorized", 401);
+}
+
+export function authorize(req: Request): RequestOrigin {
+  const auth = authorizeRequest(
+    req,
+    bearerToken(req) ? "studio:write" : undefined,
+  );
+  return auth.origin;
+}
+
+/**
+ * Enforce provider allowlists and finite paid-request allowances for named MCP
+ * tokens. Existing legacy tokens keep their established behavior.
+ */
+export async function authorizeProviderRequest(
+  req: Request,
+  providerIds: readonly string[],
+): Promise<RequestAuthorization> {
+  const auth = authorizeRequest(
+    req,
+    bearerToken(req) ? "studio:write" : undefined,
+  );
+  if (auth.origin !== "mcp" || auth.token.kind !== "named") return auth;
+  const decision = providerPolicyDecision(auth.token.record, providerIds);
+  if (!decision.allowed) {
+    throw new ProviderError(
+      `${decision.reason}. Run this operation in the web app or mint a token with an explicit allowance.`,
+      403,
+    );
+  }
+  if (
+    decision.paidRequest &&
+    !(await reserveNamedMcpPaidRequest(auth.token.record.id))
+  ) {
+    throw new ProviderError(
+      "This MCP token has reached its paid-request limit. Run this operation in the web app or raise the token allowance.",
+      403,
+    );
+  }
+  return auth;
 }
 
 /**
@@ -124,12 +198,19 @@ export function authorize(req: Request): RequestOrigin {
  * subresource loads (audio/video/img) that cannot send Authorization headers.
  */
 export function authorizeMedia(req: Request): void {
-  authorize(req);
+  const auth = authorizeRequest(
+    req,
+    bearerToken(req) ? "artifacts:read" : undefined,
+  );
+  void auth;
 }
 
 /** Reject MCP-origin requests outright (used on endpoints reserved for the web UI). */
 export function requireWeb(req: Request): void {
   if (authorize(req) !== "web") {
-    throw new ProviderError("This action is only available in the web app", 403);
+    throw new ProviderError(
+      "This action is only available in the web app",
+      403,
+    );
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Trash2 } from "lucide-react";
+import { RefreshCw, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,8 @@ const AVATAR_COLORS = [
 
 function avatarClass(key: string): string {
   let hash = 0;
-  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) | 0;
+  for (let i = 0; i < key.length; i++)
+    hash = (hash * 31 + key.charCodeAt(i)) | 0;
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
@@ -34,6 +35,7 @@ export function CompactTurnRow({
   text,
   disabled,
   onSave,
+  onRegenerate,
   onDelete,
 }: {
   index: number;
@@ -42,6 +44,7 @@ export function CompactTurnRow({
   text: string;
   disabled?: boolean;
   onSave: (text: string) => void | Promise<void>;
+  onRegenerate?: () => void;
   onDelete: () => void;
 }) {
   const [editing, setEditing] = React.useState(false);
@@ -91,7 +94,7 @@ export function CompactTurnRow({
 
   if (editing) {
     return (
-      <li className="min-w-0 rounded-lg border border-border bg-card p-2.5 shadow-sm">
+      <li className="border-border bg-card min-w-0 rounded-lg border p-2.5 shadow-sm">
         <div className="mb-1.5 flex items-center gap-2">
           <span
             className={cn(
@@ -103,7 +106,9 @@ export function CompactTurnRow({
             {initial}
           </span>
           <span className="text-xs font-medium">{characterName}</span>
-          <span className="text-[10px] text-muted-foreground">#{index + 1}</span>
+          <span className="text-muted-foreground text-[10px]">
+            #{index + 1}
+          </span>
           <div className="ml-auto flex gap-1">
             <Button
               type="button"
@@ -129,7 +134,7 @@ export function CompactTurnRow({
         </div>
         <textarea
           ref={textareaRef}
-          className="w-full resize-y rounded-md border border-input bg-background px-2.5 py-2 text-sm leading-relaxed shadow-sm"
+          className="border-input bg-background w-full resize-y rounded-md border px-2.5 py-2 text-sm leading-relaxed shadow-sm"
           value={value}
           disabled={disabled || saving}
           onChange={(e) => {
@@ -151,7 +156,29 @@ export function CompactTurnRow({
   }
 
   return (
-    <li className="group flex min-w-0 items-stretch overflow-hidden rounded-md border border-border/70 bg-card/60 hover:border-border hover:bg-card">
+    <li className="group border-border/70 bg-card/60 hover:border-border hover:bg-card flex min-w-0 items-stretch overflow-hidden rounded-md border">
+      <Tooltip>
+        {onRegenerate ? (
+          <>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                disabled={disabled}
+                className="text-muted-foreground hover:text-foreground my-0.5 size-8 shrink-0 bg-transparent hover:bg-transparent"
+                onClick={onRegenerate}
+                aria-label="Regenerate this turn"
+              >
+                <RefreshCw className="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              Regenerate this turn and reuse the rest
+            </TooltipContent>
+          </>
+        ) : null}
+      </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>
           <button
@@ -173,7 +200,7 @@ export function CompactTurnRow({
           {characterName} · {characterKey}
         </TooltipContent>
       </Tooltip>
-      <div className="w-px shrink-0 self-stretch bg-border" />
+      <div className="bg-border w-px shrink-0 self-stretch" />
       <Tooltip delayDuration={400}>
         <TooltipTrigger asChild>
           <button
@@ -182,7 +209,7 @@ export function CompactTurnRow({
             onClick={startEdit}
             disabled={disabled}
           >
-            <span className="block truncate whitespace-nowrap text-foreground">
+            <span className="text-foreground block truncate whitespace-nowrap">
               {text}
             </span>
           </button>
@@ -190,7 +217,7 @@ export function CompactTurnRow({
         <TooltipContent
           side="bottom"
           align="start"
-          className="max-w-lg whitespace-pre-wrap text-left font-normal leading-relaxed"
+          className="max-w-lg text-left leading-relaxed font-normal whitespace-pre-wrap"
         >
           {text}
         </TooltipContent>
@@ -202,7 +229,7 @@ export function CompactTurnRow({
             size="icon"
             variant="ghost"
             disabled={disabled}
-            className="my-0.5 mr-0.5 size-8 shrink-0 bg-transparent text-muted-foreground hover:bg-transparent hover:text-destructive"
+            className="text-muted-foreground hover:text-destructive my-0.5 mr-0.5 size-8 shrink-0 bg-transparent hover:bg-transparent"
             onClick={onDelete}
             aria-label="Delete turn"
           >

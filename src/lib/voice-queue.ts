@@ -7,14 +7,14 @@
  * as the render queue.
  */
 
-import type { PodcastTakeDTO, SceneVoiceClipDTO, VoiceTakeDTO } from "@/lib/dto";
+import type {
+  PodcastTakeDTO,
+  SceneVoiceClipDTO,
+  VoiceTakeDTO,
+} from "@/lib/dto";
 
 export type VoiceJobStatus =
-  | "queued"
-  | "synthesizing"
-  | "stitching"
-  | "done"
-  | "error";
+  "queued" | "synthesizing" | "stitching" | "done" | "error";
 
 export interface VoiceJob {
   id: string;
@@ -24,6 +24,9 @@ export interface VoiceJob {
   sceneCount: number;
   /** 1-based index of the beat currently being synthesized, if any. */
   workingOn?: number;
+  /** Podcast turn-cache accounting for visible selective regeneration. */
+  cached?: number;
+  generated?: number;
   error?: string;
   /** Set once status === "done" for oneshot / assemble jobs. */
   take?: VoiceTakeDTO;

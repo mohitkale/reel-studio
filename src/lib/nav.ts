@@ -4,6 +4,7 @@ import {
   Mic,
   AudioLines,
   LayoutTemplate,
+  Images,
   Library,
   Palette,
   ListVideo,
@@ -49,6 +50,12 @@ export const navItems: NavItem[] = [
     href: "/templates",
     icon: LayoutTemplate,
     description: "Premium animated scene templates",
+  },
+  {
+    title: "Gallery",
+    href: "/gallery",
+    icon: Images,
+    description: "Reproducible examples and production presets",
   },
   {
     title: "Assets",

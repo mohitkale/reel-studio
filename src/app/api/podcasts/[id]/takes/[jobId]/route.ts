@@ -23,6 +23,8 @@ export async function GET(
         scene: job.scene,
         sceneCount: job.sceneCount,
         workingOn: job.workingOn ?? null,
+        cached: job.cached ?? 0,
+        generated: job.generated ?? 0,
         error: job.error ?? null,
         podcastTake: job.podcastTake ?? null,
       },

@@ -11,6 +11,7 @@ import {
   X,
   GripVertical,
   AlertTriangle,
+  Lock,
 } from "lucide-react";
 
 import type { SceneDTO, SceneBackground } from "@/lib/dto";
@@ -71,6 +72,7 @@ type UpdateVars = {
   background?: SceneBackground | null;
   items?: string[] | null;
   hideText?: boolean | null;
+  locks?: { copy: boolean; assets: boolean; scene: boolean };
 };
 
 /**
@@ -79,10 +81,12 @@ type UpdateVars = {
  * is missing CORS, in which case it won't play in the preview or the render.
  */
 function VideoUrlStatus({ url }: { url: string }) {
-  const [result, setResult] = React.useState<{ url: string; ok: boolean } | null>(
-    null,
-  );
-  const status = result?.url === url ? (result.ok ? "ok" : "error") : "checking";
+  const [result, setResult] = React.useState<{
+    url: string;
+    ok: boolean;
+  } | null>(null);
+  const status =
+    result?.url === url ? (result.ok ? "ok" : "error") : "checking";
 
   React.useEffect(() => {
     const trimmed = url.trim();
@@ -112,8 +116,8 @@ function VideoUrlStatus({ url }: { url: string }) {
       <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
       <span>
         This video couldn&apos;t be loaded, so the scene falls back to the brand
-        background. Many sites (Pixabay, stock sites) block direct links — download
-        the file and use the upload button, or use a direct, public{" "}
+        background. Many sites (Pixabay, stock sites) block direct links —
+        download the file and use the upload button, or use a direct, public{" "}
         <code>.mp4</code> URL.
       </span>
     </div>
@@ -136,11 +140,13 @@ function BackgroundEditor({
   // only commit a background once it actually has a URL — committing an empty
   // URL would fail server validation (causing a flicker/revert) and crash the
   // video layer with "No src passed".
-  const [kind, setKind] = React.useState<BackgroundKind>(backgroundKind(background));
-  const [url, setUrl] = React.useState(background?.url ?? "");
-  const [effect, setEffect] = React.useState<NonNullable<SceneBackground["effect"]>>(
-    background?.effect ?? "ken-burns",
+  const [kind, setKind] = React.useState<BackgroundKind>(
+    backgroundKind(background),
   );
+  const [url, setUrl] = React.useState(background?.url ?? "");
+  const [effect, setEffect] = React.useState<
+    NonNullable<SceneBackground["effect"]>
+  >(background?.effect ?? "ken-burns");
   const [muted, setMuted] = React.useState(background?.muted ?? true);
 
   const assetType = kind === "video" ? "video" : "image";
@@ -148,7 +154,12 @@ function BackgroundEditor({
   const uploadAsset = useUploadAsset();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  function commit(next: { kind: BackgroundKind; url: string; effect: typeof effect; muted: boolean }) {
+  function commit(next: {
+    kind: BackgroundKind;
+    url: string;
+    effect: typeof effect;
+    muted: boolean;
+  }) {
     if (next.kind === "none" || !next.url.trim()) {
       onChange(null);
       return;
@@ -199,7 +210,7 @@ function BackgroundEditor({
   }
 
   return (
-    <div className="grid gap-2 rounded-lg border bg-muted/20 p-3">
+    <div className="bg-muted/20 grid gap-2 rounded-lg border p-3">
       <div className="flex items-center justify-between">
         <Label>Background</Label>
         <div className="flex rounded-md border p-0.5">
@@ -263,7 +274,9 @@ function BackgroundEditor({
 
           {kind === "image" && (
             <div className="grid gap-1.5">
-              <Label className="text-xs text-muted-foreground">Animation effect</Label>
+              <Label className="text-muted-foreground text-xs">
+                Animation effect
+              </Label>
               <Combobox
                 value={effect}
                 onChange={(v) => changeEffect(v as typeof effect)}
@@ -280,7 +293,7 @@ function BackgroundEditor({
                   type="checkbox"
                   checked={muted}
                   onChange={(e) => changeMuted(e.target.checked)}
-                  className="size-4 rounded border-border"
+                  className="border-border size-4 rounded"
                 />
                 Mute video audio track
               </label>
@@ -306,7 +319,9 @@ function ChecklistEditor({
 }) {
   // Initialized once per mount; SceneInspector is keyed by scene.id, so switching
   // scenes remounts this with the right items — no resync effect needed.
-  const [draft, setDraft] = React.useState<string[]>(items.length ? items : [""]);
+  const [draft, setDraft] = React.useState<string[]>(
+    items.length ? items : [""],
+  );
 
   function commit(next: string[]) {
     setDraft(next);
@@ -330,14 +345,14 @@ function ChecklistEditor({
   return (
     <div className="grid gap-2">
       <Label>Checklist items</Label>
-      <p className="text-xs text-muted-foreground">
-        Each item becomes its own row with an icon badge. Leave empty to fall back
-        to splitting the scene text.
+      <p className="text-muted-foreground text-xs">
+        Each item becomes its own row with an icon badge. Leave empty to fall
+        back to splitting the scene text.
       </p>
       <div className="grid gap-1.5">
         {draft.map((item, i) => (
           <div key={i} className="flex items-center gap-1">
-            <GripVertical className="size-3.5 shrink-0 text-muted-foreground" />
+            <GripVertical className="text-muted-foreground size-3.5 shrink-0" />
             <Input
               value={item}
               placeholder={`Item ${i + 1}`}
@@ -374,7 +389,7 @@ function ChecklistEditor({
               <Button
                 size="icon"
                 variant="ghost"
-                className="size-7 text-muted-foreground hover:text-destructive"
+                className="text-muted-foreground hover:text-destructive size-7"
                 onClick={() => commit(draft.filter((_, idx) => idx !== i))}
                 aria-label="Remove item"
               >
@@ -432,6 +447,7 @@ export function SceneInspector({
   const [emphasis, setEmphasis] = React.useState(scene.emphasis.join(", "));
   const [visual, setVisual] = React.useState(scene.visual ?? "");
   const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const locks = scene.locks ?? { copy: false, assets: false, scene: false };
 
   const engine = getVideoEngine(videoEngine);
   const templates = engine.listTemplates();
@@ -451,7 +467,8 @@ export function SceneInspector({
     if (spokenText === currentEffective) return;
     // Matching display text clears the override (inherit again).
     if (spokenText.trim() === scene.text.trim()) {
-      if (scene.spokenText != null) onUpdate({ id: scene.id, spokenText: null });
+      if (scene.spokenText != null)
+        onUpdate({ id: scene.id, spokenText: null });
       return;
     }
     onUpdate({ id: scene.id, spokenText });
@@ -481,7 +498,9 @@ export function SceneInspector({
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
             <h3 className="text-sm font-semibold">Scene</h3>
-            {saving && <span className="text-xs text-muted-foreground">Saving...</span>}
+            {saving && (
+              <span className="text-muted-foreground text-xs">Saving...</span>
+            )}
           </div>
           <div className="flex items-center gap-0.5">
             <Button
@@ -494,7 +513,7 @@ export function SceneInspector({
             >
               <ChevronUp className="size-3.5" />
             </Button>
-            <span className="w-14 text-center text-xs text-muted-foreground tabular-nums">
+            <span className="text-muted-foreground w-14 text-center text-xs tabular-nums">
               {sceneIndex + 1} / {totalScenes}
             </span>
             <Button
@@ -507,6 +526,47 @@ export function SceneInspector({
             >
               <ChevronDown className="size-3.5" />
             </Button>
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <Label>AI regeneration locks</Label>
+              <p className="text-muted-foreground mt-1 text-xs">
+                Keep selected parts unchanged when AI rewrites this project.
+              </p>
+            </div>
+            <Lock className="text-muted-foreground size-4" />
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {(
+              [
+                ["copy", "Copy"],
+                ["assets", "Assets"],
+                ["scene", "Whole scene"],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={locks[key]}
+                onClick={() =>
+                  onUpdate({
+                    id: scene.id,
+                    locks: { ...locks, [key]: !locks[key] },
+                  })
+                }
+                className={cn(
+                  "rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
+                  locks[key]
+                    ? "border-primary bg-primary/10 text-foreground"
+                    : "text-muted-foreground hover:bg-muted",
+                )}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -532,7 +592,7 @@ export function SceneInspector({
             onChange={(e) => setSpokenText(e.target.value)}
             onBlur={commitSpokenText}
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {scene.spokenText == null || scene.spokenText === scene.text
               ? "Using the same words as on-screen text for voice."
               : "Voice script differs from on-screen text."}
@@ -548,7 +608,7 @@ export function SceneInspector({
             options={templates.map((t) => ({ value: t.id, label: t.name }))}
             searchPlaceholder="Search templates…"
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {templates.find((t) => t.id === normalId)?.description}
           </p>
         </div>
@@ -597,7 +657,7 @@ export function SceneInspector({
               );
             })}
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             “Default” follows the global Text toggle; Show/Hide overrides it for
             this scene. Hiding shows just the background.
           </p>
@@ -612,8 +672,9 @@ export function SceneInspector({
             onChange={(e) => setVisual(e.target.value)}
             onBlur={commitVisual}
           />
-          <p className="text-xs text-muted-foreground">
-            {VISUAL_HINTS[normalId] ?? "Optional visual element for this scene."}
+          <p className="text-muted-foreground text-xs">
+            {VISUAL_HINTS[normalId] ??
+              "Optional visual element for this scene."}
           </p>
         </div>
 

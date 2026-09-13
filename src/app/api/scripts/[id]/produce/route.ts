@@ -8,7 +8,7 @@ import { getScript } from "@/library/repositories/scripts";
 import { generateTake } from "@/library/take-service";
 import { getVoiceJob, upsertVoiceJob } from "@/lib/voice-queue";
 import { PROVIDER_IDS } from "@/providers/voice/types";
-import { authorize } from "@/server/auth";
+import { authorizeProviderRequest } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -28,9 +28,12 @@ export async function POST(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
-    authorize(req);
     const { id } = await ctx.params;
     const body = bodySchema.parse(await req.json().catch(() => ({})));
+    await authorizeProviderRequest(
+      req,
+      body.startVoice === false ? [] : [body.providerId ?? "kokoro-server"],
+    );
 
     const audio = await produceReelAudio(id);
     let voiceJobId: string | null = null;

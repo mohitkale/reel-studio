@@ -13,8 +13,13 @@ import { autoAttachBundledMusic } from "@/library/soundtrack-service";
 import { ensureSfxCues } from "@/library/sfx-service";
 import { orientationSchema, DEFAULT_ORIENTATION } from "@/lib/orientation";
 import { VIDEO_ENGINE_IDS, DEFAULT_VIDEO_ENGINE } from "@/engines/types";
-import { authorize } from "@/server/auth";
+import { authorizeProviderRequest } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
+import {
+  getProductionPreset,
+  productionPresetIdSchema,
+} from "@/production/presets";
+import { applyPresetToAIPlan } from "@/production/ai-preset-plan";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,13 +40,14 @@ const bodySchema = z.object({
     .optional(),
   /** "auto" lets the AI choose; otherwise lock Energy. */
   energy: z.enum(["auto", "calm", "normal", "high"]).optional(),
+  productionPresetId: productionPresetIdSchema.default("product-launch"),
 });
 
 /** POST /api/projects/ai - generate a scene plan from a brief and create the project. */
 export async function POST(req: Request) {
   try {
-    authorize(req);
     const body = bodySchema.parse(await req.json());
+    await authorizeProviderRequest(req, [body.providerId]);
     if (!isAIProviderId(body.providerId)) {
       throw new AIError(`Unknown AI provider "${body.providerId}"`, 404);
     }
@@ -57,8 +63,16 @@ export async function POST(req: Request) {
 
     const orientation = body.orientation ?? DEFAULT_ORIENTATION;
     const videoEngine = body.videoEngine ?? DEFAULT_VIDEO_ENGINE;
-    const styleLock = body.styleId ?? "bold-hook";
-    const energyLock = body.energy ?? "normal";
+    const preset = getProductionPreset(body.productionPresetId);
+    if (!preset) throw new AIError("Unknown production preset", 400);
+    const styleLock =
+      body.styleId && body.styleId !== "auto"
+        ? body.styleId
+        : preset.defaults.styleId;
+    const energyLock =
+      body.energy && body.energy !== "auto"
+        ? body.energy
+        : preset.defaults.energy;
     const raw = await provider.generatePlan({
       mode: body.mode,
       brief: body.brief,
@@ -69,16 +83,29 @@ export async function POST(req: Request) {
       videoEngine,
       styleId: styleLock,
       energy: energyLock,
+      productionPresetId: body.productionPresetId,
     });
-    const plan = { ...raw, scenes: enrichScenePlan(raw.scenes, videoEngine) };
-    const visualStyle = resolvePlanVisualStyle(plan, {
+    const enriched = {
+      ...raw,
+      scenes: enrichScenePlan(raw.scenes, videoEngine),
+    };
+    const visualStyle = resolvePlanVisualStyle(enriched, {
       styleId: styleLock,
       energy: energyLock,
     });
 
     // Best-effort: turn the director's backgroundQuery hints into real stock
     // backgrounds (no-op when no Unsplash key is configured).
-    const backgrounds = await resolveSceneBackgrounds(plan.scenes, orientation);
+    const backgrounds = await resolveSceneBackgrounds(
+      enriched.scenes,
+      orientation,
+    );
+    const { plan, roles } = applyPresetToAIPlan(
+      enriched,
+      body.productionPresetId,
+      videoEngine,
+      { hasVisualAsset: backgrounds.some(Boolean) },
+    );
 
     const created = await createProjectFromPlan(
       plan,
@@ -86,11 +113,23 @@ export async function POST(req: Request) {
       backgrounds,
       videoEngine,
       visualStyle,
+      {
+        preset: {
+          id: body.productionPresetId,
+          version: preset.version,
+        },
+        roles,
+        outputType: "video",
+        creationSource: { kind: "text" },
+      },
     );
     // One-click soundtrack: attach bundled BGM from scene mood/musicMood.
     await autoAttachBundledMusic(created.scriptId);
     await ensureSfxCues(created.scriptId);
-    return NextResponse.json({ ...created, plan, visualStyle }, { status: 201 });
+    return NextResponse.json(
+      { ...created, plan, visualStyle },
+      { status: 201 },
+    );
   } catch (e) {
     return errorResponse(e);
   }

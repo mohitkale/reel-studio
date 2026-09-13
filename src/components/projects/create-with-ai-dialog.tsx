@@ -33,6 +33,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Combobox } from "@/components/ui/combobox";
 import { HintTooltip } from "@/components/ui/hint-tooltip";
 import {
+  PRODUCTION_PRESETS,
+  type ProductionPresetId,
+} from "@/production/presets";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -58,15 +62,19 @@ export function CreateWithAIDialog() {
   const [open, setOpen] = React.useState(false);
   const [mode, setMode] = React.useState<"idea" | "story">("idea");
   const [brief, setBrief] = React.useState("");
-  const [providerId, setProviderId] = React.useState<AIProviderId | undefined>();
+  const [providerId, setProviderId] = React.useState<
+    AIProviderId | undefined
+  >();
   const [sceneCount, setSceneCount] = React.useState<string>("auto");
   const [orientation, setOrientation] =
     React.useState<Orientation>(DEFAULT_ORIENTATION);
   const [scriptStyle, setScriptStyle] = React.useState<ScriptStyle>("short");
   const [videoEngine, setVideoEngine] =
     React.useState<VideoEngineId>(DEFAULT_VIDEO_ENGINE);
-  const [styleId, setStyleId] = React.useState<StylePick>("bold-hook");
-  const [energy, setEnergy] = React.useState<EnergyPick>("normal");
+  const [styleId, setStyleId] = React.useState<StylePick>("auto");
+  const [energy, setEnergy] = React.useState<EnergyPick>("auto");
+  const [productionPresetId, setProductionPresetId] =
+    React.useState<ProductionPresetId>("product-launch");
 
   const configured = (providers ?? []).filter((p) => p.configured);
   const effectiveProvider = providerId ?? configured[0]?.id;
@@ -85,14 +93,16 @@ export function CreateWithAIDialog() {
         videoEngine,
         styleId,
         energy,
+        productionPresetId,
       },
       {
         onSuccess: ({ scriptId }) => {
           setOpen(false);
           setBrief("");
           setVideoEngine(DEFAULT_VIDEO_ENGINE);
-          setStyleId("bold-hook");
-          setEnergy("normal");
+          setStyleId("auto");
+          setEnergy("auto");
+          setProductionPresetId("product-launch");
           toast.success("Video drafted", {
             description: "Review and tweak the scenes in the editor.",
           });
@@ -118,22 +128,22 @@ export function CreateWithAIDialog() {
         <DialogHeader>
           <DialogTitle>Create with AI</DialogTitle>
           <DialogDescription asChild>
-            <div className="space-y-2 text-sm text-muted-foreground">
+            <div className="text-muted-foreground space-y-2 text-sm">
               <p>
-                Describe your video. AI writes a hook-first script, splits it into
-                scenes, picks layouts, and applies your default brand kit.
+                Describe your video. AI turns the supplied idea into editable
+                scenes using the selected production preset and brand kit.
               </p>
               <p className="text-xs">
-                You&apos;ll get: a scroll-stopping first scene, mixed templates
-                (stats, lists, punchlines), your Style + Energy look, and everything
-                editable afterward.
+                Template choices follow each scene&apos;s content and engine
+                capabilities. Supplied facts stay grounded in your brief, and
+                every scene remains editable afterward.
               </p>
             </div>
           </DialogDescription>
         </DialogHeader>
 
         {configured.length === 0 ? (
-          <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+          <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm">
             No AI provider configured. Add a Gemini or OpenAI key in{" "}
             <Link href="/settings" className="text-primary underline">
               Settings
@@ -192,7 +202,7 @@ export function CreateWithAIDialog() {
                       key={example}
                       type="button"
                       onClick={() => setBrief(example)}
-                      className="rounded-full border bg-muted/40 px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+                      className="bg-muted/40 text-muted-foreground hover:border-primary hover:text-foreground rounded-full border px-2.5 py-1 text-[11px] transition-colors"
                     >
                       {example}
                     </button>
@@ -213,22 +223,20 @@ export function CreateWithAIDialog() {
             <div className="grid gap-2">
               <Label>Voice script</Label>
               <div className="grid grid-cols-2 gap-2">
-                {(
-                  [
-                    {
-                      id: "short" as const,
-                      label: "Short",
-                      description:
-                        "Same short line on screen and in voice (~14–18 words).",
-                    },
-                    {
-                      id: "detailed" as const,
-                      label: "Detailed",
-                      description:
-                        "Short on-screen text + longer voiceover (~2–3×).",
-                    },
-                  ]
-                ).map((opt) => {
+                {[
+                  {
+                    id: "short" as const,
+                    label: "Short",
+                    description:
+                      "Same short line on screen and in voice (~14–18 words).",
+                  },
+                  {
+                    id: "detailed" as const,
+                    label: "Detailed",
+                    description:
+                      "Short on-screen text + longer voiceover (~2–3×).",
+                  },
+                ].map((opt) => {
                   const active = scriptStyle === opt.id;
                   return (
                     <button
@@ -243,11 +251,40 @@ export function CreateWithAIDialog() {
                       )}
                     >
                       <span className="font-medium">{opt.label}</span>
-                      <span className="text-xs opacity-70">{opt.description}</span>
+                      <span className="text-xs opacity-70">
+                        {opt.description}
+                      </span>
                     </button>
                   );
                 })}
               </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="ai-production-preset">Production preset</Label>
+              <Combobox
+                id="ai-production-preset"
+                value={productionPresetId}
+                onChange={(value) =>
+                  setProductionPresetId(value as ProductionPresetId)
+                }
+                options={PRODUCTION_PRESETS.map((preset) => ({
+                  value: preset.id,
+                  label: preset.name,
+                }))}
+                searchPlaceholder="Search presets…"
+              />
+              <p className="text-muted-foreground text-xs">
+                {
+                  PRODUCTION_PRESETS.find(
+                    (preset) => preset.id === productionPresetId,
+                  )?.description
+                }
+              </p>
+              <p className="text-muted-foreground text-[11px]">
+                Auto Style and Energy use this preset&apos;s recommended
+                defaults.
+              </p>
             </div>
 
             <div className="grid gap-2">
@@ -267,7 +304,9 @@ export function CreateWithAIDialog() {
                           : "text-muted-foreground hover:bg-accent",
                       )}
                     >
-                      <div className="font-medium">{VIDEO_ENGINE_LABELS[id]}</div>
+                      <div className="font-medium">
+                        {VIDEO_ENGINE_LABELS[id]}
+                      </div>
                       <p className="mt-1 text-xs opacity-80">
                         {VIDEO_ENGINE_DESCRIPTIONS[id]}
                       </p>
@@ -298,13 +337,19 @@ export function CreateWithAIDialog() {
                   id="ai-provider"
                   value={effectiveProvider ?? ""}
                   onChange={(v) => setProviderId(v as AIProviderId)}
-                  options={configured.map((p) => ({ value: p.id, label: p.label }))}
+                  options={configured.map((p) => ({
+                    value: p.id,
+                    label: p.label,
+                  }))}
                   placeholder="Select provider…"
                   searchPlaceholder="Search providers…"
                 />
               </div>
               <div className="grid gap-2">
-                <HintTooltip label="How many scenes the AI should write. Auto usually picks 5–10." side="top">
+                <HintTooltip
+                  label="How many scenes the AI should write. Auto usually picks 5–10."
+                  side="top"
+                >
                   <Label htmlFor="ai-scenes">Scenes</Label>
                 </HintTooltip>
                 <Combobox
@@ -331,9 +376,7 @@ export function CreateWithAIDialog() {
           </DialogClose>
           <Button
             onClick={submit}
-            disabled={
-              !brief.trim() || !effectiveProvider || generate.isPending
-            }
+            disabled={!brief.trim() || !effectiveProvider || generate.isPending}
           >
             {generate.isPending ? (
               <>

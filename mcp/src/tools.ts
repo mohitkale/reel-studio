@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
@@ -33,7 +35,10 @@ function guard<A>(fn: (args: A) => Promise<ToolResult>) {
       return await fn(args);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      return { content: [{ type: "text", text: `Error: ${msg}` }], isError: true };
+      return {
+        content: [{ type: "text", text: `Error: ${msg}` }],
+        isError: true,
+      };
     }
   };
 }
@@ -55,6 +60,32 @@ const sceneMood = z.enum([
 ]);
 /** Server-side TTS providers MCP can drive without browser upload. */
 const serverVoiceProvider = z.enum(["cartesia", "elevenlabs", "voiceforge"]);
+const productionVoiceProvider = z.enum([
+  "kokoro",
+  "kokoro-server",
+  "webspeech",
+  "cartesia",
+  "elevenlabs",
+  "voiceforge",
+]);
+const productionBatchRow = z.object({
+  key: z.string().min(1).max(80).optional(),
+  label: z.string().min(1).max(120).optional(),
+  kind: z.enum(["video", "audio", "podcast", "audiogram"]),
+  scriptId: z.string().min(1).optional(),
+  voiceTakeId: z.string().min(1).optional(),
+  podcastId: z.string().min(1).optional(),
+  takeId: z.string().min(1).optional(),
+  startTurnId: z.string().min(1).optional(),
+  endTurnId: z.string().min(1).optional(),
+  orientations: z.array(orientation).min(1).max(3).optional(),
+  quality: z.enum(["draft", "standard", "high"]).optional(),
+  providerId: productionVoiceProvider.optional(),
+  voiceId: z.string().min(1).optional(),
+  modelId: z.string().min(1).optional(),
+  placeholder: z.boolean().optional(),
+  regenerateTurnIds: z.array(z.string().min(1)).max(120).optional(),
+});
 
 const backgroundShape = z.object({
   type: z.enum(["image", "video"]),
@@ -116,7 +147,9 @@ export function registerTools(server: McpServer): void {
       const qs = new URLSearchParams({ format });
       if (takeId) qs.set("takeId", takeId);
       return text(
-        await apiGetText(`/api/scripts/${encode(scriptId)}/captions?${qs.toString()}`),
+        await apiGetText(
+          `/api/scripts/${encode(scriptId)}/captions?${qs.toString()}`,
+        ),
       );
     }),
   );
@@ -162,7 +195,8 @@ export function registerTools(server: McpServer): void {
   server.registerTool(
     "list_voices",
     {
-      description: "List voices for a voice provider, optionally filtered by a query.",
+      description:
+        "List voices for a voice provider, optionally filtered by a query.",
       inputSchema: {
         providerId: z.string().min(1),
         query: z.string().optional(),
@@ -263,49 +297,238 @@ export function registerTools(server: McpServer): void {
         "List supported video engines (remotion, hyperframes) and their template catalogs. Use before create_project when choosing an engine.",
       inputSchema: {},
     },
-    guard(async () =>
-      ok({
-        engines: [
-          {
-            id: "remotion",
-            label: "Remotion",
-            license: "Remotion License (source-available)",
-            templates: [
-              "kinetic",
-              "lottie",
-              "three",
-              "stat-reveal",
-              "icon-grid",
-              "quote-card",
-              "emoji-punch",
-            ],
-          },
-          {
-            id: "hyperframes",
-            label: "HyperFrames",
-            license: "Apache-2.0",
-            default: true,
-            templates: [
-              "hf-kinetic-slam",
-              "hf-opener",
-              "hf-statement",
-              "hf-list",
-              "hf-stat",
-              "hf-money-count",
-              "hf-data-chart",
-              "hf-quote",
-              "hf-app-showcase",
-              "hf-cta",
-              "hf-logo-outro",
-              "hf-ig-follow",
-              "hf-tt-follow",
-              "hf-yt-lower-third",
-            ],
-            note: "Default engine. Renders via self-hosted @hyperframes/producer (Node >= 22). Curated catalog + classic templates; HeyGen hosted MCP is not used.",
-          },
-        ],
-      }),
+    guard(async () => {
+      const catalog = await apiGet<{ engines: unknown[] }>(
+        "/api/production-presets",
+      );
+      return ok({ engines: catalog.engines });
+    }),
+  );
+
+  server.registerTool(
+    "list_production_presets",
+    {
+      description:
+        "Discover the six production-ready presets, both engine capability maps, aspect ratios, scene roles, required inputs, effects, and launch duration limits.",
+      inputSchema: {},
+    },
+    guard(async () => ok(await apiGet("/api/production-presets"))),
+  );
+
+  server.registerTool(
+    "produce_content",
+    {
+      description:
+        "Start one durable video, voice-only audio, podcast, or podcast-audiogram production. Returns a persistent job. A scoped token can render unattended only when production:automatic is enabled; otherwise the job waits for web approval.",
+      inputSchema: {
+        kind: z.enum(["video", "audio", "podcast", "audiogram"]),
+        idempotencyKey: z.string().min(8).max(240).optional(),
+        runMode: z.enum(["automatic", "approval"]).optional(),
+        priority: z.number().int().min(-100).max(100).optional(),
+        scriptId: z.string().min(1).optional(),
+        voiceTakeId: z.string().min(1).optional(),
+        podcastId: z.string().min(1).optional(),
+        takeId: z.string().min(1).optional(),
+        startTurnId: z.string().min(1).optional(),
+        endTurnId: z.string().min(1).optional(),
+        orientation: orientation.optional(),
+        quality: z.enum(["draft", "standard", "high"]).optional(),
+        providerId: z
+          .enum([
+            "kokoro",
+            "kokoro-server",
+            "webspeech",
+            "cartesia",
+            "elevenlabs",
+            "voiceforge",
+          ])
+          .optional(),
+        voiceId: z.string().min(1).optional(),
+        modelId: z.string().min(1).optional(),
+        placeholder: z.boolean().optional(),
+        label: z.string().trim().min(1).max(120).optional(),
+        regenerateTurnIds: z.array(z.string().min(1)).max(120).optional(),
+      },
+    },
+    guard(async (args) => {
+      const response = await apiPost<{
+        job: { id: string; state: string };
+        approvalUrl?: string;
+      }>("/api/production-jobs", {
+        ...args,
+        idempotencyKey: args.idempotencyKey ?? `mcp-production:${randomUUID()}`,
+      });
+      return ok({
+        ...response,
+        approvalUrl: response.approvalUrl
+          ? absoluteUrl(response.approvalUrl)
+          : undefined,
+      });
+    }),
+  );
+
+  server.registerTool(
+    "produce_batch",
+    {
+      description:
+        "Submit up to ten JSON rows to the durable production queue. Video and audiogram rows default to independent portrait, square, and landscape reflows. Successful outputs survive partial failure.",
+      inputSchema: {
+        idempotencyKey: z.string().min(8).max(120).optional(),
+        rows: z.array(productionBatchRow).min(1).max(10),
+        runMode: z.enum(["automatic", "approval"]).optional(),
+        priority: z.number().int().min(-100).max(100).optional(),
+      },
+    },
+    guard(async (args) => {
+      const response = await apiPost<{
+        batch: { id: string; state: string; bundleUrl: string };
+        approvalUrl?: string;
+      }>("/api/production-batches", {
+        ...args,
+        idempotencyKey: args.idempotencyKey ?? `mcp-batch:${randomUUID()}`,
+      });
+      return ok({
+        ...response,
+        approvalUrl: response.approvalUrl
+          ? absoluteUrl(response.approvalUrl)
+          : undefined,
+        bundleUrl: absoluteUrl(response.batch.bundleUrl),
+      });
+    }),
+  );
+
+  server.registerTool(
+    "get_production_batch",
+    {
+      description:
+        "Get aggregate and per-item status for a durable production batch, including partial failures and completed artifacts.",
+      inputSchema: { batchId: z.string().min(1) },
+    },
+    guard(async ({ batchId }) =>
+      ok(await apiGet(`/api/production-batches/${encode(batchId)}`)),
     ),
+  );
+
+  server.registerTool(
+    "cancel_production_batch",
+    {
+      description:
+        "Cancel every queued or active item in a production batch while preserving completed outputs.",
+      inputSchema: { batchId: z.string().min(1) },
+    },
+    guard(async ({ batchId }) =>
+      ok(
+        await apiPost(`/api/production-batches/${encode(batchId)}/cancel`, {}),
+      ),
+    ),
+  );
+
+  server.registerTool(
+    "retry_production_batch",
+    {
+      description:
+        "Retry only failed, canceled, or previously invalid items. Successful batch outputs are retained.",
+      inputSchema: { batchId: z.string().min(1) },
+    },
+    guard(async ({ batchId }) =>
+      ok(await apiPost(`/api/production-batches/${encode(batchId)}/retry`, {})),
+    ),
+  );
+
+  server.registerTool(
+    "download_production_batch",
+    {
+      description:
+        "Return the authenticated tar.gz bundle URL for completed artifacts plus a manifest describing failed or pending items.",
+      inputSchema: { batchId: z.string().min(1) },
+    },
+    guard(async ({ batchId }) => {
+      const response = await apiGet<{
+        batch: { bundleUrl: string; state: string; items: unknown[] };
+      }>(`/api/production-batches/${encode(batchId)}`);
+      return ok({
+        state: response.batch.state,
+        items: response.batch.items,
+        bundleUrl: absoluteUrl(response.batch.bundleUrl),
+      });
+    }),
+  );
+
+  server.registerTool(
+    "get_production_job",
+    {
+      description:
+        "Get durable production state, stage progress, warnings, and completed artifacts.",
+      inputSchema: { jobId: z.string().min(1) },
+    },
+    guard(async ({ jobId }) =>
+      ok(await apiGet(`/api/production-jobs/${encode(jobId)}`)),
+    ),
+  );
+
+  server.registerTool(
+    "get_production_job_events",
+    {
+      description:
+        "Read reconnectable production events after an integer cursor. Save the returned cursor for the next poll.",
+      inputSchema: {
+        jobId: z.string().min(1),
+        after: z.number().int().nonnegative().optional(),
+      },
+    },
+    guard(async ({ jobId, after }) =>
+      ok(
+        await apiGet(
+          `/api/production-jobs/${encode(jobId)}/events?after=${after ?? 0}`,
+        ),
+      ),
+    ),
+  );
+
+  server.registerTool(
+    "cancel_production_job",
+    {
+      description: "Cancel a queued or active durable production job.",
+      inputSchema: { jobId: z.string().min(1) },
+    },
+    guard(async ({ jobId }) =>
+      ok(await apiPost(`/api/production-jobs/${encode(jobId)}/cancel`, {})),
+    ),
+  );
+
+  server.registerTool(
+    "retry_production_job",
+    {
+      description:
+        "Retry a failed or canceled durable production job without changing its immutable input snapshot.",
+      inputSchema: { jobId: z.string().min(1) },
+    },
+    guard(async ({ jobId }) =>
+      ok(await apiPost(`/api/production-jobs/${encode(jobId)}/retry`, {})),
+    ),
+  );
+
+  server.registerTool(
+    "download_production_artifact",
+    {
+      description:
+        "Return the authenticated download URL and verified metadata for one completed production output.",
+      inputSchema: {
+        jobId: z.string().min(1),
+        outputId: z.string().min(1),
+      },
+    },
+    guard(async ({ jobId, outputId }) => {
+      const response = await apiGet<{
+        artifact: { downloadUrl: string } & Record<string, unknown>;
+      }>(`/api/production-jobs/${encode(jobId)}/artifacts/${encode(outputId)}`);
+      return ok({
+        artifact: {
+          ...response.artifact,
+          downloadUrl: absoluteUrl(response.artifact.downloadUrl),
+        },
+      });
+    }),
   );
 
   server.registerTool(
@@ -333,13 +556,17 @@ export function registerTools(server: McpServer): void {
         coverUrl: z.string().max(2048).nullable().optional(),
         styleId: styleId
           .optional()
-          .describe("Whole-reel Style: bold-hook | clean-story | teach-me | soft-brand."),
+          .describe(
+            "Whole-reel Style: bold-hook | clean-story | teach-me | soft-brand.",
+          ),
         energy: energy
           .optional()
           .describe("Whole-reel Energy: calm | normal | high."),
         voiceMode: voiceMode
           .optional()
-          .describe("'oneshot' (default) or 'per_scene' for clip-per-scene workflow."),
+          .describe(
+            "'oneshot' (default) or 'per_scene' for clip-per-scene workflow.",
+          ),
       },
     },
     guard(async ({ scriptId, ...body }) =>
@@ -414,7 +641,9 @@ export function registerTools(server: McpServer): void {
           .max(60)
           .nullable()
           .optional()
-          .describe("Short music vibe hint (e.g. 'uplifting lo-fi'), used for auto music suggestions. Null clears it."),
+          .describe(
+            "Short music vibe hint (e.g. 'uplifting lo-fi'), used for auto music suggestions. Null clears it.",
+          ),
         selectedVoiceClipId: z
           .string()
           .nullable()
@@ -441,7 +670,9 @@ export function registerTools(server: McpServer): void {
     },
     guard(async ({ scriptId, orderedIds }) =>
       ok(
-        await apiPatch(`/api/scripts/${encode(scriptId)}/scenes`, { orderedIds }),
+        await apiPatch(`/api/scripts/${encode(scriptId)}/scenes`, {
+          orderedIds,
+        }),
       ),
     ),
   );
@@ -500,7 +731,9 @@ export function registerTools(server: McpServer): void {
       },
     },
     guard(async ({ scriptId, jobId }) =>
-      ok(await apiGet(`/api/scripts/${encode(scriptId)}/takes/${encode(jobId)}`)),
+      ok(
+        await apiGet(`/api/scripts/${encode(scriptId)}/takes/${encode(jobId)}`),
+      ),
     ),
   );
 
@@ -531,9 +764,7 @@ export function registerTools(server: McpServer): void {
       },
     },
     guard(async ({ scriptId, ...body }) =>
-      ok(
-        await apiPost(`/api/scripts/${encode(scriptId)}/scene-clips`, body),
-      ),
+      ok(await apiPost(`/api/scripts/${encode(scriptId)}/scene-clips`, body)),
     ),
   );
 
@@ -638,7 +869,11 @@ export function registerTools(server: McpServer): void {
     },
     guard(async ({ renderId }) => {
       const res = await apiGet<{
-        render: { status: string; outputUrl: string | null; error: string | null };
+        render: {
+          status: string;
+          outputUrl: string | null;
+          error: string | null;
+        };
       }>(`/api/renders/${encode(renderId)}`);
       const r = res.render;
       if (r.status === "done" && r.outputUrl) {
@@ -799,7 +1034,9 @@ export function registerTools(server: McpServer): void {
         updateMeta: z
           .boolean()
           .optional()
-          .describe("When true (default), apply plan title/description to the podcast."),
+          .describe(
+            "When true (default), apply plan title/description to the podcast.",
+          ),
       },
     },
     guard(async ({ podcastId, ...body }) =>
@@ -872,7 +1109,10 @@ export function registerTools(server: McpServer): void {
     {
       description: "Update the spoken text of one dialogue turn.",
       inputSchema: {
-        podcastId: z.string().min(1).describe("Podcast id (for routing consistency)."),
+        podcastId: z
+          .string()
+          .min(1)
+          .describe("Podcast id (for routing consistency)."),
         turnId: z.string().min(1),
         text: z.string().trim().min(1).max(4000),
       },
@@ -941,8 +1181,6 @@ export function registerTools(server: McpServer): void {
           .describe("Relative /media/... path or absolute URL from the take."),
       },
     },
-    guard(async ({ audioUrl }) =>
-      ok({ downloadUrl: absoluteUrl(audioUrl) }),
-    ),
+    guard(async ({ audioUrl }) => ok({ downloadUrl: absoluteUrl(audioUrl) })),
   );
 }

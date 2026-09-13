@@ -3,15 +3,25 @@ import { prisma } from "@/library/db";
 import { getAssetStore } from "@/library/storage";
 import { metaSchema, parseJsonColumn } from "../schemas";
 
-function toAssetDTO(
-  a: { id: string; type: string; name: string | null; path: string; meta: string | null; createdAt: Date }
-): AssetDTO {
+function toAssetDTO(a: {
+  id: string;
+  type: string;
+  name: string | null;
+  path: string;
+  meta: string | null;
+  createdAt: Date;
+}): AssetDTO {
   return {
     id: a.id,
     type: a.type as AssetDTO["type"],
     name: a.name,
     url: getAssetStore().url(a.path),
-    meta: a.meta ? parseJsonColumn(a.meta, metaSchema, null) as Record<string, unknown> | null : null,
+    meta: a.meta
+      ? (parseJsonColumn(a.meta, metaSchema, null) as Record<
+          string,
+          unknown
+        > | null)
+      : null,
     createdAt: a.createdAt.toISOString(),
   };
 }
@@ -27,6 +37,16 @@ export async function listAssets(type?: string): Promise<AssetDTO[]> {
 export async function getAsset(id: string): Promise<AssetDTO | null> {
   const asset = await prisma.asset.findUnique({ where: { id } });
   return asset ? toAssetDTO(asset) : null;
+}
+
+export async function getAssets(ids: string[]): Promise<AssetDTO[]> {
+  if (!ids.length) return [];
+  const assets = await prisma.asset.findMany({ where: { id: { in: ids } } });
+  const byId = new Map(assets.map((asset) => [asset.id, asset]));
+  return ids.flatMap((id) => {
+    const asset = byId.get(id);
+    return asset ? [toAssetDTO(asset)] : [];
+  });
 }
 
 export async function createAsset(
@@ -50,5 +70,7 @@ export async function deleteAsset(id: string): Promise<void> {
   const asset = await prisma.asset.findUnique({ where: { id } });
   if (!asset) return;
   await prisma.asset.delete({ where: { id } });
-  await getAssetStore().delete(asset.path).catch(() => {});
+  await getAssetStore()
+    .delete(asset.path)
+    .catch(() => {});
 }

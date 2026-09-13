@@ -1,11 +1,14 @@
 /** Plain data shapes returned by the API and consumed by the client (no Prisma types). */
 
 import type { BrandTokens } from "@/compositions/tokens";
-import type { SceneBackground } from "@/compositions/types";
+import type { SceneBackground, SceneChartData } from "@/compositions/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { VideoEngineId } from "@/engines/types";
+import type { ProductionPresetId } from "@/production/presets";
+import type { ProductionSceneRole } from "@/production/roles";
+import type { CaptionTimingSource, CaptionWord } from "@/lib/captions";
 
-export type { SceneBackground };
+export type { SceneBackground, SceneChartData };
 export type { VideoEngineId };
 
 export interface BeatTimingDTO {
@@ -34,6 +37,8 @@ export interface SceneDTO {
   visual?: string;
   background?: SceneBackground;
   items?: string[];
+  /** Explicit labels and values for chart templates; never inferred from prose. */
+  chart?: SceneChartData;
   /** Per-scene override for on-screen text. null = inherit the script default. */
   hideText: boolean | null;
   /** Emotional/visual tone (AI-suggested or manually set); drives dynamic backgrounds + music. */
@@ -42,6 +47,11 @@ export interface SceneDTO {
   musicMood?: string;
   /** Active SceneVoiceClip in per_scene mode; null = none selected. */
   selectedVoiceClipId: string | null;
+  /** Engine-independent role selected by a versioned production preset. */
+  role?: ProductionSceneRole;
+  /** Uploaded assets retained by id for reproducible planning and regeneration. */
+  assetRefs?: string[];
+  locks?: { copy: boolean; assets: boolean; scene: boolean };
 }
 
 export interface SceneVoiceClipDTO {
@@ -111,6 +121,29 @@ export interface ScriptDTO {
   styleId: StyleId;
   /** How fast and punchy cuts/text feel. */
   energy: EnergyId;
+  /** Versioned preset snapshot; absent for legacy and manually empty projects. */
+  productionPreset?: { id: ProductionPresetId; version: string };
+  captionTracks?: CaptionTrackDTO[];
+}
+
+export interface CaptionCueDTO {
+  id: string;
+  order: number;
+  startFrame: number;
+  endFrame: number;
+  text: string;
+  words?: CaptionWord[];
+}
+
+export interface CaptionTrackDTO {
+  id: string;
+  scriptId: string;
+  label: string;
+  language: string;
+  timingSource: CaptionTimingSource;
+  enabled: boolean;
+  cues: CaptionCueDTO[];
+  updatedAt: string;
 }
 
 export interface ProjectDTO {
@@ -150,12 +183,7 @@ export interface RenderDTO {
   voiceTakeId: string | null;
   name: string | null;
   status:
-    | "pending_approval"
-    | "queued"
-    | "bundling"
-    | "rendering"
-    | "done"
-    | "error";
+    "pending_approval" | "queued" | "bundling" | "rendering" | "done" | "error";
   /** Speed/resolution tradeoff used for this job. */
   quality: "draft" | "standard" | "high";
   progress: number;
@@ -173,6 +201,15 @@ export interface PodcastBeatTimingDTO {
   durationFrames: number;
   text: string;
   characterKey?: string;
+}
+
+export interface PodcastChapterDTO {
+  id: string;
+  title: string;
+  startFrame: number;
+  endFrame: number;
+  startTurnId: string;
+  endTurnId: string;
 }
 
 export interface PodcastCharacterDTO {
@@ -217,9 +254,11 @@ export interface PodcastTakeDTO {
   fps: number;
   totalFrames: number;
   timeline: PodcastBeatTimingDTO[];
+  chapters: PodcastChapterDTO[];
   /** Cast voices snapshotted at generation time. */
   voices: PodcastTakeVoiceDTO[];
   audioUrl: string;
+  mp3Url: string | null;
   createdAt: string;
 }
 
@@ -228,6 +267,7 @@ export interface PodcastSummaryDTO {
   title: string;
   description: string;
   length: PodcastLengthDTO;
+  presetId: "solo-narration" | "two-host-discussion" | "interview";
   characterCount: number;
   turnCount: number;
   takeCount: number;
@@ -240,9 +280,25 @@ export interface PodcastDTO {
   title: string;
   description: string;
   length: PodcastLengthDTO;
+  presetId: "solo-narration" | "two-host-discussion" | "interview";
   characters: PodcastCharacterDTO[];
   turns: PodcastTurnDTO[];
   takes: PodcastTakeDTO[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PodcastAudiogramJobDTO {
+  id: string;
+  state:
+    | "queued"
+    | "running"
+    | "awaiting_approval"
+    | "succeeded"
+    | "failed"
+    | "canceled";
+  progress: number;
+  activeStep: string | null;
+  error: string | null;
+  outputUrl: string | null;
 }

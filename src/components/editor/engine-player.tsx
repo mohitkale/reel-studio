@@ -8,10 +8,11 @@ import {
   HyperFramesPlayer,
   type HyperFramesPlayerHandle,
 } from "@/components/editor/hyperframes-player";
-import type { ReelBeat, ReelScene } from "@/compositions/types";
+import type { ReelBeat, ReelProps, ReelScene } from "@/compositions/types";
 import type { BrandTokens } from "@/compositions/tokens";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { VideoEngineId } from "@/engines/types";
+import type { ProductionPresetId } from "@/production/presets";
 
 export type EnginePlayerHandle = PlayerRef | HyperFramesPlayerHandle;
 
@@ -27,6 +28,7 @@ interface EnginePlayerProps {
   musicUrl?: string;
   musicVolume?: number;
   sfxCues?: Array<{ url: string; startFrame: number; volume: number }>;
+  captions?: ReelProps["captions"];
   autoPlay?: boolean;
   loop?: boolean;
   tokens?: BrandTokens;
@@ -35,6 +37,7 @@ interface EnginePlayerProps {
   previewQuality?: "standard" | "draft";
   styleId?: StyleId;
   energy?: EnergyId;
+  preset?: { id: ProductionPresetId; version: string };
 }
 
 /** Engine-selected preview player (Remotion or HyperFrames). */

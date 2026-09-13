@@ -1,0 +1,95 @@
+{
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "styleId": "clean-story",
+  "energy": "normal",
+  "preset": { "id": "developer-demo", "version": "1.0.0" },
+  "tokens": {
+    "background": "#050B12",
+    "backgroundAccent": "#102331",
+    "foreground": "#EEF8FF",
+    "muted": "#91A7B5",
+    "accent": "#46E6B0",
+    "accentSecondary": "#3A8DFF",
+    "accentForeground": "#050B12",
+    "handle": "@reelstudio",
+    "fontFamily": "Inter, sans-serif",
+    "radius": 14
+  },
+  "scenes": [
+    {
+      "id": "developer-code",
+      "role": "code",
+      "templateId": "hf-statement",
+      "text": "Start with one validated production spec.",
+      "emphasis": ["validated"],
+      "items": [
+        "const production = schema.parse(input);",
+        "await planner.resolve(production);",
+        "await renderer.export(production);"
+      ],
+      "order": 0
+    },
+    {
+      "id": "developer-diff",
+      "role": "diff",
+      "templateId": "hf-statement",
+      "text": "Change one setting without rebuilding the story.",
+      "emphasis": ["one setting"],
+      "items": [
+        "- orientation: portrait",
+        "+ orientation: landscape",
+        "+ preserveNarration: true"
+      ],
+      "order": 1
+    },
+    {
+      "id": "developer-terminal",
+      "role": "terminal",
+      "templateId": "hf-statement",
+      "text": "The local pipeline verifies every artifact.",
+      "emphasis": ["verifies"],
+      "items": [
+        "$ reel-studio produce demo.json",
+        "✓ composition prepared",
+        "✓ audio and duration verified",
+        "✓ output/demo.mp4"
+      ],
+      "order": 2
+    },
+    {
+      "id": "developer-browser",
+      "role": "browser",
+      "templateId": "hf-app-showcase",
+      "text": "Review the finished result before it leaves your machine.",
+      "emphasis": ["before it leaves"],
+      "background": {
+        "type": "image",
+        "url": "/samples/developer-demo-browser.svg",
+        "effect": "ken-burns"
+      },
+      "order": 3
+    },
+    {
+      "id": "developer-cta",
+      "role": "cta",
+      "templateId": "hf-logo-outro",
+      "text": "Automate the repeatable work. Keep creative control.",
+      "emphasis": ["creative control"],
+      "visual": "npm run produce",
+      "order": 4
+    }
+  ],
+  "timeline": [
+    { "sceneId": "developer-code", "startFrame": 0, "durationFrames": 75 },
+    { "sceneId": "developer-diff", "startFrame": 75, "durationFrames": 75 },
+    {
+      "sceneId": "developer-terminal",
+      "startFrame": 150,
+      "durationFrames": 75
+    },
+    { "sceneId": "developer-browser", "startFrame": 225, "durationFrames": 75 },
+    { "sceneId": "developer-cta", "startFrame": 300, "durationFrames": 60 }
+  ]
+}

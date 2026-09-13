@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "./prisma-client";
+import type { PrismaClient } from "@prisma/client";
 
 /**
  * Prisma client singleton. In dev, Next.js hot-reloads modules repeatedly; we
@@ -10,20 +11,26 @@ import { PrismaClient } from "@prisma/client";
  * Server-only. Access goes through the repository layer, not directly.
  */
 const globalForPrisma = globalThis as unknown as {
-  prisma?: PrismaClient & { podcast?: unknown };
+  prisma?: PrismaClient & {
+    podcast?: unknown;
+    podcastTurnAudioBeat?: unknown;
+    productionBatch?: unknown;
+  };
 };
 
 function createClient(): PrismaClient {
-  return new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
-  });
+  return createPrismaClient();
 }
 
 function getClient(): PrismaClient {
   const existing = globalForPrisma.prisma;
   if (existing) {
     // Hot-reload after `prisma generate` can leave a stale client without new models.
-    if (existing.podcast == null) {
+    if (
+      existing.podcast == null ||
+      existing.podcastTurnAudioBeat == null ||
+      existing.productionBatch == null
+    ) {
       void existing.$disconnect().catch(() => undefined);
       const fresh = createClient();
       globalForPrisma.prisma = fresh;

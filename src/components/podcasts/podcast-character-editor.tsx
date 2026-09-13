@@ -245,7 +245,7 @@ function CharacterRow({
   return (
     <div
       className={cn(
-        "grid gap-3 rounded-xl border-2 border-border bg-background p-3 shadow-sm",
+        "border-border bg-background grid gap-3 rounded-xl border-2 p-3 shadow-sm",
         "border-l-4",
         accentBorder,
       )}
@@ -261,10 +261,10 @@ function CharacterRow({
             {(draft.name.trim()[0] || "?").toUpperCase()}
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-semibold leading-tight">
+            <p className="text-sm leading-tight font-semibold">
               Character {index + 1}
               {draft.name.trim() ? (
-                <span className="font-normal text-muted-foreground">
+                <span className="text-muted-foreground font-normal">
                   {" "}
                   · {draft.name}
                 </span>
@@ -274,7 +274,7 @@ function CharacterRow({
               <Badge variant="secondary" className="font-mono text-[10px]">
                 {draft.key || "—"}
               </Badge>
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-muted-foreground text-[11px]">
                 JSON id for dialogue
               </span>
             </div>
@@ -335,18 +335,18 @@ function CharacterRow({
       <div className="grid gap-1.5">
         <Label>Character definition</Label>
         <textarea
-          className="min-h-[56px] w-full rounded-md border border-input bg-card px-3 py-2 text-sm shadow-sm"
+          className="border-input bg-card min-h-[56px] w-full rounded-md border px-3 py-2 text-sm shadow-sm"
           placeholder="Personality, role, tone — shapes how AI writes their lines"
           value={draft.definition}
           onChange={(e) => onChange({ ...draft, definition: e.target.value })}
         />
-        <p className="text-[11px] text-muted-foreground">
-          Used for AI script writing only — does not change how TTS sounds.
-          Pick Voice below for the spoken voice.
+        <p className="text-muted-foreground text-[11px]">
+          Used for AI script writing only — does not change how TTS sounds. Pick
+          Voice below for the spoken voice.
         </p>
       </div>
 
-      <div className="grid gap-1.5 rounded-lg border border-border bg-card p-2.5">
+      <div className="border-border bg-card grid gap-1.5 rounded-lg border p-2.5">
         <Label>Voice (TTS)</Label>
         <div className="flex gap-2">
           <div className="min-w-0 flex-1">
@@ -387,7 +387,7 @@ function CharacterRow({
             </Button>
           </HintTooltip>
         </div>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-muted-foreground text-[11px]">
           Audio generation always uses the voice saved here (latest pick when
           you Generate).
         </p>
@@ -429,7 +429,7 @@ export function PodcastCharacterEditor({
           key={d.localId}
           index={i}
           draft={d}
-          canRemove={drafts.length > 2}
+          canRemove={drafts.length > 1}
           onRemove={() => onChange(drafts.filter((_, j) => j !== i))}
           onChange={(next) =>
             onChange(drafts.map((row, j) => (j === i ? next : row)))

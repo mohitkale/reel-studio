@@ -7,15 +7,18 @@ import type {
   ProjectDTO,
   ScriptDTO,
   SceneDTO,
+  CaptionTrackDTO,
   SceneBackground,
+  SceneChartData,
   VoiceTakeDTO,
   VoiceMode,
 } from "@/lib/dto";
 import type { ProviderId } from "@/providers/voice/types";
 import type { Orientation } from "@/lib/orientation";
 import type { VideoEngineId } from "@/engines/types";
-import type { ScriptStyle } from "@/providers/ai/types";
+import type { AIScene, ScriptStyle } from "@/providers/ai/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
+import type { ManualCreationInput } from "@/production/manual-planner";
 
 async function apiSend<T>(
   url: string,
@@ -38,7 +41,9 @@ export function useProjects() {
   return useQuery({
     queryKey: ["projects"],
     queryFn: () =>
-      apiGet<{ projects: ProjectDTO[] }>("/api/projects").then((r) => r.projects),
+      apiGet<{ projects: ProjectDTO[] }>("/api/projects").then(
+        (r) => r.projects,
+      ),
   });
 }
 
@@ -51,6 +56,19 @@ export function useCreateProject() {
       videoEngine?: VideoEngineId;
     }) =>
       apiPost<{ projectId: string; scriptId: string }>("/api/projects", vars),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
+  });
+}
+
+export function useCreateManualProduction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ManualCreationInput) =>
+      apiPost<{
+        projectId: string;
+        scriptId: string;
+        warnings: string[];
+      }>("/api/projects/manual", input),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
   });
 }
@@ -75,6 +93,87 @@ export function useScript(scriptId: string) {
   });
 }
 
+export interface LocalTranscriptionStatus {
+  available: boolean;
+  binary: string | null;
+  model: string | null;
+  reason: string | null;
+}
+
+export function useLocalTranscriptionStatus(enabled = true) {
+  return useQuery({
+    queryKey: ["local-transcription-status"],
+    queryFn: () =>
+      apiGet<{ status: LocalTranscriptionStatus }>(
+        "/api/local-transcription/status",
+      ).then((result) => result.status),
+    enabled,
+    staleTime: 30_000,
+  });
+}
+
+export function useReplaceCaptions(scriptId: string) {
+  const invalidate = useScriptInvalidator(scriptId);
+  return useMutation({
+    mutationFn: (
+      input:
+        | { action: "estimate"; takeId?: string; trackId?: string }
+        | {
+            action: "import";
+            format: "srt" | "vtt";
+            content: string;
+            label?: string;
+            language?: string;
+          }
+        | {
+            action: "transcribe";
+            takeId: string;
+            trackId?: string;
+            language?: string;
+          },
+    ) =>
+      apiPost<{ track: CaptionTrackDTO }>(
+        `/api/scripts/${scriptId}/captions`,
+        input,
+      ).then((result) => result.track),
+    onSuccess: invalidate,
+  });
+}
+
+export function useSetCaptionTrackEnabled(scriptId: string) {
+  const invalidate = useScriptInvalidator(scriptId);
+  return useMutation({
+    mutationFn: (input: { trackId: string; enabled: boolean }) =>
+      apiPost<{ track: CaptionTrackDTO }>(`/api/scripts/${scriptId}/captions`, {
+        action: "set_enabled",
+        ...input,
+      }).then((result) => result.track),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateCaptionCue(scriptId: string) {
+  const invalidate = useScriptInvalidator(scriptId);
+  return useMutation({
+    mutationFn: (input: {
+      cueId: string;
+      text?: string;
+      startFrame?: number;
+      endFrame?: number;
+    }) =>
+      apiSend<{ track: CaptionTrackDTO }>(
+        `/api/scripts/${scriptId}/captions/${input.cueId}`,
+        "PATCH",
+        {
+          text: input.text,
+          startFrame: input.startFrame,
+          endFrame: input.endFrame,
+        },
+      ).then((result) => result.track),
+    onSuccess: invalidate,
+  });
+}
+
 function useScriptInvalidator(scriptId: string) {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: ["script", scriptId] });
@@ -89,7 +188,8 @@ export function useSetScriptCover(scriptId: string) {
     onMutate: async (coverUrl) => {
       await qc.cancelQueries({ queryKey: ["script", scriptId] });
       const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
-      if (prev) qc.setQueryData<ScriptDTO>(["script", scriptId], { ...prev, coverUrl });
+      if (prev)
+        qc.setQueryData<ScriptDTO>(["script", scriptId], { ...prev, coverUrl });
       return { prev };
     },
     onError: (_e, _v, ctx) => {
@@ -178,7 +278,11 @@ export function useSetScriptHideProgressBar(scriptId: string) {
     onMutate: async (hideProgressBar) => {
       await qc.cancelQueries({ queryKey: ["script", scriptId] });
       const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
-      if (prev) qc.setQueryData<ScriptDTO>(["script", scriptId], { ...prev, hideProgressBar });
+      if (prev)
+        qc.setQueryData<ScriptDTO>(["script", scriptId], {
+          ...prev,
+          hideProgressBar,
+        });
       return { prev };
     },
     onError: (_e, _v, ctx) => {
@@ -197,7 +301,8 @@ export function useSetScriptHideText(scriptId: string) {
     onMutate: async (hideText) => {
       await qc.cancelQueries({ queryKey: ["script", scriptId] });
       const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
-      if (prev) qc.setQueryData<ScriptDTO>(["script", scriptId], { ...prev, hideText });
+      if (prev)
+        qc.setQueryData<ScriptDTO>(["script", scriptId], { ...prev, hideText });
       return { prev };
     },
     onError: (_e, _v, ctx) => {
@@ -216,7 +321,11 @@ export function useSetVoiceMode(scriptId: string) {
     onMutate: async (voiceMode) => {
       await qc.cancelQueries({ queryKey: ["script", scriptId] });
       const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
-      if (prev) qc.setQueryData<ScriptDTO>(["script", scriptId], { ...prev, voiceMode });
+      if (prev)
+        qc.setQueryData<ScriptDTO>(["script", scriptId], {
+          ...prev,
+          voiceMode,
+        });
       return { prev };
     },
     onError: (_e, _v, ctx) => {
@@ -249,10 +358,12 @@ export function useUpdateScene(scriptId: string) {
       visual?: string | null;
       background?: SceneBackground | null;
       items?: string[] | null;
+      chart?: SceneChartData | null;
       hideText?: boolean | null;
       mood?: string | null;
       musicMood?: string | null;
       selectedVoiceClipId?: string | null;
+      locks?: { copy: boolean; assets: boolean; scene: boolean };
     }) =>
       apiSend<{ scene: SceneDTO; take?: VoiceTakeDTO | null }>(
         `/api/scenes/${vars.id}`,
@@ -289,12 +400,22 @@ export function useUpdateScene(scriptId: string) {
                   ...(vars.items !== undefined
                     ? { items: vars.items ?? undefined }
                     : {}),
+                  ...(vars.chart !== undefined
+                    ? { chart: vars.chart ?? undefined }
+                    : {}),
                   ...(vars.hideText !== undefined
                     ? { hideText: vars.hideText }
+                    : {}),
+                  ...(vars.mood !== undefined
+                    ? { mood: vars.mood ?? undefined }
+                    : {}),
+                  ...(vars.musicMood !== undefined
+                    ? { musicMood: vars.musicMood ?? undefined }
                     : {}),
                   ...(vars.selectedVoiceClipId !== undefined
                     ? { selectedVoiceClipId: vars.selectedVoiceClipId }
                     : {}),
+                  ...(vars.locks !== undefined ? { locks: vars.locks } : {}),
                 }
               : s,
           ),
@@ -311,7 +432,10 @@ export function useUpdateScene(scriptId: string) {
         if (prev) {
           qc.setQueryData<ScriptDTO>(["script", scriptId], {
             ...prev,
-            takes: [data.take!, ...prev.takes.filter((t) => t.id !== data.take!.id)],
+            takes: [
+              data.take!,
+              ...prev.takes.filter((t) => t.id !== data.take!.id),
+            ],
           });
         }
       }
@@ -430,7 +554,11 @@ async function pollVoiceJob(
         throw new Error(job.error || "Voice generation failed");
       }
     } catch (e) {
-      if (e instanceof Error && e.message !== "Job not found" && !e.message.includes("Voice generation failed")) {
+      if (
+        e instanceof Error &&
+        e.message !== "Job not found" &&
+        !e.message.includes("Voice generation failed")
+      ) {
         // Transient network blip while VoiceForge is still working — keep polling.
         continue;
       }
@@ -540,14 +668,17 @@ export function useEnhanceScript(scriptId: string) {
   return useMutation({
     mutationFn: (vars: {
       providerId: string;
-      mode: "rewrite" | "append";
+      mode: "rewrite" | "append" | "hook_variants";
       brief: string;
       sceneCount?: number;
+      sceneIds?: string[];
       scriptStyle?: ScriptStyle;
     }) =>
-      apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/ai`, vars).then(
-        (r) => r.script,
-      ),
+      apiPost<{
+        script: ScriptDTO;
+        alternatives?: AIScene[];
+        changedSceneIds?: string[];
+      }>(`/api/scripts/${scriptId}/ai`, vars),
     onSuccess: invalidate,
   });
 }
@@ -559,20 +690,29 @@ export function useEnhanceScript(scriptId: string) {
 export function useImportScenes(scriptId: string) {
   const invalidate = useScriptInvalidator(scriptId);
   return useMutation({
-    mutationFn: (scenes: {
-      templateId: string | null;
-      text: string;
-      spokenText?: string | null;
-      emphasis: string[];
-      visual: string | null;
-      background?: SceneBackground | null;
-      items?: string[];
-      mood?: string;
-      musicMood?: string;
-    }[]) =>
-      apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/undo`, { scenes }).then(
-        (r) => r.script,
-      ),
+    mutationFn: (
+      scenes: {
+        id?: string;
+        templateId: string | null;
+        text: string;
+        spokenText?: string | null;
+        emphasis: string[];
+        visual: string | null;
+        background?: SceneBackground | null;
+        items?: string[];
+        chart?: SceneChartData;
+        mood?: string;
+        musicMood?: string;
+        role?: SceneDTO["role"];
+        assetRefs?: string[];
+        locks?: SceneDTO["locks"];
+        hideText?: boolean | null;
+        selectedVoiceClipId?: string | null;
+      }[],
+    ) =>
+      apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/undo`, {
+        scenes,
+      }).then((r) => r.script),
     onSuccess: invalidate,
   });
 }
@@ -580,20 +720,29 @@ export function useImportScenes(scriptId: string) {
 export function useUndoScript(scriptId: string) {
   const invalidate = useScriptInvalidator(scriptId);
   return useMutation({
-    mutationFn: (scenes: {
-      templateId: string | null;
-      text: string;
-      spokenText?: string | null;
-      emphasis: string[];
-      visual: string | null;
-      background?: SceneBackground | null;
-      items?: string[];
-      mood?: string;
-      musicMood?: string;
-    }[]) =>
-      apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/undo`, { scenes }).then(
-        (r) => r.script,
-      ),
+    mutationFn: (
+      scenes: {
+        id?: string;
+        templateId: string | null;
+        text: string;
+        spokenText?: string | null;
+        emphasis: string[];
+        visual: string | null;
+        background?: SceneBackground | null;
+        items?: string[];
+        chart?: SceneChartData;
+        mood?: string;
+        musicMood?: string;
+        role?: SceneDTO["role"];
+        assetRefs?: string[];
+        locks?: SceneDTO["locks"];
+        hideText?: boolean | null;
+        selectedVoiceClipId?: string | null;
+      }[],
+    ) =>
+      apiPost<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/undo`, {
+        scenes,
+      }).then((r) => r.script),
     onSuccess: invalidate,
   });
 }

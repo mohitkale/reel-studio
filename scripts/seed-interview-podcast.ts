@@ -7,7 +7,7 @@
  * Usage: npx tsx scripts/seed-interview-podcast.ts
  */
 
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/library/prisma-client";
 
 import {
   INTERVIEW_SCENES,
@@ -17,7 +17,7 @@ import {
 } from "../src/library/interview-linkedin-content";
 import { generatePodcastTake } from "../src/library/podcast-take-service";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 const TITLE = "Would you hire her? (Interview audio)";
 const DESCRIPTION =

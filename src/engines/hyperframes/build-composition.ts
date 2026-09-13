@@ -4,7 +4,12 @@
  */
 
 import type { BrandTokens } from "@/compositions/tokens";
-import type { ReelBeat, ReelProps, ReelScene, SceneMood } from "@/compositions/types";
+import type {
+  ReelBeat,
+  ReelProps,
+  ReelScene,
+  SceneMood,
+} from "@/compositions/types";
 import { coverFrames } from "@/compositions/types";
 import {
   DEFAULT_ENERGY_ID,
@@ -18,7 +23,18 @@ import {
 import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
 import { getCatalogBlockByTemplateId } from "@/engines/hyperframes/catalog/manifest";
 import { buildCatalogSceneBlock } from "@/engines/hyperframes/catalog/build-scene";
-import { NATIVE_CATALOG_STYLES, buildGsapMotionBootScript, buildCinematicClassicVisual } from "@/engines/hyperframes/catalog/native-visuals";
+import {
+  NATIVE_CATALOG_STYLES,
+  buildGsapMotionBootScript,
+  buildCinematicClassicVisual,
+} from "@/engines/hyperframes/catalog/native-visuals";
+import { resolveProductionLayout } from "@/production/layout";
+import {
+  buildHyperframesPresetScene,
+  HYPERFRAMES_PRESET_STYLES,
+} from "@/engines/hyperframes/presets/registry";
+import { buildAudioMixPlan, type AudioMixPlan } from "@/lib/audio-mix";
+import { localizeHyperframesRenderFonts } from "@/engines/hyperframes/render-fonts";
 
 function escapeHtml(value: string): string {
   return value
@@ -78,8 +94,7 @@ function sceneInnerHtml(scene: ReelScene, tokens: BrandTokens): string {
   const accent = tokens.accent ?? "#ff6b4a";
   const fg = tokens.foreground ?? "#f8fafc";
   const speaker =
-    visual &&
-    /^(interviewer|candidate|host|guest)$/i.test(visual.trim())
+    visual && /^(interviewer|candidate|host|guest)$/i.test(visual.trim())
       ? visual.trim().toUpperCase()
       : "";
 
@@ -197,7 +212,10 @@ function framesToSeconds(frames: number, fps: number): number {
 }
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@500;700;800&family=Instrument+Serif:ital@0;1&display=swap');
+  @font-face { font-family: "DM Sans"; src: local("Arial"); }
+  @font-face { font-family: "Anton"; src: local("Impact"); }
+  @font-face { font-family: "Instrument Serif"; src: local("Georgia"); }
+  @font-face { font-family: "Impact"; src: local("Impact"); }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     width: 100%; height: 100%; overflow: hidden;
@@ -226,9 +244,8 @@ const STYLES = `
    */
   .scene {
     position: absolute; inset: 0; display: flex; align-items: stretch;
-    justify-content: stretch; opacity: 1; visibility: hidden;
+    justify-content: stretch; opacity: 1;
   }
-  .scene.is-active { visibility: visible; }
   .bg-mood, .bg-photo, .bg-video, .bg-scrim {
     position: absolute; inset: 0;
   }
@@ -291,7 +308,7 @@ const STYLES = `
   .content {
     position: relative; z-index: 2; flex: 1;
     display: flex; align-items: center; justify-content: center;
-    padding: 10% 8%;
+    padding: var(--safe-top, 10%) var(--safe-right, 8%) var(--safe-bottom, 10%) var(--safe-left, 8%);
   }
   .em { color: inherit; box-shadow: inset 0 -0.22em 0 0 var(--accent, #ff6b4a); }
   .speaker-chip {
@@ -301,7 +318,7 @@ const STYLES = `
     border: 1px solid; border-radius: 999px;
     padding: 8px 14px; margin-bottom: 22px;
   }
-  .tpl { width: 100%; max-width: 92%; }
+  .tpl { width: 100%; max-width: min(92%, var(--content-max-width, 92%)); }
   .tpl-opener .accent-bar {
     width: 72px; height: 8px; border-radius: 999px; margin-bottom: 28px;
     transform: scaleX(0); transform-origin: left;
@@ -418,14 +435,23 @@ function buildSeekScript(
   totalSeconds: number,
   fps: number,
   hideProgressBar: boolean,
+  audioMix: AudioMixPlan,
 ): string {
-  const payload = JSON.stringify({ beats, coverSeconds, totalSeconds, fps, hideProgressBar });
+  const payload = JSON.stringify({
+    beats,
+    coverSeconds,
+    totalSeconds,
+    fps,
+    hideProgressBar,
+    audioMix,
+  });
   return `
 <script>
 (function () {
   const CFG = ${payload};
   const root = document.getElementById('root');
   const scenes = Array.from(document.querySelectorAll('.scene'));
+  const subtitles = Array.from(document.querySelectorAll('.rs-subtitle'));
   const cover = document.querySelector('.cover');
   const progress = document.querySelector('.progress');
   const byId = Object.fromEntries(scenes.map((el) => [el.dataset.sceneId, el]));
@@ -442,6 +468,16 @@ function buildSeekScript(
     document.querySelectorAll('.bg-photo').forEach((photo) => {
       const start = Number(photo.dataset.start || 0);
       syncBgPhoto(photo, time - start);
+    });
+  }
+
+  function syncSubtitles(time) {
+    subtitles.forEach(function (subtitle) {
+      const start = Number(subtitle.getAttribute('data-start') || 0);
+      const duration = Number(subtitle.getAttribute('data-duration') || 0);
+      const active = time >= start && time < start + duration;
+      subtitle.style.opacity = active ? '1' : '0';
+      subtitle.style.visibility = active ? 'visible' : 'hidden';
     });
   }
 
@@ -507,24 +543,31 @@ function buildSeekScript(
   }
 
   function syncAudio(time) {
-    const vo = document.getElementById('vo');
-    let voActive = false;
-    if (vo) {
-      const voStart = Number(vo.dataset.start || 0);
-      const voDur = Number(vo.dataset.duration || 0);
-      voActive = time >= voStart && (voDur <= 0 || time < voStart + voDur);
-    }
+    const frame = Math.max(0, Math.round(time * CFG.fps));
+    const narrated = CFG.audioMix.narration.some(function (range) {
+      return frame >= range.startFrame && frame < range.endFrame;
+    });
     document.querySelectorAll('audio').forEach((audio) => {
       const start = Number(audio.dataset.start || 0);
       const duration = Number(audio.dataset.duration || 0);
       const baseVol = audio.dataset.volume != null && audio.dataset.volume !== ''
         ? Number(audio.dataset.volume)
         : 1;
-      // Duck BGM under narration (parity with Remotion musicAt ~0.35×).
-      let vol = baseVol;
-      if (audio.id === 'music' && voActive) vol = baseVol * 0.35;
-      audio.volume = Math.max(0, Math.min(1, vol));
       const local = time - start;
+      let vol = baseVol;
+      if (audio.dataset.role === 'music') {
+        const fadeFrames = CFG.audioMix.fadeFrames;
+        const fadeIn = fadeFrames > 0 ? Math.min(1, frame / fadeFrames) : 1;
+        const remaining = Math.max(0, CFG.audioMix.totalFrames - frame);
+        const fadeOut = fadeFrames > 0 ? Math.min(1, remaining / fadeFrames) : 1;
+        vol = baseVol * Math.min(fadeIn, fadeOut) * (narrated ? CFG.audioMix.duckRatio : 1);
+      } else if (audio.dataset.role === 'sfx') {
+        const fade = 0.08;
+        const fadeIn = Math.min(1, Math.max(0, local) / fade);
+        const fadeOut = Math.min(1, Math.max(0, duration - local) / fade);
+        vol = baseVol * Math.min(fadeIn, fadeOut);
+      }
+      audio.volume = Math.max(0, Math.min(1, vol));
       if (local < 0 || (duration > 0 && local > duration)) {
         if (!audio.paused) audio.pause();
         return;
@@ -544,6 +587,7 @@ function buildSeekScript(
     const t = Math.max(0, Math.min(CFG.totalSeconds, time));
     root._t = t;
     syncAllBgPhotos(t);
+    syncSubtitles(t);
     if (cover) {
       const inCover = CFG.coverSeconds > 0 && t < CFG.coverSeconds;
       cover.classList.toggle('is-active', inCover);
@@ -768,12 +812,17 @@ function buildSeekScript(
  */
 export function buildHyperframesCompositionHtml(
   props: ReelProps,
-  opts: { inlineCatalog?: boolean } = {},
+  opts: {
+    inlineCatalog?: boolean;
+    producerMode?: boolean;
+    runtimeUrl?: string;
+  } = {},
 ): string {
   const inlineCatalog = opts.inlineCatalog === true;
   const fps = props.fps || 30;
   const width = props.width || 1080;
   const height = props.height || 1920;
+  const layout = props.layout ?? resolveProductionLayout({ width, height });
   const tokens = props.tokens;
   const accent = tokens.accent ?? "#ff6b4a";
   const cover = coverFrames(fps, Boolean(props.coverUrl));
@@ -812,6 +861,22 @@ export function buildHyperframesCompositionHtml(
       framesToSeconds(transitionFrames, fps) / Math.max(0.05, duration),
     );
 
+    if (props.preset) {
+      const presetScene = buildHyperframesPresetScene(props.preset.id, {
+        scene,
+        tokens,
+        absoluteStart,
+        duration,
+        exitWindow,
+        transitionClass,
+        motionStiffness,
+      });
+      if (presetScene) {
+        sceneBlocks.push(presetScene);
+        continue;
+      }
+    }
+
     const catalog = getCatalogBlockByTemplateId(scene.templateId);
     if (catalog) {
       const built = buildCatalogSceneBlock({
@@ -833,7 +898,7 @@ export function buildHyperframesCompositionHtml(
     }
 
     sceneBlocks.push(`
-      <section class="scene ${transitionClass}${scene.background?.type === "image" || scene.background?.type === "video" ? " has-photo" : ""}" data-scene-id="${escapeHtml(scene.id)}"
+      <section id="scene-${escapeHtml(scene.id)}" class="clip scene ${transitionClass}${scene.background?.type === "image" || scene.background?.type === "video" ? " has-photo" : ""}" data-scene-id="${escapeHtml(scene.id)}"
                data-start="${absoluteStart.toFixed(3)}"
                data-duration="${duration.toFixed(3)}"
                data-track-index="1"
@@ -852,24 +917,35 @@ export function buildHyperframesCompositionHtml(
     beats.reduce((max, b) => Math.max(max, b.start + b.duration), 0) || 1;
   const totalSeconds = contentDuration + coverSeconds;
   const totalFrames = Math.max(1, Math.round(totalSeconds * fps));
+  const audioMix = buildAudioMixPlan({
+    fps,
+    totalFrames,
+    musicVolume: props.musicVolume,
+    narration: props.audioUrl
+      ? props.timeline.map((beat) => ({
+          startFrame: cover + beat.startFrame,
+          durationFrames: beat.durationFrames,
+        }))
+      : [],
+  });
 
   const audioTags: string[] = [];
   if (props.audioUrl) {
     audioTags.push(
-      `<audio id="vo" preload="auto" data-start="${coverSeconds.toFixed(3)}" data-duration="${contentDuration.toFixed(3)}" data-track-index="10" src="${escapeHtml(props.audioUrl)}"></audio>`,
+      `<audio id="vo" preload="auto" data-role="voice" data-start="${coverSeconds.toFixed(3)}" data-duration="${contentDuration.toFixed(3)}" data-track-index="10" src="${escapeHtml(props.audioUrl)}"></audio>`,
     );
   }
   if (props.musicUrl) {
     const vol = Math.max(0, Math.min(1, (props.musicVolume ?? 20) / 100));
     audioTags.push(
-      `<audio id="music" preload="auto" data-start="0" data-duration="${totalSeconds.toFixed(3)}" data-track-index="11" data-volume="${vol}" src="${escapeHtml(props.musicUrl)}"></audio>`,
+      `<audio id="music" preload="auto" data-role="music" data-start="0" data-duration="${totalSeconds.toFixed(3)}" data-track-index="11" data-volume="${vol}" data-fade-in="${audioMix.fadeFrames}" data-fade-out="${audioMix.fadeFrames}" src="${escapeHtml(props.musicUrl)}"></audio>`,
     );
   }
   const fpsSafe = Math.max(1, fps);
   for (const [i, cue] of (props.sfxCues ?? []).entries()) {
     const startSec = coverSeconds + cue.startFrame / fpsSafe;
     audioTags.push(
-      `<audio id="sfx-${i}" preload="auto" data-start="${startSec.toFixed(3)}" data-duration="2" data-track-index="${12 + i}" data-volume="${Math.max(0, Math.min(1, cue.volume)).toFixed(3)}" src="${escapeHtml(cue.url)}"></audio>`,
+      `<audio id="sfx-${i}" preload="auto" data-role="sfx" data-start="${startSec.toFixed(3)}" data-duration="2" data-track-index="${12 + i}" data-volume="${Math.max(0, Math.min(1, cue.volume)).toFixed(3)}" src="${escapeHtml(cue.url)}"></audio>`,
     );
   }
 
@@ -881,42 +957,61 @@ export function buildHyperframesCompositionHtml(
     ? ""
     : `<div class="progress" style="background:${accent}"></div>`;
 
+  const captionBlocks =
+    props.captions?.enabled === true
+      ? props.captions.cues
+          .map((cue, index) => {
+            const start = coverSeconds + cue.startFrame / fpsSafe;
+            const duration =
+              Math.max(1, cue.endFrame - cue.startFrame) / fpsSafe;
+            return `<div class="clip rs-subtitle" data-start="${start.toFixed(3)}" data-duration="${duration.toFixed(3)}" data-track-index="20" aria-label="Subtitle ${index + 1}"><span>${escapeHtml(cue.text)}</span></div>`;
+          })
+          .join("\n")
+      : "";
+
   const grainAttr = chrome.grainOpacity > 0 ? "1" : "0";
 
-  return `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reel Studio · HyperFrames</title>
-  <style>${STYLES}</style>
+  <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}
+    .rs-subtitle{position:absolute;z-index:50;left:var(--safe-left);right:var(--safe-right);bottom:var(--caption-bottom);display:flex;justify-content:center;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
+    .rs-subtitle>span{max-width:var(--caption-max-width);padding:.42em .68em;border-radius:18px;background:rgba(8,10,16,.82);color:#fff;font:700 calc(38px * var(--type-scale))/1.18 var(--font,system-ui,sans-serif);text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.28)}
+  </style>
 </head>
 <body>
-  <div id="fit-wrap">
+  <div id="fit-wrap"
+       data-composition-id="reel"
+       data-no-timeline
+       data-start="0"
+       data-duration="${totalSeconds.toFixed(3)}"
+       data-width="${width}"
+       data-height="${height}"
+       data-fps="${fps}"
+       style="width:${width}px;height:${height}px">
     <div id="root"
-         data-composition-id="reel"
-         data-no-timeline
-         data-start="0"
-         data-duration="${totalSeconds.toFixed(3)}"
-         data-width="${width}"
-         data-height="${height}"
-         data-fps="${fps}"
          data-total-frames="${totalFrames}"
          data-style="${styleId}"
          data-energy="${energy}"
          data-hide-progress="${hideProgress ? "1" : "0"}"
          data-grain="${grainAttr}"
-         style="width:${width}px;height:${height}px;--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness}">
+         data-orientation="${layout.orientation}"
+         style="width:${width}px;height:${height}px;--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}">
       ${coverBlock}
       ${progress}
       ${sceneBlocks.join("\n")}
+      ${captionBlocks}
       ${audioTags.join("\n")}
     </div>
   </div>
-  ${buildGsapMotionBootScript()}
-  ${buildSeekScript(beats, coverSeconds, totalSeconds, fps, hideProgress)}
+  ${buildGsapMotionBootScript(opts.runtimeUrl)}
+  ${opts.producerMode ? "" : buildSeekScript(beats, coverSeconds, totalSeconds, fps, hideProgress, audioMix)}
 </body>
 </html>`;
+  return opts.producerMode ? localizeHyperframesRenderFonts(html) : html;
 }
 
 export function compositionTotalFrames(props: ReelProps): number {

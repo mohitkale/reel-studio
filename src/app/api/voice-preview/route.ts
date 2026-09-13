@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getOrCreateVoicePreview, VOICE_PREVIEW_TEXT } from "@/library/voice-preview";
+import {
+  getOrCreateVoicePreview,
+  VOICE_PREVIEW_TEXT,
+} from "@/library/voice-preview";
 import { PROVIDER_IDS } from "@/providers/voice/types";
-import { authorize } from "@/server/auth";
+import { authorizeProviderRequest } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -19,8 +22,8 @@ const bodySchema = z.object({
 /** POST /api/voice-preview — synth (or cache-hit) a short reusable voice sample. */
 export async function POST(req: Request) {
   try {
-    authorize(req);
     const body = bodySchema.parse(await req.json());
+    await authorizeProviderRequest(req, [body.providerId]);
     const result = await getOrCreateVoicePreview({
       providerId: body.providerId,
       voiceId: body.voiceId,

@@ -7,6 +7,7 @@ import {
   updatePodcastMeta,
 } from "@/library/repositories/podcasts";
 import { podcastLengthSchema } from "@/library/podcast-schemas";
+import { podcastPresetIdSchema } from "@/library/podcast-presets";
 import { authorize } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
@@ -18,6 +19,7 @@ const patchSchema = z.object({
   title: z.string().trim().min(1).max(120).optional(),
   description: z.string().trim().max(2000).optional(),
   length: podcastLengthSchema.optional(),
+  presetId: podcastPresetIdSchema.optional(),
 });
 
 export async function GET(

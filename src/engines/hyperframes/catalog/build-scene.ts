@@ -7,6 +7,28 @@ import {
 import { personalizeCatalogBlock } from "@/engines/hyperframes/catalog/personalize";
 import { buildNativeCatalogVisual } from "@/engines/hyperframes/catalog/native-visuals";
 
+const NATIVE_ONLY_BLOCKS = new Set([
+  "apple-money-count",
+  "data-chart",
+  "app-showcase",
+]);
+
+function hasExplicitMetric(value: string | undefined): boolean {
+  return Boolean(
+    value && /[-+]?\d+(?:[.,]\d+)*(?:\s*[%×xkKmMbB])?/.test(value),
+  );
+}
+
+function hasRequiredInputs(
+  meta: HfCatalogBlockMeta,
+  scene: ReelScene,
+): boolean {
+  if (meta.id === "data-chart") return Boolean(scene.chart);
+  if (meta.id === "apple-money-count") return hasExplicitMetric(scene.visual);
+  if (meta.id === "app-showcase") return Boolean(scene.background?.url);
+  return true;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -51,11 +73,7 @@ export function buildCatalogSceneBlock(args: {
 }): CatalogSceneBuild | null {
   const meta = getCatalogBlockByTemplateId(args.scene.templateId);
   if (!meta) return null;
-
-  const personalized = personalizeCatalogBlock(meta, {
-    scene: args.scene,
-    tokens: args.tokens,
-  });
+  if (!hasRequiredInputs(meta, args.scene)) return null;
 
   const native = buildNativeCatalogVisual({
     meta,
@@ -63,6 +81,13 @@ export function buildCatalogSceneBlock(args: {
     tokens: args.tokens,
   });
   if (!native) return null;
+  const nativeOnly = NATIVE_ONLY_BLOCKS.has(meta.id);
+  const personalized = nativeOnly
+    ? "<!doctype html><html><body><!-- Reel Studio uses the validated native adapter for this data-bound block. --></body></html>"
+    : personalizeCatalogBlock(meta, {
+        scene: args.scene,
+        tokens: args.tokens,
+      });
 
   const srcName = `${meta.id}--${args.scene.id}.html`;
   // Prefer real stock photos when present; otherwise keep native mood stages
@@ -71,7 +96,7 @@ export function buildCatalogSceneBlock(args: {
   const bg = hasPhoto ? args.backgroundHtml : "";
 
   const html = `
-      <section class="scene catalog-scene ${args.transitionClass}${hasPhoto ? " has-photo" : ""}"
+      <section id="scene-${escapeHtml(args.scene.id)}" class="clip scene catalog-scene ${args.transitionClass}${hasPhoto ? " has-photo" : ""}"
                data-scene-id="${escapeHtml(args.scene.id)}"
                data-catalog-block="${escapeHtml(meta.id)}"
                data-start="${args.absoluteStart.toFixed(3)}"
@@ -80,9 +105,13 @@ export function buildCatalogSceneBlock(args: {
                data-exit-window="${args.exitWindow.toFixed(3)}"
                style="--accent:${args.accent};--motion-stiffness:${args.motionStiffness}">
         ${bg}
-        <div class="catalog-host"
+        <div class="catalog-host"${
+          nativeOnly
+            ? ""
+            : `
              data-composition-id="${escapeHtml(meta.compositionId)}"
-             data-composition-src="compositions/${escapeHtml(srcName)}"
+             data-composition-src="compositions/${escapeHtml(srcName)}"`
+        }
              data-start="${args.absoluteStart.toFixed(3)}"
              data-duration="${args.duration.toFixed(3)}"
              data-track-index="2"

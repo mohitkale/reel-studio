@@ -7,6 +7,11 @@ import type {
 } from "@/lib/dto";
 import type { PodcastBeatTiming } from "@/library/podcast-schemas";
 import type { PodcastPlan } from "@/library/podcast-schemas";
+import {
+  DEFAULT_PODCAST_PRESET,
+  resolvePodcastPreset,
+  type PodcastPresetId,
+} from "@/library/podcast-presets";
 import { prisma } from "@/library/db";
 import { getAssetStore } from "@/library/storage";
 import {
@@ -15,28 +20,6 @@ import {
   toPodcastTakeDTO,
   toPodcastTurnDTO,
 } from "./podcast-map";
-
-const DEFAULT_CAST: {
-  key: string;
-  name: string;
-  gender: PodcastGenderDTO;
-  definition: string;
-}[] = [
-  {
-    key: "maya",
-    name: "Maya",
-    gender: "female",
-    definition:
-      "Warm primary host. Curious, clear, invites guests in by name, keeps the episode moving.",
-  },
-  {
-    key: "jordan",
-    name: "Jordan",
-    gender: "male",
-    definition:
-      "Thoughtful co-host/guest. Practical examples, grounded reactions, friendly pushback.",
-  },
-];
 
 function slugKey(name: string, fallback: string): string {
   const base = name
@@ -66,6 +49,7 @@ async function loadPodcast(id: string): Promise<PodcastDTO | null> {
     title: podcast.title,
     description: podcast.description,
     length: resolveLength(podcast.length),
+    presetId: resolvePodcastPreset(podcast.presetId).id,
     characters: podcast.characters.map(toPodcastCharacterDTO),
     turns: podcast.turns.map(toPodcastTurnDTO),
     takes: podcast.takes.map(toPodcastTakeDTO),
@@ -86,6 +70,7 @@ export async function listPodcasts(): Promise<PodcastSummaryDTO[]> {
     title: p.title,
     description: p.description,
     length: resolveLength(p.length),
+    presetId: resolvePodcastPreset(p.presetId).id,
     characterCount: p._count.characters,
     turnCount: p._count.turns,
     takeCount: p._count.takes,
@@ -102,18 +87,23 @@ export async function createPodcast(input?: {
   title?: string;
   description?: string;
   length?: PodcastLengthDTO;
+  presetId?: PodcastPresetId;
 }): Promise<PodcastDTO> {
   const title = input?.title?.trim() || "Untitled podcast";
   const description = input?.description?.trim() || "";
   const length = input?.length ?? "short";
+  const preset = resolvePodcastPreset(
+    input?.presetId ?? DEFAULT_PODCAST_PRESET,
+  );
 
   const created = await prisma.podcast.create({
     data: {
       title,
       description,
       length,
+      presetId: preset.id,
       characters: {
-        create: DEFAULT_CAST.map((c, order) => ({
+        create: preset.cast.map((c, order) => ({
           key: c.key,
           name: c.name,
           gender: c.gender,
@@ -134,6 +124,7 @@ export async function updatePodcastMeta(
     title?: string;
     description?: string;
     length?: PodcastLengthDTO;
+    presetId?: PodcastPresetId;
   },
 ): Promise<PodcastDTO> {
   await prisma.podcast.update({
@@ -144,6 +135,7 @@ export async function updatePodcastMeta(
         ? { description: patch.description.trim() }
         : {}),
       ...(patch.length != null ? { length: patch.length } : {}),
+      ...(patch.presetId != null ? { presetId: patch.presetId } : {}),
     },
   });
   const full = await loadPodcast(id);
@@ -153,9 +145,22 @@ export async function updatePodcastMeta(
 
 export async function deletePodcast(id: string): Promise<void> {
   const takes = await prisma.podcastTake.findMany({ where: { podcastId: id } });
+  const cachedTurns = await prisma.podcastTurnAudioBeat.findMany({
+    where: { podcastId: id },
+    select: { audioPath: true },
+  });
   await prisma.podcast.delete({ where: { id } });
   await Promise.all(
-    takes.map((t) => getAssetStore().delete(t.audioPath).catch(() => undefined)),
+    [
+      ...takes.flatMap((take) => [take.audioPath, take.mp3Path]),
+      ...cachedTurns.map((beat) => beat.audioPath),
+    ]
+      .filter((path): path is string => Boolean(path))
+      .map((path) =>
+        getAssetStore()
+          .delete(path)
+          .catch(() => undefined),
+      ),
   );
 }
 
@@ -170,18 +175,20 @@ export interface CharacterInput {
   modelId?: string | null;
 }
 
-/** Replace the cast (2–4 characters). Clears turns that reference removed characters. */
+/** Replace the cast (1–4 characters). Clears turns that reference removed characters. */
 export async function replaceCharacters(
   podcastId: string,
   characters: CharacterInput[],
 ): Promise<PodcastDTO> {
-  if (characters.length < 2 || characters.length > 4) {
-    throw new Error("Podcasts need between 2 and 4 characters");
+  if (characters.length < 1 || characters.length > 4) {
+    throw new Error("Podcasts need between 1 and 4 characters");
   }
 
   const keys: string[] = [];
   const normalized = characters.map((c, order) => {
-    let key = (c.key?.trim() || slugKey(c.name, `speaker-${order + 1}`)).toLowerCase();
+    let key = (
+      c.key?.trim() || slugKey(c.name, `speaker-${order + 1}`)
+    ).toLowerCase();
     if (keys.includes(key)) key = `${key}-${order + 1}`;
     keys.push(key);
     return {
@@ -196,6 +203,10 @@ export async function replaceCharacters(
     };
   });
 
+  const cachedPaths = await prisma.podcastTurnAudioBeat.findMany({
+    where: { podcastId },
+    select: { audioPath: true },
+  });
   await prisma.$transaction(async (tx) => {
     await tx.podcastTurn.deleteMany({ where: { podcastId } });
     await tx.podcastCharacter.deleteMany({ where: { podcastId } });
@@ -207,6 +218,13 @@ export async function replaceCharacters(
       data: { updatedAt: new Date() },
     });
   });
+  await Promise.all(
+    cachedPaths.map(({ audioPath }) =>
+      getAssetStore()
+        .delete(audioPath)
+        .catch(() => undefined),
+    ),
+  );
 
   const full = await loadPodcast(podcastId);
   if (!full) throw new Error("Podcast not found");
@@ -272,6 +290,10 @@ export async function replaceTurnsFromPlan(
     }
   }
 
+  const cachedPaths = await prisma.podcastTurnAudioBeat.findMany({
+    where: { podcastId },
+    select: { audioPath: true },
+  });
   await prisma.$transaction(async (tx) => {
     await tx.podcastTurn.deleteMany({ where: { podcastId } });
     await tx.podcastTurn.createMany({
@@ -300,6 +322,13 @@ export async function replaceTurnsFromPlan(
       });
     }
   });
+  await Promise.all(
+    cachedPaths.map(({ audioPath }) =>
+      getAssetStore()
+        .delete(audioPath)
+        .catch(() => undefined),
+    ),
+  );
 
   const full = await loadPodcast(podcastId);
   if (!full) throw new Error("Podcast not found");
@@ -384,7 +413,10 @@ export async function insertTurn(
 }
 
 export async function deleteTurn(turnId: string): Promise<PodcastDTO> {
-  const turn = await prisma.podcastTurn.findUnique({ where: { id: turnId } });
+  const turn = await prisma.podcastTurn.findUnique({
+    where: { id: turnId },
+    include: { audioBeats: { select: { audioPath: true } } },
+  });
   if (!turn) throw new Error("Turn not found");
   const podcastId = turn.podcastId;
   await prisma.$transaction(async (tx) => {
@@ -406,6 +438,13 @@ export async function deleteTurn(turnId: string): Promise<PodcastDTO> {
       data: { updatedAt: new Date() },
     });
   });
+  await Promise.all(
+    turn.audioBeats.map(({ audioPath }) =>
+      getAssetStore()
+        .delete(audioPath)
+        .catch(() => undefined),
+    ),
+  );
   const full = await loadPodcast(podcastId);
   if (!full) throw new Error("Podcast not found");
   return full;
@@ -420,6 +459,7 @@ export interface CreatePodcastTakeInput {
   fps: number;
   totalFrames: number;
   timeline: PodcastBeatTiming[];
+  chapters: PodcastTakeDTO["chapters"];
   voices: Array<{
     key: string;
     name: string;
@@ -428,6 +468,7 @@ export interface CreatePodcastTakeInput {
     modelId?: string | null;
   }>;
   audioPath: string;
+  mp3Path?: string;
 }
 
 export async function createPodcastTake(
@@ -443,8 +484,10 @@ export async function createPodcastTake(
       fps: input.fps,
       totalFrames: input.totalFrames,
       timingJson: JSON.stringify(input.timeline),
+      chaptersJson: JSON.stringify(input.chapters),
       voicesJson: JSON.stringify(input.voices),
       audioPath: input.audioPath,
+      mp3Path: input.mp3Path,
     },
   });
   await prisma.podcast.update({
@@ -464,9 +507,29 @@ export async function listPodcastTakes(
   return takes.map(toPodcastTakeDTO);
 }
 
+export async function getPodcastTake(
+  id: string,
+): Promise<PodcastTakeDTO | null> {
+  const take = await prisma.podcastTake.findUnique({ where: { id } });
+  return take ? toPodcastTakeDTO(take) : null;
+}
+
+export async function getPodcastTakeSource(id: string): Promise<{
+  take: PodcastTakeDTO;
+  podcast: PodcastDTO;
+  audioPath: string;
+} | null> {
+  const row = await prisma.podcastTake.findUnique({ where: { id } });
+  if (!row) return null;
+  const podcast = await loadPodcast(row.podcastId);
+  if (!podcast) return null;
+  return { take: toPodcastTakeDTO(row), podcast, audioPath: row.audioPath };
+}
+
 export async function deletePodcastTake(id: string): Promise<void> {
   const take = await prisma.podcastTake.findUnique({ where: { id } });
   if (!take) return;
   await prisma.podcastTake.delete({ where: { id } });
   await getAssetStore().delete(take.audioPath);
+  if (take.mp3Path) await getAssetStore().delete(take.mp3Path);
 }

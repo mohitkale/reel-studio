@@ -21,6 +21,17 @@ export const podcastBeatTimingSchema = z.object({
 
 export const podcastTimelineSchema = z.array(podcastBeatTimingSchema);
 
+export const podcastChapterSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1).max(120),
+  startFrame: z.number().int().nonnegative(),
+  endFrame: z.number().int().positive(),
+  startTurnId: z.string().min(1),
+  endTurnId: z.string().min(1),
+});
+
+export const podcastChaptersSchema = z.array(podcastChapterSchema);
+
 /** Snapshot of a cast voice used when a take was generated. */
 export const podcastTakeVoiceSchema = z.object({
   key: z.string(),
@@ -54,7 +65,7 @@ export const podcastPlanSchema = z
   .object({
     title: z.string().trim().min(1).max(120).optional(),
     description: z.string().trim().max(2000).optional(),
-    characters: z.array(podcastScriptCharacterSchema).min(2).max(4),
+    characters: z.array(podcastScriptCharacterSchema).min(1).max(4),
     turns: z.array(podcastScriptTurnSchema).min(2).max(120),
   })
   .superRefine((plan, ctx) => {
@@ -78,6 +89,8 @@ export const podcastPlanSchema = z
   });
 
 export type PodcastPlan = z.infer<typeof podcastPlanSchema>;
-export type PodcastScriptCharacter = z.infer<typeof podcastScriptCharacterSchema>;
+export type PodcastScriptCharacter = z.infer<
+  typeof podcastScriptCharacterSchema
+>;
 export type PodcastScriptTurn = z.infer<typeof podcastScriptTurnSchema>;
 export type PodcastBeatTiming = z.infer<typeof podcastBeatTimingSchema>;

@@ -7,7 +7,7 @@
  * Usage: npx tsx scripts/seed-interview-video-voiceover.ts
  */
 
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/library/prisma-client";
 
 import {
   INTERVIEW_VOICES,
@@ -20,7 +20,7 @@ import {
 import { updateScript } from "../src/library/repositories/scripts";
 import { hasSpokenContent, resolveSpokenText } from "../src/lib/spoken-text";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 const SCRIPT_ID = "cms4s3y3e00029k3b3hz0v47w";
 

@@ -14,6 +14,14 @@ import {
   DEFAULT_STYLE_ID,
   getStyleChrome,
 } from "./visual-style";
+import { resolveProductionLayout } from "@/production/layout";
+import { getPresetSceneComponent } from "./presets/registry";
+import { SubtitleOverlay } from "./components/subtitle-overlay";
+import {
+  buildAudioMixPlan,
+  clipVolumeAtFrame,
+  musicVolumeAtFrame,
+} from "@/lib/audio-mix";
 
 /**
  * Static cover/thumbnail frame shown at the very start of the reel. The image is
@@ -22,8 +30,13 @@ import {
  */
 function CoverFrame({ url, tokens }: { url: string; tokens: BrandTokens }) {
   return (
-    <AbsoluteFill style={{ backgroundColor: tokens.background, overflow: "hidden" }}>
-      <Img src={url} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+    <AbsoluteFill
+      style={{ backgroundColor: tokens.background, overflow: "hidden" }}
+    >
+      <Img
+        src={url}
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+      />
     </AbsoluteFill>
   );
 }
@@ -51,8 +64,12 @@ export const ReelComposition = React.memo(function ReelComposition({
   previewQuality = "standard",
   styleId = DEFAULT_STYLE_ID,
   energy = DEFAULT_ENERGY_ID,
+  layout,
+  preset,
+  captions,
 }: ReelProps) {
-  const { fps } = useVideoConfig();
+  const { fps, width, height, durationInFrames } = useVideoConfig();
+  const resolvedLayout = layout ?? resolveProductionLayout({ width, height });
   const sceneById = new Map(scenes.map((s) => [s.id, s]));
   const cover = coverFrames(fps, Boolean(coverUrl));
   const chrome = getStyleChrome(styleId);
@@ -60,19 +77,25 @@ export const ReelComposition = React.memo(function ReelComposition({
   const showProgressBar =
     hideProgressBar === true ? false : !chrome.preferHideProgressBar;
 
-  // Background music level (0-1). When there's a voiceover, duck the music while
-  // a scene is being spoken so narration stays clear; lift it in the gaps.
-  const baseMusic = Math.max(0, Math.min(1, musicVolume / 100));
-  const isVoiced = (frame: number) =>
-    timeline.some(
-      (b) => frame >= b.startFrame && frame < b.startFrame + b.durationFrames,
-    );
-  const musicAt = (frame: number) =>
-    audioUrl && isVoiced(frame) ? baseMusic * 0.35 : baseMusic;
+  const audioMix = buildAudioMixPlan({
+    fps,
+    totalFrames: durationInFrames,
+    musicVolume,
+    narration: audioUrl
+      ? timeline.map((beat) => ({
+          startFrame: cover + beat.startFrame,
+          durationFrames: beat.durationFrames,
+        }))
+      : [],
+  });
 
   return (
     <VisualStyleProvider styleId={styleId} energy={energy} fps={fps}>
-      <StageOptionsProvider showProgressBar={showProgressBar} quality={previewQuality}>
+      <StageOptionsProvider
+        showProgressBar={showProgressBar}
+        quality={previewQuality}
+        layout={resolvedLayout}
+      >
         <AbsoluteFill
           style={{
             backgroundColor: tokens.background,
@@ -85,12 +108,22 @@ export const ReelComposition = React.memo(function ReelComposition({
             </Sequence>
           ) : null}
 
+          {musicUrl && audioMix.musicVolume > 0 ? (
+            <Audio
+              src={musicUrl}
+              loop
+              volume={(frame) => musicVolumeAtFrame(frame, audioMix)}
+            />
+          ) : null}
+
           {/* Everything after the cover is offset by `cover` via this wrapping Sequence. */}
           <Sequence from={cover} name="Reel">
             {timeline.map((beat, i) => {
               const scene = sceneById.get(beat.sceneId);
               if (!scene) return null;
-              const Template = getTemplateComponent(scene.templateId);
+              const Template =
+                getPresetSceneComponent(preset?.id) ??
+                getTemplateComponent(scene.templateId);
               // Hold each scene until the next one starts so the inter-beat audio gap
               // never shows a black frame. The last scene uses its own duration.
               const next = timeline[i + 1];
@@ -127,18 +160,32 @@ export const ReelComposition = React.memo(function ReelComposition({
               );
             })}
             {audioUrl ? <Audio src={audioUrl} /> : null}
-            {musicUrl && baseMusic > 0 ? (
-              <Audio src={musicUrl} loop volume={musicAt} />
-            ) : null}
             {(sfxCues ?? []).map((cue, i) => (
               <Sequence
                 key={`sfx-${i}-${cue.startFrame}`}
                 from={cue.startFrame}
                 name={`SFX ${i + 1}`}
               >
-                <Audio src={cue.url} volume={cue.volume} />
+                <Audio
+                  src={cue.url}
+                  volume={(frame) =>
+                    clipVolumeAtFrame(
+                      frame,
+                      fps * 2,
+                      cue.volume,
+                      Math.round(fps * 0.08),
+                    )
+                  }
+                />
               </Sequence>
             ))}
+            {captions ? (
+              <SubtitleOverlay
+                captions={captions}
+                tokens={tokens}
+                layout={resolvedLayout}
+              />
+            ) : null}
           </Sequence>
         </AbsoluteFill>
       </StageOptionsProvider>

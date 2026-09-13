@@ -1,0 +1,32 @@
+{
+  "product-launch": [
+    "Teams lose time rebuilding the same campaign assets. Reel Studio turns one approved brief into editable scenes and format variants. Show the supplied dashboard, then invite viewers to try the local workflow.",
+    "A product update should be easy to understand on a phone. Introduce the new review queue, demonstrate the supplied screen, and close with a clear download action.",
+    "Creators need repeatable launch content without handing over source material. Explain the local production path, show the actual editor, and ask viewers to build their first draft."
+  ],
+  "editorial-explainer": [
+    "A strong explainer begins with one useful question. Define the idea in plain language, show the supplied three-step process, and finish with the practical takeaway.",
+    "Readable captions help viewers follow an argument without sound. Explain the timing choices, include the attributed expert quote, and summarize what the viewer should change.",
+    "Format-aware design treats each canvas as its own layout. Compare portrait, landscape, and square composition, then close with a concise editorial summary."
+  ],
+  "creator-punch": [
+    "Stop rebuilding every reel from scratch. Start from one focused hook, give three concrete production tips, and finish with the payoff: a reusable local project.",
+    "Your caption style should support the message. Lead with the common mistake, emphasize readable timing, and ask creators to preview before they publish.",
+    "One approved script can become three social formats. Keep the hook direct, show the workflow in short beats, and close with a specific next step."
+  ],
+  "data-story": [
+    "Weekly completed exports increased from 120 to 180, measured in the supplied project log. Label both values, cite the project log, and explain that the absolute increase was 60 exports.",
+    "Median review time moved from 18 minutes to 11 minutes across the supplied September sample. Show both labeled values and attribute the result to the supplied review audit.",
+    "Three supported ratios produced 24, 21, and 19 completed variants in the supplied test batch. Preserve those exact counts, name each ratio, and end with the operational takeaway."
+  ],
+  "developer-demo": [
+    "Show the supplied API request, the validation diff, and the terminal result. Use the supplied browser screenshot as proof, then point developers to the local MCP setup.",
+    "A durable worker resumes jobs after a restart. Present the exact lease fields, show the recovery log excerpt, and close with the command that starts the worker.",
+    "Batch variants should reflow source content instead of cropping pixels. Walk through the supplied JSON row, terminal progress, and verified artifact response."
+  ],
+  "cinematic-brand": [
+    "Open on the supplied studio photograph and let the product message breathe. Present the attributed customer quote, reveal the brand promise, and finish on the supplied logo.",
+    "A local creative tool keeps source projects close to the creator. Use the supplied workspace footage, measured typography, and the attributed founder statement before the logo close.",
+    "The campaign moves from a quiet visual detail to a confident product reveal. Use only supplied footage and attribution, then hold the final brand mark long enough to read."
+  ]
+}

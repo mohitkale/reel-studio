@@ -1,7 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import {
+  AbsoluteFill,
+  interpolate,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 
 import type { BrandTokens } from "../tokens";
 import type { TransitionRecipe } from "../visual-style";
@@ -21,7 +26,11 @@ export const SceneTransition = React.memo(function SceneTransition({
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
   const { transition, transitionFrames } = useVisualStyle();
-  const tf = Math.max(3, Math.min(transitionFrames, Math.floor(durationInFrames / 3)));
+  const safeDuration = Math.max(1, durationInFrames);
+  const tf = Math.max(
+    1,
+    Math.min(transitionFrames, Math.max(1, Math.floor(safeDuration / 3))),
+  );
 
   const enter = interpolate(frame, [0, tf], [0, 1], {
     extrapolateLeft: "clamp",
@@ -29,7 +38,7 @@ export const SceneTransition = React.memo(function SceneTransition({
   });
   const exit = interpolate(
     frame,
-    [Math.max(tf, durationInFrames - tf), durationInFrames],
+    [Math.max(0, safeDuration - tf), safeDuration],
     [0, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );

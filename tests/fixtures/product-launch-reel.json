@@ -1,0 +1,90 @@
+{
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "styleId": "clean-story",
+  "energy": "normal",
+  "preset": { "id": "product-launch", "version": "1.0.0" },
+  "tokens": {
+    "background": "#070A12",
+    "backgroundAccent": "#11182A",
+    "foreground": "#F8FAFC",
+    "muted": "#A5AFC4",
+    "accent": "#8B72FF",
+    "accentSecondary": "#FF7657",
+    "accentForeground": "#070A12",
+    "handle": "@reelstudio",
+    "fontFamily": "Arial, sans-serif",
+    "radius": 24
+  },
+  "scenes": [
+    {
+      "id": "launch-hook",
+      "role": "hook",
+      "templateId": "hf-kinetic-slam",
+      "text": "One brief. A complete content launch.",
+      "emphasis": ["complete content launch"],
+      "mood": "tech",
+      "order": 0
+    },
+    {
+      "id": "launch-demo",
+      "role": "screenshot-demo",
+      "templateId": "hf-app-showcase",
+      "text": "Choose a format, add your content, and produce.",
+      "emphasis": ["produce"],
+      "background": {
+        "type": "image",
+        "url": "/samples/product-launch-dashboard.svg",
+        "effect": "ken-burns"
+      },
+      "mood": "tech",
+      "order": 1
+    },
+    {
+      "id": "launch-features",
+      "role": "feature",
+      "templateId": "hf-list",
+      "text": "Everything stays ready for production.",
+      "emphasis": ["ready for production"],
+      "items": [
+        "Versioned premium styles",
+        "Voice and captions",
+        "Three social formats",
+        "Local-first rendering"
+      ],
+      "mood": "inspiring",
+      "order": 2
+    },
+    {
+      "id": "launch-compare",
+      "role": "comparison",
+      "templateId": "hf-statement",
+      "text": "Move from manual assembly to a guided production flow.",
+      "emphasis": ["guided production flow"],
+      "items": [
+        "Before: configure every scene",
+        "After: review a complete first cut"
+      ],
+      "mood": "calm",
+      "order": 3
+    },
+    {
+      "id": "launch-cta",
+      "role": "cta",
+      "templateId": "hf-logo-outro",
+      "text": "Make your next launch with Reel Studio.",
+      "emphasis": ["Reel Studio"],
+      "visual": "Start creating",
+      "mood": "inspiring",
+      "order": 4
+    }
+  ],
+  "timeline": [
+    { "sceneId": "launch-hook", "startFrame": 0, "durationFrames": 45 },
+    { "sceneId": "launch-demo", "startFrame": 45, "durationFrames": 75 },
+    { "sceneId": "launch-features", "startFrame": 120, "durationFrames": 75 },
+    { "sceneId": "launch-compare", "startFrame": 195, "durationFrames": 60 },
+    { "sceneId": "launch-cta", "startFrame": 255, "durationFrames": 45 }
+  ]
+}

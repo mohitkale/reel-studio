@@ -3,6 +3,7 @@ import {
   buildPodcastHumaniseBlock,
   buildPodcastStructureBlock,
 } from "./podcast-humanise";
+import { resolvePodcastPreset } from "@/library/podcast-presets";
 
 /**
  * Director prompt for multi-speaker audio podcasts.
@@ -13,6 +14,8 @@ export function buildPodcastPrompt(input: GeneratePodcastPlanInput): {
   user: string;
 } {
   const isLong = input.length === "long";
+  const preset = resolvePodcastPreset(input.presetId ?? "two-host-discussion");
+  const isSolo = preset.id === "solo-narration";
   const durationHint = isLong
     ? "5 to 10 minutes when spoken (~750 to 1500 words of dialogue total)"
     : "2 to 3 minutes when spoken (~300 to 450 words of dialogue total)";
@@ -41,14 +44,21 @@ export function buildPodcastPrompt(input: GeneratePodcastPlanInput): {
     buildPodcastStructureBlock(),
     `Target length: ${durationHint}.`,
     turnHint,
+    `Production format: ${preset.label}. ${preset.direction}`,
     "Rules:",
     "- Output ONLY valid JSON matching the schema (no markdown fences, no commentary).",
     "- Every turn.characterId MUST be one of the provided character ids.",
     "- Characters array in the output MUST use the same ids/names/genders provided (do not invent new speakers).",
     "- Write each speaker in a voice that matches their Character definition (tone, energy, vocabulary) when provided.",
-    "- Opening turns: host greets listeners, introduces co-hosts/guests BY NAME, and frames the topic.",
-    "- Closing turns: host thanks guests BY NAME and signs off warmly.",
-    "- Alternate speakers most of the time; avoid one person dominating more than ~3 turns in a row unless storytelling.",
+    isSolo
+      ? "- Opening turns: introduce the topic directly. Do not invent a guest, co-host, interview, or panel."
+      : "- Opening turns: host greets listeners, introduces co-hosts/guests BY NAME, and frames the topic.",
+    isSolo
+      ? "- Closing turns: give listeners a useful takeaway and sign off naturally."
+      : "- Closing turns: host thanks guests BY NAME and signs off warmly.",
+    isSolo
+      ? "- Use consecutive narrator turns as distinct spoken beats and section boundaries."
+      : "- Alternate speakers most of the time; avoid one person dominating more than ~3 turns in a row unless storytelling.",
     "- Each turn is one spoken beat (1–3 sentences). Prefer short turns for energy; let a turn breathe when the feeling needs it.",
     "- title (optional): short episode title. description (optional): 1–2 sentence summary.",
   ].join("\n");
@@ -75,20 +85,31 @@ export function buildPodcastPrompt(input: GeneratePodcastPlanInput): {
           name: c.name,
           gender: c.gender,
         })),
-        turns: [
-          {
-            characterId: host?.key ?? "host",
-            text: `Hey everyone — welcome in. I'm ${host?.name ?? "the host"}, and today I'm joined by ${guest?.name ?? "my guest"}. We're talking about…`,
-          },
-          {
-            characterId: guest?.key ?? "guest",
-            text: `Thanks ${host?.name ?? "host"} — glad to be here.`,
-          },
-          {
-            characterId: host?.key ?? "host",
-            text: `…and that's a wrap. ${guest?.name ?? "Friend"}, thank you. Listeners — take care.`,
-          },
-        ],
+        turns: isSolo
+          ? [
+              {
+                characterId: host?.key ?? "narrator",
+                text: "Today, we're unpacking one useful idea…",
+              },
+              {
+                characterId: host?.key ?? "narrator",
+                text: "Here's the practical takeaway to keep…",
+              },
+            ]
+          : [
+              {
+                characterId: host?.key ?? "host",
+                text: `Hey everyone — welcome in. I'm ${host?.name ?? "the host"}, and today I'm joined by ${guest?.name ?? "my guest"}. We're talking about…`,
+              },
+              {
+                characterId: guest?.key ?? "guest",
+                text: `Thanks ${host?.name ?? "host"} — glad to be here.`,
+              },
+              {
+                characterId: host?.key ?? "host",
+                text: `…and that's a wrap. ${guest?.name ?? "Friend"}, thank you. Listeners — take care.`,
+              },
+            ],
       },
       null,
       2,

@@ -8,13 +8,10 @@ import {
   type BeatInput,
   buildDialogueGaps,
 } from "@/lib/audio-timing";
-import { normalizeWavLoudness } from "@/lib/audio-normalize";
+import { finalizeSpeechWav } from "@/lib/audio-production";
 import { makeSilentWav, parseWav } from "@/lib/wav";
 import { getProvider } from "@/providers/voice/registry";
-import {
-  ProviderError,
-  type ProviderId,
-} from "@/providers/voice/types";
+import { ProviderError, type ProviderId } from "@/providers/voice/types";
 import { prisma } from "@/library/db";
 import {
   getCachedBeatWav,
@@ -27,10 +24,7 @@ import {
   selectSceneClip,
 } from "@/library/repositories/scene-clips";
 import { createTake } from "@/library/repositories/takes";
-import {
-  hasSpokenContent,
-  resolveSpokenText,
-} from "@/lib/spoken-text";
+import { hasSpokenContent, resolveSpokenText } from "@/lib/spoken-text";
 
 const DEFAULT_SYNTH_CONCURRENCY = 4;
 
@@ -40,7 +34,12 @@ export function hasSpokenText(text: string): boolean {
 }
 
 export type SceneClipProgress =
-  | { phase: "synthesizing"; scene: number; sceneCount: number; workingOn?: number }
+  | {
+      phase: "synthesizing";
+      scene: number;
+      sceneCount: number;
+      workingOn?: number;
+    }
   | { phase: "stitching"; scene: number; sceneCount: number };
 
 export interface GenerateSceneClipInput {
@@ -190,7 +189,8 @@ export async function generateSceneClip(
     wav = cached;
     providerId = input.providerId;
     voiceId = input.voiceId;
-    label = label ?? `${provider.label}${input.modelId ? ` · ${input.modelId}` : ""}`;
+    label =
+      label ?? `${provider.label}${input.modelId ? ` · ${input.modelId}` : ""}`;
   }
 
   const clip = await persistClipFromWav({
@@ -233,7 +233,10 @@ export async function generateAllSceneClips(
   });
   if (!script) throw new ProviderError("Script not found", 404);
   if (script.scenes.length === 0) {
-    throw new ProviderError("Add at least one scene before generating clips", 400);
+    throw new ProviderError(
+      "Add at least one scene before generating clips",
+      400,
+    );
   }
 
   const sceneCount = script.scenes.length;
@@ -356,9 +359,8 @@ export async function generateAllSceneClips(
   }
 
   await Promise.all(
-    Array.from(
-      { length: Math.min(maxConcurrency, sceneCount || 1) },
-      () => worker(),
+    Array.from({ length: Math.min(maxConcurrency, sceneCount || 1) }, () =>
+      worker(),
     ),
   );
 
@@ -394,7 +396,10 @@ export async function assembleVoiceTake(
   });
   if (!script) throw new ProviderError("Script not found", 404);
   if (script.scenes.length === 0) {
-    throw new ProviderError("Add at least one scene before assembling audio", 400);
+    throw new ProviderError(
+      "Add at least one scene before assembling audio",
+      400,
+    );
   }
 
   const missing: number[] = [];
@@ -460,7 +465,7 @@ export async function assembleVoiceTake(
   const stitched = stitchBeats(beats, script.fps, gaps);
   const wav = isPlaceholder
     ? stitched.wav
-    : normalizeWavLoudness(stitched.wav);
+    : finalizeSpeechWav(stitched.wav).wav;
   const key = `takes/${randomUUID()}.wav`;
   await getAssetStore().put(key, wav);
 
@@ -594,7 +599,10 @@ export async function createAllSceneClipsFromUpload(input: {
   });
   if (!script) throw new ProviderError("Script not found", 404);
   if (script.scenes.length === 0) {
-    throw new ProviderError("Add at least one scene before uploading clips", 400);
+    throw new ProviderError(
+      "Add at least one scene before uploading clips",
+      400,
+    );
   }
 
   const byScene = new Map(input.beats.map((b) => [b.sceneId, b.wav]));

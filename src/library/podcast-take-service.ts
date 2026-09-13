@@ -1,12 +1,8 @@
 import { randomUUID } from "node:crypto";
 
 import type { PodcastTakeDTO } from "@/lib/dto";
-import {
-  stitchBeats,
-  DEFAULT_GAP_SECONDS,
-  type BeatInput,
-} from "@/lib/audio-timing";
-import { normalizeWavLoudness } from "@/lib/audio-normalize";
+import { stitchBeats, type BeatInput } from "@/lib/audio-timing";
+import { finalizeSpeechWav, transcodeWavToMp3 } from "@/lib/audio-production";
 import { getProvider } from "@/providers/voice/registry";
 import {
   ProviderError,
@@ -18,14 +14,31 @@ import { prisma } from "@/library/db";
 import { getAssetStore } from "@/library/storage";
 import { createPodcastTake } from "@/library/repositories/podcasts";
 import type { PodcastBeatTiming } from "@/library/podcast-schemas";
+import {
+  getCachedPodcastTurnWav,
+  setCachedPodcastTurnWav,
+} from "@/library/podcast-audio-cache";
+import {
+  derivePodcastChapters,
+  resolvePodcastPreset,
+} from "@/library/podcast-presets";
 
 export type PodcastTakeProgress =
-  | { phase: "synthesizing"; scene: number; sceneCount: number; workingOn?: number }
+  | {
+      phase: "synthesizing";
+      scene: number;
+      sceneCount: number;
+      workingOn?: number;
+      cached: number;
+      generated: number;
+    }
   | { phase: "stitching"; scene: number; sceneCount: number };
 
 export interface GeneratePodcastTakeInput {
   podcastId: string;
   label?: string;
+  /** Bypass the cache only for these turns; all other exact matches are reused. */
+  regenerateTurnIds?: string[];
   onProgress?: (progress: PodcastTakeProgress) => void;
 }
 
@@ -40,6 +53,7 @@ type TurnJob = {
   providerId: string;
   voiceId: string;
   modelId?: string;
+  podcastId: string;
 };
 
 /**
@@ -49,13 +63,27 @@ type TurnJob = {
 async function synthesizeTurnsConcurrently(
   jobs: TurnJob[],
   maxConcurrency: number,
-  onProgress?: (done: number, total: number, workingOn?: number) => void,
-): Promise<{ beats: BeatInput[]; keys: string[] }> {
+  forceTurnIds: ReadonlySet<string>,
+  onProgress?: (
+    done: number,
+    total: number,
+    workingOn: number | undefined,
+    cached: number,
+    generated: number,
+  ) => void,
+): Promise<{
+  beats: BeatInput[];
+  keys: string[];
+  cached: number;
+  generated: number;
+}> {
   const total = jobs.length;
   const results: BeatInput[] = new Array(total);
   const keys: string[] = new Array(total);
   let cursor = 0;
   let completed = 0;
+  let cached = 0;
+  let generated = 0;
 
   // Group by provider so we can reuse the same synth function.
   const providerCache = new Map<
@@ -92,27 +120,45 @@ async function synthesizeTurnsConcurrently(
     while (cursor < jobs.length) {
       const i = cursor++;
       const job = jobs[i];
-      onProgress?.(completed, total, i + 1);
-      const synth = getSynth(job.providerId);
-      const result = await synth({
+      const cacheKey = {
+        podcastId: job.podcastId,
+        turnId: job.turnId,
+        providerId: job.providerId,
         voiceId: job.voiceId,
         modelId: job.modelId,
         text: job.text,
-      });
+      };
+      let wav = forceTurnIds.has(job.turnId)
+        ? null
+        : await getCachedPodcastTurnWav(cacheKey);
+      if (wav) {
+        cached += 1;
+      } else {
+        onProgress?.(completed, total, i + 1, cached, generated);
+        const synth = getSynth(job.providerId);
+        const result = await synth({
+          voiceId: job.voiceId,
+          modelId: job.modelId,
+          text: job.text,
+        });
+        wav = result.wav;
+        await setCachedPodcastTurnWav(cacheKey, wav).catch(() => undefined);
+        generated += 1;
+      }
       results[i] = {
         sceneId: job.turnId,
         text: job.text,
-        wav: result.wav,
+        wav,
       };
       keys[i] = job.characterKey;
       completed += 1;
-      onProgress?.(completed, total);
+      onProgress?.(completed, total, undefined, cached, generated);
     }
   }
 
   const concurrency = Math.min(maxConcurrency, jobs.length || 1);
   await Promise.all(Array.from({ length: concurrency }, worker));
-  return { beats: results, keys };
+  return { beats: results, keys, cached, generated };
 }
 
 /**
@@ -156,6 +202,7 @@ export async function generatePodcastTake(
       providerId: c.providerId,
       voiceId: c.voiceId,
       modelId: c.modelId ?? undefined,
+      podcastId: podcast.id,
     };
   });
 
@@ -169,17 +216,33 @@ export async function generatePodcastTake(
   }
 
   const turnCount = jobs.length;
-  input.onProgress?.({ phase: "synthesizing", scene: 0, sceneCount: turnCount });
+  const knownTurnIds = new Set(jobs.map((job) => job.turnId));
+  const forceTurnIds = new Set(input.regenerateTurnIds ?? []);
+  for (const turnId of forceTurnIds) {
+    if (!knownTurnIds.has(turnId)) {
+      throw new ProviderError(`Podcast turn not found: ${turnId}`, 400);
+    }
+  }
+  input.onProgress?.({
+    phase: "synthesizing",
+    scene: 0,
+    sceneCount: turnCount,
+    cached: 0,
+    generated: 0,
+  });
 
-  const { beats, keys } = await synthesizeTurnsConcurrently(
+  const { beats, keys, cached, generated } = await synthesizeTurnsConcurrently(
     jobs,
     maxConcurrency,
-    (done, total, workingOn) =>
+    forceTurnIds,
+    (done, total, workingOn, cachedCount, generatedCount) =>
       input.onProgress?.({
         phase: "synthesizing",
         scene: done,
         sceneCount: total,
         workingOn,
+        cached: cachedCount,
+        generated: generatedCount,
       }),
   );
 
@@ -189,10 +252,11 @@ export async function generatePodcastTake(
     sceneCount: beats.length,
   });
 
+  const preset = resolvePodcastPreset(podcast.presetId);
   const gaps: number[] = keys.slice(0, -1).map((key, i) => {
     const next = keys[i + 1];
-    if (key !== next) return 0.75;
-    return DEFAULT_GAP_SECONDS;
+    if (key !== next) return preset.pacing.speakerChangeGapSeconds;
+    return preset.pacing.sameSpeakerGapSeconds;
   });
   // Extra breath before reflective / closing turns (narrator-style interviewer lines after dialogue).
   for (let i = 0; i < gaps.length; i++) {
@@ -207,7 +271,7 @@ export async function generatePodcastTake(
   }
 
   const stitched = stitchBeats(beats, DEFAULT_FPS, gaps);
-  const wav = normalizeWavLoudness(stitched.wav);
+  const { wav } = finalizeSpeechWav(stitched.wav);
 
   const timeline: PodcastBeatTiming[] = stitched.timeline.map((beat, i) => ({
     turnId: beat.sceneId,
@@ -216,14 +280,26 @@ export async function generatePodcastTake(
     text: beat.text,
     characterKey: keys[i],
   }));
+  const chapters = derivePodcastChapters(timeline, DEFAULT_FPS);
 
   const key = `podcast-takes/${randomUUID()}.wav`;
   await getAssetStore().put(key, wav);
+  let mp3Path: string | undefined;
+  try {
+    const mp3 = await transcodeWavToMp3(wav);
+    mp3Path = `podcast-takes/${randomUUID()}.mp3`;
+    await getAssetStore().put(mp3Path, mp3);
+  } catch (error) {
+    console.warn(
+      "[podcast-takes] MP3 export unavailable; WAV remains ready:",
+      error instanceof Error ? error.message : String(error),
+    );
+  }
 
   const first = jobs[0];
   const label =
     input.label ??
-    `Podcast · ${podcast.characters.length} voices · ${turnCount} turns`;
+    `Podcast · ${podcast.characters.length} voices · ${turnCount} turns · ${cached} reused/${generated} generated`;
 
   // Snapshot unique cast voices actually used (preserve character order).
   const voiceByKey = new Map<
@@ -257,7 +333,9 @@ export async function generatePodcastTake(
     fps: DEFAULT_FPS,
     totalFrames: stitched.totalFrames,
     timeline,
+    chapters,
     voices,
     audioPath: key,
+    mp3Path,
   });
 }

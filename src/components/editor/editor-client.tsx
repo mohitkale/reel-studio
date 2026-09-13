@@ -2,9 +2,29 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, Video, Loader2, Sparkles, Undo2, Braces, ChevronDown, Eye, EyeOff, BarChart2, Gauge, Zap, Gem, Clapperboard } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  Video,
+  Loader2,
+  Sparkles,
+  Undo2,
+  Braces,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  BarChart2,
+  Gauge,
+  Zap,
+  Gem,
+  Clapperboard,
+} from "lucide-react";
 
-import { ORIENTATIONS, ORIENTATION_LABELS, type Orientation } from "@/lib/orientation";
+import {
+  ORIENTATIONS,
+  ORIENTATION_LABELS,
+  type Orientation,
+} from "@/lib/orientation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,6 +87,7 @@ const TAKE_CLEARED = "__cleared__";
 const takeKey = (scriptId: string) => `reel-studio:selected-take:${scriptId}`;
 
 export function EditorClient({ scriptId }: { scriptId: string }) {
+  const router = useRouter();
   const { data: script, isLoading, isError, error } = useScript(scriptId);
 
   const addScene = useAddScene(scriptId);
@@ -83,27 +104,37 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   const assignBrandKit = useAssignBrandKit();
   const [produceLabel, setProduceLabel] = React.useState<string | null>(null);
 
-  const [selectedSceneId, setSelectedSceneId] = React.useState<string | null>(null);
+  const [selectedSceneId, setSelectedSceneId] = React.useState<string | null>(
+    null,
+  );
   // Take selection persists per-script across refreshes (lazy init from
   // localStorage; avoids re-deriving in an effect).
-  const [selectedTakeId, setSelectedTakeId] = React.useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    const v = window.localStorage.getItem(takeKey(scriptId));
-    return v && v !== TAKE_CLEARED ? v : null;
-  });
+  const [selectedTakeId, setSelectedTakeId] = React.useState<string | null>(
+    () => {
+      if (typeof window === "undefined") return null;
+      const v = window.localStorage.getItem(takeKey(scriptId));
+      return v && v !== TAKE_CLEARED ? v : null;
+    },
+  );
   // When true, user explicitly cleared the take — don't auto-select the first one
   const [takeCleared, setTakeCleared] = React.useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(takeKey(scriptId)) === TAKE_CLEARED;
   });
-  const [previewMode, setPreviewMode] = React.useState<"scene" | "reel">("scene");
+  const [previewMode, setPreviewMode] = React.useState<"scene" | "reel">(
+    "scene",
+  );
   // Editor-only preview fidelity: "draft" trims expensive effects for smoother
   // scrubbing on lower-end machines. Never affects the final render.
-  const [previewQuality, setPreviewQuality] = React.useState<"standard" | "draft">("standard");
+  const [previewQuality, setPreviewQuality] = React.useState<
+    "standard" | "draft"
+  >("standard");
   const [aiOpen, setAiOpen] = React.useState(false);
   const [jsonOpen, setJsonOpen] = React.useState(false);
   // Snapshot of scenes taken before an AI enhance — cleared after render or undo
-  const [undoSnapshot, setUndoSnapshot] = React.useState<SceneDTO[] | null>(null);
+  const [undoSnapshot, setUndoSnapshot] = React.useState<SceneDTO[] | null>(
+    null,
+  );
   const playerRef = React.useRef<EnginePlayerHandle>(null);
 
   // Inline render progress: track the most recently queued render from this
@@ -155,6 +186,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
         visual: s.visual,
         background: s.background,
         items: s.items,
+        chart: s.chart,
+        role: s.role,
         // Per-scene override wins; otherwise the script-wide default.
         hideText: s.hideText ?? script?.hideText,
         mood: s.mood as ReelScene["mood"],
@@ -177,12 +210,14 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             visual: selectedScene.visual,
             background: selectedScene.background,
             items: selectedScene.items,
+            chart: selectedScene.chart,
+            role: selectedScene.role,
             hideText: selectedScene.hideText ?? script?.hideText,
             mood: selectedScene.mood as ReelScene["mood"],
             order: selectedScene.order,
           }
         : null,
-    [selectedScene, script?.hideText, scenes, videoEngine],
+    [selectedScene, script?.hideText, videoEngine],
   );
   // A take stays valid as long as its spoken text still matches the script
   // (resolveReelTimeline matches by text, so background/template/effect edits
@@ -200,17 +235,17 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   const effectiveTakeId = takeCleared
     ? null
     : selectedTakeId && usableTakes.some((t) => t.id === selectedTakeId)
-    ? selectedTakeId
-    : (usableTakes[0]?.id ?? null);
+      ? selectedTakeId
+      : (usableTakes[0]?.id ?? null);
 
-  const selectedTake =
-    allTakes.find((t) => t.id === effectiveTakeId) ?? null;
+  const selectedTake = allTakes.find((t) => t.id === effectiveTakeId) ?? null;
   const fps = selectedTake?.fps ?? script?.fps ?? 30;
   const resolved = resolveReelTimeline(sceneTexts, selectedTake, fps);
   const takeUsable = resolved.takeUsable;
   const timeline = resolved.timeline;
   const totalFrames = resolved.totalFrames;
-  const audioUrl = takeUsable && selectedTake ? selectedTake.audioUrl : undefined;
+  const audioUrl =
+    takeUsable && selectedTake ? selectedTake.audioUrl : undefined;
   const coverFr = coverFrames(fps, !!script?.coverUrl);
   const sfxCues = React.useMemo(
     () =>
@@ -239,20 +274,35 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
 
   // Editor keyboard shortcuts — hooks must be called unconditionally.
   useHotkey("n", () => addScene.mutate(""), { enabled: !!script });
-  useHotkey("j", () => {
-    const idx = scenes.findIndex((s) => s.id === effectiveSceneId);
-    const next = scenes[idx + 1];
-    if (next) setSelectedSceneId(next.id);
-  }, { enabled: !!script });
-  useHotkey("k", () => {
-    const idx = scenes.findIndex((s) => s.id === effectiveSceneId);
-    const prev = scenes[idx - 1];
-    if (prev) setSelectedSceneId(prev.id);
-  }, { enabled: !!script });
-  useHotkey("R", () => {
-    if (!scenes.length || createRender.isPending) return;
-    createRender.mutate({ scriptId, voiceTakeId: effectiveTakeId ?? undefined });
-  }, { ctrl: true, shift: true, enabled: !!script });
+  useHotkey(
+    "j",
+    () => {
+      const idx = scenes.findIndex((s) => s.id === effectiveSceneId);
+      const next = scenes[idx + 1];
+      if (next) setSelectedSceneId(next.id);
+    },
+    { enabled: !!script },
+  );
+  useHotkey(
+    "k",
+    () => {
+      const idx = scenes.findIndex((s) => s.id === effectiveSceneId);
+      const prev = scenes[idx - 1];
+      if (prev) setSelectedSceneId(prev.id);
+    },
+    { enabled: !!script },
+  );
+  useHotkey(
+    "R",
+    () => {
+      if (!scenes.length || createRender.isPending) return;
+      createRender.mutate({
+        scriptId,
+        voiceTakeId: effectiveTakeId ?? undefined,
+      });
+    },
+    { ctrl: true, shift: true, enabled: !!script },
+  );
 
   if (isLoading) {
     return (
@@ -276,7 +326,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
   if (isError || !script) {
     return (
       <Card>
-        <CardContent className="p-6 text-sm text-destructive">
+        <CardContent className="text-destructive p-6 text-sm">
           Could not load this script. {(error as Error)?.message}
         </CardContent>
       </Card>
@@ -292,8 +342,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
       ? estimateTimeline(
           [{ id: selectedScene.id, text: resolveSpokenText(selectedScene) }],
           fps,
-        )
-          .totalFrames
+        ).totalFrames
       : 1);
 
   function selectScene(id: string) {
@@ -311,13 +360,17 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
     reorder.mutate(ids);
   }
 
-  const sceneBusy = reorder.isPending || addScene.isPending || deleteScene.isPending;
+  const sceneBusy =
+    reorder.isPending || addScene.isPending || deleteScene.isPending;
 
   // Queue a render at the script's native orientation, or repurpose into another
   // format. Multiple formats simply queue several jobs (the server runs them
   // within its concurrency cap). `quality` trades resolution for speed: draft
   // is a near-instant low-fidelity export, high is a crisper final delivery.
-  function queueRender(orientation?: Orientation, quality?: "draft" | "standard" | "high") {
+  function queueRender(
+    orientation?: Orientation,
+    quality?: "draft" | "standard" | "high",
+  ) {
     createRender.mutate(
       {
         scriptId,
@@ -330,19 +383,31 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
           setUndoSnapshot(null); // can't undo after a render
           const labelParts = [
             orientation ? ORIENTATION_LABELS[orientation] : null,
-            quality === "draft" ? "draft" : quality === "high" ? "high quality" : null,
+            quality === "draft"
+              ? "draft"
+              : quality === "high"
+                ? "high quality"
+                : null,
           ].filter(Boolean);
           const label = labelParts.length ? labelParts.join(" · ") : "Render";
-          setActiveRender({ id: render.id, label, progress: 0, status: render.status });
-          toast.success(labelParts.length ? `Queued ${labelParts.join(" · ")}` : "Render queued", {
-            description: "Track progress on the Renders page.",
-            action: {
-              label: "View",
-              onClick: () => {
-                window.location.href = "/renders";
+          setActiveRender({
+            id: render.id,
+            label,
+            progress: 0,
+            status: render.status,
+          });
+          toast.success(
+            labelParts.length
+              ? `Queued ${labelParts.join(" · ")}`
+              : "Render queued",
+            {
+              description: "Track progress on the Renders page.",
+              action: {
+                label: "View",
+                onClick: () => router.push("/renders"),
               },
             },
-          });
+          );
         },
         onError: () => toast.error("Failed to queue render"),
       },
@@ -366,10 +431,12 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
           </Link>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-semibold leading-tight">{script.name}</h2>
+              <h2 className="text-lg leading-tight font-semibold">
+                {script.name}
+              </h2>
               <EngineBadge engine={videoEngine} size="lg" />
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {scenes.length} scenes · {script.fps} fps
               {takeUsable ? " · previewing take audio" : " · estimated timing"}
             </p>
@@ -442,7 +509,10 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             </div>
           </HintTooltip>
           {undoSnapshot && (
-            <HintTooltip label="Restore scenes to how they were before the last AI change" side="bottom">
+            <HintTooltip
+              label="Restore scenes to how they were before the last AI change"
+              side="bottom"
+            >
               <Button
                 size="sm"
                 variant="ghost"
@@ -450,20 +520,29 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                 onClick={() =>
                   undoScript.mutate(
                     undoSnapshot.map((s) => ({
+                      id: s.id,
                       templateId: s.templateId,
                       text: s.text,
+                      spokenText: s.spokenText,
                       emphasis: s.emphasis,
                       visual: s.visual ?? null,
                       background: s.background ?? null,
                       items: s.items,
                       mood: s.mood,
                       musicMood: s.musicMood,
+                      chart: s.chart,
+                      role: s.role,
+                      assetRefs: s.assetRefs,
+                      locks: s.locks,
+                      hideText: s.hideText,
+                      selectedVoiceClipId: s.selectedVoiceClipId,
                     })),
                     {
                       onSuccess: () => {
                         setUndoSnapshot(null);
                         toast.success("Scenes restored", {
-                          description: "Rolled back to the version before AI changes.",
+                          description:
+                            "Rolled back to the version before AI changes.",
                         });
                       },
                       onError: () => toast.error("Undo failed"),
@@ -494,7 +573,8 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                 produceReel.mutate(
                   {
                     onProgress: (p) => {
-                      if (p.status === "queued") setProduceLabel("Voice queued…");
+                      if (p.status === "queued")
+                        setProduceLabel("Voice queued…");
                       else if (p.status === "synthesizing") {
                         setProduceLabel(
                           `Voice ${p.scene}/${p.sceneCount || "…"}`,
@@ -510,7 +590,10 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                       const bits = [];
                       if (data.result.musicAttached) bits.push("BGM");
                       if (data.result.sfxAttached) bits.push("SFX");
-                      if (data.result.voiceJobId || data.result.hadVoiceAlready) {
+                      if (
+                        data.result.voiceJobId ||
+                        data.result.hadVoiceAlready
+                      ) {
                         bits.push("VO");
                       }
                       toast.success("Reel produced", {
@@ -557,18 +640,18 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             }
             side="bottom"
           >
-          <Button
-            size="sm"
-            variant={script.hideText ? "default" : "outline"}
-            onClick={() => setHideText.mutate(!script.hideText)}
-          >
-            {script.hideText ? (
-              <EyeOff className="size-3.5" />
-            ) : (
-              <Eye className="size-3.5" />
-            )}
-            {script.hideText ? "Text hidden" : "Show text"}
-          </Button>
+            <Button
+              size="sm"
+              variant={script.hideText ? "default" : "outline"}
+              onClick={() => setHideText.mutate(!script.hideText)}
+            >
+              {script.hideText ? (
+                <EyeOff className="size-3.5" />
+              ) : (
+                <Eye className="size-3.5" />
+              )}
+              {script.hideText ? "Text hidden" : "Show text"}
+            </Button>
           </HintTooltip>
           <HintTooltip
             label={
@@ -578,14 +661,14 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             }
             side="bottom"
           >
-          <Button
-            size="sm"
-            variant={script.hideProgressBar ? "default" : "outline"}
-            onClick={() => setHideProgressBar.mutate(!script.hideProgressBar)}
-          >
-            <BarChart2 className="size-3.5" />
-            {script.hideProgressBar ? "Progress hidden" : "Show progress"}
-          </Button>
+            <Button
+              size="sm"
+              variant={script.hideProgressBar ? "default" : "outline"}
+              onClick={() => setHideProgressBar.mutate(!script.hideProgressBar)}
+            >
+              <BarChart2 className="size-3.5" />
+              {script.hideProgressBar ? "Progress hidden" : "Show progress"}
+            </Button>
           </HintTooltip>
           <HintTooltip
             label={
@@ -595,44 +678,45 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             }
             side="bottom"
           >
-          <Button
-            size="sm"
-            variant={previewQuality === "draft" ? "default" : "outline"}
-            onClick={() =>
-              setPreviewQuality((q) => (q === "draft" ? "standard" : "draft"))
-            }
-          >
-            <Gauge className="size-3.5" />
-            {previewQuality === "draft" ? "Draft preview" : "Full preview"}
-          </Button>
+            <Button
+              size="sm"
+              variant={previewQuality === "draft" ? "default" : "outline"}
+              onClick={() =>
+                setPreviewQuality((q) => (q === "draft" ? "standard" : "draft"))
+              }
+            >
+              <Gauge className="size-3.5" />
+              {previewQuality === "draft" ? "Draft preview" : "Full preview"}
+            </Button>
           </HintTooltip>
           <HintTooltip
             label="Edit scenes as JSON, load a sample, or copy a prompt for ChatGPT/Claude. Style and Energy stay in the editor toolbar."
             side="bottom"
           >
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setJsonOpen(true)}
-          >
-            <Braces className="size-3.5" />
-            JSON
-          </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setJsonOpen(true)}
+            >
+              <Braces className="size-3.5" />
+              JSON
+            </Button>
           </HintTooltip>
           <CaptionsMenu
             scriptId={scriptId}
             takeId={effectiveTakeId}
+            tracks={script.captionTracks ?? []}
+            fps={script.fps}
             disabled={scenes.length === 0}
           />
-          <HintTooltip label="Rewrite or append scenes with AI storyboarding" side="bottom">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setAiOpen(true)}
+          <HintTooltip
+            label="Rewrite or append scenes with AI storyboarding"
+            side="bottom"
           >
-            <Sparkles className="size-3.5" />
-            AI
-          </Button>
+            <Button size="sm" variant="outline" onClick={() => setAiOpen(true)}>
+              <Sparkles className="size-3.5" />
+              AI
+            </Button>
           </HintTooltip>
           {activeRenderIsLive && activeRender ? (
             <HintTooltip
@@ -641,7 +725,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             >
               <Link
                 href="/renders"
-                className="flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs"
               >
                 <Loader2 className="size-3.5 shrink-0 animate-spin" />
                 <span className="whitespace-nowrap">
@@ -649,51 +733,63 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     ? "Bundling…"
                     : `${Math.round(activeRender.progress * 100)}%`}
                 </span>
-                <span className="h-1.5 w-14 overflow-hidden rounded-full bg-muted">
+                <span className="bg-muted h-1.5 w-14 overflow-hidden rounded-full">
                   <span
-                    className="block h-full rounded-full bg-primary transition-all duration-300"
-                    style={{ width: `${Math.round(activeRender.progress * 100)}%` }}
+                    className="bg-primary block h-full rounded-full transition-all duration-300"
+                    style={{
+                      width: `${Math.round(activeRender.progress * 100)}%`,
+                    }}
                   />
                 </span>
               </Link>
             </HintTooltip>
           ) : null}
           <div className="flex items-center">
-            <HintTooltip label="Export the reel as MP4 at standard quality" side="bottom">
-            <Button
-              size="sm"
-              className="rounded-r-none"
-              disabled={createRender.isPending || scenes.length === 0}
-              onClick={() => queueRender()}
+            <HintTooltip
+              label="Export the reel as MP4 at standard quality"
+              side="bottom"
             >
-              {createRender.isPending ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Video className="size-3.5" />
-              )}
-              Render
-            </Button>
+              <Button
+                size="sm"
+                className="rounded-r-none"
+                disabled={createRender.isPending || scenes.length === 0}
+                onClick={() => queueRender()}
+              >
+                {createRender.isPending ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Video className="size-3.5" />
+                )}
+                Render
+              </Button>
             </HintTooltip>
             <DropdownMenu>
-              <HintTooltip label="Render options — draft, high quality, or other formats" side="bottom">
-              <DropdownMenuTrigger asChild>
-                <Button
-                  size="sm"
-                  className="rounded-l-none border-l border-l-primary-foreground/20 px-1.5"
-                  disabled={createRender.isPending || scenes.length === 0}
-                  aria-label="Render in another format"
-                >
-                  <ChevronDown className="size-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
+              <HintTooltip
+                label="Render options — draft, high quality, or other formats"
+                side="bottom"
+              >
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    className="border-l-primary-foreground/20 rounded-l-none border-l px-1.5"
+                    disabled={createRender.isPending || scenes.length === 0}
+                    aria-label="Render in another format"
+                  >
+                    <ChevronDown className="size-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
               </HintTooltip>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Speed / quality</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => queueRender(undefined, "draft")}>
+                <DropdownMenuItem
+                  onClick={() => queueRender(undefined, "draft")}
+                >
                   <Zap className="size-3.5" />
                   Quick draft (fastest, lower res)
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => queueRender(undefined, "high")}>
+                <DropdownMenuItem
+                  onClick={() => queueRender(undefined, "high")}
+                >
                   <Gem className="size-3.5" />
                   High quality (slower, sharper)
                 </DropdownMenuItem>
@@ -772,6 +868,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     previewQuality={previewQuality}
                     styleId={script.styleId}
                     energy={script.energy}
+                    preset={script.productionPreset}
                   />
                 ) : (
                   <EnginePlayer
@@ -785,10 +882,12 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                     tokens={script.brandTokens}
                     styleId={script.styleId}
                     energy={script.energy}
+                    preset={script.productionPreset}
                   />
                 )}
-                <p className="mt-3 text-center text-xs text-muted-foreground">
-                  Looping the selected scene. Template and text edits update live.
+                <p className="text-muted-foreground mt-3 text-center text-xs">
+                  Looping the selected scene. Template and text edits update
+                  live.
                 </p>
               </TabsContent>
 
@@ -806,6 +905,9 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                   musicUrl={script.musicUrl ?? undefined}
                   musicVolume={script.musicVolume}
                   sfxCues={sfxCues}
+                  captions={script.captionTracks?.find(
+                    (track) => track.enabled,
+                  )}
                   loop={false}
                   tokens={script.brandTokens}
                   coverUrl={script.coverUrl ?? undefined}
@@ -813,8 +915,9 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                   previewQuality={previewQuality}
                   styleId={script.styleId}
                   energy={script.energy}
+                  preset={script.productionPreset}
                 />
-                <p className="mt-3 text-center text-xs text-muted-foreground">
+                <p className="text-muted-foreground mt-3 text-center text-xs">
                   {takeUsable
                     ? "Playing the selected take with synced captions."
                     : "Estimated preview. Generate a take below for exact, audio-synced timing."}
@@ -833,7 +936,9 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                 sceneIndex={scenes.findIndex((s) => s.id === effectiveSceneId)}
                 totalScenes={scenes.length}
                 onNavigate={(dir) => {
-                  const idx = scenes.findIndex((s) => s.id === effectiveSceneId);
+                  const idx = scenes.findIndex(
+                    (s) => s.id === effectiveSceneId,
+                  );
                   const next = scenes[idx + dir];
                   if (next) selectScene(next.id);
                 }}
@@ -843,7 +948,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                 videoEngine={videoEngine}
               />
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Add a scene to start editing.
               </p>
             )}

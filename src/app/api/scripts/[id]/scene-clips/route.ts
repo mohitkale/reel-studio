@@ -7,7 +7,7 @@ import { listSceneClips } from "@/library/repositories/scene-clips";
 import { generateAllSceneClips } from "@/library/scene-voice-service";
 import { PROVIDER_IDS } from "@/providers/voice/types";
 import { getVoiceJob, upsertVoiceJob } from "@/lib/voice-queue";
-import { authorize } from "@/server/auth";
+import { authorizeProviderRequest } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -44,9 +44,12 @@ export async function POST(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
-    authorize(req);
     const { id } = await ctx.params;
     const body = generateSchema.parse(await req.json().catch(() => ({})));
+    await authorizeProviderRequest(
+      req,
+      body.placeholder || !body.providerId ? [] : [body.providerId],
+    );
 
     const jobId = randomUUID();
     upsertVoiceJob({ id: jobId, status: "queued", scene: 0, sceneCount: 0 });
@@ -62,7 +65,9 @@ export async function POST(
             scene: progress.scene,
             sceneCount: progress.sceneCount,
             workingOn:
-              progress.phase === "synthesizing" ? progress.workingOn : undefined,
+              progress.phase === "synthesizing"
+                ? progress.workingOn
+                : undefined,
           });
         },
       })
