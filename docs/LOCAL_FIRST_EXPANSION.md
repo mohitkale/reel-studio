@@ -2,7 +2,7 @@
 
 - Status: reviewed plan only; implementation has not started
 - Prepared: 2026-09-13
-- Recommended future branch: `feat/local-first-expansion`
+- Delivery: eight sequential PRs, each implemented in a separate agent session
 
 ## Outcome
 
@@ -33,15 +33,15 @@ At that point:
 1. Read `AGENTS.md`, `AI_GUIDELINES.md`, this plan, and the 0.4 audit.
 2. Verify the default branch, PR #8, current checkout, and working tree before
    creating a branch.
-3. If PR #8 has merged, create `feat/local-first-expansion` from the updated
-   default branch. If it has not merged, report the exact base choice and create
-   the branch from `feat/premium-production` only when the user wants a stacked
-   continuation.
+3. Start only the next PR in the execution map below. Create its named branch
+   from the updated default branch after the preceding PR has merged. Do not use
+   stacked branches unless the user explicitly changes this policy.
 4. Preserve existing commits and use actual completion dates.
 5. Keep every commit local. Do not push or create/update a PR until the user
    explicitly requests it.
 6. Complete one numbered task at a time, run its focused checks, review the diff,
-   commit it, and record the SHA and evidence in a task ledger.
+   commit it, and record the SHA and evidence in a task ledger. Stop after the
+   assigned PR is review-ready; do not begin the next PR in the same session.
 
 ## Current baseline
 
@@ -307,6 +307,46 @@ signals through Remotion, HyperFrames, and FFmpeg wrappers; terminate supported
 children with a bounded graceful timeout and cleanup. Do not automatically retry
 an uncertain paid request.
 
+## PR execution map
+
+Deliver the plan as eight sequential PRs. Each PR starts from the updated default
+branch after the preceding PR has merged, and each gets its own agent session.
+This keeps schema and service foundations ahead of their UI consumers and avoids
+large stacked reviews.
+
+|  PR | Suggested branch                     | Tasks | Reviewable outcome                                                                                                           | Merge requirement                                                                                               |
+| --: | ------------------------------------ | ----: | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+|   1 | `feat/production-worker-reliability` |   1–4 | Frozen baseline, supervised app/worker lifecycle, active cancellation, and real resumable video stages                       | Existing REST/MCP behavior, fresh/populated databases, render regression, restart, and cancellation checks pass |
+|   2 | `feat/podcast-finishing`             |   5–6 | Podcast intro/outro, pauses, pronunciation substitutions, grounded clip suggestions, and missing 0.4 acceptance evidence     | Turn-cache reuse, audio validation, manual no-AI selection, and three-brief preset evidence pass                |
+|   3 | `feat/stock-media-providers`         |  7–12 | Provider-neutral image/video domain, caching/materialization, Pexels, Pixabay, compliant Unsplash, and gated Coverr adapters | Migration, provider contracts, attribution, quota/cache, safe download, and no-key regression pass              |
+|   4 | `feat/stock-media-workflow`          | 13–15 | Manual media picker, media preferences, deterministic/AI selection, fallback, and both-engine stock-video rendering          | Browser selection flows and image/video renders in all three ratios pass                                        |
+|   5 | `feat/local-ai-providers`            | 16–20 | Secure local endpoint configuration, shared compatible transport, Ollama, LM Studio, and strict repair behavior              | Gemini/OpenAI regressions plus local-server/model/error fixtures pass                                           |
+|   6 | `feat/caption-styling`               | 21–23 | Versioned caption appearance, saved controls, and HyperFrames/Remotion parity                                                | Legacy appearance, safe areas, Unicode/long copy, and reference-frame comparisons pass                          |
+|   7 | `feat/hyperframes-catalog-sync`      | 24–25 | Stable HyperFrames upgrade, deterministic catalog sync, capability selection, and reviewed carousel family                   | Legacy render matrix, repeated no-diff sync, version retention, and carousel ratio renders pass                 |
+|   8 | `feat/quick-produce`                 | 26–29 | Optional Quick Produce across UI/REST/MCP/batches with local paths, final docs, examples, and release validation             | All five launch gates and the final acceptance matrix pass                                                      |
+
+### Session contract for every PR
+
+At the beginning of each session, the agent should:
+
+1. confirm that the preceding PR is merged and fetch the updated default branch
+2. verify a clean tree and create only the suggested branch for that PR
+3. read this plan, the implementation audit, and completion notes from earlier PRs
+4. state the assigned task numbers and avoid unrelated cleanup
+
+Before handing the PR back for review, the agent should:
+
+1. complete all assigned tasks and record their actual local commit SHAs
+2. run focused checks plus the PR's merge requirement
+3. review the entire diff against the updated default branch
+4. update relevant docs, migrations, and fixtures within that PR
+5. prepare a concise PR title, description, validation list, risks, and screenshots
+   or render artifacts when visual behavior changed
+6. keep the branch local until the user explicitly asks to push or create the PR
+
+Do not mix work from the next PR into a corrective commit. If review finds a bug,
+fix it on the current PR branch and repeat the affected checks before merging.
+
 ## Sequential implementation and commit plan
 
 Each row is a meaningful local commit target. Additional corrective commits are
@@ -347,7 +387,7 @@ manufacture commit volume.
 
 ## Milestone gates
 
-### Gate 1 — reliable foundation, after task 6
+### Gate 1 — reliable foundation, after PR 2 / task 6
 
 - web and worker start together locally and in Docker
 - active cancellation and restart recovery have real subprocess tests
@@ -355,7 +395,7 @@ manufacture commit volume.
 - original 0.4 podcast omissions are implemented
 - three rendered briefs per preset are inspected, not only schema-tested
 
-### Gate 2 — stock media, after task 15
+### Gate 2 — stock media, after PR 4 / task 15
 
 - no-key/no-stock production still works
 - Pexels, Pixabay, and Unsplash pass contract fixtures and attribution review
@@ -364,7 +404,7 @@ manufacture commit volume.
 - provider-specific cache/hotlink/download behavior is proven
 - both engines render selected stock video in all ratios
 
-### Gate 3 — local AI, after task 20
+### Gate 3 — local AI, after PR 5 / task 20
 
 - Gemini/OpenAI regressions pass
 - Ollama and LM Studio each pass discovery, video plan, and podcast plan with at
@@ -372,7 +412,7 @@ manufacture commit volume.
 - absence of either server is a normal actionable status, not an app failure
 - invalid or hallucinated structures never bypass Zod validation
 
-### Gate 4 — captions and HyperFrames, after task 25
+### Gate 4 — captions and HyperFrames, after PR 7 / task 25
 
 - caption appearance matches preview/export across both engines and three ratios
 - old caption tracks retain the 0.4 look
@@ -381,7 +421,7 @@ manufacture commit volume.
   upstream items
 - carousel examples use supplied/local media and seek correctly
 
-### Gate 5 — Quick Produce and release, after task 29
+### Gate 5 — Quick Produce and release, after PR 8 / task 29
 
 - one credential-free brief produces an editable verified video unattended
 - Ollama and LM Studio Quick Produce paths pass when locally configured
@@ -441,7 +481,9 @@ keys/local servers are configured; CI uses deterministic fixtures.
 
 ## Fresh-session handoff
 
-When the user asks to begin, the future agent should report the verified base and
-new local branch, create the task ledger, and start with task 1. It should not
-repeat broad product research unless an official source has changed, and it
-should not skip the carry-over tasks in order to start the more visible UI work.
+When the user asks to begin, the first future agent should report the verified
+base and create `feat/production-worker-reliability` for PR 1 only. Later agents
+should identify the next uncompleted PR from its merged predecessor and create
+only that PR's branch. An agent should not repeat broad product research unless
+an official source has changed, skip carry-over work to start more visible UI,
+or continue into another PR after its assigned branch is review-ready.

@@ -244,8 +244,9 @@ your own auth layer. See [SECURITY.md](SECURITY.md).
 The current production release includes six cross-engine presets, editable
 caption timing and text, persistent jobs, podcast and audiogram workflows,
 scoped MCP automation, and format-aware batches. The reviewed next phase is in
-[docs/LOCAL_FIRST_EXPANSION.md](docs/LOCAL_FIRST_EXPANSION.md); no implementation
-of that phase has started. Follow longer-term work in [ROADMAP.md](ROADMAP.md).
+[docs/LOCAL_FIRST_EXPANSION.md](docs/LOCAL_FIRST_EXPANSION.md), split into eight
+sequential PRs for separate implementation sessions; no implementation of that
+phase has started. Follow longer-term work in [ROADMAP.md](ROADMAP.md).
 
 ## Contributing
 
