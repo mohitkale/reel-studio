@@ -1,0 +1,243 @@
+{
+  "recordedAt": "2026-09-13T22:13:46.694Z",
+  "branch": "feat/production-worker-reliability",
+  "base": "5e6a4b74599ffa51cb3fc8e504db2fbba2ae713a",
+  "hostValidatedCode": "65f4bb7",
+  "checks": {
+    "build": "passed",
+    "typecheck": "passed",
+    "lint": "passed",
+    "securityScan": "passed",
+    "unit": {
+      "files": 44,
+      "tests": 239
+    },
+    "database": "fresh and populated migration/backup/restore passed",
+    "contracts": "REST and MCP suites passed",
+    "legacyRenders": ["remotion", "hyperframes"],
+    "docker": "passed with bounded in-memory temporary mounts"
+  },
+  "launchers": [
+    {
+      "mode": "start",
+      "httpStatus": 200,
+      "workerRestart": true,
+      "cleanShutdown": true
+    },
+    {
+      "mode": "dev",
+      "httpStatus": 200,
+      "workerRestart": true,
+      "cleanShutdown": true
+    }
+  ],
+  "workers": [
+    {
+      "engine": "remotion",
+      "cancel": false,
+      "result": "succeeded",
+      "jobId": "cmu03d55f00050n9k8eu91b99",
+      "steps": [
+        {
+          "key": "validate",
+          "state": "succeeded",
+          "cacheKey": "eadcfefdfeca754351af3013c884b27b98afac07ced14f0a28a7d26cdcdf53e1"
+        },
+        {
+          "key": "plan",
+          "state": "succeeded",
+          "cacheKey": "aabbb972f1f4ee95beb5ac7df356cdc1ae3fd8db0327687554917e833343b738"
+        },
+        {
+          "key": "resolve_media",
+          "state": "succeeded",
+          "cacheKey": "69f6d5709dd878d7793544249e8292cd19ab091f5f68b7b6ad60cb2170931dfc"
+        },
+        {
+          "key": "synthesize_audio",
+          "state": "succeeded",
+          "cacheKey": "ffb18dd5dc47225091877ce52f7cb62264bf2792f0a50c03819454d0f5b57d5d"
+        },
+        {
+          "key": "time_content",
+          "state": "succeeded",
+          "cacheKey": "690e9266283a5cca583bbcbaf014e239034a1a1d3388a2c26cf502e23dced0b8"
+        },
+        {
+          "key": "prepare_composition",
+          "state": "succeeded",
+          "cacheKey": "38dd315959563a517aa08a8a0046d02d56ccf6e01b43ae9c8e483bbea0478fe1"
+        },
+        {
+          "key": "render_export",
+          "state": "succeeded",
+          "cacheKey": "bc8c60786e0bfd70a43c475f5a6394b28041eb08b32586c2f4aaa26dca700918"
+        },
+        {
+          "key": "verify_artifacts",
+          "state": "succeeded",
+          "cacheKey": "578dbe542767aac5703ab3a872c2d604cf9cca3a2499d28c840e4577b3de972c"
+        }
+      ],
+      "outputs": [
+        {
+          "path": "media/renders/render-cmu03d55800040n9kpsr2rt9d.mp4",
+          "checksum": "sha256:de765b7cc1cb1e063a9bb3464ba0922a90a2e27455b77b08e3be3e81ba10a934"
+        }
+      ]
+    },
+    {
+      "engine": "remotion",
+      "cancel": true,
+      "result": "canceled",
+      "jobId": "cmu03deoo000s0n9k6nckx6p3",
+      "steps": [
+        {
+          "key": "render_export",
+          "state": "canceled",
+          "cacheKey": "e771f1727cfb4c4b4104538f1d742b4ea6973649e8132aca07b7d34c0137eb7e"
+        },
+        {
+          "key": "validate",
+          "state": "succeeded",
+          "cacheKey": "f875e3cf4249e0c5d900c131b1c2a2df5fff97757615d45d81041a4b41081c85"
+        },
+        {
+          "key": "plan",
+          "state": "succeeded",
+          "cacheKey": "b0f5545d0cfd4b0dc2174642bea953436766880a3d292a8eaf1c80a834847915"
+        },
+        {
+          "key": "resolve_media",
+          "state": "succeeded",
+          "cacheKey": "580e437b4ae599e43d76c126751dffef7e5a9131558ded958c92a15fc03eb16a"
+        },
+        {
+          "key": "synthesize_audio",
+          "state": "succeeded",
+          "cacheKey": "d11d25dcd9247496db25ff0123db957cfb1df7ca3b1e48f11dc635464ae4dbf4"
+        },
+        {
+          "key": "time_content",
+          "state": "succeeded",
+          "cacheKey": "690e9266283a5cca583bbcbaf014e239034a1a1d3388a2c26cf502e23dced0b8"
+        },
+        {
+          "key": "prepare_composition",
+          "state": "succeeded",
+          "cacheKey": "ff5f52cf936b5ff95c59002f3732586136f78b9c5bf6d476ed311663277b5a01"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "engine": "hyperframes",
+      "cancel": false,
+      "result": "succeeded",
+      "jobId": "cmu03dllx001c0n9kat0a3dwd",
+      "steps": [
+        {
+          "key": "validate",
+          "state": "succeeded",
+          "cacheKey": "e4a12e5859550a2952f3772fa9072b7ae597c09858b70c0d75b9e3c35fb3e0e8"
+        },
+        {
+          "key": "plan",
+          "state": "succeeded",
+          "cacheKey": "a43c2ecb04d7b4a67b35b941988b0b4fc2084985b11b1aba74eeab9a742b3728"
+        },
+        {
+          "key": "resolve_media",
+          "state": "succeeded",
+          "cacheKey": "4ff7b12c09adcda2ee4819defa13b08c8b91817fa61c462ecd17b9410e0f8138"
+        },
+        {
+          "key": "synthesize_audio",
+          "state": "succeeded",
+          "cacheKey": "ffb18dd5dc47225091877ce52f7cb62264bf2792f0a50c03819454d0f5b57d5d"
+        },
+        {
+          "key": "time_content",
+          "state": "succeeded",
+          "cacheKey": "690e9266283a5cca583bbcbaf014e239034a1a1d3388a2c26cf502e23dced0b8"
+        },
+        {
+          "key": "prepare_composition",
+          "state": "succeeded",
+          "cacheKey": "9f6a1df124c81702dd3b513d07b95942384801b67a64b326b474469283b26929"
+        },
+        {
+          "key": "render_export",
+          "state": "succeeded",
+          "cacheKey": "0cbd945d20910264cf3d49642d867e50d78e781184bc3fe4374679f1dee945e9"
+        },
+        {
+          "key": "verify_artifacts",
+          "state": "succeeded",
+          "cacheKey": "024e9977aef1b3ca066e18a4bc6beca591ebb4a0741f020dd64e2f507031e5c9"
+        }
+      ],
+      "outputs": [
+        {
+          "path": "media/renders/render-cmu03dllv001b0n9k5f3ddc5y.mp4",
+          "checksum": "sha256:ac03566bd225ed5954b9d22af2b87d092303d1e4689b1b0638b7e4d8c3cc07d4"
+        }
+      ]
+    },
+    {
+      "engine": "hyperframes",
+      "cancel": true,
+      "result": "canceled",
+      "jobId": "cmu03dx6z001z0n9kuiu6yrly",
+      "steps": [
+        {
+          "key": "render_export",
+          "state": "canceled",
+          "cacheKey": "643d59ac3d6b54fd9549513538fd8461492cdf3cde497e9b77629015bc8b5378"
+        },
+        {
+          "key": "validate",
+          "state": "succeeded",
+          "cacheKey": "dc51b5c3266ff1f19e1191364b571467d140ee76c6c13b2fe264876db7f7d1d6"
+        },
+        {
+          "key": "plan",
+          "state": "succeeded",
+          "cacheKey": "e08fefb35370db21e7812705220715c4e9ce2bf31c264becead8b9aaf9362978"
+        },
+        {
+          "key": "resolve_media",
+          "state": "succeeded",
+          "cacheKey": "634e8a44d43e548cc570f40a2bcc0b6701a8d30787f9118185de3d60026729ec"
+        },
+        {
+          "key": "synthesize_audio",
+          "state": "succeeded",
+          "cacheKey": "d11d25dcd9247496db25ff0123db957cfb1df7ca3b1e48f11dc635464ae4dbf4"
+        },
+        {
+          "key": "time_content",
+          "state": "succeeded",
+          "cacheKey": "690e9266283a5cca583bbcbaf014e239034a1a1d3388a2c26cf502e23dced0b8"
+        },
+        {
+          "key": "prepare_composition",
+          "state": "succeeded",
+          "cacheKey": "b6b7df77c9c4227d97c93727fd3a583ff388c89bad5bf0d0c1f40e0522adb4bf"
+        }
+      ],
+      "outputs": []
+    }
+  ],
+  "dockerValidatedCommit": "64a4f31",
+  "docker": {
+    "image": "sha256:e63f5a748706b7215ed51860e354006f637e816de7bf33fa18a2af9e77bb8ff0",
+    "httpStatus": 200,
+    "workerRestart": true,
+    "recoveredHttpStatus": 200,
+    "exitCode": 0,
+    "finishedAt": "2026-09-13T22:25:00.461Z",
+    "temporaryMounts": ["/data", "/app/.next", "/tmp"],
+    "notes": "Build used copied npm tarball cache with the locked dependencies; final CMD correction applied as image metadata. Disk-backed first run encountered ENOSPC; no cleanup/settings changes performed."
+  }
+}

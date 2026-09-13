@@ -13,7 +13,7 @@ Existing AGENTS.md and AI_GUIDELINES.md provide the shared Codex instructions.
 | 1    | Freeze installed/locked exact dependencies, API and license policies, source URLs and baseline fixtures             | Complete | `0e917f2`      |
 | 2    | Supervise web/worker in dev, production and Docker; test signals, crash visibility and restart                      | Complete | `799441a`      |
 | 3    | Propagate abort into both render engines and supported encoders; test child termination, scratch cleanup and leases | Complete | `fd31c5d`      |
-| 4    | Persist concrete stage outputs and invalidation keys; test immutable inputs, cache reuse and restart                | Pending  | Pending        |
+| 4    | Persist concrete stage outputs and invalidation keys; test immutable inputs, cache reuse and restart                | Complete | `dac6703`      |
 
 ## Audit decisions
 
@@ -118,3 +118,52 @@ REST/MCP contracts, and fresh/populated 0.4 backup/restoration. Both-engine
 legacy regression passed. Real worker exports and capture-stage cancellation
 passed with no remaining renderer child PIDs; final runtime checks are recorded
 below after the implementation commit.
+
+Task 4 completion: `dac6703`; corrective commit `65f4bb7` adds checksum-based
+artifact invalidation, interrupted media-copy repair, and silent-timing cache
+coverage. Final host checks against `65f4bb7` passed: production build followed
+by typecheck, lint, 44 test files / 239 tests, and security scan. Running build
+before typecheck avoids racing Next.js generated type files.
+
+Local runtime evidence (ignored validation artifacts):
+
+- `.artifacts/production-worker-1789320729016/evidence.json`: both engines
+  exported verified MP4s; active cancellation returned canceled with no outputs.
+  The runner also asserts duplicate submission, immutable inputs, all eight
+  persisted stages, no leftover renderer PIDs/browser profiles, and no partial
+  MP4 or HyperFrames scratch directory.
+- `.artifacts/launcher-validation.json`: actual `dev` and `start` launchers
+  returned HTTP 200, restarted an intentionally crashed test worker, and stopped
+  both children cleanly.
+- `.artifacts/render-regression/legacy/`: existing Remotion and HyperFrames
+  regression MP4s passed.
+- Unit coverage includes fresh/populated database migration and backup/restore,
+  REST/MCP contracts, expired leases, restart/resume, duplicate outputs,
+  cancellation at every stage, and real FFmpeg/process-group termination.
+
+Docker gate passed after corrective commit `64a4f31`: the image includes `unzip`
+for Puppeteer's browser extraction, and its default command directly executes
+the supervisor so Docker SIGTERM reaches graceful shutdown instead of stopping
+at npm. The isolated fresh database migrated successfully; GET /api/projects
+returned 200 before and after an intentional worker crash; the replacement worker
+started; stop logged worker SIGTERM and web exit 0, and the container exited 0.
+Compose configuration validation and the security scan also passed.
+
+Build evidence: a test-only Dockerfile used the unchanged lockfile and a copied
+npm tarball cache with `npm ci --prefer-offline` to recover from registry timeouts.
+All normal install scripts ran; Chromium extraction and Prisma generation passed.
+The final command correction was applied as a metadata-only image derived from
+that build. No application code was replaced for the runtime test.
+
+The Docker storage limit caused ENOSPC in the first runtime attempt. The passing
+isolated test used bounded memory mounts for `.next`, `/tmp`, and its fresh
+SQLite database, with no existing database/media mounts. Normal disk-backed
+startup still needs sufficient Docker disk space. No cleanup or Docker settings
+change was performed; those require the user's approval. Test containers are
+stopped; test images/cache are retained locally.
+
+Final evidence is summarized in [PR1_VALIDATION.json](PR1_VALIDATION.json), with
+raw Docker logs in `.artifacts/docker-runtime-final.log`. All PR 1 code gates are
+satisfied under the documented isolated validation configuration. The complete
+diff against main was reviewed for tasks 1–4 scope, compatibility, and whitespace;
+no later-PR implementation, push, PR creation, or merge was performed.
