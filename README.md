@@ -14,8 +14,9 @@ Also supports Instagram, YouTube Shorts, TikTok, Facebook, X (Twitter), and
 other social formats in **9:16**, **16:9**, and **1:1**.
 
 > **Project status: 0.4 local production release.** The credential-free path,
-> both render engines, durable jobs, and the advertised example matrix are
-> release-tested. Provider integrations remain optional and may evolve.
+> both render engines, SQLite-backed jobs, and the advertised 36-render example
+> matrix are release-tested. Provider integrations remain optional and may
+> evolve.
 
 **MIT-licensed app. Local-first.** Projects and renders stay on your machine
 unless you explicitly enable a cloud provider.
@@ -38,6 +39,47 @@ If Reel Studio helps your workflow, star the repository and tell us which
 template or voice provider you want next.
 
 [Quick start](#quick-start) · [Creator guide](docs/CREATOR_GUIDE.md) · [Walkthroughs](docs/WALKTHROUGHS.md) · [MCP](mcp/README.md) · [Roadmap](ROADMAP.md) · [Contributing](CONTRIBUTING.md)
+
+## 0.4 release coverage
+
+The 0.4 roadmap contained 28 numbered tasks. The implemented release includes:
+
+- synchronized Node, Next.js, Prisma, HyperFrames, Remotion, UI, and test
+  dependency upgrades with fresh and populated-database migration checks
+- versioned production specifications, a pinned 20-item HyperFrames catalog,
+  shared engine inputs, and six presets rendered by both engines in three ratios
+- deterministic and optional AI planning, safe public-page import, uploaded
+  media, scene locks, hook alternatives, and selective regeneration
+- editable caption tracks with timing provenance and SRT/VTT import/export
+- reusable audio generation, podcast turn caching, WAV/MP3 output, chapters,
+  transcripts, and manual audiogram selection
+- persistent production jobs, REST/MCP production interfaces, scoped tokens,
+  format variants, partial-failure batches, diagnostics, and bundled examples
+
+The detailed implementation audit is in
+[docs/production/IMPLEMENTATION_AUDIT.md](docs/production/IMPLEMENTATION_AUDIT.md).
+It records five areas that remain partial against the full roadmap: supervising
+the web app and worker as one lifecycle, terminating active render processes on
+cancel, performing real work in every named video pipeline stage, podcast
+intro/outro and pronunciation controls with AI clip suggestions, and rendering
+three different briefs for every preset during release acceptance.
+
+### Current boundaries
+
+- `npm run dev`, `npm run start`, and the current Docker app service start the
+  web process. Run `npm run production:worker` as a second process for continuous
+  unattended queue processing. Request handlers also make a best-effort attempt
+  to process newly submitted work.
+- Stock media currently means optional Unsplash images. Pexels, Pixabay, Coverr,
+  stock video, provider fallback, local asset caching, and a manual media picker
+  are planned work.
+- AI planning currently supports Gemini and OpenAI. Ollama and LM Studio are
+  planned; the deterministic no-key planner remains available.
+- Caption text and timing are editable. Font, position, box, outline, karaoke,
+  and other caption appearance controls are planned.
+- The catalog is pinned for reproducible saved projects. It does not
+  automatically track the full upstream HyperFrames registry.
+- Reel Studio does not call generative-video APIs or run model-produced code.
 
 ## Who is this for?
 
@@ -96,7 +138,8 @@ Reel Studio is designed for:
 ### Export and automate
 
 - Local MP4 rendering with queue and progress
-- Durable restart-safe jobs, bounded batches, cancellation, and verified artifacts
+- SQLite-backed jobs with leases, recovery, bounded batches, cancellation requests,
+  and verified artifacts
 - Docker isolation bound to `127.0.0.1`
 - **MCP server** for AI-assisted video and podcast workflows ([mcp/README.md](mcp/README.md))
 
@@ -127,6 +170,10 @@ scene timeline. For optional offline speech alignment, install
 `WHISPER_CPP_BIN` plus `WHISPER_CPP_MODEL` in `.env.local`. The caption editor
 and deterministic timing work without whisper.cpp.
 
+Caption appearance currently uses the preset-safe renderer defaults. The next
+planned release adds user-facing typography, placement, background, outline,
+word-count, highlighting, and karaoke controls shared by both engines.
+
 See [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md).
 
 ## Quick start
@@ -141,6 +188,12 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+For continuous unattended production, start the worker in a second terminal:
+
+```bash
+npm run production:worker
+```
 
 Or run `npm run demo` (setup + dev server). No cloud keys are required for the
 seeded HyperFrames demo or Kokoro voices. Open **Gallery** for bundled examples,
@@ -167,6 +220,8 @@ docker compose up --build
 ```
 
 Compose publishes **`127.0.0.1:3000` only** (not your LAN).
+For continuous queue processing in the current development compose setup, run
+`docker compose exec app npm run production:worker` in another terminal.
 
 ## MCP integration
 
@@ -187,8 +242,10 @@ your own auth layer. See [SECURITY.md](SECURITY.md).
 ## Roadmap
 
 The current production release includes six cross-engine presets, editable
-captions, durable jobs, podcast and audiogram workflows, scoped MCP automation,
-and format-aware batches. Follow planned work in [ROADMAP.md](ROADMAP.md).
+caption timing and text, persistent jobs, podcast and audiogram workflows,
+scoped MCP automation, and format-aware batches. The reviewed next phase is in
+[docs/LOCAL_FIRST_EXPANSION.md](docs/LOCAL_FIRST_EXPANSION.md); no implementation
+of that phase has started. Follow longer-term work in [ROADMAP.md](ROADMAP.md).
 
 ## Contributing
 
@@ -231,6 +288,7 @@ HyperFrames, TanStack Query, Zod.
 | `npm run release:matrix`                      | Render all 36 preset/engine/format outputs  |
 | `npm run dev`                                 | Start development server                    |
 | `npm run build` / `start`                     | Production build / run                      |
+| `npm run production:worker`                   | Continuously process the persistent queue   |
 | `npm run lint` / `typecheck` / `test`         | Quality checks                              |
 | `npm run security:scan`                       | Secret pattern scan                         |
 | `npm run prepare:hooks`                       | Enable `.githooks`                          |
@@ -241,6 +299,7 @@ HyperFrames, TanStack Query, Zod.
 | `npm run test:podcast-audiogram -- <take-id>` | Render and verify a podcast-to-video sample |
 | `npm run seed:demo-brandkit`                  | Seed Coral Harbor brand kit                 |
 | `npm run seed:assets`                         | Sample SVG/Lottie assets                    |
+| `npm run import:hf-catalog`                   | Re-import the currently pinned HF selection |
 | `npm run mcp`                                 | MCP server                                  |
 | `npm run studio`                              | Remotion Studio                             |
 
@@ -272,6 +331,8 @@ Full matrix: **[docs/LICENSING.md](docs/LICENSING.md)**.
 - [docs/VOICE_PROVIDERS.md](docs/VOICE_PROVIDERS.md)
 - [docs/TEMPLATE_AUTHORING.md](docs/TEMPLATE_AUTHORING.md)
 - [docs/LICENSING.md](docs/LICENSING.md)
+- [docs/production/IMPLEMENTATION_AUDIT.md](docs/production/IMPLEMENTATION_AUDIT.md)
+- [docs/LOCAL_FIRST_EXPANSION.md](docs/LOCAL_FIRST_EXPANSION.md)
 - [CHANGELOG.md](CHANGELOG.md)
 
 ### Production regression checks
