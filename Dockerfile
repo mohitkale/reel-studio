@@ -24,6 +24,7 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends \
      ca-certificates \
      ffmpeg \
+     procps \
      fonts-liberation \
      libnss3 \
      libdbus-1-3 \

@@ -29,7 +29,14 @@ export function supervise({
     exitCode = code;
     clearTimeout(restartTimer);
     for (const child of children) {
-      child.kill("SIGTERM");
+      if (process.platform === "win32") child.kill("SIGTERM");
+      else {
+        try {
+          process.kill(-child.pid, "SIGTERM");
+        } catch (error) {
+          if (error.code !== "ESRCH") throw error;
+        }
+      }
       const timer = setTimeout(() => {
         try {
           if (process.platform !== "win32") process.kill(-child.pid, "SIGKILL");
@@ -39,7 +46,16 @@ export function supervise({
             console.error("[supervisor] cleanup failed", error);
         }
       }, graceMs);
-      child.once("close", () => clearTimeout(timer));
+      child.once("close", () => {
+        clearTimeout(timer);
+        if (process.platform !== "win32") {
+          try {
+            process.kill(-child.pid, "SIGKILL");
+          } catch (error) {
+            if (error.code !== "ESRCH") console.error(error);
+          }
+        }
+      });
     }
     finish();
   };
@@ -85,6 +101,12 @@ if (
   process.env.NODE_ENV ??= mode === "dev" ? "development" : "production";
   const require = createRequire(import.meta.url);
   require("@next/env").loadEnvConfig(process.cwd(), mode === "dev");
+  const flags = process.argv.slice(3);
+  const portIndex = flags.findIndex(
+    (flag) => flag === "-p" || flag === "--port",
+  );
+  const port =
+    portIndex >= 0 ? flags[portIndex + 1] : process.env.PORT || "3000";
   const runner = supervise({
     web: [
       process.execPath,
@@ -98,7 +120,11 @@ if (
       "tsx",
       "scripts/production-worker.ts",
     ],
-    env: { ...process.env, REEL_SUPERVISED_WORKER: "1" },
+    env: {
+      ...process.env,
+      REEL_SUPERVISED_WORKER: "1",
+      REEL_WORKER_BASE_URL: `http://127.0.0.1:${port}`,
+    },
   });
   process.once("SIGINT", () => runner.stop());
   process.once("SIGTERM", () => runner.stop());

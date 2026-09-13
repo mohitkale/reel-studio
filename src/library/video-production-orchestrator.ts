@@ -1,4 +1,22 @@
-import { productionSignal } from "@/library/production-cancellation";
+import { parseWav } from "@/lib/wav";
+import { z } from "zod";
+import { captureVideoSnapshot } from "@/library/video-snapshot";
+import {
+  videoSnapshotSchema,
+  preparedVideoCompositionSchema,
+} from "@/production/video-snapshot";
+import {
+  resolveVideoStageMedia,
+  videoStageHash,
+} from "@/library/video-stage-media";
+import { resolveReelTimeline } from "@/lib/reel-timeline";
+import { resolveSpokenText } from "@/lib/spoken-text";
+import { prepareVideoComposition } from "@/library/render-service";
+import type { StartRenderOptions } from "@/library/render-service";
+import {
+  productionSignal,
+  withProductionSignal,
+} from "@/library/production-cancellation";
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
 import { promises as fs } from "node:fs";
@@ -8,7 +26,6 @@ import { promisify } from "node:util";
 import type {
   ClaimedProductionJob,
   ProductionStepKey,
-  VideoProductionJobInput,
 } from "@/production/jobs";
 import { videoProductionJobInputSchema } from "@/production/jobs";
 import { runRenderNow } from "@/library/render-service";
@@ -16,11 +33,12 @@ import { prisma } from "@/library/db";
 import {
   addProductionJobOutput,
   upsertProductionJobStep,
+  getProductionJobStep,
 } from "@/library/repositories/production-jobs";
 
 type Context = { signal: AbortSignal; heartbeat: () => Promise<boolean> };
 type Dependencies = {
-  render: (input: VideoProductionJobInput) => Promise<void>;
+  render: (input: StartRenderOptions) => Promise<void>;
   artifact: (
     renderId: string,
   ) => Promise<{ path: string; expectsAudio: boolean }>;
@@ -28,6 +46,9 @@ type Dependencies = {
     path: string,
     expectsAudio: boolean,
   ) => Promise<Record<string, unknown>>;
+  capture: typeof captureVideoSnapshot;
+  media: typeof resolveVideoStageMedia;
+  load: typeof getProductionJobStep;
   step: typeof upsertProductionJobStep;
   output: typeof addProductionJobOutput;
 };
@@ -83,6 +104,9 @@ export async function verifyProductionMp4(
 
 const defaults: Dependencies = {
   render: (input) => runRenderNow(input),
+  capture: captureVideoSnapshot,
+  media: resolveVideoStageMedia,
+  load: getProductionJobStep,
   artifact: async (renderId) => {
     const render = await prisma.render.findUniqueOrThrow({
       where: { id: renderId },
@@ -100,58 +124,273 @@ const defaults: Dependencies = {
   output: addProductionJobOutput,
 };
 
+const timingSchema = z.object({
+  timeline: z.array(
+    z.object({
+      sceneId: z.string(),
+      startFrame: z.number().int().nonnegative(),
+      durationFrames: z.number().int().nonnegative(),
+    }),
+  ),
+  totalFrames: z.number().int().positive(),
+  takeUsable: z.boolean(),
+});
+const mediaSchema = z.object({
+  snapshot: videoSnapshotSchema,
+  assets: z.array(
+    z.object({
+      url: z.string(),
+      resolvedUrl: z.string(),
+      checksum: z.string().nullable(),
+    }),
+  ),
+});
+const audioSchema = z.object({
+  take: videoSnapshotSchema.shape.take,
+  mode: z.enum(["reuse", "silent"]),
+  durationSeconds: z.number().nonnegative(),
+});
+const artifactSchema = z.object({
+  path: z.string(),
+  expectsAudio: z.boolean(),
+});
+
 export async function executeVideoProductionJob(
   job: ClaimedProductionJob,
   context: Context,
   dependencies: Dependencies = defaults,
 ): Promise<void> {
-  const input = videoProductionJobInputSchema.parse(job.inputSnapshot);
-  const stages: ProductionStepKey[] = [
-    "validate",
-    "plan",
-    "resolve_media",
-    "synthesize_audio",
-    "time_content",
-    "prepare_composition",
-  ];
-  for (const key of stages) {
-    if (context.signal.aborted || !(await context.heartbeat()))
-      throw new Error("Production canceled");
-    await dependencies.step(job.id, key, {
-      state: "succeeded",
-      progress: 1,
-      detail: { reused: key === "synthesize_audio" },
+  return withProductionSignal(context.signal, async () => {
+    const input = videoProductionJobInputSchema.parse(job.inputSnapshot);
+    const active = async () => {
+      if (context.signal.aborted || !(await context.heartbeat()))
+        throw new Error("Production canceled");
+    };
+    async function stage<T>(
+      key: ProductionStepKey,
+      cacheInput: unknown,
+      schema: z.ZodType<T>,
+      run: () => Promise<unknown>,
+      reusable: (value: T) => Promise<boolean> = async () => true,
+    ): Promise<T> {
+      await active();
+      const cacheKey = videoStageHash({ version: 1, key, input: cacheInput });
+      const saved = await dependencies.load(job.id, key);
+      if (
+        saved?.state === "succeeded" &&
+        saved.cacheKey === cacheKey &&
+        saved.detailJson
+      ) {
+        const parsed = schema.safeParse(
+          (() => {
+            try {
+              return JSON.parse(saved.detailJson!);
+            } catch {
+              return null;
+            }
+          })(),
+        );
+        if (parsed.success && (await reusable(parsed.data))) return parsed.data;
+      }
+      await dependencies.step(job.id, key, {
+        state: "running",
+        progress: 0,
+        cacheKey,
+        leaseOwner: job.leaseOwner,
+      });
+      try {
+        await active();
+        const output = schema.parse(await run());
+        await active();
+        await dependencies.step(job.id, key, {
+          state: "succeeded",
+          progress: 1,
+          cacheKey,
+          detail: output,
+          leaseOwner: job.leaseOwner,
+        });
+        return output;
+      } catch (error) {
+        await dependencies.step(job.id, key, {
+          state: context.signal.aborted ? "canceled" : "failed",
+          progress: 0,
+          cacheKey,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+      }
+    }
+    // Old queued inputs are frozen once on first execution; new submissions
+    // already contain the immutable revision captured by the service.
+    const snapshot = await stage(
+      "validate",
+      input,
+      videoSnapshotSchema,
+      async () =>
+        input.snapshot ??
+        dependencies.capture(input.scriptId, input.voiceTakeId),
+    );
+    const planned = await stage(
+      "plan",
+      snapshot,
+      videoSnapshotSchema,
+      async () => ({
+        ...snapshot,
+        script: {
+          ...snapshot.script,
+          scenes: [...snapshot.script.scenes].sort((a, b) => a.order - b.order),
+        },
+      }),
+    );
+    const media = await stage(
+      "resolve_media",
+      planned,
+      mediaSchema,
+      () => dependencies.media(planned, input.serverBaseUrl),
+      async (saved) => {
+        for (const asset of saved.assets)
+          if (asset.checksum) {
+            try {
+              const data = await fs.readFile(
+                path.join(process.cwd(), "media", asset.resolvedUrl.slice(7)),
+              );
+              if (
+                createHash("sha256").update(data).digest("hex") !==
+                asset.checksum
+              )
+                return false;
+            } catch {
+              return false;
+            }
+          }
+        return true;
+      },
+    );
+    const audio = await stage(
+      "synthesize_audio",
+      {
+        take: media.snapshot.take,
+        scenes: media.snapshot.script.scenes.map(resolveSpokenText),
+        fps: media.snapshot.script.fps,
+      },
+      audioSchema,
+      async () => {
+        const take = media.snapshot.take;
+        const resolved = resolveReelTimeline(
+          media.snapshot.script.scenes.map((scene) => ({
+            id: scene.id,
+            text: resolveSpokenText(scene),
+          })),
+          take,
+          media.snapshot.script.fps,
+        );
+        if (!take || !resolved.takeUsable)
+          return { take: null, mode: "silent" as const, durationSeconds: 0 };
+        // A video request reuses an explicitly selected take. It never silently
+        // initiates a paid synthesis operation or changes the selected voice.
+        let durationSeconds = take.totalFrames / take.fps;
+        if (take.audioUrl.startsWith("/media/")) {
+          const wav = parseWav(
+            await fs.readFile(
+              path.join(process.cwd(), "media", take.audioUrl.slice(7)),
+            ),
+          );
+          durationSeconds = wav.durationSeconds;
+          if (durationSeconds <= 0)
+            throw new Error("Selected voice take is empty");
+        }
+        return { take, mode: "reuse" as const, durationSeconds };
+      },
+    );
+    const timing = await stage(
+      "time_content",
+      { audio, captions: media.snapshot.script.captionTracks },
+      timingSchema,
+      async () => {
+        for (const track of media.snapshot.script.captionTracks ?? [])
+          for (const cue of track.cues) {
+            if (cue.endFrame <= cue.startFrame)
+              throw new Error("Caption cue has invalid timing");
+          }
+        return resolveReelTimeline(
+          media.snapshot.script.scenes.map((scene) => ({
+            id: scene.id,
+            text: resolveSpokenText(scene),
+          })),
+          audio.take,
+          media.snapshot.script.fps,
+        );
+      },
+    );
+    const preparedSchema = z.object({
+      snapshot: videoSnapshotSchema,
+      timing: timingSchema,
+      compositionHash: z.string(),
+      composition: preparedVideoCompositionSchema,
     });
-  }
-  await dependencies.step(job.id, "render_export", {
-    state: "running",
-    progress: 0,
-  });
-  await dependencies.render(input);
-  await dependencies.step(job.id, "render_export", {
-    state: "succeeded",
-    progress: 1,
-  });
-  const artifact = await dependencies.artifact(input.renderId);
-  await dependencies.step(job.id, "verify_artifacts", {
-    state: "running",
-    progress: 0,
-  });
-  const metadata = await dependencies.verify(
-    artifact.path,
-    artifact.expectsAudio,
-  );
-  await dependencies.output(job.id, {
-    kind: "video",
-    format: "mp4",
-    path: artifact.path,
-    checksum:
-      typeof metadata.checksum === "string" ? metadata.checksum : undefined,
-    metadata,
-  });
-  await dependencies.step(job.id, "verify_artifacts", {
-    state: "succeeded",
-    progress: 1,
-    detail: metadata,
+    const prepared = await stage(
+      "prepare_composition",
+      {
+        media,
+        timing,
+        orientation: input.orientation,
+        base: input.serverBaseUrl,
+      },
+      preparedSchema,
+      async () => {
+        const composition = prepareVideoComposition(
+          media.snapshot,
+          timing,
+          input.orientation,
+          input.serverBaseUrl,
+        );
+        return {
+          snapshot: media.snapshot,
+          timing,
+          compositionHash: videoStageHash(composition),
+          composition,
+        };
+      },
+    );
+    const composition = prepared.composition;
+    const artifact = await stage(
+      "render_export",
+      { prepared, quality: input.quality },
+      artifactSchema,
+      async () => {
+        await dependencies.render({
+          ...input,
+          snapshot: prepared.snapshot,
+          prepared: composition,
+        });
+        const artifact = await dependencies.artifact(input.renderId);
+        return { ...artifact, expectsAudio: prepared.timing.takeUsable };
+      },
+      async (artifact) => {
+        try {
+          await dependencies.verify(artifact.path, artifact.expectsAudio);
+          return true;
+        } catch {
+          return false;
+        }
+      },
+    );
+    const metadata = await stage(
+      "verify_artifacts",
+      { artifact, prepared },
+      z.record(z.string(), z.unknown()),
+      () => dependencies.verify(artifact.path, artifact.expectsAudio),
+      async () => false,
+    );
+    await active();
+    await dependencies.output(job.id, {
+      kind: "video",
+      leaseOwner: job.leaseOwner,
+      format: "mp4",
+      path: artifact.path,
+      checksum:
+        typeof metadata.checksum === "string" ? metadata.checksum : undefined,
+      metadata,
+    });
   });
 }

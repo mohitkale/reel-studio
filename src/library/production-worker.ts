@@ -3,6 +3,7 @@ import {
   claimProductionJob,
   finishProductionJob,
   heartbeatProductionJob,
+  releaseProductionJob,
 } from "@/library/repositories/production-jobs";
 import type { ClaimedProductionJob } from "@/production/jobs";
 
@@ -25,6 +26,7 @@ export async function runProductionWorkerOnce(args: {
 }): Promise<"idle" | "succeeded" | "failed" | "canceled"> {
   if (process.env.REEL_SUPERVISED_WORKER === "1" && !args.supervised)
     return "idle";
+  if (args.signal?.aborted) return "idle";
   const leaseMs = args.leaseMs ?? 30_000;
   const job = await claimProductionJob({ workerId: args.workerId, leaseMs });
   if (!job) return "idle";
@@ -47,12 +49,14 @@ export async function runProductionWorkerOnce(args: {
       args.execute(job, { signal: controller.signal, heartbeat }),
     );
     const state = controller.signal.aborted ? "canceled" : "succeeded";
-    await finishProductionJob(job.id, args.workerId, state);
+    if (args.signal?.aborted) await releaseProductionJob(job.id, args.workerId);
+    else await finishProductionJob(job.id, args.workerId, state);
     return state;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     const state = controller.signal.aborted ? "canceled" : "failed";
-    await finishProductionJob(job.id, args.workerId, state, message);
+    if (args.signal?.aborted) await releaseProductionJob(job.id, args.workerId);
+    else await finishProductionJob(job.id, args.workerId, state, message);
     return state;
   } finally {
     clearInterval(timer);

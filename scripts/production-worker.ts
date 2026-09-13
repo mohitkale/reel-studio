@@ -16,6 +16,18 @@ process.once("SIGTERM", () => {
 });
 
 async function main() {
+  if (process.env.REEL_WORKER_BASE_URL) {
+    while (!stopping) {
+      try {
+        await fetch(process.env.REEL_WORKER_BASE_URL, {
+          signal: AbortSignal.any([shutdown.signal, AbortSignal.timeout(2000)]),
+        });
+        break;
+      } catch {
+        if (!stopping) await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+    }
+  }
   console.log(`[production-worker] ${workerId} ready`);
   while (!stopping) {
     const result = await runProductionWorkerOnce({

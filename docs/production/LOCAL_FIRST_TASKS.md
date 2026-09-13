@@ -11,8 +11,8 @@ Existing AGENTS.md and AI_GUIDELINES.md provide the shared Codex instructions.
 | Task | Implementation and acceptance                                                                                       | State    | Completion SHA |
 | ---- | ------------------------------------------------------------------------------------------------------------------- | -------- | -------------- |
 | 1    | Freeze installed/locked exact dependencies, API and license policies, source URLs and baseline fixtures             | Complete | `0e917f2`      |
-| 2    | Supervise web/worker in dev, production and Docker; test signals, crash visibility and restart                      | Pending  | Pending        |
-| 3    | Propagate abort into both render engines and supported encoders; test child termination, scratch cleanup and leases | Pending  | Pending        |
+| 2    | Supervise web/worker in dev, production and Docker; test signals, crash visibility and restart                      | Complete | `799441a`      |
+| 3    | Propagate abort into both render engines and supported encoders; test child termination, scratch cleanup and leases | Complete | `fd31c5d`      |
 | 4    | Persist concrete stage outputs and invalidation keys; test immutable inputs, cache reuse and restart                | Pending  | Pending        |
 
 ## Audit decisions
@@ -82,3 +82,39 @@ Task 2 focused evidence: supervision and durable-job suites passed (9 tests).
 Task 2 completion: `799441a`; focused tests and typecheck passed.
 Task 3 focused evidence: real FFmpeg termination, stubborn-process SIGKILL,
 Remotion cancel bridge, queued cancellation and lease recovery tests pass.
+
+## PR 1 runtime and compatibility decisions
+
+- No schema migration or dependency upgrade. Snapshot/invalidation data uses
+  existing job input and step JSON columns. Old queued inputs are frozen when
+  first executed; new service submissions capture their revision immediately.
+- Video jobs consume existing editable scripts. Planning orders the frozen
+  scenes; media resolution retains local content by hash and remote URLs;
+  audio validates/reuses the selected take or records silent mode; timing
+  reconciles narration and checks captions; preparation stores the validated
+  engine composition; rendering and verification persist the MP4 and checksum.
+- Retries retain successful stages. Owned transactions fence stage/output writes;
+  output publication deduplicates and refreshes the verified checksum.
+- Normal dev/start/Docker launchers supervise web and worker. Route fallbacks
+  remain for explicit unsupervised setups. Worker startup waits for the web
+  listener; local jobs resume after shutdown; uncertain provider work fails for
+  explicit inspection/retry rather than automatic paid replay.
+- HyperFrames receives its native abort signal. POSIX process-tree inspection
+  also covers Chromium's detached process group; Docker includes procps for
+  this fallback. Remotion uses its installed renderer cancellation API.
+- Windows direct child termination remains available; POSIX/macOS and Docker
+  are the process-tree validation targets for this PR.
+
+Task 3 completion: `fd31c5d`. A stronger HyperFrames frame-capture test exposed
+an orphaned detached Chromium process; the corrective change uses the producer's
+native AbortSignal and bounds descendant cleanup. The regression then passed
+with no new renderer PIDs remaining.
+
+Task 4 implementation evidence: typecheck, lint, 44 unit-test files / 239 tests,
+security scan and production build passed. Coverage includes stage-by-stage
+cancellation, persisted resume, immutable revision retention, local asset
+freezing, queued/expired cancellation, explicit retry, shutdown requeue,
+REST/MCP contracts, and fresh/populated 0.4 backup/restoration. Both-engine
+legacy regression passed. Real worker exports and capture-stage cancellation
+passed with no remaining renderer child PIDs; final runtime checks are recorded
+below after the implementation commit.

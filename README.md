@@ -353,6 +353,23 @@ configuration and SQLite URL. Do not launch another worker for the normal setup.
 Worker crashes are logged and restarted with bounded backoff (five attempts);
 a web crash or exhausted restart budget stops the pair with a nonzero exit.
 Ctrl+C/SIGTERM stops both, with a ten-second forced shutdown bound. Durable
-leases recover interrupted work. `npm run production:worker` remains available
+leases recover interrupted local rendering. Shutdown requeues local video jobs
+with their saved stages; interrupted audio/provider jobs require explicit retry
+to avoid repeating an uncertain paid request. `npm run production:worker` remains available
 for explicitly managed deployments; routes retain their fallback when the app
 is launched directly without the supervisor.
+
+Video production jobs capture an immutable script/engine/brand/caption/take
+snapshot at submission. Selected local assets are preserved under
+`media/production-assets/` with content hashes; remote stock URLs remain network
+sources. Each stage saves a validated output and invalidation key in the existing
+SQLite job-step records. Retries reuse valid stages and verified renders, and
+never synthesize a new paid voice implicitly. Existing queued video inputs are
+snapshotted on their first execution; older projects and REST/MCP requests retain
+their current formats.
+
+Run `npm run test:production-worker` for isolated real exports and active
+cancellation through both engines. It creates a fresh test database and evidence
+under `.artifacts/`, checks every persisted stage, and verifies renderer children
+and partial output files are gone after cancellation. It uses installed local
+rendering tools and does not modify existing project rows.

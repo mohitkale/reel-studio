@@ -1,3 +1,4 @@
+import type { VideoSnapshot } from "@/production/video-snapshot";
 import {
   assertProductionActive,
   cancelChild,
@@ -50,6 +51,8 @@ function localizeGsapRuntime(html: string): string {
 }
 
 export interface HyperframesRenderOptions {
+  snapshot?: VideoSnapshot;
+  prepared?: { props: ReelProps; totalFrames: number };
   renderId: string;
   scriptId: string;
   voiceTakeId?: string;
@@ -241,6 +244,8 @@ export async function runHyperframesRender(
   opts: HyperframesRenderOptions,
 ): Promise<void> {
   const {
+    snapshot,
+    prepared,
     renderId,
     scriptId,
     voiceTakeId,
@@ -261,7 +266,7 @@ export async function runHyperframesRender(
 
   try {
     progress(0, "bundling");
-    const script = await getScript(scriptId);
+    const script = snapshot?.script ?? (await getScript(scriptId));
     if (!script) throw new Error(`Script ${scriptId} not found`);
 
     const takes = voiceTakeId
@@ -269,7 +274,7 @@ export async function runHyperframesRender(
           ts.filter((t) => t.id === voiceTakeId),
         )
       : [];
-    const take = takes[0] ?? null;
+    const take = snapshot ? snapshot.take : (takes[0] ?? null);
 
     const { resolveReelTimeline } = await import("@/lib/reel-timeline");
     const { resolveSpokenText } = await import("@/lib/spoken-text");
@@ -287,7 +292,7 @@ export async function runHyperframesRender(
     await fs.mkdir(projectDir, { recursive: true });
 
     const scenes = await Promise.all(
-      script.scenes.map(async (s, i) => {
+      (prepared?.props.scenes ?? script.scenes).map(async (s, i) => {
         const bgUrl = s.background?.url
           ? await materializeUrl(
               s.background.url.startsWith("http")
@@ -342,12 +347,14 @@ export async function runHyperframesRender(
     );
 
     const { resolveReelSfxCues } = await import("@/lib/sfx-cues");
-    const rawSfx = resolveReelSfxCues({
-      sfxEnabled: script.sfxEnabled,
-      sfxJson: script.sfxJson,
-      timeline: resolved.timeline,
-      fps: script.fps,
-    });
+    const rawSfx =
+      prepared?.props.sfxCues ??
+      resolveReelSfxCues({
+        sfxEnabled: script.sfxEnabled,
+        sfxJson: script.sfxJson,
+        timeline: resolved.timeline,
+        fps: script.fps,
+      });
     const sfxCues = await Promise.all(
       rawSfx.map(async (cue, i) => ({
         ...cue,
@@ -372,9 +379,9 @@ export async function runHyperframesRender(
       serverBaseUrl,
     );
 
-    const inputProps: ReelProps = {
+    const legacyInputProps: ReelProps = {
       scenes,
-      timeline: resolved.timeline,
+      timeline: prepared?.props.timeline ?? resolved.timeline,
       width: nativeDims.width,
       height: nativeDims.height,
       fps: script.fps,
@@ -390,6 +397,10 @@ export async function runHyperframesRender(
       preset: script.productionPreset,
       captions: script.captionTracks?.find((track) => track.enabled),
     };
+
+    const inputProps: ReelProps = prepared
+      ? { ...prepared.props, scenes, audioUrl, musicUrl, sfxCues, coverUrl }
+      : legacyInputProps;
 
     const runtimeDir = path.join(projectDir, "_runtime");
     await fs.mkdir(runtimeDir, { recursive: true });

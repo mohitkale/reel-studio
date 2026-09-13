@@ -13,6 +13,7 @@ import {
   heartbeatProductionJob,
   requestProductionJobCancellation,
   retryProductionJob,
+  releaseProductionJob,
 } from "@/library/repositories/production-jobs";
 
 describe("durable production jobs", () => {
@@ -176,5 +177,34 @@ describe("durable production jobs", () => {
       expect(row.state).toBe(kind === "video" ? "canceled" : "failed");
       expect(row.leaseOwner).toBeNull();
     }
+  });
+  it("resumes a shutdown job with successful step snapshots intact", async () => {
+    const job = await enqueueProductionJob(
+      {
+        kind: "video",
+        idempotencyKey: "shutdown-resume",
+        inputSnapshot: { revision: 1 },
+      },
+      client,
+    );
+    await claimProductionJob({ workerId: "old" }, client);
+    await client.productionJobStep.create({
+      data: {
+        jobId: job.id,
+        key: "plan",
+        state: "succeeded",
+        cacheKey: "saved",
+        detailJson: '{"revision":1}',
+      },
+    });
+    await releaseProductionJob(job.id, "old", client);
+    const claimed = await claimProductionJob({ workerId: "new" }, client);
+    expect(claimed?.id).toBe(job.id);
+    expect(claimed?.attempt).toBe(2);
+    expect(
+      await client.productionJobStep.count({
+        where: { jobId: job.id, state: "succeeded" },
+      }),
+    ).toBe(1);
   });
 });

@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import { DatabaseSync } from "node:sqlite";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
@@ -261,6 +261,48 @@ describe("SQLite migration preparation", () => {
       ).toEqual({ chaptersJson: "[]" });
     } finally {
       db.close();
+    }
+  });
+  it("backs up and restores a populated 0.4 database with durable stage outputs", () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "reel-pr1-populated-"));
+    const filename = path.join(directory, "populated.db");
+    try {
+      const db = new DatabaseSync(filename);
+      for (const migration of readdirSync("prisma/migrations")
+        .filter((name) => !name.endsWith(".toml"))
+        .sort())
+        db.exec(
+          readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),
+        );
+      db.exec(`CREATE TABLE _prisma_migrations (id TEXT PRIMARY KEY);
+        INSERT INTO Project (id,name,videoEngine,updatedAt) VALUES ('saved','Saved project','remotion',CURRENT_TIMESTAMP);
+        INSERT INTO Script (id,projectId,name,updatedAt) VALUES ('script','saved','Saved script',CURRENT_TIMESTAMP);
+        INSERT INTO ProductionJob (id,kind,state,idempotencyKey,inputSnapshot,updatedAt) VALUES ('job','video','failed','saved-request','{"scriptId":"script"}',CURRENT_TIMESTAMP);
+        INSERT INTO ProductionJobStep (id,jobId,key,state,cacheKey,detailJson,updatedAt) VALUES ('step','job','plan','succeeded','saved-cache','{"revision":1}',CURRENT_TIMESTAMP);`);
+      const signature = schemaSignature(db);
+      db.close();
+      const backup = inspectAndBackup(filename);
+      expect(backup.needsBaseline).toBe(false);
+      const restored = new DatabaseSync(backup.backup!);
+      try {
+        expect(schemaSignature(restored)).toBe(signature);
+        expect(
+          restored
+            .prepare("SELECT name,videoEngine FROM Project WHERE id='saved'")
+            .get(),
+        ).toEqual({ name: "Saved project", videoEngine: "remotion" });
+        expect(
+          restored
+            .prepare(
+              "SELECT cacheKey,detailJson FROM ProductionJobStep WHERE id='step'",
+            )
+            .get(),
+        ).toEqual({ cacheKey: "saved-cache", detailJson: '{"revision":1}' });
+      } finally {
+        restored.close();
+      }
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
     }
   });
 });
