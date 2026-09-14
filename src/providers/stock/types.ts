@@ -1,10 +1,27 @@
 import type { Orientation } from "@/lib/orientation";
+import type {
+  NormalizedStockMediaSearchRequest,
+  ResolvedStockAsset,
+  StockMediaCandidate,
+  StockMediaProviderCapabilities,
+  StockMediaProviderHealth,
+  StockMediaRendition,
+  StockMediaSearchResponse,
+} from "./schemas";
 
-/**
- * Stock-image provider contract. The app talks only to this interface; adding a
- * vendor (Pexels, Pixabay, ...) means one new file + a registry entry, mirroring
- * the voice/AI provider pattern.
- */
+export type {
+  NormalizedStockMediaSearchRequest,
+  ResolvedStockAsset,
+  StockMediaCandidate,
+  StockMediaProviderCapabilities,
+  StockMediaProviderHealth,
+  StockMediaQuotaState,
+  StockMediaRendition,
+  StockMediaSearchRequest,
+  StockMediaSearchResponse,
+} from "./schemas";
+
+/** Legacy image-only contract retained until Unsplash moves to the shared service. */
 
 export const STOCK_PROVIDER_IDS = ["unsplash"] as const;
 export type StockProviderId = (typeof STOCK_PROVIDER_IDS)[number];
@@ -30,16 +47,44 @@ export interface StockProvider {
   label: string;
   isConfigured(): boolean;
   /** Search for images matching `query`, sized for `orientation`. */
-  search(query: string, orientation: Orientation, count?: number): Promise<StockImage[]>;
+  search(
+    query: string,
+    orientation: Orientation,
+    count?: number,
+  ): Promise<StockImage[]>;
   /** Optional: notify the provider an image was used (vendor API guideline). */
   trackUsage?(image: StockImage): void;
+}
+
+/** Provider-neutral contract used by the local-first stock-media service. */
+export interface StockMediaProvider {
+  id: string;
+  label: string;
+  capabilities: StockMediaProviderCapabilities;
+  health(): Promise<StockMediaProviderHealth>;
+  search(
+    input: NormalizedStockMediaSearchRequest,
+    signal?: AbortSignal,
+  ): Promise<StockMediaSearchResponse>;
+  /** Refresh or authorize the selected rendition when a provider requires it. */
+  resolve?(
+    candidate: StockMediaCandidate,
+    rendition: StockMediaRendition,
+    signal?: AbortSignal,
+  ): Promise<StockMediaProviderResolution>;
+  reportUsage?(asset: ResolvedStockAsset, signal?: AbortSignal): Promise<void>;
+}
+
+export interface StockMediaProviderResolution {
+  candidate: StockMediaCandidate;
+  rendition: StockMediaRendition;
 }
 
 export class StockError extends Error {
   constructor(
     message: string,
     readonly status = 502,
-    readonly providerId?: StockProviderId,
+    readonly providerId?: string,
   ) {
     super(message);
     this.name = "StockError";

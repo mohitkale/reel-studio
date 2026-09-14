@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { orientationSchema } from "@/lib/orientation";
+import { assertSafeMediaUrl } from "@/lib/media-url-safety";
 
 export const stockProviderIdSchema = z
   .string()
@@ -11,7 +12,7 @@ export const stockProviderIdSchema = z
 
 const providerAssetIdSchema = z.string().trim().min(1).max(2048);
 
-const externalHttpsUrlSchema = z
+export const stockMediaExternalUrlSchema = z
   .string()
   .trim()
   .min(1)
@@ -29,6 +30,15 @@ const externalHttpsUrlSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Stock provider URLs must not contain credentials",
+      });
+    }
+    try {
+      assertSafeMediaUrl(value);
+    } catch (error) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          error instanceof Error ? error.message : "Unsafe stock provider URL",
       });
     }
   });
@@ -50,7 +60,7 @@ export const stockMediaAttributionSchema = z
     text: z.string().trim().min(1).max(500),
     required: z.boolean(),
     licenseName: z.string().trim().min(1).max(120).optional(),
-    licenseUrl: externalHttpsUrlSchema.optional(),
+    licenseUrl: stockMediaExternalUrlSchema.optional(),
   })
   .strict();
 export type StockMediaAttribution = z.infer<typeof stockMediaAttributionSchema>;
@@ -58,7 +68,7 @@ export type StockMediaAttribution = z.infer<typeof stockMediaAttributionSchema>;
 export const stockMediaRenditionSchema = z
   .object({
     id: z.string().trim().min(1).max(160),
-    url: externalHttpsUrlSchema,
+    url: stockMediaExternalUrlSchema,
     width: z.number().int().positive().max(32768),
     height: z.number().int().positive().max(32768),
     mimeType: z
@@ -77,10 +87,10 @@ export const stockMediaCandidateSchema = z
     providerId: stockProviderIdSchema,
     providerAssetId: providerAssetIdSchema,
     kind: stockMediaKindSchema,
-    previewUrl: externalHttpsUrlSchema,
-    sourcePageUrl: externalHttpsUrlSchema,
+    previewUrl: stockMediaExternalUrlSchema,
+    sourcePageUrl: stockMediaExternalUrlSchema,
     creator: z.string().trim().min(1).max(240),
-    creatorUrl: externalHttpsUrlSchema.optional(),
+    creatorUrl: stockMediaExternalUrlSchema.optional(),
     width: z.number().int().positive().max(32768),
     height: z.number().int().positive().max(32768),
     durationSec: z.number().finite().positive().max(86_400).optional(),
@@ -201,7 +211,7 @@ export const stockMediaUsageEventSchema = z
 export const stockMediaSourceRevisionSchema = z
   .object({
     capturedAt: z.string().datetime({ offset: true }),
-    termsUrl: externalHttpsUrlSchema,
+    termsUrl: stockMediaExternalUrlSchema,
     providerUpdatedAt: z.string().datetime({ offset: true }).optional(),
     termsVersion: z.string().trim().min(1).max(160).optional(),
   })
@@ -213,7 +223,7 @@ export const resolvedStockAssetSchema = z
     schemaVersion: z.literal(1),
     resolvedAt: z.string().datetime({ offset: true }),
     localAssetId: z.string().trim().min(1).max(160).optional(),
-    compliantRemoteUrl: externalHttpsUrlSchema.optional(),
+    compliantRemoteUrl: stockMediaExternalUrlSchema.optional(),
     providerSnapshot: stockMediaCandidateSchema,
     sourceRevision: stockMediaSourceRevisionSchema,
     contentHash: z
@@ -293,6 +303,106 @@ export const resolvedStockAssetSchema = z
     }
   });
 export type ResolvedStockAsset = z.infer<typeof resolvedStockAssetSchema>;
+
+export const stockMediaProviderCapabilitiesSchema = z
+  .object({
+    kinds: z.array(stockMediaKindSchema).min(1).max(2),
+    acquisitionPolicies: z
+      .array(stockMediaAcquisitionPolicySchema)
+      .min(1)
+      .max(3),
+    maxPageSize: z.number().int().positive().max(100),
+    supportsPagination: z.boolean(),
+    requiresApiKey: z.boolean(),
+    usageReporting: z.boolean(),
+    defaultCacheTtlSec: z.number().int().nonnegative().max(604_800),
+  })
+  .strict()
+  .superRefine((capabilities, ctx) => {
+    if (new Set(capabilities.kinds).size !== capabilities.kinds.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["kinds"],
+        message: "Provider media kinds must be unique",
+      });
+    }
+    if (
+      new Set(capabilities.acquisitionPolicies).size !==
+      capabilities.acquisitionPolicies.length
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["acquisitionPolicies"],
+        message: "Provider acquisition policies must be unique",
+      });
+    }
+  });
+export type StockMediaProviderCapabilities = z.infer<
+  typeof stockMediaProviderCapabilitiesSchema
+>;
+
+export const stockMediaProviderHealthSchema = z
+  .object({
+    status: z.enum(["ready", "unconfigured", "degraded", "disabled"]),
+    message: z.string().trim().min(1).max(500).optional(),
+    checkedAt: z.string().datetime({ offset: true }),
+  })
+  .strict();
+export type StockMediaProviderHealth = z.infer<
+  typeof stockMediaProviderHealthSchema
+>;
+
+export const stockMediaQuotaStateSchema = z
+  .object({
+    limit: z.number().int().nonnegative().optional(),
+    remaining: z.number().int().nonnegative().optional(),
+    resetAt: z.string().datetime({ offset: true }).optional(),
+    observedAt: z.string().datetime({ offset: true }),
+    metadata: z.record(z.string(), z.string().max(500)).optional(),
+  })
+  .strict()
+  .superRefine((quota, ctx) => {
+    if (
+      quota.limit !== undefined &&
+      quota.remaining !== undefined &&
+      quota.remaining > quota.limit
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["remaining"],
+        message: "Remaining quota cannot exceed the provider limit",
+      });
+    }
+  });
+export type StockMediaQuotaState = z.infer<typeof stockMediaQuotaStateSchema>;
+
+export const stockMediaSearchRequestSchema = z
+  .object({
+    query: z.string().trim().min(1).max(200),
+    kind: stockMediaKindSchema,
+    orientation: orientationSchema.optional(),
+    pageToken: z.string().trim().min(1).max(500).optional(),
+    perPage: z.number().int().positive().max(100).default(20),
+  })
+  .strict();
+export type StockMediaSearchRequest = z.input<
+  typeof stockMediaSearchRequestSchema
+>;
+export type NormalizedStockMediaSearchRequest = z.output<
+  typeof stockMediaSearchRequestSchema
+>;
+
+export const stockMediaSearchResponseSchema = z
+  .object({
+    items: z.array(stockMediaCandidateSchema).max(100),
+    nextPageToken: z.string().trim().min(1).max(500).optional(),
+    total: z.number().int().nonnegative().optional(),
+    quota: stockMediaQuotaStateSchema.optional(),
+  })
+  .strict();
+export type StockMediaSearchResponse = z.infer<
+  typeof stockMediaSearchResponseSchema
+>;
 
 export interface StockMediaSelectionDTO {
   id: string;

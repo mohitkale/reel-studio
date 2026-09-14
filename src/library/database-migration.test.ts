@@ -383,6 +383,46 @@ describe("SQLite migration preparation", () => {
     }
   });
 
+  it("adds stock response cache, quota, and materialization state", () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      for (const migration of [
+        "20260910000100_baseline",
+        "20260914000200_stock_media_schema",
+        "20260914000300_stock_media_services",
+      ]) {
+        db.exec(
+          readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),
+        );
+      }
+      db.exec(`
+        INSERT INTO Asset (id,type,path) VALUES ('asset','image','stock-media/hash.png');
+        INSERT INTO StockMediaResponseCache (requestHash,providerId,operation,requestJson,responseJson,expiresAt,updatedAt)
+          VALUES ('request','fixture','search','{}','{"items":[]}','2026-09-15T00:00:00.000Z',CURRENT_TIMESTAMP);
+        INSERT INTO StockMediaQuotaState (providerId,"limit",remaining,observedAt,updatedAt)
+          VALUES ('fixture',100,99,'2026-09-14T14:30:00.000Z',CURRENT_TIMESTAMP);
+        INSERT INTO StockMediaMaterialization (requestHash,providerId,providerAssetId,renditionId,sourceUrl,assetId,contentHash,metadataJson,updatedAt)
+          VALUES ('materialized','fixture','photo-1','large','https://cdn.example.test/photo.png','asset','${"a".repeat(64)}','{}',CURRENT_TIMESTAMP);
+      `);
+      expect(
+        db
+          .prepare(
+            "SELECT providerId, remaining FROM StockMediaQuotaState WHERE providerId='fixture'",
+          )
+          .get(),
+      ).toEqual({ providerId: "fixture", remaining: 99 });
+      expect(
+        db
+          .prepare(
+            "SELECT assetId FROM StockMediaMaterialization WHERE requestHash='materialized'",
+          )
+          .get(),
+      ).toEqual({ assetId: "asset" });
+    } finally {
+      db.close();
+    }
+  });
+
   it("backs up and restores a populated 0.4 database with durable stage outputs", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "reel-pr1-populated-"));
     const filename = path.join(directory, "populated.db");

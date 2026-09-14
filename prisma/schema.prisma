@@ -220,7 +220,8 @@ model Asset {
   meta      String? // JSON
   createdAt DateTime @default(now())
 
-  stockMediaSelections StockMediaSelection[]
+  stockMediaSelections       StockMediaSelection[]
+  stockMediaMaterializations StockMediaMaterialization[]
 }
 
 /// Immutable provider metadata retained when a scene selects stock media.
@@ -240,6 +241,50 @@ model StockMediaSelection {
 
   @@index([providerId, providerAssetId])
   @@index([localAssetId])
+}
+
+/// Provider search responses cached by a canonical request hash and expiry.
+model StockMediaResponseCache {
+  requestHash  String   @id
+  providerId   String
+  operation    String
+  requestJson  String
+  responseJson String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([providerId, operation])
+  @@index([expiresAt])
+}
+
+/// Latest quota headers observed for a provider request.
+model StockMediaQuotaState {
+  providerId   String    @id
+  limit        Int?
+  remaining    Int?
+  resetAt      DateTime?
+  observedAt   DateTime
+  metadataJson String?
+  updatedAt    DateTime  @updatedAt
+}
+
+/// Idempotency record linking one provider rendition to immutable local bytes.
+model StockMediaMaterialization {
+  requestHash     String   @id
+  providerId      String
+  providerAssetId String
+  renditionId     String
+  sourceUrl       String
+  assetId         String
+  asset           Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  contentHash     String
+  metadataJson    String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([providerId, providerAssetId])
+  @@index([assetId])
 }
 
 model ProviderSetting {
