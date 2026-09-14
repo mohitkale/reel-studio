@@ -14,7 +14,7 @@ the user requests publication.
 |    8 | Add provider capabilities/health registry, response cache, quota state, and safe idempotent materialization          | Complete | `3143f722e840da8de008f0b69fa45009322744b3` |
 |    9 | Add Pexels photo/video adapter with auth, pagination, quota, attribution, rendition, and failure fixtures            | Complete | `ebe86bb51081fe705a4d0b2be9f17c93de2eed1f` |
 |   10 | Add Pixabay image/video adapter with required 24-hour cache, temporary-preview handling, and failure fixtures        | Complete | `273710b45bfe2bd4404d1b658fde4f9bd1043862` |
-|   11 | Move Unsplash persistence, hotlink/`ixid`, attribution, and download-event tracking into the shared service          | Pending  | —                                          |
+|   11 | Move Unsplash persistence, hotlink/`ixid`, attribution, and download-event tracking into the shared service          | Complete | `681c09cc4efa57e57eb8fd70bfabeacff9f3dd08` |
 |   12 | Keep Coverr disabled behind the recorded license decision unless the license gate is resolved                        | Pending  | —                                          |
 
 ## Task 7 decisions
@@ -175,3 +175,44 @@ the user requests publication.
   fixtures.
 - No real key, external provider request, Docker command, dependency install,
   or host setting change was used for Task 10.
+
+## Task 11 decisions
+
+- Unsplash is now a provider-neutral image adapter in the built-in registry.
+  The existing image-only entry point delegates to it so automatic scene
+  backgrounds and existing REST behavior remain compatible.
+- Search keeps the exact returned `images.unsplash.com` or
+  `plus.unsplash.com` hotlinks, including `ixid`, and adds the required Reel
+  Studio referral parameters only to photographer and photo-page attribution
+  links. The API key stays in the `Authorization` header.
+- Immutable provider snapshots now retain the validated
+  `links.download_location` endpoint alongside photographer, attribution,
+  source page, asset id, dimensions, rendition, and hotlink policy. The shared
+  usage service persists `reported` or `failed` state and does not
+  automatically retry either state.
+- Hotlink materialization stores no local bytes and returns the exact selected
+  remote rendition, so Unsplash renders remain network-dependent. This follows
+  the Task 1 decision that the reviewed guidance does not grant a local
+  render-staging exception.
+- The returned download endpoint is accepted only on `api.unsplash.com` and
+  only for the selected asset id. Usage calls, search calls, timeouts, and
+  provider errors occur once without retry.
+- No stock picker, automatic provider choice, downloaded-stock rendering, or
+  later-PR workflow is included.
+
+## Task 11 validation
+
+- Focused Unsplash, registry, schema, materialization, Pexels, and Pixabay
+  suites: 6 files / 52 tests passed. Coverage includes exact `ixid` retention,
+  attribution/referral links, quota and pagination, no local download, persisted
+  usage success/failure, legacy delegation, malformed data, foreign URLs,
+  cancellation, timeout, and no-retry behavior.
+- Full unit suite: 54 files / 298 tests passed.
+- `npm run typecheck`, `npm run lint -- --max-warnings=0`,
+  `npm run security:scan`, changed-code formatting, and the Next.js production
+  build passed.
+- Current official Unsplash API documentation and API guidelines were reviewed
+  on 2026-09-15. All API interactions in tests used deterministic local
+  fixtures; no real credential or provider API request was used.
+- No Docker command, dependency install, or host setting change was used for
+  Task 11.
