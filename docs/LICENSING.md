@@ -168,3 +168,11 @@ license.
 
 When in doubt, read the upstream license pages linked above or ask Remotion /
 the relevant vendor for written clarification for your entity size and use case.
+
+## Local-first expansion policy snapshot
+
+The [PR 1 snapshot](production/LOCAL_FIRST_TASKS.md#api-and-licensing-snapshot-2026-09-13)
+records the stock API research and release gates. Unsplash remains a network
+render source: the reviewed API guidance does not explicitly authorize a
+video-render staging exception, so no generic permanent-download policy is
+approved. Coverr remains disabled pending resolution of its API license gate.

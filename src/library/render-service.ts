@@ -1,3 +1,10 @@
+import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
+import type { VideoSnapshot } from "@/production/video-snapshot";
+import type { ResolvedTimeline } from "@/lib/reel-timeline";
+import {
+  assertProductionActive,
+  cancelableRemotion,
+} from "@/library/production-cancellation";
 /**
  * Server-side render service. Bundles the Remotion composition once (cached in
  * memory), then calls renderMedia for each job. Node.js only -- never import
@@ -135,6 +142,8 @@ export function getRemotionServeUrl(
 }
 
 export interface StartRenderOptions {
+  snapshot?: VideoSnapshot;
+  prepared?: { props: ReelProps; totalFrames: number };
   renderId: string;
   scriptId: string;
   voiceTakeId?: string;
@@ -209,7 +218,7 @@ export function startRender(opts: StartRenderOptions): void {
 
 async function runRender(opts: StartRenderOptions): Promise<void> {
   // Dispatch by project video engine before entering the Remotion path.
-  const script = await getScript(opts.scriptId);
+  const script = opts.snapshot?.script ?? (await getScript(opts.scriptId));
   if (script?.videoEngine === "hyperframes") {
     const { runHyperframesRender } =
       await import("@/library/hyperframes-render");
@@ -232,6 +241,8 @@ export async function runRenderNow(opts: StartRenderOptions): Promise<void> {
 }
 
 async function runRemotionRender({
+  snapshot,
+  prepared,
   renderId,
   scriptId,
   voiceTakeId,
@@ -311,7 +322,7 @@ async function runRemotionRender({
     console.log("[render] Starting renderMedia for job", renderId);
 
     // 2. Load script + optional take.
-    const script = await getScript(scriptId);
+    const script = snapshot?.script ?? (await getScript(scriptId));
     if (!script) throw new Error(`Script ${scriptId} not found`);
 
     const takes = voiceTakeId
@@ -319,7 +330,7 @@ async function runRemotionRender({
           ts.filter((t) => t.id === voiceTakeId),
         )
       : [];
-    const take = takes[0] ?? null;
+    const take = snapshot ? snapshot.take : (takes[0] ?? null);
 
     // Reconcile the take with the scenes by spoken text (same logic as the
     // editor): a take survives non-text edits and rewrites that keep the text,
@@ -350,7 +361,7 @@ async function runRemotionRender({
       : { width: script.width, height: script.height };
     const outputScale = qualityPreset.scale;
 
-    const inputProps: ReelProps = {
+    const inputProps: ReelProps = prepared?.props ?? {
       scenes: script.scenes.map((s) => ({
         id: s.id,
         templateId: normalizeTemplateId(s.templateId),
@@ -395,7 +406,8 @@ async function runRemotionRender({
 
     // Cover is held at the start, lengthening the video by that many frames.
     const cover = coverFrames(script.fps, Boolean(script.coverUrl));
-    const fullDuration = Math.max(1, totalFrames + cover);
+    const fullDuration =
+      prepared?.totalFrames ?? Math.max(1, totalFrames + cover);
 
     // 3. Resolve the "Reel" composition with input props to get the correct duration.
     const composition = await selectComposition({
@@ -421,32 +433,36 @@ async function runRemotionRender({
       Math.min(4, Math.floor(concurrency / 2)),
     );
 
-    await renderMedia({
-      composition: { ...composition, durationInFrames: fullDuration },
-      serveUrl,
-      codec: "h264",
-      outputLocation: outputPath,
-      inputProps,
-      scale: outputScale,
-      imageFormat: "jpeg",
-      pixelFormat: "yuv420p",
-      concurrency,
-      x264Preset: qualityPreset.x264Preset,
-      crf: qualityPreset.crf,
-      offthreadVideoThreads,
-      offthreadVideoCacheSizeInBytes: 512 * 1024 * 1024,
-      mediaCacheSizeInBytes: 512 * 1024 * 1024,
-      hardwareAcceleration: "if-possible",
-      timeoutInMilliseconds: 300_000,
-      logLevel: "error",
-      onProgress: ({ progress: p }) => {
-        const pct = Math.round(p * 100) / 100;
-        progress(pct, "rendering");
-        if (Math.round(pct * 100) % 5 === 0) {
-          console.log(`[render] Job ${renderId}: ${Math.round(pct * 100)}%`);
-        }
-      },
-    });
+    assertProductionActive();
+    await cancelableRemotion((cancelSignal) =>
+      renderMedia({
+        cancelSignal,
+        composition: { ...composition, durationInFrames: fullDuration },
+        serveUrl,
+        codec: "h264",
+        outputLocation: outputPath,
+        inputProps,
+        scale: outputScale,
+        imageFormat: "jpeg",
+        pixelFormat: "yuv420p",
+        concurrency,
+        x264Preset: qualityPreset.x264Preset,
+        crf: qualityPreset.crf,
+        offthreadVideoThreads,
+        offthreadVideoCacheSizeInBytes: 512 * 1024 * 1024,
+        mediaCacheSizeInBytes: 512 * 1024 * 1024,
+        hardwareAcceleration: "if-possible",
+        timeoutInMilliseconds: 300_000,
+        logLevel: "error",
+        onProgress: ({ progress: p }) => {
+          const pct = Math.round(p * 100) / 100;
+          progress(pct, "rendering");
+          if (Math.round(pct * 100) % 5 === 0) {
+            console.log(`[render] Job ${renderId}: ${Math.round(pct * 100)}%`);
+          }
+        },
+      }),
+    );
 
     // 6. Mark done.
     await completeRender(renderId, outputKey);
@@ -458,9 +474,89 @@ async function runRemotionRender({
     });
     console.log("[render] Job", renderId, "complete:", outputPath);
   } catch (err) {
+    await fs.rm(
+      path.join(process.cwd(), "media", "renders", `render-${renderId}.mp4`),
+      { force: true },
+    );
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[render] Job", renderId, "failed:", msg);
     await failRender(renderId, msg).catch(() => {});
     upsertJob({ id: renderId, progress: 0, status: "error", error: msg });
   }
+}
+
+export function prepareVideoComposition(
+  snapshot: VideoSnapshot,
+  resolved: ResolvedTimeline,
+  orientation?: Orientation,
+  serverBaseUrl = "http://localhost:3000",
+) {
+  const { script, take } = snapshot;
+  const timeline = resolved.timeline;
+  // Media URLs must be absolute so Remotion's separate Chrome process (its own
+  // webpack dev server) can fetch them — relative URLs resolve against that
+  // server, not Next.js.
+  const absolute = (url?: string | null) =>
+    url ? (url.startsWith("http") ? url : `${serverBaseUrl}${url}`) : undefined;
+
+  // Repurpose: render at the requested orientation's canvas instead of the
+  // script's own. The composition reads width/height from these input props.
+  const nativeDims = orientation
+    ? dimsFor(orientation)
+    : { width: script.width, height: script.height };
+
+  const inputProps: ReelProps = {
+    scenes: script.scenes.map((s) => ({
+      id: s.id,
+      templateId:
+        script.videoEngine === "hyperframes"
+          ? normalizeHfTemplateId(s.templateId)
+          : normalizeTemplateId(s.templateId),
+      text: s.text,
+      emphasis: s.emphasis,
+      visual: s.visual,
+      background: s.background
+        ? { ...s.background, url: absolute(s.background.url)! }
+        : undefined,
+      items: s.items,
+      chart: s.chart,
+      role: s.role,
+      // Per-scene override wins; otherwise the script-wide default.
+      hideText: s.hideText ?? script.hideText,
+      mood: s.mood as ReelScene["mood"],
+      order: s.order,
+    })),
+    timeline,
+    width: nativeDims.width,
+    height: nativeDims.height,
+    fps: script.fps,
+    audioUrl: resolved.takeUsable ? absolute(take?.audioUrl) : undefined,
+    musicUrl: absolute(script.musicUrl),
+    musicVolume: script.musicVolume,
+    sfxCues: resolveReelSfxCues({
+      sfxEnabled: script.sfxEnabled,
+      sfxJson: script.sfxJson,
+      timeline,
+      fps: script.fps,
+    }).map((c) => ({
+      ...c,
+      url: absolute(snapshot.sfxAssets?.[c.url] ?? c.url)!,
+    })),
+    coverUrl: absolute(script.coverUrl),
+    // script.brandTokens is server-safe (uses serverDefaultTokens, no @remotion/google-fonts).
+    // Importing @/compositions/tokens here would pull loadFont() into the Next.js server
+    // process where React.createContext is undefined, crashing the render job.
+    tokens: script.brandTokens,
+    hideProgressBar: script.hideProgressBar,
+    styleId: script.styleId,
+    energy: script.energy,
+    preset: script.productionPreset,
+    captions: script.captionTracks?.find((track) => track.enabled),
+  };
+
+  // Cover is held at the start, lengthening the video by that many frames.
+  const cover = coverFrames(script.fps, Boolean(script.coverUrl));
+  const fullDuration = Math.max(1, resolved.totalFrames + cover);
+
+  return { props: inputProps, totalFrames: fullDuration };
 }

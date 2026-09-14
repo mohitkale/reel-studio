@@ -1,3 +1,4 @@
+import { videoSnapshotSchema } from "@/production/video-snapshot";
 import { z } from "zod";
 
 export const PRODUCTION_JOB_STATES = [
@@ -36,6 +37,7 @@ export type EnqueueProductionJob = z.input<typeof enqueueProductionJobSchema>;
 
 export const videoProductionJobInputSchema = z.object({
   renderId: z.string().min(1),
+  snapshot: videoSnapshotSchema.optional(),
   scriptId: z.string().min(1),
   voiceTakeId: z.string().min(1).optional(),
   orientation: z.enum(["portrait", "landscape", "square"]).optional(),

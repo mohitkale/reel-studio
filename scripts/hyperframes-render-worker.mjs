@@ -13,7 +13,8 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-const [projectDir, outputPath, fpsRaw, quality = "standard"] = process.argv.slice(2);
+const [projectDir, outputPath, fpsRaw, quality = "standard"] =
+  process.argv.slice(2);
 
 if (!projectDir || !outputPath || !fpsRaw) {
   console.error(
@@ -56,18 +57,32 @@ const job = createRenderJob({
   strictness: "best-effort",
 });
 
+const cancellation = new AbortController();
+process.once("SIGTERM", () => cancellation.abort());
+process.once("SIGINT", () => cancellation.abort());
+
 try {
-  await executeRenderJob(job, projectDir, outputPath, (renderJob) => {
-    const pct = toFraction(renderJob.progress);
-    console.log(`HF_PROGRESS ${pct.toFixed(4)}`);
-  });
+  await executeRenderJob(
+    job,
+    projectDir,
+    outputPath,
+    (renderJob) => {
+      const pct = toFraction(renderJob.progress);
+      console.log(`HF_PROGRESS ${pct.toFixed(4)}`);
+    },
+    cancellation.signal,
+  );
   console.log("HF_DONE");
 } catch (err) {
   const message = err instanceof Error ? err.message : String(err);
   const warnings =
     err && typeof err === "object" && Array.isArray(err.warnings)
       ? err.warnings
-          .map((w) => (w && typeof w === "object" && "message" in w ? w.message : String(w)))
+          .map((w) =>
+            w && typeof w === "object" && "message" in w
+              ? w.message
+              : String(w),
+          )
           .filter(Boolean)
           .join("; ")
       : "";

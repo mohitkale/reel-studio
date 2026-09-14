@@ -1,3 +1,8 @@
+import type { VideoSnapshot } from "@/production/video-snapshot";
+import {
+  assertProductionActive,
+  cancelChild,
+} from "@/library/production-cancellation";
 /**
  * Server-side HyperFrames render path. Builds HTML, then runs
  * @hyperframes/producer in an isolated child process so Puppeteer / producer
@@ -46,6 +51,8 @@ function localizeGsapRuntime(html: string): string {
 }
 
 export interface HyperframesRenderOptions {
+  snapshot?: VideoSnapshot;
+  prepared?: { props: ReelProps; totalFrames: number };
   renderId: string;
   scriptId: string;
   voiceTakeId?: string;
@@ -159,6 +166,7 @@ function runWorker(args: {
   quality: RenderQuality;
   onProgress: (pct: number) => void;
 }): Promise<void> {
+  assertProductionActive();
   return new Promise((resolve, reject) => {
     const worker = path.join(
       process.cwd(),
@@ -174,12 +182,14 @@ function runWorker(args: {
         args.quality,
       ],
       {
+        detached: process.platform !== "win32",
         cwd: process.cwd(),
         env: process.env,
         stdio: ["ignore", "pipe", "pipe"],
       },
     );
 
+    cancelChild(child);
     let stderr = "";
     let hfError = "";
     child.stdout.on("data", (buf: Buffer) => {
@@ -234,6 +244,8 @@ export async function runHyperframesRender(
   opts: HyperframesRenderOptions,
 ): Promise<void> {
   const {
+    snapshot,
+    prepared,
     renderId,
     scriptId,
     voiceTakeId,
@@ -254,7 +266,7 @@ export async function runHyperframesRender(
 
   try {
     progress(0, "bundling");
-    const script = await getScript(scriptId);
+    const script = snapshot?.script ?? (await getScript(scriptId));
     if (!script) throw new Error(`Script ${scriptId} not found`);
 
     const takes = voiceTakeId
@@ -262,7 +274,7 @@ export async function runHyperframesRender(
           ts.filter((t) => t.id === voiceTakeId),
         )
       : [];
-    const take = takes[0] ?? null;
+    const take = snapshot ? snapshot.take : (takes[0] ?? null);
 
     const { resolveReelTimeline } = await import("@/lib/reel-timeline");
     const { resolveSpokenText } = await import("@/lib/spoken-text");
@@ -280,7 +292,7 @@ export async function runHyperframesRender(
     await fs.mkdir(projectDir, { recursive: true });
 
     const scenes = await Promise.all(
-      script.scenes.map(async (s, i) => {
+      (prepared?.props.scenes ?? script.scenes).map(async (s, i) => {
         const bgUrl = s.background?.url
           ? await materializeUrl(
               s.background.url.startsWith("http")
@@ -335,12 +347,14 @@ export async function runHyperframesRender(
     );
 
     const { resolveReelSfxCues } = await import("@/lib/sfx-cues");
-    const rawSfx = resolveReelSfxCues({
-      sfxEnabled: script.sfxEnabled,
-      sfxJson: script.sfxJson,
-      timeline: resolved.timeline,
-      fps: script.fps,
-    });
+    const rawSfx =
+      prepared?.props.sfxCues ??
+      resolveReelSfxCues({
+        sfxEnabled: script.sfxEnabled,
+        sfxJson: script.sfxJson,
+        timeline: resolved.timeline,
+        fps: script.fps,
+      });
     const sfxCues = await Promise.all(
       rawSfx.map(async (cue, i) => ({
         ...cue,
@@ -365,9 +379,9 @@ export async function runHyperframesRender(
       serverBaseUrl,
     );
 
-    const inputProps: ReelProps = {
+    const legacyInputProps: ReelProps = {
       scenes,
-      timeline: resolved.timeline,
+      timeline: prepared?.props.timeline ?? resolved.timeline,
       width: nativeDims.width,
       height: nativeDims.height,
       fps: script.fps,
@@ -383,6 +397,10 @@ export async function runHyperframesRender(
       preset: script.productionPreset,
       captions: script.captionTracks?.find((track) => track.enabled),
     };
+
+    const inputProps: ReelProps = prepared
+      ? { ...prepared.props, scenes, audioUrl, musicUrl, sfxCues, coverUrl }
+      : legacyInputProps;
 
     const runtimeDir = path.join(projectDir, "_runtime");
     await fs.mkdir(runtimeDir, { recursive: true });
@@ -474,6 +492,7 @@ export async function runHyperframesRender(
       },
     });
 
+    assertProductionActive();
     await completeRender(renderId, outputKey);
     upsertJob({
       id: renderId,
@@ -485,9 +504,18 @@ export async function runHyperframesRender(
 
     await fs.rm(projectDir, { recursive: true, force: true }).catch(() => {});
   } catch (err) {
+    await fs.rm(
+      path.join(process.cwd(), "media", "renders", `render-${renderId}.mp4`),
+      { force: true },
+    );
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[render:hf] Job", renderId, "failed:", msg);
     await failRender(renderId, msg).catch(() => {});
     upsertJob({ id: renderId, progress: 0, status: "error", error: msg });
+  } finally {
+    await fs.rm(path.join(process.cwd(), "media", "hf-work", renderId), {
+      recursive: true,
+      force: true,
+    });
   }
 }

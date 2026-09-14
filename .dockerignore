@@ -9,6 +9,7 @@ node_modules
 
 # Local data, secrets and render output (mounted as volumes at runtime instead).
 media
+.artifacts
 .data
 *.db
 *.db-journal

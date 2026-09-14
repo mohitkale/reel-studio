@@ -13,6 +13,7 @@ import {
   heartbeatProductionJob,
   requestProductionJobCancellation,
   retryProductionJob,
+  releaseProductionJob,
 } from "@/library/repositories/production-jobs";
 
 describe("durable production jobs", () => {
@@ -154,5 +155,56 @@ describe("durable production jobs", () => {
     expect(
       (await claimProductionJob({ workerId: "worker" }, client))?.inputSnapshot,
     ).toEqual({ scriptId: "script" });
+  });
+  it("finalizes abandoned cancellation and does not replay uncertain provider work", async () => {
+    for (const kind of ["video", "audio"] as const) {
+      const job = await enqueueProductionJob(
+        { kind, idempotencyKey: `expired-${kind}`, inputSnapshot: {} },
+        client,
+      );
+      await claimProductionJob(
+        { workerId: "dead", now: new Date(0), leaseMs: 1 },
+        client,
+      );
+      if (kind === "video")
+        await requestProductionJobCancellation(job.id, client);
+      expect(
+        await claimProductionJob({ workerId: "replacement" }, client),
+      ).toBeNull();
+      const row = await client.productionJob.findUniqueOrThrow({
+        where: { id: job.id },
+      });
+      expect(row.state).toBe(kind === "video" ? "canceled" : "failed");
+      expect(row.leaseOwner).toBeNull();
+    }
+  });
+  it("resumes a shutdown job with successful step snapshots intact", async () => {
+    const job = await enqueueProductionJob(
+      {
+        kind: "video",
+        idempotencyKey: "shutdown-resume",
+        inputSnapshot: { revision: 1 },
+      },
+      client,
+    );
+    await claimProductionJob({ workerId: "old" }, client);
+    await client.productionJobStep.create({
+      data: {
+        jobId: job.id,
+        key: "plan",
+        state: "succeeded",
+        cacheKey: "saved",
+        detailJson: '{"revision":1}',
+      },
+    });
+    await releaseProductionJob(job.id, "old", client);
+    const claimed = await claimProductionJob({ workerId: "new" }, client);
+    expect(claimed?.id).toBe(job.id);
+    expect(claimed?.attempt).toBe(2);
+    expect(
+      await client.productionJobStep.count({
+        where: { jobId: job.id, state: "succeeded" },
+      }),
+    ).toBe(1);
   });
 });

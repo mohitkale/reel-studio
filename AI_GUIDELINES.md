@@ -12,6 +12,7 @@ Keep changes minimal, high-quality, and consistent with existing architecture.
 ## Non-Negotiables
 
 1. Preserve architecture boundaries:
+
 - `src/app`: pages + API route handlers
 - `src/library`: repositories, render orchestration, storage
 - `src/engines`: video-engine registry/adapters (`remotion` | `hyperframes`); do not put HyperFrames HTML/producer logic in `compositions/`
@@ -20,19 +21,23 @@ Keep changes minimal, high-quality, and consistent with existing architecture.
 - HyperFrames MP4 export: `src/library/hyperframes-render.ts` + `scripts/hyperframes-render-worker.mjs`
 
 2. Keep strict typing and avoid unsafe shortcuts:
+
 - No `any` unless clearly justified.
 - Use Zod validation for API inputs and external IO.
 
 3. Do not leak secrets:
+
 - Never commit `.env.local` values.
 - Keep `.env.example` placeholders only.
 - Respect `npm run security:scan` failures.
 
 4. Favor small, focused diffs:
+
 - Do not reformat unrelated files.
 - Do not rename symbols/files unless necessary.
 
 5. Honor current visual and UX style:
+
 - Reuse existing components before creating new ones.
 - Preserve established UI patterns.
 
@@ -65,3 +70,11 @@ Run relevant checks when code changes are made:
 - If uncertain, inspect existing code patterns first.
 - Explain tradeoffs clearly when making non-trivial choices.
 - If blocked by missing information, ask the smallest possible clarification.
+
+## Environment changes
+
+- Ask for explicit permission before installing software, changing computer-level
+  settings, or performing destructive actions.
+- Reuse installed tools. If Docker Desktop is stopped, ask the user to start it.
+- Explain downloads and dependency installation inside a Docker test image and
+  obtain permission before starting that build.

@@ -1,3 +1,7 @@
+import {
+  assertProductionActive,
+  cancelChild,
+} from "@/library/production-cancellation";
 import { spawn } from "node:child_process";
 
 import { normalizeWavLoudness } from "@/lib/audio-normalize";
@@ -70,6 +74,7 @@ export async function transcodeWavToMp3(
   wav: Buffer,
   binary = process.env.FFMPEG_BIN?.trim() || "ffmpeg",
 ): Promise<Buffer> {
+  assertProductionActive();
   return new Promise((resolve, reject) => {
     const child = spawn(
       binary,
@@ -89,8 +94,13 @@ export async function transcodeWavToMp3(
         "mp3",
         "pipe:1",
       ],
-      { shell: false, stdio: ["pipe", "pipe", "pipe"] },
+      {
+        shell: false,
+        detached: process.platform !== "win32",
+        stdio: ["pipe", "pipe", "pipe"],
+      },
     );
+    cancelChild(child);
     const stdout: Buffer[] = [];
     const stderr: Buffer[] = [];
     child.stdout.on("data", (chunk: Buffer) => stdout.push(chunk));

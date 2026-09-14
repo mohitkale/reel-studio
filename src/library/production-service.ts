@@ -1,3 +1,4 @@
+import { captureVideoSnapshot } from "@/library/video-snapshot";
 import { estimateSpeechSeconds } from "@/lib/audio-timing";
 import type { RequestAuthorization } from "@/server/auth";
 import { prisma } from "@/library/db";
@@ -58,6 +59,10 @@ async function resolveRequest(
       durationSeconds,
       providerIds: [],
       inputSnapshot: {
+        snapshot: await captureVideoSnapshot(
+          request.scriptId,
+          request.voiceTakeId,
+        ),
         scriptId: request.scriptId,
         voiceTakeId: request.voiceTakeId,
         orientation: request.orientation,

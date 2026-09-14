@@ -57,6 +57,39 @@ export async function claimProductionJob(
 ): Promise<ClaimedProductionJob | null> {
   const now = args.now ?? new Date();
   const leaseExpiresAt = new Date(now.getTime() + (args.leaseMs ?? 30_000));
+  // A dead owner cannot acknowledge cancellation. Do not leave these running.
+  await db.productionJob.updateMany({
+    where: {
+      state: "running",
+      cancelRequested: true,
+      leaseExpiresAt: { lt: now },
+    },
+    data: {
+      state: "canceled",
+      finishedAt: now,
+      leaseOwner: null,
+      leaseExpiresAt: null,
+      heartbeatAt: null,
+    },
+  });
+  // Audio/podcast providers may have charged before the worker died. Require
+  // explicit retry rather than replaying an uncertain external operation.
+  await db.productionJob.updateMany({
+    where: {
+      state: "running",
+      kind: { in: ["audio", "podcast"] },
+      leaseExpiresAt: { lt: now },
+    },
+    data: {
+      state: "failed",
+      error:
+        "Worker interrupted provider work; inspect outputs before explicit retry",
+      finishedAt: now,
+      leaseOwner: null,
+      leaseExpiresAt: null,
+      heartbeatAt: null,
+    },
+  });
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const candidate = await db.productionJob.findFirst({
       where: {
@@ -200,36 +233,45 @@ export async function upsertProductionJobStep(
     state: string;
     progress: number;
     cacheKey?: string;
+    leaseOwner?: string;
     detail?: unknown;
     error?: string;
   },
 ) {
   const timestamps =
     input.state === "running"
-      ? { startedAt: new Date() }
+      ? { startedAt: new Date(), finishedAt: null }
       : ["succeeded", "failed", "canceled"].includes(input.state)
         ? { finishedAt: new Date() }
         : {};
-  return prisma.productionJobStep.upsert({
-    where: { jobId_key: { jobId, key } },
-    create: {
-      jobId,
-      key,
-      state: input.state,
-      progress: input.progress,
-      cacheKey: input.cacheKey,
-      detailJson: input.detail === undefined ? null : json(input.detail),
-      error: input.error?.slice(0, 2_000),
-      ...timestamps,
-    },
-    update: {
-      state: input.state,
-      progress: input.progress,
-      cacheKey: input.cacheKey,
-      detailJson: input.detail === undefined ? undefined : json(input.detail),
-      error: input.error?.slice(0, 2_000),
-      ...timestamps,
-    },
+  return prisma.$transaction(async (tx) => {
+    if (input.leaseOwner) {
+      const owned = await tx.productionJob.findFirst({
+        where: { id: jobId, state: "running", leaseOwner: input.leaseOwner },
+      });
+      if (!owned) throw new Error("Production lease lost");
+    }
+    return tx.productionJobStep.upsert({
+      where: { jobId_key: { jobId, key } },
+      create: {
+        jobId,
+        key,
+        state: input.state,
+        progress: input.progress,
+        cacheKey: input.cacheKey,
+        detailJson: input.detail === undefined ? null : json(input.detail),
+        error: input.error?.slice(0, 2_000) ?? null,
+        ...timestamps,
+      },
+      update: {
+        state: input.state,
+        progress: input.progress,
+        cacheKey: input.cacheKey,
+        detailJson: input.detail === undefined ? undefined : json(input.detail),
+        error: input.error?.slice(0, 2_000) ?? null,
+        ...timestamps,
+      },
+    });
   });
 }
 
@@ -260,11 +302,24 @@ export async function addProductionJobOutput(
     path: string;
     checksum?: string;
     metadata?: unknown;
+    leaseOwner?: string;
   },
   db: PrismaClient = prisma,
 ) {
-  return db.productionJobOutput.create({
-    data: {
+  return db.$transaction(async (tx) => {
+    if (output.leaseOwner) {
+      const owned = await tx.productionJob.findFirst({
+        where: {
+          id: jobId,
+          state: "running",
+          leaseOwner: output.leaseOwner,
+          cancelRequested: false,
+        },
+      });
+      if (!owned)
+        throw new Error("Production lease lost before output publication");
+    }
+    const data = {
       jobId,
       kind: output.kind,
       format: output.format,
@@ -272,7 +327,18 @@ export async function addProductionJobOutput(
       checksum: output.checksum,
       metadataJson:
         output.metadata === undefined ? null : json(output.metadata),
-    },
+    };
+    const existing = await tx.productionJobOutput.findFirst({
+      where: {
+        jobId,
+        kind: output.kind,
+        format: output.format,
+        path: output.path,
+      },
+    });
+    return existing
+      ? tx.productionJobOutput.update({ where: { id: existing.id }, data })
+      : tx.productionJobOutput.create({ data });
   });
 }
 
@@ -331,7 +397,7 @@ export async function retryProductionJob(
   return db.$transaction(async (tx) => {
     const job = await tx.productionJob.findUnique({ where: { id } });
     if (!job || !["failed", "canceled"].includes(job.state)) return null;
-    await tx.productionJobStep.deleteMany({ where: { jobId: id } });
+    // Keep successful stage snapshots so an explicit retry resumes reusable work.
     const updated = await tx.productionJob.update({
       where: { id },
       data: {
@@ -349,5 +415,48 @@ export async function retryProductionJob(
       data: { jobId: id, type: "retried" },
     });
     return updated;
+  });
+}
+
+export async function getProductionJobStep(
+  jobId: string,
+  key: ProductionStepKey,
+) {
+  return prisma.productionJobStep.findUnique({
+    where: { jobId_key: { jobId, key } },
+  });
+}
+
+/** Release interrupted local rendering without replaying uncertain providers. */
+export async function releaseProductionJob(
+  jobId: string,
+  workerId: string,
+  db: PrismaClient = prisma,
+) {
+  return db.$transaction(async (tx) => {
+    const job = await tx.productionJob.findUnique({ where: { id: jobId } });
+    if (!job || job.leaseOwner !== workerId || job.state !== "running") return;
+    const state = job.cancelRequested
+      ? "canceled"
+      : ["video", "audiogram"].includes(job.kind)
+        ? "queued"
+        : "failed";
+    await tx.productionJob.update({
+      where: { id: jobId },
+      data: {
+        state,
+        leaseOwner: null,
+        leaseExpiresAt: null,
+        heartbeatAt: null,
+        finishedAt: state === "queued" ? null : new Date(),
+        error:
+          state === "failed"
+            ? "Worker interrupted provider work; inspect outputs before explicit retry"
+            : null,
+      },
+    });
+    await tx.productionJobEvent.create({
+      data: { jobId, type: "worker_interrupted", dataJson: json({ state }) },
+    });
   });
 }

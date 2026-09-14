@@ -7,9 +7,9 @@
     "node": ">=24.15.0 <25"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/supervise.mjs dev",
     "build": "next build --webpack",
-    "start": "next start",
+    "start": "node scripts/supervise.mjs start",
     "lint": "eslint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -50,7 +50,8 @@
     "test:render:cinematic-brand": "tsx scripts/render-regression.ts --preset=cinematic-brand",
     "test:podcast-audio": "tsx scripts/verify-podcast-audio.ts",
     "test:podcast-audiogram": "tsx scripts/render-podcast-audiogram.ts",
-    "db:migrate": "node scripts/migrate-database.mjs"
+    "db:migrate": "node scripts/migrate-database.mjs",
+    "test:production-worker": "node --import tsx scripts/verify-production-worker.ts"
   },
   "dependencies": {
     "@fontsource-variable/geist": "5.3.0",
