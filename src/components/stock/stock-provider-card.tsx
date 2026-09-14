@@ -10,6 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
+const PROVIDER_DESCRIPTION: Record<StockProviderStatus["id"], string> = {
+  unsplash:
+    "Free Demo tier (~50 requests/hour). Access Key from your Unsplash app.",
+  pexels: "Photo and video search. API key from your Pexels account.",
+  pixabay: "Image and video search. API key from your Pixabay account.",
+};
+
 export function StockProviderCard({ status }: { status: StockProviderStatus }) {
   const [apiKey, setApiKey] = React.useState("");
   const saveKey = useSaveStockKey();
@@ -24,9 +31,9 @@ export function StockProviderCard({ status }: { status: StockProviderStatus }) {
           if (res.verified) {
             toast.success(`${status.label} connected`, {
               description:
-                status.id === "pexels"
-                  ? "Pexels is ready for stock photo and video search."
-                  : "Stock backgrounds are now available for AI scenes.",
+                status.id === "unsplash"
+                  ? "Stock backgrounds are now available for AI scenes."
+                  : `${status.label} is ready for stock image and video search.`,
             });
           } else {
             toast.warning(`${status.label} key saved, but not verified`, {
@@ -68,16 +75,14 @@ export function StockProviderCard({ status }: { status: StockProviderStatus }) {
             )}
           </div>
           <p className="text-muted-foreground text-sm">
-            {status.id === "pexels"
-              ? "Photo and video search. API key from your Pexels account."
-              : "Free Demo tier (~50 requests/hour). Access Key from your Unsplash app."}
+            {PROVIDER_DESCRIPTION[status.id]}
           </p>
         </div>
       </div>
 
       <div className="grid gap-2">
         <Label htmlFor={`stock-key-${status.id}`}>
-          {status.id === "pexels" ? "API key" : "Access key"}
+          {status.id === "unsplash" ? "Access key" : "API key"}
         </Label>
         <div className="flex gap-2">
           <Input
@@ -87,9 +92,9 @@ export function StockProviderCard({ status }: { status: StockProviderStatus }) {
             placeholder={
               status.configured
                 ? "Enter a new key to replace"
-                : status.id === "pexels"
-                  ? "Paste your API key"
-                  : "Paste your Access Key"
+                : status.id === "unsplash"
+                  ? "Paste your Access Key"
+                  : "Paste your API key"
             }
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}

@@ -23,6 +23,7 @@ import {
 } from "./types";
 import { createUnsplashProvider } from "./unsplash";
 import { createPexelsProvider } from "./pexels";
+import { createPixabayProvider } from "./pixabay";
 import {
   withStockMediaResponseCache,
   type StockMediaCachePersistence,
@@ -242,7 +243,10 @@ export class StockMediaProviderRegistry {
 }
 
 export function createStockMediaProviderRegistry(
-  providers: StockMediaProvider[] = [createPexelsProvider()],
+  providers: StockMediaProvider[] = [
+    createPexelsProvider(),
+    createPixabayProvider(),
+  ],
   persistence?: StockMediaRegistryPersistence,
 ): StockMediaProviderRegistry {
   return new StockMediaProviderRegistry(providers, persistence);

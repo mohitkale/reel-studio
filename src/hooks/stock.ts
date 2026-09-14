@@ -14,6 +14,7 @@ export interface StockProviderStatus {
 const LABELS: Record<StockProviderId, string> = {
   unsplash: "Unsplash",
   pexels: "Pexels",
+  pixabay: "Pixabay",
 };
 
 export function useStockProviders() {

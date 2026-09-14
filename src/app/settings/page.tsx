@@ -157,7 +157,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-base">Stock media (optional)</CardTitle>
           <CardDescription>
-            Add an Unsplash Access Key or Pexels API key. Stock providers remain
+            Add an Unsplash, Pexels, or Pixabay key. Stock providers remain
             optional, and generation works without them. Unsplash photos remain
             under the{" "}
             <a
@@ -168,8 +168,8 @@ export default function SettingsPage() {
             >
               Unsplash License
             </a>
-            ; Pexels photos and videos retain creator attribution and are stored
-            locally only after selection.
+            ; Pexels and Pixabay media retain creator/source attribution and are
+            stored locally only after selection.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

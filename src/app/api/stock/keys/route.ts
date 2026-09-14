@@ -41,13 +41,15 @@ export async function POST(req: Request) {
     let verified = false;
     let verifyError: string | undefined;
     try {
-      if (providerId === "pexels") {
-        await getStockMediaProviderRegistry().get("pexels").search({
-          query: "nature",
-          kind: "image",
-          orientation: "portrait",
-          perPage: 1,
-        });
+      if (providerId !== "unsplash") {
+        await getStockMediaProviderRegistry()
+          .get(providerId)
+          .search({
+            query: "nature",
+            kind: "image",
+            orientation: "portrait",
+            perPage: providerId === "pixabay" ? 3 : 1,
+          });
       } else {
         await getStockProvider().search("nature", "portrait", 1);
       }

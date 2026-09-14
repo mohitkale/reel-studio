@@ -22,7 +22,7 @@ export type {
 } from "./schemas";
 
 /** Provider ids accepted by server-side stock-media key management. */
-export const STOCK_PROVIDER_IDS = ["unsplash", "pexels"] as const;
+export const STOCK_PROVIDER_IDS = ["unsplash", "pexels", "pixabay"] as const;
 export type StockProviderId = (typeof STOCK_PROVIDER_IDS)[number];
 
 /** Legacy image-only contract retained until Unsplash moves to the shared service. */

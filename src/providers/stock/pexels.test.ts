@@ -214,9 +214,11 @@ describe("Pexels stock-media provider", () => {
         now: () => OBSERVED_AT,
       }).health(),
     ).resolves.toMatchObject({ status: "unconfigured" });
-    expect(createStockMediaProviderRegistry().listCapabilities()).toEqual([
-      expect.objectContaining({ id: "pexels", label: "Pexels" }),
-    ]);
+    expect(createStockMediaProviderRegistry().listCapabilities()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "pexels", label: "Pexels" }),
+      ]),
+    );
   });
 
   it("authenticates and maps photo search, orientation, pagination, quota, and attribution", async () => {
