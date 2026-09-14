@@ -15,7 +15,7 @@ the user requests publication.
 |    9 | Add Pexels photo/video adapter with auth, pagination, quota, attribution, rendition, and failure fixtures            | Complete | `ebe86bb51081fe705a4d0b2be9f17c93de2eed1f` |
 |   10 | Add Pixabay image/video adapter with required 24-hour cache, temporary-preview handling, and failure fixtures        | Complete | `273710b45bfe2bd4404d1b658fde4f9bd1043862` |
 |   11 | Move Unsplash persistence, hotlink/`ixid`, attribution, and download-event tracking into the shared service          | Complete | `681c09cc4efa57e57eb8fd70bfabeacff9f3dd08` |
-|   12 | Keep Coverr disabled behind the recorded license decision unless the license gate is resolved                        | Pending  | —                                          |
+|   12 | Keep Coverr disabled behind the recorded license decision unless the license gate is resolved                        | Complete | `b2164c3c4a0ad3b9d097f2823cc4359775f2cffe` |
 
 ## Task 7 decisions
 
@@ -216,3 +216,38 @@ the user requests publication.
   fixtures; no real credential or provider API request was used.
 - No Docker command, dependency install, or host setting change was used for
   Task 11.
+
+## Task 12 decisions
+
+- The Coverr license gate remains closed after reviewing the official API
+  introduction, API start page, developer page, and general license on
+  2026-09-15. The API introduction excludes commercial use for free access,
+  while the developer and general license pages state that commercial use is
+  allowed; the tier page does not identify which terms control this use case.
+- The built-in registry exposes `Coverr (disabled)` with disabled health so the
+  decision is inspectable. Search fails locally with a license-gate error before
+  reading a key or making a network request.
+- Coverr is absent from the supported key-management ids, `.env.example`, and
+  Settings. No production-ready claim, key prompt, remote search, media
+  selection, or local rendition path is reachable while the gate is closed.
+- Enabling the adapter requires written API-specific clarification followed by
+  provider fixtures for authorization, attribution, quota, original-stock
+  filtering, safe local rendition handling, and provider errors. That
+  conditional implementation is intentionally not guessed while the release
+  gate remains unresolved.
+- No Task 13 picker or later workflow work is included.
+
+## Task 12 validation
+
+- Focused provider and schema suites: 6 files / 50 tests passed. Coverr-specific
+  fixtures verify the dated source decision, disabled registry health, absence
+  from key settings, a local 451 search failure, and zero network calls even
+  when an unused Coverr-like environment value exists.
+- Full unit suite: 55 files / 301 tests passed.
+- `npm run typecheck`, `npm run lint -- --max-warnings=0`,
+  `npm run security:scan`, changed-code formatting, and the Next.js production
+  build passed.
+- All provider interactions in tests used deterministic local fixtures; no real
+  credential or provider API request was used.
+- No Docker command, dependency install, or host setting change was used for
+  Task 12.
