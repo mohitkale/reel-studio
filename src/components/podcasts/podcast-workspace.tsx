@@ -63,6 +63,7 @@ import { PodcastGenerateProgress } from "./podcast-generate-progress";
 import { CompactTurnRow } from "./compact-turn-row";
 import { AddDialogueComposer } from "./add-dialogue-composer";
 import { PodcastAudiogramControls } from "./podcast-audiogram-controls";
+import { PodcastFinishingControls } from "./podcast-finishing-controls";
 import {
   PodcastCharacterEditor,
   charactersToDrafts,
@@ -189,6 +190,14 @@ export function PodcastWorkspace({ podcast }: { podcast: PodcastDTO }) {
     podcast.title,
     podcast.length,
     podcast.presetId,
+    podcast.introMusicAssetId,
+    podcast.outroMusicAssetId,
+    podcast.pronunciations
+      .map((rule) => `${rule.find}:${rule.replaceWith}:${rule.caseSensitive}`)
+      .join("|"),
+    podcast.turns
+      .map((turn) => `${turn.id}:${turn.pauseAfterSeconds ?? "auto"}`)
+      .join("|"),
   ].join("::");
   return <PodcastWorkspaceForm key={formKey} podcast={podcast} />;
 }
@@ -775,6 +784,7 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                         characterName={t.characterName}
                         characterKey={t.characterKey}
                         text={t.text}
+                        pauseAfterSeconds={t.pauseAfterSeconds}
                         disabled={busy || insertTurn.isPending}
                         onSave={async (text) => {
                           try {
@@ -792,6 +802,19 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                           deleteTurn.mutate(t.id, {
                             onSuccess: () => toast.info("Turn removed"),
                           })
+                        }
+                        onPauseChange={(pauseAfterSeconds) =>
+                          updateTurn.mutate(
+                            { turnId: t.id, pauseAfterSeconds },
+                            {
+                              onSuccess: () =>
+                                toast.success("Turn pause saved"),
+                              onError: (error) =>
+                                toast.error("Could not save pause", {
+                                  description: (error as Error).message,
+                                }),
+                            },
+                          )
                         }
                         onRegenerate={() => void runAudio([t.id])}
                       />
@@ -864,6 +887,7 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
           value="audio"
           className="mt-0 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto data-[state=inactive]:hidden"
         >
+          <PodcastFinishingControls podcast={podcast} />
           <section className="border-border bg-card flex flex-wrap items-center gap-3 rounded-xl border p-3 shadow-sm">
             <Button
               type="button"

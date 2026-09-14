@@ -2,7 +2,12 @@ import { randomUUID } from "node:crypto";
 
 import type { PodcastTakeDTO } from "@/lib/dto";
 import { stitchBeats, type BeatInput } from "@/lib/audio-timing";
-import { finalizeSpeechWav, transcodeWavToMp3 } from "@/lib/audio-production";
+import {
+  analyzeWav,
+  finalizeSpeechWav,
+  transcodeAudioToWav,
+  transcodeWavToMp3,
+} from "@/lib/audio-production";
 import { getProvider } from "@/providers/voice/registry";
 import {
   ProviderError,
@@ -13,7 +18,12 @@ import {
 import { prisma } from "@/library/db";
 import { getAssetStore } from "@/library/storage";
 import { createPodcastTake } from "@/library/repositories/podcasts";
-import type { PodcastBeatTiming } from "@/library/podcast-schemas";
+import {
+  PODCAST_BUMPER_SECONDS,
+  podcastPronunciationsSchema,
+  type PodcastBeatTiming,
+  type PodcastFinishingSnapshot,
+} from "@/library/podcast-schemas";
 import {
   getCachedPodcastTurnWav,
   setCachedPodcastTurnWav,
@@ -22,6 +32,11 @@ import {
   derivePodcastChapters,
   resolvePodcastPreset,
 } from "@/library/podcast-presets";
+import { parseJsonColumn } from "@/library/schemas";
+import {
+  applyPodcastPronunciations,
+  assemblePodcastMaster,
+} from "@/library/podcast-finishing";
 
 export type PodcastTakeProgress =
   | {
@@ -49,6 +64,8 @@ type TurnJob = {
   index: number;
   turnId: string;
   text: string;
+  spokenText: string;
+  pauseAfterSeconds: number | null;
   characterKey: string;
   providerId: string;
   voiceId: string;
@@ -126,7 +143,7 @@ async function synthesizeTurnsConcurrently(
         providerId: job.providerId,
         voiceId: job.voiceId,
         modelId: job.modelId,
-        text: job.text,
+        text: job.spokenText,
       };
       let wav = forceTurnIds.has(job.turnId)
         ? null
@@ -139,7 +156,7 @@ async function synthesizeTurnsConcurrently(
         const result = await synth({
           voiceId: job.voiceId,
           modelId: job.modelId,
-          text: job.text,
+          text: job.spokenText,
         });
         wav = result.wav;
         await setCachedPodcastTurnWav(cacheKey, wav).catch(() => undefined);
@@ -186,6 +203,52 @@ export async function generatePodcastTake(
     );
   }
 
+  const pronunciations = parseJsonColumn(
+    podcast.pronunciationsJson,
+    podcastPronunciationsSchema,
+    [],
+  );
+
+  async function loadBumper(
+    assetId: string | null,
+    position: "intro" | "outro",
+  ) {
+    if (!assetId) return null;
+    const asset = await prisma.asset.findUnique({ where: { id: assetId } });
+    if (!asset || asset.type !== "audio") {
+      throw new ProviderError(
+        `Assigned ${position} music asset is unavailable`,
+        409,
+      );
+    }
+    const bytes = await getAssetStore()
+      .get(asset.path)
+      .catch(() => null);
+    if (!bytes) {
+      throw new ProviderError(
+        `Assigned ${position} music file is missing`,
+        409,
+      );
+    }
+    const wav = await transcodeAudioToWav(bytes, {
+      maxSeconds: PODCAST_BUMPER_SECONDS,
+    });
+    return {
+      wav,
+      snapshot: {
+        assetId: asset.id,
+        name: asset.name ?? `${position} music`,
+        durationSeconds: analyzeWav(wav).durationSeconds,
+      },
+    };
+  }
+
+  // Validate local finishing media before any potentially paid provider call.
+  const [intro, outro] = await Promise.all([
+    loadBumper(podcast.introMusicAssetId, "intro"),
+    loadBumper(podcast.outroMusicAssetId, "outro"),
+  ]);
+
   const jobs: TurnJob[] = podcast.turns.map((t, index) => {
     const c = t.character;
     if (!c.providerId || !c.voiceId) {
@@ -198,6 +261,8 @@ export async function generatePodcastTake(
       index,
       turnId: t.id,
       text: t.text,
+      spokenText: applyPodcastPronunciations(t.text, pronunciations),
+      pauseAfterSeconds: t.pauseAfterSeconds,
       characterKey: c.key,
       providerId: c.providerId,
       voiceId: c.voiceId,
@@ -254,6 +319,7 @@ export async function generatePodcastTake(
 
   const preset = resolvePodcastPreset(podcast.presetId);
   const gaps: number[] = keys.slice(0, -1).map((key, i) => {
+    if (jobs[i].pauseAfterSeconds !== null) return jobs[i].pauseAfterSeconds;
     const next = keys[i + 1];
     if (key !== next) return preset.pacing.speakerChangeGapSeconds;
     return preset.pacing.sameSpeakerGapSeconds;
@@ -271,16 +337,35 @@ export async function generatePodcastTake(
   }
 
   const stitched = stitchBeats(beats, DEFAULT_FPS, gaps);
-  const { wav } = finalizeSpeechWav(stitched.wav);
+  const speech = finalizeSpeechWav(stitched.wav).wav;
+  const master = assemblePodcastMaster({
+    speechWav: speech,
+    introWav: intro?.wav,
+    outroWav: outro?.wav,
+    fps: DEFAULT_FPS,
+  });
+  const wav = master.wav;
+  analyzeWav(wav);
 
   const timeline: PodcastBeatTiming[] = stitched.timeline.map((beat, i) => ({
     turnId: beat.sceneId,
-    startFrame: beat.startFrame,
+    startFrame: beat.startFrame + master.introFrames,
     durationFrames: beat.durationFrames,
     text: beat.text,
     characterKey: keys[i],
   }));
   const chapters = derivePodcastChapters(timeline, DEFAULT_FPS);
+  const finishing: PodcastFinishingSnapshot = {
+    version: 1,
+    intro: intro?.snapshot ?? null,
+    outro: outro?.snapshot ?? null,
+    pronunciations,
+    pauses: jobs.flatMap((job) =>
+      job.pauseAfterSeconds === null
+        ? []
+        : [{ turnId: job.turnId, seconds: job.pauseAfterSeconds }],
+    ),
+  };
 
   const key = `podcast-takes/${randomUUID()}.wav`;
   await getAssetStore().put(key, wav);
@@ -331,11 +416,12 @@ export async function generatePodcastTake(
     voiceId: first.voiceId,
     modelId: first.modelId,
     fps: DEFAULT_FPS,
-    totalFrames: stitched.totalFrames,
+    totalFrames: stitched.totalFrames + master.introFrames + master.outroFrames,
     timeline,
     chapters,
     voices,
     audioPath: key,
     mp3Path,
+    finishing,
   });
 }

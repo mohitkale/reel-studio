@@ -18,6 +18,7 @@ import {
   podcastChaptersSchema,
   podcastLengthSchema,
   podcastTakeVoicesSchema,
+  podcastFinishingSnapshotSchema,
   podcastTimelineSchema,
 } from "@/library/podcast-schemas";
 import { parseJsonColumn } from "@/library/schemas";
@@ -63,6 +64,7 @@ export function toPodcastTurnDTO(t: TurnWithCharacter): PodcastTurnDTO {
     characterName: t.character.name,
     order: t.order,
     text: t.text,
+    pauseAfterSeconds: t.pauseAfterSeconds,
   };
 }
 
@@ -92,6 +94,11 @@ export function toPodcastTakeDTO(take: PodcastTake): PodcastTakeDTO {
     savedChapters.length > 0
       ? savedChapters
       : derivePodcastChapters(timeline, take.fps);
+  const finishing = parseJsonColumn(
+    take.finishingJson,
+    podcastFinishingSnapshotSchema.nullable(),
+    null,
+  );
   return {
     id: take.id,
     podcastId: take.podcastId,
@@ -104,6 +111,7 @@ export function toPodcastTakeDTO(take: PodcastTake): PodcastTakeDTO {
     timeline,
     chapters,
     voices,
+    finishing,
     audioUrl: getAssetStore().url(take.audioPath),
     mp3Url: take.mp3Path ? getAssetStore().url(take.mp3Path) : null,
     createdAt: take.createdAt.toISOString(),

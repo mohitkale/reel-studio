@@ -263,6 +263,59 @@ describe("SQLite migration preparation", () => {
       db.close();
     }
   });
+
+  it("adds podcast finishing controls without changing saved episodes or takes", () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      for (const migration of [
+        "20260910000100_baseline",
+        "20260912000200_audio_production",
+        "20260912000300_podcast_production",
+      ]) {
+        db.exec(
+          readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),
+        );
+      }
+      db.exec(`
+        INSERT INTO Podcast (id,title,updatedAt) VALUES ('podcast','Saved episode',CURRENT_TIMESTAMP);
+        INSERT INTO PodcastCharacter (id,podcastId,key,name,"order",updatedAt)
+          VALUES ('host','podcast','host','Host',0,CURRENT_TIMESTAMP);
+        INSERT INTO PodcastTurn (id,podcastId,characterId,"order",text,updatedAt)
+          VALUES ('turn','podcast','host',0,'Existing line',CURRENT_TIMESTAMP);
+        INSERT INTO PodcastTake (id,podcastId,providerId,voiceId,totalFrames,timingJson,audioPath)
+          VALUES ('take','podcast','kokoro-server','af_bella',30,'[]','podcast-takes/existing.wav');
+      `);
+      db.exec(
+        readFileSync(
+          "prisma/migrations/20260914000100_podcast_finishing/migration.sql",
+          "utf8",
+        ),
+      );
+      expect(
+        db
+          .prepare(
+            "SELECT introMusicAssetId, outroMusicAssetId, pronunciationsJson FROM Podcast WHERE id='podcast'",
+          )
+          .get(),
+      ).toEqual({
+        introMusicAssetId: null,
+        outroMusicAssetId: null,
+        pronunciationsJson: "[]",
+      });
+      expect(
+        db
+          .prepare("SELECT pauseAfterSeconds FROM PodcastTurn WHERE id='turn'")
+          .get(),
+      ).toEqual({ pauseAfterSeconds: null });
+      expect(
+        db
+          .prepare("SELECT finishingJson FROM PodcastTake WHERE id='take'")
+          .get(),
+      ).toEqual({ finishingJson: "{}" });
+    } finally {
+      db.close();
+    }
+  });
   it("backs up and restores a populated 0.4 database with durable stage outputs", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "reel-pr1-populated-"));
     const filename = path.join(directory, "populated.db");

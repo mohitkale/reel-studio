@@ -234,6 +234,19 @@ export interface PodcastTurnDTO {
   characterName: string;
   order: number;
   text: string;
+  pauseAfterSeconds: number | null;
+}
+
+export interface PodcastMusicAssetDTO {
+  id: string;
+  name: string;
+  url: string;
+}
+
+export interface PodcastPronunciationDTO {
+  find: string;
+  replaceWith: string;
+  caseSensitive: boolean;
 }
 
 export interface PodcastTakeVoiceDTO {
@@ -257,6 +270,8 @@ export interface PodcastTakeDTO {
   chapters: PodcastChapterDTO[];
   /** Cast voices snapshotted at generation time. */
   voices: PodcastTakeVoiceDTO[];
+  finishing:
+    import("@/library/podcast-schemas").PodcastFinishingSnapshot | null;
   audioUrl: string;
   mp3Url: string | null;
   createdAt: string;
@@ -281,6 +296,11 @@ export interface PodcastDTO {
   description: string;
   length: PodcastLengthDTO;
   presetId: "solo-narration" | "two-host-discussion" | "interview";
+  introMusicAssetId: string | null;
+  outroMusicAssetId: string | null;
+  introMusic: PodcastMusicAssetDTO | null;
+  outroMusic: PodcastMusicAssetDTO | null;
+  pronunciations: PodcastPronunciationDTO[];
   characters: PodcastCharacterDTO[];
   turns: PodcastTurnDTO[];
   takes: PodcastTakeDTO[];

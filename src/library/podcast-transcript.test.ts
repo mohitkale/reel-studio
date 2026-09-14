@@ -35,6 +35,7 @@ const take = {
     },
   ],
   voices: [],
+  finishing: null,
   audioUrl: "/media/take.wav",
   mp3Url: null,
   createdAt: "2026-09-12T00:00:00.000Z",

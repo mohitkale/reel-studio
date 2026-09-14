@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   analyzeWav,
   finalizeSpeechWav,
+  transcodeAudioToWav,
   transcodeWavToMp3,
 } from "@/lib/audio-production";
 import {
@@ -58,5 +59,7 @@ describe("audio production", () => {
     expect(mp3.length).toBeGreaterThan(1_000);
     expect(mp3.subarray(0, 3).toString("ascii")).toMatch(/ID3|\xFF/);
     expect(analyzeWav(toneWav()).clipped).toBe(false);
+    const decoded = await transcodeAudioToWav(mp3, { maxSeconds: 0.25 });
+    expect(analyzeWav(decoded).durationSeconds).toBeCloseTo(0.25, 1);
   });
 });

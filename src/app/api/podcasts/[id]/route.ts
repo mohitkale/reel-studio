@@ -6,7 +6,10 @@ import {
   getPodcast,
   updatePodcastMeta,
 } from "@/library/repositories/podcasts";
-import { podcastLengthSchema } from "@/library/podcast-schemas";
+import {
+  podcastLengthSchema,
+  podcastPronunciationsSchema,
+} from "@/library/podcast-schemas";
 import { podcastPresetIdSchema } from "@/library/podcast-presets";
 import { authorize } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
@@ -20,6 +23,9 @@ const patchSchema = z.object({
   description: z.string().trim().max(2000).optional(),
   length: podcastLengthSchema.optional(),
   presetId: podcastPresetIdSchema.optional(),
+  introMusicAssetId: z.string().min(1).nullable().optional(),
+  outroMusicAssetId: z.string().min(1).nullable().optional(),
+  pronunciations: podcastPronunciationsSchema.optional(),
 });
 
 export async function GET(
