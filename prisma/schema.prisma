@@ -122,7 +122,8 @@ model Scene {
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
 
-  voiceClips SceneVoiceClip[] @relation("SceneClips")
+  voiceClips          SceneVoiceClip[]     @relation("SceneClips")
+  stockMediaSelection StockMediaSelection?
 
   @@index([scriptId, order])
 }
@@ -218,6 +219,72 @@ model Asset {
   path      String // AssetStore key
   meta      String? // JSON
   createdAt DateTime @default(now())
+
+  stockMediaSelections       StockMediaSelection[]
+  stockMediaMaterializations StockMediaMaterialization[]
+}
+
+/// Immutable provider metadata retained when a scene selects stock media.
+/// The current background remains in Scene.layoutJson for render compatibility.
+model StockMediaSelection {
+  id              String   @id @default(cuid())
+  sceneId         String   @unique
+  scene           Scene    @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  providerId      String
+  providerAssetId String
+  kind            String
+  snapshotJson    String
+  localAssetId    String?
+  localAsset      Asset?   @relation(fields: [localAssetId], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([providerId, providerAssetId])
+  @@index([localAssetId])
+}
+
+/// Provider search responses cached by a canonical request hash and expiry.
+model StockMediaResponseCache {
+  requestHash  String   @id
+  providerId   String
+  operation    String
+  requestJson  String
+  responseJson String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([providerId, operation])
+  @@index([expiresAt])
+}
+
+/// Latest quota headers observed for a provider request.
+model StockMediaQuotaState {
+  providerId   String    @id
+  limit        Int?
+  remaining    Int?
+  resetAt      DateTime?
+  observedAt   DateTime
+  metadataJson String?
+  updatedAt    DateTime  @updatedAt
+}
+
+/// Idempotency record linking one provider rendition to immutable local bytes.
+model StockMediaMaterialization {
+  requestHash     String   @id
+  providerId      String
+  providerAssetId String
+  renditionId     String
+  sourceUrl       String
+  assetId         String
+  asset           Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  contentHash     String
+  metadataJson    String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([providerId, providerAssetId])
+  @@index([assetId])
 }
 
 model ProviderSetting {

@@ -42,6 +42,8 @@ const AI_ENV_KEY: Record<AIProviderId, string> = {
 
 const STOCK_ENV_KEY: Record<StockProviderId, string> = {
   unsplash: "UNSPLASH_ACCESS_KEY",
+  pexels: "PEXELS_API_KEY",
+  pixabay: "PIXABAY_API_KEY",
 };
 
 const MUSIC_ENV_KEY: Record<MusicProviderId, string> = {
@@ -116,7 +118,7 @@ export function setAIKey(id: AIProviderId, value: string): Promise<void> {
   return writeEnvKey(AI_ENV_KEY[id], value);
 }
 
-/* Stock-image providers */
+/* Stock-media providers */
 
 export function hasStockKey(id: StockProviderId): boolean {
   return envHas(STOCK_ENV_KEY[id]);

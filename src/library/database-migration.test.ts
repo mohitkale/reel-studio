@@ -10,6 +10,7 @@ import {
 } from "../../scripts/migrate-database.mjs";
 import { databaseUrl } from "../../scripts/database-url.mjs";
 import { createPrismaClient } from "./prisma-client";
+import { resolvedStockAssetSchema } from "@/providers/stock/schemas";
 
 describe("SQLite migration preparation", () => {
   it("recognizes equivalent schemas when db push appended columns", () => {
@@ -316,6 +317,112 @@ describe("SQLite migration preparation", () => {
       db.close();
     }
   });
+
+  it("backfills existing Unsplash backgrounds without changing their render data", () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      db.exec(
+        readFileSync(
+          "prisma/migrations/20260910000100_baseline/migration.sql",
+          "utf8",
+        ),
+      );
+      const hotlink =
+        "https://images.unsplash.com/photo-123?crop=entropy&ixid=keep-me&w=1080";
+      const legacyHotlink =
+        "https://plus.unsplash.com/premium_photo-456?ixid=keep-legacy";
+      db.prepare(
+        "INSERT INTO Project (id,name,updatedAt) VALUES ('saved','Existing project',CURRENT_TIMESTAMP)",
+      ).run();
+      db.prepare(
+        "INSERT INTO Script (id,projectId,name,width,height,updatedAt) VALUES ('script','saved','Existing script',1920,1080,CURRENT_TIMESTAMP)",
+      ).run();
+      db.prepare(
+        "INSERT INTO Scene (id,scriptId,\"order\",text,layoutJson,updatedAt) VALUES ('layout','script',0,'Layout background',?,CURRENT_TIMESTAMP)",
+      ).run(JSON.stringify({ background: { type: "image", url: hotlink } }));
+      db.prepare(
+        "INSERT INTO Scene (id,scriptId,\"order\",text,visual,updatedAt) VALUES ('visual','script',1,'Legacy visual',?,CURRENT_TIMESTAMP)",
+      ).run(JSON.stringify({ url: legacyHotlink, effect: "ken-burns" }));
+
+      db.exec(
+        readFileSync(
+          "prisma/migrations/20260914000200_stock_media_schema/migration.sql",
+          "utf8",
+        ),
+      );
+
+      const selections = db
+        .prepare(
+          "SELECT sceneId, snapshotJson FROM StockMediaSelection ORDER BY sceneId",
+        )
+        .all() as Array<{ sceneId: string; snapshotJson: string }>;
+      expect(selections).toHaveLength(2);
+      for (const selection of selections) {
+        const snapshot = resolvedStockAssetSchema.parse(
+          JSON.parse(selection.snapshotJson),
+        );
+        expect(snapshot.providerSnapshot.providerId).toBe("unsplash");
+        expect(snapshot.providerSnapshot.acquisitionPolicy).toBe("hotlink");
+        expect(snapshot.compliantRemoteUrl).toContain("ixid=keep-");
+        expect(snapshot.providerSnapshot.orientation).toBe("landscape");
+      }
+      expect(
+        db.prepare("SELECT layoutJson FROM Scene WHERE id='layout'").get(),
+      ).toEqual({
+        layoutJson: JSON.stringify({
+          background: { type: "image", url: hotlink },
+        }),
+      });
+      expect(
+        db.prepare("SELECT visual FROM Scene WHERE id='visual'").get(),
+      ).toEqual({
+        visual: JSON.stringify({ url: legacyHotlink, effect: "ken-burns" }),
+      });
+    } finally {
+      db.close();
+    }
+  });
+
+  it("adds stock response cache, quota, and materialization state", () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      for (const migration of [
+        "20260910000100_baseline",
+        "20260914000200_stock_media_schema",
+        "20260914000300_stock_media_services",
+      ]) {
+        db.exec(
+          readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),
+        );
+      }
+      db.exec(`
+        INSERT INTO Asset (id,type,path) VALUES ('asset','image','stock-media/hash.png');
+        INSERT INTO StockMediaResponseCache (requestHash,providerId,operation,requestJson,responseJson,expiresAt,updatedAt)
+          VALUES ('request','fixture','search','{}','{"items":[]}','2026-09-15T00:00:00.000Z',CURRENT_TIMESTAMP);
+        INSERT INTO StockMediaQuotaState (providerId,"limit",remaining,observedAt,updatedAt)
+          VALUES ('fixture',100,99,'2026-09-14T14:30:00.000Z',CURRENT_TIMESTAMP);
+        INSERT INTO StockMediaMaterialization (requestHash,providerId,providerAssetId,renditionId,sourceUrl,assetId,contentHash,metadataJson,updatedAt)
+          VALUES ('materialized','fixture','photo-1','large','https://cdn.example.test/photo.png','asset','${"a".repeat(64)}','{}',CURRENT_TIMESTAMP);
+      `);
+      expect(
+        db
+          .prepare(
+            "SELECT providerId, remaining FROM StockMediaQuotaState WHERE providerId='fixture'",
+          )
+          .get(),
+      ).toEqual({ providerId: "fixture", remaining: 99 });
+      expect(
+        db
+          .prepare(
+            "SELECT assetId FROM StockMediaMaterialization WHERE requestHash='materialized'",
+          )
+          .get(),
+      ).toEqual({ assetId: "asset" });
+    } finally {
+      db.close();
+    }
+  });
+
   it("backs up and restores a populated 0.4 database with durable stage outputs", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "reel-pr1-populated-"));
     const filename = path.join(directory, "populated.db");

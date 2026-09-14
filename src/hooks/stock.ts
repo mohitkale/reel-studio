@@ -13,19 +13,22 @@ export interface StockProviderStatus {
 
 const LABELS: Record<StockProviderId, string> = {
   unsplash: "Unsplash",
+  pexels: "Pexels",
+  pixabay: "Pixabay",
 };
 
 export function useStockProviders() {
   return useQuery({
     queryKey: ["stock-providers"],
     queryFn: () =>
-      apiGet<{ status: Record<StockProviderId, boolean> }>("/api/stock/keys").then(
-        (r) =>
-          (Object.keys(r.status) as StockProviderId[]).map((id) => ({
-            id,
-            label: LABELS[id] ?? id,
-            configured: r.status[id],
-          })),
+      apiGet<{ status: Record<StockProviderId, boolean> }>(
+        "/api/stock/keys",
+      ).then((r) =>
+        (Object.keys(r.status) as StockProviderId[]).map((id) => ({
+          id,
+          label: LABELS[id] ?? id,
+          configured: r.status[id],
+        })),
       ),
   });
 }

@@ -10,6 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
+const PROVIDER_DESCRIPTION: Record<StockProviderStatus["id"], string> = {
+  unsplash:
+    "Free Demo tier (~50 requests/hour). Access Key from your Unsplash app.",
+  pexels: "Photo and video search. API key from your Pexels account.",
+  pixabay: "Image and video search. API key from your Pixabay account.",
+};
+
 export function StockProviderCard({ status }: { status: StockProviderStatus }) {
   const [apiKey, setApiKey] = React.useState("");
   const saveKey = useSaveStockKey();
@@ -23,7 +30,10 @@ export function StockProviderCard({ status }: { status: StockProviderStatus }) {
           setApiKey("");
           if (res.verified) {
             toast.success(`${status.label} connected`, {
-              description: "Stock backgrounds are now available for AI scenes.",
+              description:
+                status.id === "unsplash"
+                  ? "Stock backgrounds are now available for AI scenes."
+                  : `${status.label} is ready for stock image and video search.`,
             });
           } else {
             toast.warning(`${status.label} key saved, but not verified`, {
@@ -49,7 +59,7 @@ export function StockProviderCard({ status }: { status: StockProviderStatus }) {
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-3">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+        <div className="bg-muted text-muted-foreground flex size-9 items-center justify-center rounded-lg">
           <ImageIcon className="size-4" />
         </div>
         <div>
@@ -64,36 +74,49 @@ export function StockProviderCard({ status }: { status: StockProviderStatus }) {
               <Badge variant="secondary">Not configured</Badge>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">
-            Free Demo tier (~50 requests/hour). Access Key from your Unsplash app.
+          <p className="text-muted-foreground text-sm">
+            {PROVIDER_DESCRIPTION[status.id]}
           </p>
         </div>
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor={`stock-key-${status.id}`}>Access key</Label>
+        <Label htmlFor={`stock-key-${status.id}`}>
+          {status.id === "unsplash" ? "Access key" : "API key"}
+        </Label>
         <div className="flex gap-2">
           <Input
             id={`stock-key-${status.id}`}
             type="password"
             autoComplete="off"
             placeholder={
-              status.configured ? "Enter a new key to replace" : "Paste your Access Key"
+              status.configured
+                ? "Enter a new key to replace"
+                : status.id === "unsplash"
+                  ? "Paste your Access Key"
+                  : "Paste your API key"
             }
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSave()}
           />
-          <Button onClick={handleSave} disabled={!apiKey.trim() || saveKey.isPending}>
+          <Button
+            onClick={handleSave}
+            disabled={!apiKey.trim() || saveKey.isPending}
+          >
             {saveKey.isPending ? "Saving..." : "Save"}
           </Button>
           {status.configured ? (
-            <Button variant="outline" onClick={handleClear} disabled={saveKey.isPending}>
+            <Button
+              variant="outline"
+              onClick={handleClear}
+              disabled={saveKey.isPending}
+            >
               Remove
             </Button>
           ) : null}
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           Stored in a git-ignored .env.local on this machine.
         </p>
       </div>
