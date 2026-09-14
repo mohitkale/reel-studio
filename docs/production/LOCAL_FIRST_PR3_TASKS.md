@@ -251,3 +251,27 @@ the user requests publication.
   credential or provider API request was used.
 - No Docker command, dependency install, or host setting change was used for
   Task 12.
+
+## PR 3 merge-gate validation
+
+- Final full unit suite: 55 files / 302 tests passed. This includes the existing
+  REST and MCP contracts and the explicit no-key/no-request Unsplash and Coverr
+  regressions.
+- Focused fresh/populated migration, stock-media repository, REST contract, and
+  MCP access suites: 4 files / 19 tests passed. Fresh databases apply all nine
+  migrations, and populated legacy Unsplash records retain their original
+  render data and exact hotlinks.
+- `npm run typecheck`, `npm run lint -- --max-warnings=0`,
+  `npm run security:scan`, `npm run release:check`, and the Next.js production
+  build passed. Prettier checks passed for every TypeScript, TSX, and MJS file
+  changed by PR 3.
+- The release check verified metadata, 36 deterministic provider-independent
+  preset plans, 36 capability combinations, 18 offline HyperFrames
+  compositions, and four decodable bundled gallery artifacts.
+- Provider contract fixtures cover attribution, cache expiry, quota state,
+  safe local image/video ingestion, hotlink-only media, usage-event persistence,
+  malformed and expired URLs, cancellation, timeouts, and no automatic retry.
+- The complete branch diff against `main` was reviewed. It contains Tasks 7–12
+  only; Task 13 and later workflow/render work has not started.
+- No Docker command, dependency installation, real provider credential or API
+  request, or host setting change was used for PR 3 validation.
