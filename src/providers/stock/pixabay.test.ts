@@ -186,16 +186,18 @@ describe("Pixabay stock-media provider", () => {
         now: () => OBSERVED_AT,
       }).health(),
     ).resolves.toMatchObject({ status: "unconfigured" });
-    expect(createStockMediaProviderRegistry().listCapabilities()).toEqual([
-      expect.objectContaining({ id: "pexels" }),
-      expect.objectContaining({
-        id: "pixabay",
-        capabilities: expect.objectContaining({
-          kinds: ["image", "video"],
-          defaultCacheTtlSec: 86_400,
+    expect(createStockMediaProviderRegistry().listCapabilities()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "pexels" }),
+        expect.objectContaining({
+          id: "pixabay",
+          capabilities: expect.objectContaining({
+            kinds: ["image", "video"],
+            defaultCacheTtlSec: 86_400,
+          }),
         }),
-      }),
-    ]);
+      ]),
+    );
   });
 
   it("authenticates image search, maps orientation, and keeps remote URLs as previews", async () => {

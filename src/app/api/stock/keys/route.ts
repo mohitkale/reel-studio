@@ -2,10 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { STOCK_PROVIDER_IDS, StockError } from "@/providers/stock/types";
-import {
-  getStockMediaProviderRegistry,
-  getStockProvider,
-} from "@/providers/stock/registry";
+import { getStockMediaProviderRegistry } from "@/providers/stock/registry";
 import { stockKeyStatus, setStockKey } from "@/server/secrets";
 import { requireWeb } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
@@ -41,18 +38,14 @@ export async function POST(req: Request) {
     let verified = false;
     let verifyError: string | undefined;
     try {
-      if (providerId !== "unsplash") {
-        await getStockMediaProviderRegistry()
-          .get(providerId)
-          .search({
-            query: "nature",
-            kind: "image",
-            orientation: "portrait",
-            perPage: providerId === "pixabay" ? 3 : 1,
-          });
-      } else {
-        await getStockProvider().search("nature", "portrait", 1);
-      }
+      await getStockMediaProviderRegistry()
+        .get(providerId)
+        .search({
+          query: "nature",
+          kind: "image",
+          orientation: "portrait",
+          perPage: providerId === "pixabay" ? 3 : 1,
+        });
       verified = true;
     } catch (e) {
       verifyError =

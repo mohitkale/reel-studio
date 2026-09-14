@@ -103,6 +103,8 @@ export const stockMediaCandidateSchema = z
     renderRenditions: z.array(stockMediaRenditionSchema).min(1).max(24),
     attribution: stockMediaAttributionSchema,
     acquisitionPolicy: stockMediaAcquisitionPolicySchema,
+    /** Provider event endpoint retained with the immutable selection snapshot. */
+    usageReportUrl: stockMediaExternalUrlSchema.optional(),
   })
   .strict()
   .superRefine((candidate, ctx) => {
@@ -207,6 +209,7 @@ export const stockMediaUsageEventSchema = z
       });
     }
   });
+export type StockMediaUsageEvent = z.infer<typeof stockMediaUsageEventSchema>;
 
 export const stockMediaSourceRevisionSchema = z
   .object({

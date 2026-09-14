@@ -7,6 +7,7 @@ import {
   stockMediaRenditionSchema,
   stockMediaSearchRequestSchema,
   stockMediaSearchResponseSchema,
+  stockMediaUsageEventSchema,
   stockProviderIdSchema,
   type StockMediaCandidate,
   type StockMediaProviderCapabilities,
@@ -14,6 +15,7 @@ import {
   type StockMediaQuotaState,
   type StockMediaSearchRequest,
   type StockMediaSearchResponse,
+  type StockMediaUsageEvent,
 } from "./schemas";
 import {
   StockError,
@@ -21,7 +23,10 @@ import {
   type StockMediaProviderResolution,
   type StockProvider,
 } from "./types";
-import { createUnsplashProvider } from "./unsplash";
+import {
+  createUnsplashMediaProvider,
+  createUnsplashProvider,
+} from "./unsplash";
 import { createPexelsProvider } from "./pexels";
 import { createPixabayProvider } from "./pixabay";
 import {
@@ -30,7 +35,7 @@ import {
 } from "@/library/stock-media-cache";
 import { stockMediaServiceRepository } from "@/library/repositories/stock-media-services";
 
-/** Existing Unsplash-only entry point retained until Task 11 migrates its callers. */
+/** Existing image-only entry point retained for automatic scene backgrounds. */
 let instance: StockProvider | null = null;
 let mediaInstance: StockMediaProviderRegistry | null = null;
 
@@ -227,9 +232,11 @@ export class StockMediaProviderRegistry {
     providerId: string,
     asset: Parameters<NonNullable<StockMediaProvider["reportUsage"]>>[0],
     signal?: AbortSignal,
-  ): Promise<void> {
+  ): Promise<StockMediaUsageEvent> {
     const provider = this.get(providerId);
-    if (!provider.capabilities.usageReporting || !provider.reportUsage) return;
+    if (!provider.capabilities.usageReporting || !provider.reportUsage) {
+      return { state: "not-required" };
+    }
     const resolved = resolvedStockAssetSchema.parse(asset);
     if (resolved.providerSnapshot.providerId !== provider.id) {
       throw new StockError(
@@ -238,12 +245,15 @@ export class StockMediaProviderRegistry {
         provider.id,
       );
     }
-    await provider.reportUsage(resolved, signal);
+    return stockMediaUsageEventSchema.parse(
+      await provider.reportUsage(resolved, signal),
+    );
   }
 }
 
 export function createStockMediaProviderRegistry(
   providers: StockMediaProvider[] = [
+    createUnsplashMediaProvider(),
     createPexelsProvider(),
     createPixabayProvider(),
   ],
@@ -252,7 +262,7 @@ export function createStockMediaProviderRegistry(
   return new StockMediaProviderRegistry(providers, persistence);
 }
 
-/** Built-in provider-neutral registry. Later provider tasks extend this list. */
+/** Built-in provider-neutral registry. */
 export function getStockMediaProviderRegistry(): StockMediaProviderRegistry {
   if (!mediaInstance) mediaInstance = createStockMediaProviderRegistry();
   return mediaInstance;

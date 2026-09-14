@@ -110,7 +110,7 @@ them.
 
 | Provider | What it powers | Notes |
 | --- | --- | --- |
-| **Unsplash** | Optional AI stock backgrounds | [Unsplash License](https://unsplash.com/license) + [API guidelines](https://unsplash.com/api/terms) (attribution / download ping). Hotlinked CDN URLs; photographer credit is stored when available. |
+| **Unsplash** | Optional AI stock backgrounds | [Unsplash License](https://unsplash.com/license) + [API guidelines](https://help.unsplash.com/en/articles/2511245-unsplash-api-guidelines). Returned CDN URLs remain hotlinked with `ixid`; attribution and the returned download-event endpoint are stored. Selection triggers that endpoint once and persists the known outcome. The reviewed terms do not establish a render-staging exception, so Unsplash media is not copied into the generic local store and rendering requires network access. |
 | **Pexels** | Optional stock photos and videos | [Pexels License](https://www.pexels.com/license/) + [API documentation and guidelines](https://www.pexels.com/api/documentation/). Search results retain creator and Pexels source links; selected render renditions are validated and stored in the local media store. |
 | **Pixabay** | Optional stock images and videos | [Pixabay Content License](https://pixabay.com/service/license-summary/) + [API documentation](https://pixabay.com/api/docs/). API responses are cached for 24 hours; remote image URLs are temporary previews, while selected images and videos are validated and stored locally with contributor/source metadata. |
 | **Jamendo** | Optional Creative Commons music search | Tracks carry their own **CC** licenses (shown via attribution strings). Follow Jamendo’s API/developer terms. |

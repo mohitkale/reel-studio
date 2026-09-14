@@ -152,7 +152,10 @@ describe("stock-media provider registry", () => {
 
   it("bounds searches and validates resolve and usage ownership", async () => {
     const candidate = fixtureCandidate();
-    const reportUsage = vi.fn(async () => undefined);
+    const reportUsage = vi.fn(async () => ({
+      state: "reported" as const,
+      reportedAt: "2026-09-14T14:30:00.000Z",
+    }));
     const provider: StockMediaProvider = {
       id: "fixture",
       label: "Fixture",

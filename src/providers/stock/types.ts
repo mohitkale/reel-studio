@@ -7,6 +7,7 @@ import type {
   StockMediaProviderHealth,
   StockMediaRendition,
   StockMediaSearchResponse,
+  StockMediaUsageEvent,
 } from "./schemas";
 
 export type {
@@ -19,6 +20,7 @@ export type {
   StockMediaRendition,
   StockMediaSearchRequest,
   StockMediaSearchResponse,
+  StockMediaUsageEvent,
 } from "./schemas";
 
 /** Provider ids accepted by server-side stock-media key management. */
@@ -73,7 +75,10 @@ export interface StockMediaProvider {
     rendition: StockMediaRendition,
     signal?: AbortSignal,
   ): Promise<StockMediaProviderResolution>;
-  reportUsage?(asset: ResolvedStockAsset, signal?: AbortSignal): Promise<void>;
+  reportUsage?(
+    asset: ResolvedStockAsset,
+    signal?: AbortSignal,
+  ): Promise<StockMediaUsageEvent>;
 }
 
 export interface StockMediaProviderResolution {
