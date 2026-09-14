@@ -21,10 +21,11 @@ export type {
   StockMediaSearchResponse,
 } from "./schemas";
 
-/** Legacy image-only contract retained until Unsplash moves to the shared service. */
-
-export const STOCK_PROVIDER_IDS = ["unsplash"] as const;
+/** Provider ids accepted by server-side stock-media key management. */
+export const STOCK_PROVIDER_IDS = ["unsplash", "pexels"] as const;
 export type StockProviderId = (typeof STOCK_PROVIDER_IDS)[number];
+
+/** Legacy image-only contract retained until Unsplash moves to the shared service. */
 
 export interface StockImage {
   /** Full-bleed image URL to use as a scene background. */

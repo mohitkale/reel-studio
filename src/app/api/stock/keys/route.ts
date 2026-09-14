@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { STOCK_PROVIDER_IDS, StockError } from "@/providers/stock/types";
-import { getStockProvider } from "@/providers/stock/registry";
+import {
+  getStockMediaProviderRegistry,
+  getStockProvider,
+} from "@/providers/stock/registry";
 import { stockKeyStatus, setStockKey } from "@/server/secrets";
 import { requireWeb } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
@@ -38,7 +41,16 @@ export async function POST(req: Request) {
     let verified = false;
     let verifyError: string | undefined;
     try {
-      await getStockProvider().search("nature", "portrait", 1);
+      if (providerId === "pexels") {
+        await getStockMediaProviderRegistry().get("pexels").search({
+          query: "nature",
+          kind: "image",
+          orientation: "portrait",
+          perPage: 1,
+        });
+      } else {
+        await getStockProvider().search("nature", "portrait", 1);
+      }
       verified = true;
     } catch (e) {
       verifyError =
@@ -47,7 +59,11 @@ export async function POST(req: Request) {
           : "Could not verify the key.";
     }
 
-    return NextResponse.json({ status: stockKeyStatus(), verified, verifyError });
+    return NextResponse.json({
+      status: stockKeyStatus(),
+      verified,
+      verifyError,
+    });
   } catch (e) {
     return errorResponse(e);
   }

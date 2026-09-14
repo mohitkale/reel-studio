@@ -155,12 +155,11 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Stock images (optional)</CardTitle>
+          <CardTitle className="text-base">Stock media (optional)</CardTitle>
           <CardDescription>
-            Add a free Unsplash Access Key so the AI director can place relevant
-            stock photo backgrounds on scenes. Generation works without it;
-            those scenes simply keep the clean branded look. Photos remain under
-            the{" "}
+            Add an Unsplash Access Key or Pexels API key. Stock providers remain
+            optional, and generation works without them. Unsplash photos remain
+            under the{" "}
             <a
               href="https://unsplash.com/license"
               target="_blank"
@@ -169,7 +168,8 @@ export default function SettingsPage() {
             >
               Unsplash License
             </a>
-            ; follow their API attribution guidelines.
+            ; Pexels photos and videos retain creator attribution and are stored
+            locally only after selection.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

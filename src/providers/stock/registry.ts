@@ -22,17 +22,16 @@ import {
   type StockProvider,
 } from "./types";
 import { createUnsplashProvider } from "./unsplash";
+import { createPexelsProvider } from "./pexels";
 import {
   withStockMediaResponseCache,
   type StockMediaCachePersistence,
 } from "@/library/stock-media-cache";
-import {
-  stockMediaServiceRepository,
-  type StockMediaServiceRepository,
-} from "@/library/repositories/stock-media-services";
+import { stockMediaServiceRepository } from "@/library/repositories/stock-media-services";
 
 /** Existing Unsplash-only entry point retained until Task 11 migrates its callers. */
 let instance: StockProvider | null = null;
+let mediaInstance: StockMediaProviderRegistry | null = null;
 
 export function getStockProvider(): StockProvider {
   if (!instance) instance = createUnsplashProvider();
@@ -50,7 +49,7 @@ export interface StockMediaQuotaPersistence {
   putQuota(providerId: string, quota: StockMediaQuotaState): Promise<void>;
 }
 
-interface StockMediaRegistryPersistence
+export interface StockMediaRegistryPersistence
   extends StockMediaCachePersistence, StockMediaQuotaPersistence {}
 
 /** Registry for the provider-neutral API introduced by the local-first plan. */
@@ -243,8 +242,14 @@ export class StockMediaProviderRegistry {
 }
 
 export function createStockMediaProviderRegistry(
-  providers: StockMediaProvider[],
-  persistence?: StockMediaServiceRepository,
+  providers: StockMediaProvider[] = [createPexelsProvider()],
+  persistence?: StockMediaRegistryPersistence,
 ): StockMediaProviderRegistry {
   return new StockMediaProviderRegistry(providers, persistence);
+}
+
+/** Built-in provider-neutral registry. Later provider tasks extend this list. */
+export function getStockMediaProviderRegistry(): StockMediaProviderRegistry {
+  if (!mediaInstance) mediaInstance = createStockMediaProviderRegistry();
+  return mediaInstance;
 }

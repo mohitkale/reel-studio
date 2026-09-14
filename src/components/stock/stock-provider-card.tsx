@@ -23,7 +23,10 @@ export function StockProviderCard({ status }: { status: StockProviderStatus }) {
           setApiKey("");
           if (res.verified) {
             toast.success(`${status.label} connected`, {
-              description: "Stock backgrounds are now available for AI scenes.",
+              description:
+                status.id === "pexels"
+                  ? "Pexels is ready for stock photo and video search."
+                  : "Stock backgrounds are now available for AI scenes.",
             });
           } else {
             toast.warning(`${status.label} key saved, but not verified`, {
@@ -49,7 +52,7 @@ export function StockProviderCard({ status }: { status: StockProviderStatus }) {
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-3">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+        <div className="bg-muted text-muted-foreground flex size-9 items-center justify-center rounded-lg">
           <ImageIcon className="size-4" />
         </div>
         <div>
@@ -64,36 +67,51 @@ export function StockProviderCard({ status }: { status: StockProviderStatus }) {
               <Badge variant="secondary">Not configured</Badge>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">
-            Free Demo tier (~50 requests/hour). Access Key from your Unsplash app.
+          <p className="text-muted-foreground text-sm">
+            {status.id === "pexels"
+              ? "Photo and video search. API key from your Pexels account."
+              : "Free Demo tier (~50 requests/hour). Access Key from your Unsplash app."}
           </p>
         </div>
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor={`stock-key-${status.id}`}>Access key</Label>
+        <Label htmlFor={`stock-key-${status.id}`}>
+          {status.id === "pexels" ? "API key" : "Access key"}
+        </Label>
         <div className="flex gap-2">
           <Input
             id={`stock-key-${status.id}`}
             type="password"
             autoComplete="off"
             placeholder={
-              status.configured ? "Enter a new key to replace" : "Paste your Access Key"
+              status.configured
+                ? "Enter a new key to replace"
+                : status.id === "pexels"
+                  ? "Paste your API key"
+                  : "Paste your Access Key"
             }
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSave()}
           />
-          <Button onClick={handleSave} disabled={!apiKey.trim() || saveKey.isPending}>
+          <Button
+            onClick={handleSave}
+            disabled={!apiKey.trim() || saveKey.isPending}
+          >
             {saveKey.isPending ? "Saving..." : "Save"}
           </Button>
           {status.configured ? (
-            <Button variant="outline" onClick={handleClear} disabled={saveKey.isPending}>
+            <Button
+              variant="outline"
+              onClick={handleClear}
+              disabled={saveKey.isPending}
+            >
               Remove
             </Button>
           ) : null}
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           Stored in a git-ignored .env.local on this machine.
         </p>
       </div>

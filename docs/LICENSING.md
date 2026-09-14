@@ -111,6 +111,7 @@ them.
 | Provider | What it powers | Notes |
 | --- | --- | --- |
 | **Unsplash** | Optional AI stock backgrounds | [Unsplash License](https://unsplash.com/license) + [API guidelines](https://unsplash.com/api/terms) (attribution / download ping). Hotlinked CDN URLs; photographer credit is stored when available. |
+| **Pexels** | Optional stock photos and videos | [Pexels License](https://www.pexels.com/license/) + [API documentation and guidelines](https://www.pexels.com/api/documentation/). Search results retain creator and Pexels source links; selected render renditions are validated and stored in the local media store. |
 | **Jamendo** | Optional Creative Commons music search | Tracks carry their own **CC** licenses (shown via attribution strings). Follow Jamendo’s API/developer terms. |
 | **Cartesia** | Cloud TTS / cloning | Vendor commercial ToS + usage limits |
 | **ElevenLabs** | Cloud TTS | Vendor commercial ToS + usage limits |
