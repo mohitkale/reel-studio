@@ -13,7 +13,7 @@ the user requests publication.
 |    7 | Add provider-neutral image/video contracts, immutable selection snapshots, and an additive legacy Unsplash migration | Complete | `213ef014c183f6c7d15115e3bdba7e032c154f33` |
 |    8 | Add provider capabilities/health registry, response cache, quota state, and safe idempotent materialization          | Complete | `3143f722e840da8de008f0b69fa45009322744b3` |
 |    9 | Add Pexels photo/video adapter with auth, pagination, quota, attribution, rendition, and failure fixtures            | Complete | `ebe86bb51081fe705a4d0b2be9f17c93de2eed1f` |
-|   10 | Add Pixabay image/video adapter with required 24-hour cache, temporary-preview handling, and failure fixtures        | Pending  | —                                          |
+|   10 | Add Pixabay image/video adapter with required 24-hour cache, temporary-preview handling, and failure fixtures        | Complete | `273710b45bfe2bd4404d1b658fde4f9bd1043862` |
 |   11 | Move Unsplash persistence, hotlink/`ixid`, attribution, and download-event tracking into the shared service          | Pending  | —                                          |
 |   12 | Keep Coverr disabled behind the recorded license decision unless the license gate is resolved                        | Pending  | —                                          |
 
@@ -135,3 +135,43 @@ the user requests publication.
 - All provider tests used deterministic local fixtures. No real key, external
   provider request, Docker command, dependency install, or host setting change
   was used for Task 9.
+
+## Task 10 decisions
+
+- The built-in registry now includes Pixabay image and video search, while the
+  API key remains server-side through `PIXABAY_API_KEY` and the existing
+  Settings secret route. Provider health does not make a network request.
+- Searches use Pixabay's image and video endpoints with the key in the query
+  string, enforce the documented minimum page size and 100-character query
+  limit, and map orientation and pagination through the shared contracts.
+- The shared cache uses Pixabay's required 24-hour lifetime. The key is excluded
+  from the canonical cache request, and limit, remaining, and relative reset
+  headers are validated together before quota state is persisted.
+- Image search URLs are treated as temporary previews. Selected image and video
+  renditions use the provider-owned `download` policy and pass shared media
+  validation before content-addressed local storage. Resolution refreshes an
+  asset by provider id before materialization so expired result URLs are not
+  reused.
+- Candidates retain the Pixabay item id, source page, contributor link,
+  required attribution, dimensions, duration, and usable rendition metadata.
+  Authentication, rate-limit, provider, malformed response, corrupt download,
+  expired URL, timeout, and cancellation failures occur once without retry.
+- No Unsplash shared-service migration, Coverr enabling, stock picker,
+  automatic media selection, or render integration from later tasks is
+  included.
+
+## Task 10 validation
+
+- Pixabay fixture suite and focused stock-media suites: 5 files / 39 tests
+  passed, including the exact 24-hour cache boundary, quota reset conversion,
+  expired-URL refresh, corrupt-media rejection, local image/video persistence,
+  timeout, cancellation, and no-retry cases.
+- Full unit suite: 54 files / 291 tests passed.
+- `npm run typecheck`, `npm run lint -- --max-warnings=0`,
+  `npm run security:scan`, changed-code formatting, and the Next.js production
+  build passed.
+- Existing Pexels registry coverage was retained while adding Pixabay to the
+  default provider set. All provider requests used deterministic local
+  fixtures.
+- No real key, external provider request, Docker command, dependency install,
+  or host setting change was used for Task 10.
