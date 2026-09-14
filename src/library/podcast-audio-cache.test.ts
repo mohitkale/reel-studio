@@ -29,6 +29,7 @@ describe("podcast turn audio cache", () => {
       "20260910000100_baseline",
       "20260912000200_audio_production",
       "20260912000300_podcast_production",
+      "20260914000100_podcast_finishing",
     ]) {
       sqlite.exec(
         readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),

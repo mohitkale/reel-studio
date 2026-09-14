@@ -130,3 +130,76 @@ export async function transcodeWavToMp3(
     child.stdin.end(wav);
   });
 }
+
+/** Decode a bounded uploaded audio excerpt to the podcast PCM target. */
+export async function transcodeAudioToWav(
+  input: Buffer,
+  options: {
+    maxSeconds?: number;
+    binary?: string;
+  } = {},
+): Promise<Buffer> {
+  assertProductionActive();
+  const maxSeconds = Math.max(0.25, Math.min(30, options.maxSeconds ?? 6));
+  const binary = options.binary ?? process.env.FFMPEG_BIN?.trim() ?? "ffmpeg";
+  return new Promise((resolve, reject) => {
+    const child = spawn(
+      binary,
+      [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-i",
+        "pipe:0",
+        "-t",
+        String(maxSeconds),
+        "-ac",
+        "1",
+        "-ar",
+        "44100",
+        "-c:a",
+        "pcm_s16le",
+        "-f",
+        "wav",
+        "pipe:1",
+      ],
+      {
+        shell: false,
+        detached: process.platform !== "win32",
+        stdio: ["pipe", "pipe", "pipe"],
+      },
+    );
+    cancelChild(child);
+    const stdout: Buffer[] = [];
+    const stderr: Buffer[] = [];
+    child.stdout.on("data", (chunk: Buffer) => stdout.push(chunk));
+    child.stderr.on("data", (chunk: Buffer) => {
+      if (stderr.reduce((size, item) => size + item.length, 0) < 16_384) {
+        stderr.push(chunk);
+      }
+    });
+    child.once("error", reject);
+    child.once("close", (code) => {
+      if (code !== 0) {
+        reject(
+          new Error(
+            `Audio decode failed${stderr.length ? `: ${Buffer.concat(stderr).toString("utf8").trim()}` : ""}`,
+          ),
+        );
+        return;
+      }
+      const wav = Buffer.concat(stdout);
+      try {
+        const analysis = analyzeWav(wav);
+        if (analysis.durationSeconds <= 0.05) {
+          throw new Error("Audio decode produced an empty file");
+        }
+        resolve(wav);
+      } catch (error) {
+        reject(error);
+      }
+    });
+    child.stdin.on("error", () => undefined);
+    child.stdin.end(input);
+  });
+}

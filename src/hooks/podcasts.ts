@@ -6,12 +6,14 @@ import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api-client";
 import type {
   PodcastDTO,
   PodcastAudiogramJobDTO,
+  PodcastClipSuggestionDTO,
   PodcastGenderDTO,
   PodcastLengthDTO,
   PodcastSummaryDTO,
   PodcastTakeDTO,
 } from "@/lib/dto";
 import type { PodcastPlan } from "@/library/podcast-schemas";
+import type { PodcastPronunciation } from "@/library/podcast-schemas";
 import type { AIProviderId } from "@/providers/ai/types";
 import type { VoiceJobStatus } from "@/lib/voice-queue";
 import type { PodcastPresetId } from "@/library/podcast-presets";
@@ -74,6 +76,9 @@ export function useUpdatePodcast(id: string) {
       description?: string;
       length?: PodcastLengthDTO;
       presetId?: PodcastPresetId;
+      introMusicAssetId?: string | null;
+      outroMusicAssetId?: string | null;
+      pronunciations?: PodcastPronunciation[];
     }) =>
       apiPatch<{ podcast: PodcastDTO }>(`/api/podcasts/${id}`, vars).then(
         (r) => r.podcast,
@@ -167,7 +172,11 @@ export function useImportPodcastScript(id: string) {
 export function useUpdatePodcastTurn(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { turnId: string; text: string }) =>
+    mutationFn: (vars: {
+      turnId: string;
+      text?: string;
+      pauseAfterSeconds?: number | null;
+    }) =>
       apiPatch<{ podcast: PodcastDTO }>(`/api/podcasts/${id}/turns`, vars).then(
         (r) => r.podcast,
       ),
@@ -392,5 +401,30 @@ export function useGeneratePodcastAudiogram() {
       }
       throw new Error("Audiogram generation timed out after 20 minutes");
     },
+  });
+}
+
+export function usePodcastClipSuggestions(takeId: string) {
+  return useQuery({
+    queryKey: ["podcast-clip-suggestions", takeId, "local"],
+    enabled: Boolean(takeId),
+    queryFn: () =>
+      apiGet<{ suggestions: PodcastClipSuggestionDTO[] }>(
+        `/api/podcast-takes/${takeId}/clip-suggestions`,
+      ).then((result) => result.suggestions),
+  });
+}
+
+export function useGeneratePodcastClipSuggestions() {
+  return useMutation({
+    mutationFn: (vars: {
+      takeId: string;
+      providerId: AIProviderId;
+      modelId?: string;
+    }) =>
+      apiPost<{ suggestions: PodcastClipSuggestionDTO[] }>(
+        `/api/podcast-takes/${vars.takeId}/clip-suggestions`,
+        { providerId: vars.providerId, modelId: vars.modelId },
+      ).then((result) => result.suggestions),
   });
 }

@@ -10,6 +10,60 @@ export type PodcastGender = (typeof PODCAST_GENDERS)[number];
 
 export const podcastLengthSchema = z.enum(PODCAST_LENGTHS);
 export const podcastGenderSchema = z.enum(PODCAST_GENDERS);
+export const PODCAST_BUMPER_SECONDS = 6;
+
+export const podcastPronunciationSchema = z.object({
+  find: z.string().trim().min(1).max(80),
+  replaceWith: z.string().trim().min(1).max(120),
+  caseSensitive: z.boolean().default(false),
+});
+
+export const podcastPronunciationsSchema = z
+  .array(podcastPronunciationSchema)
+  .max(50)
+  .superRefine((rules, ctx) => {
+    const seen = new Set<string>();
+    rules.forEach((rule, index) => {
+      const key = rule.caseSensitive
+        ? rule.find
+        : rule.find.toLocaleLowerCase();
+      if (seen.has(key)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Pronunciation find values must be unique",
+          path: [index, "find"],
+        });
+      }
+      seen.add(key);
+    });
+  });
+
+export const podcastPauseSecondsSchema = z.number().min(0).max(10).nullable();
+
+export const podcastFinishingSnapshotSchema = z.object({
+  version: z.literal(1),
+  intro: z
+    .object({
+      assetId: z.string().min(1),
+      name: z.string().min(1),
+      durationSeconds: z.number().positive(),
+    })
+    .nullable(),
+  outro: z
+    .object({
+      assetId: z.string().min(1),
+      name: z.string().min(1),
+      durationSeconds: z.number().positive(),
+    })
+    .nullable(),
+  pronunciations: podcastPronunciationsSchema,
+  pauses: z.array(
+    z.object({
+      turnId: z.string().min(1),
+      seconds: z.number().min(0).max(10),
+    }),
+  ),
+});
 
 export const podcastBeatTimingSchema = z.object({
   turnId: z.string(),
@@ -44,6 +98,10 @@ export const podcastTakeVoiceSchema = z.object({
 export const podcastTakeVoicesSchema = z.array(podcastTakeVoiceSchema);
 
 export type PodcastTakeVoice = z.infer<typeof podcastTakeVoiceSchema>;
+export type PodcastPronunciation = z.infer<typeof podcastPronunciationSchema>;
+export type PodcastFinishingSnapshot = z.infer<
+  typeof podcastFinishingSnapshotSchema
+>;
 
 /** Character shape in AI/JSON scripts (id maps to PodcastCharacter.key). */
 export const podcastScriptCharacterSchema = z.object({

@@ -1,0 +1,177 @@
+{
+  "version": 2,
+  "completedAt": "2026-09-14T13:57:48.048Z",
+  "environment": {
+    "platform": "darwin",
+    "architecture": "x64",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "logicalCpus": 12,
+    "memoryGiB": 16,
+    "node": "v24.18.1",
+    "packageVersion": "0.4.0"
+  },
+  "entries": [
+    {
+      "presetId": "product-launch",
+      "briefIndex": 1,
+      "briefHash": "25b07eabad7f3a961716b2598bdc56fab499cb2c50bd47e289d9e03c3d2ce4ef",
+      "orientation": "portrait",
+      "width": 1080,
+      "height": 1920,
+      "engines": { "hyperframes": 1009876, "remotion": 2643554 }
+    },
+    {
+      "presetId": "product-launch",
+      "briefIndex": 2,
+      "briefHash": "297b40b92609fb6d00dfa3a04178e37a9a5e52dce4503ba3f256b41b582b89f4",
+      "orientation": "landscape",
+      "width": 1920,
+      "height": 1080,
+      "engines": { "hyperframes": 1015820, "remotion": 2374838 }
+    },
+    {
+      "presetId": "product-launch",
+      "briefIndex": 3,
+      "briefHash": "6135e4e9d905bfd2c76081f3c228b7dd27637fe13b1dc7c2456a545d282f3e1b",
+      "orientation": "square",
+      "width": 1080,
+      "height": 1080,
+      "engines": { "hyperframes": 811930, "remotion": 1958383 }
+    },
+    {
+      "presetId": "editorial-explainer",
+      "briefIndex": 1,
+      "briefHash": "3eba74a247f8fea6235d6a89bf50fd255ce3835ab2ded0a23456d42ca65f7b0e",
+      "orientation": "portrait",
+      "width": 1080,
+      "height": 1920,
+      "engines": { "hyperframes": 529018, "remotion": 2179840 }
+    },
+    {
+      "presetId": "editorial-explainer",
+      "briefIndex": 2,
+      "briefHash": "ad2e745e16f3ddc7f415d3b61df8cf68822bff8ad533bcca662dcdcfd794f00b",
+      "orientation": "landscape",
+      "width": 1920,
+      "height": 1080,
+      "engines": { "hyperframes": 700445, "remotion": 2003752 }
+    },
+    {
+      "presetId": "editorial-explainer",
+      "briefIndex": 3,
+      "briefHash": "8a72fd773f50b9196ad525609e2289113ab631ea4ef9dc48405bd16f66028dd3",
+      "orientation": "square",
+      "width": 1080,
+      "height": 1080,
+      "engines": { "hyperframes": 475392, "remotion": 1551286 }
+    },
+    {
+      "presetId": "creator-punch",
+      "briefIndex": 1,
+      "briefHash": "d9ca356c4c6be01f346a7430a99083223ea3638d83e137f52458f5fafa3c4107",
+      "orientation": "portrait",
+      "width": 1080,
+      "height": 1920,
+      "engines": { "hyperframes": 805803, "remotion": 2514886 }
+    },
+    {
+      "presetId": "creator-punch",
+      "briefIndex": 2,
+      "briefHash": "30310e058676329a18bfcf68546f468c544c31e9b92cc30a5a59080d52425da1",
+      "orientation": "landscape",
+      "width": 1920,
+      "height": 1080,
+      "engines": { "hyperframes": 1118372, "remotion": 2306549 }
+    },
+    {
+      "presetId": "creator-punch",
+      "briefIndex": 3,
+      "briefHash": "15a046d1744ed6a56ad5056cdb85868ef57079a11b4fa5ea36d8eae07f7d1f2c",
+      "orientation": "square",
+      "width": 1080,
+      "height": 1080,
+      "engines": { "hyperframes": 709094, "remotion": 1846326 }
+    },
+    {
+      "presetId": "data-story",
+      "briefIndex": 1,
+      "briefHash": "d4e5beb0f8b9984d332c172406c741707f3742bbb1cb627882fc1d5fb6fd7b20",
+      "orientation": "portrait",
+      "width": 1080,
+      "height": 1920,
+      "engines": { "hyperframes": 689422, "remotion": 1570000 }
+    },
+    {
+      "presetId": "data-story",
+      "briefIndex": 2,
+      "briefHash": "236efd7ba5a53315c3e9ae443de69927623cd0f4bbe73ae4cb3e200b097cb1cc",
+      "orientation": "landscape",
+      "width": 1920,
+      "height": 1080,
+      "engines": { "hyperframes": 860214, "remotion": 1421230 }
+    },
+    {
+      "presetId": "data-story",
+      "briefIndex": 3,
+      "briefHash": "1db48438deafbbaacefdfe88642a588f747b58b9eba2a41cd599f3a69e578c25",
+      "orientation": "square",
+      "width": 1080,
+      "height": 1080,
+      "engines": { "hyperframes": 587004, "remotion": 1204657 }
+    },
+    {
+      "presetId": "developer-demo",
+      "briefIndex": 1,
+      "briefHash": "d8d0d60b773aa07cef480f48d3e06acada21592bdeeaeb25b32bfa707205e95a",
+      "orientation": "portrait",
+      "width": 1080,
+      "height": 1920,
+      "engines": { "hyperframes": 2389124, "remotion": 3198837 }
+    },
+    {
+      "presetId": "developer-demo",
+      "briefIndex": 2,
+      "briefHash": "97f8efb1618aac0c49f695a39f7ba3b904ce5579a5c300d161d95f450567b7b8",
+      "orientation": "landscape",
+      "width": 1920,
+      "height": 1080,
+      "engines": { "hyperframes": 2334479, "remotion": 3052904 }
+    },
+    {
+      "presetId": "developer-demo",
+      "briefIndex": 3,
+      "briefHash": "cafc043185994db760c91beb42693a8a37f49ee93d9cf0575a8e4f33167a4ab0",
+      "orientation": "square",
+      "width": 1080,
+      "height": 1080,
+      "engines": { "hyperframes": 1473489, "remotion": 2221142 }
+    },
+    {
+      "presetId": "cinematic-brand",
+      "briefIndex": 1,
+      "briefHash": "01e22a220f842215c9811bab108585c3d20fb4cc6eaf13668d8dd62d3346f483",
+      "orientation": "portrait",
+      "width": 1080,
+      "height": 1920,
+      "engines": { "hyperframes": 596359, "remotion": 2451981 }
+    },
+    {
+      "presetId": "cinematic-brand",
+      "briefIndex": 2,
+      "briefHash": "91a88b88a83b8ce91d300ccc8c1be021bb2caefbbfdc6ce5f6afd6616a7816f0",
+      "orientation": "landscape",
+      "width": 1920,
+      "height": 1080,
+      "engines": { "hyperframes": 745709, "remotion": 2213607 }
+    },
+    {
+      "presetId": "cinematic-brand",
+      "briefIndex": 3,
+      "briefHash": "02378f86d93d6a8fe0e4967fc0da4349e915d4d3688b715cdf2db325faba1f4b",
+      "orientation": "square",
+      "width": 1080,
+      "height": 1080,
+      "engines": { "hyperframes": 518462, "remotion": 1790070 }
+    }
+  ]
+}

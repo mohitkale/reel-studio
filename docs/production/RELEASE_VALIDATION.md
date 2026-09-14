@@ -30,11 +30,14 @@ mappings, three materially different deterministic briefs per preset, 18
 offline HyperFrames composition variants, and decodable bundled gallery media.
 
 `release:matrix` performs 36 real H.264 renders: six presets, both engines, and
-portrait, landscape, and square canvases. It checks dimensions and decodability,
-writes MP4s under `.artifacts/render-regression/`, and records hardware, elapsed
-time, duration, and file size in `.artifacts/release-matrix/report.json`.
-The passing report is preserved as
-[`RELEASE_MATRIX_0.4.0.json`](RELEASE_MATRIX_0.4.0.json).
+three distinct briefs per preset, distributed across portrait, landscape, and
+square canvases. It checks dimensions and decodability, writes MP4s under
+`.artifacts/render-regression/`, and records the selected brief and its SHA-256
+hash with hardware, elapsed time, duration, and file size in
+`.artifacts/release-matrix/report.json`. The original 0.4 report remains in
+[`RELEASE_MATRIX_0.4.0.json`](RELEASE_MATRIX_0.4.0.json); the corrected
+three-brief evidence is preserved in
+[`LOCAL_FIRST_PR2_RENDER_MATRIX.json`](LOCAL_FIRST_PR2_RENDER_MATRIX.json).
 
 ## Acceptance matrix
 

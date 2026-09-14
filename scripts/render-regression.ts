@@ -21,6 +21,8 @@ import { TEMPLATES } from "../src/compositions/templates";
 import { buildHyperframesCompositionHtml } from "../src/engines/hyperframes/build-composition";
 import { remotionWebpackOverride } from "../src/remotion/webpack-override";
 import { HYPERFRAMES_RENDER_FONT_FILES } from "../src/engines/hyperframes/render-fonts";
+import releaseBriefs from "../tests/fixtures/release-briefs.json";
+import { applyReleaseBriefToFixture } from "./release-brief-fixture";
 import {
   ORIENTATIONS,
   dimsFor,
@@ -32,6 +34,10 @@ async function main() {
   const args = process.argv.slice(2);
   const presetArg = args.find((arg) => arg.startsWith("--preset="));
   const orientationArg = args.find((arg) => arg.startsWith("--orientation="));
+  const briefIndexArg = args.find((arg) => arg.startsWith("--brief-index="));
+  const briefIndex = briefIndexArg
+    ? Number(briefIndexArg.slice("--brief-index=".length))
+    : undefined;
   const orientation = orientationArg?.slice("--orientation=".length);
   if (orientation && !ORIENTATIONS.includes(orientation as Orientation)) {
     throw new Error(`Unknown orientation: ${orientation}`);
@@ -50,6 +56,15 @@ async function main() {
   if (presetId && !presetFixtures[presetId]) {
     throw new Error(`Unknown render fixture preset: ${presetId}`);
   }
+  if (
+    briefIndex !== undefined &&
+    (!Number.isInteger(briefIndex) || briefIndex < 0 || briefIndex > 2)
+  ) {
+    throw new Error(`Invalid release brief index: ${briefIndexArg}`);
+  }
+  if (briefIndex !== undefined && !presetId) {
+    throw new Error("Release brief renders require --preset");
+  }
   const renderPreset = Boolean(presetId);
   const renderProductLaunch = presetId === "product-launch";
   const renderDeveloperDemo = presetId === "developer-demo";
@@ -58,6 +73,7 @@ async function main() {
     ? path.resolve(
         ".artifacts/render-regression",
         presetId ?? "legacy",
+        ...(briefIndex === undefined ? [] : [`brief-${briefIndex + 1}`]),
         orientation,
       )
     : path.resolve(".artifacts/render-regression", presetId ?? "legacy");
@@ -89,7 +105,7 @@ async function main() {
       ).toString("base64")}`
     : undefined;
   const selectedFixture = presetId ? presetFixtures[presetId] : fixture;
-  const fixtureProps = (
+  const fixtureWithLocalAssets = (
     renderProductLaunch || renderDeveloperDemo || renderCinematicBrand
       ? {
           ...(selectedFixture as ReelProps),
@@ -109,6 +125,21 @@ async function main() {
         }
       : selectedFixture
   ) as ReelProps;
+  const brief =
+    presetId && briefIndex !== undefined
+      ? (releaseBriefs as Record<string, string[]>)[presetId]?.[briefIndex]
+      : undefined;
+  if (briefIndex !== undefined && !brief) {
+    throw new Error(`Missing release brief ${briefIndex + 1} for ${presetId}`);
+  }
+  const fixtureProps = brief
+    ? applyReleaseBriefToFixture({
+        fixture: fixtureWithLocalAssets,
+        presetId: presetId as keyof typeof releaseBriefs,
+        brief,
+        briefIndex: briefIndex!,
+      })
+    : fixtureWithLocalAssets;
   const dimensions = orientation
     ? dimsFor(orientation as Orientation)
     : { width: fixtureProps.width, height: fixtureProps.height };

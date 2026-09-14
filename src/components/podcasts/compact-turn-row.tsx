@@ -37,6 +37,8 @@ export function CompactTurnRow({
   onSave,
   onRegenerate,
   onDelete,
+  pauseAfterSeconds,
+  onPauseChange,
 }: {
   index: number;
   characterName: string;
@@ -46,6 +48,8 @@ export function CompactTurnRow({
   onSave: (text: string) => void | Promise<void>;
   onRegenerate?: () => void;
   onDelete: () => void;
+  pauseAfterSeconds: number | null;
+  onPauseChange: (seconds: number | null) => void;
 }) {
   const [editing, setEditing] = React.useState(false);
   const [value, setValue] = React.useState(text);
@@ -179,6 +183,27 @@ export function CompactTurnRow({
           </>
         ) : null}
       </Tooltip>
+      <select
+        value={pauseAfterSeconds ?? ""}
+        disabled={disabled}
+        aria-label={`Pause after turn ${index + 1}`}
+        title="Silence after this turn"
+        className="border-border bg-background text-muted-foreground my-1 mr-1 h-7 rounded border px-1 text-[11px]"
+        onChange={(event) =>
+          onPauseChange(
+            event.target.value === "" ? null : Number(event.target.value),
+          )
+        }
+      >
+        <option value="">Auto pause</option>
+        <option value="0">No pause</option>
+        <option value="0.25">0.25s</option>
+        <option value="0.5">0.5s</option>
+        <option value="1">1s</option>
+        <option value="1.5">1.5s</option>
+        <option value="2">2s</option>
+        <option value="3">3s</option>
+      </select>
       <Tooltip>
         <TooltipTrigger asChild>
           <button

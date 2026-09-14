@@ -2,6 +2,12 @@ import { aiFetch } from "./http";
 import { buildPrompt } from "./prompt";
 import { buildPodcastPrompt } from "./podcast-prompt";
 import {
+  buildPodcastClipSuggestionsPrompt,
+  podcastClipSuggestionCandidatesSchema,
+  type GeneratePodcastClipSuggestionsInput,
+  type PodcastClipSuggestionCandidate,
+} from "./podcast-clip-suggestions";
+import {
   normalizePodcastPlan,
   podcastAiPlanSchema,
   type GeneratePodcastPlanInput,
@@ -117,6 +123,26 @@ const PODCAST_RESPONSE_SCHEMA = {
     },
   },
   required: ["turns"],
+};
+
+const PODCAST_CLIP_SUGGESTIONS_RESPONSE_SCHEMA = {
+  type: "object",
+  properties: {
+    suggestions: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          startTurnId: { type: "string" },
+          endTurnId: { type: "string" },
+          label: { type: "string" },
+          reason: { type: "string" },
+        },
+        required: ["startTurnId", "endTurnId", "label", "reason"],
+      },
+    },
+  },
+  required: ["suggestions"],
 };
 
 export function createGeminiProvider(): AIProvider {
@@ -245,6 +271,50 @@ export function createGeminiProvider(): AIProvider {
       } catch (e) {
         throw new AIError(
           e instanceof Error ? e.message : String(e),
+          502,
+          "gemini",
+        );
+      }
+    },
+
+    async generatePodcastClipSuggestions(
+      input: GeneratePodcastClipSuggestionsInput,
+    ): Promise<PodcastClipSuggestionCandidate[]> {
+      const { system, user } = buildPodcastClipSuggestionsPrompt(input);
+      const model = input.modelId || GEMINI_DEFAULT_MODEL;
+      const res = await aiFetch(
+        `${API_BASE}/models/${model}:generateContent`,
+        {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: system }] },
+            contents: [{ role: "user", parts: [{ text: user }] }],
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: PODCAST_CLIP_SUGGESTIONS_RESPONSE_SCHEMA,
+              temperature: 0.3,
+            },
+          }),
+        },
+        "gemini",
+      );
+      const json = (await res.json()) as {
+        candidates?: { content?: { parts?: { text?: string }[] } }[];
+      };
+      const text =
+        json.candidates?.[0]?.content?.parts
+          ?.map((part) => part.text ?? "")
+          .join("") ?? "";
+      if (!text) {
+        throw new AIError("Gemini returned an empty response", 502, "gemini");
+      }
+      try {
+        return podcastClipSuggestionCandidatesSchema.parse(JSON.parse(text))
+          .suggestions;
+      } catch {
+        throw new AIError(
+          "Gemini returned invalid clip suggestions",
           502,
           "gemini",
         );

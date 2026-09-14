@@ -5,9 +5,12 @@ import {
   deleteTurn,
   insertTurn,
   replaceTurnsFromPlan,
-  updateTurnText,
+  updatePodcastTurn,
 } from "@/library/repositories/podcasts";
-import { podcastPlanSchema } from "@/library/podcast-schemas";
+import {
+  podcastPauseSecondsSchema,
+  podcastPlanSchema,
+} from "@/library/podcast-schemas";
 import { authorize } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
@@ -20,10 +23,19 @@ const importSchema = z.object({
   updateMeta: z.boolean().optional(),
 });
 
-const patchTurnSchema = z.object({
-  turnId: z.string().min(1),
-  text: z.string().trim().min(1).max(4000),
-});
+const patchTurnSchema = z
+  .object({
+    turnId: z.string().min(1),
+    text: z.string().trim().min(1).max(4000).optional(),
+    pauseAfterSeconds: podcastPauseSecondsSchema.optional(),
+  })
+  .refine(
+    (value) =>
+      value.text !== undefined || value.pauseAfterSeconds !== undefined,
+    {
+      message: "Provide text or pauseAfterSeconds",
+    },
+  );
 
 const insertTurnSchema = z.object({
   characterId: z.string().min(1),
@@ -70,9 +82,9 @@ export async function PATCH(
 ) {
   try {
     authorize(req);
-    await ctx.params;
+    const { id } = await ctx.params;
     const body = patchTurnSchema.parse(await req.json());
-    const podcast = await updateTurnText(body.turnId, body.text);
+    const podcast = await updatePodcastTurn(id, body.turnId, body);
     return NextResponse.json({ podcast });
   } catch (e) {
     return errorResponse(e);
