@@ -122,7 +122,8 @@ model Scene {
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
 
-  voiceClips SceneVoiceClip[] @relation("SceneClips")
+  voiceClips          SceneVoiceClip[]     @relation("SceneClips")
+  stockMediaSelection StockMediaSelection?
 
   @@index([scriptId, order])
 }
@@ -218,6 +219,27 @@ model Asset {
   path      String // AssetStore key
   meta      String? // JSON
   createdAt DateTime @default(now())
+
+  stockMediaSelections StockMediaSelection[]
+}
+
+/// Immutable provider metadata retained when a scene selects stock media.
+/// The current background remains in Scene.layoutJson for render compatibility.
+model StockMediaSelection {
+  id              String   @id @default(cuid())
+  sceneId         String   @unique
+  scene           Scene    @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  providerId      String
+  providerAssetId String
+  kind            String
+  snapshotJson    String
+  localAssetId    String?
+  localAsset      Asset?   @relation(fields: [localAssetId], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([providerId, providerAssetId])
+  @@index([localAssetId])
 }
 
 model ProviderSetting {

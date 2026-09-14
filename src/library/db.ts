@@ -15,6 +15,7 @@ const globalForPrisma = globalThis as unknown as {
     podcast?: unknown;
     podcastTurnAudioBeat?: unknown;
     productionBatch?: unknown;
+    stockMediaSelection?: unknown;
   };
 };
 
@@ -29,7 +30,8 @@ function getClient(): PrismaClient {
     if (
       existing.podcast == null ||
       existing.podcastTurnAudioBeat == null ||
-      existing.productionBatch == null
+      existing.productionBatch == null ||
+      existing.stockMediaSelection == null
     ) {
       void existing.$disconnect().catch(() => undefined);
       const fresh = createClient();

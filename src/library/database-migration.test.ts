@@ -10,6 +10,7 @@ import {
 } from "../../scripts/migrate-database.mjs";
 import { databaseUrl } from "../../scripts/database-url.mjs";
 import { createPrismaClient } from "./prisma-client";
+import { resolvedStockAssetSchema } from "@/providers/stock/schemas";
 
 describe("SQLite migration preparation", () => {
   it("recognizes equivalent schemas when db push appended columns", () => {
@@ -316,6 +317,72 @@ describe("SQLite migration preparation", () => {
       db.close();
     }
   });
+
+  it("backfills existing Unsplash backgrounds without changing their render data", () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      db.exec(
+        readFileSync(
+          "prisma/migrations/20260910000100_baseline/migration.sql",
+          "utf8",
+        ),
+      );
+      const hotlink =
+        "https://images.unsplash.com/photo-123?crop=entropy&ixid=keep-me&w=1080";
+      const legacyHotlink =
+        "https://plus.unsplash.com/premium_photo-456?ixid=keep-legacy";
+      db.prepare(
+        "INSERT INTO Project (id,name,updatedAt) VALUES ('saved','Existing project',CURRENT_TIMESTAMP)",
+      ).run();
+      db.prepare(
+        "INSERT INTO Script (id,projectId,name,width,height,updatedAt) VALUES ('script','saved','Existing script',1920,1080,CURRENT_TIMESTAMP)",
+      ).run();
+      db.prepare(
+        "INSERT INTO Scene (id,scriptId,\"order\",text,layoutJson,updatedAt) VALUES ('layout','script',0,'Layout background',?,CURRENT_TIMESTAMP)",
+      ).run(JSON.stringify({ background: { type: "image", url: hotlink } }));
+      db.prepare(
+        "INSERT INTO Scene (id,scriptId,\"order\",text,visual,updatedAt) VALUES ('visual','script',1,'Legacy visual',?,CURRENT_TIMESTAMP)",
+      ).run(JSON.stringify({ url: legacyHotlink, effect: "ken-burns" }));
+
+      db.exec(
+        readFileSync(
+          "prisma/migrations/20260914000200_stock_media_schema/migration.sql",
+          "utf8",
+        ),
+      );
+
+      const selections = db
+        .prepare(
+          "SELECT sceneId, snapshotJson FROM StockMediaSelection ORDER BY sceneId",
+        )
+        .all() as Array<{ sceneId: string; snapshotJson: string }>;
+      expect(selections).toHaveLength(2);
+      for (const selection of selections) {
+        const snapshot = resolvedStockAssetSchema.parse(
+          JSON.parse(selection.snapshotJson),
+        );
+        expect(snapshot.providerSnapshot.providerId).toBe("unsplash");
+        expect(snapshot.providerSnapshot.acquisitionPolicy).toBe("hotlink");
+        expect(snapshot.compliantRemoteUrl).toContain("ixid=keep-");
+        expect(snapshot.providerSnapshot.orientation).toBe("landscape");
+      }
+      expect(
+        db.prepare("SELECT layoutJson FROM Scene WHERE id='layout'").get(),
+      ).toEqual({
+        layoutJson: JSON.stringify({
+          background: { type: "image", url: hotlink },
+        }),
+      });
+      expect(
+        db.prepare("SELECT visual FROM Scene WHERE id='visual'").get(),
+      ).toEqual({
+        visual: JSON.stringify({ url: legacyHotlink, effect: "ken-burns" }),
+      });
+    } finally {
+      db.close();
+    }
+  });
+
   it("backs up and restores a populated 0.4 database with durable stage outputs", () => {
     const directory = mkdtempSync(path.join(tmpdir(), "reel-pr1-populated-"));
     const filename = path.join(directory, "populated.db");
