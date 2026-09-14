@@ -35,10 +35,15 @@ planning chooses a non-data layout when no values are available.
   revise individual lines. Unchanged scene clips are reused.
 - Import SRT/VTT captions, use provider timing, or start with clearly labeled
   estimated timing. Optional whisper.cpp alignment stays local.
-- Start podcasts as solo narration, a two-host discussion, or an interview.
-  Regenerate selected turns, then export WAV, MP3, transcript, and chapters.
-- Select a contiguous podcast excerpt to make a portrait, landscape, or square
-  audiogram with the original take audio.
+- Start podcasts as solo narration, a two-host discussion, or an interview. Add
+  optional six-second intro/outro audio, per-turn pauses, and pronunciation
+  substitutions before generating a take. Saved takes retain an immutable
+  snapshot of those finishing choices.
+- Regenerate selected turns, then export WAV, MP3, transcript, and chapters.
+- Select a contiguous podcast excerpt manually, use local timestamp-grounded
+  suggestions with no AI key, or explicitly ask a configured AI provider for
+  ranges. Displayed quotes always come from the saved take transcript. Produce a
+  portrait, landscape, or square audiogram with the original take audio.
 
 ## Format variants and batch work
 

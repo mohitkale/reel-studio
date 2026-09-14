@@ -2,6 +2,12 @@ import { aiFetch } from "./http";
 import { buildPrompt } from "./prompt";
 import { buildPodcastPrompt } from "./podcast-prompt";
 import {
+  buildPodcastClipSuggestionsPrompt,
+  podcastClipSuggestionCandidatesSchema,
+  type GeneratePodcastClipSuggestionsInput,
+  type PodcastClipSuggestionCandidate,
+} from "./podcast-clip-suggestions";
+import {
   normalizePodcastPlan,
   podcastAiPlanSchema,
   type GeneratePodcastPlanInput,
@@ -134,6 +140,34 @@ const PODCAST_JSON_SCHEMA = {
   },
 };
 
+const PODCAST_CLIP_SUGGESTIONS_JSON_SCHEMA = {
+  name: "podcast_clip_suggestions",
+  strict: true,
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      suggestions: {
+        type: "array",
+        minItems: 1,
+        maxItems: 5,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            startTurnId: { type: "string" },
+            endTurnId: { type: "string" },
+            label: { type: "string" },
+            reason: { type: "string" },
+          },
+          required: ["startTurnId", "endTurnId", "label", "reason"],
+        },
+      },
+    },
+    required: ["suggestions"],
+  },
+};
+
 export function createOpenAIProvider(): AIProvider {
   const key = () => process.env.OPENAI_API_KEY?.trim() || "";
   const headers = () => ({
@@ -252,6 +286,50 @@ export function createOpenAIProvider(): AIProvider {
       } catch (e) {
         throw new AIError(
           e instanceof Error ? e.message : String(e),
+          502,
+          "openai",
+        );
+      }
+    },
+
+    async generatePodcastClipSuggestions(
+      input: GeneratePodcastClipSuggestionsInput,
+    ): Promise<PodcastClipSuggestionCandidate[]> {
+      const { system, user } = buildPodcastClipSuggestionsPrompt(input);
+      const model = input.modelId || OPENAI_DEFAULT_MODEL;
+      const res = await aiFetch(
+        `${API_BASE}/chat/completions`,
+        {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify({
+            model,
+            temperature: 0.3,
+            messages: [
+              { role: "system", content: system },
+              { role: "user", content: user },
+            ],
+            response_format: {
+              type: "json_schema",
+              json_schema: PODCAST_CLIP_SUGGESTIONS_JSON_SCHEMA,
+            },
+          }),
+        },
+        "openai",
+      );
+      const json = (await res.json()) as {
+        choices?: { message?: { content?: string } }[];
+      };
+      const text = json.choices?.[0]?.message?.content ?? "";
+      if (!text) {
+        throw new AIError("OpenAI returned an empty response", 502, "openai");
+      }
+      try {
+        return podcastClipSuggestionCandidatesSchema.parse(JSON.parse(text))
+          .suggestions;
+      } catch {
+        throw new AIError(
+          "OpenAI returned invalid clip suggestions",
           502,
           "openai",
         );

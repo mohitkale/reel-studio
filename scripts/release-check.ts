@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 
@@ -97,8 +98,8 @@ function checkReleaseMetadata() {
     withFileTypes: true,
   }).filter((entry) => entry.isDirectory()).length;
   assert(
-    migrationCount === 6,
-    `expected 6 database migrations, found ${migrationCount}`,
+    migrationCount === 7,
+    `expected 7 database migrations, found ${migrationCount}`,
   );
 
   for (const filename of [
@@ -107,6 +108,7 @@ function checkReleaseMetadata() {
     "docs/CREATOR_GUIDE.md",
     "docs/WALKTHROUGHS.md",
     "docs/production/RELEASE_MATRIX_0.4.0.json",
+    "docs/production/LOCAL_FIRST_PR2_RENDER_MATRIX.json",
     "docs/production/RELEASE_VALIDATION.md",
     "mcp/README.md",
   ]) {
@@ -133,8 +135,68 @@ function checkReleaseMetadata() {
         (output) => `${output.presetId}/${output.orientation}/${output.engine}`,
       ),
     ).size === 36,
-    "published release matrix contains duplicate or missing combinations",
+    "published 0.4 matrix contains duplicate or missing combinations",
   );
+
+  const briefMatrix = readJson(
+    "docs/production/LOCAL_FIRST_PR2_RENDER_MATRIX.json",
+  );
+  const briefEnvironment = briefMatrix.environment as
+    { packageVersion?: string } | undefined;
+  const entries = briefMatrix.entries as
+    | Array<{
+        presetId?: string;
+        orientation?: string;
+        briefIndex?: number;
+        briefHash?: string;
+        width?: number;
+        height?: number;
+        engines?: { hyperframes?: number; remotion?: number };
+      }>
+    | undefined;
+  assert(
+    briefEnvironment?.packageVersion === EXPECTED_VERSION,
+    "three-brief matrix package version drift",
+  );
+  assert(entries?.length === 18, "expected 18 three-brief matrix entries");
+  for (const presetId of PRODUCTION_PRESET_IDS) {
+    const presetEntries = entries.filter(
+      (entry) => entry.presetId === presetId,
+    );
+    assert(
+      presetEntries.length === 3,
+      `${presetId} needs three rendered briefs`,
+    );
+    assert(
+      new Set(presetEntries.map((entry) => entry.briefHash)).size === 3,
+      `${presetId} needs three distinct rendered briefs`,
+    );
+    assert(
+      new Set(presetEntries.map((entry) => entry.orientation)).size === 3,
+      `${presetId} needs all three orientations`,
+    );
+    for (const [briefIndex, brief] of releaseBriefs[presetId].entries()) {
+      const entry = presetEntries.find(
+        (candidate) => candidate.briefIndex === briefIndex + 1,
+      );
+      assert(entry, `${presetId} brief ${briefIndex + 1} is missing`);
+      const expectedDimensions = dimsFor(ORIENTATIONS[briefIndex]);
+      assert(
+        entry.briefHash === createHash("sha256").update(brief).digest("hex"),
+        `${presetId} brief ${briefIndex + 1} hash drifted`,
+      );
+      assert(
+        entry.width === expectedDimensions.width &&
+          entry.height === expectedDimensions.height,
+        `${presetId} brief ${briefIndex + 1} dimensions drifted`,
+      );
+      assert(
+        Number(entry.engines?.hyperframes) > 10_000 &&
+          Number(entry.engines?.remotion) > 10_000,
+        `${presetId} brief ${briefIndex + 1} needs both engine outputs`,
+      );
+    }
+  }
 }
 
 function checkPresetContracts() {

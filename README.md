@@ -51,8 +51,9 @@ The 0.4 roadmap contained 28 numbered tasks. The implemented release includes:
 - deterministic and optional AI planning, safe public-page import, uploaded
   media, scene locks, hook alternatives, and selective regeneration
 - editable caption tracks with timing provenance and SRT/VTT import/export
-- reusable audio generation, podcast turn caching, WAV/MP3 output, chapters,
-  transcripts, and manual audiogram selection
+- reusable audio generation, podcast turn caching, intro/outro bumpers, explicit
+  pauses, pronunciation rules, WAV/MP3 output, chapters, transcripts, and
+  timestamp-grounded audiogram selection
 - persistent production jobs, REST/MCP production interfaces, scoped tokens,
   format variants, partial-failure batches, diagnostics, and bundled examples
 
@@ -125,8 +126,10 @@ Reel Studio is designed for:
 - Cartesia and ElevenLabs (optional keys)
 - Optional self-hosted [VoiceForge](https://github.com/mohitkale/voiceforge)
 - Full-reel or per-scene takes, plus cached **solo, two-host, and interview podcasts**
-- Selective podcast turn regeneration, production WAV/MP3, transcript and chapter exports
-- One-click portrait, square, or landscape **audiograms** from selected timed turns
+- Selective podcast turn regeneration, pronunciation rules, explicit pauses,
+  intro/outro bumpers, production WAV/MP3, transcript and chapter exports
+- One-click portrait, square, or landscape **audiograms** from manually selected
+  or timestamp-grounded suggested turns
 - Durable JSON batches with independent portrait, square and landscape reflows, partial-failure recovery and downloadable bundles
 
 ### Design

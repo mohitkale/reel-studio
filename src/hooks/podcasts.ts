@@ -6,6 +6,7 @@ import { apiDelete, apiGet, apiPatch, apiPost } from "@/lib/api-client";
 import type {
   PodcastDTO,
   PodcastAudiogramJobDTO,
+  PodcastClipSuggestionDTO,
   PodcastGenderDTO,
   PodcastLengthDTO,
   PodcastSummaryDTO,
@@ -400,5 +401,30 @@ export function useGeneratePodcastAudiogram() {
       }
       throw new Error("Audiogram generation timed out after 20 minutes");
     },
+  });
+}
+
+export function usePodcastClipSuggestions(takeId: string) {
+  return useQuery({
+    queryKey: ["podcast-clip-suggestions", takeId, "local"],
+    enabled: Boolean(takeId),
+    queryFn: () =>
+      apiGet<{ suggestions: PodcastClipSuggestionDTO[] }>(
+        `/api/podcast-takes/${takeId}/clip-suggestions`,
+      ).then((result) => result.suggestions),
+  });
+}
+
+export function useGeneratePodcastClipSuggestions() {
+  return useMutation({
+    mutationFn: (vars: {
+      takeId: string;
+      providerId: AIProviderId;
+      modelId?: string;
+    }) =>
+      apiPost<{ suggestions: PodcastClipSuggestionDTO[] }>(
+        `/api/podcast-takes/${vars.takeId}/clip-suggestions`,
+        { providerId: vars.providerId, modelId: vars.modelId },
+      ).then((result) => result.suggestions),
   });
 }

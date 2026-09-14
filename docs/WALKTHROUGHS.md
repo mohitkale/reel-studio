@@ -62,8 +62,10 @@ video excerpt that uses the original podcast audio.
    Confirm the other completed turns show reuse rather than new synthesis.
 4. Download WAV, MP3, transcript, and chapters. The chapter boundaries should
    match the dialogue turns.
-5. Select a contiguous group of turns, choose portrait, square, or landscape,
-   and create the audiogram from the completed take.
+5. Choose a timestamp-grounded suggestion or manually select a contiguous group
+   of turns, choose portrait, square, or landscape, and create the audiogram from
+   the completed take. Local suggestions require no AI key; asking a configured
+   provider is an explicit paid-provider action.
 6. Follow the durable job on **Renders**, then play and download the verified
    H.264/AAC output.
 

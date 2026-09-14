@@ -277,6 +277,19 @@ export interface PodcastTakeDTO {
   createdAt: string;
 }
 
+export interface PodcastClipSuggestionDTO {
+  startTurnId: string;
+  endTurnId: string;
+  label: string;
+  reason?: string;
+  startSeconds: number;
+  endSeconds: number;
+  durationSeconds: number;
+  selectedTurnIds: string[];
+  /** Exact transcript text for the selected contiguous turn range. */
+  quote: string;
+}
+
 export interface PodcastSummaryDTO {
   id: string;
   title: string;

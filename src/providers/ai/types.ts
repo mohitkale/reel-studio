@@ -7,6 +7,10 @@ import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { ProductionPresetId } from "@/production/presets";
 import { stripMarkdown } from "@/lib/strip-markdown";
 import type { GeneratePodcastPlanInput, PodcastPlan } from "./podcast-types";
+import type {
+  GeneratePodcastClipSuggestionsInput,
+  PodcastClipSuggestionCandidate,
+} from "./podcast-clip-suggestions";
 
 /**
  * AI "director" contract. Mirrors the voice provider factory: the app talks only
@@ -236,6 +240,9 @@ export interface AIProvider {
   listModels(): Promise<AIModel[]>;
   generatePlan(input: GeneratePlanInput): Promise<ScenePlan>;
   generatePodcastPlan(input: GeneratePodcastPlanInput): Promise<PodcastPlan>;
+  generatePodcastClipSuggestions(
+    input: GeneratePodcastClipSuggestionsInput,
+  ): Promise<PodcastClipSuggestionCandidate[]>;
 }
 
 export const aiProviderStatusSchema = z.object({

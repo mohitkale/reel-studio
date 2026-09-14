@@ -1,14 +1,14 @@
 import { AIError, type AIProviderId } from "./types";
 
-// Transient statuses worth retrying (Gemini flash often returns 503 under load).
+// Only read-only discovery calls may be retried. A failed generation response is
+// uncertain and may already have consumed provider quota.
 const RETRYABLE = new Set([429, 500, 503]);
 const MAX_ATTEMPTS = 3;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * fetch wrapper with backoff retry on transient errors, mapping failures to
- * AIError with actionable messages. Returns the Response on 2xx.
+ * Fetch wrapper with GET-only backoff and actionable provider errors.
  */
 export async function aiFetch(
   url: string,
@@ -17,13 +17,15 @@ export async function aiFetch(
 ): Promise<Response> {
   let lastBody = "";
   let lastStatus = 0;
+  const maxAttempts =
+    (init.method ?? "GET").toUpperCase() === "GET" ? MAX_ATTEMPTS : 1;
 
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     let res: Response;
     try {
       res = await fetch(url, init);
     } catch (e) {
-      if (attempt < MAX_ATTEMPTS - 1) {
+      if (attempt < maxAttempts - 1) {
         await sleep(500 * (attempt + 1));
         continue;
       }
@@ -39,7 +41,7 @@ export async function aiFetch(
     lastStatus = res.status;
     lastBody = await res.text().catch(() => "");
 
-    if (RETRYABLE.has(res.status) && attempt < MAX_ATTEMPTS - 1) {
+    if (RETRYABLE.has(res.status) && attempt < maxAttempts - 1) {
       await sleep(600 * (attempt + 1));
       continue;
     }
