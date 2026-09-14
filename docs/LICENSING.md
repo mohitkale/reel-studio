@@ -113,6 +113,7 @@ them.
 | **Unsplash** | Optional AI stock backgrounds | [Unsplash License](https://unsplash.com/license) + [API guidelines](https://help.unsplash.com/en/articles/2511245-unsplash-api-guidelines). Returned CDN URLs remain hotlinked with `ixid`; attribution and the returned download-event endpoint are stored. Selection triggers that endpoint once and persists the known outcome. The reviewed terms do not establish a render-staging exception, so Unsplash media is not copied into the generic local store and rendering requires network access. |
 | **Pexels** | Optional stock photos and videos | [Pexels License](https://www.pexels.com/license/) + [API documentation and guidelines](https://www.pexels.com/api/documentation/). Search results retain creator and Pexels source links; selected render renditions are validated and stored in the local media store. |
 | **Pixabay** | Optional stock images and videos | [Pixabay Content License](https://pixabay.com/service/license-summary/) + [API documentation](https://pixabay.com/api/docs/). API responses are cached for 24 hours; remote image URLs are temporary previews, while selected images and videos are validated and stored locally with contributor/source metadata. |
+| **Coverr** | Disabled stock-video adapter | **License gate closed as of 2026-09-15.** The [API introduction](https://api.coverr.co/docs) says free API access cannot be used commercially, while the [developer page](https://coverr.co/developers) and [general license](https://coverr.co/license) say commercial use is allowed. The [API start page](https://api.coverr.co/docs/start/) describes demo and paid production tiers but does not resolve which terms govern Reel Studio's API use. Coverr remains disabled and no key is accepted or request made until API-specific clarification resolves the conflict. |
 | **Jamendo** | Optional Creative Commons music search | Tracks carry their own **CC** licenses (shown via attribution strings). Follow Jamendo’s API/developer terms. |
 | **Cartesia** | Cloud TTS / cloning | Vendor commercial ToS + usage limits |
 | **ElevenLabs** | Cloud TTS | Vendor commercial ToS + usage limits |
@@ -165,7 +166,7 @@ license.
 | Can an individual use Remotion via Reel Studio for free? | **Usually yes** under Remotion’s Free License (verify upstream). |
 | Can a 10-person company use Remotion via Reel Studio for free? | **Usually no** — they need a Remotion Company License (or use HyperFrames projects). |
 | Does MIT on this repo waive Remotion fees for downstream users? | **No.** |
-| Are Unsplash / Jamendo / cloud TTS “free forever, any use”? | **No** — follow each provider’s terms. |
+| Are Unsplash / Pexels / Pixabay / Jamendo / cloud services “free forever, any use”? | **No** — follow each provider’s terms. Coverr remains disabled pending API-specific license clarification. |
 | Is VoiceForge XTTS-v2 OK for commercial products? | **No** (CPML non-commercial); prefer F5-TTS / OpenVoice / RVC as documented there. |
 
 When in doubt, read the upstream license pages linked above or ask Remotion /

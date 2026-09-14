@@ -29,6 +29,7 @@ import {
 } from "./unsplash";
 import { createPexelsProvider } from "./pexels";
 import { createPixabayProvider } from "./pixabay";
+import { createCoverrProvider } from "./coverr";
 import {
   withStockMediaResponseCache,
   type StockMediaCachePersistence,
@@ -256,6 +257,7 @@ export function createStockMediaProviderRegistry(
     createUnsplashMediaProvider(),
     createPexelsProvider(),
     createPixabayProvider(),
+    createCoverrProvider(),
   ],
   persistence?: StockMediaRegistryPersistence,
 ): StockMediaProviderRegistry {
