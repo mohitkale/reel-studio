@@ -415,6 +415,19 @@ describe("provider-neutral Unsplash adapter", () => {
 });
 
 describe("legacy Unsplash wrapper", () => {
+  it("keeps the no-key path disabled without a provider request", async () => {
+    const fetchImpl = vi.fn<typeof fetch>();
+    const legacy = createUnsplashProvider({
+      apiKey: () => "",
+      fetchImpl,
+    });
+    expect(legacy.isConfigured()).toBe(false);
+    await expect(legacy.search("ocean", "portrait", 1)).rejects.toThrow(
+      "no API key",
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
   it("preserves image search behavior and delegates usage reporting", async () => {
     process.env.UNSPLASH_ACCESS_KEY = "legacy_key";
     const fetchImpl = vi
