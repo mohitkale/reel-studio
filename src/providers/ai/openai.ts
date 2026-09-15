@@ -68,6 +68,7 @@ function buildJsonSchema(input: GeneratePlanInput) {
               visual: { type: "string" },
               items: { type: "array", items: { type: "string" } },
               backgroundQuery: { type: "string" },
+              mediaKind: { type: "string", enum: ["image", "video"] },
               effect: {
                 type: "string",
                 enum: [

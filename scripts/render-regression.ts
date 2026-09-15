@@ -35,6 +35,7 @@ async function main() {
   const presetArg = args.find((arg) => arg.startsWith("--preset="));
   const orientationArg = args.find((arg) => arg.startsWith("--orientation="));
   const briefIndexArg = args.find((arg) => arg.startsWith("--brief-index="));
+  const renderStockVideo = args.includes("--stock-video");
   const briefIndex = briefIndexArg
     ? Number(briefIndexArg.slice("--brief-index=".length))
     : undefined;
@@ -45,6 +46,9 @@ async function main() {
   const presetId = args.includes("--product-launch")
     ? "product-launch"
     : presetArg?.slice("--preset=".length);
+  if (renderStockVideo && presetId) {
+    throw new Error("Stock-video regression cannot be combined with a preset");
+  }
   const presetFixtures: Record<string, unknown> = {
     "product-launch": productLaunchFixture,
     "editorial-explainer": editorialExplainerFixture,
@@ -72,12 +76,62 @@ async function main() {
   const output = orientation
     ? path.resolve(
         ".artifacts/render-regression",
-        presetId ?? "legacy",
+        renderStockVideo ? "stock-video" : (presetId ?? "legacy"),
         ...(briefIndex === undefined ? [] : [`brief-${briefIndex + 1}`]),
         orientation,
       )
-    : path.resolve(".artifacts/render-regression", presetId ?? "legacy");
+    : path.resolve(
+        ".artifacts/render-regression",
+        renderStockVideo ? "stock-video" : (presetId ?? "legacy"),
+      );
   await mkdir(output, { recursive: true });
+  const stockVideoSource = path.join(output, "stock-video-source.mp4");
+  if (renderStockVideo) {
+    await run("ffmpeg", [
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-f",
+      "lavfi",
+      "-i",
+      "testsrc2=size=640x360:rate=30",
+      "-f",
+      "lavfi",
+      "-i",
+      "sine=frequency=440:sample_rate=48000",
+      "-t",
+      "4",
+      "-c:v",
+      "libx264",
+      "-pix_fmt",
+      "yuv420p",
+      "-c:a",
+      "aac",
+      "-shortest",
+      "-y",
+      stockVideoSource,
+    ]);
+    const sourceProbe = JSON.parse(
+      (
+        await run("ffprobe", [
+          "-v",
+          "error",
+          "-show_entries",
+          "stream=codec_type",
+          "-of",
+          "json",
+          stockVideoSource,
+        ])
+      ).stdout,
+    );
+    if (
+      !sourceProbe.streams?.some(
+        (stream: { codec_type?: string }) => stream.codec_type === "audio",
+      )
+    ) {
+      throw new Error("Stock-video fixture must contain an audio track");
+    }
+  }
   const engines = args.filter((arg) => !arg.startsWith("--"));
   const selected = engines.length ? engines : ["hyperframes", "remotion"];
   if (
@@ -146,18 +200,39 @@ async function main() {
   const props: ReelProps = {
     ...fixtureProps,
     ...dimensions,
-    captions: fixtureProps.captions ?? {
-      enabled: true,
-      timingSource: "imported",
-      cues: [
-        {
-          id: "regression-caption",
-          startFrame: 15,
-          endFrame: 75,
-          text: "Editable subtitles render separately from scene copy.",
-        },
-      ],
-    },
+    ...(renderStockVideo
+      ? {
+          scenes: fixtureProps.scenes.map((scene, index) => ({
+            ...scene,
+            background:
+              index === 0
+                ? {
+                    type: "video" as const,
+                    url: "stock-video.mp4",
+                    muted: false,
+                    stock: true,
+                  }
+                : undefined,
+          })),
+          audioUrl: undefined,
+          musicUrl: undefined,
+          sfxCues: [],
+        }
+      : {}),
+    captions: renderStockVideo
+      ? { enabled: false, timingSource: "imported", cues: [] }
+      : (fixtureProps.captions ?? {
+          enabled: true,
+          timingSource: "imported",
+          cues: [
+            {
+              id: "regression-caption",
+              startFrame: 15,
+              endFrame: 75,
+              text: "Editable subtitles render separately from scene copy.",
+            },
+          ],
+        }),
   };
   const expectedFrames = props.timeline.reduce(
     (max, beat) => Math.max(max, beat.startFrame + beat.durationFrames),
@@ -170,7 +245,7 @@ async function main() {
           "-v",
           "error",
           "-show_entries",
-          "stream=codec_name,width,height",
+          "stream=codec_name,codec_type,width,height",
           "-show_entries",
           "format=duration",
           "-of",
@@ -180,12 +255,26 @@ async function main() {
       ).stdout,
     );
     if (
-      probe.streams?.[0]?.codec_name !== "h264" ||
-      probe.streams[0].width !== props.width ||
-      probe.streams[0].height !== props.height ||
+      probe.streams?.find(
+        (stream: { codec_type?: string }) => stream.codec_type === "video",
+      )?.codec_name !== "h264" ||
+      probe.streams.find(
+        (stream: { codec_type?: string }) => stream.codec_type === "video",
+      )?.width !== props.width ||
+      probe.streams.find(
+        (stream: { codec_type?: string }) => stream.codec_type === "video",
+      )?.height !== props.height ||
       Number(probe.format?.duration) < expectedFrames / (props.fps ?? 30) - 0.2
     ) {
       throw new Error(`${engine}: unexpected output metadata`);
+    }
+    if (
+      renderStockVideo &&
+      probe.streams.some(
+        (stream: { codec_type?: string }) => stream.codec_type === "audio",
+      )
+    ) {
+      throw new Error(`${engine}: muted stock fixture leaked an audio track`);
     }
     const sample = path.join(output, `${engine}-sample.png`);
     await run("ffmpeg", [
@@ -221,9 +310,27 @@ async function main() {
   }
   for (const engine of selected) {
     const mp4 = path.join(output, `${engine}.mp4`);
+    const stockVideoUrl =
+      engine === "hyperframes" ? "stock-video.mp4" : "/public/stock-video.mp4";
+    const engineProps: ReelProps = renderStockVideo
+      ? {
+          ...props,
+          scenes: props.scenes.map((scene, index) =>
+            index === 0 && scene.background?.type === "video"
+              ? {
+                  ...scene,
+                  background: { ...scene.background, url: stockVideoUrl },
+                }
+              : scene,
+          ),
+        }
+      : props;
     if (engine === "hyperframes") {
       const project = path.join(output, "hyperframes");
       await mkdir(project, { recursive: true });
+      if (renderStockVideo) {
+        await copyFile(stockVideoSource, path.join(project, "stock-video.mp4"));
+      }
       const runtime = path.join(project, "_runtime");
       await mkdir(runtime, { recursive: true });
       await copyFile(
@@ -248,7 +355,7 @@ async function main() {
       ]);
       await writeFile(
         path.join(project, "index.html"),
-        buildHyperframesCompositionHtml(props, {
+        buildHyperframesCompositionHtml(engineProps, {
           producerMode: true,
           runtimeUrl: "/_runtime/gsap.min.js",
         }),
@@ -260,18 +367,28 @@ async function main() {
       );
       process.stdout.write(result.stdout);
     } else {
-      const inputProps: ReelProps = renderPreset
-        ? props
-        : {
-            ...props,
-            scenes: props.scenes.map((scene, index) => ({
-              ...scene,
-              templateId: index === 0 ? "three" : "lottie",
-            })),
-          };
+      const inputProps: ReelProps =
+        renderPreset || renderStockVideo
+          ? engineProps
+          : {
+              ...engineProps,
+              scenes: engineProps.scenes.map((scene, index) => ({
+                ...scene,
+                templateId: index === 0 ? "three" : "lottie",
+              })),
+            };
+      const remotionPublic = path.join(output, "remotion-public");
+      if (renderStockVideo) {
+        await mkdir(remotionPublic, { recursive: true });
+        await copyFile(
+          stockVideoSource,
+          path.join(remotionPublic, "stock-video.mp4"),
+        );
+      }
       const serveUrl = await bundle({
         entryPoint: path.resolve("src/remotion/index.ts"),
         webpackOverride: remotionWebpackOverride,
+        ...(renderStockVideo ? { publicDir: remotionPublic } : {}),
       });
       const composition = await selectComposition({
         serveUrl,
@@ -287,12 +404,14 @@ async function main() {
         concurrency: 2,
         logLevel: "error",
       });
-      const stillFrames = renderPreset
-        ? props.timeline.flatMap((beat) => [
-            beat.startFrame,
-            beat.startFrame + Math.floor(beat.durationFrames / 2),
-          ])
-        : [0, 22, 44, 45, 67, 89];
+      const stillFrames = renderStockVideo
+        ? [Math.floor(props.timeline[0]!.durationFrames / 2)]
+        : renderPreset
+          ? props.timeline.flatMap((beat) => [
+              beat.startFrame,
+              beat.startFrame + Math.floor(beat.durationFrames / 2),
+            ])
+          : [0, 22, 44, 45, 67, 89];
       for (const frame of stillFrames) {
         await renderStill({
           serveUrl,
@@ -303,7 +422,9 @@ async function main() {
           logLevel: "error",
         });
       }
-      for (const template of renderPreset ? [] : TEMPLATES) {
+      for (const template of renderPreset || renderStockVideo
+        ? []
+        : TEMPLATES) {
         const templateProps: ReelProps = {
           ...props,
           scenes: props.scenes.map((scene) => ({

@@ -200,10 +200,31 @@ function backgroundLayer(
             <div class="bg-scrim"></div>`;
   }
   if (scene.background?.type === "video" && scene.background.url) {
-    return `<video class="bg-video" src="${escapeHtml(scene.background.url)}" muted playsinline loop></video>
-            <div class="bg-scrim"></div>`;
+    return `<div class="bg-scrim"></div>`;
   }
   return `<div class="bg-mood" style="background:${moodGradient(scene.mood)}"></div>`;
+}
+
+function timedVideoLayer(
+  scene: ReelScene,
+  absoluteStart: number,
+  durationSec: number,
+): string {
+  if (scene.background?.type !== "video" || !scene.background.url) return "";
+  const dur = Math.max(0.05, durationSec);
+  return `<video id="scene-${escapeHtml(scene.id)}-stock-video" class="bg-video clip" src="${escapeHtml(scene.background.url)}"
+                 data-start="${absoluteStart.toFixed(3)}" data-duration="${dur.toFixed(3)}" data-media-start="0"
+                 data-track-index="0" muted playsinline preload="auto"></video>`;
+}
+
+function addBackgroundToPresetScene(
+  html: string,
+  backgroundHtml: string,
+): string {
+  if (!backgroundHtml) return html;
+  return html
+    .replace('class="clip scene ', 'class="clip scene has-photo ')
+    .replace(/(<div class="fx-stage[^>]*>)/, `${backgroundHtml}\n    $1`);
 }
 
 function framesToSeconds(frames: number, fps: number): number {
@@ -839,6 +860,7 @@ export function buildHyperframesCompositionHtml(
 
   const beats: Array<{ id: string; start: number; duration: number }> = [];
   const sceneBlocks: string[] = [];
+  const videoBlocks: string[] = [];
   const timeline = props.timeline as ReelBeat[];
 
   // Match Remotion: hold each scene until the next beat starts so inter-beat
@@ -856,6 +878,8 @@ export function buildHyperframesCompositionHtml(
     const duration = framesToSeconds(holdFrames, fps);
     beats.push({ id: scene.id, start, duration });
     const absoluteStart = start + coverSeconds;
+    const videoBlock = timedVideoLayer(scene, absoluteStart, duration);
+    if (videoBlock) videoBlocks.push(videoBlock);
     const exitWindow = Math.min(
       0.35,
       framesToSeconds(transitionFrames, fps) / Math.max(0.05, duration),
@@ -872,7 +896,14 @@ export function buildHyperframesCompositionHtml(
         motionStiffness,
       });
       if (presetScene) {
-        sceneBlocks.push(presetScene);
+        sceneBlocks.push(
+          addBackgroundToPresetScene(
+            presetScene,
+            scene.background?.type === "video"
+              ? backgroundLayer(scene, absoluteStart, duration)
+              : "",
+          ),
+        );
         continue;
       }
     }
@@ -964,7 +995,7 @@ export function buildHyperframesCompositionHtml(
             const start = coverSeconds + cue.startFrame / fpsSafe;
             const duration =
               Math.max(1, cue.endFrame - cue.startFrame) / fpsSafe;
-            return `<div class="clip rs-subtitle" data-start="${start.toFixed(3)}" data-duration="${duration.toFixed(3)}" data-track-index="20" aria-label="Subtitle ${index + 1}"><span>${escapeHtml(cue.text)}</span></div>`;
+            return `<div id="subtitle-${escapeHtml(cue.id || String(index + 1))}" class="clip rs-subtitle" data-start="${start.toFixed(3)}" data-duration="${duration.toFixed(3)}" data-track-index="20" aria-label="Subtitle ${index + 1}"><span>${escapeHtml(cue.text)}</span></div>`;
           })
           .join("\n")
       : "";
@@ -1002,6 +1033,7 @@ export function buildHyperframesCompositionHtml(
          style="width:${width}px;height:${height}px;--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}">
       ${coverBlock}
       ${progress}
+      ${videoBlocks.join("\n")}
       ${sceneBlocks.join("\n")}
       ${captionBlocks}
       ${audioTags.join("\n")}

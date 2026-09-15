@@ -13,7 +13,9 @@ import {
   mergeGeneratedScene,
   selectRegenerationTargets,
 } from "@/library/selective-scene-regeneration";
-import { resolveSceneBackgrounds } from "@/library/stock-backgrounds";
+import { resolveAutomaticSceneMediaBatch } from "@/library/automatic-stock-media";
+import { applyStockMediaSelection } from "@/library/repositories/stock-media-selections";
+import { reportStockMediaSelectionUsage } from "@/library/stock-media-usage";
 import { applyPresetToAIPlan } from "@/production/ai-preset-plan";
 import { getPresetTemplateId } from "@/production/preset-template-map";
 import type { ProductionPresetId } from "@/production/presets";
@@ -28,6 +30,7 @@ import {
 } from "@/providers/ai/types";
 import { errorResponse } from "@/server/api-helpers";
 import { authorizeProviderRequest } from "@/server/auth";
+import { mediaPreferenceSchema } from "@/lib/media-preference";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,6 +44,7 @@ const bodySchema = z.object({
   sceneCount: z.number().int().min(1).max(20).optional(),
   sceneIds: z.array(z.string().min(1)).max(20).optional(),
   scriptStyle: z.enum(SCRIPT_STYLES).optional(),
+  mediaPreference: mediaPreferenceSchema.default("auto"),
 });
 
 /** Build the Scene.layoutJson payload for a newly appended AI scene. */
@@ -51,6 +55,7 @@ function layoutJsonFor(
     musicMood?: string;
     items?: string[];
     chart?: SceneChartData;
+    mediaPreference?: z.infer<typeof mediaPreferenceSchema>;
   },
   role?: ProductionSceneRole,
 ): string | null {
@@ -60,6 +65,7 @@ function layoutJsonFor(
   if (scene.musicMood) config.musicMood = scene.musicMood;
   if (scene.items?.length) config.items = scene.items;
   if (scene.chart) config.chart = scene.chart;
+  if (scene.mediaPreference) config.mediaPreference = scene.mediaPreference;
   if (role) config.role = role;
   return Object.keys(config).length ? JSON.stringify(config) : null;
 }
@@ -195,25 +201,74 @@ export async function POST(
             videoEngine,
           ),
       );
-      const backgrounds = await resolveSceneBackgrounds(generated, orientation);
+      const mediaDecisions = await resolveAutomaticSceneMediaBatch(
+        generated,
+        orientation,
+        targets.map((target) => target.mediaPreference ?? "auto"),
+        targets.map((target) => target.background),
+      );
+      const backgrounds = mediaDecisions.map((decision) => decision.background);
 
       await prisma.$transaction(
-        targets.map((target, index) =>
-          prisma.scene.update({
-            where: { id: target.id },
-            data: mergeGeneratedScene(
-              target,
-              generated[index]!,
-              backgrounds[index],
-            ),
-          }),
-        ),
+        targets.flatMap((target, index) => {
+          const snapshot = mediaDecisions[index]?.snapshot;
+          return [
+            prisma.scene.update({
+              where: { id: target.id },
+              data: mergeGeneratedScene(
+                target,
+                generated[index]!,
+                backgrounds[index],
+              ),
+            }),
+            ...(snapshot
+              ? [
+                  prisma.stockMediaSelection.upsert({
+                    where: { sceneId: target.id },
+                    create: {
+                      sceneId: target.id,
+                      providerId: snapshot.providerSnapshot.providerId,
+                      providerAssetId:
+                        snapshot.providerSnapshot.providerAssetId,
+                      kind: snapshot.providerSnapshot.kind,
+                      snapshotJson: JSON.stringify(snapshot),
+                      localAssetId: snapshot.localAssetId ?? null,
+                    },
+                    update: {
+                      providerId: snapshot.providerSnapshot.providerId,
+                      providerAssetId:
+                        snapshot.providerSnapshot.providerAssetId,
+                      kind: snapshot.providerSnapshot.kind,
+                      snapshotJson: JSON.stringify(snapshot),
+                      localAssetId: snapshot.localAssetId ?? null,
+                    },
+                  }),
+                ]
+              : []),
+          ];
+        }),
       );
+      for (const [index, target] of targets.entries()) {
+        if (mediaDecisions[index]?.snapshot?.usageEvent.state === "pending") {
+          await reportStockMediaSelectionUsage(target.id).catch(
+            () => undefined,
+          );
+        }
+      }
 
       const updated = await getScript(scriptId);
       return NextResponse.json({
         script: updated,
         changedSceneIds: targets.map((scene) => scene.id),
+        mediaDecisions: mediaDecisions.map(
+          ({ state, kind, providerId, attemptedProviders, message }) => ({
+            state,
+            kind,
+            providerId,
+            attemptedProviders,
+            message,
+          }),
+        ),
       });
     }
 
@@ -228,15 +283,18 @@ export async function POST(
       scriptStyle: body.scriptStyle,
       videoEngine,
       productionPresetId: script.productionPreset?.id,
+      mediaPreference: body.mediaPreference,
     });
     const enriched = scenePlanSchema.parse({
       ...raw,
       scenes: enrichScenePlan(raw.scenes, videoEngine),
     });
-    const backgrounds = await resolveSceneBackgrounds(
+    const mediaDecisions = await resolveAutomaticSceneMediaBatch(
       enriched.scenes,
       orientation,
+      enriched.scenes.map(() => body.mediaPreference),
     );
+    const backgrounds = mediaDecisions.map((decision) => decision.background);
     const resolved = script.productionPreset
       ? applyPresetToAIPlan(enriched, script.productionPreset.id, videoEngine, {
           continuation: true,
@@ -254,12 +312,44 @@ export async function POST(
         spokenText: scene.spokenText ?? null,
         emphasis: scene.emphasis.length ? JSON.stringify(scene.emphasis) : null,
         visual: scene.visual ?? null,
-        layoutJson: layoutJsonFor(backgrounds[index], scene, roles[index]),
+        layoutJson: layoutJsonFor(
+          backgrounds[index],
+          { ...scene, mediaPreference: body.mediaPreference },
+          roles[index],
+        ),
       })),
     });
 
+    const appended = await prisma.scene.findMany({
+      where: { scriptId, order: { gte: startOrder } },
+      orderBy: { order: "asc" },
+    });
+    for (const [index, row] of appended.entries()) {
+      const decision = mediaDecisions[index];
+      if (!decision?.snapshot || !decision.background) continue;
+      await applyStockMediaSelection(
+        row.id,
+        decision.snapshot,
+        decision.background,
+      );
+      if (decision.snapshot.usageEvent.state === "pending") {
+        await reportStockMediaSelectionUsage(row.id).catch(() => undefined);
+      }
+    }
+
     const updated = await getScript(scriptId);
-    return NextResponse.json({ script: updated });
+    return NextResponse.json({
+      script: updated,
+      mediaDecisions: mediaDecisions.map(
+        ({ state, kind, providerId, attemptedProviders, message }) => ({
+          state,
+          kind,
+          providerId,
+          attemptedProviders,
+          message,
+        }),
+      ),
+    });
   } catch (e) {
     return errorResponse(e);
   }

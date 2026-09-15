@@ -93,6 +93,56 @@ describe("buildHyperframesCompositionHtml", () => {
     expect(html).toContain("syncSubtitles(t)");
   });
 
+  it("emits deterministic muted stock-video timing and cover layout", () => {
+    const html = buildHyperframesCompositionHtml({
+      scenes: [
+        {
+          id: "stock-video",
+          templateId: "hf-opener",
+          text: "Stock footage stays deterministic.",
+          emphasis: [],
+          background: {
+            type: "video",
+            url: "https://videos.example.test/clip.mp4?x=1&y=2",
+            muted: false,
+            stock: true,
+          },
+        },
+      ],
+      timeline: [
+        { sceneId: "stock-video", startFrame: 30, durationFrames: 75 },
+      ],
+      width: 1080,
+      height: 1920,
+      fps: 30,
+      tokens: defaultBrandTokens,
+    });
+
+    expect(html).toContain('id="scene-stock-video-stock-video"');
+    expect(html).toContain(
+      'src="https://videos.example.test/clip.mp4?x=1&amp;y=2"',
+    );
+    expect(html).toContain('data-start="1.000"');
+    expect(html).toContain('data-duration="2.500"');
+    expect(html).toContain('data-media-start="0"');
+    expect(html).toContain('data-track-index="0"');
+    expect(html).toContain("muted playsinline");
+    const videoTag = html.match(
+      /<video id="scene-stock-video-stock-video"[^>]+>/,
+    )?.[0];
+    expect(videoTag).toBeTruthy();
+    expect(videoTag).toContain('data-start="1.000"');
+    expect(videoTag).toContain('data-duration="2.500"');
+    expect(videoTag).not.toContain("crossorigin");
+    expect(html.indexOf(videoTag!)).toBeLessThan(
+      html.indexOf('id="scene-stock-video"'),
+    );
+    expect(html).toContain(
+      ".bg-video { width: 100%; height: 100%; object-fit: cover; }",
+    );
+    expect(html).not.toContain("<video loop");
+  });
+
   it("serializes the shared fade, ducking, and SFX mix contract", () => {
     const html = buildHyperframesCompositionHtml({
       scenes: [

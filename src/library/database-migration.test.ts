@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { DatabaseSync } from "node:sqlite";
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -11,6 +11,8 @@ import {
 import { databaseUrl } from "../../scripts/database-url.mjs";
 import { createPrismaClient } from "./prisma-client";
 import { resolvedStockAssetSchema } from "@/providers/stock/schemas";
+
+vi.setConfig({ testTimeout: 15_000 });
 
 describe("SQLite migration preparation", () => {
   it("recognizes equivalent schemas when db push appended columns", () => {

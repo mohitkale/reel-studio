@@ -100,7 +100,8 @@ const SceneBackgroundLayer = React.memo(function SceneBackgroundLayer({
         <AbsoluteFill style={{ overflow: "hidden" }}>
           <OffthreadVideo
             src={background.url}
-            muted={background.muted ?? true}
+            muted={background.stock ? true : (background.muted ?? true)}
+            startFrom={0}
             onError={() => setFailedUrl(background.url)}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />

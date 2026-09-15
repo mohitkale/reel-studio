@@ -38,4 +38,16 @@ describe("AI production prompts", () => {
     expect(prompt.user).toContain("three materially different opening options");
     expect(prompt.user).toContain("Do not invent claims");
   });
+
+  it("limits AI media output to search intent and honors explicit preference", () => {
+    const prompt = buildPrompt({
+      mode: "idea",
+      brief: "Ocean conservation",
+      mediaPreference: "video",
+    });
+    expect(prompt.system).toContain(
+      "Never return a URL, provider id, or asset id",
+    );
+    expect(prompt.system).toContain("mediaKind must be video");
+  });
 });

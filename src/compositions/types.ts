@@ -30,9 +30,11 @@ export type SceneMood =
 export interface SceneBackground {
   type: "image" | "video";
   url: string;
+  /** Marks provider-selected media so renderers can enforce the stock contract. */
+  stock?: boolean;
   /** Image only. */
   effect?: PanEffect;
-  /** Video only — defaults to true. */
+  /** Video only — defaults to true and is always true for stock media. */
   muted?: boolean;
 }
 

@@ -71,9 +71,15 @@ three different briefs for every preset during release acceptance.
   web process. Run `npm run production:worker` as a second process for continuous
   unattended queue processing. Request handlers also make a best-effort attempt
   to process newly submitted work.
-- Stock media currently means optional Unsplash images. Pexels, Pixabay, Coverr,
-  stock video, provider fallback, local asset caching, and a manual media picker
-  are planned work.
+- The scene editor can search configured Unsplash, Pexels, and Pixabay providers
+  by media kind and orientation, preview attribution, and select, replace, or
+  clear stock backgrounds. Pexels and Pixabay selections are cached locally;
+  compliant Unsplash URLs remain hotlinked. Coverr stays disabled behind its
+  unresolved license gate. Scene and AI creation controls support
+  `auto/image/video/none`; automatic selection uses stable candidate choice and
+  provider fallback while preserving explicit uploads, URLs, and selections.
+  Stock videos render muted with deterministic scene timing and cover crops in
+  both engines, and output records retain their source attribution snapshots.
 - AI planning currently supports Gemini and OpenAI. Ollama and LM Studio are
   planned; the deterministic no-key planner remains available.
 - Caption text and timing are editable. Font, position, box, outline, karaoke,
@@ -118,7 +124,8 @@ Reel Studio is designed for:
 - Product Launch, Editorial Explainer, Creator Punch, Data Story, Developer Demo,
   and Cinematic Brand presets
 - Native portrait, landscape, and square layouts in both engines
-- Uploaded media, bounded public-page text import, or optional Unsplash backgrounds
+- Uploaded media, bounded public-page text import, or optional Pexels, Pixabay,
+  and Unsplash image/video backgrounds
 
 ### Voice
 
@@ -158,14 +165,14 @@ See [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md).
 
 ## Local vs optional cloud
 
-| Feature          | Local option                              | Optional cloud       |
-| ---------------- | ----------------------------------------- | -------------------- |
-| Voice preview    | Web Speech                                | n/a                  |
-| Voice generation | Kokoro / VoiceForge                       | ElevenLabs, Cartesia |
-| Video render     | HyperFrames or Remotion (on your machine) | n/a                  |
-| AI planning      | Manual                                    | Gemini, OpenAI       |
-| Backgrounds      | Upload / gradients                        | Unsplash             |
-| Music            | Bundled CC0 / upload                      | Jamendo              |
+| Feature          | Local option                              | Optional cloud            |
+| ---------------- | ----------------------------------------- | ------------------------- |
+| Voice preview    | Web Speech                                | n/a                       |
+| Voice generation | Kokoro / VoiceForge                       | ElevenLabs, Cartesia      |
+| Video render     | HyperFrames or Remotion (on your machine) | n/a                       |
+| AI planning      | Manual                                    | Gemini, OpenAI            |
+| Backgrounds      | Upload / gradients                        | Pexels, Pixabay, Unsplash |
+| Music            | Bundled CC0 / upload                      | Jamendo                   |
 
 Caption timing can come from an imported SRT/VTT file, provider timing, or the
 scene timeline. For optional offline speech alignment, install
@@ -341,7 +348,16 @@ Full matrix: **[docs/LICENSING.md](docs/LICENSING.md)**.
 
 ### Production regression checks
 
-`npm run test:unit` runs credential-free unit tests. `npm run test:render` renders a legacy fixture through both engines. `npm run release:matrix` renders all six presets through both engines in portrait, landscape, and square layouts. Artifacts stay under `.artifacts/`; the manual Quality workflow retains them for inspection. Rendering requires Chromium and may download it during initial setup. Composition fonts and motion runtime files are bundled locally before frame rendering.
+`npm run test:unit` runs credential-free unit tests. `npm run test:render`
+renders a legacy fixture through both engines. `npm run test:stock-video-render`
+generates a credential-free local video with an audio track, renders it muted
+through both engines in portrait, landscape, and square, and verifies codec,
+dimensions, duration, visible content, and absence of leaked stock audio.
+`npm run release:matrix` renders all six presets through both engines in all
+three layouts. Artifacts stay under `.artifacts/`; the manual Quality workflow
+retains them for inspection. Rendering requires Chromium and may download it
+during initial setup. Composition fonts and motion runtime files are bundled
+locally before frame rendering.
 
 ### Database upgrades
 

@@ -42,6 +42,7 @@ export function mergeGeneratedScene(
         ? { chart: generated.chart }
         : {}),
     mood: generated.mood ?? existing.mood,
+    mediaPreference: existing.mediaPreference ?? "auto",
     ...(generated.musicMood || existing.musicMood
       ? { musicMood: generated.musicMood ?? existing.musicMood }
       : {}),

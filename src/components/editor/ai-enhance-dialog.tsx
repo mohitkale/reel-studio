@@ -28,6 +28,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  MEDIA_PREFERENCES,
+  MEDIA_PREFERENCE_LABELS,
+  type MediaPreference,
+} from "@/lib/media-preference";
 
 const MODES = [
   {
@@ -86,6 +91,8 @@ export function AIEnhanceDialog({
     Record<string, boolean>
   >({});
   const [alternatives, setAlternatives] = React.useState<AIScene[]>([]);
+  const [mediaPreference, setMediaPreference] =
+    React.useState<MediaPreference>("auto");
 
   const configured = (providers ?? []).filter(
     (provider) => provider.configured,
@@ -116,6 +123,7 @@ export function AIEnhanceDialog({
             : undefined,
         sceneIds: mode === "rewrite" ? validSelectedIds : undefined,
         scriptStyle,
+        mediaPreference,
       },
       {
         onSuccess: (result) => {
@@ -131,7 +139,11 @@ export function AIEnhanceDialog({
               description:
                 mode === "rewrite"
                   ? `${result.changedSceneIds?.length ?? validSelectedIds.length} scenes updated; locked content stayed unchanged.`
-                  : "New scenes were added using this project's preset.",
+                  : result.mediaDecisions?.some(
+                        (decision) => decision.state === "selected",
+                      )
+                    ? "New scenes were added with deterministic stock selections where available."
+                    : "New scenes were added; no stock result was available, so mood backgrounds remain.",
             },
           );
         },
@@ -313,10 +325,30 @@ export function AIEnhanceDialog({
             )}
 
             {mode === "append" && scenes.length > 0 && (
-              <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
-                New scenes continue after the existing {scenes.length} and keep
-                the project&apos;s current preset. Undo remains available.
-              </p>
+              <div className="grid gap-2">
+                <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
+                  New scenes continue after the existing {scenes.length} and
+                  keep the project&apos;s current preset. Undo remains
+                  available.
+                </p>
+                <Label htmlFor="append-media-preference">Automatic media</Label>
+                <Combobox
+                  id="append-media-preference"
+                  value={mediaPreference}
+                  onChange={(value) =>
+                    setMediaPreference(value as MediaPreference)
+                  }
+                  options={MEDIA_PREFERENCES.map((value) => ({
+                    value,
+                    label: MEDIA_PREFERENCE_LABELS[value],
+                  }))}
+                  searchPlaceholder="Search preferences…"
+                />
+                <p className="text-muted-foreground text-xs">
+                  Image: Pexels → Pixabay → Unsplash. Video: Pexels → Pixabay.
+                  No result uses the animated mood background.
+                </p>
+              </div>
             )}
 
             {mode === "hook_variants" && openingLocked && (

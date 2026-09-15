@@ -7,7 +7,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import { executeVideoProductionJob } from "@/library/video-production-orchestrator";
 import { serverDefaultTokens } from "@/lib/brand-defaults";
-import { videoSnapshotSchema } from "@/production/video-snapshot";
+import {
+  stockMediaOutputMetadata,
+  videoSnapshotSchema,
+} from "@/production/video-snapshot";
 import type { ClaimedProductionJob } from "@/production/jobs";
 
 const job: ClaimedProductionJob = {
@@ -111,8 +114,87 @@ describe("video production orchestration", () => {
     ]);
     expect(output).toHaveBeenCalledWith(
       "job-1",
-      expect.objectContaining({ format: "mp4", checksum: "sha256:verified" }),
+      expect.objectContaining({
+        format: "mp4",
+        checksum: "sha256:verified",
+        metadata: expect.objectContaining({ stockMedia: [] }),
+      }),
     );
+  });
+
+  it("keeps immutable stock attribution in output metadata", () => {
+    const withStock = videoSnapshotSchema.parse({
+      ...snapshot,
+      stockMedia: [
+        {
+          sceneId: "scene-1",
+          snapshot: {
+            schemaVersion: 1,
+            resolvedAt: "2026-09-15T01:00:00.000Z",
+            localAssetId: "asset-1",
+            contentHash: "b".repeat(64),
+            providerSnapshot: {
+              providerId: "pexels",
+              providerAssetId: "video-42",
+              kind: "video",
+              previewUrl: "https://videos.example.test/preview.mp4",
+              sourcePageUrl: "https://www.example.test/video/42",
+              creator: "Example Creator",
+              creatorUrl: "https://www.example.test/creator",
+              width: 1920,
+              height: 1080,
+              durationSec: 12,
+              orientation: "landscape",
+              mimeType: "video/mp4",
+              renderRenditions: [
+                {
+                  id: "hd",
+                  url: "https://videos.example.test/video.mp4",
+                  width: 1920,
+                  height: 1080,
+                  durationSec: 12,
+                  mimeType: "video/mp4",
+                },
+              ],
+              attribution: {
+                text: "Video by Example Creator",
+                required: true,
+              },
+              acquisitionPolicy: "download",
+            },
+            selectedRendition: {
+              id: "hd",
+              url: "https://videos.example.test/video.mp4",
+              width: 1920,
+              height: 1080,
+              durationSec: 12,
+              mimeType: "video/mp4",
+            },
+            sourceRevision: {
+              capturedAt: "2026-09-15T01:00:00.000Z",
+              termsUrl: "https://www.example.test/license",
+              termsVersion: "2026-09",
+            },
+            usageEvent: { state: "not-required" },
+          },
+        },
+      ],
+    });
+
+    expect(stockMediaOutputMetadata(withStock)).toEqual([
+      expect.objectContaining({
+        sceneId: "scene-1",
+        providerId: "pexels",
+        providerAssetId: "video-42",
+        sourcePageUrl: "https://www.example.test/video/42",
+        attribution: {
+          text: "Video by Example Creator",
+          required: true,
+        },
+        sourceRevision: expect.objectContaining({ termsVersion: "2026-09" }),
+        contentHash: "b".repeat(64),
+      }),
+    ]);
   });
 
   it("stops before rendering when ownership or cancellation heartbeat fails", async () => {

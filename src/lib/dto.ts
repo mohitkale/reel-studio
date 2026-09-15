@@ -7,6 +7,7 @@ import type { VideoEngineId } from "@/engines/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
 import type { CaptionTimingSource, CaptionWord } from "@/lib/captions";
+import type { MediaPreference } from "@/lib/media-preference";
 
 export type { SceneBackground, SceneChartData };
 export type { VideoEngineId };
@@ -36,6 +37,8 @@ export interface SceneDTO {
   emphasis: string[];
   visual?: string;
   background?: SceneBackground;
+  /** Preferred stock-media kind for automatic planning. */
+  mediaPreference?: MediaPreference;
   items?: string[];
   /** Explicit labels and values for chart templates; never inferred from prose. */
   chart?: SceneChartData;

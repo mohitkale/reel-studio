@@ -7,6 +7,7 @@ import { authorize } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
 import { productionChartDataSchema } from "@/production/spec";
+import { mediaPreferenceSchema } from "@/lib/media-preference";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ const backgroundSchema = z.object({
     .enum(["ken-burns", "pan-left", "pan-right", "pan-up", "pan-down"])
     .optional(),
   muted: z.boolean().optional(),
+  stock: z.boolean().optional(),
 });
 
 const sceneMoodSchema = z.enum([
@@ -39,6 +41,7 @@ const patchSchema = z.object({
   visual: z.string().max(2048).nullable().optional(),
   // Per-scene full-bleed background (image/video); null clears it.
   background: backgroundSchema.nullable().optional(),
+  mediaPreference: mediaPreferenceSchema.optional(),
   // List items for list/checklist templates; null/empty clears them.
   items: z.array(z.string().max(280)).max(24).nullable().optional(),
   // Exact labels and values for a chart; null clears chart data.

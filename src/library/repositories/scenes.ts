@@ -5,6 +5,7 @@ import { prisma } from "@/library/db";
 import { ProviderError } from "@/providers/voice/types";
 import { sceneConfigSchema, parseJsonColumn } from "../schemas";
 import type { SceneLocks } from "../schemas";
+import type { MediaPreference } from "@/lib/media-preference";
 import { toSceneDTO } from "./map";
 
 export async function addScene(
@@ -46,6 +47,7 @@ export async function updateScene(
     emphasis?: string[];
     visual?: string | null;
     background?: SceneBackground | null;
+    mediaPreference?: MediaPreference;
     items?: string[] | null;
     /** Structured chart values; null clears them. */
     chart?: SceneChartData | null;
@@ -63,8 +65,10 @@ export async function updateScene(
   // Structured scene options live together in the layoutJson config
   // blob; merge so updating one never clobbers the others.
   let layoutJson: string | undefined;
+  let clearStockSelection = false;
   if (
     data.background !== undefined ||
+    data.mediaPreference !== undefined ||
     data.items !== undefined ||
     data.chart !== undefined ||
     data.mood !== undefined ||
@@ -77,8 +81,19 @@ export async function updateScene(
     });
     const config = parseJsonColumn(current?.layoutJson, sceneConfigSchema, {});
     if (data.background !== undefined) {
+      const previousUrl = config.background?.url;
       if (data.background === null) delete config.background;
       else config.background = data.background;
+      clearStockSelection =
+        data.background === null || data.background.url !== previousUrl;
+      if (data.background) config.mediaPreference = data.background.type;
+    }
+    if (data.mediaPreference !== undefined) {
+      config.mediaPreference = data.mediaPreference;
+      if (data.mediaPreference === "none") {
+        delete config.background;
+        clearStockSelection = true;
+      }
     }
     if (data.items !== undefined) {
       if (data.items === null || data.items.length === 0) delete config.items;
@@ -113,7 +128,7 @@ export async function updateScene(
     }
   }
 
-  const scene = await prisma.scene.update({
+  const update = prisma.scene.update({
     where: { id },
     data: {
       text: data.text,
@@ -130,6 +145,14 @@ export async function updateScene(
           : undefined,
     },
   });
+  const scene = clearStockSelection
+    ? (
+        await prisma.$transaction([
+          update,
+          prisma.stockMediaSelection.deleteMany({ where: { sceneId: id } }),
+        ])
+      )[0]
+    : await update;
   return toSceneDTO(scene);
 }
 

@@ -68,6 +68,7 @@ function buildResponseSchema(input: GeneratePlanInput) {
             visual: { type: "string" },
             items: { type: "array", items: { type: "string" } },
             backgroundQuery: { type: "string" },
+            mediaKind: { type: "string" },
             // Plain string (not enum) to keep Gemini's schema state budget small;
             // aiSceneSchema validates/normalizes it to a real pan effect.
             effect: { type: "string" },

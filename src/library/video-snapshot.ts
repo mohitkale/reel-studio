@@ -1,5 +1,6 @@
 import { getScript } from "@/library/repositories/scripts";
 import { videoSnapshotSchema } from "@/production/video-snapshot";
+import { listScriptStockMediaSelections } from "@/library/repositories/stock-media-selections";
 
 export async function captureVideoSnapshot(
   scriptId: string,
@@ -12,5 +13,11 @@ export async function captureVideoSnapshot(
     : null;
   if (voiceTakeId && !take)
     throw new Error("Voice take does not belong to this script");
-  return videoSnapshotSchema.parse({ version: 1, script, take: take ?? null });
+  const stockMedia = await listScriptStockMediaSelections(scriptId);
+  return videoSnapshotSchema.parse({
+    version: 1,
+    script,
+    take: take ?? null,
+    stockMedia,
+  });
 }

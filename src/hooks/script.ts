@@ -15,6 +15,7 @@ import type {
 } from "@/lib/dto";
 import type { ProviderId } from "@/providers/voice/types";
 import type { Orientation } from "@/lib/orientation";
+import type { MediaPreference } from "@/lib/media-preference";
 import type { VideoEngineId } from "@/engines/types";
 import type { AIScene, ScriptStyle } from "@/providers/ai/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
@@ -357,6 +358,7 @@ export function useUpdateScene(scriptId: string) {
       emphasis?: string[];
       visual?: string | null;
       background?: SceneBackground | null;
+      mediaPreference?: MediaPreference;
       items?: string[] | null;
       chart?: SceneChartData | null;
       hideText?: boolean | null;
@@ -396,6 +398,14 @@ export function useUpdateScene(scriptId: string) {
                     : {}),
                   ...(vars.background !== undefined
                     ? { background: vars.background ?? undefined }
+                    : {}),
+                  ...(vars.mediaPreference !== undefined
+                    ? {
+                        mediaPreference: vars.mediaPreference,
+                        ...(vars.mediaPreference === "none"
+                          ? { background: undefined }
+                          : {}),
+                      }
                     : {}),
                   ...(vars.items !== undefined
                     ? { items: vars.items ?? undefined }
@@ -673,11 +683,17 @@ export function useEnhanceScript(scriptId: string) {
       sceneCount?: number;
       sceneIds?: string[];
       scriptStyle?: ScriptStyle;
+      mediaPreference?: MediaPreference;
     }) =>
       apiPost<{
         script: ScriptDTO;
         alternatives?: AIScene[];
         changedSceneIds?: string[];
+        mediaDecisions?: Array<{
+          state: string;
+          message: string;
+          attemptedProviders: string[];
+        }>;
       }>(`/api/scripts/${scriptId}/ai`, vars),
     onSuccess: invalidate,
   });

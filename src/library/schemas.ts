@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { assertSafeMediaUrl } from "@/lib/media-url-safety";
 import { productionChartDataSchema } from "@/production/spec";
+import { mediaPreferenceSchema } from "@/lib/media-preference";
 import { productionPresetIdSchema } from "@/production/presets";
 import { productionSceneRoleSchema } from "@/production/roles";
 
@@ -113,6 +114,7 @@ export const sceneBackgroundSchema = z.object({
     }),
   effect: panEffectSchema.optional(),
   muted: z.boolean().optional(),
+  stock: z.boolean().optional(),
 });
 
 // Broad emotional/visual moods a scene can carry, used to auto-select a
@@ -143,6 +145,8 @@ export const DEFAULT_SCENE_LOCKS: SceneLocks = {
 /** Per-scene config stored in the Scene.layoutJson column. */
 export const sceneConfigSchema = z.object({
   background: sceneBackgroundSchema.optional(),
+  /** Automatic stock-media preference; explicit scene backgrounds still win. */
+  mediaPreference: mediaPreferenceSchema.optional(),
   items: z.array(z.string()).optional(),
   chart: productionChartDataSchema.optional(),
   /** Emotional/visual tone, drives the dynamic background treatment + music. */

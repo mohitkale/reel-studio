@@ -8,7 +8,9 @@ import {
   enrichScenePlan,
   resolvePlanVisualStyle,
 } from "@/library/enrich-scene-plan";
-import { resolveSceneBackgrounds } from "@/library/stock-backgrounds";
+import { resolveAutomaticSceneMediaBatch } from "@/library/automatic-stock-media";
+import { reportStockMediaSelectionUsage } from "@/library/stock-media-usage";
+import { getScript } from "@/library/repositories/scripts";
 import { autoAttachBundledMusic } from "@/library/soundtrack-service";
 import { ensureSfxCues } from "@/library/sfx-service";
 import { orientationSchema, DEFAULT_ORIENTATION } from "@/lib/orientation";
@@ -20,6 +22,7 @@ import {
   productionPresetIdSchema,
 } from "@/production/presets";
 import { applyPresetToAIPlan } from "@/production/ai-preset-plan";
+import { mediaPreferenceSchema } from "@/lib/media-preference";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,6 +44,7 @@ const bodySchema = z.object({
   /** "auto" lets the AI choose; otherwise lock Energy. */
   energy: z.enum(["auto", "calm", "normal", "high"]).optional(),
   productionPresetId: productionPresetIdSchema.default("product-launch"),
+  mediaPreference: mediaPreferenceSchema.default("auto"),
 });
 
 /** POST /api/projects/ai - generate a scene plan from a brief and create the project. */
@@ -84,6 +88,7 @@ export async function POST(req: Request) {
       styleId: styleLock,
       energy: energyLock,
       productionPresetId: body.productionPresetId,
+      mediaPreference: body.mediaPreference,
     });
     const enriched = {
       ...raw,
@@ -94,12 +99,12 @@ export async function POST(req: Request) {
       energy: energyLock,
     });
 
-    // Best-effort: turn the director's backgroundQuery hints into real stock
-    // backgrounds (no-op when no Unsplash key is configured).
-    const backgrounds = await resolveSceneBackgrounds(
+    const mediaDecisions = await resolveAutomaticSceneMediaBatch(
       enriched.scenes,
       orientation,
+      enriched.scenes.map(() => body.mediaPreference),
     );
+    const backgrounds = mediaDecisions.map((decision) => decision.background);
     const { plan, roles } = applyPresetToAIPlan(
       enriched,
       body.productionPresetId,
@@ -119,15 +124,34 @@ export async function POST(req: Request) {
           version: preset.version,
         },
         roles,
+        mediaPreferences: enriched.scenes.map(() => body.mediaPreference),
+        stockSelections: mediaDecisions.map((decision) => decision.snapshot),
         outputType: "video",
         creationSource: { kind: "text" },
       },
     );
+    const persisted = await getScript(created.scriptId);
+    for (const scene of persisted?.scenes ?? []) {
+      await reportStockMediaSelectionUsage(scene.id).catch(() => undefined);
+    }
     // One-click soundtrack: attach bundled BGM from scene mood/musicMood.
     await autoAttachBundledMusic(created.scriptId);
     await ensureSfxCues(created.scriptId);
     return NextResponse.json(
-      { ...created, plan, visualStyle },
+      {
+        ...created,
+        plan,
+        visualStyle,
+        mediaDecisions: mediaDecisions.map(
+          ({ state, kind, providerId, attemptedProviders, message }) => ({
+            state,
+            kind,
+            providerId,
+            attemptedProviders,
+            message,
+          }),
+        ),
+      },
       { status: 201 },
     );
   } catch (e) {

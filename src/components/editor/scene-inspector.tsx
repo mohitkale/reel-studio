@@ -26,6 +26,13 @@ import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AssetThumbPicker } from "@/components/assets/asset-thumb-picker";
+import { StockMediaPicker } from "@/components/editor/stock-media-picker";
+import type { Orientation } from "@/lib/orientation";
+import {
+  MEDIA_PREFERENCES,
+  MEDIA_PREFERENCE_LABELS,
+  type MediaPreference,
+} from "@/lib/media-preference";
 
 const VISUAL_HINTS: Record<string, string> = {
   "stat-reveal": "Key stat or number (e.g. 73% or 10x)",
@@ -70,6 +77,7 @@ type UpdateVars = {
   emphasis?: string[];
   visual?: string | null;
   background?: SceneBackground | null;
+  mediaPreference?: MediaPreference;
   items?: string[] | null;
   hideText?: boolean | null;
   locks?: { copy: boolean; assets: boolean; scene: boolean };
@@ -129,11 +137,21 @@ function VideoUrlStatus({ url }: { url: string }) {
 /* ------------------------------------------------------------------ */
 
 function BackgroundEditor({
+  scriptId,
+  sceneId,
+  orientation,
+  mediaPreference,
   background,
   onChange,
+  onPreferenceChange,
 }: {
+  scriptId: string;
+  sceneId: string;
+  orientation: Orientation;
+  mediaPreference: MediaPreference;
   background: SceneBackground | undefined;
   onChange: (bg: SceneBackground | null) => void;
+  onPreferenceChange: (preference: MediaPreference) => void;
 }) {
   // Kind + draft fields are local UI state (initialized from the scene; the
   // parent SceneInspector is keyed by scene.id so this remounts per scene). We
@@ -166,8 +184,25 @@ function BackgroundEditor({
     }
     onChange(
       next.kind === "image"
-        ? { type: "image", url: next.url.trim(), effect: next.effect }
-        : { type: "video", url: next.url.trim(), muted: next.muted },
+        ? {
+            type: "image",
+            url: next.url.trim(),
+            effect: next.effect,
+            ...(background?.stock && background.url === next.url.trim()
+              ? { stock: true }
+              : {}),
+          }
+        : {
+            type: "video",
+            url: next.url.trim(),
+            muted:
+              background?.stock && background.url === next.url.trim()
+                ? true
+                : next.muted,
+            ...(background?.stock && background.url === next.url.trim()
+              ? { stock: true }
+              : {}),
+          },
     );
   }
 
@@ -192,6 +227,19 @@ function BackgroundEditor({
   function changeMuted(next: boolean) {
     setMuted(next);
     commit({ kind, url, effect, muted: next });
+  }
+
+  function applyStockBackground(next: SceneBackground | null) {
+    const nextKind = backgroundKind(next ?? undefined);
+    setKind(nextKind);
+    setUrl(next?.url ?? "");
+    setEffect(next?.effect ?? "ken-burns");
+    setMuted(next?.muted ?? true);
+  }
+
+  function changePreference(next: MediaPreference) {
+    if (next === "none") applyStockBackground(null);
+    onPreferenceChange(next);
   }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -231,6 +279,45 @@ function BackgroundEditor({
           ))}
         </div>
       </div>
+
+      <div className="grid gap-1.5">
+        <Label className="text-muted-foreground text-xs">
+          Automatic media preference
+        </Label>
+        <div className="grid grid-cols-4 rounded-md border p-0.5">
+          {MEDIA_PREFERENCES.map((preference) => (
+            <button
+              key={preference}
+              type="button"
+              aria-pressed={mediaPreference === preference}
+              onClick={() => changePreference(preference)}
+              className={cn(
+                "rounded px-1.5 py-1 text-xs transition-colors",
+                mediaPreference === preference
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {MEDIA_PREFERENCE_LABELS[preference]}
+            </button>
+          ))}
+        </div>
+        <p className="text-muted-foreground text-[11px]">
+          {mediaPreference === "none"
+            ? "Automatic stock search is disabled; the animated mood background is used."
+            : mediaPreference === "video"
+              ? "Auto tries Pexels, then Pixabay. No result keeps the animated mood background."
+              : "Auto tries Pexels, Pixabay, then Unsplash for images. An existing upload or selection always stays in place."}
+        </p>
+      </div>
+
+      <StockMediaPicker
+        scriptId={scriptId}
+        sceneId={sceneId}
+        orientation={orientation}
+        imageEffect={effect}
+        onApplied={applyStockBackground}
+      />
 
       {kind !== "none" && (
         <>
@@ -291,11 +378,14 @@ function BackgroundEditor({
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
-                  checked={muted}
+                  checked={background?.stock ? true : muted}
+                  disabled={background?.stock}
                   onChange={(e) => changeMuted(e.target.checked)}
                   className="border-border size-4 rounded"
                 />
-                Mute video audio track
+                {background?.stock
+                  ? "Stock video audio is always muted"
+                  : "Mute video audio track"}
               </label>
               {url.trim() ? <VideoUrlStatus url={url} /> : null}
             </>
@@ -430,6 +520,7 @@ export function SceneInspector({
   onDelete,
   saving,
   videoEngine = "remotion",
+  orientation = "portrait",
 }: {
   scene: SceneDTO;
   sceneIndex: number;
@@ -439,6 +530,7 @@ export function SceneInspector({
   onDelete: (id: string) => void;
   saving?: boolean;
   videoEngine?: VideoEngineId;
+  orientation?: Orientation;
 }) {
   const [text, setText] = React.useState(scene.text);
   const [spokenText, setSpokenText] = React.useState(
@@ -624,8 +716,15 @@ export function SceneInspector({
 
         {/* Background (image/video) — available for every template */}
         <BackgroundEditor
+          scriptId={scene.scriptId}
+          sceneId={scene.id}
+          orientation={orientation}
+          mediaPreference={scene.mediaPreference ?? "auto"}
           background={scene.background}
           onChange={(bg) => onUpdate({ id: scene.id, background: bg })}
+          onPreferenceChange={(mediaPreference) =>
+            onUpdate({ id: scene.id, mediaPreference })
+          }
         />
 
         {/* Per-scene on-screen text override (wins over the global Text toggle). */}
