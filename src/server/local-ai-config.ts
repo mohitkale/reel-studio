@@ -73,7 +73,7 @@ function defaultProvider(id: LocalAIProviderId): StoredProvider {
 }
 
 export function createLocalAIConfigStore(filePath = defaultFilePath()) {
-  let pendingWrite = Promise.resolve();
+  let pendingMutation = Promise.resolve();
 
   async function read(): Promise<LocalAIConfigFile> {
     try {
@@ -88,19 +88,24 @@ export function createLocalAIConfigStore(filePath = defaultFilePath()) {
   }
 
   async function write(config: LocalAIConfigFile): Promise<void> {
-    const operation = pendingWrite.then(async () => {
-      const directory = path.dirname(filePath);
-      const temporary = `${filePath}.${process.pid}.tmp`;
-      await fs.mkdir(directory, { recursive: true, mode: 0o700 });
-      await fs.writeFile(temporary, `${JSON.stringify(config, null, 2)}\n`, {
-        encoding: "utf8",
-        mode: 0o600,
-      });
-      await fs.rename(temporary, filePath);
-      await fs.chmod(filePath, 0o600);
+    const directory = path.dirname(filePath);
+    const temporary = `${filePath}.${process.pid}.tmp`;
+    await fs.mkdir(directory, { recursive: true, mode: 0o700 });
+    await fs.writeFile(temporary, `${JSON.stringify(config, null, 2)}\n`, {
+      encoding: "utf8",
+      mode: 0o600,
     });
-    pendingWrite = operation.catch(() => undefined);
-    return operation;
+    await fs.rename(temporary, filePath);
+    await fs.chmod(filePath, 0o600);
+  }
+
+  function mutate<T>(operation: () => Promise<T>): Promise<T> {
+    const result = pendingMutation.then(operation);
+    pendingMutation = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
   }
 
   async function save(
@@ -112,45 +117,49 @@ export function createLocalAIConfigStore(filePath = defaultFilePath()) {
       parsed.baseUrl,
       parsed.allowLan,
     );
-    const current = await read();
-    const previous = current.providers[id];
-    const token =
-      id === "lm-studio"
-        ? parsed.token === undefined
-          ? previous?.token
-          : parsed.token.trim() || undefined
-        : undefined;
-    current.providers[id] = {
-      ...parsed,
-      baseUrl: endpoint.baseUrl,
-      token,
-      endpointScope: endpoint.scope,
-      diagnostic:
-        previous?.baseUrl === endpoint.baseUrl &&
-        previous.modelId === parsed.modelId
-          ? previous.diagnostic
-          : undefined,
-    };
-    await write(current);
-    return view(id, current.providers[id]);
+    return mutate(async () => {
+      const current = await read();
+      const previous = current.providers[id];
+      const token =
+        id === "lm-studio"
+          ? parsed.token === undefined
+            ? previous?.token
+            : parsed.token.trim() || undefined
+          : undefined;
+      current.providers[id] = {
+        ...parsed,
+        baseUrl: endpoint.baseUrl,
+        token,
+        endpointScope: endpoint.scope,
+        diagnostic:
+          previous?.baseUrl === endpoint.baseUrl &&
+          previous.modelId === parsed.modelId
+            ? previous.diagnostic
+            : undefined,
+      };
+      await write(current);
+      return view(id, current.providers[id]);
+    });
   }
 
   async function recordDiagnostic(
     id: LocalAIProviderId,
     diagnostic: z.infer<typeof diagnosticSchema>,
   ): Promise<void> {
-    const current = await read();
     const parsed = diagnosticSchema.parse(diagnostic);
-    const previous = current.providers[id] ?? defaultProvider(id);
-    current.providers[id] = {
-      ...previous,
-      diagnostic: parsed,
-      lastSuccessfulDiscovery:
-        parsed.modelIds && parsed.checkedAt
-          ? { checkedAt: parsed.checkedAt, modelIds: parsed.modelIds }
-          : previous.lastSuccessfulDiscovery,
-    };
-    await write(current);
+    return mutate(async () => {
+      const current = await read();
+      const previous = current.providers[id] ?? defaultProvider(id);
+      current.providers[id] = {
+        ...previous,
+        diagnostic: parsed,
+        lastSuccessfulDiscovery:
+          parsed.modelIds && parsed.checkedAt
+            ? { checkedAt: parsed.checkedAt, modelIds: parsed.modelIds }
+            : previous.lastSuccessfulDiscovery,
+      };
+      await write(current);
+    });
   }
 
   function view(

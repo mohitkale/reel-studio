@@ -158,7 +158,8 @@ export function CreateWithAIDialog() {
 
         {configured.length === 0 ? (
           <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm">
-            No AI provider configured. Add a Gemini or OpenAI key in{" "}
+            No AI provider configured. Add a cloud key or select a local model
+            in{" "}
             <Link href="/settings" className="text-primary underline">
               Settings
             </Link>{" "}

@@ -44,4 +44,32 @@ describe("local AI config store", () => {
       }),
     ).rejects.toThrow();
   });
+
+  it("serializes concurrent provider updates without losing either provider", async () => {
+    const directory = await mkdtemp(path.join(tmpdir(), "reel-local-ai-"));
+    const store = createLocalAIConfigStore(path.join(directory, "config.json"));
+
+    await Promise.all([
+      store.save("ollama", {
+        baseUrl: "http://127.0.0.1:11434",
+        modelId: "qwen2.5:7b",
+        temperature: 0.3,
+        allowLan: false,
+      }),
+      store.save("lm-studio", {
+        baseUrl: "http://127.0.0.1:1234",
+        modelId: "qwen2.5-7b-instruct",
+        temperature: 0.4,
+        allowLan: false,
+      }),
+    ]);
+
+    await expect(store.list()).resolves.toEqual([
+      expect.objectContaining({ id: "ollama", modelId: "qwen2.5:7b" }),
+      expect.objectContaining({
+        id: "lm-studio",
+        modelId: "qwen2.5-7b-instruct",
+      }),
+    ]);
+  });
 });

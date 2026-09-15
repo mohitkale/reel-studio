@@ -80,8 +80,10 @@ three different briefs for every preset during release acceptance.
   provider fallback while preserving explicit uploads, URLs, and selections.
   Stock videos render muted with deterministic scene timing and cover crops in
   both engines, and output records retain their source attribution snapshots.
-- AI planning currently supports Gemini and OpenAI. Ollama and LM Studio are
-  planned; the deterministic no-key planner remains available.
+- AI planning supports Gemini, OpenAI, Ollama, and LM Studio. Ollama and LM
+  Studio use local endpoints configured in Settings; an absent local server is
+  reported as an optional provider status. The deterministic no-key planner
+  remains available.
 - Caption text and timing are editable. Font, position, box, outline, karaoke,
   and other caption appearance controls are planned.
 - The catalog is pinned for reproducible saved projects. It does not
@@ -120,7 +122,8 @@ Reel Studio is designed for:
 ### Create
 
 - Four-step production wizard plus the full scene editor
-- Deterministic no-key planning and optional Gemini / OpenAI planning
+- Deterministic no-key planning and optional Gemini / OpenAI / Ollama / LM
+  Studio planning
 - Product Launch, Editorial Explainer, Creator Punch, Data Story, Developer Demo,
   and Cinematic Brand presets
 - Native portrait, landscape, and square layouts in both engines
@@ -170,7 +173,7 @@ See [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md).
 | Voice preview    | Web Speech                                | n/a                       |
 | Voice generation | Kokoro / VoiceForge                       | ElevenLabs, Cartesia      |
 | Video render     | HyperFrames or Remotion (on your machine) | n/a                       |
-| AI planning      | Manual                                    | Gemini, OpenAI            |
+| AI planning      | Manual, Ollama, or LM Studio              | Gemini, OpenAI            |
 | Backgrounds      | Upload / gradients                        | Pexels, Pixabay, Unsplash |
 | Music            | Bundled CC0 / upload                      | Jamendo                   |
 
@@ -232,6 +235,29 @@ docker compose up --build
 Compose publishes **`127.0.0.1:3000` only** (not your LAN).
 For continuous queue processing in the current development compose setup, run
 `docker compose exec app npm run production:worker` in another terminal.
+
+To use a model server running on the Docker host, set its local AI endpoint in
+Settings to `http://host.docker.internal:11434` for Ollama or
+`http://host.docker.internal:1234` for LM Studio and explicitly enable LAN
+access for that provider. This opt-in affects only local AI calls; public media
+imports continue to reject private-network targets and redirects.
+
+### Local AI planning
+
+Start Ollama or LM Studio separately, then open **Settings → Local AI director**.
+Save the loopback endpoint, run **Check connection**, choose a discovered model,
+and save again. Reel Studio does not install, start, or download local models.
+
+- Ollama default: `http://127.0.0.1:11434`; the deterministic fixture targets
+  `qwen2.5:7b` or another current 7B+ instruction model with JSON-schema support.
+- LM Studio default: `http://127.0.0.1:1234`; load a current 7B+ instruction
+  model such as a Qwen 2.5 7B Instruct build. Add a local token only if the LM
+  Studio server requires one.
+
+Local configuration is stored in `.data/local-ai-config.json` with owner-only
+permissions, separately from cloud keys in `.env.local`. Loopback HTTP works by
+default. Private LAN endpoints require explicit opt-in; public or mixed DNS
+answers, URL credentials, and redirects are rejected.
 
 ## MCP integration
 

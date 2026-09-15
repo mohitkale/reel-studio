@@ -165,11 +165,13 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">AI director (optional)</CardTitle>
+          <CardTitle className="text-base">
+            Cloud AI director (optional)
+          </CardTitle>
           <CardDescription>
             Add a Gemini or OpenAI key to generate a full scene plan from a one
-            line idea or a pasted story. The manual editor always works without
-            this.
+            line idea or a pasted story. Cloud credentials stay separate from
+            local AI configuration.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

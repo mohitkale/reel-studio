@@ -51,6 +51,7 @@ touches the database directly. By design it can do everything an editor can
 - **Read:** `list_projects`, `list_video_engines`, `list_production_presets`, `get_script`, `list_takes`,
   `list_scene_clips`, `get_captions`, `list_renders`, `get_render`,
   `list_voice_providers`, `list_voices`, `list_voice_models`, `list_ai_providers`
+  (Gemini, OpenAI, Ollama, and LM Studio when configured)
 - **Create / edit:** `create_project`, `ai_create_project`, `assign_brand_kit`,
   `update_script`, `set_music`, `add_scene`, `update_scene`, `reorder_scenes`,
   `ai_generate_scenes`, `create_voice_take`, `get_voice_job`,
