@@ -122,6 +122,7 @@ export function resolveProductionComposition(
     captions: {
       enabled: spec.captions.enabled,
       timingSource: spec.captions.timingSource,
+      style: spec.captions.style,
       cues: spec.captions.cues.map((cue) => ({
         ...cue,
         words: cue.words?.map((word) => ({ ...word })),

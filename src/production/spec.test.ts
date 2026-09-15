@@ -219,6 +219,7 @@ describe("legacy production specification", () => {
     spec.captions = {
       enabled: true,
       timingSource: "imported",
+      style: spec.captions.style,
       cues: [
         {
           id: "cue-1",

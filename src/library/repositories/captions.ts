@@ -1,4 +1,9 @@
 import type { CaptionCue, CaptionTimingSource } from "@/lib/captions";
+import {
+  captionStyleSnapshotSchema,
+  LEGACY_CAPTION_STYLE,
+  type CaptionStyleSnapshot,
+} from "@/lib/caption-style";
 import type { CaptionTrackDTO } from "@/lib/dto";
 import { prisma } from "@/library/db";
 import {
@@ -32,6 +37,11 @@ function toCaptionTrackDTO(
     language: track.language,
     timingSource,
     enabled: track.enabled,
+    style: parseJsonColumn(
+      track.styleJson,
+      captionStyleSnapshotSchema,
+      LEGACY_CAPTION_STYLE,
+    ),
     cues: (track.cues ?? []).map((cue) => ({
       id: cue.id,
       order: cue.order,
@@ -62,6 +72,7 @@ export async function replaceCaptionTrack(input: {
   language?: string;
   timingSource: CaptionTimingSource;
   enabled?: boolean;
+  style?: CaptionStyleSnapshot;
   cues: CaptionCue[];
 }): Promise<CaptionTrackDTO> {
   const track = await prisma.$transaction(async (tx) => {
@@ -80,6 +91,8 @@ export async function replaceCaptionTrack(input: {
           language: input.language,
           timingSource: input.timingSource,
           enabled: input.enabled,
+          styleJson:
+            input.style === undefined ? undefined : JSON.stringify(input.style),
         },
       });
       if (updated.count !== 1) {
@@ -94,6 +107,7 @@ export async function replaceCaptionTrack(input: {
           language: input.language,
           timingSource: input.timingSource,
           enabled: input.enabled,
+          styleJson: input.style ? JSON.stringify(input.style) : null,
         },
       });
       id = created.id;
@@ -114,6 +128,26 @@ export async function replaceCaptionTrack(input: {
       where: { id },
       include: { cues: { orderBy: { order: "asc" } } },
     });
+  });
+  return toCaptionTrackDTO(track);
+}
+
+export async function updateCaptionTrackStyle(
+  scriptId: string,
+  trackId: string,
+  style: CaptionStyleSnapshot,
+): Promise<CaptionTrackDTO> {
+  const parsed = captionStyleSnapshotSchema.parse(style);
+  const result = await prisma.captionTrack.updateMany({
+    where: { id: trackId, scriptId },
+    data: { styleJson: JSON.stringify(parsed) },
+  });
+  if (result.count !== 1) {
+    throw new ProviderError("Caption track not found", 404);
+  }
+  const track = await prisma.captionTrack.findUniqueOrThrow({
+    where: { id: trackId },
+    include: { cues: { orderBy: { order: "asc" } } },
   });
   return toCaptionTrackDTO(track);
 }

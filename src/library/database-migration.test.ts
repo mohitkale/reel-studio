@@ -147,6 +147,12 @@ describe("SQLite migration preparation", () => {
         "utf8",
       ),
     );
+    db.exec(
+      readFileSync(
+        "prisma/migrations/20260915000100_caption_styles/migration.sql",
+        "utf8",
+      ),
+    );
     db.close();
     process.env.DATABASE_URL = `file:${filename}`;
     const client = createPrismaClient();
@@ -181,6 +187,50 @@ describe("SQLite migration preparation", () => {
       if (previous === undefined) delete process.env.DATABASE_URL;
       else process.env.DATABASE_URL = previous;
       rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("adds nullable caption styles without restyling saved caption tracks", () => {
+    const db = new DatabaseSync(":memory:");
+    try {
+      db.exec(
+        readFileSync(
+          "prisma/migrations/20260910000100_baseline/migration.sql",
+          "utf8",
+        ),
+      );
+      db.exec(
+        readFileSync(
+          "prisma/migrations/20260912000100_caption_tracks/migration.sql",
+          "utf8",
+        ),
+      );
+      db.exec(`
+        INSERT INTO Project (id,name,updatedAt) VALUES ('saved','Existing project',CURRENT_TIMESTAMP);
+        INSERT INTO Script (id,projectId,name,updatedAt) VALUES ('script','saved','Existing script',CURRENT_TIMESTAMP);
+        INSERT INTO CaptionTrack (id,scriptId,label,language,timingSource,enabled,updatedAt)
+          VALUES ('captions','script','Saved subtitles','en','imported',1,CURRENT_TIMESTAMP);
+      `);
+      db.exec(
+        readFileSync(
+          "prisma/migrations/20260915000100_caption_styles/migration.sql",
+          "utf8",
+        ),
+      );
+      expect(
+        db
+          .prepare(
+            "SELECT label, timingSource, enabled, styleJson FROM CaptionTrack WHERE id='captions'",
+          )
+          .get(),
+      ).toEqual({
+        label: "Saved subtitles",
+        timingSource: "imported",
+        enabled: 1,
+        styleJson: null,
+      });
+    } finally {
+      db.close();
     }
   });
 

@@ -2,12 +2,17 @@ import { z } from "zod";
 
 import { coverFrames } from "@/compositions/types";
 import { buildCaptions, parseCaptions, type CaptionCue } from "@/lib/captions";
+import {
+  captionStyleForProductionPreset,
+  captionStyleSnapshotSchema,
+} from "@/lib/caption-style";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveSpokenText } from "@/lib/spoken-text";
 import {
   getCaptionAudioSource,
   replaceCaptionTrack,
   setCaptionTrackEnabled,
+  updateCaptionTrackStyle,
 } from "@/library/repositories/captions";
 import { getScript } from "@/library/repositories/scripts";
 import { getAssetStore } from "@/library/storage";
@@ -42,6 +47,11 @@ const postSchema = z.discriminatedUnion("action", [
     action: z.literal("set_enabled"),
     trackId: z.string(),
     enabled: z.boolean(),
+  }),
+  z.object({
+    action: z.literal("set_style"),
+    trackId: z.string(),
+    style: captionStyleSnapshotSchema,
   }),
   z.object({
     action: z.literal("transcribe"),
@@ -149,6 +159,14 @@ export async function POST(
       );
       return Response.json({ track });
     }
+    if (body.action === "set_style") {
+      const track = await updateCaptionTrackStyle(
+        scriptId,
+        body.trackId,
+        body.style,
+      );
+      return Response.json({ track });
+    }
     if (body.action === "transcribe") {
       const source = await getCaptionAudioSource(scriptId, body.takeId);
       const cues = await transcribeWithWhisperCpp({
@@ -163,6 +181,11 @@ export async function POST(
         language: body.language,
         timingSource: "local-transcription",
         enabled: true,
+        style:
+          script.captionTracks?.find(
+            (candidate) => candidate.id === body.trackId,
+          )?.style ??
+          captionStyleForProductionPreset(script.productionPreset?.id),
         cues,
       });
       return Response.json({ track }, { status: body.trackId ? 200 : 201 });
@@ -194,6 +217,10 @@ export async function POST(
       language: body.action === "import" ? body.language : undefined,
       timingSource: body.action === "import" ? "imported" : "estimated",
       enabled: true,
+      style:
+        script.captionTracks?.find((candidate) => candidate.id === body.trackId)
+          ?.style ??
+        captionStyleForProductionPreset(script.productionPreset?.id),
       cues,
     });
     return Response.json({ track }, { status: body.trackId ? 200 : 201 });

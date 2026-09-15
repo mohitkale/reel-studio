@@ -4,6 +4,10 @@ import { ENERGY_IDS, STYLE_IDS } from "@/compositions/visual-style";
 import { VIDEO_ENGINE_IDS } from "@/engines/types";
 import { ORIENTATIONS } from "@/lib/orientation";
 import {
+  captionStyleSnapshotSchema,
+  LEGACY_CAPTION_STYLE,
+} from "@/lib/caption-style";
+import {
   getProductionPreset,
   productionPresetIdSchema,
 } from "@/production/presets";
@@ -228,6 +232,7 @@ export const productionSpecSchema = z
         "estimated",
         "imported",
       ]),
+      style: captionStyleSnapshotSchema.default(LEGACY_CAPTION_STYLE),
       cues: z.array(captionCueSchema),
     }),
     presentation: z.object({
