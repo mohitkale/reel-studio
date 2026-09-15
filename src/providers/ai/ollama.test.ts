@@ -178,40 +178,71 @@ describe("Ollama provider", () => {
       }),
     ).rejects.toMatchObject({ status: 499 });
 
-    vi.stubGlobal(
-      "fetch",
-      vi
-        .fn()
-        .mockImplementationOnce(async () => modelsResponse())
-        .mockImplementationOnce(async () => chatResponse("not-json")),
-    );
+    const malformedFetch = vi
+      .fn()
+      .mockImplementationOnce(async () => modelsResponse())
+      .mockImplementationOnce(async () => chatResponse("not-json"))
+      .mockImplementationOnce(async () => modelsResponse())
+      .mockImplementationOnce(async () => chatResponse("still-not-json"));
+    vi.stubGlobal("fetch", malformedFetch);
     await expect(
       createOllamaProvider(fixtureStore()).generatePlan({
         mode: "idea",
         brief: "Malformed",
       }),
-    ).rejects.toThrow("malformed JSON");
+    ).rejects.toThrow("repair was exhausted after one attempt");
+    expect(
+      malformedFetch.mock.calls.filter(
+        ([url]) => new URL(String(url)).pathname === "/api/chat",
+      ),
+    ).toHaveLength(2);
 
+    const invalidPlan = {
+      projectName: "Bad",
+      scriptName: "Bad",
+      scenes: [{ text: "Bad", templateId: "invented-template", emphasis: [] }],
+    };
     vi.stubGlobal(
       "fetch",
       vi
         .fn()
         .mockImplementationOnce(async () => modelsResponse())
-        .mockImplementationOnce(async () =>
-          chatResponse({
-            projectName: "Bad",
-            scriptName: "Bad",
-            scenes: [
-              { text: "Bad", templateId: "invented-template", emphasis: [] },
-            ],
-          }),
-        ),
+        .mockImplementationOnce(async () => chatResponse(invalidPlan))
+        .mockImplementationOnce(async () => modelsResponse())
+        .mockImplementationOnce(async () => chatResponse(invalidPlan)),
     );
     await expect(
       createOllamaProvider(fixtureStore()).generatePlan({
         mode: "idea",
         brief: "Schema mismatch",
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow("repair was exhausted after one attempt");
+  });
+
+  it("makes one repair request to the same selected model", async () => {
+    const repaired = {
+      projectName: "Repaired",
+      scriptName: "Repaired",
+      styleId: "clean-story",
+      energy: "normal",
+      scenes: [{ text: "Valid", templateId: "kinetic", emphasis: [] }],
+    };
+    const fetchMock = vi
+      .fn()
+      .mockImplementationOnce(async () => modelsResponse())
+      .mockImplementationOnce(async () => chatResponse("prose before JSON"))
+      .mockImplementationOnce(async () => modelsResponse())
+      .mockImplementationOnce(async () => chatResponse(repaired));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(
+      createOllamaProvider(fixtureStore()).generatePlan({
+        mode: "idea",
+        brief: "Repair once",
+      }),
+    ).resolves.toMatchObject({ projectName: "Repaired" });
+    const modelRequests = fetchMock.mock.calls
+      .filter(([url]) => new URL(String(url)).pathname === "/api/chat")
+      .map(([, init]) => JSON.parse(String((init as RequestInit).body)).model);
+    expect(modelRequests).toEqual(["qwen2.5:7b", "qwen2.5:7b"]);
   });
 });

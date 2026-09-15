@@ -81,8 +81,11 @@ export function useSaveLocalAIConfig() {
       config: LocalAIProviderConfigInput;
     }) =>
       apiPost<{ provider: LocalAIProviderView }>("/api/ai/local-config", input),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["local-ai-providers"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["local-ai-providers"] });
+      queryClient.invalidateQueries({ queryKey: ["ai-providers"] });
+      queryClient.invalidateQueries({ queryKey: ["ai-models"] });
+    },
   });
 }
 

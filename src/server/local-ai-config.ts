@@ -177,6 +177,8 @@ export function createLocalAIConfigStore(filePath = defaultFilePath()) {
         message: diagnostic.message,
         checkedAt: diagnostic.checkedAt,
         modelCount: diagnostic.modelIds?.length,
+        modelIds:
+          diagnostic.modelIds ?? stored.lastSuccessfulDiscovery?.modelIds,
         lastSuccessfulDiscoveryAt: stored.lastSuccessfulDiscovery?.checkedAt,
       },
     };

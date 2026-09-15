@@ -68,6 +68,7 @@ export const localAIProviderViewSchema = z.object({
     message: z.string(),
     checkedAt: z.string().datetime({ offset: true }).optional(),
     modelCount: z.number().int().nonnegative().optional(),
+    modelIds: z.array(z.string()).max(500).optional(),
     lastSuccessfulDiscoveryAt: z.string().datetime({ offset: true }).optional(),
   }),
 });

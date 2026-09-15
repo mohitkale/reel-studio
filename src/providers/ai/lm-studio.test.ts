@@ -164,39 +164,45 @@ describe("LM Studio provider", () => {
   });
 
   it("rejects malformed JSON and schema mismatches", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi
-        .fn()
-        .mockImplementationOnce(async () => modelsResponse())
-        .mockImplementationOnce(async () => completionResponse("not-json")),
-    );
+    const malformedFetch = vi
+      .fn()
+      .mockImplementationOnce(async () => modelsResponse())
+      .mockImplementationOnce(async () => completionResponse("not-json"))
+      .mockImplementationOnce(async () => modelsResponse())
+      .mockImplementationOnce(async () => completionResponse("still-not-json"));
+    vi.stubGlobal("fetch", malformedFetch);
     await expect(
       createLMStudioProvider(fixtureStore()).generatePlan({
         mode: "idea",
         brief: "Malformed",
       }),
-    ).rejects.toThrow("malformed JSON");
+    ).rejects.toThrow("repair was exhausted after one attempt");
+    expect(
+      malformedFetch.mock.calls.filter(
+        ([url]) => new URL(String(url)).pathname === "/v1/chat/completions",
+      ),
+    ).toHaveLength(2);
 
+    const invalidPlan = {
+      projectName: "Bad",
+      scriptName: "Bad",
+      scenes: [{ text: "Bad", templateId: "made-up", emphasis: [] }],
+    };
     vi.stubGlobal(
       "fetch",
       vi
         .fn()
         .mockImplementationOnce(async () => modelsResponse())
-        .mockImplementationOnce(async () =>
-          completionResponse({
-            projectName: "Bad",
-            scriptName: "Bad",
-            scenes: [{ text: "Bad", templateId: "made-up", emphasis: [] }],
-          }),
-        ),
+        .mockImplementationOnce(async () => completionResponse(invalidPlan))
+        .mockImplementationOnce(async () => modelsResponse())
+        .mockImplementationOnce(async () => completionResponse(invalidPlan)),
     );
     await expect(
       createLMStudioProvider(fixtureStore()).generatePlan({
         mode: "idea",
         brief: "Schema mismatch",
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow("repair was exhausted after one attempt");
   });
 
   it("preserves request cancellation", async () => {

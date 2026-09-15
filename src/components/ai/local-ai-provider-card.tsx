@@ -65,6 +65,21 @@ export function LocalAIProviderCard({
     );
   }
 
+  function handleClearToken() {
+    save.mutate({
+      providerId: status.id,
+      config: {
+        baseUrl,
+        modelId,
+        temperature: Number(temperature),
+        contextWindow: optionalNumber(contextWindow),
+        maxOutputTokens: optionalNumber(maxOutputTokens),
+        allowLan,
+        token: "",
+      },
+    });
+  }
+
   return (
     <div className="space-y-4 rounded-lg border p-4">
       <div className="flex items-start gap-3">
@@ -103,10 +118,22 @@ export function LocalAIProviderCard({
           <Label htmlFor={`local-ai-model-${status.id}`}>Selected model</Label>
           <Input
             id={`local-ai-model-${status.id}`}
+            list={`local-ai-models-${status.id}`}
             value={modelId}
             onChange={(event) => setModelId(event.target.value)}
             placeholder="Discover models after connecting"
           />
+          <datalist id={`local-ai-models-${status.id}`}>
+            {status.diagnostic.modelIds?.map((id) => (
+              <option key={id} value={id} />
+            ))}
+          </datalist>
+          {status.diagnostic.modelIds ? (
+            <p className="text-muted-foreground text-xs">
+              {status.diagnostic.modelIds.length} model
+              {status.diagnostic.modelIds.length === 1 ? "" : "s"} discovered.
+            </p>
+          ) : null}
         </div>
         <div className="grid gap-2">
           <Label htmlFor={`local-ai-temperature-${status.id}`}>
@@ -161,6 +188,16 @@ export function LocalAIProviderCard({
                 status.hasToken ? "Token saved; enter to replace" : "Optional"
               }
             />
+            {status.hasToken ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClearToken}
+                disabled={save.isPending}
+              >
+                Remove token
+              </Button>
+            ) : null}
           </div>
         ) : null}
       </div>

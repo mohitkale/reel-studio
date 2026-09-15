@@ -13,8 +13,8 @@ the user requests publication.
 |   16 | Secure local AI configuration, endpoint policy, and connectivity diagnostics  | Complete    | `1558ae50771c0cd796ada6012f7591beb27715ee` |
 |   17 | Shared OpenAI-compatible structured-output transport and credential isolation | Complete    | `7b90005bb530cf71ab89c2af712858705f003448` |
 |   18 | Ollama discovery and video/podcast planning                                   | Complete    | `32ea00a46457425c0e38dbc058b254705b408e7f` |
-|   19 | LM Studio discovery and video/podcast planning                                | In progress | Pending                                    |
-|   20 | Bounded JSON extraction, one repair request, and model capability guidance    | Pending     | Pending                                    |
+|   19 | LM Studio discovery and video/podcast planning                                | Complete    | `f96823646ac879e33548fcc9afab44a8c7902b6a` |
+|   20 | Bounded JSON extraction, one repair request, and model capability guidance    | In progress | Pending                                    |
 
 ## Scope decisions
 
@@ -49,6 +49,27 @@ Validation:
 - Focused local endpoint, secure HTTP, diagnostics, and config-store suites
   passed: 4 files, 10 tests.
 - Changed-file Prettier check and `git diff --check` passed.
+
+## Task 19 — LM Studio discovery and planning
+
+Completed at `2026-09-15T19:06:38+05:30` in
+`f96823646ac879e33548fcc9afab44a8c7902b6a`.
+
+- Added LM Studio `/v1/models` discovery and `/v1/chat/completions` planning
+  through the shared OpenAI-compatible transport, while retaining its own
+  endpoint, optional local token, diagnostics, and provider identity.
+- Video, podcast, and grounded clip planning use the existing prompts and final
+  Zod schemas. Output bounds use LM Studio's compatible `max_tokens` field.
+- Authentication failures, offline server, missing or unloaded model, timeout,
+  cancellation, malformed JSON, and schema mismatch are reported separately.
+
+Validation:
+
+- `npm run typecheck` and `npm run lint -- --quiet` passed.
+- Focused LM Studio, Ollama, compatible-transport, local diagnostic, and local
+  HTTP suites passed: 5 files, 20 tests.
+- Fixtures covered `/v1/models`, optional auth, video/podcast plans, all required
+  failure states, and credential isolation without a live LM Studio server.
 
 ## Task 18 — Ollama discovery and planning
 

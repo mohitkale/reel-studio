@@ -29,44 +29,25 @@ import {
 } from "./openai-compatible-schemas";
 import { secureLocalAIFetch } from "./local-http";
 import { diagnoseLocalAIProvider } from "./local-diagnostics";
+import { parseStructuredOutput } from "./structured-output";
+import {
+  strictLocalClipSuggestionsSchema,
+  strictLocalPodcastPlanSchema,
+  strictLocalScenePlanSchema,
+} from "./local-structured-schemas";
 import { localAIConfigStore } from "@/server/local-ai-config";
 
-type LocalAIConfigStore = Pick<
+type Store = Pick<
   typeof localAIConfigStore,
   "readProvider" | "recordDiagnostic"
 >;
+type JsonSchema = { schema: Record<string, unknown> };
 
-const ollamaChatResponseSchema = z.object({
+const chatResponseSchema = z.object({
   message: z.object({ content: z.string() }),
-  done_reason: z.string().optional(),
 });
 
-async function readError(response: Response): Promise<string> {
-  const body = await response.text().catch(() => "");
-  try {
-    const parsed = z.object({ error: z.string() }).parse(JSON.parse(body));
-    return parsed.error;
-  } catch {
-    return body.slice(0, 300);
-  }
-}
-
-function parseJson(text: string, description: string): unknown {
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new AIError(
-      `Ollama returned malformed ${description}`,
-      502,
-      "ollama",
-    );
-  }
-}
-
-async function availableModels(
-  store: LocalAIConfigStore,
-  signal?: AbortSignal,
-): Promise<AIModel[]> {
+async function availableModels(store: Store, signal?: AbortSignal) {
   const config = await store.readProvider("ollama");
   const diagnostic = await diagnoseLocalAIProvider("ollama", config, signal);
   await store.recordDiagnostic("ollama", diagnostic);
@@ -79,35 +60,44 @@ async function availableModels(
   return (diagnostic.modelIds ?? []).map((id) => ({ id, label: id }));
 }
 
+async function readError(response: Response): Promise<string> {
+  const body = await response.text().catch(() => "");
+  try {
+    return z.object({ error: z.string() }).parse(JSON.parse(body)).error;
+  } catch {
+    return body.slice(0, 300);
+  }
+}
+
 async function complete(
+  store: Store,
   input: {
-    modelId?: string;
+    modelId: string;
     system: string;
     user: string;
-    jsonSchema: { schema: Record<string, unknown> };
-    temperature: number;
+    jsonSchema: JsonSchema;
     signal?: AbortSignal;
   },
-  store: LocalAIConfigStore,
 ): Promise<string> {
   const config = await store.readProvider("ollama");
-  const model = input.modelId?.trim() || config.modelId;
-  if (!model) {
+  if (!input.modelId) {
     throw new AIError(
       "Select an Ollama model in Settings before planning.",
       400,
       "ollama",
     );
   }
-  const models = await availableModels(store, input.signal);
-  if (!models.some(({ id }) => id === model)) {
+  if (
+    !(await availableModels(store, input.signal)).some(
+      ({ id }) => id === input.modelId,
+    )
+  ) {
     throw new AIError(
-      `Ollama model “${model}” is not installed. Pull it in Ollama, then refresh model discovery.`,
+      `Ollama model “${input.modelId}” is not installed. Pull it in Ollama, then refresh model discovery.`,
       404,
       "ollama",
     );
   }
-
   const response = await secureLocalAIFetch({
     providerId: "ollama",
     baseUrl: config.baseUrl,
@@ -116,7 +106,7 @@ async function complete(
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
-      model,
+      model: input.modelId,
       stream: false,
       messages: [
         { role: "system", content: input.system },
@@ -138,14 +128,14 @@ async function complete(
     const detail = await readError(response);
     if (response.status === 404 || /not found/i.test(detail)) {
       throw new AIError(
-        `Ollama could not load model “${model}”: ${detail || "model not found"}`,
+        `Ollama could not load model “${input.modelId}”: ${detail || "model not found"}`,
         404,
         "ollama",
       );
     }
     if (response.status === 503 || /load|memory|runner/i.test(detail)) {
       throw new AIError(
-        `Ollama model “${model}” is installed but could not be loaded. Check Ollama memory and runner status. ${detail}`,
+        `Ollama model “${input.modelId}” is installed but could not be loaded. Check Ollama memory and runner status. ${detail}`,
         503,
         "ollama",
       );
@@ -156,35 +146,52 @@ async function complete(
       "ollama",
     );
   }
-  const parsed = ollamaChatResponseSchema.parse(await response.json());
-  if (!parsed.message.content.trim()) {
+  const content = chatResponseSchema.parse(await response.json()).message
+    .content;
+  if (!content.trim()) {
     throw new AIError("Ollama returned an empty response", 502, "ollama");
   }
-  return parsed.message.content;
+  return content;
+}
+
+async function selectedModel(store: Store, requested?: string) {
+  return requested?.trim() || (await store.readProvider("ollama")).modelId;
 }
 
 export function createOllamaProvider(
-  store: LocalAIConfigStore = localAIConfigStore,
+  store: Store = localAIConfigStore,
 ): AIProvider {
   return {
     id: "ollama",
     label: "Ollama",
     isConfigured: () => true,
-    listModels: () => availableModels(store),
+    listModels: (): Promise<AIModel[]> => availableModels(store),
 
     async generatePlan(input: GeneratePlanInput): Promise<ScenePlan> {
       const prompt = buildPrompt(input);
-      const text = await complete(
-        {
-          ...prompt,
-          modelId: input.modelId,
-          jsonSchema: buildOpenAIVideoPlanJsonSchema(input),
-          temperature: 0.7,
-          signal: input.signal,
-        },
-        store,
-      );
-      return scenePlanSchema.parse(parseJson(text, "JSON"));
+      const modelId = await selectedModel(store, input.modelId);
+      const jsonSchema = buildOpenAIVideoPlanJsonSchema(input);
+      const text = await complete(store, {
+        ...prompt,
+        modelId,
+        jsonSchema,
+        signal: input.signal,
+      });
+      const raw = await parseStructuredOutput({
+        text,
+        schema: strictLocalScenePlanSchema,
+        providerId: "ollama",
+        providerLabel: "Ollama",
+        modelId,
+        repair: (repair) =>
+          complete(store, {
+            ...repair,
+            modelId,
+            jsonSchema,
+            signal: input.signal,
+          }),
+      });
+      return scenePlanSchema.parse(raw);
     },
 
     async generatePodcastPlan(
@@ -194,17 +201,29 @@ export function createOllamaProvider(
         throw new AIError("Podcast needs at least 2 characters", 400, "ollama");
       }
       const prompt = buildPodcastPrompt(input);
-      const text = await complete(
-        {
-          ...prompt,
-          modelId: input.modelId,
-          jsonSchema: OPENAI_PODCAST_JSON_SCHEMA,
-          temperature: 0.7,
-          signal: input.signal,
-        },
-        store,
-      );
-      const raw = podcastAiPlanSchema.parse(parseJson(text, "JSON"));
+      const modelId = await selectedModel(store, input.modelId);
+      const jsonSchema = OPENAI_PODCAST_JSON_SCHEMA;
+      const text = await complete(store, {
+        ...prompt,
+        modelId,
+        jsonSchema,
+        signal: input.signal,
+      });
+      const structured = await parseStructuredOutput({
+        text,
+        schema: strictLocalPodcastPlanSchema,
+        providerId: "ollama",
+        providerLabel: "Ollama",
+        modelId,
+        repair: (repair) =>
+          complete(store, {
+            ...repair,
+            modelId,
+            jsonSchema,
+            signal: input.signal,
+          }),
+      });
+      const raw = podcastAiPlanSchema.parse(structured);
       try {
         return normalizePodcastPlan(raw, input.characters);
       } catch (error) {
@@ -220,19 +239,30 @@ export function createOllamaProvider(
       input: GeneratePodcastClipSuggestionsInput,
     ): Promise<PodcastClipSuggestionCandidate[]> {
       const prompt = buildPodcastClipSuggestionsPrompt(input);
-      const text = await complete(
-        {
-          ...prompt,
-          modelId: input.modelId,
-          jsonSchema: OPENAI_PODCAST_CLIP_SUGGESTIONS_JSON_SCHEMA,
-          temperature: 0.3,
-          signal: input.signal,
-        },
-        store,
-      );
-      return podcastClipSuggestionCandidatesSchema.parse(
-        parseJson(text, "clip suggestions"),
-      ).suggestions;
+      const modelId = await selectedModel(store, input.modelId);
+      const jsonSchema = OPENAI_PODCAST_CLIP_SUGGESTIONS_JSON_SCHEMA;
+      const text = await complete(store, {
+        ...prompt,
+        modelId,
+        jsonSchema,
+        signal: input.signal,
+      });
+      const structured = await parseStructuredOutput({
+        text,
+        schema: strictLocalClipSuggestionsSchema,
+        providerId: "ollama",
+        providerLabel: "Ollama",
+        modelId,
+        repair: (repair) =>
+          complete(store, {
+            ...repair,
+            modelId,
+            jsonSchema,
+            signal: input.signal,
+          }),
+      });
+      return podcastClipSuggestionCandidatesSchema.parse(structured)
+        .suggestions;
     },
   };
 }
