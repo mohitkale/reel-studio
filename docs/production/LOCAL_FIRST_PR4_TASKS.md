@@ -149,3 +149,13 @@ Validation:
 - `git diff --check` passed before the implementation commit.
 - No Docker command, remote provider request, software installation, push, PR,
   merge, or computer setting change was used for this task.
+
+PR validation follow-up:
+
+- The first GitHub Actions run completed all 314 assertions outside two
+  SQLite integration cases, which exceeded Vitest's five-second default while
+  applying the full migration set on the Linux runner. The two SQLite
+  integration files now use a bounded 15-second timeout; their database
+  operations and assertions are unchanged.
+- The focused SQLite pair passed (2 files, 14 tests), followed by typecheck,
+  lint, and the full unit suite (59 files, 316 tests) locally.
