@@ -46,4 +46,29 @@ describe("secure local AI HTTP", () => {
       }),
     ).rejects.toMatchObject({ status: 499 });
   });
+
+  it("enforces a bounded timeout", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(
+        async (_url: URL, init: RequestInit) =>
+          new Promise<Response>((_resolve, reject) => {
+            init.signal?.addEventListener("abort", () =>
+              reject(new DOMException("timed out", "TimeoutError")),
+            );
+          }),
+      ),
+    );
+    const request = secureLocalAIFetch({
+      providerId: "ollama",
+      baseUrl: "http://127.0.0.1:11434",
+      allowLan: false,
+      path: "/api/tags",
+      timeoutMs: 25,
+    });
+    await vi.advanceTimersByTimeAsync(25);
+    await expect(request).rejects.toMatchObject({ status: 504 });
+    vi.useRealTimers();
+  });
 });

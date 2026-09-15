@@ -4,7 +4,7 @@ import * as React from "react";
 import { Check, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
-import type { AIProviderStatus } from "@/providers/ai/types";
+import type { CloudAIProviderStatus } from "@/providers/ai/types";
 import { useSaveAIKey } from "@/hooks/ai";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
-export function AIProviderCard({ status }: { status: AIProviderStatus }) {
+export function AIProviderCard({ status }: { status: CloudAIProviderStatus }) {
   const [apiKey, setApiKey] = React.useState("");
   const saveKey = useSaveAIKey();
 
@@ -51,7 +51,7 @@ export function AIProviderCard({ status }: { status: AIProviderStatus }) {
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-3">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+        <div className="bg-muted text-muted-foreground flex size-9 items-center justify-center rounded-lg">
           <Sparkles className="size-4" />
         </div>
         <div>
@@ -66,7 +66,7 @@ export function AIProviderCard({ status }: { status: AIProviderStatus }) {
               <Badge variant="secondary">Not configured</Badge>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Default model: {status.defaultModel}
           </p>
         </div>
@@ -80,22 +80,31 @@ export function AIProviderCard({ status }: { status: AIProviderStatus }) {
             type="password"
             autoComplete="off"
             placeholder={
-              status.configured ? "Enter a new key to replace" : "Paste your API key"
+              status.configured
+                ? "Enter a new key to replace"
+                : "Paste your API key"
             }
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSave()}
           />
-          <Button onClick={handleSave} disabled={!apiKey.trim() || saveKey.isPending}>
+          <Button
+            onClick={handleSave}
+            disabled={!apiKey.trim() || saveKey.isPending}
+          >
             {saveKey.isPending ? "Saving..." : "Save"}
           </Button>
           {status.configured ? (
-            <Button variant="outline" onClick={handleClear} disabled={saveKey.isPending}>
+            <Button
+              variant="outline"
+              onClick={handleClear}
+              disabled={saveKey.isPending}
+            >
               Remove
             </Button>
           ) : null}
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           Stored in a git-ignored .env.local on this machine.
         </p>
       </div>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getAIProvider, isAIProviderId } from "@/providers/ai/registry";
-import { AIError, AI_PROVIDER_IDS } from "@/providers/ai/types";
+import { AIError, CLOUD_AI_PROVIDER_IDS } from "@/providers/ai/types";
 import { aiKeyStatus, setAIKey } from "@/server/secrets";
 import { requireWeb } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const bodySchema = z.object({
-  providerId: z.enum(AI_PROVIDER_IDS),
+  providerId: z.enum(CLOUD_AI_PROVIDER_IDS),
   apiKey: z.string(),
 });
 
@@ -46,7 +46,8 @@ export async function POST(req: Request) {
       verified = true;
       modelCount = models.length;
     } catch (e) {
-      verifyError = e instanceof Error ? e.message : "Could not verify the key.";
+      verifyError =
+        e instanceof Error ? e.message : "Could not verify the key.";
     }
 
     return NextResponse.json({

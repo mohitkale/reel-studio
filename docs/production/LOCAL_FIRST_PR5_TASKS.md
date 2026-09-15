@@ -11,8 +11,8 @@ the user requests publication.
 | Task | Implementation and acceptance                                                 | State       | Completion SHA                             |
 | ---: | ----------------------------------------------------------------------------- | ----------- | ------------------------------------------ |
 |   16 | Secure local AI configuration, endpoint policy, and connectivity diagnostics  | Complete    | `1558ae50771c0cd796ada6012f7591beb27715ee` |
-|   17 | Shared OpenAI-compatible structured-output transport and credential isolation | In progress | Pending                                    |
-|   18 | Ollama discovery and video/podcast planning                                   | Pending     | Pending                                    |
+|   17 | Shared OpenAI-compatible structured-output transport and credential isolation | Complete    | `7b90005bb530cf71ab89c2af712858705f003448` |
+|   18 | Ollama discovery and video/podcast planning                                   | In progress | Pending                                    |
 |   19 | LM Studio discovery and video/podcast planning                                | Pending     | Pending                                    |
 |   20 | Bounded JSON extraction, one repair request, and model capability guidance    | Pending     | Pending                                    |
 
@@ -51,3 +51,28 @@ Validation:
 - Changed-file Prettier check and `git diff --check` passed.
 - No Docker command, local model installation, external provider request,
   software installation, push, or host setting change was used.
+
+## Task 17 — shared OpenAI-compatible transport
+
+Completed at `2026-09-15T18:56:17+05:30` in
+`7b90005bb530cf71ab89c2af712858705f003448`.
+
+- Extracted the OpenAI-compatible model-list and JSON-schema completion envelope
+  behind the existing provider boundary. The OpenAI adapter retains its fixed
+  cloud origin, models filter, temperatures, schemas, prompts, and final Zod
+  validation.
+- Added a separately constructed local-compatible transport. It can receive only
+  the token passed by its owning local adapter and has no access to OpenAI or
+  Gemini keys; local requests retain endpoint resolution and redirect rejection.
+- Request cancellation now travels from Next.js routes through Gemini, OpenAI,
+  and compatible transports. Discovery remains the only automatically retried
+  cloud operation; uncertain generation POSTs remain single-attempt.
+
+Validation:
+
+- `npm run typecheck` and `npm run lint -- --quiet` passed.
+- Focused compatible-transport, OpenAI regression, cloud HTTP, prompt, and schema
+  suites passed: 4 files, 19 tests.
+- Credential fixtures proved cloud keys do not appear in local headers or bodies,
+  and that an explicitly supplied local token stays local.
+- Changed-file Prettier check and `git diff --check` passed.

@@ -7,6 +7,7 @@ import type {
   AIModel,
   AIProviderId,
   AIProviderStatus,
+  CloudAIProviderId,
   ScriptStyle,
 } from "@/providers/ai/types";
 import type { Orientation } from "@/lib/orientation";
@@ -43,7 +44,7 @@ export function useAIModels(providerId: AIProviderId | undefined) {
 }
 
 interface SaveAIKeyResponse {
-  status: Record<AIProviderId, boolean>;
+  status: Record<CloudAIProviderId, boolean>;
   verified?: boolean;
   modelCount?: number;
   verifyError?: string;
@@ -53,7 +54,7 @@ interface SaveAIKeyResponse {
 export function useSaveAIKey() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { providerId: AIProviderId; apiKey: string }) =>
+    mutationFn: (vars: { providerId: CloudAIProviderId; apiKey: string }) =>
       apiPost<SaveAIKeyResponse>("/api/ai/keys", vars),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["ai-providers"] });

@@ -93,6 +93,7 @@ export async function diagnoseLocalAIProvider(
     };
   } catch (error) {
     if (error instanceof AIError) {
+      if (error.status === 499) throw error;
       return {
         state:
           error.status === 503 || error.status === 504 ? "offline" : "error",

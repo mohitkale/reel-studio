@@ -179,9 +179,11 @@ export default function SettingsPage() {
               <Skeleton className="h-20 w-full" />
             </div>
           ) : (
-            aiProviders.map((status) => (
-              <AIProviderCard key={status.id} status={status} />
-            ))
+            aiProviders
+              .filter((status) => status.kind === "cloud")
+              .map((status) => (
+                <AIProviderCard key={status.id} status={status} />
+              ))
           )}
         </CardContent>
       </Card>
