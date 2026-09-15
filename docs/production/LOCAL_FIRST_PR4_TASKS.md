@@ -11,7 +11,7 @@ the user requests publication.
 | Task | Implementation and acceptance                                                                                   | State    | Completion SHA                             |
 | ---: | --------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------ |
 |   13 | Add manual provider/kind/orientation search, preview, attribution inspection, selection, replacement, and clear | Complete | `ed22d28eda7dd89445c4d660960d1e8bf32c2878` |
-|   14 | Persist media preferences and deterministic/AI selection with explicit-choice precedence and visible fallback   | Pending  | —                                          |
+|   14 | Persist media preferences and deterministic/AI selection with explicit-choice precedence and visible fallback   | Complete | `54d40614259c452648dde5edb14d428c47f51584` |
 |   15 | Render downloaded stock video and provider metadata through both engines in all three ratios                    | Pending  | —                                          |
 
 ## Scope decisions
@@ -63,6 +63,40 @@ Validation:
 - `npm run security:scan` passed.
 - `npm run build` passed with the new dynamic provider, search, and scene
   selection routes included in the Next.js route manifest.
+- `git diff --check` passed before the implementation commit.
+- No Docker command, provider credential, remote provider request, push, or
+  host-level change was used for this task.
+
+## Task 14 — media preferences and automatic selection
+
+Completed at `2026-09-15T12:29:17+05:30` in
+`54d40614259c452648dde5edb14d428c47f51584`.
+
+- Added the persisted `auto/image/video/none` scene preference and controls in
+  AI project creation, AI append, and the scene inspector. Choosing `none`
+  clears stock state and prevents automatic search; manual URLs, uploads,
+  selected stock, existing scene backgrounds, and asset locks take precedence.
+- AI plan contracts may return only a bounded search query and desired
+  `image/video` kind. Both provider schemas and prompts prohibit provider ids,
+  asset ids, and arbitrary render URLs. An explicit user kind overrides the AI
+  kind, while `auto` uses the AI kind or a deterministic image default.
+- Automatic selection uses stable candidate hashing and a documented provider
+  order: Pexels, Pixabay, then Unsplash for images; Pexels then Pixabay for
+  videos. It skips unavailable providers, persists materialized selection
+  snapshots with new and regenerated scenes, and never retries provider usage
+  events after a known failure.
+- Every decision has a visible state and message. Creation and append flows
+  report selected versus no-result behavior, while controls explain that
+  unavailable or empty results retain the animated mood background.
+
+Validation:
+
+- `npm run typecheck`, `npm run lint`, and `npm run security:scan` passed.
+- `npm run test:unit` passed: 59 files, 314 tests.
+- Focused AI intent, deterministic selection, persistence, regeneration, and
+  enrichment suites passed: 6 files, 29 tests; the repository persistence pair
+  also passed independently: 2 files, 5 tests.
+- `npm run build` passed.
 - `git diff --check` passed before the implementation commit.
 - No Docker command, provider credential, remote provider request, push, or
   host-level change was used for this task.
