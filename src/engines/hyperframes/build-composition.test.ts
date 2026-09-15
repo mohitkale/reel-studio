@@ -5,6 +5,7 @@ import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-com
 import { mapScenesToEngineTemplates } from "@/engines/hyperframes/map-templates";
 import { personalizeCatalogHtml } from "@/engines/hyperframes/catalog/personalize";
 import type { AIScene } from "@/providers/ai/types";
+import { CAPTION_STYLE_PRESETS } from "@/lib/caption-style";
 
 describe("buildHyperframesCompositionHtml", () => {
   it("emits a HyperFrames root with scene clips and seek API", () => {
@@ -91,6 +92,48 @@ describe("buildHyperframesCompositionHtml", () => {
     expect(html).toContain("Spoken &lt;copy&gt; is escaped.");
     expect(html).toContain("Headline stays here.");
     expect(html).toContain("syncSubtitles(t)");
+  });
+
+  it("serializes a versioned caption style and word timing clips", () => {
+    const html = buildHyperframesCompositionHtml({
+      scenes: [
+        {
+          id: "s1",
+          templateId: "hf-opener",
+          text: "Headline",
+          emphasis: [],
+        },
+      ],
+      timeline: [{ sceneId: "s1", startFrame: 0, durationFrames: 60 }],
+      width: 1920,
+      height: 1080,
+      fps: 30,
+      tokens: defaultBrandTokens,
+      captions: {
+        enabled: true,
+        timingSource: "provider",
+        style: CAPTION_STYLE_PRESETS.technical,
+        cues: [
+          {
+            id: "cue",
+            startFrame: 0,
+            endFrame: 60,
+            text: "Ship safely",
+            words: [
+              { text: "Ship", startFrame: 0, endFrame: 30 },
+              { text: "safely", startFrame: 30, endFrame: 60 },
+            ],
+          },
+        ],
+      },
+    });
+
+    expect(html).toContain('data-caption-style="technical"');
+    expect(html).toContain('data-caption-style-version="1"');
+    expect(html).toContain("rs-caption-active");
+    expect(html).toContain('data-start="1.000"');
+    expect(html).toContain('data-duration="1.000"');
+    expect(html).toContain('dir="auto"');
   });
 
   it("emits deterministic muted stock-video timing and cover layout", () => {

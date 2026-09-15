@@ -5,6 +5,7 @@ import { orientationFromDims } from "@/lib/orientation";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveReelSfxCues } from "@/lib/sfx-cues";
 import { resolveSpokenText } from "@/lib/spoken-text";
+import { LEGACY_CAPTION_STYLE } from "@/lib/caption-style";
 import { getVideoEngine } from "@/engines/registry";
 import { CURRENT_HF_CATALOG_REVISION } from "@/engines/hyperframes/catalog/versions";
 import type { ProductionSceneRole } from "@/production/roles";
@@ -257,6 +258,7 @@ export function productionSpecFromLegacyScript(
     captions: script.captionTracks?.find((track) => track.enabled) ?? {
       enabled: false,
       timingSource: "estimated",
+      style: LEGACY_CAPTION_STYLE,
       cues: [],
     },
     presentation: {

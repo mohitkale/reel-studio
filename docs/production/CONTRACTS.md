@@ -58,6 +58,14 @@ Resolve values in this order:
 The resulting values belong in the production snapshot. A later preset or brand
 edit must not restyle a queued, completed or reopened production implicitly.
 
+Caption tracks carry a versioned appearance snapshot containing typography,
+placement, colors, box, outline, shadow, wrapping targets, highlight mode and
+per-ratio safe-area offsets. Null database values and older production specs
+resolve to the 0.4 legacy appearance. New tracks start from the active production
+preset; compatible brand typography resolves next, and explicit track values
+win. Both engines consume the same resolved measurements and preserve cue and
+word timing unchanged.
+
 ## Engine capability metadata
 
 Every engine adapter publishes its supported aspect ratios and a capability entry

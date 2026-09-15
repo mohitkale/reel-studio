@@ -13,6 +13,7 @@ import type {
   VoiceTakeDTO,
   VoiceMode,
 } from "@/lib/dto";
+import type { CaptionStyleSnapshot } from "@/lib/caption-style";
 import type { ProviderId } from "@/providers/voice/types";
 import type { Orientation } from "@/lib/orientation";
 import type { MediaPreference } from "@/lib/media-preference";
@@ -147,6 +148,18 @@ export function useSetCaptionTrackEnabled(scriptId: string) {
     mutationFn: (input: { trackId: string; enabled: boolean }) =>
       apiPost<{ track: CaptionTrackDTO }>(`/api/scripts/${scriptId}/captions`, {
         action: "set_enabled",
+        ...input,
+      }).then((result) => result.track),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateCaptionStyle(scriptId: string) {
+  const invalidate = useScriptInvalidator(scriptId);
+  return useMutation({
+    mutationFn: (input: { trackId: string; style: CaptionStyleSnapshot }) =>
+      apiPost<{ track: CaptionTrackDTO }>(`/api/scripts/${scriptId}/captions`, {
+        action: "set_style",
         ...input,
       }).then((result) => result.track),
     onSuccess: invalidate,

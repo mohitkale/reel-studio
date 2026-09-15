@@ -3,6 +3,7 @@ import type { EnergyId, StyleId } from "./visual-style";
 import type { ProductionLayout } from "@/production/layout";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
+import type { CaptionStyleSnapshot } from "@/lib/caption-style";
 
 /** Image pan/zoom animations available for a background image. */
 export type PanEffect =
@@ -121,6 +122,8 @@ export type ReelProps = {
   captions?: {
     enabled: boolean;
     timingSource: "provider" | "local-transcription" | "estimated" | "imported";
+    /** Versioned appearance snapshot. Missing values use the 0.4 legacy look. */
+    style?: CaptionStyleSnapshot;
     cues: ReelCaptionCue[];
   };
   tokens: BrandTokens;

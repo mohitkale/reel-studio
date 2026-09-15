@@ -7,6 +7,7 @@ import type { VideoEngineId } from "@/engines/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
 import type { CaptionTimingSource, CaptionWord } from "@/lib/captions";
+import type { CaptionStyleSnapshot } from "@/lib/caption-style";
 import type { MediaPreference } from "@/lib/media-preference";
 
 export type { SceneBackground, SceneChartData };
@@ -145,6 +146,7 @@ export interface CaptionTrackDTO {
   language: string;
   timingSource: CaptionTimingSource;
   enabled: boolean;
+  style: CaptionStyleSnapshot;
   cues: CaptionCueDTO[];
   updatedAt: string;
 }

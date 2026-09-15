@@ -7,6 +7,10 @@ import {
   brandOverridesSchema,
 } from "@/library/schemas";
 import { resolvedStockAssetSchema } from "@/providers/stock/schemas";
+import {
+  captionStyleSnapshotSchema,
+  LEGACY_CAPTION_STYLE,
+} from "@/lib/caption-style";
 
 const scene = sceneConfigSchema.extend({
   id: z.string().min(1),
@@ -78,6 +82,7 @@ export const videoScriptSnapshotSchema = z.object({
         language: z.string(),
         timingSource: captionTimingSourceSchema,
         enabled: z.boolean(),
+        style: captionStyleSnapshotSchema.default(LEGACY_CAPTION_STYLE),
         updatedAt: z.string(),
         cues: z.array(
           z.object({
