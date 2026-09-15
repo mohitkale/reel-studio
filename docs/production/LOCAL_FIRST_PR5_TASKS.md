@@ -8,13 +8,13 @@ the user requests publication.
 
 ## Task cards
 
-| Task | Implementation and acceptance                                                 | State       | Completion SHA |
-| ---: | ----------------------------------------------------------------------------- | ----------- | -------------- |
-|   16 | Secure local AI configuration, endpoint policy, and connectivity diagnostics  | In progress | Pending        |
-|   17 | Shared OpenAI-compatible structured-output transport and credential isolation | Pending     | Pending        |
-|   18 | Ollama discovery and video/podcast planning                                   | Pending     | Pending        |
-|   19 | LM Studio discovery and video/podcast planning                                | Pending     | Pending        |
-|   20 | Bounded JSON extraction, one repair request, and model capability guidance    | Pending     | Pending        |
+| Task | Implementation and acceptance                                                 | State       | Completion SHA                             |
+| ---: | ----------------------------------------------------------------------------- | ----------- | ------------------------------------------ |
+|   16 | Secure local AI configuration, endpoint policy, and connectivity diagnostics  | Complete    | `1558ae50771c0cd796ada6012f7591beb27715ee` |
+|   17 | Shared OpenAI-compatible structured-output transport and credential isolation | In progress | Pending                                    |
+|   18 | Ollama discovery and video/podcast planning                                   | Pending     | Pending                                    |
+|   19 | LM Studio discovery and video/podcast planning                                | Pending     | Pending                                    |
+|   20 | Bounded JSON extraction, one repair request, and model capability guidance    | Pending     | Pending                                    |
 
 ## Scope decisions
 
@@ -27,3 +27,27 @@ the user requests publication.
   not make a configured endpoint eligible to receive another provider's token.
 - PR 5 changes planning and provider diagnostics only. Caption work, catalog
   upgrades, Quick Produce, and later REST/MCP expansion remain out of scope.
+
+## Task 16 — local AI configuration and diagnostics
+
+Completed at `2026-09-15T18:51:10+05:30` in
+`1558ae50771c0cd796ada6012f7591beb27715ee`.
+
+- Added separate, permission-restricted local provider configuration with
+  loopback defaults, selected model, temperature, bounded context/output values,
+  optional LM Studio token, endpoint scope, and persisted discovery status.
+- Local endpoint validation resolves every hostname. It accepts loopback by
+  default, requires explicit opt-in for private LAN or `host.docker.internal`,
+  and rejects public/mixed answers, URL credentials, non-HTTP schemes, and
+  redirects. The existing public media-ingestion policy is unchanged.
+- Settings exposes both local providers, actionable healthy/offline/missing
+  model/authentication states, connection checks, and Docker host guidance.
+
+Validation:
+
+- `npm run typecheck` and `npm run lint -- --quiet` passed.
+- Focused local endpoint, secure HTTP, diagnostics, and config-store suites
+  passed: 4 files, 10 tests.
+- Changed-file Prettier check and `git diff --check` passed.
+- No Docker command, local model installation, external provider request,
+  software installation, push, or host setting change was used.

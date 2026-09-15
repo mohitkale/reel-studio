@@ -23,6 +23,7 @@ export type PodcastClipSuggestionCandidate = z.infer<
 
 export interface GeneratePodcastClipSuggestionsInput {
   modelId?: string;
+  signal?: AbortSignal;
   title: string;
   fps: number;
   timeline: Array<{

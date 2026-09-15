@@ -141,6 +141,7 @@ export async function POST(
         scriptStyle: body.scriptStyle,
         videoEngine,
         productionPresetId: script.productionPreset?.id,
+        signal: req.signal,
       });
       const alternatives = enrichScenePlan(raw.scenes, videoEngine)
         .slice(0, 3)
@@ -185,6 +186,7 @@ export async function POST(
         scriptStyle: body.scriptStyle,
         videoEngine,
         productionPresetId: script.productionPreset?.id,
+        signal: req.signal,
       });
       if (raw.scenes.length !== targets.length) {
         throw new AIError(
@@ -284,6 +286,7 @@ export async function POST(
       videoEngine,
       productionPresetId: script.productionPreset?.id,
       mediaPreference: body.mediaPreference,
+      signal: req.signal,
     });
     const enriched = scenePlanSchema.parse({
       ...raw,

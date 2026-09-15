@@ -89,6 +89,7 @@ export async function POST(req: Request) {
       energy: energyLock,
       productionPresetId: body.productionPresetId,
       mediaPreference: body.mediaPreference,
+      signal: req.signal,
     });
     const enriched = {
       ...raw,

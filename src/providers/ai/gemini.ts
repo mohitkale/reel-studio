@@ -199,6 +199,7 @@ export function createGeminiProvider(): AIProvider {
               temperature: 0.85,
             },
           }),
+          signal: input.signal,
         },
         "gemini",
       );
@@ -245,6 +246,7 @@ export function createGeminiProvider(): AIProvider {
               temperature: 0.9,
             },
           }),
+          signal: input.signal,
         },
         "gemini",
       );
@@ -297,6 +299,7 @@ export function createGeminiProvider(): AIProvider {
               temperature: 0.3,
             },
           }),
+          signal: input.signal,
         },
         "gemini",
       );

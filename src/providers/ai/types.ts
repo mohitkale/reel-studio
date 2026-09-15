@@ -232,6 +232,8 @@ export interface GeneratePlanInput {
   mediaPreference?: MediaPreference;
   /** One-based existing scene positions replaced by a selective rewrite. */
   replacementSceneNumbers?: number[];
+  /** Cancels an in-flight provider request when the caller disconnects or aborts. */
+  signal?: AbortSignal;
 }
 
 export interface AIModel {

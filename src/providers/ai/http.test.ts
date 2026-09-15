@@ -21,4 +21,21 @@ describe("AI provider request retries", () => {
     ).rejects.toThrow("busy right now");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+
+  it("reports an aborted request as cancellation without retrying", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValue(new DOMException("aborted", "AbortError"));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(
+      aiFetch(
+        "https://provider.invalid/models",
+        { method: "GET", signal: controller.signal },
+        "openai",
+      ),
+    ).rejects.toMatchObject({ status: 499 });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
 });
