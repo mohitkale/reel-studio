@@ -12,6 +12,7 @@ import type {
   GeneratePodcastClipSuggestionsInput,
   PodcastClipSuggestionCandidate,
 } from "./podcast-clip-suggestions";
+import type { LocalAIProviderId } from "./local-types";
 
 /**
  * AI "director" contract. Mirrors the voice provider factory: the app talks only
@@ -262,7 +263,7 @@ export class AIError extends Error {
   constructor(
     message: string,
     readonly status = 502,
-    readonly providerId?: AIProviderId,
+    readonly providerId?: AIProviderId | LocalAIProviderId,
   ) {
     super(message);
     this.name = "AIError";

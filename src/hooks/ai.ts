@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { apiGet, apiPost } from "@/lib/api-client";
+import { apiGet, apiPost, apiPut } from "@/lib/api-client";
 import type {
   AIModel,
   AIProviderId,
@@ -15,6 +15,11 @@ import type { ProductionPresetId } from "@/production/presets";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { MediaPreference } from "@/lib/media-preference";
 import type { AutomaticMediaState } from "@/library/automatic-stock-media";
+import type {
+  LocalAIProviderConfigInput,
+  LocalAIProviderId,
+  LocalAIProviderView,
+} from "@/providers/ai/local-types";
 
 export function useAIProviders() {
   return useQuery({
@@ -54,6 +59,42 @@ export function useSaveAIKey() {
       qc.invalidateQueries({ queryKey: ["ai-providers"] });
       qc.invalidateQueries({ queryKey: ["ai-models"] });
     },
+  });
+}
+
+export function useLocalAIProviders() {
+  return useQuery({
+    queryKey: ["local-ai-providers"],
+    queryFn: () =>
+      apiGet<{ providers: LocalAIProviderView[] }>("/api/ai/local-config").then(
+        (response) => response.providers,
+      ),
+  });
+}
+
+export function useSaveLocalAIConfig() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      providerId: LocalAIProviderId;
+      config: LocalAIProviderConfigInput;
+    }) =>
+      apiPost<{ provider: LocalAIProviderView }>("/api/ai/local-config", input),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["local-ai-providers"] }),
+  });
+}
+
+export function useDiagnoseLocalAI() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (providerId: LocalAIProviderId) =>
+      apiPut<{ diagnostic: LocalAIProviderView["diagnostic"] }>(
+        "/api/ai/local-config",
+        { providerId },
+      ),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["local-ai-providers"] }),
   });
 }
 
