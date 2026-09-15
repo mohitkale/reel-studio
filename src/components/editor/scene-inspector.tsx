@@ -28,6 +28,11 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AssetThumbPicker } from "@/components/assets/asset-thumb-picker";
 import { StockMediaPicker } from "@/components/editor/stock-media-picker";
 import type { Orientation } from "@/lib/orientation";
+import {
+  MEDIA_PREFERENCES,
+  MEDIA_PREFERENCE_LABELS,
+  type MediaPreference,
+} from "@/lib/media-preference";
 
 const VISUAL_HINTS: Record<string, string> = {
   "stat-reveal": "Key stat or number (e.g. 73% or 10x)",
@@ -72,6 +77,7 @@ type UpdateVars = {
   emphasis?: string[];
   visual?: string | null;
   background?: SceneBackground | null;
+  mediaPreference?: MediaPreference;
   items?: string[] | null;
   hideText?: boolean | null;
   locks?: { copy: boolean; assets: boolean; scene: boolean };
@@ -134,14 +140,18 @@ function BackgroundEditor({
   scriptId,
   sceneId,
   orientation,
+  mediaPreference,
   background,
   onChange,
+  onPreferenceChange,
 }: {
   scriptId: string;
   sceneId: string;
   orientation: Orientation;
+  mediaPreference: MediaPreference;
   background: SceneBackground | undefined;
   onChange: (bg: SceneBackground | null) => void;
+  onPreferenceChange: (preference: MediaPreference) => void;
 }) {
   // Kind + draft fields are local UI state (initialized from the scene; the
   // parent SceneInspector is keyed by scene.id so this remounts per scene). We
@@ -210,6 +220,11 @@ function BackgroundEditor({
     setMuted(next?.muted ?? true);
   }
 
+  function changePreference(next: MediaPreference) {
+    if (next === "none") applyStockBackground(null);
+    onPreferenceChange(next);
+  }
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -246,6 +261,37 @@ function BackgroundEditor({
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="grid gap-1.5">
+        <Label className="text-muted-foreground text-xs">
+          Automatic media preference
+        </Label>
+        <div className="grid grid-cols-4 rounded-md border p-0.5">
+          {MEDIA_PREFERENCES.map((preference) => (
+            <button
+              key={preference}
+              type="button"
+              aria-pressed={mediaPreference === preference}
+              onClick={() => changePreference(preference)}
+              className={cn(
+                "rounded px-1.5 py-1 text-xs transition-colors",
+                mediaPreference === preference
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {MEDIA_PREFERENCE_LABELS[preference]}
+            </button>
+          ))}
+        </div>
+        <p className="text-muted-foreground text-[11px]">
+          {mediaPreference === "none"
+            ? "Automatic stock search is disabled; the animated mood background is used."
+            : mediaPreference === "video"
+              ? "Auto tries Pexels, then Pixabay. No result keeps the animated mood background."
+              : "Auto tries Pexels, Pixabay, then Unsplash for images. An existing upload or selection always stays in place."}
+        </p>
       </div>
 
       <StockMediaPicker
@@ -653,8 +699,12 @@ export function SceneInspector({
           scriptId={scene.scriptId}
           sceneId={scene.id}
           orientation={orientation}
+          mediaPreference={scene.mediaPreference ?? "auto"}
           background={scene.background}
           onChange={(bg) => onUpdate({ id: scene.id, background: bg })}
+          onPreferenceChange={(mediaPreference) =>
+            onUpdate({ id: scene.id, mediaPreference })
+          }
         />
 
         {/* Per-scene on-screen text override (wins over the global Text toggle). */}

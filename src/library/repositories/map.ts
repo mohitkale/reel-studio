@@ -60,6 +60,7 @@ export function toSceneDTO(scene: Scene): SceneDTO {
     emphasis: parseJsonColumn(scene.emphasis, emphasisSchema, []),
     visual,
     background,
+    mediaPreference: config.mediaPreference ?? "auto",
     items: config.items && config.items.length ? config.items : undefined,
     chart: config.chart,
     hideText: scene.hideText ?? null,

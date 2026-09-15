@@ -90,6 +90,7 @@ export async function applyStockMediaSelection(
   if (!current) throw new Error("Scene not found");
   const config = parseJsonColumn(current.layoutJson, sceneConfigSchema, {});
   config.background = background;
+  config.mediaPreference = provider.kind;
 
   if (snapshot.localAssetId) {
     const asset = await prisma.asset.findUnique({
@@ -139,6 +140,7 @@ export async function clearSceneStockMedia(sceneId: string): Promise<SceneDTO> {
   if (!current) throw new Error("Scene not found");
   const config = parseJsonColumn(current.layoutJson, sceneConfigSchema, {});
   delete config.background;
+  config.mediaPreference = "none";
   const [scene] = await prisma.$transaction([
     prisma.scene.update({
       where: { id: sceneId },

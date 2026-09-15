@@ -5,6 +5,7 @@ import type { Orientation } from "@/lib/orientation";
 import type { VideoEngineId } from "@/engines/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { ProductionPresetId } from "@/production/presets";
+import type { MediaPreference } from "@/lib/media-preference";
 import { stripMarkdown } from "@/lib/strip-markdown";
 import type { GeneratePodcastPlanInput, PodcastPlan } from "./podcast-types";
 import type {
@@ -118,6 +119,8 @@ export const aiSceneSchema = z.object({
   chart: productionChartDataSchema.optional(),
   /** 2-4 concrete visual keywords for a stock photo background, when one fits. */
   backgroundQuery: z.string().trim().min(2).max(80).optional(),
+  /** Desired stock kind only; providers and URLs are always resolved server-side. */
+  mediaKind: z.enum(["image", "video"]).optional().catch(undefined),
   /**
    * Pan/zoom motion for the background image. Sent to the model as a free string
    * (keeps Gemini's schema small); anything not a known pan effect normalizes to
@@ -224,6 +227,8 @@ export interface GeneratePlanInput {
   energy?: EnergyId | "auto";
   /** Constrain template choices to this versioned production preset. */
   productionPresetId?: ProductionPresetId;
+  /** User preference constraining the AI's bounded stock search intent. */
+  mediaPreference?: MediaPreference;
   /** One-based existing scene positions replaced by a selective rewrite. */
   replacementSceneNumbers?: number[];
 }

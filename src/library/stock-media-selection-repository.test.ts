@@ -43,6 +43,7 @@ describe("stock-media scene persistence", () => {
       const { prisma } = await import("./db");
       const selections = await import("./repositories/stock-media-selections");
       const { updateScene } = await import("./repositories/scenes");
+      const { createProjectFromPlan } = await import("./repositories/projects");
       await prisma.project.create({
         data: {
           id: "project-1",
@@ -130,13 +131,53 @@ describe("stock-media scene persistence", () => {
         selections.getStockMediaSelection("scene-1"),
       ).resolves.not.toBeNull();
 
-      await selections.clearSceneStockMedia("scene-1");
+      const cleared = await selections.clearSceneStockMedia("scene-1");
+      expect(cleared.mediaPreference).toBe("none");
       await expect(
         selections.getStockMediaSelection("scene-1"),
       ).resolves.toBeNull();
       await expect(
         prisma.asset.findUnique({ where: { id: "stock-asset" } }),
       ).resolves.not.toBeNull();
+
+      const created = await createProjectFromPlan(
+        {
+          projectName: "Automatic stock",
+          scriptName: "Created",
+          scenes: [
+            {
+              text: "Ocean scene",
+              templateId: "kinetic",
+              emphasis: [],
+              backgroundQuery: "ocean waves",
+              mediaKind: "image",
+            },
+          ],
+        },
+        "portrait",
+        [
+          {
+            type: "image",
+            url: "/media/stock-media/test.jpg",
+            effect: "ken-burns",
+          },
+        ],
+        "remotion",
+        undefined,
+        {
+          mediaPreferences: ["image"],
+          stockSelections: [snapshot],
+        },
+      );
+      const automaticScene = await prisma.scene.findFirstOrThrow({
+        where: { scriptId: created.scriptId },
+        include: { stockMediaSelection: true },
+      });
+      expect(JSON.parse(automaticScene.layoutJson!)).toMatchObject({
+        mediaPreference: "image",
+        background: { type: "image" },
+      });
+      expect(automaticScene.stockMediaSelection?.providerAssetId).toBe("42");
     } finally {
       const globalWithPrisma = globalThis as typeof globalThis & {
         prisma?: { $disconnect(): Promise<void> };

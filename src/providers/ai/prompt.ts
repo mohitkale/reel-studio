@@ -117,6 +117,14 @@ export function buildPrompt(input: GeneratePlanInput): {
   const photoOmit = isHyperframes
     ? "OMIT for hf-stat, hf-list, hf-quote, hf-cta, hf-kinetic-slam, hf-money-count, hf-data-chart, and social/logo outros — those need clean type, not busy photos."
     : "OMIT for stat-reveal, icon-grid, quote-card, emoji-punch — those need clean type, not busy photos.";
+  const mediaIntentRule =
+    input.mediaPreference === "none"
+      ? "  • Omit backgroundQuery and mediaKind. The user disabled stock media."
+      : input.mediaPreference === "image"
+        ? "  • When backgroundQuery is present, mediaKind must be image."
+        : input.mediaPreference === "video"
+          ? "  • When backgroundQuery is present, mediaKind must be video."
+          : "  • When backgroundQuery is present, mediaKind may be image or video. Prefer image unless motion materially helps the beat.";
 
   const preset = input.productionPresetId
     ? getProductionPreset(input.productionPresetId)
@@ -154,10 +162,11 @@ export function buildPrompt(input: GeneratePlanInput): {
     "  • mood: energetic|calm|dramatic|playful|inspiring|tech|nature. Prefer calm / inspiring / tech for most beats. Use dramatic sparingly (hooks). Avoid stacking playful + energetic back-to-back neon feels.",
     "  • musicMood: 1–3 words, gentle progression (e.g. 'warm lo-fi', 'soft cinematic', 'calm focus'). No whiplash.",
     "  BACKGROUNDS:",
-    "  • backgroundQuery: 2–4 literal photo keywords when a photo helps (place, object, atmosphere). Prefer soft, uncluttered subjects.",
+    "  • backgroundQuery: 2–4 literal visual-search keywords when stock media helps (place, object, atmosphere). Never return a URL, provider id, or asset id.",
+    mediaIntentRule,
     `  • Use backgroundQuery on ~30–50% of scenes. ${photoOmit}`,
     "  • effect: ken-burns|pan-left|pan-right|pan-up|pan-down — vary gently; ken-burns for hero beats.",
-    `  • Photos crop to ${aspect} — choose subjects that read in that frame.`,
+    `  • Stock media crops to ${aspect} — choose subjects that read in that frame.`,
     "- projectName: 2 to 4 words. scriptName: short, human episode title.",
     "Return only JSON that matches the provided schema.",
   ].join("\n");

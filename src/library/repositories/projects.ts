@@ -3,6 +3,8 @@ import type { ScenePlan } from "@/providers/ai/types";
 import type { SceneBackground } from "@/compositions/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
+import type { MediaPreference } from "@/lib/media-preference";
+import type { ResolvedStockAsset } from "@/providers/stock/schemas";
 import {
   DEFAULT_ENERGY_ID,
   DEFAULT_STYLE_ID,
@@ -106,6 +108,8 @@ export async function createProjectFromPlan(
     preset?: { id: ProductionPresetId; version: string };
     roles?: ProductionSceneRole[];
     assetRefs?: string[][];
+    mediaPreferences?: MediaPreference[];
+    stockSelections?: Array<ResolvedStockAsset | undefined>;
     voiceMode?: "oneshot" | "per_scene";
     outputType?: "video" | "voiceover";
     creationSource?: {
@@ -154,6 +158,8 @@ export async function createProjectFromPlan(
               const background = backgrounds[order];
               const config: Record<string, unknown> = {};
               if (background) config.background = background;
+              config.mediaPreference =
+                production?.mediaPreferences?.[order] ?? "auto";
               if (scene.mood) config.mood = scene.mood;
               if (scene.musicMood) config.musicMood = scene.musicMood;
               if (scene.items?.length) config.items = scene.items;
@@ -175,6 +181,28 @@ export async function createProjectFromPlan(
                 assetRefs: production?.assetRefs?.[order]?.length
                   ? JSON.stringify(production.assetRefs[order])
                   : null,
+                ...(production?.stockSelections?.[order]
+                  ? {
+                      stockMediaSelection: {
+                        create: {
+                          providerId:
+                            production.stockSelections[order]!.providerSnapshot
+                              .providerId,
+                          providerAssetId:
+                            production.stockSelections[order]!.providerSnapshot
+                              .providerAssetId,
+                          kind: production.stockSelections[order]!
+                            .providerSnapshot.kind,
+                          snapshotJson: JSON.stringify(
+                            production.stockSelections[order],
+                          ),
+                          localAssetId:
+                            production.stockSelections[order]!.localAssetId ??
+                            null,
+                        },
+                      },
+                    }
+                  : {}),
               };
             }),
           },

@@ -13,6 +13,8 @@ import type { Orientation } from "@/lib/orientation";
 import type { VideoEngineId } from "@/engines/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
+import type { MediaPreference } from "@/lib/media-preference";
+import type { AutomaticMediaState } from "@/library/automatic-stock-media";
 
 export function useAIProviders() {
   return useQuery({
@@ -70,11 +72,19 @@ export function useGenerateProject() {
       styleId?: StyleId | "auto";
       energy?: EnergyId | "auto";
       productionPresetId?: ProductionPresetId;
+      mediaPreference?: MediaPreference;
     }) =>
-      apiPost<{ projectId: string; scriptId: string }>(
-        "/api/projects/ai",
-        vars,
-      ),
+      apiPost<{
+        projectId: string;
+        scriptId: string;
+        mediaDecisions: Array<{
+          state: AutomaticMediaState;
+          kind?: "image" | "video";
+          providerId?: string;
+          attemptedProviders: string[];
+          message: string;
+        }>;
+      }>("/api/projects/ai", vars),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
   });
 }

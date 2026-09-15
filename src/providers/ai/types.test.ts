@@ -22,8 +22,20 @@ describe("aiSceneSchema effect normalization", () => {
   });
 
   it("keeps a backgroundQuery when present", () => {
-    const s = aiSceneSchema.parse({ ...base, backgroundQuery: "sunrise over mountains" });
+    const s = aiSceneSchema.parse({
+      ...base,
+      backgroundQuery: "sunrise over mountains",
+    });
     expect(s.backgroundQuery).toBe("sunrise over mountains");
+  });
+
+  it("accepts only a bounded media kind and never a provider URL field", () => {
+    expect(aiSceneSchema.parse({ ...base, mediaKind: "video" }).mediaKind).toBe(
+      "video",
+    );
+    expect(
+      aiSceneSchema.parse({ ...base, mediaKind: "audio" }).mediaKind,
+    ).toBeUndefined();
   });
 });
 
@@ -42,7 +54,9 @@ describe("scenePlanSchema markdown sanitization", () => {
     const plan = scenePlanSchema.parse({
       projectName: "My **Project**",
       scriptName: "Episode *One*",
-      scenes: [{ ...base, text: "This is *great* news", emphasis: ["*great*"] }],
+      scenes: [
+        { ...base, text: "This is *great* news", emphasis: ["*great*"] },
+      ],
     });
     expect(plan.scenes[0].text).toBe("This is great news");
     expect(plan.scenes[0].emphasis).toEqual(["great"]);

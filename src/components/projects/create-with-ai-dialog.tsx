@@ -33,6 +33,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Combobox } from "@/components/ui/combobox";
 import { HintTooltip } from "@/components/ui/hint-tooltip";
 import {
+  MEDIA_PREFERENCES,
+  MEDIA_PREFERENCE_LABELS,
+  type MediaPreference,
+} from "@/lib/media-preference";
+import {
   PRODUCTION_PRESETS,
   type ProductionPresetId,
 } from "@/production/presets";
@@ -75,6 +80,8 @@ export function CreateWithAIDialog() {
   const [energy, setEnergy] = React.useState<EnergyPick>("auto");
   const [productionPresetId, setProductionPresetId] =
     React.useState<ProductionPresetId>("product-launch");
+  const [mediaPreference, setMediaPreference] =
+    React.useState<MediaPreference>("auto");
 
   const configured = (providers ?? []).filter((p) => p.configured);
   const effectiveProvider = providerId ?? configured[0]?.id;
@@ -94,17 +101,24 @@ export function CreateWithAIDialog() {
         styleId,
         energy,
         productionPresetId,
+        mediaPreference,
       },
       {
-        onSuccess: ({ scriptId }) => {
+        onSuccess: ({ scriptId, mediaDecisions }) => {
           setOpen(false);
           setBrief("");
           setVideoEngine(DEFAULT_VIDEO_ENGINE);
           setStyleId("auto");
           setEnergy("auto");
           setProductionPresetId("product-launch");
+          setMediaPreference("auto");
+          const selected = mediaDecisions.filter(
+            (decision) => decision.state === "selected",
+          ).length;
           toast.success("Video drafted", {
-            description: "Review and tweak the scenes in the editor.",
+            description: selected
+              ? `${selected} stock background${selected === 1 ? "" : "s"} selected. Review every scene in the editor.`
+              : "No stock result was selected; animated mood backgrounds remain available.",
           });
           router.push(`/editor/${scriptId}`);
         },
@@ -328,6 +342,27 @@ export function CreateWithAIDialog() {
                 }))}
                 searchPlaceholder="Search…"
               />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="ai-media-preference">Automatic media</Label>
+              <Combobox
+                id="ai-media-preference"
+                value={mediaPreference}
+                onChange={(value) =>
+                  setMediaPreference(value as MediaPreference)
+                }
+                options={MEDIA_PREFERENCES.map((value) => ({
+                  value,
+                  label: MEDIA_PREFERENCE_LABELS[value],
+                }))}
+                searchPlaceholder="Search preferences…"
+              />
+              <p className="text-muted-foreground text-xs">
+                Image fallback: Pexels → Pixabay → Unsplash. Video fallback:
+                Pexels → Pixabay. Existing uploads and manual selections always
+                win; no result uses the animated mood background.
+              </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
