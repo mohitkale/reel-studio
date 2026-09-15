@@ -50,7 +50,8 @@ The 0.4 roadmap contained 28 numbered tasks. The implemented release includes:
   shared engine inputs, and six presets rendered by both engines in three ratios
 - deterministic and optional AI planning, safe public-page import, uploaded
   media, scene locks, hook alternatives, and selective regeneration
-- editable caption tracks with timing provenance and SRT/VTT import/export
+- editable caption tracks with timing provenance, SRT/VTT import/export, and
+  versioned appearance presets shared by both render engines
 - reusable audio generation, podcast turn caching, intro/outro bumpers, explicit
   pauses, pronunciation rules, WAV/MP3 output, chapters, transcripts, and
   timestamp-grounded audiogram selection
@@ -84,8 +85,9 @@ three different briefs for every preset during release acceptance.
   Studio use local endpoints configured in Settings; an absent local server is
   reported as an optional provider status. The deterministic no-key planner
   remains available.
-- Caption text and timing are editable. Font, position, box, outline, karaoke,
-  and other caption appearance controls are planned.
+- Caption text, timing, typography, placement, colors, box, outline, shadow,
+  wrapping, and highlighting are editable. Remotion and HyperFrames consume the
+  same versioned caption-style snapshot.
 - The catalog is pinned for reproducible saved projects. It does not
   automatically track the full upstream HyperFrames registry.
 - Reel Studio does not call generative-video APIs or run model-produced code.
@@ -183,9 +185,10 @@ scene timeline. For optional offline speech alignment, install
 `WHISPER_CPP_BIN` plus `WHISPER_CPP_MODEL` in `.env.local`. The caption editor
 and deterministic timing work without whisper.cpp.
 
-Caption appearance currently uses the preset-safe renderer defaults. The next
-planned release adds user-facing typography, placement, background, outline,
-word-count, highlighting, and karaoke controls shared by both engines.
+Caption appearance supports legacy, minimal, editorial, karaoke, technical, and
+cinematic presets. Open the caption editor to adjust typography, placement,
+background, outline, shadow, word and line targets, and highlight mode. Saved
+tracks keep a versioned snapshot so later preset changes do not restyle them.
 
 See [docs/LOCAL_FIRST.md](docs/LOCAL_FIRST.md).
 

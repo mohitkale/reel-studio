@@ -31,14 +31,19 @@ export function SubtitleOverlay({
     style: captions.style,
     tokens,
     layout,
+    engine: "remotion",
   });
   const { activeWordColor, ...innerStyle } = resolved.inner;
+  const wordsPerLine =
+    resolved.style.presetId === "legacy"
+      ? Number.MAX_SAFE_INTEGER
+      : resolved.style.maxWordsPerLine;
   const wordLines = cue.words?.length
-    ? splitCaptionWords(cue.words, resolved.style.maxWordsPerLine)
+    ? splitCaptionWords(cue.words, wordsPerLine)
     : undefined;
   const textLines = wordLines
     ? undefined
-    : splitCaptionText(cue.text, resolved.style.maxWordsPerLine);
+    : splitCaptionText(cue.text, wordsPerLine);
   const lineCount = wordLines?.length ?? textLines?.length ?? 1;
   const lineScale = Math.max(
     0.65,

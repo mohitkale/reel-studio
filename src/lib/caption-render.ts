@@ -32,6 +32,7 @@ export function resolveCaptionRenderStyle(input: {
   style?: CaptionStyleSnapshot;
   tokens: BrandTokens;
   layout: ProductionLayout;
+  engine?: "remotion" | "hyperframes";
 }) {
   const style = input.style ?? LEGACY_CAPTION_STYLE;
   const { layout, tokens } = input;
@@ -73,7 +74,9 @@ export function resolveCaptionRenderStyle(input: {
       padding: `${Math.round(style.paddingY * scale)}px ${Math.round(style.paddingX * scale)}px`,
       borderRadius:
         style.presetId === "legacy"
-          ? Math.max(12, tokens.radius)
+          ? input.engine === "hyperframes"
+            ? 18
+            : Math.max(12, tokens.radius)
           : Math.round(style.radius * scale),
       background: colorWithOpacity(
         style.backgroundColor,

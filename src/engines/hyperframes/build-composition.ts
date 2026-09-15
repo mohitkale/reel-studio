@@ -1064,6 +1064,7 @@ export function buildHyperframesCompositionHtml(
     style: props.captions?.style,
     tokens,
     layout,
+    engine: "hyperframes",
   });
   const captionInner = captionResolved.inner;
   const captionBlocks =
@@ -1077,7 +1078,10 @@ export function buildHyperframesCompositionHtml(
               cue,
               coverSeconds,
               fps: fpsSafe,
-              maxWordsPerLine: captionResolved.style.maxWordsPerLine,
+              maxWordsPerLine:
+                captionResolved.style.presetId === "legacy"
+                  ? Number.MAX_SAFE_INTEGER
+                  : captionResolved.style.maxWordsPerLine,
               maxLines: captionResolved.style.maxLines,
               highlightMode: captionResolved.style.highlightMode,
               activeWordColor: captionInner.activeWordColor,

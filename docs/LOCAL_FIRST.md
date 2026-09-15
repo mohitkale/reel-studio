@@ -40,6 +40,10 @@ Only when you explicitly configure and use a provider:
 
 Nothing is sent for analytics or telemetry. See [SECURITY.md](../SECURITY.md).
 
+Caption timing and appearance remain local project data. Each styled track keeps
+a versioned snapshot used by both Remotion and HyperFrames; older tracks with no
+snapshot retain the 0.4 caption appearance.
+
 Ollama and LM Studio prompts go only to the configured local endpoint. Loopback
 is the default; private LAN endpoints require an explicit per-provider opt-in.
 Hostnames are resolved before each request, redirects are rejected, and cloud

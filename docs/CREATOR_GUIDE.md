@@ -35,6 +35,9 @@ planning chooses a non-data layout when no values are available.
   revise individual lines. Unchanged scene clips are reused.
 - Import SRT/VTT captions, use provider timing, or start with clearly labeled
   estimated timing. Optional whisper.cpp alignment stays local.
+- Choose a caption appearance preset or adjust font, placement, colors, box,
+  outline, shadow, wrapping, and highlighting. The preview uses the same style
+  snapshot and safe-area measurements as export.
 - Start podcasts as solo narration, a two-host discussion, or an interview. Add
   optional six-second intro/outro audio, per-turn pauses, and pronunciation
   substitutions before generating a take. Saved takes retain an immutable
