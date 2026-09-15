@@ -178,6 +178,26 @@ describe("stock-media scene persistence", () => {
         background: { type: "image" },
       });
       expect(automaticScene.stockMediaSelection?.providerAssetId).toBe("42");
+
+      const { captureVideoSnapshot } = await import("./video-snapshot");
+      const frozen = await captureVideoSnapshot(created.scriptId);
+      expect(frozen.stockMedia).toEqual([
+        expect.objectContaining({
+          sceneId: automaticScene.id,
+          snapshot: expect.objectContaining({
+            contentHash: "a".repeat(64),
+            providerSnapshot: expect.objectContaining({
+              providerId: "pexels",
+              providerAssetId: "42",
+              sourcePageUrl: "https://www.example.test/photo/42",
+              attribution: {
+                text: "Photo by Creator",
+                required: true,
+              },
+            }),
+          }),
+        }),
+      ]);
     } finally {
       const globalWithPrisma = globalThis as typeof globalThis & {
         prisma?: { $disconnect(): Promise<void> };

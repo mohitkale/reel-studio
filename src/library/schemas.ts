@@ -114,6 +114,7 @@ export const sceneBackgroundSchema = z.object({
     }),
   effect: panEffectSchema.optional(),
   muted: z.boolean().optional(),
+  stock: z.boolean().optional(),
 });
 
 // Broad emotional/visual moods a scene can carry, used to auto-select a

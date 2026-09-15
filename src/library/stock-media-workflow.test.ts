@@ -149,7 +149,12 @@ describe("stock-media selection workflow", () => {
     expect(deps.apply).toHaveBeenCalledWith(
       "scene-1",
       expect.objectContaining({ localAssetId: "stock-asset" }),
-      { type: "image", url: "/media/stock.jpg", effect: "pan-left" },
+      {
+        type: "image",
+        url: "/media/stock.jpg",
+        effect: "pan-left",
+        stock: true,
+      },
     );
     expect(result.scene.background?.url).toBe("/media/stock.jpg");
   });

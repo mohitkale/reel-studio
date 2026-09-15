@@ -133,8 +133,8 @@ async function backgroundForSnapshot(
     );
   }
   return snapshot.providerSnapshot.kind === "image"
-    ? { type: "image", url, effect: imageEffect }
-    : { type: "video", url, muted: true };
+    ? { type: "image", url, effect: imageEffect, stock: true }
+    : { type: "video", url, muted: true, stock: true };
 }
 
 /** Search again on the server, resolve, materialize and atomically select an asset. */

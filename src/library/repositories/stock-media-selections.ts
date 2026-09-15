@@ -156,3 +156,19 @@ export async function clearSceneStockMedia(sceneId: string): Promise<SceneDTO> {
 export async function clearStockMediaSelection(sceneId: string): Promise<void> {
   await prisma.stockMediaSelection.deleteMany({ where: { sceneId } });
 }
+
+/** Immutable provider snapshots ordered with their owning script scenes. */
+export async function listScriptStockMediaSelections(scriptId: string) {
+  const selections = await prisma.stockMediaSelection.findMany({
+    where: { scene: { scriptId } },
+    include: { scene: { select: { order: true } } },
+  });
+  return selections
+    .sort((left, right) => left.scene.order - right.scene.order)
+    .map((selection) => ({
+      sceneId: selection.sceneId,
+      snapshot: resolvedStockAssetSchema.parse(
+        JSON.parse(selection.snapshotJson),
+      ),
+    }));
+}

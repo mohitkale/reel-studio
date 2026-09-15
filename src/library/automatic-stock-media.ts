@@ -118,8 +118,8 @@ async function background(
   }
   if (!url) throw new Error("Resolved stock asset has no renderable URL");
   return snapshot.providerSnapshot.kind === "video"
-    ? { type: "video", url, muted: true }
-    : { type: "image", url, effect: effect ?? "ken-burns" };
+    ? { type: "video", url, muted: true, stock: true }
+    : { type: "image", url, effect: effect ?? "ken-burns", stock: true };
 }
 
 /** Resolve a bounded AI/deterministic intent through a fixed provider fallback. */

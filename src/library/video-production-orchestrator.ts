@@ -4,6 +4,7 @@ import { captureVideoSnapshot } from "@/library/video-snapshot";
 import {
   videoSnapshotSchema,
   preparedVideoCompositionSchema,
+  stockMediaOutputMetadata,
 } from "@/production/video-snapshot";
 import {
   resolveVideoStageMedia,
@@ -422,7 +423,10 @@ export async function executeVideoProductionJob(
       path: artifact.path,
       checksum:
         typeof metadata.checksum === "string" ? metadata.checksum : undefined,
-      metadata,
+      metadata: {
+        ...metadata,
+        stockMedia: stockMediaOutputMetadata(prepared.snapshot),
+      },
     });
   });
 }

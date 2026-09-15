@@ -6,6 +6,7 @@ import {
   captionTimingSourceSchema,
   brandOverridesSchema,
 } from "@/library/schemas";
+import { resolvedStockAssetSchema } from "@/providers/stock/schemas";
 
 const scene = sceneConfigSchema.extend({
   id: z.string().min(1),
@@ -96,11 +97,40 @@ export const videoSnapshotSchema = z
   .object({
     version: z.literal(1),
     sfxAssets: z.record(z.string(), z.string()).optional(),
+    stockMedia: z
+      .array(
+        z
+          .object({
+            sceneId: z.string().min(1),
+            snapshot: resolvedStockAssetSchema,
+          })
+          .strict(),
+      )
+      .default([]),
     script: videoScriptSnapshotSchema,
     take: videoTakeSnapshotSchema.nullable(),
   })
   .strict();
 export type VideoSnapshot = z.infer<typeof videoSnapshotSchema>;
+
+export function stockMediaOutputMetadata(snapshot: VideoSnapshot) {
+  return snapshot.stockMedia.map(({ sceneId, snapshot: selected }) => ({
+    sceneId,
+    providerId: selected.providerSnapshot.providerId,
+    providerAssetId: selected.providerSnapshot.providerAssetId,
+    kind: selected.providerSnapshot.kind,
+    creator: selected.providerSnapshot.creator,
+    creatorUrl: selected.providerSnapshot.creatorUrl,
+    sourcePageUrl: selected.providerSnapshot.sourcePageUrl,
+    attribution: selected.providerSnapshot.attribution,
+    acquisitionPolicy: selected.providerSnapshot.acquisitionPolicy,
+    selectedRendition: selected.selectedRendition,
+    sourceRevision: selected.sourceRevision,
+    localAssetId: selected.localAssetId,
+    contentHash: selected.contentHash,
+    usageEvent: selected.usageEvent,
+  }));
+}
 
 /** Validates the exact internal composition artifact consumed by either adapter. */
 export const preparedVideoCompositionSchema = z

@@ -6,33 +6,35 @@ configure a provider key and use that feature.
 
 ## What stays local
 
-| Capability | Local behaviour |
-| --- | --- |
-| Projects & scripts | SQLite database under `prisma/` |
-| Uploaded assets & renders | Files under `media/` (git-ignored) |
-| HyperFrames / Remotion preview & MP4 export | Runs on your machine (or in Docker on localhost) |
-| Kokoro TTS | In-browser or `kokoro-server` — no vendor API key |
-| Web Speech preview | Browser-only |
-| Bundled music | CC0 files in `public/music/` |
-| Podcast scripts & takes | Local DB + `media/` audio |
+| Capability                                  | Local behaviour                                   |
+| ------------------------------------------- | ------------------------------------------------- |
+| Projects & scripts                          | SQLite database under `prisma/`                   |
+| Uploaded assets & renders                   | Files under `media/` (git-ignored)                |
+| HyperFrames / Remotion preview & MP4 export | Runs on your machine (or in Docker on localhost)  |
+| Kokoro TTS                                  | In-browser or `kokoro-server` — no vendor API key |
+| Web Speech preview                          | Browser-only                                      |
+| Bundled music                               | CC0 files in `public/music/`                      |
+| Podcast scripts & takes                     | Local DB + `media/` audio                         |
 
 ## Optional cloud features
 
-| Feature | Local option | Optional cloud |
-| --- | --- | --- |
-| Voice preview | Web Speech | — |
-| Voice generation | Kokoro / VoiceForge | ElevenLabs, Cartesia |
-| Video engine | HyperFrames (Apache-2.0) or Remotion | — (both render locally) |
-| AI scene / podcast planning | Manual editing | Gemini, OpenAI |
-| Backgrounds | Local upload / mood gradients | Unsplash |
-| Music | Bundled CC0 / user upload | Jamendo |
+| Feature                     | Local option                         | Optional cloud            |
+| --------------------------- | ------------------------------------ | ------------------------- |
+| Voice preview               | Web Speech                           | —                         |
+| Voice generation            | Kokoro / VoiceForge                  | ElevenLabs, Cartesia      |
+| Video engine                | HyperFrames (Apache-2.0) or Remotion | — (both render locally)   |
+| AI scene / podcast planning | Manual editing                       | Gemini, OpenAI            |
+| Backgrounds                 | Local upload / mood gradients        | Pexels, Pixabay, Unsplash |
+| Music                       | Bundled CC0 / user upload            | Jamendo                   |
 
 ## What leaves your machine
 
 Only when you explicitly configure and use a provider:
 
 - **Gemini / OpenAI** — script brief and planning prompts you submit
-- **Unsplash** — search queries for stock backgrounds
+- **Pexels / Pixabay / Unsplash** — stock search queries and the selected
+  provider asset request. Download-policy selections are cached in local media;
+  compliant hotlinks retain their provider URL and attribution snapshot.
 - **ElevenLabs / Cartesia** — text (and cloning samples if you use those features)
 - **Jamendo** — music search queries
 

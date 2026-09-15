@@ -92,11 +92,11 @@ export function buildCatalogSceneBlock(args: {
   const srcName = `${meta.id}--${args.scene.id}.html`;
   // Prefer real stock photos when present; otherwise keep native mood stages
   // (flat CSS washes look low-effort under VO).
-  const hasPhoto = /class="bg-photo/.test(args.backgroundHtml);
-  const bg = hasPhoto ? args.backgroundHtml : "";
+  const hasMedia = /class="(?:bg-photo|bg-scrim)/.test(args.backgroundHtml);
+  const bg = hasMedia ? args.backgroundHtml : "";
 
   const html = `
-      <section id="scene-${escapeHtml(args.scene.id)}" class="clip scene catalog-scene ${args.transitionClass}${hasPhoto ? " has-photo" : ""}"
+      <section id="scene-${escapeHtml(args.scene.id)}" class="clip scene catalog-scene ${args.transitionClass}${hasMedia ? " has-photo" : ""}"
                data-scene-id="${escapeHtml(args.scene.id)}"
                data-catalog-block="${escapeHtml(meta.id)}"
                data-start="${args.absoluteStart.toFixed(3)}"

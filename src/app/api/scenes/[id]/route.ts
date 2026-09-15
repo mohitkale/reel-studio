@@ -19,6 +19,7 @@ const backgroundSchema = z.object({
     .enum(["ken-burns", "pan-left", "pan-right", "pan-up", "pan-down"])
     .optional(),
   muted: z.boolean().optional(),
+  stock: z.boolean().optional(),
 });
 
 const sceneMoodSchema = z.enum([

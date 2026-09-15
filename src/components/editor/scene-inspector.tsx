@@ -184,8 +184,25 @@ function BackgroundEditor({
     }
     onChange(
       next.kind === "image"
-        ? { type: "image", url: next.url.trim(), effect: next.effect }
-        : { type: "video", url: next.url.trim(), muted: next.muted },
+        ? {
+            type: "image",
+            url: next.url.trim(),
+            effect: next.effect,
+            ...(background?.stock && background.url === next.url.trim()
+              ? { stock: true }
+              : {}),
+          }
+        : {
+            type: "video",
+            url: next.url.trim(),
+            muted:
+              background?.stock && background.url === next.url.trim()
+                ? true
+                : next.muted,
+            ...(background?.stock && background.url === next.url.trim()
+              ? { stock: true }
+              : {}),
+          },
     );
   }
 
@@ -361,11 +378,14 @@ function BackgroundEditor({
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
-                  checked={muted}
+                  checked={background?.stock ? true : muted}
+                  disabled={background?.stock}
                   onChange={(e) => changeMuted(e.target.checked)}
                   className="border-border size-4 rounded"
                 />
-                Mute video audio track
+                {background?.stock
+                  ? "Stock video audio is always muted"
+                  : "Mute video audio track"}
               </label>
               {url.trim() ? <VideoUrlStatus url={url} /> : null}
             </>
