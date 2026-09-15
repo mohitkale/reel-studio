@@ -63,6 +63,7 @@ export async function updateScene(
   // Structured scene options live together in the layoutJson config
   // blob; merge so updating one never clobbers the others.
   let layoutJson: string | undefined;
+  let clearStockSelection = false;
   if (
     data.background !== undefined ||
     data.items !== undefined ||
@@ -77,8 +78,11 @@ export async function updateScene(
     });
     const config = parseJsonColumn(current?.layoutJson, sceneConfigSchema, {});
     if (data.background !== undefined) {
+      const previousUrl = config.background?.url;
       if (data.background === null) delete config.background;
       else config.background = data.background;
+      clearStockSelection =
+        data.background === null || data.background.url !== previousUrl;
     }
     if (data.items !== undefined) {
       if (data.items === null || data.items.length === 0) delete config.items;
@@ -113,7 +117,7 @@ export async function updateScene(
     }
   }
 
-  const scene = await prisma.scene.update({
+  const update = prisma.scene.update({
     where: { id },
     data: {
       text: data.text,
@@ -130,6 +134,14 @@ export async function updateScene(
           : undefined,
     },
   });
+  const scene = clearStockSelection
+    ? (
+        await prisma.$transaction([
+          update,
+          prisma.stockMediaSelection.deleteMany({ where: { sceneId: id } }),
+        ])
+      )[0]
+    : await update;
   return toSceneDTO(scene);
 }
 

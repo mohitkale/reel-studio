@@ -26,6 +26,8 @@ import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AssetThumbPicker } from "@/components/assets/asset-thumb-picker";
+import { StockMediaPicker } from "@/components/editor/stock-media-picker";
+import type { Orientation } from "@/lib/orientation";
 
 const VISUAL_HINTS: Record<string, string> = {
   "stat-reveal": "Key stat or number (e.g. 73% or 10x)",
@@ -129,9 +131,15 @@ function VideoUrlStatus({ url }: { url: string }) {
 /* ------------------------------------------------------------------ */
 
 function BackgroundEditor({
+  scriptId,
+  sceneId,
+  orientation,
   background,
   onChange,
 }: {
+  scriptId: string;
+  sceneId: string;
+  orientation: Orientation;
   background: SceneBackground | undefined;
   onChange: (bg: SceneBackground | null) => void;
 }) {
@@ -194,6 +202,14 @@ function BackgroundEditor({
     commit({ kind, url, effect, muted: next });
   }
 
+  function applyStockBackground(next: SceneBackground | null) {
+    const nextKind = backgroundKind(next ?? undefined);
+    setKind(nextKind);
+    setUrl(next?.url ?? "");
+    setEffect(next?.effect ?? "ken-burns");
+    setMuted(next?.muted ?? true);
+  }
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -231,6 +247,14 @@ function BackgroundEditor({
           ))}
         </div>
       </div>
+
+      <StockMediaPicker
+        scriptId={scriptId}
+        sceneId={sceneId}
+        orientation={orientation}
+        imageEffect={effect}
+        onApplied={applyStockBackground}
+      />
 
       {kind !== "none" && (
         <>
@@ -430,6 +454,7 @@ export function SceneInspector({
   onDelete,
   saving,
   videoEngine = "remotion",
+  orientation = "portrait",
 }: {
   scene: SceneDTO;
   sceneIndex: number;
@@ -439,6 +464,7 @@ export function SceneInspector({
   onDelete: (id: string) => void;
   saving?: boolean;
   videoEngine?: VideoEngineId;
+  orientation?: Orientation;
 }) {
   const [text, setText] = React.useState(scene.text);
   const [spokenText, setSpokenText] = React.useState(
@@ -624,6 +650,9 @@ export function SceneInspector({
 
         {/* Background (image/video) — available for every template */}
         <BackgroundEditor
+          scriptId={scene.scriptId}
+          sceneId={scene.id}
+          orientation={orientation}
           background={scene.background}
           onChange={(bg) => onUpdate({ id: scene.id, background: bg })}
         />

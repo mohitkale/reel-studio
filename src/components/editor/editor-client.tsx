@@ -23,6 +23,7 @@ import {
 import {
   ORIENTATIONS,
   ORIENTATION_LABELS,
+  orientationFromDims,
   type Orientation,
 } from "@/lib/orientation";
 import {
@@ -946,6 +947,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
                 onDelete={(id) => deleteScene.mutate(id)}
                 saving={updateScene.isPending}
                 videoEngine={videoEngine}
+                orientation={orientationFromDims(script.width, script.height)}
               />
             ) : (
               <p className="text-muted-foreground text-sm">

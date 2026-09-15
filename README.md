@@ -71,9 +71,11 @@ three different briefs for every preset during release acceptance.
   web process. Run `npm run production:worker` as a second process for continuous
   unattended queue processing. Request handlers also make a best-effort attempt
   to process newly submitted work.
-- Stock media currently means optional Unsplash images. Pexels, Pixabay, Coverr,
-  stock video, provider fallback, local asset caching, and a manual media picker
-  are planned work.
+- The scene editor can search configured Unsplash, Pexels, and Pixabay providers
+  by media kind and orientation, preview attribution, and select, replace, or
+  clear stock backgrounds. Pexels and Pixabay selections are cached locally;
+  compliant Unsplash URLs remain hotlinked. Coverr stays disabled behind its
+  unresolved license gate. Automatic provider choice and fallback are planned.
 - AI planning currently supports Gemini and OpenAI. Ollama and LM Studio are
   planned; the deterministic no-key planner remains available.
 - Caption text and timing are editable. Font, position, box, outline, karaoke,

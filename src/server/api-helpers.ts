@@ -3,10 +3,15 @@ import { ZodError } from "zod";
 
 import { ProviderError } from "@/providers/voice/types";
 import { AIError } from "@/providers/ai/types";
+import { StockError } from "@/providers/stock/types";
 
 /** Map thrown errors to JSON responses with sensible status codes and messages. */
 export function errorResponse(e: unknown): NextResponse {
-  if (e instanceof ProviderError || e instanceof AIError) {
+  if (
+    e instanceof ProviderError ||
+    e instanceof AIError ||
+    e instanceof StockError
+  ) {
     const status = e.status >= 400 && e.status < 600 ? e.status : 502;
     return NextResponse.json(
       { error: e.message, providerId: e.providerId },
