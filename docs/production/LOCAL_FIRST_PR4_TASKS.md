@@ -12,7 +12,7 @@ the user requests publication.
 | ---: | --------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------ |
 |   13 | Add manual provider/kind/orientation search, preview, attribution inspection, selection, replacement, and clear | Complete | `ed22d28eda7dd89445c4d660960d1e8bf32c2878` |
 |   14 | Persist media preferences and deterministic/AI selection with explicit-choice precedence and visible fallback   | Complete | `54d40614259c452648dde5edb14d428c47f51584` |
-|   15 | Render downloaded stock video and provider metadata through both engines in all three ratios                    | Pending  | —                                          |
+|   15 | Render downloaded stock video and provider metadata through both engines in all three ratios                    | Complete | `c24fc49aa032423f8bbb9159e5bc55f7f45c629a` |
 
 ## Scope decisions
 
@@ -100,3 +100,52 @@ Validation:
 - `git diff --check` passed before the implementation commit.
 - No Docker command, provider credential, remote provider request, push, or
   host-level change was used for this task.
+
+## Task 15 — deterministic stock-video rendering
+
+Completed at `2026-09-15T17:13:31+05:30` in
+`c24fc49aa032423f8bbb9159e5bc55f7f45c629a`.
+
+- Added an explicit stock-media marker to the shared scene contract. Manual and
+  automatic selections persist it, editor changes preserve it only while the
+  selected URL remains unchanged, and stock-video audio is always muted in the
+  editor, Remotion, and HyperFrames.
+- Remotion starts provider video at frame zero, trims it to the owning scene,
+  and uses a cover crop. HyperFrames emits the video as its own root-level timed
+  clip with a zero media offset, exact scene duration, cover crop, and muted
+  playback; scene scrims and native/catalog/preset overlays remain above it.
+- Video production snapshots now freeze ordered provider selections alongside
+  the script revision. Successful output records retain provider and asset ids,
+  creator/source links, attribution, acquisition policy, selected rendition,
+  terms revision, local content hash, and usage-report state. Version-1
+  snapshots without this new field still parse with an empty selection list.
+- Added a credential-free render regression that generates a local video with
+  an audio stream and verifies both engines in portrait, landscape, and square.
+  The check fails on wrong codec, dimensions, duration, blank foreground, or an
+  audio stream leaking from the muted stock source.
+
+Validation:
+
+- `npm run typecheck`, `npm run lint`, and `npm run security:scan` passed.
+- `npm run test:unit` passed: 59 files, 316 tests.
+- Focused migrated-database, stock workflow, automatic selection, production
+  output, REST, and MCP contract suite passed: 8 files, 42 tests.
+- `npm run build` passed and included all stock-media and scene routes in the
+  Next.js production route manifest.
+- `npm run test:stock-video-render` passed both engines in portrait, landscape,
+  and square. Each generated source contained audio; every output was H.264 at
+  the expected dimensions/duration with visible content and no audio track.
+- Installed `hyperframes check` passed lint, runtime, layout, motion, and
+  contrast with zero findings for the generated portrait, landscape, and square
+  compositions.
+- The bundled Product Launch image fixture rendered successfully through both
+  engines in portrait, landscape, and square.
+- Browser acceptance against a fresh, migrated, separately seeded SQLite
+  database verified provider/kind/orientation picker states, persisted `video`
+  preference across reload, and persisted `none` behavior across reload. No
+  provider search was submitted.
+- The isolated web/worker process group was stopped after browser validation;
+  port 3217 and the production-worker lock were both clear.
+- `git diff --check` passed before the implementation commit.
+- No Docker command, remote provider request, software installation, push, PR,
+  merge, or computer setting change was used for this task.
