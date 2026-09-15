@@ -1,6 +1,18 @@
 {
-  "source": "https://github.com/heygen-com/hyperframes/tree/c93c7654033282e1a66a662a39fb10b8ed273b7d/registry",
-  "revision": "c93c7654033282e1a66a662a39fb10b8ed273b7d",
+  "schemaVersion": 1,
+  "source": "https://github.com/heygen-com/hyperframes/tree/cfe5dcfad310ced2a5844998628daa2b8a0f53d7/registry",
+  "releaseTag": "v0.8.40",
+  "revision": "cfe5dcfad310ced2a5844998628daa2b8a0f53d7",
+  "packages": {
+    "producer": {
+      "name": "@hyperframes/producer",
+      "version": "0.8.40"
+    },
+    "cli": {
+      "name": "hyperframes",
+      "version": "0.8.40"
+    }
+  },
   "license": "Apache-2.0",
   "items": [
     {
@@ -58,6 +70,30 @@
       "templateId": "hf-notes-reveal-v1",
       "presets": ["editorial-explainer", "creator-punch"],
       "layouts": ["landscape"]
+    },
+    {
+      "name": "carousel-circle-1",
+      "type": "block",
+      "templateId": "hf-carousel-circle-v1",
+      "integration": "native-adapter",
+      "presets": ["product-launch", "cinematic-brand"],
+      "layouts": ["portrait", "landscape", "square"]
+    },
+    {
+      "name": "carousel-path-1",
+      "type": "block",
+      "templateId": "hf-carousel-path-v1",
+      "integration": "native-adapter",
+      "presets": ["product-launch", "editorial-explainer"],
+      "layouts": ["portrait", "landscape", "square"]
+    },
+    {
+      "name": "carousel-vision-1",
+      "type": "block",
+      "templateId": "hf-carousel-vision-v1",
+      "integration": "native-adapter",
+      "presets": ["cinematic-brand", "creator-punch"],
+      "layouts": ["portrait", "landscape", "square"]
     },
     {
       "name": "browser-device-stage",

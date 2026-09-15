@@ -1,0 +1,1932 @@
+{
+  "schemaVersion": 1,
+  "releaseTag": "v0.8.40",
+  "sourceRevision": "cfe5dcfad310ced2a5844998628daa2b8a0f53d7",
+  "items": [
+    {
+      "name": "ai-chat-reveal",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "apple-money-count",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "bar-chart-race",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "beat-freeze-cut",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "blue-sweater-intro-video",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "camcorder-hud",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "camera-dolly-zoom",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-circle-2",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-circle-3",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-circle-4",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-circle-5",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-orbit-1",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-orbit-2",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-orbit-3",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-orbit-4",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-orbit-5",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-path-2",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-path-3",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-path-4",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-path-5",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-text-circle-1",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-text-circle-2",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-text-circle-3",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-text-circle-4",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-text-circle-5",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-vision-2",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-vision-3",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-vision-4",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "carousel-vision-5",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "chatgpt-exchange",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "chromatic-radial-split",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "cinematic-zoom",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "claude-exchange",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-3d-extrude",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-highlight",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-morph",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-particle-assemble",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-scroll",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-shader-dissolve",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-apple-terminal-basic",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-apple-terminal-clear-dark",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-apple-terminal-clear-light",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-apple-terminal-grass",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-apple-terminal-homebrew",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-apple-terminal-man-page",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-apple-terminal-novel",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-apple-terminal-ocean",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-apple-terminal-pro",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-apple-terminal-red-sands",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-apple-terminal-silver-aerogel",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-apple-terminal-solid-colors",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-dark-2026",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-dark-plus",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-flight",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-high-contrast",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-high-contrast-light",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-light-2026",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-light-modern",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-light-plus",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-monokai",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-solarized-light",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-visual-studio-dark",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-snippet-visual-studio-light",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "code-typing",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "cosmic-orb",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "cross-warp-morph",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "domain-warp-dissolve",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "editorial-flash-overlay",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "flash-through-white",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "flowchart-vertical",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "freeze-frame-dressing",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "gallery-tunnel",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "glitch",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "gravitational-lens",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "halftone-field",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "heygen-avatar-promo-card",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "hw-frame",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "hw-path-text",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "hw-pipeline",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "hw-scribble-transition",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "hw-text-cloud",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "hw-title",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "hw-write-title",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "instagram-follow",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "ios26-liquid-glass",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "light-leak",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "liquid-glass-context-menu",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "liquid-glass-media-controls",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "liquid-glass-notification",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "liquid-glass-widgets",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "lower-third-bild",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "lt-accent-underline",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "lt-bold-block",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "lt-clean-bar",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "lt-color-block",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "lt-dark-card",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "lt-kicker-name",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "lt-mask-reveal",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "lt-neon-border",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "lt-side-rule",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "lt-soft-pill",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "lt-stack-bars",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "macos-notification",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "macos-tahoe-liquid-glass",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "message-thread-reveal",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "mk-background",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "mk-callout-highlight",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "mk-clone-wall-transition",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "mk-line-graph",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "mk-placeholder-grid",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "mk-progress-stat",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "mk-specs-list",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "news-ticker",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "north-korea-locked-down",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "notification-cascade",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "nyc-paris-flight",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "organic-light-leak-overlay",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "oscilloscope-trace",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "rack-focus",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "reddit-post",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "ridged-burn",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "ripple-waves",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "sdf-iris",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "share-sheet-carousel",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "slack-notification-ad",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "spain-map",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "spiral-galaxy",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "split-flap-board",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "spotify-card",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "swirl-vortex",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "thermal-distortion",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "thread-message-stack",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "tiktok-follow",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "transitions-3d",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "transitions-blur",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "transitions-cover",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "transitions-destruction",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "transitions-dissolve",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "transitions-distortion",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "transitions-grid",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "transitions-light",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "transitions-mechanical",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "transitions-other",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "transitions-push",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "transitions-radial",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "transitions-scale",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "us-map",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "us-map-bubble",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "us-map-flow",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "us-map-hex",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "vfx-anamorphic-flare",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "vfx-iphone-device",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "vfx-liquid-background",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "vfx-liquid-glass",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "vfx-magnetic",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "vfx-portal",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "vfx-shatter",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "vfx-text-cursor",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "vpn-youtube-spot",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "weight-wave",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "whip-pan",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "world-map",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "x-post",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "yt-comment-card",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "yt-lcd-background",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "yt-logo-intro",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "yt-lower-third",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "yt-prism-title",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "yt-vertical-fill",
+      "type": "hyperframes:block",
+      "reason": "Block is outside the reviewed Reel Studio selection for v0.8.40; responsive, seek, media, and render review is required."
+    },
+    {
+      "name": "arc-motion-path",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "ascii-render-pass",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "ascii-trail-reveal",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "aurora-drift",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "avatar-cloud",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "avatar-group-hover",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "badge-pop",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "beat-pulse-background",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "beat-timeline",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "blur-in",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "blur-out-up",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "bottom-up-letters",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "camera-rig-depth-stack",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "camera-scan-gate",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "camera-shake",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "caption-blend-difference",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "caption-camera-follow",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "caption-clip-wipe",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "caption-emoji-pop",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "caption-glitch-rgb",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "caption-gradient-fill",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "caption-highlight",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "caption-kinetic-slam",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "caption-matrix-decode",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "caption-neon-accent",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "caption-neon-glow",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "caption-parallax-layers",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "caption-particle-burst",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "caption-weight-shift",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "card-resize",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "char-slam-explode",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "chart-story",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "chat-message",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "chat-thread",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "chromatic-aberration-wipe",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "code-terminal-run",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "comparison-split",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "confetti",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "conic-progress-ring",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "constellation-hub",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "count-up",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "cta-close",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "cta-lockup",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "cursor-glyph-trail",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "cut-the-curve",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "decline-chart",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "device-frame-stage",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "directional-wipe",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "drift-hold",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "dynamic-grid",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "echo-trail",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "facet-morph",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "fade-through",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "focus-blur-resolve",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "focus-rack",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "focus-swap",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "gesture-tap",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "gloss-sweep",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "grade-split-reveal",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "grain-field",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "grid-card-assemble",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "grid-pixelate-wipe",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "halftone-dissolve",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "headline-slam",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "hw-arrow",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "hw-boil",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "hw-box-label",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "hw-callout-circle",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "hw-underline",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "icon-morph-beat",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "icon-swap",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "ink-bleed-reveal",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "inline-highlight",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "input-feedback",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "iris-reveal",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "keyframe-scrub-stack",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "kinetic-center-build",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "kinetic-type-swap",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "light-sweep-pass",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "line-by-line-slide",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "line-swap",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "locked-nucleus-orbit",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "logo-brand-close",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "logo-sting",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "logo-wall",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "marker-checklist-card",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "marker-highlight",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "match-cut",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "matrix-decode",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "menu-morph",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "mesh-gradient-bg",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "micro-transitions",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "mk-emphasis-type",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "mk-usage-arc",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "modal-morph",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "morph-swap",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "morph-text",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "motion-blur",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "multi-device-splay",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "multiplayer-cursors",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "native-notification-pop",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "notes-typing",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "notification-pileup",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "notification-stack",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "number-pop-in",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "number-wheel",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "offset-path-traveler",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "onboarding-stepper-flow",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "ordered-dither-pass",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "outline-draw",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "oversized-cursor",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "overwhelm-surround",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "page-slide",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "pan-stations",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "panel-reveal",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "parallax-device-dive",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "parallax-unzoom",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "parallax-zoom",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "particle-image-reveal",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "particle-text-dissolve",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "per-word-crossfade",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "per-word-rise",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "perspective-marquee",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "physical-exit",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "press-ripple",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "pull-back-reveal",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "pull-to-refresh",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "push-in",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "radial-surround",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "rgb-glitch-text",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "rubber-band-bumper",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "scan-band",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "scramble-reveal",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "screen-flow-carousel",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "scroll-camera-story",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "scroll-feed",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "segmentation-flood",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "separator",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "settings-toggle-flow",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "shared-axis-y",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "shared-axis-z",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "sheet-spring-up",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "signup-flow",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "skeleton-reveal",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "slit-scan-reveal",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "slot-machine-roll",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "social-proof-card",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "soft-blob-touch",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "soft-blur-in",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "split-tilt-cards",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "spotlight-card",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "spring-pop",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "spring-stack-shuffle",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "stagger-cascade",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "stagger-lattice",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "staggered-fade-up",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "star-rating-fill",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "state-chip-rail",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "sticky-mock-swap",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "stitched-text-draw",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "stop-motion-cadence",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "store-badge-lockup",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "streaming-text",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "strikethrough-replace",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "success-check",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "svg-line-draw-loader",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "svg-mask-reveal",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "svg-stroke-trace",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "swipe-rail",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "tabs-slide-indicator",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "telemetry-hud",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "terminal-simulator",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "testimonial-card",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "testimonial-proof-card",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "text-shimmer",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "text-stagger",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "text-state-swap",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "texture-mask-text",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "three-orbiting-cards",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "ticker-takeover",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "tilt-card",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "titlecard-calm",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "titlecard-lockup",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "toggle-flip",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "top-down-letters",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "touch-indicator",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "tracing-beam",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "tracking-in",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "trust-strip",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "type-match-cut",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "typed-prompt",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "typing-indicator",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "ui-focus-zoom",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "variable-axis-type",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "variable-font-flex",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "vector-editor-rig",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "velocity-throw-snap",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "vox-annotate",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "whip-pan-cut",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "whiteboard-ink",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "wordmark-tiles",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "x-follow-card",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "yt-camera-move",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "yt-circle-pointer",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "yt-feather-highlight",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "yt-screen-warp",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "zoom-through-transition",
+      "type": "hyperframes:component",
+      "reason": "Component is outside the reviewed Reel Studio selection for v0.8.40; dependency and host integration review is required."
+    },
+    {
+      "name": "decision-tree",
+      "type": "hyperframes:example",
+      "reason": "Registry examples are project scaffolds and cannot be embedded as production catalog items."
+    },
+    {
+      "name": "kinetic-type",
+      "type": "hyperframes:example",
+      "reason": "Registry examples are project scaffolds and cannot be embedded as production catalog items."
+    },
+    {
+      "name": "nyt-graph",
+      "type": "hyperframes:example",
+      "reason": "Registry examples are project scaffolds and cannot be embedded as production catalog items."
+    },
+    {
+      "name": "play-mode",
+      "type": "hyperframes:example",
+      "reason": "Registry examples are project scaffolds and cannot be embedded as production catalog items."
+    },
+    {
+      "name": "product-promo",
+      "type": "hyperframes:example",
+      "reason": "Registry examples are project scaffolds and cannot be embedded as production catalog items."
+    },
+    {
+      "name": "swiss-grid",
+      "type": "hyperframes:example",
+      "reason": "Registry examples are project scaffolds and cannot be embedded as production catalog items."
+    },
+    {
+      "name": "vignelli",
+      "type": "hyperframes:example",
+      "reason": "Registry examples are project scaffolds and cannot be embedded as production catalog items."
+    },
+    {
+      "name": "vscode-theme-visualizer",
+      "type": "hyperframes:example",
+      "reason": "Registry examples are project scaffolds and cannot be embedded as production catalog items."
+    },
+    {
+      "name": "warm-grain",
+      "type": "hyperframes:example",
+      "reason": "Registry examples are project scaffolds and cannot be embedded as production catalog items."
+    }
+  ]
+}

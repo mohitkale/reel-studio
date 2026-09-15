@@ -1015,7 +1015,7 @@ export function buildGsapMotionBootScript(
 
       // Recipe-specific backgrounds
       if (recipe === 'void-slash') {
-        letterbox.forEach(function (el) { tl.fromTo(el, { scaleY: 0 }, { scaleY: 1, duration: 0.35, ease: 'power3.out', overwrite: 'auto' }, 0); });
+        letterbox.forEach(function (el) { tl.fromTo(el, { scaleY: 0 }, { scaleY: 1, duration: 0.35, ease: 'power3.out', overwrite: 'auto', immediateRender: false }, 0); });
         var panel = stage.querySelector('.fx-void-panel');
         if (panel) tl.fromTo(panel, { xPercent: -55 }, { xPercent: -8, duration: 0.75, ease: 'power3.out' }, 0);
         slash.forEach(function (el, i) {
@@ -1030,7 +1030,7 @@ export function buildGsapMotionBootScript(
       if (recipe === 'lower-third') {
         if (beam) tl.fromTo(beam, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.8, ease: 'power2.out' }, 0);
         if (floor) tl.to(floor, { opacity: 1, duration: 0.7 }, 0.1);
-        letterbox.forEach(function (el) { tl.fromTo(el, { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: 'power2.out', overwrite: 'auto' }, 0); });
+        letterbox.forEach(function (el) { tl.fromTo(el, { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: 'power2.out', overwrite: 'auto', immediateRender: false }, 0); });
         if (plate) tl.fromTo(plate, { opacity: 0, x: -48 }, { opacity: 1, x: 0, duration: 0.55, ease: 'power3.out' }, 0.15);
       }
       if (recipe === 'punch-block') {

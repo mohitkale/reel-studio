@@ -46,7 +46,7 @@ The 0.4 roadmap contained 28 numbered tasks. The implemented release includes:
 
 - synchronized Node, Next.js, Prisma, HyperFrames, Remotion, UI, and test
   dependency upgrades with fresh and populated-database migration checks
-- versioned production specifications, a pinned 20-item HyperFrames catalog,
+- versioned production specifications, a pinned 23-item HyperFrames catalog,
   shared engine inputs, and six presets rendered by both engines in three ratios
 - deterministic and optional AI planning, safe public-page import, uploaded
   media, scene locks, hook alternatives, and selective regeneration
@@ -339,7 +339,7 @@ HyperFrames, TanStack Query, Zod.
 | `npm run test:podcast-audiogram -- <take-id>` | Render and verify a podcast-to-video sample |
 | `npm run seed:demo-brandkit`                  | Seed Coral Harbor brand kit                 |
 | `npm run seed:assets`                         | Sample SVG/Lottie assets                    |
-| `npm run import:hf-catalog`                   | Re-import the currently pinned HF selection |
+| `npm run sync:hf-catalog`                     | Sync the reviewed pinned HF catalog         |
 | `npm run mcp`                                 | MCP server                                  |
 | `npm run studio`                              | Remotion Studio                             |
 

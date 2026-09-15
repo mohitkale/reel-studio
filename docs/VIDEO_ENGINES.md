@@ -45,7 +45,8 @@ differ because HyperFrames renders deterministic HTML while Remotion renders
 React compositions. Portrait, landscape, and square are native layouts in each
 adapter rather than crops of a completed video.
 
-HyperFrames render workspaces contain local GSAP and WOFF2 files. The producer
-does not need a font or motion-runtime CDN while capturing frames. Catalog
-blocks and components are tracked separately with their upstream revision,
-checksum, dependencies, attribution, layouts, and retained version.
+HyperFrames producer and CLI are pinned as a matching stable release pair.
+Render workspaces contain local GSAP and WOFF2 files, so frame capture does not
+need a font or motion-runtime CDN. `npm run sync:hf-catalog` creates immutable
+catalog versions and records blocks, components, capabilities, unsupported
+items, upstream revision, checksums, dependencies, attribution, and layouts.

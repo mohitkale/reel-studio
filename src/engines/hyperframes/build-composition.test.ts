@@ -130,6 +130,10 @@ describe("buildHyperframesCompositionHtml", () => {
 
     expect(html).toContain('data-caption-style="technical"');
     expect(html).toContain('data-caption-style-version="1"');
+    expect(html).toContain("flex-direction:column");
+    expect(html).toContain(
+      'class="rs-caption-line" data-layout-allow-overlap data-layout-allow-occlusion',
+    );
     expect(html).toContain("rs-caption-active");
     expect(html).toContain('data-start="1.000"');
     expect(html).toContain('data-duration="1.000"');
