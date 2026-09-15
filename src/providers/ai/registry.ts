@@ -8,6 +8,7 @@ import {
 import { createGeminiProvider, GEMINI_DEFAULT_MODEL } from "./gemini";
 import { createOpenAIProvider, OPENAI_DEFAULT_MODEL } from "./openai";
 import { createOllamaProvider } from "./ollama";
+import { createLMStudioProvider } from "./lm-studio";
 import { localAIConfigStore } from "@/server/local-ai-config";
 
 /**
@@ -22,13 +23,7 @@ const factories: Record<
   openai: { create: createOpenAIProvider, defaultModel: OPENAI_DEFAULT_MODEL },
   ollama: { create: createOllamaProvider, defaultModel: "" },
   "lm-studio": {
-    create: () => {
-      throw new AIError(
-        "LM Studio adapter is not available yet",
-        501,
-        "lm-studio",
-      );
-    },
+    create: createLMStudioProvider,
     defaultModel: "",
   },
 };

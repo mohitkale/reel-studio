@@ -12,8 +12,8 @@ the user requests publication.
 | ---: | ----------------------------------------------------------------------------- | ----------- | ------------------------------------------ |
 |   16 | Secure local AI configuration, endpoint policy, and connectivity diagnostics  | Complete    | `1558ae50771c0cd796ada6012f7591beb27715ee` |
 |   17 | Shared OpenAI-compatible structured-output transport and credential isolation | Complete    | `7b90005bb530cf71ab89c2af712858705f003448` |
-|   18 | Ollama discovery and video/podcast planning                                   | In progress | Pending                                    |
-|   19 | LM Studio discovery and video/podcast planning                                | Pending     | Pending                                    |
+|   18 | Ollama discovery and video/podcast planning                                   | Complete    | `32ea00a46457425c0e38dbc058b254705b408e7f` |
+|   19 | LM Studio discovery and video/podcast planning                                | In progress | Pending                                    |
 |   20 | Bounded JSON extraction, one repair request, and model capability guidance    | Pending     | Pending                                    |
 
 ## Scope decisions
@@ -49,6 +49,31 @@ Validation:
 - Focused local endpoint, secure HTTP, diagnostics, and config-store suites
   passed: 4 files, 10 tests.
 - Changed-file Prettier check and `git diff --check` passed.
+
+## Task 18 — Ollama discovery and planning
+
+Completed at `2026-09-15T19:01:26+05:30` in
+`32ea00a46457425c0e38dbc058b254705b408e7f`.
+
+- Added Ollama to the provider registry with native `/api/tags` discovery and
+  `/api/chat` JSON-schema planning. Selected temperature, context window, and
+  output-token bounds map to Ollama generation options.
+- Video, podcast, and grounded podcast-clip plans use existing prompts and final
+  Zod schemas. Missing/uninstalled models, runner-load failures, offline server,
+  malformed output, schema mismatch, timeout, and cancellation remain distinct
+  actionable errors.
+- Ollama server absence does not affect startup, manual workflows, or existing
+  Gemini/OpenAI selection. Its provider status becomes selectable only after a
+  model is saved.
+
+Validation:
+
+- `npm run typecheck` and `npm run lint -- --quiet` passed.
+- Focused Ollama, local HTTP, diagnostics, compatible-transport, and cloud HTTP
+  suites passed: 5 files, 16 tests.
+- Fixtures covered discovery, video planning, podcast planning, offline server,
+  missing and unloaded models, timeout, cancellation, malformed JSON, and schema
+  mismatch without a live Ollama installation.
 - No Docker command, local model installation, external provider request,
   software installation, push, or host setting change was used.
 
