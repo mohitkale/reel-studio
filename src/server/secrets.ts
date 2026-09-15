@@ -3,7 +3,10 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 
 import { type ProviderId, PROVIDER_IDS } from "@/providers/voice/types";
-import { type AIProviderId, AI_PROVIDER_IDS } from "@/providers/ai/types";
+import {
+  type CloudAIProviderId,
+  CLOUD_AI_PROVIDER_IDS,
+} from "@/providers/ai/types";
 import {
   type StockProviderId,
   STOCK_PROVIDER_IDS,
@@ -35,7 +38,7 @@ const VOICE_ENV_KEY: Partial<Record<ProviderId, string>> = {
   elevenlabs: "ELEVENLABS_API_KEY",
 };
 
-const AI_ENV_KEY: Record<AIProviderId, string> = {
+const AI_ENV_KEY: Record<CloudAIProviderId, string> = {
   gemini: "GEMINI_API_KEY",
   openai: "OPENAI_API_KEY",
 };
@@ -104,17 +107,17 @@ export function setKey(id: ProviderId, value: string): Promise<void> {
 
 /* AI providers */
 
-export function hasAIKey(id: AIProviderId): boolean {
+export function hasAIKey(id: CloudAIProviderId): boolean {
   return envHas(AI_ENV_KEY[id]);
 }
 
-export function aiKeyStatus(): Record<AIProviderId, boolean> {
+export function aiKeyStatus(): Record<CloudAIProviderId, boolean> {
   return Object.fromEntries(
-    AI_PROVIDER_IDS.map((id) => [id, hasAIKey(id)]),
-  ) as Record<AIProviderId, boolean>;
+    CLOUD_AI_PROVIDER_IDS.map((id) => [id, hasAIKey(id)]),
+  ) as Record<CloudAIProviderId, boolean>;
 }
 
-export function setAIKey(id: AIProviderId, value: string): Promise<void> {
+export function setAIKey(id: CloudAIProviderId, value: string): Promise<void> {
   return writeEnvKey(AI_ENV_KEY[id], value);
 }
 

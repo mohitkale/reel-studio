@@ -25,6 +25,13 @@ export async function aiFetch(
     try {
       res = await fetch(url, init);
     } catch (e) {
+      if (init.signal?.aborted) {
+        throw new AIError(
+          `${providerId} request was cancelled.`,
+          499,
+          providerId,
+        );
+      }
       if (attempt < maxAttempts - 1) {
         await sleep(500 * (attempt + 1));
         continue;

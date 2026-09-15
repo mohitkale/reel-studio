@@ -23,7 +23,7 @@ configure a provider key and use that feature.
 | Voice preview               | Web Speech                           | —                         |
 | Voice generation            | Kokoro / VoiceForge                  | ElevenLabs, Cartesia      |
 | Video engine                | HyperFrames (Apache-2.0) or Remotion | — (both render locally)   |
-| AI scene / podcast planning | Manual editing                       | Gemini, OpenAI            |
+| AI scene / podcast planning | Manual, Ollama, or LM Studio         | Gemini, OpenAI            |
 | Backgrounds                 | Local upload / mood gradients        | Pexels, Pixabay, Unsplash |
 | Music                       | Bundled CC0 / user upload            | Jamendo                   |
 
@@ -39,6 +39,12 @@ Only when you explicitly configure and use a provider:
 - **Jamendo** — music search queries
 
 Nothing is sent for analytics or telemetry. See [SECURITY.md](../SECURITY.md).
+
+Ollama and LM Studio prompts go only to the configured local endpoint. Loopback
+is the default; private LAN endpoints require an explicit per-provider opt-in.
+Hostnames are resolved before each request, redirects are rejected, and cloud
+keys are never attached to local requests. Local server absence does not prevent
+Reel Studio from starting or using manual, Gemini, or OpenAI workflows.
 
 ## VoiceForge
 

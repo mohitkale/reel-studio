@@ -12,6 +12,7 @@ import type {
   GeneratePodcastClipSuggestionsInput,
   PodcastClipSuggestionCandidate,
 } from "./podcast-clip-suggestions";
+import { LOCAL_AI_PROVIDER_IDS, type LocalAIProviderId } from "./local-types";
 
 /**
  * AI "director" contract. Mirrors the voice provider factory: the app talks only
@@ -28,7 +29,12 @@ export const planEffectSchema = z.enum([
   "pan-down",
 ]);
 
-export const AI_PROVIDER_IDS = ["gemini", "openai"] as const;
+export const CLOUD_AI_PROVIDER_IDS = ["gemini", "openai"] as const;
+export type CloudAIProviderId = (typeof CLOUD_AI_PROVIDER_IDS)[number];
+export const AI_PROVIDER_IDS = [
+  ...CLOUD_AI_PROVIDER_IDS,
+  ...LOCAL_AI_PROVIDER_IDS,
+] as const;
 export type AIProviderId = (typeof AI_PROVIDER_IDS)[number];
 
 /** Short = punchy/fast (today's default). Detailed = deeper narration + story structure. */
@@ -231,6 +237,8 @@ export interface GeneratePlanInput {
   mediaPreference?: MediaPreference;
   /** One-based existing scene positions replaced by a selective rewrite. */
   replacementSceneNumbers?: number[];
+  /** Cancels an in-flight provider request when the caller disconnects or aborts. */
+  signal?: AbortSignal;
 }
 
 export interface AIModel {
@@ -250,19 +258,33 @@ export interface AIProvider {
   ): Promise<PodcastClipSuggestionCandidate[]>;
 }
 
-export const aiProviderStatusSchema = z.object({
-  id: z.enum(AI_PROVIDER_IDS),
-  label: z.string(),
-  configured: z.boolean(),
-  defaultModel: z.string(),
-});
+export const aiProviderStatusSchema = z.discriminatedUnion("kind", [
+  z.object({
+    id: z.enum(CLOUD_AI_PROVIDER_IDS),
+    kind: z.literal("cloud"),
+    label: z.string(),
+    configured: z.boolean(),
+    defaultModel: z.string(),
+  }),
+  z.object({
+    id: z.enum(LOCAL_AI_PROVIDER_IDS),
+    kind: z.literal("local"),
+    label: z.string(),
+    configured: z.boolean(),
+    defaultModel: z.string(),
+  }),
+]);
 export type AIProviderStatus = z.infer<typeof aiProviderStatusSchema>;
+export type CloudAIProviderStatus = Extract<
+  AIProviderStatus,
+  { kind: "cloud" }
+>;
 
 export class AIError extends Error {
   constructor(
     message: string,
     readonly status = 502,
-    readonly providerId?: AIProviderId,
+    readonly providerId?: AIProviderId | LocalAIProviderId,
   ) {
     super(message);
     this.name = "AIError";

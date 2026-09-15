@@ -81,6 +81,7 @@ export async function POST(
       brief: body.brief,
       length,
       modelId: body.modelId,
+      signal: req.signal,
       characters: podcast.characters.map((c) => ({
         key: c.key,
         name: c.name,

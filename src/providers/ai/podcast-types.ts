@@ -43,6 +43,7 @@ export interface GeneratePodcastPlanInput {
   characters: PodcastCharacterContext[];
   presetId?: PodcastPresetId;
   modelId?: string;
+  signal?: AbortSignal;
 }
 
 /**

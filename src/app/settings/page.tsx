@@ -6,7 +6,7 @@ import { Activity, Monitor, Moon, Sun } from "lucide-react";
 
 import { useMounted } from "@/hooks/use-mounted";
 import { useProviders } from "@/hooks/voice";
-import { useAIProviders } from "@/hooks/ai";
+import { useAIProviders, useLocalAIProviders } from "@/hooks/ai";
 import { useStockProviders } from "@/hooks/stock";
 import { useMusicProviders } from "@/hooks/music";
 import {
@@ -22,6 +22,7 @@ import { PageHeader } from "@/components/shell/page-header";
 import { ProviderKeyCard } from "@/components/voice/provider-key-card";
 import { KokoroVoicesCard } from "@/components/voice/kokoro-voices-card";
 import { AIProviderCard } from "@/components/ai/ai-provider-card";
+import { LocalAIProviderCard } from "@/components/ai/local-ai-provider-card";
 import { StockProviderCard } from "@/components/stock/stock-provider-card";
 import { MusicProviderCard } from "@/components/music/music-provider-card";
 import { McpTokenCard } from "@/components/mcp/mcp-token-card";
@@ -38,6 +39,8 @@ export default function SettingsPage() {
   const mounted = useMounted();
   const { data, isLoading } = useProviders();
   const { data: aiProviders, isLoading: aiLoading } = useAIProviders();
+  const { data: localAIProviders, isLoading: localAILoading } =
+    useLocalAIProviders();
   const { data: stockProviders, isLoading: stockLoading } = useStockProviders();
   const { data: musicProviders, isLoading: musicLoading } = useMusicProviders();
 
@@ -64,6 +67,36 @@ export default function SettingsPage() {
             <Link href="/diagnostics">Run system check</Link>
           </Button>
         </CardHeader>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            Local AI director (optional)
+          </CardTitle>
+          <CardDescription>
+            Connect Ollama or LM Studio on this computer. Local servers require
+            no cloud key. Private LAN servers require an explicit opt-in.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {localAILoading || !localAIProviders ? (
+            <div className="space-y-4">
+              <Skeleton className="h-40 w-full" />
+              <Skeleton className="h-40 w-full" />
+            </div>
+          ) : (
+            localAIProviders.map((status) => (
+              <LocalAIProviderCard key={status.id} status={status} />
+            ))
+          )}
+          <p className="text-muted-foreground text-xs">
+            In Docker, use <code>host.docker.internal</code> with LAN access
+            enabled when the model server runs on the host. This setting applies
+            only to local AI provider calls; public media URL protections remain
+            unchanged.
+          </p>
+        </CardContent>
       </Card>
 
       <Card>
@@ -132,11 +165,13 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">AI director (optional)</CardTitle>
+          <CardTitle className="text-base">
+            Cloud AI director (optional)
+          </CardTitle>
           <CardDescription>
             Add a Gemini or OpenAI key to generate a full scene plan from a one
-            line idea or a pasted story. The manual editor always works without
-            this.
+            line idea or a pasted story. Cloud credentials stay separate from
+            local AI configuration.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -146,9 +181,11 @@ export default function SettingsPage() {
               <Skeleton className="h-20 w-full" />
             </div>
           ) : (
-            aiProviders.map((status) => (
-              <AIProviderCard key={status.id} status={status} />
-            ))
+            aiProviders
+              .filter((status) => status.kind === "cloud")
+              .map((status) => (
+                <AIProviderCard key={status.id} status={status} />
+              ))
           )}
         </CardContent>
       </Card>

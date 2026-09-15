@@ -70,6 +70,7 @@ export async function POST(
       fps: take.fps,
       timeline: take.timeline,
       modelId: body.modelId,
+      signal: req.signal,
     });
     try {
       return NextResponse.json({

@@ -13,6 +13,22 @@ every redirect and DNS answer, connects only through a public address, rejects
 local/private networks and nonstandard ports, and fails when source copy exceeds
 the planner limit instead of silently truncating it.
 
+## AI provider boundary
+
+Gemini and OpenAI retain their cloud-specific adapters. Ollama uses native
+`/api/tags` and `/api/chat`; LM Studio uses `/v1/models` and
+`/v1/chat/completions` through the shared compatible transport. Local endpoints
+resolve only to loopback by default or private LAN after explicit opt-in, and
+redirects are rejected. Provider-owned credentials are constructed inside each
+adapter, so cloud keys cannot cross into a local or custom endpoint.
+
+Local structured output accepts one complete JSON object or one explicitly
+fenced `json` object. The unchanged parsed object must pass the strict raw schema
+and existing domain schema. One same-model repair request may correct a rejected
+response; a second failure ends with repair-exhaustion and model-capability
+guidance. Application code never fills required fields, edits chart values, or
+substitutes template IDs.
+
 The deterministic planner retains complete source passages in `spokenText` and
 uses shorter `text` only when needed for readable on-screen composition. It never
 creates chart values. A Data Story created from prose uses a non-chart takeaway
