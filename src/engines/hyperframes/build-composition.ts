@@ -6,6 +6,7 @@
 import type { BrandTokens } from "@/compositions/tokens";
 import type {
   ReelBeat,
+  ReelCaptionCue,
   ReelProps,
   ReelScene,
   SceneMood,
@@ -35,6 +36,11 @@ import {
 } from "@/engines/hyperframes/presets/registry";
 import { buildAudioMixPlan, type AudioMixPlan } from "@/lib/audio-mix";
 import { localizeHyperframesRenderFonts } from "@/engines/hyperframes/render-fonts";
+import {
+  resolveCaptionRenderStyle,
+  splitCaptionText,
+  splitCaptionWords,
+} from "@/lib/caption-render";
 
 function escapeHtml(value: string): string {
   return value
@@ -56,6 +62,65 @@ function emphasize(text: string, emphasis: string[]): string {
     );
   }
   return html.replace(/\n/g, "<br/>");
+}
+
+function captionCueHtml(input: {
+  cue: ReelCaptionCue;
+  coverSeconds: number;
+  fps: number;
+  maxWordsPerLine: number;
+  maxLines: number;
+  highlightMode: "none" | "word" | "phrase" | "karaoke";
+  activeWordColor: string;
+}): { html: string; lineScale: number } {
+  const { cue } = input;
+  if (!cue.words?.length) {
+    const lines = splitCaptionText(cue.text, input.maxWordsPerLine);
+    const color =
+      input.highlightMode === "phrase"
+        ? ` style="color:${input.activeWordColor}"`
+        : "";
+    return {
+      html: lines
+        .map(
+          (line) =>
+            `<span class="rs-caption-line"${color}>${escapeHtml(line)}</span>`,
+        )
+        .join(""),
+      lineScale: Math.max(0.65, Math.min(1, input.maxLines / lines.length)),
+    };
+  }
+
+  const lines = splitCaptionWords(cue.words, input.maxWordsPerLine);
+  let wordIndex = 0;
+  const html = lines
+    .map((line) => {
+      const words = line
+        .map((word) => {
+          const index = wordIndex++;
+          const start = input.coverSeconds + word.startFrame / input.fps;
+          const end =
+            input.highlightMode === "karaoke"
+              ? input.coverSeconds + cue.endFrame / input.fps
+              : input.coverSeconds + word.endFrame / input.fps;
+          const active =
+            input.highlightMode === "word" || input.highlightMode === "karaoke"
+              ? `<span class="clip rs-caption-active" data-start="${start.toFixed(3)}" data-duration="${Math.max(1 / input.fps, end - start).toFixed(3)}" data-track-index="21" style="color:${input.activeWordColor}">${escapeHtml(word.text)}</span>`
+              : "";
+          const color =
+            input.highlightMode === "phrase"
+              ? ` style="color:${input.activeWordColor}"`
+              : "";
+          return `<span class="rs-caption-word" data-word-index="${index}"${color}><span>${escapeHtml(word.text)}</span>${active}</span>`;
+        })
+        .join(" ");
+      return `<span class="rs-caption-line">${words}</span>`;
+    })
+    .join("");
+  return {
+    html,
+    lineScale: Math.max(0.65, Math.min(1, input.maxLines / lines.length)),
+  };
 }
 
 function moodGradient(mood?: SceneMood): string {
@@ -499,6 +564,13 @@ function buildSeekScript(
       const active = time >= start && time < start + duration;
       subtitle.style.opacity = active ? '1' : '0';
       subtitle.style.visibility = active ? 'visible' : 'hidden';
+    });
+    document.querySelectorAll('.rs-caption-active').forEach(function (word) {
+      const start = Number(word.getAttribute('data-start') || 0);
+      const duration = Number(word.getAttribute('data-duration') || 0);
+      const active = time >= start && time < start + duration;
+      word.style.opacity = active ? '1' : '0';
+      word.style.visibility = active ? 'visible' : 'hidden';
     });
   }
 
@@ -988,6 +1060,12 @@ export function buildHyperframesCompositionHtml(
     ? ""
     : `<div class="progress" style="background:${accent}"></div>`;
 
+  const captionResolved = resolveCaptionRenderStyle({
+    style: props.captions?.style,
+    tokens,
+    layout,
+  });
+  const captionInner = captionResolved.inner;
   const captionBlocks =
     props.captions?.enabled === true
       ? props.captions.cues
@@ -995,7 +1073,16 @@ export function buildHyperframesCompositionHtml(
             const start = coverSeconds + cue.startFrame / fpsSafe;
             const duration =
               Math.max(1, cue.endFrame - cue.startFrame) / fpsSafe;
-            return `<div id="subtitle-${escapeHtml(cue.id || String(index + 1))}" class="clip rs-subtitle" data-start="${start.toFixed(3)}" data-duration="${duration.toFixed(3)}" data-track-index="20" aria-label="Subtitle ${index + 1}"><span>${escapeHtml(cue.text)}</span></div>`;
+            const content = captionCueHtml({
+              cue,
+              coverSeconds,
+              fps: fpsSafe,
+              maxWordsPerLine: captionResolved.style.maxWordsPerLine,
+              maxLines: captionResolved.style.maxLines,
+              highlightMode: captionResolved.style.highlightMode,
+              activeWordColor: captionInner.activeWordColor,
+            });
+            return `<div id="subtitle-${escapeHtml(cue.id || String(index + 1))}" class="clip rs-subtitle" data-caption-style-version="${captionResolved.style.version}" data-caption-style="${captionResolved.style.presetId}" data-start="${start.toFixed(3)}" data-duration="${duration.toFixed(3)}" data-track-index="20" aria-label="Subtitle ${index + 1}"><span dir="auto" style="font-size:${Math.round(captionInner.fontSize * content.lineScale)}px">${content.html}</span></div>`;
           })
           .join("\n")
       : "";
@@ -1009,8 +1096,9 @@ export function buildHyperframesCompositionHtml(
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reel Studio · HyperFrames</title>
   <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}
-    .rs-subtitle{position:absolute;z-index:50;left:var(--safe-left);right:var(--safe-right);bottom:var(--caption-bottom);display:flex;justify-content:center;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
-    .rs-subtitle>span{max-width:var(--caption-max-width);padding:.42em .68em;border-radius:18px;background:rgba(8,10,16,.82);color:#fff;font:700 calc(38px * var(--type-scale))/1.18 var(--font,system-ui,sans-serif);text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.28)}
+    .rs-subtitle{position:absolute;z-index:50;inset:0;box-sizing:border-box;display:flex;justify-content:${captionResolved.outer.justifyContent};align-items:${captionResolved.outer.alignItems};padding:${captionResolved.outer.paddingTop}px ${captionResolved.outer.paddingRight}px ${captionResolved.outer.paddingBottom}px ${captionResolved.outer.paddingLeft}px;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
+    .rs-subtitle>span{display:block;max-width:${captionInner.maxWidth}px;padding:${captionInner.padding};border-radius:${captionInner.borderRadius}px;background:${captionInner.background};color:${captionInner.color};font-family:${escapeHtml(captionInner.fontFamily)};font-weight:${captionInner.fontWeight};line-height:${captionInner.lineHeight};letter-spacing:${captionInner.letterSpacing};text-align:${captionInner.textAlign};text-shadow:${captionInner.textShadow};${captionInner.WebkitTextStroke ? `-webkit-text-stroke:${captionInner.WebkitTextStroke};` : ""}overflow-wrap:anywhere}
+    .rs-caption-line{display:block}.rs-caption-word{display:inline-block;position:relative}.rs-caption-active{position:absolute;inset:0;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
   </style>
 </head>
 <body>
