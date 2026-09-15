@@ -22,9 +22,11 @@ import {
   useLocalTranscriptionStatus,
   useReplaceCaptions,
   useSetCaptionTrackEnabled,
+  useUpdateCaptionStyle,
   useUpdateCaptionCue,
 } from "@/hooks/script";
 import type { CaptionCueDTO, CaptionTrackDTO } from "@/lib/dto";
+import { CaptionStyleControls } from "@/components/editor/caption-style-controls";
 
 const SOURCE_LABELS: Record<CaptionTrackDTO["timingSource"], string> = {
   provider: "Provider timing",
@@ -141,6 +143,7 @@ export function CaptionsMenu({
   const replace = useReplaceCaptions(scriptId);
   const setEnabled = useSetCaptionTrackEnabled(scriptId);
   const updateCue = useUpdateCaptionCue(scriptId);
+  const updateStyle = useUpdateCaptionStyle(scriptId);
   const transcription = useLocalTranscriptionStatus(open);
   const busy = replace.isPending || setEnabled.isPending;
   const activeTrack = tracks.find((candidate) => candidate.enabled);
@@ -332,6 +335,26 @@ export function CaptionsMenu({
             <p className="text-muted-foreground text-xs">
               Local transcription is optional. {transcription.data?.reason}
             </p>
+          ) : null}
+
+          {track ? (
+            <CaptionStyleControls
+              key={`${track.id}:${track.updatedAt}`}
+              value={track.style}
+              saving={updateStyle.isPending}
+              onSave={(style) =>
+                updateStyle.mutate(
+                  { trackId: track.id, style },
+                  {
+                    onSuccess: () => toast.success("Caption style saved"),
+                    onError: (error) =>
+                      toast.error("Could not save caption style", {
+                        description: error.message,
+                      }),
+                  },
+                )
+              }
+            />
           ) : null}
 
           {track?.cues.length ? (
