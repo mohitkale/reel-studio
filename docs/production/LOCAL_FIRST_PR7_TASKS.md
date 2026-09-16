@@ -10,7 +10,7 @@ branch is not stacked.
 | Task | Implementation and acceptance                                     | State    | Completion SHA                             |
 | ---: | ----------------------------------------------------------------- | -------- | ------------------------------------------ |
 |   24 | Stable HyperFrames pair and deterministic catalog synchronization | Complete | `16d8ebba663bbd5805bd053914fcf50b9e7c315d` |
-|   25 | Capability selection and reviewed responsive carousel family      | Complete | Recorded after commit                      |
+|   25 | Capability selection and reviewed responsive carousel family      | Complete | `d72d578ca068ffc579011840cadf72e886cec0e2` |
 
 ## Task 24 — stable package pair and deterministic synchronization
 
