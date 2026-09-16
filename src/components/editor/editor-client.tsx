@@ -188,6 +188,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
         background: s.background,
         items: s.items,
         chart: s.chart,
+        carouselImages: s.carouselImages,
         role: s.role,
         // Per-scene override wins; otherwise the script-wide default.
         hideText: s.hideText ?? script?.hideText,
@@ -212,6 +213,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
             background: selectedScene.background,
             items: selectedScene.items,
             chart: selectedScene.chart,
+            carouselImages: selectedScene.carouselImages,
             role: selectedScene.role,
             hideText: selectedScene.hideText ?? script?.hideText,
             mood: selectedScene.mood as ReelScene["mood"],

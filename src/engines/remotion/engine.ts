@@ -48,6 +48,7 @@ const remotionTemplateCapabilities = Object.fromEntries(
   TEMPLATES.map((template) => [
     template.id,
     {
+      capabilityId: `remotion.template.${template.id}`,
       templateId: template.id,
       version: "legacy-v0.3.0",
       aspectRatios: ORIENTATIONS,

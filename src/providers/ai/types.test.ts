@@ -6,6 +6,15 @@ import { aiSceneSchema, scenePlanSchema } from "./types";
 const base = { text: "Hello", templateId: "kinetic", emphasis: [] };
 
 describe("aiSceneSchema effect normalization", () => {
+  it("maps a planner capability id to its engine template", () => {
+    const scene = aiSceneSchema.parse({
+      text: "Show the collection",
+      capabilityId: "hf.catalog.block.carousel-circle-1",
+      emphasis: [],
+    });
+    expect(scene.templateId).toBe("hf-carousel-circle-v1");
+  });
+
   it("keeps a valid pan effect", () => {
     const s = aiSceneSchema.parse({ ...base, effect: "pan-left" });
     expect(s.effect).toBe("pan-left");

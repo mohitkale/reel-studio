@@ -15,14 +15,14 @@ import {
 } from "./podcast-types";
 import {
   AIError,
-  planTemplateIdsForEngine,
   scenePlanSchema,
   type AIModel,
   type AIProvider,
   type GeneratePlanInput,
   type ScenePlan,
 } from "./types";
-import { allowedPresetTemplateIds } from "@/production/ai-preset-plan";
+import { allowedPresetCapabilityIds } from "@/production/ai-preset-plan";
+import { capabilityIdsForEngine } from "@/engines/capabilities";
 
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 // flash-lite has the most free-tier/availability headroom; full flash often 503s.
@@ -30,12 +30,10 @@ export const GEMINI_DEFAULT_MODEL = "gemini-2.5-flash-lite";
 
 // Gemini responseSchema (OpenAPI subset). Template enum switches with engine.
 function buildResponseSchema(input: GeneratePlanInput) {
-  const templateIds = input.productionPresetId
-    ? allowedPresetTemplateIds(
-        input.productionPresetId,
-        input.videoEngine ?? "remotion",
-      )
-    : [...planTemplateIdsForEngine(input.videoEngine)];
+  const engineId = input.videoEngine ?? "remotion";
+  const capabilityIds = input.productionPresetId
+    ? allowedPresetCapabilityIds(input.productionPresetId, engineId)
+    : capabilityIdsForEngine(engineId);
   return {
     type: "object",
     properties: {
@@ -60,9 +58,9 @@ function buildResponseSchema(input: GeneratePlanInput) {
           properties: {
             text: { type: "string" },
             spokenText: { type: "string" },
-            templateId: {
+            capabilityId: {
               type: "string",
-              enum: templateIds,
+              enum: capabilityIds,
             },
             emphasis: { type: "array", items: { type: "string" } },
             visual: { type: "string" },
@@ -86,7 +84,7 @@ function buildResponseSchema(input: GeneratePlanInput) {
             },
             musicMood: { type: "string" },
           },
-          required: ["text", "templateId", "emphasis"],
+          required: ["text", "capabilityId", "emphasis"],
         },
       },
     },

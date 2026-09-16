@@ -6,6 +6,11 @@ import { mapScenesToEngineTemplates } from "@/engines/hyperframes/map-templates"
 import { personalizeCatalogHtml } from "@/engines/hyperframes/catalog/personalize";
 import type { AIScene } from "@/providers/ai/types";
 import { CAPTION_STYLE_PRESETS } from "@/lib/caption-style";
+import {
+  CURRENT_HF_CATALOG_REVISION,
+  PREVIOUS_HF_CATALOG_REVISION,
+} from "@/engines/hyperframes/catalog/revisions";
+import { ORIENTATIONS, dimsFor } from "@/lib/orientation";
 
 describe("buildHyperframesCompositionHtml", () => {
   it("emits a HyperFrames root with scene clips and seek API", () => {
@@ -130,6 +135,10 @@ describe("buildHyperframesCompositionHtml", () => {
 
     expect(html).toContain('data-caption-style="technical"');
     expect(html).toContain('data-caption-style-version="1"');
+    expect(html).toContain("flex-direction:column");
+    expect(html).toContain(
+      'class="rs-caption-line" data-layout-allow-overlap data-layout-allow-occlusion',
+    );
     expect(html).toContain("rs-caption-active");
     expect(html).toContain('data-start="1.000"');
     expect(html).toContain('data-duration="1.000"');
@@ -398,6 +407,90 @@ describe("buildHyperframesCompositionHtml", () => {
 
     expect(html).not.toContain("acme.com");
     expect(html).not.toContain("figma.com");
+  });
+
+  it.each(ORIENTATIONS)(
+    "renders reviewed local-image carousels in %s preview and export markup",
+    (orientation) => {
+      const dimensions = dimsFor(orientation);
+      const props = {
+        scenes: [
+          {
+            id: `carousel-${orientation}`,
+            templateId: "hf-carousel-circle-v1",
+            text: "Your launch in three moments.",
+            emphasis: ["three moments"],
+            carouselImages: [
+              "/media/first.png",
+              "/media/second.png",
+              "/media/third.png",
+            ],
+          },
+        ],
+        timeline: [
+          {
+            sceneId: `carousel-${orientation}`,
+            startFrame: 0,
+            durationFrames: 180,
+          },
+        ],
+        ...dimensions,
+        fps: 30,
+        tokens: defaultBrandTokens,
+        catalogRevision: CURRENT_HF_CATALOG_REVISION,
+      };
+      const preview = buildHyperframesCompositionHtml(props, {
+        inlineCatalog: true,
+      });
+      const exported = buildHyperframesCompositionHtml(props, {
+        producerMode: true,
+        runtimeUrl: "/_runtime/gsap.min.js",
+      });
+
+      for (const html of [preview, exported]) {
+        expect(html).toContain('data-catalog-block="carousel-circle-1"');
+        expect(html.match(/data-carousel-card=/g)).toHaveLength(3);
+        expect(html).toContain('src="/media/first.png"');
+        expect(html).not.toContain("static.heygen.ai");
+        expect(html).toContain("carouselCards.forEach");
+      }
+    },
+  );
+
+  it("requires supplied images and honors a saved catalog revision", () => {
+    const base = {
+      scenes: [
+        {
+          id: "carousel",
+          templateId: "hf-carousel-vision-v1",
+          text: "Saved gallery",
+          emphasis: [],
+          carouselImages: ["/a.png", "/b.png", "/c.png"],
+        },
+      ],
+      timeline: [{ sceneId: "carousel", startFrame: 0, durationFrames: 180 }],
+      width: 1080,
+      height: 1920,
+      fps: 30,
+      tokens: defaultBrandTokens,
+    };
+    const current = buildHyperframesCompositionHtml({
+      ...base,
+      catalogRevision: CURRENT_HF_CATALOG_REVISION,
+    });
+    const retained = buildHyperframesCompositionHtml({
+      ...base,
+      catalogRevision: PREVIOUS_HF_CATALOG_REVISION,
+    });
+    const missingMedia = buildHyperframesCompositionHtml({
+      ...base,
+      scenes: [{ ...base.scenes[0], carouselImages: ["/a.png", "/b.png"] }],
+      catalogRevision: CURRENT_HF_CATALOG_REVISION,
+    });
+
+    expect(current).toContain('data-catalog-block="carousel-vision-1"');
+    expect(retained).not.toContain("data-carousel-card");
+    expect(missingMedia).not.toContain("data-carousel-card");
   });
 });
 

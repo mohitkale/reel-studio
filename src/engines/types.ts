@@ -31,6 +31,8 @@ export type EngineTemplateInput =
   "displayText" | "narrationText" | "visual" | "items" | "asset" | "chartData";
 
 export interface EngineTemplateCapabilities {
+  /** Stable planner-facing id; engine template ids remain adapter details. */
+  capabilityId: string;
   templateId: string;
   version: string;
   aspectRatios: readonly Orientation[];

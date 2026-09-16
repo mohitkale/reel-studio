@@ -8,8 +8,9 @@ Apache-2.0 contributions; use **Remotion** when you need React compositions.
 1. Add a template entry in `src/engines/hyperframes/templates.ts`
 2. Implement HTML/CSS/motion in the HyperFrames composition builder
    (`src/engines/hyperframes/`) **or** vendor a registry block under
-   `src/engines/hyperframes/catalog/blocks/` and register it in
-   `catalog/manifest.ts`, then run `node scripts/embed-hf-catalog.mjs`
+   the reviewed selection in
+   `src/engines/hyperframes/catalog/selection.json`, then run
+   `npm run sync:hf-catalog`
 3. Register the id in the engine catalog so the editor picker lists it
 4. Keep templates self-contained (no Unsplash or paid assets required)
 5. Document props: `text`, `spokenText`, `emphasis`, `visual`, layout JSON
@@ -20,13 +21,26 @@ Curated upstream catalog ids (wired via `data-composition-src`):
 `hf-kinetic-slam`, `hf-money-count`, `hf-data-chart`, `hf-app-showcase`,
 `hf-logo-outro`, `hf-ig-follow`, `hf-tt-follow`, `hf-yt-lower-third`
 
-The premium catalog snapshot is selected in
-`src/engines/hyperframes/catalog/selection.json` and imported with
-`npm run import:hf-catalog`. The selection pins a full upstream Git revision.
-The importer validates registry item types, paths and metadata, stores blocks and
-components separately, downloads declared assets and records SHA-256 checksums.
-Never change an imported revision in place; add a version and retain the earlier
-directory for projects that reference it.
+Reviewed native catalog adapters: `hf-carousel-circle-v1`,
+`hf-carousel-path-v1`, and `hf-carousel-vision-v1`. Each carousel requires at
+least three `carouselImages` resolved from project image assets. Do not vendor or
+fall back to the upstream sample images. Keep element IDs unique, motion on the
+single paused HyperFrames timeline, and layouts responsive at 9:16, 1:1, and
+16:9.
+
+Every engine template also declares a stable planner-facing `capabilityId`.
+Add new mappings in `src/engines/capabilities.ts`; provider schemas must expose
+the capability ID rather than the internal template ID.
+
+The reviewed catalog snapshot is selected in
+`src/engines/hyperframes/catalog/selection.json` and synchronized with
+`npm run sync:hf-catalog`. The selection pins a stable package pair, release tag,
+and immutable upstream Git revision. Synchronization validates registry item
+types, paths, metadata, variables, dependencies, declared assets, and offline
+render requirements; records SHA-256 checksums; emits typed capabilities and an
+unsupported-item report; and refuses to change an existing version directory.
+Run it twice before review: the second run must report only unchanged files.
+Retain every earlier directory for projects that reference its revision.
 
 ## Remotion
 

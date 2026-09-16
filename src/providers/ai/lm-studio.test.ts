@@ -73,7 +73,11 @@ describe("LM Studio provider", () => {
           styleId: "teach-me",
           energy: "normal",
           scenes: [
-            { text: "Local output", templateId: "kinetic", emphasis: [] },
+            {
+              text: "Local output",
+              capabilityId: "remotion.template.kinetic",
+              emphasis: [],
+            },
           ],
         });
       });
@@ -186,7 +190,13 @@ describe("LM Studio provider", () => {
     const invalidPlan = {
       projectName: "Bad",
       scriptName: "Bad",
-      scenes: [{ text: "Bad", templateId: "made-up", emphasis: [] }],
+      scenes: [
+        {
+          text: "Bad",
+          capabilityId: "remotion.template.made-up",
+          emphasis: [],
+        },
+      ],
     };
     vi.stubGlobal(
       "fetch",

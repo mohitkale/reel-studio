@@ -18,6 +18,7 @@ import developerDemoFixture from "../../tests/fixtures/developer-demo-reel.json"
 import cinematicBrandFixture from "../../tests/fixtures/cinematic-brand-reel.json";
 import type { ReelProps } from "@/compositions/types";
 import { reelDurationFrames } from "@/compositions/types";
+import { CURRENT_HF_CATALOG_REVISION } from "@/engines/hyperframes/catalog/revisions";
 
 function productionSpec(
   engineId: VideoEngineId,
@@ -162,6 +163,37 @@ describe("resolved production composition", () => {
     expect(
       resolveProductionComposition(spec).reelProps.audioUrl,
     ).toBeUndefined();
+  });
+
+  it("retains the saved catalog version and resolves every carousel image", () => {
+    const spec = productionSpec("hyperframes", "square");
+    spec.engine.catalogRevision = CURRENT_HF_CATALOG_REVISION;
+    spec.scenes[0].template.resolvedId = "hf-carousel-path-v1";
+    spec.scenes[0].assetRefs = ["hero", "gallery-2", "gallery-3"];
+    spec.assets.push(
+      {
+        id: "gallery-2",
+        type: "image",
+        uri: "/media/gallery-2.png",
+        source: "uploaded",
+      },
+      {
+        id: "gallery-3",
+        type: "image",
+        uri: "/media/gallery-3.png",
+        source: "uploaded",
+      },
+    );
+
+    const resolved = resolveProductionComposition(spec);
+    expect(resolved.reelProps.catalogRevision).toBe(
+      CURRENT_HF_CATALOG_REVISION,
+    );
+    expect(resolved.reelProps.scenes[0].carouselImages).toEqual([
+      "/media/hero.png",
+      "/media/gallery-2.png",
+      "/media/gallery-3.png",
+    ]);
   });
 
   it("renders the complete Product Launch role sequence in HyperFrames", () => {

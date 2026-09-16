@@ -24,6 +24,7 @@ const scene = sceneConfigSchema.extend({
   hideText: z.boolean().nullable(),
   selectedVoiceClipId: z.string().nullable(),
   assetRefs: z.array(z.string()).optional(),
+  carouselImages: z.array(z.string().min(1)).optional(),
 });
 export const videoTakeSnapshotSchema = z
   .object({
@@ -152,6 +153,7 @@ export const preparedVideoCompositionSchema = z
             visual: true,
             items: true,
             chart: true,
+            carouselImages: true,
             role: true,
             mood: true,
             order: true,
@@ -192,6 +194,7 @@ export const preparedVideoCompositionSchema = z
       styleId: videoScriptSnapshotSchema.shape.styleId.optional(),
       energy: videoScriptSnapshotSchema.shape.energy.optional(),
       preset: videoScriptSnapshotSchema.shape.productionPreset,
+      catalogRevision: z.string().min(1).optional(),
       captions: videoScriptSnapshotSchema.shape.captionTracks
         .unwrap()
         .element.optional(),

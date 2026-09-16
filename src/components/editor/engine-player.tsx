@@ -38,6 +38,7 @@ interface EnginePlayerProps {
   styleId?: StyleId;
   energy?: EnergyId;
   preset?: { id: ProductionPresetId; version: string };
+  catalogRevision?: string;
 }
 
 /** Engine-selected preview player (Remotion or HyperFrames). */

@@ -303,6 +303,16 @@ export async function runHyperframesRender(
               serverBaseUrl,
             )
           : undefined;
+        const carouselImages = await Promise.all(
+          (s.carouselImages ?? []).map(async (url, imageIndex) =>
+            materializeUrl(
+              url.startsWith("http") ? url : `${serverBaseUrl}${url}`,
+              projectDir,
+              `carousel-${i}-${imageIndex}`,
+              serverBaseUrl,
+            ),
+          ),
+        );
         return {
           id: s.id,
           templateId: normalizeHfTemplateId(s.templateId),
@@ -314,6 +324,9 @@ export async function runHyperframesRender(
             : undefined,
           items: s.items,
           chart: s.chart,
+          carouselImages: carouselImages.filter((url): url is string =>
+            Boolean(url),
+          ),
           role: s.role,
           hideText: s.hideText ?? script.hideText,
           mood: s.mood as ReelScene["mood"],
@@ -437,14 +450,21 @@ export async function runHyperframesRender(
     // can resolve data-composition-src on the host index.html.
     const tokens = script.brandTokens ?? defaultBrandTokens;
     const catalogScenes = scenes.filter((s) =>
-      getCatalogBlockByTemplateId(s.templateId),
+      getCatalogBlockByTemplateId(
+        s.templateId,
+        prepared?.props.catalogRevision,
+      ),
     );
     if (catalogScenes.length) {
       const compositionsDir = path.join(projectDir, "compositions");
       await fs.mkdir(compositionsDir, { recursive: true });
       for (const scene of catalogScenes) {
-        const meta = getCatalogBlockByTemplateId(scene.templateId);
+        const meta = getCatalogBlockByTemplateId(
+          scene.templateId,
+          prepared?.props.catalogRevision,
+        );
         if (!meta) continue;
+        if (meta.requiresCarouselImages) continue;
         const personalized = personalizeCatalogBlock(meta, {
           scene,
           tokens,

@@ -72,7 +72,11 @@ describe("Ollama provider", () => {
           styleId: "clean-story",
           energy: "normal",
           scenes: [
-            { text: "A local plan", templateId: "kinetic", emphasis: [] },
+            {
+              text: "A local plan",
+              capabilityId: "remotion.template.kinetic",
+              emphasis: [],
+            },
           ],
         });
       });
@@ -200,7 +204,13 @@ describe("Ollama provider", () => {
     const invalidPlan = {
       projectName: "Bad",
       scriptName: "Bad",
-      scenes: [{ text: "Bad", templateId: "invented-template", emphasis: [] }],
+      scenes: [
+        {
+          text: "Bad",
+          capabilityId: "remotion.template.invented-template",
+          emphasis: [],
+        },
+      ],
     };
     vi.stubGlobal(
       "fetch",
@@ -225,7 +235,13 @@ describe("Ollama provider", () => {
       scriptName: "Repaired",
       styleId: "clean-story",
       energy: "normal",
-      scenes: [{ text: "Valid", templateId: "kinetic", emphasis: [] }],
+      scenes: [
+        {
+          text: "Valid",
+          capabilityId: "remotion.template.kinetic",
+          emphasis: [],
+        },
+      ],
     };
     const fetchMock = vi
       .fn()

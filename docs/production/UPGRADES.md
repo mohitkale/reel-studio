@@ -5,7 +5,7 @@ The frozen registry inventory is in `dependencies.json`. Install targets exclude
 - Runtime: Node 24 LTS (minimum 24.15), matching modern test tooling requirements. Node types use the 24 line instead of the registry latest tag's 22 line.
 - React / React DOM: 19.2.8. Stable 19.3.0 is excluded because even React Three Fiber 9.7.0 declares `>=19 <19.3`. Preserve Three.js support; do not override its peer contract.
 - Prisma: 7.10.0. The registry latest tag points to 8.0.0-rc.13, which is explicitly excluded.
-- HyperFrames: producer 0.8.33 and CLI 0.8.27 are the compatible published targets. GSAP 3.14.2 is pinned and copied into each render workspace so frame capture does not fetch its motion runtime from the network.
+- HyperFrames: producer and CLI 0.8.40 are the matching stable published targets. The catalog is pinned to release `v0.8.40` at immutable revision `cfe5dcfad310ced2a5844998628daa2b8a0f53d7`. GSAP 3.14.2 is pinned and copied into each render workspace so frame capture does not fetch its motion runtime from the network.
 - Remotion family: all direct packages target exactly 4.0.523.
 
 ## Remotion 4.0.523
@@ -18,8 +18,8 @@ The credential-free render regression encodes a Three.js-to-Lottie MP4 and rende
 
 All remaining direct runtime and development packages are exact-pinned to the frozen stable target unless an upstream peer contract prevents it. The first compatibility gate uses these newest compatible exceptions:
 
-- `@vitejs/plugin-react` 5.2.0 and Vite 7.3.5: plugin-react 6.1.1 introduces an optional Rolldown Babel bridge that conflicts with Remotion's Babel 7 SVG toolchain. Vite 8 requires esbuild 0.27/0.28, while HyperFrames core 0.8.33 requires `^0.25.12`.
-- esbuild 0.25.12: HyperFrames producer 0.8.33 imports esbuild at runtime but publishes it only through a core optional peer/development dependency. Reel Studio declares the tested version directly so clean installs can render.
+- `@vitejs/plugin-react` 5.2.0 and Vite 7.3.5: plugin-react 6.1.1 introduces an optional Rolldown Babel bridge that conflicts with Remotion's Babel 7 SVG toolchain. Vite 8 requires esbuild 0.27/0.28, while HyperFrames core 0.8.40 requires `^0.25.12`.
+- esbuild 0.25.12: HyperFrames producer 0.8.40 imports esbuild at runtime while core publishes it as an optional dependency. Reel Studio declares the tested version directly so clean installs can render.
 - ESLint 9.39.5: the plugins bundled by `eslint-config-next` 16.3.4 do not declare ESLint 10 support.
 - TypeScript 6.0.3: the TypeScript ESLint 8.70 stack bundled by `eslint-config-next` supports TypeScript below 6.1, excluding the frozen TypeScript 7 target.
 
@@ -32,7 +32,7 @@ issue. The September 13, 2026 release audit reports nine dependency findings:
 one low, one moderate, and seven high. None has a compatible upstream resolution
 in the validated graph:
 
-- HyperFrames CLI 0.8.27 depends on affected `adm-zip`; no fix is published. This is a development/catalog tool, not an application request path.
+- HyperFrames CLI 0.8.40 depends on `adm-zip` 0.6.0. The remaining audit finding is in a development/catalog tool, not an application request path.
 - Prisma 7.10.0 includes affected `deepmerge-ts` and `mysql2`. Reel Studio uses SQLite, so the MySQL authentication and compression paths are not used. npm's proposed fix is an incompatible downgrade to Prisma 6.19.3.
 - Kokoro 1.2.1 reaches the affected Sharp release through Hugging Face Transformers; no fix is published for the current provider package.
 - Vite 7.3.5 requires the affected esbuild 0.27 line. The advisory applies to Vite's development server on Windows; moving to Vite 8 would violate HyperFrames' esbuild peer contract.
@@ -43,6 +43,6 @@ Recheck these exceptions when HyperFrames, Prisma, Kokoro, Next's lint stack, or
 
 Both engines encoded three-second H.264 fixtures before upgrades. HyperFrames at 0.7.61 produced a background-only sampled frame; this is an existing visual failure, not an accepted baseline. The HyperFrames compatibility task must fix it before the first milestone passes.
 
-HyperFrames 0.8.33 now receives a direct composition root, canonical clip IDs, and a root timeline under the composition ID. The regression harness rejects background-only frames, and the 0.8.27 checker reports no lint, runtime, layout, motion, or contrast findings for the generated fixture.
+HyperFrames 0.8.40 receives a direct composition root, canonical clip IDs, and a root timeline under the composition ID. The regression harness rejects background-only frames. The 0.8.40 checker reports clean lint, runtime, layout, motion, and contrast gates for the generated fixture; two expected legacy-caption occlusion observations are informational after the intentional overlay is declared.
 
 - Production builds explicitly use Next's supported Webpack path. Turbopack failed to launch its CSS evaluation subprocess in the validation environment, including an escalated retry. Webpack completes the same application compilation and type checks. Geist fonts are packaged locally so builds do not need Google Fonts.

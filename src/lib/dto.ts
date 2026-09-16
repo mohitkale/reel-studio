@@ -55,6 +55,8 @@ export interface SceneDTO {
   role?: ProductionSceneRole;
   /** Uploaded assets retained by id for reproducible planning and regeneration. */
   assetRefs?: string[];
+  /** Image asset URLs resolved server-side for carousel preview and export. */
+  carouselImages?: string[];
   locks?: { copy: boolean; assets: boolean; scene: boolean };
 }
 

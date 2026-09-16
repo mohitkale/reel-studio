@@ -1,0 +1,743 @@
+{
+  "schemaVersion": 1,
+  "releaseTag": "v0.8.40",
+  "sourceRevision": "cfe5dcfad310ced2a5844998628daa2b8a0f53d7",
+  "packages": {
+    "producer": {
+      "name": "@hyperframes/producer",
+      "version": "0.8.40"
+    },
+    "cli": {
+      "name": "hyperframes",
+      "version": "0.8.40"
+    }
+  },
+  "registryCounts": {
+    "blocks": 180,
+    "components": 219,
+    "examples": 9
+  },
+  "items": [
+    {
+      "capabilityId": "hf.catalog.block.app-showcase",
+      "registryName": "app-showcase",
+      "type": "block",
+      "templateId": "hf-app-showcase-v1",
+      "integration": "vendored",
+      "tags": [
+        "showcase",
+        "app",
+        "3d"
+      ],
+      "presets": [
+        "product-launch"
+      ],
+      "layouts": [
+        "landscape"
+      ],
+      "variableIds": [],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "google-fonts",
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.block.ui-3d-reveal",
+      "registryName": "ui-3d-reveal",
+      "type": "block",
+      "templateId": "hf-ui-3d-reveal-v1",
+      "integration": "vendored",
+      "tags": [
+        "showcase",
+        "3d",
+        "reveal"
+      ],
+      "presets": [
+        "product-launch",
+        "cinematic-brand"
+      ],
+      "layouts": [
+        "landscape"
+      ],
+      "variableIds": [],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "google-fonts",
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.block.data-chart",
+      "registryName": "data-chart",
+      "type": "block",
+      "templateId": "hf-data-chart-v1",
+      "integration": "vendored",
+      "tags": [
+        "data",
+        "chart",
+        "statistics"
+      ],
+      "presets": [
+        "data-story"
+      ],
+      "layouts": [
+        "landscape"
+      ],
+      "variableIds": [],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "google-fonts",
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.block.flowchart",
+      "registryName": "flowchart",
+      "type": "block",
+      "templateId": "hf-flowchart-v1",
+      "integration": "vendored",
+      "tags": [
+        "diagram",
+        "flowchart",
+        "interactive"
+      ],
+      "presets": [
+        "editorial-explainer",
+        "developer-demo"
+      ],
+      "layouts": [
+        "landscape"
+      ],
+      "variableIds": [],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "google-fonts",
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.block.code-diff",
+      "registryName": "code-diff",
+      "type": "block",
+      "templateId": "hf-code-diff-v1",
+      "integration": "vendored",
+      "tags": [
+        "code",
+        "code-animation",
+        "diff",
+        "developer"
+      ],
+      "presets": [
+        "developer-demo"
+      ],
+      "layouts": [
+        "landscape"
+      ],
+      "variableIds": [],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.block.code-snippet-dark-modern",
+      "registryName": "code-snippet-dark-modern",
+      "type": "block",
+      "templateId": "hf-code-modern-v1",
+      "integration": "vendored",
+      "tags": [
+        "code",
+        "developer",
+        "showcase",
+        "vscode"
+      ],
+      "presets": [
+        "developer-demo"
+      ],
+      "layouts": [
+        "landscape"
+      ],
+      "variableIds": [],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.block.logo-outro",
+      "registryName": "logo-outro",
+      "type": "block",
+      "templateId": "hf-logo-outro-v1",
+      "integration": "vendored",
+      "tags": [
+        "branding",
+        "outro",
+        "logo"
+      ],
+      "presets": [
+        "product-launch",
+        "cinematic-brand"
+      ],
+      "layouts": [
+        "landscape"
+      ],
+      "variableIds": [],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "google-fonts",
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.block.notes-reveal",
+      "registryName": "notes-reveal",
+      "type": "block",
+      "templateId": "hf-notes-reveal-v1",
+      "integration": "vendored",
+      "tags": [
+        "showcase",
+        "mock-ui",
+        "notes",
+        "typing",
+        "vertical",
+        "ad-template"
+      ],
+      "presets": [
+        "editorial-explainer",
+        "creator-punch"
+      ],
+      "layouts": [
+        "landscape"
+      ],
+      "variableIds": [
+        "titleL1",
+        "titleL2",
+        "noteLine1",
+        "noteLine2",
+        "noteLine3",
+        "noteLine4",
+        "noteLine5",
+        "noteLine6",
+        "noteLine7",
+        "cardTop",
+        "cardMid",
+        "cardBottom",
+        "check1Label",
+        "check1Value",
+        "check2Label",
+        "check2Value",
+        "check3Label",
+        "check3Value",
+        "brandLogo",
+        "brandDomain"
+      ],
+      "requiredLocalMedia": [
+        "image"
+      ],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.block.carousel-circle-1",
+      "registryName": "carousel-circle-1",
+      "type": "block",
+      "templateId": "hf-carousel-circle-v1",
+      "integration": "native-adapter",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "circle"
+      ],
+      "presets": [
+        "product-launch",
+        "cinematic-brand"
+      ],
+      "layouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "variableIds": [
+        "image1",
+        "image2",
+        "image3",
+        "image4",
+        "image5",
+        "image6",
+        "image7",
+        "image8",
+        "image9",
+        "image10",
+        "image11",
+        "image12",
+        "speed",
+        "background"
+      ],
+      "requiredLocalMedia": [
+        "image"
+      ],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.block.carousel-path-1",
+      "registryName": "carousel-path-1",
+      "type": "block",
+      "templateId": "hf-carousel-path-v1",
+      "integration": "native-adapter",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "path"
+      ],
+      "presets": [
+        "product-launch",
+        "editorial-explainer"
+      ],
+      "layouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "variableIds": [
+        "image1",
+        "image2",
+        "image3",
+        "image4",
+        "image5",
+        "image6",
+        "image7",
+        "image8",
+        "image9",
+        "image10",
+        "image11",
+        "image12",
+        "image13",
+        "image14",
+        "image15",
+        "image16",
+        "image17",
+        "image18",
+        "image19",
+        "image20",
+        "image21",
+        "image22",
+        "image23",
+        "image24",
+        "speed",
+        "background"
+      ],
+      "requiredLocalMedia": [
+        "image"
+      ],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.block.carousel-vision-1",
+      "registryName": "carousel-vision-1",
+      "type": "block",
+      "templateId": "hf-carousel-vision-v1",
+      "integration": "native-adapter",
+      "tags": [
+        "carousel",
+        "gallery",
+        "images",
+        "showcase",
+        "vision",
+        "3d"
+      ],
+      "presets": [
+        "cinematic-brand",
+        "creator-punch"
+      ],
+      "layouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "variableIds": [
+        "image1",
+        "image2",
+        "image3",
+        "image4",
+        "image5",
+        "image6",
+        "image7",
+        "image8",
+        "image9",
+        "image10",
+        "image11",
+        "image12",
+        "speed",
+        "background"
+      ],
+      "requiredLocalMedia": [
+        "image"
+      ],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.component.browser-device-stage",
+      "registryName": "browser-device-stage",
+      "type": "component",
+      "integration": "vendored",
+      "tags": [
+        "stage",
+        "product-demo",
+        "device",
+        "browser",
+        "phone",
+        "slot",
+        "chrome"
+      ],
+      "presets": [
+        "product-launch",
+        "developer-demo"
+      ],
+      "layouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "variableIds": [
+        "chrome",
+        "title",
+        "swap_at",
+        "accent",
+        "exit"
+      ],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.component.before-after-wipe",
+      "registryName": "before-after-wipe",
+      "type": "component",
+      "integration": "vendored",
+      "tags": [
+        "prop",
+        "ui-props",
+        "compare",
+        "holdable",
+        "before-after",
+        "wipe",
+        "slots"
+      ],
+      "presets": [
+        "product-launch",
+        "data-story"
+      ],
+      "layouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "variableIds": [
+        "label_a",
+        "label_b",
+        "rest_split",
+        "wipe_at",
+        "accent",
+        "exit"
+      ],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.component.caption-editorial-emphasis",
+      "registryName": "caption-editorial-emphasis",
+      "type": "component",
+      "integration": "vendored",
+      "tags": [
+        "captions",
+        "caption-style",
+        "editorial",
+        "typography",
+        "emphasis"
+      ],
+      "presets": [
+        "editorial-explainer"
+      ],
+      "layouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "variableIds": [],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "google-fonts",
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.component.caption-pill-karaoke",
+      "registryName": "caption-pill-karaoke",
+      "type": "component",
+      "integration": "vendored",
+      "tags": [
+        "captions",
+        "caption-style",
+        "karaoke",
+        "pill"
+      ],
+      "presets": [
+        "creator-punch"
+      ],
+      "layouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "variableIds": [],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "google-fonts",
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.component.caption-texture",
+      "registryName": "caption-texture",
+      "type": "component",
+      "integration": "vendored",
+      "tags": [
+        "captions",
+        "caption-style",
+        "texture",
+        "mask"
+      ],
+      "presets": [
+        "cinematic-brand"
+      ],
+      "layouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "variableIds": [
+        "texture"
+      ],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "google-fonts",
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.component.beat-accent",
+      "registryName": "beat-accent",
+      "type": "component",
+      "integration": "vendored",
+      "tags": [
+        "motion-primitive",
+        "effects",
+        "burst",
+        "sting",
+        "emphasize",
+        "impact"
+      ],
+      "presets": [
+        "creator-punch"
+      ],
+      "layouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "variableIds": [
+        "text",
+        "flashColor",
+        "intensity"
+      ],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": [
+        "gsap"
+      ]
+    },
+    {
+      "capabilityId": "hf.catalog.component.grain-overlay",
+      "registryName": "grain-overlay",
+      "type": "component",
+      "integration": "vendored",
+      "tags": [
+        "texture",
+        "grain",
+        "overlay",
+        "film"
+      ],
+      "presets": [
+        "editorial-explainer",
+        "cinematic-brand"
+      ],
+      "layouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "variableIds": [],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": []
+    },
+    {
+      "capabilityId": "hf.catalog.component.simulated-cursor",
+      "registryName": "simulated-cursor",
+      "type": "component",
+      "integration": "vendored",
+      "tags": [
+        "video-primitive",
+        "motion-primitive",
+        "cursor",
+        "ui",
+        "walkthrough"
+      ],
+      "presets": [
+        "product-launch",
+        "developer-demo"
+      ],
+      "layouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "variableIds": [
+        "size",
+        "tone",
+        "pulse"
+      ],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": []
+    },
+    {
+      "capabilityId": "hf.catalog.component.animated-bar-chart",
+      "registryName": "animated-bar-chart",
+      "type": "component",
+      "integration": "vendored",
+      "tags": [
+        "data"
+      ],
+      "presets": [
+        "data-story"
+      ],
+      "layouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "variableIds": [],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": []
+    },
+    {
+      "capabilityId": "hf.catalog.component.typewriter",
+      "registryName": "typewriter",
+      "type": "component",
+      "integration": "vendored",
+      "tags": [
+        "video-primitive",
+        "motion-primitive",
+        "typography"
+      ],
+      "presets": [
+        "developer-demo"
+      ],
+      "layouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "variableIds": [
+        "text",
+        "tone",
+        "caret"
+      ],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": []
+    },
+    {
+      "capabilityId": "hf.catalog.component.vignette",
+      "registryName": "vignette",
+      "type": "component",
+      "integration": "vendored",
+      "tags": [
+        "vignette",
+        "overlay",
+        "cinematic",
+        "effect"
+      ],
+      "presets": [
+        "cinematic-brand"
+      ],
+      "layouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "variableIds": [],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": []
+    },
+    {
+      "capabilityId": "hf.catalog.component.shimmer-sweep",
+      "registryName": "shimmer-sweep",
+      "type": "component",
+      "integration": "vendored",
+      "tags": [
+        "text",
+        "shimmer",
+        "highlight",
+        "effect"
+      ],
+      "presets": [
+        "product-launch",
+        "cinematic-brand"
+      ],
+      "layouts": [
+        "portrait",
+        "landscape",
+        "square"
+      ],
+      "variableIds": [],
+      "requiredLocalMedia": [],
+      "offlineReady": true,
+      "runtimeRewrites": []
+    }
+  ]
+}

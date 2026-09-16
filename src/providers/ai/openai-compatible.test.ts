@@ -5,6 +5,7 @@ import {
   createLocalOpenAICompatibleTransport,
   createOpenAICloudTransport,
 } from "./openai-compatible";
+import { buildOpenAIVideoPlanJsonSchema } from "./openai-compatible-schemas";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -18,6 +19,21 @@ const schema = {
 };
 
 describe("OpenAI-compatible structured transport", () => {
+  it("exposes bounded capability ids instead of engine template ids", () => {
+    const output = buildOpenAIVideoPlanJsonSchema({
+      mode: "idea",
+      brief: "A product gallery",
+      videoEngine: "hyperframes",
+    });
+    const scene = output.schema.properties.scenes.items;
+
+    expect(scene.properties.capabilityId.enum).toContain(
+      "hf.catalog.block.carousel-circle-1",
+    );
+    expect(scene.properties).not.toHaveProperty("templateId");
+    expect(scene.required).toContain("capabilityId");
+  });
+
   it("preserves OpenAI structured-output request behavior", async () => {
     vi.stubEnv("OPENAI_API_KEY", "cloud-secret");
     const fetchMock = vi.fn().mockResolvedValue(

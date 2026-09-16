@@ -22,6 +22,7 @@ import {
 import { resolveBrandTokens, getDefaultBrandKit } from "./brandkits";
 import { toSceneDTO, toTakeDTO, toVoiceClipDTO } from "./map";
 import { listCaptionTracks } from "./captions";
+import { getAssets } from "./assets";
 
 function resolveEngine(value: string | null | undefined): VideoEngineId {
   return value && isVideoEngineId(value) ? value : DEFAULT_VIDEO_ENGINE;
@@ -51,6 +52,16 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     brandOverridesSchema,
     {},
   );
+  const scenes = script.scenes.map(toSceneDTO);
+  const assetIds = [
+    ...new Set(scenes.flatMap((scene) => scene.assetRefs ?? [])),
+  ];
+  const assets = await getAssets(assetIds);
+  const imageUrls = new Map(
+    assets
+      .filter((asset) => asset.type === "image")
+      .map((asset) => [asset.id, asset.url] as const),
+  );
 
   return {
     id: script.id,
@@ -60,7 +71,16 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     width: script.width,
     height: script.height,
     videoEngine: resolveEngine(script.project.videoEngine),
-    scenes: script.scenes.map(toSceneDTO),
+    scenes: scenes.map((scene) => {
+      const carouselImages = (scene.assetRefs ?? []).flatMap((assetId) => {
+        const url = imageUrls.get(assetId);
+        return url ? [url] : [];
+      });
+      return {
+        ...scene,
+        carouselImages: carouselImages.length ? carouselImages : undefined,
+      };
+    }),
     takes: script.takes.map(toTakeDTO),
     voiceClips: script.voiceClips.map(toVoiceClipDTO),
     voiceMode: resolveVoiceMode(script.voiceMode),

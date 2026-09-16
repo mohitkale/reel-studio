@@ -2,19 +2,21 @@ import { z } from "zod";
 
 import { productionChartDataSchema } from "@/production/spec";
 import {
-  PLAN_TEMPLATE_IDS,
   planEffectSchema,
   planEnergySchema,
   planStyleIdSchema,
   sceneMoodSchema,
 } from "./types";
+import { templateIdForCapabilityId } from "@/engines/capabilities";
 import { podcastAiCharacterSchema, podcastAiTurnSchema } from "./podcast-types";
 
 const strictSceneSchema = z
   .object({
     text: z.string().min(1),
     spokenText: z.string().optional(),
-    templateId: z.enum(PLAN_TEMPLATE_IDS),
+    capabilityId: z
+      .string()
+      .refine((value) => Boolean(templateIdForCapabilityId(value))),
     emphasis: z.array(z.string()),
     visual: z.string().max(64).optional(),
     items: z.array(z.string().trim().min(1).max(80)).min(2).max(5).optional(),

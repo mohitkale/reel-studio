@@ -13,9 +13,12 @@ import {
 } from "@/engines/hyperframes/catalog/importer";
 import {
   CURRENT_HF_CATALOG,
+  CURRENT_HF_CATALOG_CAPABILITIES,
   CURRENT_HF_CATALOG_REVISION,
+  CURRENT_HF_UNSUPPORTED_CATALOG,
   HF_CATALOG_VERSIONS,
   LEGACY_HF_CATALOG_REVISION,
+  PREVIOUS_HF_CATALOG_REVISION,
   getCatalogVersion,
 } from "@/engines/hyperframes/catalog/versions";
 
@@ -52,6 +55,7 @@ describe("HyperFrames catalog import", () => {
   it("verifies every vendored file against its recorded checksum", async () => {
     for (const item of CURRENT_HF_CATALOG.items) {
       for (const file of item.files) {
+        if (!file.embedded) continue;
         const content = await readFile(path.join(versionRoot, file.path));
         expect(content.byteLength).toBe(file.bytes);
         expect(sha256(content)).toBe(file.checksum);
@@ -62,14 +66,49 @@ describe("HyperFrames catalog import", () => {
   it("retains the legacy catalog alongside the current catalog", () => {
     expect(HF_CATALOG_VERSIONS.map((version) => version.revision)).toEqual([
       LEGACY_HF_CATALOG_REVISION,
+      PREVIOUS_HF_CATALOG_REVISION,
       CURRENT_HF_CATALOG_REVISION,
     ]);
     expect(getCatalogVersion(LEGACY_HF_CATALOG_REVISION)?.status).toBe(
       "legacy",
     );
+    expect(getCatalogVersion(PREVIOUS_HF_CATALOG_REVISION)?.status).toBe(
+      "legacy",
+    );
     expect(getCatalogVersion(CURRENT_HF_CATALOG_REVISION)?.status).toBe(
       "current",
     );
+  });
+
+  it("exposes only reviewed carousel capabilities through native adapters", () => {
+    const names = [
+      "carousel-circle-1",
+      "carousel-path-1",
+      "carousel-vision-1",
+    ];
+    const capabilities = CURRENT_HF_CATALOG_CAPABILITIES.items.filter((item) =>
+      names.includes(item.registryName),
+    );
+
+    expect(capabilities).toHaveLength(3);
+    expect(capabilities.every((item) => item.integration === "native-adapter"))
+      .toBe(true);
+    expect(
+      capabilities.every(
+        (item) => item.requiredLocalMedia.join(",") === "image",
+      ),
+    ).toBe(true);
+    expect(
+      CURRENT_HF_UNSUPPORTED_CATALOG.items.some((item) =>
+        names.includes(item.name),
+      ),
+    ).toBe(false);
+    expect(
+      CURRENT_HF_CATALOG.items
+        .filter((item) => names.includes(item.name))
+        .flatMap((item) => item.files)
+        .every((file) => !file.embedded),
+    ).toBe(true);
   });
 
   it("rejects traversal and block/component mismatches", () => {
@@ -107,6 +146,7 @@ describe("HyperFrames catalog import", () => {
           name: component.name,
           type: "block",
           templateId: "hf-caption-pill-v1",
+          integration: "vendored",
           presets: ["creator-punch"],
           layouts: ["portrait"],
         },

@@ -1,16 +1,34 @@
-import importedCatalogJson from "@/engines/hyperframes/catalog/versions/c93c7654033282e1a66a662a39fb10b8ed273b7d/catalog.json";
+import previousCatalogJson from "@/engines/hyperframes/catalog/versions/c93c7654033282e1a66a662a39fb10b8ed273b7d/catalog.json";
+import currentCapabilitiesJson from "@/engines/hyperframes/catalog/versions/cfe5dcfad310ced2a5844998628daa2b8a0f53d7/capabilities.json";
+import currentCatalogJson from "@/engines/hyperframes/catalog/versions/cfe5dcfad310ced2a5844998628daa2b8a0f53d7/catalog.json";
+import currentUnsupportedJson from "@/engines/hyperframes/catalog/versions/cfe5dcfad310ced2a5844998628daa2b8a0f53d7/unsupported.json";
 import { HF_CATALOG_BLOCKS } from "@/engines/hyperframes/catalog/manifest";
 import {
+  catalogCapabilityManifestSchema,
   importedCatalogSchema,
+  unsupportedCatalogReportSchema,
   type ImportedCatalog,
 } from "@/engines/hyperframes/catalog/importer";
-
-export const LEGACY_HF_CATALOG_REVISION = "builtin-v0.3.0" as const;
-export const CURRENT_HF_CATALOG_REVISION =
-  "c93c7654033282e1a66a662a39fb10b8ed273b7d" as const;
+export {
+  CURRENT_HF_CATALOG_REVISION,
+  LEGACY_HF_CATALOG_REVISION,
+  PREVIOUS_HF_CATALOG_REVISION,
+} from "@/engines/hyperframes/catalog/revisions";
+import {
+  CURRENT_HF_CATALOG_REVISION,
+  LEGACY_HF_CATALOG_REVISION,
+  PREVIOUS_HF_CATALOG_REVISION,
+} from "@/engines/hyperframes/catalog/revisions";
 
 export const CURRENT_HF_CATALOG = importedCatalogSchema.parse(
-  importedCatalogJson,
+  currentCatalogJson,
+) as ImportedCatalog;
+export const CURRENT_HF_CATALOG_CAPABILITIES =
+  catalogCapabilityManifestSchema.parse(currentCapabilitiesJson);
+export const CURRENT_HF_UNSUPPORTED_CATALOG =
+  unsupportedCatalogReportSchema.parse(currentUnsupportedJson);
+const PREVIOUS_HF_CATALOG = importedCatalogSchema.parse(
+  previousCatalogJson,
 ) as ImportedCatalog;
 
 export interface CatalogVersionSummary {
@@ -26,6 +44,12 @@ export const HF_CATALOG_VERSIONS: readonly CatalogVersionSummary[] = [
     source: "Reel Studio v0.3 bundled catalog",
     status: "legacy",
     itemNames: HF_CATALOG_BLOCKS.map((item) => item.id),
+  },
+  {
+    revision: PREVIOUS_HF_CATALOG_REVISION,
+    source: PREVIOUS_HF_CATALOG.source,
+    status: "legacy",
+    itemNames: PREVIOUS_HF_CATALOG.items.map((item) => item.name),
   },
   {
     revision: CURRENT_HF_CATALOG_REVISION,

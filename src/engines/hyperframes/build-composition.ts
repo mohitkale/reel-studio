@@ -84,7 +84,7 @@ function captionCueHtml(input: {
       html: lines
         .map(
           (line) =>
-            `<span class="rs-caption-line"${color}>${escapeHtml(line)}</span>`,
+            `<span class="rs-caption-line" data-layout-allow-overlap data-layout-allow-occlusion${color}>${escapeHtml(line)}</span>`,
         )
         .join(""),
       lineScale: Math.max(0.65, Math.min(1, input.maxLines / lines.length)),
@@ -114,7 +114,7 @@ function captionCueHtml(input: {
           return `<span class="rs-caption-word" data-word-index="${index}"${color}><span>${escapeHtml(word.text)}</span>${active}</span>`;
         })
         .join(" ");
-      return `<span class="rs-caption-line">${words}</span>`;
+      return `<span class="rs-caption-line" data-layout-allow-overlap data-layout-allow-occlusion>${words}</span>`;
     })
     .join("");
   return {
@@ -980,7 +980,10 @@ export function buildHyperframesCompositionHtml(
       }
     }
 
-    const catalog = getCatalogBlockByTemplateId(scene.templateId);
+    const catalog = getCatalogBlockByTemplateId(
+      scene.templateId,
+      props.catalogRevision,
+    );
     if (catalog) {
       const built = buildCatalogSceneBlock({
         scene,
@@ -993,6 +996,7 @@ export function buildHyperframesCompositionHtml(
         motionStiffness,
         inline: inlineCatalog,
         backgroundHtml: backgroundLayer(scene, absoluteStart, duration),
+        catalogRevision: props.catalogRevision,
       });
       if (built) {
         sceneBlocks.push(built.html);
@@ -1086,7 +1090,7 @@ export function buildHyperframesCompositionHtml(
               highlightMode: captionResolved.style.highlightMode,
               activeWordColor: captionInner.activeWordColor,
             });
-            return `<div id="subtitle-${escapeHtml(cue.id || String(index + 1))}" class="clip rs-subtitle" data-caption-style-version="${captionResolved.style.version}" data-caption-style="${captionResolved.style.presetId}" data-start="${start.toFixed(3)}" data-duration="${duration.toFixed(3)}" data-track-index="20" aria-label="Subtitle ${index + 1}"><span dir="auto" style="font-size:${Math.round(captionInner.fontSize * content.lineScale)}px">${content.html}</span></div>`;
+            return `<div id="subtitle-${escapeHtml(cue.id || String(index + 1))}" class="clip rs-subtitle" data-caption-style-version="${captionResolved.style.version}" data-caption-style="${captionResolved.style.presetId}" data-start="${start.toFixed(3)}" data-duration="${duration.toFixed(3)}" data-track-index="20" aria-label="Subtitle ${index + 1}"><span dir="auto" data-layout-allow-overlap data-layout-allow-occlusion style="font-size:${Math.round(captionInner.fontSize * content.lineScale)}px">${content.html}</span></div>`;
           })
           .join("\n")
       : "";
@@ -1100,7 +1104,7 @@ export function buildHyperframesCompositionHtml(
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reel Studio · HyperFrames</title>
   <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}
-    .rs-subtitle{position:absolute;z-index:50;inset:0;box-sizing:border-box;display:flex;justify-content:${captionResolved.outer.justifyContent};align-items:${captionResolved.outer.alignItems};padding:${captionResolved.outer.paddingTop}px ${captionResolved.outer.paddingRight}px ${captionResolved.outer.paddingBottom}px ${captionResolved.outer.paddingLeft}px;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
+    .rs-subtitle{position:absolute;z-index:50;inset:0;box-sizing:border-box;display:flex;flex-direction:column;justify-content:${captionResolved.outer.justifyContent};align-items:${captionResolved.outer.alignItems};padding:${captionResolved.outer.paddingTop}px ${captionResolved.outer.paddingRight}px ${captionResolved.outer.paddingBottom}px ${captionResolved.outer.paddingLeft}px;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
     .rs-subtitle>span{display:block;max-width:${captionInner.maxWidth}px;padding:${captionInner.padding};border-radius:${captionInner.borderRadius}px;background:${captionInner.background};color:${captionInner.color};font-family:${escapeHtml(captionInner.fontFamily)};font-weight:${captionInner.fontWeight};line-height:${captionInner.lineHeight};letter-spacing:${captionInner.letterSpacing};text-align:${captionInner.textAlign};text-shadow:${captionInner.textShadow};${captionInner.WebkitTextStroke ? `-webkit-text-stroke:${captionInner.WebkitTextStroke};` : ""}overflow-wrap:anywhere}
     .rs-caption-line{display:block}.rs-caption-word{display:inline-block;position:relative}.rs-caption-active{position:absolute;inset:0;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
   </style>
