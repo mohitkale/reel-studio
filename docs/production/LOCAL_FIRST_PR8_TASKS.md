@@ -11,8 +11,8 @@ user requests publication.
 | Task | Implementation and acceptance                                                   | State    | Completion SHA |
 | ---: | ------------------------------------------------------------------------------- | -------- | -------------- |
 |   26 | Off-by-default Quick Produce UI, immutable revision, durable reconnectable job  | Complete | `be1339b`      |
-|   27 | Real local/optional-AI stages, reusable media/audio/composition/render outputs  | Complete | Recorded next  |
-|   28 | Shared REST/MCP/batch Quick Produce semantics, limits, retry/cancel/idempotency | Pending  | —              |
+|   27 | Real local/optional-AI stages, reusable media/audio/composition/render outputs  | Complete | `2c92001`      |
+|   28 | Shared REST/MCP/batch Quick Produce semantics, limits, retry/cancel/idempotency | Complete | Recorded next  |
 |   29 | Release docs, examples, licensing, walkthroughs, and final Gate 5 validation    | Pending  | —              |
 
 ## Initial decisions
@@ -56,3 +56,24 @@ user requests publication.
 - Typecheck, quiet lint, and focused orchestration, lease, stock, deterministic
   planning, Ollama, LM Studio, strict output, and voice-provider suites passed
   (8 files, 65 tests). No live local-model server or remote provider was started.
+  Completion commit: `2c92001`.
+
+### Task 28
+
+- Prepared-script video requests accept the shared Quick Produce options without
+  changing existing defaults. The same schema validates media preference,
+  planner/model metadata, and server-capable narration providers for REST, MCP,
+  and every expanded batch variant.
+- MCP imports the application validators instead of maintaining a second Quick
+  Produce or batch-row model. Its AI creation tool now exposes configured local
+  planners, production presets, media preference, idempotency, and the optional
+  immediate durable job.
+- Every opted-in batch row persists its own immutable revision and job; duplicate
+  batch/job keys deduplicate, successful siblings and artifacts survive partial
+  failure, and existing retry/cancel/approval behavior remains item-scoped.
+- Provider allowlists, paid allowances, duration limits, maximum batch size,
+  authorization scopes, artifact retrieval, reconnect events, and revision
+  reporting continue through the shared production service and views.
+- Typecheck and focused REST schema, MCP policy, batch expansion, persistence,
+  idempotency, partial failure, retry/cancel, and fresh/populated migration suites
+  passed (6 files, 34 tests).
