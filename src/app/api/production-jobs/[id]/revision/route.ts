@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 
+import { getProductionJob } from "@/library/repositories/production-jobs";
+import { restoreProductionRevision } from "@/library/restore-production-revision";
 import { authorizeRequest } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
-import { productionJobViewWithRevision } from "@/library/production-job-view";
-import { getProductionJob } from "@/library/repositories/production-jobs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(
+export async function POST(
   req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -16,13 +16,16 @@ export async function GET(
     authorizeRequest(req, "production:submit");
     const { id } = await context.params;
     const job = await getProductionJob(id);
-    if (!job) {
+    if (!job?.productionRevision) {
       return NextResponse.json(
-        { error: "Production job not found" },
+        { error: "Production revision not found" },
         { status: 404 },
       );
     }
-    return NextResponse.json({ job: await productionJobViewWithRevision(job) });
+    const restored = await restoreProductionRevision(
+      JSON.parse(job.productionRevision.snapshotJson),
+    );
+    return NextResponse.json(restored, { status: 201 });
   } catch (error) {
     return errorResponse(error);
   }

@@ -41,6 +41,7 @@ import {
   PRODUCTION_PRESETS,
   type ProductionPresetId,
 } from "@/production/presets";
+import { DEFAULT_QUICK_PRODUCE_ENABLED } from "@/production/quick-produce";
 import {
   Dialog,
   DialogContent,
@@ -82,16 +83,23 @@ export function CreateWithAIDialog() {
     React.useState<ProductionPresetId>("product-launch");
   const [mediaPreference, setMediaPreference] =
     React.useState<MediaPreference>("auto");
+  const [quickProduce, setQuickProduce] = React.useState(
+    DEFAULT_QUICK_PRODUCE_ENABLED,
+  );
+  const [quickPlanner, setQuickPlanner] = React.useState<
+    "deterministic" | AIProviderId
+  >("deterministic");
 
   const configured = (providers ?? []).filter((p) => p.configured);
   const effectiveProvider = providerId ?? configured[0]?.id;
 
   function submit() {
     const trimmed = brief.trim();
-    if (!trimmed || !effectiveProvider) return;
+    if (!trimmed || (!quickProduce && !effectiveProvider)) return;
+    const planner = quickProduce ? quickPlanner : effectiveProvider;
     generate.mutate(
       {
-        providerId: effectiveProvider,
+        providerId: planner === "deterministic" ? undefined : planner,
         mode,
         brief: trimmed,
         sceneCount: sceneCount === "auto" ? undefined : Number(sceneCount),
@@ -102,9 +110,24 @@ export function CreateWithAIDialog() {
         energy,
         productionPresetId,
         mediaPreference,
+        ...(quickProduce
+          ? {
+              idempotencyKey: `quick-produce:${crypto.randomUUID()}`,
+              quickProduce: {
+                enabled: true as const,
+                planner: quickPlanner,
+                mediaPreference,
+                voice: {
+                  enabled: true,
+                  providerId: "kokoro-server" as const,
+                  voiceId: "af_heart",
+                },
+              },
+            }
+          : {}),
       },
       {
-        onSuccess: ({ scriptId, mediaDecisions }) => {
+        onSuccess: ({ scriptId, mediaDecisions, job }) => {
           setOpen(false);
           setBrief("");
           setVideoEngine(DEFAULT_VIDEO_ENGINE);
@@ -112,15 +135,24 @@ export function CreateWithAIDialog() {
           setEnergy("auto");
           setProductionPresetId("product-launch");
           setMediaPreference("auto");
+          setQuickProduce(DEFAULT_QUICK_PRODUCE_ENABLED);
+          setQuickPlanner("deterministic");
           const selected = mediaDecisions.filter(
             (decision) => decision.state === "selected",
           ).length;
-          toast.success("Video drafted", {
-            description: selected
-              ? `${selected} stock background${selected === 1 ? "" : "s"} selected. Review every scene in the editor.`
-              : "No stock result was selected; animated mood backgrounds remain available.",
-          });
-          router.push(`/editor/${scriptId}`);
+          toast.success(
+            quickProduce ? "Quick Produce started" : "Video drafted",
+            {
+              description: selected
+                ? `${selected} stock background${selected === 1 ? "" : "s"} selected. Review every scene in the editor.`
+                : "No stock result was selected; animated mood backgrounds remain available.",
+            },
+          );
+          router.push(
+            job
+              ? `/editor/${scriptId}?productionJob=${encodeURIComponent(job.id)}`
+              : `/editor/${scriptId}`,
+          );
         },
         onError: (e) =>
           toast.error("Generation failed", {
@@ -156,7 +188,36 @@ export function CreateWithAIDialog() {
           </DialogDescription>
         </DialogHeader>
 
-        {configured.length === 0 ? (
+        <button
+          type="button"
+          aria-pressed={quickProduce}
+          onClick={() => setQuickProduce((value) => !value)}
+          className={cn(
+            "flex items-start justify-between gap-4 rounded-xl border p-4 text-left transition-colors",
+            quickProduce ? "border-primary bg-primary/8" : "hover:bg-muted/40",
+          )}
+        >
+          <span>
+            <span className="block text-sm font-medium">Quick Produce</span>
+            <span className="text-muted-foreground mt-1 block text-xs">
+              Create the editable project first, then produce a verified MP4 in
+              the durable local queue. Off by default.
+            </span>
+          </span>
+          <span
+            aria-hidden="true"
+            className={cn(
+              "mt-0.5 flex h-6 w-11 shrink-0 rounded-full p-0.5 transition-colors",
+              quickProduce
+                ? "bg-primary justify-end"
+                : "bg-muted justify-start",
+            )}
+          >
+            <span className="bg-background size-5 rounded-full shadow" />
+          </span>
+        </button>
+
+        {configured.length === 0 && !quickProduce ? (
           <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm">
             No AI provider configured. Add a cloud key or select a local model
             in{" "}
@@ -371,12 +432,28 @@ export function CreateWithAIDialog() {
                 <Label htmlFor="ai-provider">Provider</Label>
                 <Combobox
                   id="ai-provider"
-                  value={effectiveProvider ?? ""}
-                  onChange={(v) => setProviderId(v as AIProviderId)}
-                  options={configured.map((p) => ({
-                    value: p.id,
-                    label: p.label,
-                  }))}
+                  value={
+                    quickProduce ? quickPlanner : (effectiveProvider ?? "")
+                  }
+                  onChange={(v) =>
+                    quickProduce
+                      ? setQuickPlanner(v as "deterministic" | AIProviderId)
+                      : setProviderId(v as AIProviderId)
+                  }
+                  options={[
+                    ...(quickProduce
+                      ? [
+                          {
+                            value: "deterministic",
+                            label: "Deterministic (no AI key)",
+                          },
+                        ]
+                      : []),
+                    ...configured.map((p) => ({
+                      value: p.id,
+                      label: p.label,
+                    })),
+                  ]}
                   placeholder="Select provider…"
                   searchPlaceholder="Search providers…"
                 />
@@ -412,17 +489,21 @@ export function CreateWithAIDialog() {
           </DialogClose>
           <Button
             onClick={submit}
-            disabled={!brief.trim() || !effectiveProvider || generate.isPending}
+            disabled={
+              !brief.trim() ||
+              (!quickProduce && !effectiveProvider) ||
+              generate.isPending
+            }
           >
             {generate.isPending ? (
               <>
                 <Loader2 className="animate-spin" />
-                Generating...
+                {quickProduce ? "Starting production..." : "Generating..."}
               </>
             ) : (
               <>
                 <Sparkles />
-                Generate video
+                {quickProduce ? "Create and produce" : "Generate video"}
               </>
             )}
           </Button>

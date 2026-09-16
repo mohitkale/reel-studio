@@ -82,12 +82,19 @@ import { MusicControl } from "@/components/editor/music-control";
 import { CaptionsMenu } from "@/components/editor/captions-menu";
 import { Combobox } from "@/components/ui/combobox";
 import { HintTooltip } from "@/components/ui/hint-tooltip";
+import { QuickProduceStatus } from "@/components/production/quick-produce-status";
 
 /** Sentinel stored when the user explicitly clears the take (vs. never choosing). */
 const TAKE_CLEARED = "__cleared__";
 const takeKey = (scriptId: string) => `reel-studio:selected-take:${scriptId}`;
 
-export function EditorClient({ scriptId }: { scriptId: string }) {
+export function EditorClient({
+  scriptId,
+  productionJobId = null,
+}: {
+  scriptId: string;
+  productionJobId?: string | null;
+}) {
   const router = useRouter();
   const { data: script, isLoading, isError, error } = useScript(scriptId);
 
@@ -419,6 +426,7 @@ export function EditorClient({ scriptId }: { scriptId: string }) {
 
   return (
     <div className="space-y-6">
+      <QuickProduceStatus jobId={productionJobId} scriptId={scriptId} />
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link

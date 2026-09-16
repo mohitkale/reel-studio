@@ -36,6 +36,7 @@ export async function enqueueProductionJob(
         inputSnapshot: json(data.inputSnapshot),
         priority: data.priority,
         batchItemId: data.batchItemId,
+        productionRevisionId: data.productionRevisionId,
       },
     });
   } catch (error) {
@@ -348,6 +349,7 @@ export async function getProductionJob(id: string) {
     include: {
       steps: { orderBy: { createdAt: "asc" } },
       outputs: { orderBy: { createdAt: "asc" } },
+      productionRevision: true,
     },
   });
 }
@@ -358,6 +360,7 @@ export async function getProductionJobByIdempotencyKey(idempotencyKey: string) {
     include: {
       steps: { orderBy: { createdAt: "asc" } },
       outputs: { orderBy: { createdAt: "asc" } },
+      productionRevision: true,
     },
   });
 }
@@ -369,6 +372,7 @@ export async function listProductionJobs(limit = 50) {
     include: {
       steps: { orderBy: { createdAt: "asc" } },
       outputs: { orderBy: { createdAt: "asc" } },
+      productionRevision: true,
     },
   });
 }

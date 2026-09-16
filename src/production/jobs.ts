@@ -1,4 +1,5 @@
 import { videoSnapshotSchema } from "@/production/video-snapshot";
+import { quickProduceOptionsSchema } from "@/production/quick-produce";
 import { z } from "zod";
 
 export const PRODUCTION_JOB_STATES = [
@@ -32,6 +33,7 @@ export const enqueueProductionJobSchema = z.object({
   priority: z.number().int().min(-100).max(100).default(0),
   state: z.enum(["queued", "awaiting_approval"]).default("queued"),
   batchItemId: z.string().min(1).optional(),
+  productionRevisionId: z.string().min(1).optional(),
 });
 export type EnqueueProductionJob = z.input<typeof enqueueProductionJobSchema>;
 
@@ -43,6 +45,9 @@ export const videoProductionJobInputSchema = z.object({
   orientation: z.enum(["portrait", "landscape", "square"]).optional(),
   quality: z.enum(["draft", "standard", "high"]).default("standard"),
   serverBaseUrl: z.url().default("http://localhost:3000"),
+  quickProduce: quickProduceOptionsSchema.optional(),
+  productionRevisionId: z.string().min(1).optional(),
+  revisionHash: z.string().length(64).optional(),
 });
 export type VideoProductionJobInput = z.infer<
   typeof videoProductionJobInputSchema
