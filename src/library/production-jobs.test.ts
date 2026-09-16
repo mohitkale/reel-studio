@@ -43,6 +43,12 @@ describe("durable production jobs", () => {
         "utf8",
       ),
     );
+    sqlite.exec(
+      readFileSync(
+        "prisma/migrations/20260916000100_quick_produce_revisions/migration.sql",
+        "utf8",
+      ),
+    );
     sqlite.close();
     previous = process.env.DATABASE_URL;
     process.env.DATABASE_URL = `file:${filename}`;
@@ -206,5 +212,45 @@ describe("durable production jobs", () => {
         where: { jobId: job.id, state: "succeeded" },
       }),
     ).toBe(1);
+  });
+
+  it("requires explicit retry after uncertain paid Quick Produce voice work", async () => {
+    const job = await enqueueProductionJob(
+      {
+        kind: "video",
+        idempotencyKey: "paid-quick-produce",
+        inputSnapshot: {
+          renderId: "render",
+          scriptId: "script",
+          quickProduce: {
+            enabled: true,
+            planner: "deterministic",
+            mediaPreference: "none",
+            voice: {
+              enabled: true,
+              providerId: "elevenlabs",
+              voiceId: "voice",
+            },
+          },
+        },
+      },
+      client,
+    );
+    await claimProductionJob(
+      { workerId: "dead", now: new Date(0), leaseMs: 1 },
+      client,
+    );
+    expect(
+      await claimProductionJob(
+        { workerId: "replacement", now: new Date(2) },
+        client,
+      ),
+    ).toBeNull();
+    expect(
+      await client.productionJob.findUniqueOrThrow({ where: { id: job.id } }),
+    ).toMatchObject({
+      state: "failed",
+      error: expect.stringContaining("paid provider work"),
+    });
   });
 });

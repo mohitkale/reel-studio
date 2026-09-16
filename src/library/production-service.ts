@@ -58,7 +58,10 @@ async function resolveRequest(
     return {
       kind: request.kind,
       durationSeconds,
-      providerIds: [],
+      providerIds:
+        request.quickProduce?.voice.enabled === true
+          ? [request.quickProduce.voice.providerId]
+          : [],
       inputSnapshot: {
         snapshot: await captureVideoSnapshot(
           request.scriptId,

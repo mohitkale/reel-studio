@@ -2,7 +2,13 @@ import { z } from "zod";
 
 import { mediaPreferenceSchema } from "@/lib/media-preference";
 import { AI_PROVIDER_IDS } from "@/providers/ai/types";
-import { PROVIDER_IDS } from "@/providers/voice/types";
+
+export const QUICK_PRODUCE_VOICE_PROVIDERS = [
+  "kokoro-server",
+  "cartesia",
+  "elevenlabs",
+  "voiceforge",
+] as const;
 
 export const QUICK_PRODUCE_PLANNERS = [
   "deterministic",
@@ -19,7 +25,9 @@ export const quickProduceOptionsSchema = z
     voice: z
       .object({
         enabled: z.boolean().default(true),
-        providerId: z.enum(PROVIDER_IDS).default("kokoro-server"),
+        providerId: z
+          .enum(QUICK_PRODUCE_VOICE_PROVIDERS)
+          .default("kokoro-server"),
         voiceId: z.string().min(1).default("af_heart"),
         modelId: z.string().min(1).optional(),
       })

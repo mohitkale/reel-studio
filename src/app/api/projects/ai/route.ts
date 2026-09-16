@@ -83,6 +83,8 @@ export async function POST(req: Request) {
     const auth = await authorizeProviderRequest(req, providerIds);
 
     const orientation = body.orientation ?? DEFAULT_ORIENTATION;
+    const mediaPreference =
+      body.quickProduce?.mediaPreference ?? body.mediaPreference;
     const videoEngine = body.videoEngine ?? DEFAULT_VIDEO_ENGINE;
     const preset = getProductionPreset(body.productionPresetId);
     if (!preset) throw new AIError("Unknown production preset", 400);
@@ -127,7 +129,7 @@ export async function POST(req: Request) {
         styleId: styleLock,
         energy: energyLock,
         productionPresetId: body.productionPresetId,
-        mediaPreference: body.mediaPreference,
+        mediaPreference,
         signal: req.signal,
       });
     }
@@ -143,7 +145,7 @@ export async function POST(req: Request) {
     const mediaDecisions = await resolveAutomaticSceneMediaBatch(
       enriched.scenes,
       orientation,
-      enriched.scenes.map(() => body.mediaPreference),
+      enriched.scenes.map(() => mediaPreference),
     );
     const backgrounds = mediaDecisions.map((decision) => decision.background);
     const { plan, roles } = applyPresetToAIPlan(
@@ -165,7 +167,7 @@ export async function POST(req: Request) {
           version: preset.version,
         },
         roles,
-        mediaPreferences: enriched.scenes.map(() => body.mediaPreference),
+        mediaPreferences: enriched.scenes.map(() => mediaPreference),
         stockSelections: mediaDecisions.map((decision) => decision.snapshot),
         outputType: "video",
         creationSource: { kind: "text" },
