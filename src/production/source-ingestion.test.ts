@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   assertPublicArticleUrl,
+  createPublicLookup,
   ingestPublicArticle,
   isPublicAddress,
 } from "@/production/source-ingestion";
@@ -19,6 +20,25 @@ describe("public article ingestion", () => {
     expect(isPublicAddress("fd00::1")).toBe(false);
     expect(isPublicAddress("93.184.216.34")).toBe(true);
     expect(isPublicAddress("2606:2800:220:1:248:1893:25c8:1946")).toBe(true);
+  });
+
+  it("returns the address array requested by Node automatic family selection", async () => {
+    const lookup = createPublicLookup(async () => [
+      { address: "93.184.216.34", family: 4 },
+      { address: "2606:2800:220:1:248:1893:25c8:1946", family: 6 },
+    ]);
+
+    await expect(
+      new Promise((resolve, reject) =>
+        lookup("example.com", { all: true }, (error, addresses) => {
+          if (error) reject(error);
+          else resolve(addresses);
+        }),
+      ),
+    ).resolves.toEqual([
+      { address: "93.184.216.34", family: 4 },
+      { address: "2606:2800:220:1:248:1893:25c8:1946", family: 6 },
+    ]);
   });
 
   it("rejects local names, private DNS answers, credentials, and non-web protocols", async () => {
@@ -72,6 +92,24 @@ describe("public article ingestion", () => {
       "First clear paragraph.\nSecond clear paragraph",
     );
     expect(result.text).not.toContain("ignore()");
+  });
+
+  it("removes an exact repeated page suffix from responsive HTML markup", async () => {
+    const article = `Article heading. ${"Complete article wording remains available for narration. ".repeat(14)}`;
+    const result = await ingestPublicArticle("https://example.com/repeated", {
+      resolveHost: publicResolver,
+      fetchPage: async () =>
+        new Response(
+          `<main><p>Page introduction.</p><article>${article}</article><footer>Page actions</footer><article>${article}</article></main>`,
+          {
+            status: 200,
+            headers: { "content-type": "text/html" },
+          },
+        ),
+    });
+
+    expect(result.text.match(/Article heading\./g)).toHaveLength(1);
+    expect(result.text).toContain(article.trim());
   });
 
   it("blocks a redirect into a private network", async () => {

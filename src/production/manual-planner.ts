@@ -84,6 +84,29 @@ function splitLongPiece(piece: string, maxChars: number): string[] {
   return chunks;
 }
 
+function capSceneCount(scenes: string[], maxScenes: number): string[] {
+  const capped = [...scenes];
+  while (capped.length > maxScenes) {
+    let shortestPairIndex = 0;
+    let shortestPairLength = Number.POSITIVE_INFINITY;
+    for (let index = 0; index < capped.length - 1; index += 1) {
+      const pairLength = Array.from(
+        `${capped[index]} ${capped[index + 1]}`,
+      ).length;
+      if (pairLength < shortestPairLength) {
+        shortestPairIndex = index;
+        shortestPairLength = pairLength;
+      }
+    }
+    capped.splice(
+      shortestPairIndex,
+      2,
+      `${capped[shortestPairIndex]} ${capped[shortestPairIndex + 1]}`,
+    );
+  }
+  return capped;
+}
+
 /** Preserve every source character while producing at most 20 narration scenes. */
 export function segmentSourceText(text: string): string[] {
   const normalized = normalizeText(text);
@@ -103,7 +126,7 @@ export function segmentSourceText(text: string): string[] {
     }
   }
   if (current) scenes.push(current);
-  return scenes;
+  return capSceneCount(scenes, 20);
 }
 
 function displayCopy(narration: string): { text: string; shortened: boolean } {
