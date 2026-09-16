@@ -75,7 +75,6 @@ expansion Tasks 26–29 on `feat/quick-produce`; its detailed evidence is in
       validators, provider and duration policy, idempotency, item-scoped
       retry/cancel, revision reporting, and partial-failure semantics. SHA:
       `13f8fa4`.
-- [ ] Expansion 29. Release documentation, setup, Settings, licensing,
-      walkthroughs, architecture diagrams, and Gate 5 validation. Record the
-      completion SHA and measured gate evidence in the PR 8 ledger after the final
-      checks pass.
+- [x] Expansion 29. Release documentation, setup, Settings, licensing,
+      walkthroughs, architecture diagrams, and Gate 5 validation are complete.
+      Measured evidence is recorded in the PR 8 ledger. SHA: `37d9d1b`.

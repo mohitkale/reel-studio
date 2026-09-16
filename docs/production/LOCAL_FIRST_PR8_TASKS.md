@@ -13,7 +13,7 @@ user requests publication.
 |   26 | Off-by-default Quick Produce UI, immutable revision, durable reconnectable job  | Complete | `be1339b`      |
 |   27 | Real local/optional-AI stages, reusable media/audio/composition/render outputs  | Complete | `2c92001`      |
 |   28 | Shared REST/MCP/batch Quick Produce semantics, limits, retry/cancel/idempotency | Complete | `13f8fa4`      |
-|   29 | Release docs, examples, licensing, walkthroughs, and final Gate 5 validation    | Pending  | —              |
+|   29 | Release docs, examples, licensing, walkthroughs, and final Gate 5 validation    | Complete | `37d9d1b`      |
 
 ## Initial decisions
 
@@ -77,3 +77,30 @@ user requests publication.
 - Typecheck and focused REST schema, MCP policy, batch expansion, persistence,
   idempotency, partial failure, retry/cancel, and fresh/populated migration suites
   passed (6 files, 34 tests). Completion commit: `13f8fa4`.
+
+### Task 29
+
+- README, environment/setup guidance, Settings, MCP examples, licensing,
+  creator walkthroughs, production contracts, and architecture/render diagrams
+  now describe the shipped off-by-default, immutable Quick Produce behavior.
+- Typecheck, zero-warning lint, secret scan, the Next.js production build, the
+  release contract check, and all 386 unit tests passed. Fresh and populated
+  migration coverage recognizes all 11 migrations.
+- Real worker and active-cancellation tests passed for Remotion and HyperFrames;
+  the legacy dual-engine regression produced decodable 1080×1920 H.264 MP4s.
+  A fresh isolated no-key export produced a 14.9-second 1080×1920 H.264/AAC MP4.
+- The complete six-preset × three-format × two-engine release matrix rendered
+  36 fresh application outputs with no resumed artifacts in 2,151.7 seconds.
+- Browser acceptance confirmed Quick Produce defaults off, durable eight-stage
+  progress, refresh reconnect, download, editable results, immutable submitted
+  hash versus current-project conflict reporting, restore-as-new, and
+  produce-current actions with a clean console.
+- Ollama and LM Studio were not running, so their authorized live checks were
+  skipped; success, malformed, offline, and model-error fixtures passed. No
+  Docker service, remote provider, model download, or dependency change was
+  started for validation.
+- All Prettier-supported changed files and `git diff --check` pass. The
+  repository-wide `npm run format:check` still reports 192 pre-existing
+  untouched files; those unrelated files were deliberately not rewritten in
+  this PR.
+- Release documentation and Gate 5 implementation commit: `37d9d1b`.
