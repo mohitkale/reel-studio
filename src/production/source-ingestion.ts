@@ -226,6 +226,32 @@ function decodeEntities(text: string): string {
   });
 }
 
+function removeRepeatedSuffix(text: string): string {
+  const anchorLength = 512;
+  if (text.length < anchorLength * 2) return text;
+
+  const anchorStart = text.length - anchorLength;
+  const earlierAnchorStart = text.lastIndexOf(
+    text.slice(anchorStart),
+    anchorStart - anchorLength,
+  );
+  if (earlierAnchorStart < 0) return text;
+
+  const repetitionDistance = anchorStart - earlierAnchorStart;
+  if (repetitionDistance < anchorLength) return text;
+
+  let repeatedSuffixStart = anchorStart;
+  while (
+    repeatedSuffixStart > repetitionDistance &&
+    text[repeatedSuffixStart - 1] ===
+      text[repeatedSuffixStart - repetitionDistance - 1]
+  ) {
+    repeatedSuffixStart -= 1;
+  }
+
+  return text.slice(0, repeatedSuffixStart).trim();
+}
+
 function htmlToText(html: string): { title?: string; text: string } {
   const titleMatch = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
   const title = titleMatch?.[1]
@@ -233,20 +259,25 @@ function htmlToText(html: string): { title?: string; text: string } {
         .replace(/\s+/g, " ")
         .trim()
     : undefined;
-  const text = decodeEntities(
-    html
-      .replace(
-        /<(script|style|noscript|svg|canvas)\b[^>]*>[\s\S]*?<\/\1>/gi,
-        " ",
-      )
-      .replace(/<br\s*\/?\s*>/gi, "\n")
-      .replace(/<\/(p|div|article|section|main|h[1-6]|li|blockquote)>/gi, "\n")
-      .replace(/<[^>]+>/g, " "),
-  )
-    .replace(/[\t\r ]+/g, " ")
-    .replace(/ *\n */g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+  const text = removeRepeatedSuffix(
+    decodeEntities(
+      html
+        .replace(
+          /<(script|style|noscript|svg|canvas)\b[^>]*>[\s\S]*?<\/\1>/gi,
+          " ",
+        )
+        .replace(/<br\s*\/?\s*>/gi, "\n")
+        .replace(
+          /<\/(p|div|article|section|main|h[1-6]|li|blockquote)>/gi,
+          "\n",
+        )
+        .replace(/<[^>]+>/g, " "),
+    )
+      .replace(/[\t\r ]+/g, " ")
+      .replace(/ *\n */g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim(),
+  );
   return { title, text };
 }
 

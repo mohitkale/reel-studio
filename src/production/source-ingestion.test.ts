@@ -94,6 +94,24 @@ describe("public article ingestion", () => {
     expect(result.text).not.toContain("ignore()");
   });
 
+  it("removes an exact repeated page suffix from responsive HTML markup", async () => {
+    const article = `Article heading. ${"Complete article wording remains available for narration. ".repeat(14)}`;
+    const result = await ingestPublicArticle("https://example.com/repeated", {
+      resolveHost: publicResolver,
+      fetchPage: async () =>
+        new Response(
+          `<main><p>Page introduction.</p><article>${article}</article><footer>Page actions</footer><article>${article}</article></main>`,
+          {
+            status: 200,
+            headers: { "content-type": "text/html" },
+          },
+        ),
+    });
+
+    expect(result.text.match(/Article heading\./g)).toHaveLength(1);
+    expect(result.text).toContain(article.trim());
+  });
+
   it("blocks a redirect into a private network", async () => {
     const fetchPage = vi.fn(
       async () =>

@@ -19,6 +19,18 @@ describe("deterministic production planning", () => {
     expect(segments.join(" ")).toBe(source);
   });
 
+  it("caps long medium-sentence sources at the scene schema limit", () => {
+    const source = Array.from(
+      { length: 35 },
+      (_, index) =>
+        `Section ${index + 1} ${"carefully calibrated decision ".repeat(10).trim()}.`,
+    ).join(" ");
+    const segments = segmentSourceText(source);
+
+    expect(segments).toHaveLength(20);
+    expect(segments.join(" ")).toBe(source);
+  });
+
   it("keeps long display copy separate from complete narration", () => {
     const sentence =
       "A production workflow should retain every supplied word while presenting concise and readable on-screen copy for viewers who are watching on a small phone display.";
