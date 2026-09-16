@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { orientationSchema } from "@/lib/orientation";
 import { PROVIDER_IDS } from "@/providers/voice/types";
+import { quickProduceOptionsSchema } from "@/production/quick-produce";
 
 export const productionQualitySchema = z.enum(["draft", "standard", "high"]);
 export const productionRunModeSchema = z.enum(["automatic", "approval"]);
@@ -21,6 +22,7 @@ export const produceContentRequestSchema = z.discriminatedUnion("kind", [
     voiceTakeId: z.string().min(1).optional(),
     orientation: orientationSchema.optional(),
     quality: productionQualitySchema.default("standard"),
+    quickProduce: quickProduceOptionsSchema.optional(),
   }),
   z.object({
     ...common,

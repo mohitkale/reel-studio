@@ -9,6 +9,30 @@ tests, typecheck, zero-warning lint, secret scan, Next.js production build, fast
 release contract, empty-font-cache HyperFrames render, and 36-output media matrix
 all completed successfully.
 
+## Local-first expansion Gate 5
+
+PR 8 extends this release gate with Quick Produce. Its required contract adds an
+off-by-default UI, immutable submitted revisions, persisted eight-stage
+progress, conflict-safe editable recovery, shared REST/MCP/batch schemas, and
+the existing scoped provider limits. Live cloud and local-model tests remain
+conditional: they run only when the provider is configured and the operator has
+authorized usage. Deterministic planner, offline/malformed provider, stock
+fallback, strict schema, and paid-retry behavior are always covered by fixtures.
+
+The Gate 5 rerun on September 16, 2026 uses the commands below plus
+`npm run test:production-worker` and `npm run test:render`. A credential-free
+isolated sample export supplies the real H.264/AAC proof without requiring a
+Kokoro model download. Exact results and artifact paths are recorded in
+[`LOCAL_FIRST_PR8_TASKS.md`](LOCAL_FIRST_PR8_TASKS.md).
+
+Gate 5 result: **passed on September 16, 2026**. Typecheck, zero-warning lint,
+386 unit tests, secret scan, production build, release contract, fresh/populated
+migration coverage, real dual-engine worker/cancellation, legacy dual-engine
+render, isolated 14.9-second 1080×1920 H.264/AAC sample, browser revision flow,
+and all 36 fresh release renders passed. The matrix completed in 2,151.7 seconds.
+Ollama and LM Studio were not running, so their live smokes were correctly
+skipped while their deterministic fixtures passed.
+
 ## Reproduce the gate
 
 Use Node 24 LTS, npm 11, FFmpeg/FFprobe, and a Chromium-capable host.
@@ -43,7 +67,7 @@ three-brief evidence is preserved in
 
 | Requirement                               | Evidence                                                                                                                                                 |
 | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fresh install and recognized v0.3 upgrade | Six versioned migrations; setup and migration tests exercise fresh, populated, backup, recognition, and restore behavior                                 |
+| Fresh install and recognized v0.3 upgrade | Eleven versioned migrations; setup and migration tests exercise fresh, populated, backup, recognition, and restore behavior                              |
 | Existing projects and engine selection    | Legacy mapping, repository, editor, preview, and real dual-engine fixture regressions                                                                    |
 | Six presets in both engines               | Role capability contracts, three briefs per preset, and the 36-output render matrix                                                                      |
 | Three native canvas formats               | Shared safe-area tests plus portrait, landscape, and square outputs from each engine                                                                     |
@@ -53,6 +77,10 @@ three-brief evidence is preserved in
 | Podcast audiogram                         | Real podcast-to-video H.264/AAC render that retains the completed take audio                                                                             |
 | Scoped unattended MCP                     | Shared REST/MCP contract tests, legacy approval flow, automatic-render scope, provider limits, duration/batch quotas, and artifact downloads             |
 | Partial batch failure                     | Independently durable children retain successful outputs and bundle a failure manifest across retry                                                      |
+| Quick Produce revision safety             | Toggle default, stable snapshot hashing, duplicate idempotency, current/submitted conflict reporting, restore-as-new, and produce-current contract tests |
+| Quick Produce recovery                    | Eight persisted stages, cache reuse, restart/lease recovery, cancellation, explicit paid retry, and real dual-engine worker regression                   |
+| Shared REST/MCP/batch options             | One strict Quick Produce/media schema, scoped provider/automatic/duration/batch policy, per-variant revisions, and partial-failure preservation          |
+| Optional local AI                         | Ollama and LM Studio discovery, strict structured plans, repair exhaustion, offline server, and model guidance fixtures; live smoke only when configured |
 | Offline frame assets                      | Render workspaces copy GSAP and WOFF2 assets locally; generated producer HTML contains no Google Fonts or runtime CDN reference                          |
 | Input and authorization safety            | Public URL network-boundary tests, strict Zod schemas, HTML escaping, legacy-route quota checks, and secret scan                                         |
 | Browser usability                         | Wizard, editor/captions, podcast, render recovery/download, gallery, diagnostics, keyboard, and console smoke reviews                                    |

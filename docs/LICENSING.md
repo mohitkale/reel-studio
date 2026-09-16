@@ -16,6 +16,13 @@ upstream terms before commercial or enterprise use — they can change.
 The MIT License covers **our** code only. It does **not** relicense Remotion,
 cloud APIs, stock/music providers, or VoiceForge model weights.
 
+Quick Produce changes orchestration, not licensing. Its immutable revision keeps
+the selected engine, model/provider identifiers, media attribution snapshots,
+and output metadata, but it does not grant new rights to any input or provider
+output. The deterministic planner adds no model license. Server-side Kokoro uses
+the same Apache-2.0 model listed below; Ollama and LM Studio users remain
+responsible for the selected local model's terms.
+
 ---
 
 ## Critical dependency: Remotion (not open-source)

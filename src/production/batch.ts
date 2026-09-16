@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { ORIENTATIONS, orientationSchema } from "@/lib/orientation";
 import { voiceProviderIdSchema } from "@/production/api";
+import { quickProduceOptionsSchema } from "@/production/quick-produce";
 
 const rowFields = {
   key: z
@@ -31,6 +32,7 @@ export const productionBatchRowSchema = z.discriminatedUnion("kind", [
     voiceTakeId: z.string().min(1).optional(),
     orientations: variantOrientationsSchema,
     quality: z.enum(["draft", "standard", "high"]).default("standard"),
+    quickProduce: quickProduceOptionsSchema.optional(),
   }),
   z.object({
     ...rowFields,
@@ -101,6 +103,7 @@ export interface ExpandedProductionBatchItem {
         voiceTakeId?: string;
         orientation: (typeof ORIENTATIONS)[number];
         quality: "draft" | "standard" | "high";
+        quickProduce?: z.infer<typeof quickProduceOptionsSchema>;
       }
     | {
         kind: "audio";

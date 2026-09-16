@@ -11,6 +11,7 @@ const productionBatchInclude = {
         include: {
           steps: { orderBy: { createdAt: "asc" as const } },
           outputs: { orderBy: { createdAt: "asc" as const } },
+          productionRevision: true,
         },
       },
     },

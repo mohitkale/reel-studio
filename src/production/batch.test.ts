@@ -43,6 +43,43 @@ describe("production batch contracts", () => {
     expect(items[1]?.request.kind).toBe("audio");
   });
 
+  it("keeps per-row Quick Produce preferences on every video variant", () => {
+    const batch = productionBatchRequestSchema.parse({
+      idempotencyKey: "quick-batch",
+      rows: [
+        {
+          kind: "video",
+          scriptId: "script-1",
+          orientations: ["portrait", "square"],
+          quickProduce: {
+            enabled: true,
+            planner: "deterministic",
+            mediaPreference: "none",
+            voice: {
+              enabled: true,
+              providerId: "kokoro-server",
+              voiceId: "af_heart",
+            },
+          },
+        },
+      ],
+    });
+    expect(expandProductionBatch(batch)).toEqual([
+      expect.objectContaining({
+        orientation: "portrait",
+        request: expect.objectContaining({
+          quickProduce: expect.objectContaining({ mediaPreference: "none" }),
+        }),
+      }),
+      expect.objectContaining({
+        orientation: "square",
+        request: expect.objectContaining({
+          quickProduce: expect.objectContaining({ mediaPreference: "none" }),
+        }),
+      }),
+    ]);
+  });
+
   it("rejects duplicate row keys and more than ten inputs", () => {
     expect(() =>
       productionBatchRequestSchema.parse({

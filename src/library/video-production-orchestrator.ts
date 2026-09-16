@@ -3,6 +3,7 @@ import { z } from "zod";
 import { captureVideoSnapshot } from "@/library/video-snapshot";
 import {
   videoSnapshotSchema,
+  videoTakeSnapshotSchema,
   preparedVideoCompositionSchema,
   stockMediaOutputMetadata,
 } from "@/production/video-snapshot";
@@ -31,6 +32,7 @@ import type {
 import { videoProductionJobInputSchema } from "@/production/jobs";
 import { runRenderNow } from "@/library/render-service";
 import { prisma } from "@/library/db";
+import { generateTakeFromVideoSnapshot } from "@/library/take-service";
 import {
   addProductionJobOutput,
   upsertProductionJobStep,
@@ -52,6 +54,7 @@ type Dependencies = {
   load: typeof getProductionJobStep;
   step: typeof upsertProductionJobStep;
   output: typeof addProductionJobOutput;
+  synthesize?: typeof generateTakeFromVideoSnapshot;
 };
 
 export async function verifyProductionMp4(
@@ -135,6 +138,7 @@ const defaults: Dependencies = {
   verify: verifyProductionMp4,
   step: upsertProductionJobStep,
   output: addProductionJobOutput,
+  synthesize: generateTakeFromVideoSnapshot,
 };
 
 const timingSchema = z.object({
@@ -160,8 +164,9 @@ const mediaSchema = z.object({
 });
 const audioSchema = z.object({
   take: videoSnapshotSchema.shape.take,
-  mode: z.enum(["reuse", "silent"]),
+  mode: z.enum(["reuse", "synthesize", "silent"]),
   durationSeconds: z.number().nonnegative(),
+  checksum: z.string().nullable(),
 });
 const artifactSchema = z.object({
   checksum: z.string(),
@@ -176,6 +181,17 @@ export async function executeVideoProductionJob(
 ): Promise<void> {
   return withProductionSignal(context.signal, async () => {
     const input = videoProductionJobInputSchema.parse(job.inputSnapshot);
+    const takePath = (audioUrl: string) =>
+      audioUrl.startsWith("/media/")
+        ? path.join(process.cwd(), "media", audioUrl.slice(7))
+        : null;
+    const takeChecksum = async (audioUrl: string) => {
+      const filePath = takePath(audioUrl);
+      if (!filePath) return null;
+      return createHash("sha256")
+        .update(await fs.readFile(filePath))
+        .digest("hex");
+    };
     const active = async () => {
       if (context.signal.aborted || !(await context.heartbeat()))
         throw new Error("Production canceled");
@@ -286,6 +302,7 @@ export async function executeVideoProductionJob(
         take: media.snapshot.take,
         scenes: media.snapshot.script.scenes.map(resolveSpokenText),
         fps: media.snapshot.script.fps,
+        quickProduceVoice: input.quickProduce?.voice,
       },
       audioSchema,
       async () => {
@@ -298,8 +315,31 @@ export async function executeVideoProductionJob(
           take,
           media.snapshot.script.fps,
         );
+        if (!take && input.quickProduce?.voice.enabled) {
+          const generated = await (
+            dependencies.synthesize ?? defaults.synthesize!
+          )({
+            snapshot: media.snapshot,
+            providerId: input.quickProduce.voice.providerId,
+            voiceId: input.quickProduce.voice.voiceId,
+            modelId: input.quickProduce.voice.modelId,
+            label: "Quick Produce",
+          });
+          const frozen = videoTakeSnapshotSchema.parse(generated);
+          return {
+            take: frozen,
+            mode: "synthesize" as const,
+            durationSeconds: frozen.totalFrames / frozen.fps,
+            checksum: await takeChecksum(frozen.audioUrl),
+          };
+        }
         if (!take || !resolved.takeUsable)
-          return { take: null, mode: "silent" as const, durationSeconds: 0 };
+          return {
+            take: null,
+            mode: "silent" as const,
+            durationSeconds: 0,
+            checksum: null,
+          };
         // A video request reuses an explicitly selected take. It never silently
         // initiates a paid synthesis operation or changes the selected voice.
         let durationSeconds = take.totalFrames / take.fps;
@@ -313,7 +353,20 @@ export async function executeVideoProductionJob(
           if (durationSeconds <= 0)
             throw new Error("Selected voice take is empty");
         }
-        return { take, mode: "reuse" as const, durationSeconds };
+        return {
+          take,
+          mode: "reuse" as const,
+          durationSeconds,
+          checksum: await takeChecksum(take.audioUrl),
+        };
+      },
+      async (saved) => {
+        if (!saved.take || !saved.checksum) return saved.mode === "silent";
+        try {
+          return (await takeChecksum(saved.take.audioUrl)) === saved.checksum;
+        } catch {
+          return false;
+        }
       },
     );
     const timing = await stage(
@@ -350,10 +403,14 @@ export async function executeVideoProductionJob(
       compositionHash: z.string(),
       composition: preparedVideoCompositionSchema,
     });
+    const snapshotWithAudio = {
+      ...media.snapshot,
+      take: audio.take,
+    };
     const prepared = await stage(
       "prepare_composition",
       {
-        media,
+        media: { ...media, snapshot: snapshotWithAudio },
         timing,
         orientation: input.orientation,
         base: input.serverBaseUrl,
@@ -361,13 +418,13 @@ export async function executeVideoProductionJob(
       preparedSchema,
       async () => {
         const composition = prepareVideoComposition(
-          media.snapshot,
+          snapshotWithAudio,
           timing,
           input.orientation,
           input.serverBaseUrl,
         );
         return {
-          snapshot: media.snapshot,
+          snapshot: snapshotWithAudio,
           timing,
           compositionHash: videoStageHash(composition),
           composition,
@@ -426,6 +483,14 @@ export async function executeVideoProductionJob(
       metadata: {
         ...metadata,
         stockMedia: stockMediaOutputMetadata(prepared.snapshot),
+        revision: input.productionRevisionId
+          ? {
+              id: input.productionRevisionId,
+              hash: input.revisionHash,
+              projectId: prepared.snapshot.script.projectId,
+              scriptId: prepared.snapshot.script.id,
+            }
+          : undefined,
       },
     });
   });

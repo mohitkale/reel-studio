@@ -16,6 +16,7 @@ import {
 import type { ProduceContentRequest } from "@/production/api";
 import { ProviderError } from "@/providers/voice/types";
 import { reserveNamedMcpPaidRequest } from "@/server/secrets";
+import { createProductionRevision } from "@/library/production-revision";
 
 interface ResolvedRequest {
   kind: ProduceContentRequest["kind"];
@@ -57,7 +58,10 @@ async function resolveRequest(
     return {
       kind: request.kind,
       durationSeconds,
-      providerIds: [],
+      providerIds:
+        request.quickProduce?.voice.enabled === true
+          ? [request.quickProduce.voice.providerId]
+          : [],
       inputSnapshot: {
         snapshot: await captureVideoSnapshot(
           request.scriptId,
@@ -237,6 +241,17 @@ export async function submitProduction(args: {
         : "Production",
     });
     resolved.inputSnapshot.renderId = render.id;
+    if (request.quickProduce) {
+      const snapshot = await captureVideoSnapshot(
+        request.scriptId,
+        request.voiceTakeId,
+      );
+      const revision = await createProductionRevision(snapshot);
+      resolved.inputSnapshot.snapshot = snapshot;
+      resolved.inputSnapshot.quickProduce = request.quickProduce;
+      resolved.inputSnapshot.productionRevisionId = revision.id;
+      resolved.inputSnapshot.revisionHash = revision.revisionHash;
+    }
   }
 
   const job = await enqueueProductionJob({
@@ -246,6 +261,10 @@ export async function submitProduction(args: {
     priority: args.request.priority,
     inputSnapshot: resolved.inputSnapshot,
     batchItemId: args.batchItemId,
+    productionRevisionId:
+      typeof resolved.inputSnapshot.productionRevisionId === "string"
+        ? resolved.inputSnapshot.productionRevisionId
+        : undefined,
   });
   await appendProductionJobEvent(job.id, "submitted", {
     origin: args.auth.origin,

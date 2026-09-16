@@ -9,6 +9,16 @@ export interface ProductionJobOutputView {
   kind: string;
   format: string;
   downloadUrl: string;
+  checksum?: string | null;
+  metadata?: unknown;
+}
+
+export interface ProductionJobStepView {
+  key: string;
+  state: string;
+  progress: number;
+  detail: unknown;
+  error: string | null;
 }
 
 export interface ProductionJobView {
@@ -18,7 +28,19 @@ export interface ProductionJobView {
   progress: number;
   error: string | null;
   createdAt: string;
+  updatedAt: string;
+  steps: ProductionJobStepView[];
   outputs: ProductionJobOutputView[];
+  revision: {
+    id: string;
+    projectId: string;
+    scriptId: string;
+    submittedHash: string;
+    currentHash: string | null;
+    conflict: boolean;
+    source: string;
+    createdAt: string;
+  } | null;
 }
 
 const KEY = ["production-jobs"];
@@ -33,6 +55,24 @@ export function useProductionJobs() {
         ["queued", "running"].includes(job.state),
       )
         ? 2_000
+        : false,
+  });
+}
+
+export function useProductionJob(id: string | null) {
+  return useQuery({
+    queryKey: [...KEY, id],
+    enabled: Boolean(id),
+    queryFn: () =>
+      apiGet<{ job: ProductionJobView }>(`/api/production-jobs/${id}`).then(
+        (response) => response.job,
+      ),
+    refetchInterval: (query) =>
+      query.state.data &&
+      ["queued", "running", "awaiting_approval"].includes(
+        query.state.data.state,
+      )
+        ? 1_500
         : false,
   });
 }

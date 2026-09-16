@@ -20,7 +20,8 @@ model Project {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  scripts Script[]
+  scripts             Script[]
+  productionRevisions ProductionRevision[]
 }
 
 model BrandKit {
@@ -60,11 +61,12 @@ model Script {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  scenes        Scene[]
-  takes         VoiceTake[]
-  voiceClips    SceneVoiceClip[]
-  renders       Render[]
-  captionTracks CaptionTrack[]
+  scenes              Scene[]
+  takes               VoiceTake[]
+  voiceClips          SceneVoiceClip[]
+  renders             Render[]
+  captionTracks       CaptionTrack[]
+  productionRevisions ProductionRevision[]
 
   @@index([projectId])
 }
@@ -296,31 +298,53 @@ model ProviderSetting {
 }
 
 model ProductionJob {
-  id              String    @id @default(cuid())
-  kind            String
-  state           String    @default("queued")
-  inputSnapshot   String
-  idempotencyKey  String    @unique
-  priority        Int       @default(0)
-  attempt         Int       @default(0)
-  cancelRequested Boolean   @default(false)
-  leaseOwner      String?
-  leaseExpiresAt  DateTime?
-  heartbeatAt     DateTime?
-  error           String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  startedAt       DateTime?
-  finishedAt      DateTime?
-  batchItemId     String?   @unique
+  id                   String    @id @default(cuid())
+  kind                 String
+  state                String    @default("queued")
+  inputSnapshot        String
+  idempotencyKey       String    @unique
+  priority             Int       @default(0)
+  attempt              Int       @default(0)
+  cancelRequested      Boolean   @default(false)
+  leaseOwner           String?
+  leaseExpiresAt       DateTime?
+  heartbeatAt          DateTime?
+  error                String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  startedAt            DateTime?
+  finishedAt           DateTime?
+  batchItemId          String?   @unique
+  productionRevisionId String?   @unique
 
-  steps     ProductionJobStep[]
-  events    ProductionJobEvent[]
-  outputs   ProductionJobOutput[]
-  batchItem ProductionBatchItem?  @relation(fields: [batchItemId], references: [id], onDelete: SetNull)
+  steps              ProductionJobStep[]
+  events             ProductionJobEvent[]
+  outputs            ProductionJobOutput[]
+  batchItem          ProductionBatchItem?  @relation(fields: [batchItemId], references: [id], onDelete: SetNull)
+  productionRevision ProductionRevision?   @relation(fields: [productionRevisionId], references: [id], onDelete: SetNull)
 
   @@index([state, priority, createdAt])
   @@index([leaseExpiresAt])
+}
+
+/// Immutable project/script snapshot captured before a durable production job
+/// is enqueued. The editable project may continue changing independently.
+model ProductionRevision {
+  id           String   @id @default(cuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  scriptId     String
+  script       Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  revisionHash String
+  snapshotJson String
+  source       String   @default("quick_produce")
+  createdAt    DateTime @default(now())
+
+  job ProductionJob?
+
+  @@index([projectId, createdAt])
+  @@index([scriptId, createdAt])
+  @@index([revisionHash])
 }
 
 model ProductionBatch {

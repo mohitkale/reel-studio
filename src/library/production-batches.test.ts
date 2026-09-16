@@ -54,6 +54,12 @@ describe("durable production batches", () => {
         "utf8",
       ),
     );
+    sqlite.exec(
+      readFileSync(
+        "prisma/migrations/20260916000100_quick_produce_revisions/migration.sql",
+        "utf8",
+      ),
+    );
     expect(sqlite.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
     sqlite.close();
     previous = process.env.DATABASE_URL;

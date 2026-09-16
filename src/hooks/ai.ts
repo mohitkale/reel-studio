@@ -106,7 +106,7 @@ export function useGenerateProject() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: {
-      providerId: AIProviderId;
+      providerId?: AIProviderId;
       modelId?: string;
       mode: "idea" | "story";
       brief: string;
@@ -118,6 +118,18 @@ export function useGenerateProject() {
       energy?: EnergyId | "auto";
       productionPresetId?: ProductionPresetId;
       mediaPreference?: MediaPreference;
+      quickProduce?: {
+        enabled: true;
+        planner: "deterministic" | AIProviderId;
+        plannerModelId?: string;
+        mediaPreference: MediaPreference;
+        voice: {
+          enabled: boolean;
+          providerId: "kokoro-server";
+          voiceId: string;
+        };
+      };
+      idempotencyKey?: string;
     }) =>
       apiPost<{
         projectId: string;
@@ -129,6 +141,10 @@ export function useGenerateProject() {
           attemptedProviders: string[];
           message: string;
         }>;
+        job: {
+          id: string;
+          state: string;
+        } | null;
       }>("/api/projects/ai", vars),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
   });

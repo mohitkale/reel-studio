@@ -7,7 +7,9 @@ import {
   type EnqueueProductionJob,
   type ProductionJobState,
   type ProductionStepKey,
+  videoProductionJobInputSchema,
 } from "@/production/jobs";
+import { PAID_MCP_PROVIDERS } from "@/production/mcp-access";
 
 function json(value: unknown): string {
   return JSON.stringify(value ?? null);
@@ -20,6 +22,22 @@ function parsed(value: string | null): unknown {
   } catch {
     return null;
   }
+}
+
+function hasUncertainPaidVideoWork(job: {
+  inputSnapshot: string;
+  steps?: Array<{ key: string; state: string }>;
+}): boolean {
+  const input = videoProductionJobInputSchema.safeParse(
+    parsed(job.inputSnapshot),
+  );
+  const voice = input.success ? input.data.quickProduce?.voice : undefined;
+  if (!voice?.enabled || !PAID_MCP_PROVIDERS.has(voice.providerId as never)) {
+    return false;
+  }
+  return !job.steps?.some(
+    (step) => step.key === "synthesize_audio" && step.state === "succeeded",
+  );
 }
 
 export async function enqueueProductionJob(
@@ -36,6 +54,7 @@ export async function enqueueProductionJob(
         inputSnapshot: json(data.inputSnapshot),
         priority: data.priority,
         batchItemId: data.batchItemId,
+        productionRevisionId: data.productionRevisionId,
       },
     });
   } catch (error) {
@@ -72,6 +91,29 @@ export async function claimProductionJob(
       heartbeatAt: null,
     },
   });
+  const interruptedVideos = await db.productionJob.findMany({
+    where: {
+      state: "running",
+      kind: "video",
+      leaseExpiresAt: { lt: now },
+    },
+    include: { steps: true },
+  });
+  for (const interrupted of interruptedVideos) {
+    if (!hasUncertainPaidVideoWork(interrupted)) continue;
+    await db.productionJob.updateMany({
+      where: { id: interrupted.id, state: "running" },
+      data: {
+        state: "failed",
+        error:
+          "Worker interrupted paid provider work; inspect outputs before explicit retry",
+        finishedAt: now,
+        leaseOwner: null,
+        leaseExpiresAt: null,
+        heartbeatAt: null,
+      },
+    });
+  }
   // Audio/podcast providers may have charged before the worker died. Require
   // explicit retry rather than replaying an uncertain external operation.
   await db.productionJob.updateMany({
@@ -348,6 +390,7 @@ export async function getProductionJob(id: string) {
     include: {
       steps: { orderBy: { createdAt: "asc" } },
       outputs: { orderBy: { createdAt: "asc" } },
+      productionRevision: true,
     },
   });
 }
@@ -358,6 +401,7 @@ export async function getProductionJobByIdempotencyKey(idempotencyKey: string) {
     include: {
       steps: { orderBy: { createdAt: "asc" } },
       outputs: { orderBy: { createdAt: "asc" } },
+      productionRevision: true,
     },
   });
 }
@@ -369,6 +413,7 @@ export async function listProductionJobs(limit = 50) {
     include: {
       steps: { orderBy: { createdAt: "asc" } },
       outputs: { orderBy: { createdAt: "asc" } },
+      productionRevision: true,
     },
   });
 }
@@ -434,11 +479,15 @@ export async function releaseProductionJob(
   db: PrismaClient = prisma,
 ) {
   return db.$transaction(async (tx) => {
-    const job = await tx.productionJob.findUnique({ where: { id: jobId } });
+    const job = await tx.productionJob.findUnique({
+      where: { id: jobId },
+      include: { steps: true },
+    });
     if (!job || job.leaseOwner !== workerId || job.state !== "running") return;
     const state = job.cancelRequested
       ? "canceled"
-      : ["video", "audiogram"].includes(job.kind)
+      : ["video", "audiogram"].includes(job.kind) &&
+          !hasUncertainPaidVideoWork(job)
         ? "queued"
         : "failed";
     await tx.productionJob.update({

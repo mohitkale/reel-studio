@@ -24,6 +24,7 @@ import {
   type SceneAudioCacheKey,
 } from "@/library/scene-audio-cache";
 import { resolveSpokenText } from "@/lib/spoken-text";
+import type { VideoSnapshot } from "@/production/video-snapshot";
 
 /** Reported as scenes finish synthesizing (cache hit or fresh call) or when stitching starts. */
 export type TakeProgress =
@@ -122,15 +123,14 @@ async function synthesizeScenesConcurrently(
  * (so its exact duration is known), stitch the beats into one track with gaps,
  * store the WAV, and persist the take with per-beat frame timing.
  */
-export async function generateTake(
+async function generateTakeForScenes(
   input: GenerateTakeInput,
+  script: {
+    fps: number;
+    scenes: Array<{ id: string; text: string; spokenText?: string | null }>;
+  },
 ): Promise<VoiceTakeDTO> {
-  const script = await prisma.script.findUnique({
-    where: { id: input.scriptId },
-    include: { scenes: { orderBy: { order: "asc" } } },
-  });
-  if (!script) throw new ProviderError("Script not found", 404);
-  if (script.scenes.length === 0) {
+  if (!script.scenes.length) {
     throw new ProviderError(
       "Add at least one scene before generating a take",
       400,
@@ -230,6 +230,34 @@ export async function generateTake(
     audioPath: key,
     isPlaceholder: Boolean(input.placeholder),
   });
+}
+
+export async function generateTake(
+  input: GenerateTakeInput,
+): Promise<VoiceTakeDTO> {
+  const script = await prisma.script.findUnique({
+    where: { id: input.scriptId },
+    include: { scenes: { orderBy: { order: "asc" } } },
+  });
+  if (!script) throw new ProviderError("Script not found", 404);
+  return generateTakeForScenes(input, script);
+}
+
+/** Synthesize exactly the immutable text captured at submission time. */
+export function generateTakeFromVideoSnapshot(
+  input: Omit<GenerateTakeInput, "scriptId"> & { snapshot: VideoSnapshot },
+): Promise<VoiceTakeDTO> {
+  return generateTakeForScenes(
+    { ...input, scriptId: input.snapshot.script.id },
+    {
+      fps: input.snapshot.script.fps,
+      scenes: input.snapshot.script.scenes.map((scene) => ({
+        id: scene.id,
+        text: scene.text,
+        spokenText: scene.spokenText,
+      })),
+    },
+  );
 }
 
 export interface UploadedBeat {

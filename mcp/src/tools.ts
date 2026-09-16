@@ -3,6 +3,12 @@ import { randomUUID } from "node:crypto";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
+import { AI_PROVIDER_IDS } from "@/providers/ai/types";
+import { mediaPreferenceSchema } from "@/lib/media-preference";
+import { productionPresetIdSchema } from "@/production/presets";
+import { productionBatchRowSchema } from "@/production/batch";
+import { quickProduceOptionsSchema } from "@/production/quick-produce";
+
 import {
   apiGet,
   apiGetText,
@@ -60,33 +66,6 @@ const sceneMood = z.enum([
 ]);
 /** Server-side TTS providers MCP can drive without browser upload. */
 const serverVoiceProvider = z.enum(["cartesia", "elevenlabs", "voiceforge"]);
-const productionVoiceProvider = z.enum([
-  "kokoro",
-  "kokoro-server",
-  "webspeech",
-  "cartesia",
-  "elevenlabs",
-  "voiceforge",
-]);
-const productionBatchRow = z.object({
-  key: z.string().min(1).max(80).optional(),
-  label: z.string().min(1).max(120).optional(),
-  kind: z.enum(["video", "audio", "podcast", "audiogram"]),
-  scriptId: z.string().min(1).optional(),
-  voiceTakeId: z.string().min(1).optional(),
-  podcastId: z.string().min(1).optional(),
-  takeId: z.string().min(1).optional(),
-  startTurnId: z.string().min(1).optional(),
-  endTurnId: z.string().min(1).optional(),
-  orientations: z.array(orientation).min(1).max(3).optional(),
-  quality: z.enum(["draft", "standard", "high"]).optional(),
-  providerId: productionVoiceProvider.optional(),
-  voiceId: z.string().min(1).optional(),
-  modelId: z.string().min(1).optional(),
-  placeholder: z.boolean().optional(),
-  regenerateTurnIds: z.array(z.string().min(1)).max(120).optional(),
-});
-
 const backgroundShape = z.object({
   type: z.enum(["image", "video"]),
   url: z.string().min(1).max(2048),
@@ -261,7 +240,7 @@ export function registerTools(server: McpServer): void {
       description:
         "Generate a full scene plan from a brief and create a new project. Requires an AI key configured in the website. For large storyboards, create a smaller plan then extend with ai_generate_scenes (append) or add_scene. Pass videoEngine='hyperframes' to use HyperFrames-native templates. scriptStyle='detailed' writes short on-screen text plus longer spokenText for voiceover.",
       inputSchema: {
-        providerId: z.enum(["gemini", "openai"]),
+        providerId: z.enum(AI_PROVIDER_IDS).optional(),
         modelId: z.string().optional(),
         mode: z.enum(["idea", "story"]),
         brief: z.string().trim().min(3).max(8000),
@@ -285,6 +264,10 @@ export function registerTools(server: McpServer): void {
             "Whole-reel Energy (motion intensity). 'auto' lets the AI choose; omit defaults to normal.",
           ),
         videoEngine,
+        productionPresetId: productionPresetIdSchema.optional(),
+        mediaPreference: mediaPreferenceSchema.optional(),
+        quickProduce: quickProduceOptionsSchema.optional(),
+        idempotencyKey: z.string().min(8).max(240).optional(),
       },
     },
     guard(async (args) => ok(await apiPost("/api/projects/ai", args))),
@@ -348,6 +331,7 @@ export function registerTools(server: McpServer): void {
         placeholder: z.boolean().optional(),
         label: z.string().trim().min(1).max(120).optional(),
         regenerateTurnIds: z.array(z.string().min(1)).max(120).optional(),
+        quickProduce: quickProduceOptionsSchema.optional(),
       },
     },
     guard(async (args) => {
@@ -374,7 +358,7 @@ export function registerTools(server: McpServer): void {
         "Submit up to ten JSON rows to the durable production queue. Video and audiogram rows default to independent portrait, square, and landscape reflows. Successful outputs survive partial failure.",
       inputSchema: {
         idempotencyKey: z.string().min(8).max(120).optional(),
-        rows: z.array(productionBatchRow).min(1).max(10),
+        rows: z.array(productionBatchRowSchema).min(1).max(10),
         runMode: z.enum(["automatic", "approval"]).optional(),
         priority: z.number().int().min(-100).max(100).optional(),
       },

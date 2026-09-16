@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { resolveVideoStageMedia } from "@/library/video-stage-media";
+import { makeSilentWav } from "@/lib/wav";
+import type { generateTakeFromVideoSnapshot } from "@/library/take-service";
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
 
@@ -195,6 +197,100 @@ describe("video production orchestration", () => {
         contentHash: "b".repeat(64),
       }),
     ]);
+  });
+
+  it("synthesizes Quick Produce audio from the immutable revision", async () => {
+    const audioName = `quick-produce-${randomUUID()}.wav`;
+    const audioPath = path.resolve("media", "takes", audioName);
+    await fs.mkdir(path.dirname(audioPath), { recursive: true });
+    await fs.writeFile(audioPath, makeSilentWav(1));
+    const original = structuredClone(snapshot);
+    const capture = vi.fn(async () => ({
+      ...snapshot,
+      script: { ...snapshot.script, name: "Edited after submission" },
+    }));
+    const synthesize = vi.fn(
+      async (input: Parameters<typeof generateTakeFromVideoSnapshot>[0]) => ({
+        id: "quick-take",
+        scriptId: input.snapshot.script.id,
+        label: "Quick Produce",
+        providerId: "kokoro-server",
+        voiceId: "af_heart",
+        modelId: null,
+        fps: 30,
+        totalFrames: 30,
+        timeline: [
+          {
+            sceneId: "scene-1",
+            startFrame: 0,
+            durationFrames: 30,
+            text: "A real saved plan",
+          },
+        ],
+        audioUrl: `/media/takes/${audioName}`,
+        isPlaceholder: false,
+        source: "oneshot" as const,
+        createdAt: new Date().toISOString(),
+      }),
+    );
+    const render = vi.fn(async () => undefined);
+    try {
+      await executeVideoProductionJob(
+        {
+          ...job,
+          inputSnapshot: {
+            renderId: "render-1",
+            scriptId: "script-1",
+            snapshot: original,
+            quality: "standard",
+            serverBaseUrl: "http://localhost:3000",
+            productionRevisionId: "revision-1",
+            revisionHash: "a".repeat(64),
+            quickProduce: {
+              enabled: true,
+              planner: "deterministic",
+              mediaPreference: "none",
+              voice: {
+                enabled: true,
+                providerId: "kokoro-server",
+                voiceId: "af_heart",
+              },
+            },
+          },
+        },
+        { signal: new AbortController().signal, heartbeat: async () => true },
+        {
+          ...stageDependencies,
+          capture,
+          synthesize,
+          render,
+          artifact: async () => ({
+            path: "/tmp/quick-produce.mp4",
+            expectsAudio: true,
+          }),
+          verify: async () => ({ checksum: "sha256:quick-produce" }),
+          step: vi.fn(async () => ({}) as never),
+          output: vi.fn(async () => ({}) as never),
+        },
+      );
+      expect(capture).not.toHaveBeenCalled();
+      expect(synthesize).toHaveBeenCalledWith(
+        expect.objectContaining({
+          snapshot: expect.objectContaining({
+            script: expect.objectContaining({ name: "Fixture" }),
+          }),
+        }),
+      );
+      expect(render).toHaveBeenCalledWith(
+        expect.objectContaining({
+          snapshot: expect.objectContaining({
+            take: expect.objectContaining({ id: "quick-take" }),
+          }),
+        }),
+      );
+    } finally {
+      await fs.rm(audioPath, { force: true });
+    }
   });
 
   it("stops before rendering when ownership or cancellation heartbeat fails", async () => {

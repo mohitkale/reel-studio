@@ -44,6 +44,13 @@ Caption timing and appearance remain local project data. Each styled track keeps
 a versioned snapshot used by both Remotion and HyperFrames; older tracks with no
 snapshot retain the 0.4 caption appearance.
 
+Quick Produce is off by default and does not introduce a cloud service. An
+enabled request creates the editable project plus an immutable local
+`ProductionRevision`, then uses the same SQLite queue and local render engines.
+The deterministic planner and stock-free fallback require no provider. Its
+default server-side Kokoro voice may download the model weights on first use;
+use voice-off Quick Produce when an initial model download is not acceptable.
+
 Ollama and LM Studio prompts go only to the configured local endpoint. Loopback
 is the default; private LAN endpoints require an explicit per-provider opt-in.
 Hostnames are resolved before each request, redirects are rejected, and cloud

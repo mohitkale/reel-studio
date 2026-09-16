@@ -13,10 +13,10 @@ rendering. Use the built-in **MCP server** for bounded unattended production.
 Also supports Instagram, YouTube Shorts, TikTok, Facebook, X (Twitter), and
 other social formats in **9:16**, **16:9**, and **1:1**.
 
-> **Project status: 0.4 local production release.** The credential-free path,
-> both render engines, SQLite-backed jobs, and the advertised 36-render example
-> matrix are release-tested. Provider integrations remain optional and may
-> evolve.
+> **Project status: local-first production release.** The credential-free path,
+> optional Quick Produce workflow, both render engines, SQLite-backed jobs, and
+> the advertised 36-render example matrix are release-tested. Provider
+> integrations remain optional and may evolve.
 
 **MIT-licensed app. Local-first.** Projects and renders stay on your machine
 unless you explicitly enable a cloud provider.
@@ -40,7 +40,7 @@ template or voice provider you want next.
 
 [Quick start](#quick-start) · [Creator guide](docs/CREATOR_GUIDE.md) · [Walkthroughs](docs/WALKTHROUGHS.md) · [MCP](mcp/README.md) · [Roadmap](ROADMAP.md) · [Contributing](CONTRIBUTING.md)
 
-## 0.4 release coverage
+## Local-first release coverage
 
 The 0.4 roadmap contained 28 numbered tasks. The implemented release includes:
 
@@ -57,21 +57,22 @@ The 0.4 roadmap contained 28 numbered tasks. The implemented release includes:
   timestamp-grounded audiogram selection
 - persistent production jobs, REST/MCP production interfaces, scoped tokens,
   format variants, partial-failure batches, diagnostics, and bundled examples
+- an off-by-default Quick Produce path that freezes an immutable submitted
+  revision, runs the same durable stages, reconnects after refresh/restart, and
+  leaves the editable project independent of its completed output
 
 The detailed implementation audit is in
 [docs/production/IMPLEMENTATION_AUDIT.md](docs/production/IMPLEMENTATION_AUDIT.md).
-It records five areas that remain partial against the full roadmap: supervising
-the web app and worker as one lifecycle, terminating active render processes on
-cancel, performing real work in every named video pipeline stage, podcast
-intro/outro and pronunciation controls with AI clip suggestions, and rendering
-three different briefs for every preset during release acceptance.
+The follow-on local-first expansion and its task ledgers are documented in
+[docs/LOCAL_FIRST_EXPANSION.md](docs/LOCAL_FIRST_EXPANSION.md) and
+[docs/production](docs/production/).
 
 ### Current boundaries
 
-- `npm run dev`, `npm run start`, and the current Docker app service start the
-  web process. Run `npm run production:worker` as a second process for continuous
-  unattended queue processing. Request handlers also make a best-effort attempt
-  to process newly submitted work.
+- `npm run dev`, `npm run start`, and the Docker app service supervise the web
+  process and durable production worker together. `npm run production:worker`
+  remains available only for explicitly managed deployments; do not start a
+  second worker for the normal setup.
 - The scene editor can search configured Unsplash, Pexels, and Pixabay providers
   by media kind and orientation, preview attribution, and select, replace, or
   clear stock backgrounds. Pexels and Pixabay selections are cached locally;
@@ -111,6 +112,21 @@ Reel Studio is designed for:
 3. Choose one of six production presets, a brand kit, voice, and canvas
 4. Review the deterministic or AI-assisted draft and lock approved material
 5. Produce locally and download verified media, captions, and transcripts
+
+### Quick Produce
+
+Create with AI includes an explicit **Quick Produce** toggle. It is off by
+default. When enabled, Reel Studio saves the editable project, freezes an
+immutable production revision, and immediately queues the normal durable video
+pipeline. The no-key option uses the deterministic planner, stock-free fallback,
+and server-side Kokoro voice; Ollama, LM Studio, Gemini, OpenAI, and configured
+media/voice providers remain optional.
+
+The editor reconnects to the job after refresh and shows persisted stage
+progress. Editing while the submitted revision runs never changes that render.
+If the current project later differs, Reel Studio reports the revision conflict
+and offers either the completed immutable revision as a new editable project or
+a new production from the current project.
 
 ## Example outputs
 
@@ -208,16 +224,16 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-For continuous unattended production, start the worker in a second terminal:
-
-```bash
-npm run production:worker
-```
-
-Or run `npm run demo` (setup + dev server). No cloud keys are required for the
+The normal launcher supervises both the web app and production worker. Run
+`npm run demo` for setup + the supervised development server. No cloud keys are required for the
 seeded HyperFrames demo or Kokoro voices. Open **Gallery** for bundled examples,
 or run `npm run sample:export` for a credential-free local MP4. Run
 `npm run doctor` whenever you want to verify the production runtime.
+
+Quick Produce uses server-side Kokoro by default. Its Apache-2.0 model weights
+are fetched and cached by `kokoro-js` on first synthesis if they are not already
+present; choose voice off or a configured server-capable provider when that
+first-use download is unsuitable.
 
 ### Manual fallback
 
@@ -285,10 +301,11 @@ your own auth layer. See [SECURITY.md](SECURITY.md).
 
 The current production release includes six cross-engine presets, editable
 caption timing and text, persistent jobs, podcast and audiogram workflows,
-scoped MCP automation, and format-aware batches. The reviewed next phase is in
-[docs/LOCAL_FIRST_EXPANSION.md](docs/LOCAL_FIRST_EXPANSION.md), split into eight
-sequential PRs for separate implementation sessions; no implementation of that
-phase has started. Follow longer-term work in [ROADMAP.md](ROADMAP.md).
+local AI, optional stock media, styled captions, Quick Produce, scoped MCP
+automation, and format-aware batches. The implementation plan and evidence are
+in [docs/LOCAL_FIRST_EXPANSION.md](docs/LOCAL_FIRST_EXPANSION.md) and the task
+ledgers under [docs/production](docs/production/). Follow longer-term work in
+[ROADMAP.md](ROADMAP.md).
 
 ## Contributing
 
@@ -329,8 +346,8 @@ HyperFrames, TanStack Query, Zod.
 | `npm run sample:export`                       | Render a credential-free sample MP4         |
 | `npm run release:check`                       | Run the fast 0.4 release contract checks    |
 | `npm run release:matrix`                      | Render all 36 preset/engine/format outputs  |
-| `npm run dev`                                 | Start development server                    |
-| `npm run build` / `start`                     | Production build / run                      |
+| `npm run dev`                                 | Start supervised dev web + worker           |
+| `npm run build` / `start`                     | Build / run supervised production services  |
 | `npm run production:worker`                   | Continuously process the persistent queue   |
 | `npm run lint` / `typecheck` / `test`         | Quality checks                              |
 | `npm run security:scan`                       | Secret pattern scan                         |
@@ -418,6 +435,12 @@ SQLite job-step records. Retries reuse valid stages and verified renders, and
 never synthesize a new paid voice implicitly. Existing queued video inputs are
 snapshotted on their first execution; older projects and REST/MCP requests retain
 their current formats.
+
+Quick Produce adds a `ProductionRevision` above that immutable production
+snapshot. UI, REST, MCP, and batch submissions use the same strict options and
+job model. A repeated idempotency key returns the original revision/job, while a
+new submission from edited content creates a new revision instead of mutating a
+completed artifact.
 
 Run `npm run test:production-worker` for isolated real exports and active
 cancellation through both engines. It creates a fresh test database and evidence

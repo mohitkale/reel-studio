@@ -46,4 +46,31 @@ describe("production API contract", () => {
       }),
     ).toThrow();
   });
+
+  it("shares Quick Produce media and narration preferences with prepared video requests", () => {
+    expect(
+      produceContentRequestSchema.parse({
+        kind: "video",
+        idempotencyKey: "quick-video-request",
+        scriptId: "script",
+        quickProduce: {
+          enabled: true,
+          planner: "ollama",
+          plannerModelId: "qwen-local",
+          mediaPreference: "video",
+          voice: {
+            enabled: true,
+            providerId: "kokoro-server",
+            voiceId: "af_heart",
+          },
+        },
+      }),
+    ).toMatchObject({
+      quickProduce: {
+        planner: "ollama",
+        mediaPreference: "video",
+        voice: { providerId: "kokoro-server" },
+      },
+    });
+  });
 });

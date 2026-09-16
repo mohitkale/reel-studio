@@ -56,3 +56,25 @@ Work in the numbered order. For each task, record acceptance evidence and commit
 Fresh install and populated v0.3 database upgrade; both engines and legacy templates; six presets × three ratios × three briefs; no-key demo; voice and scene-clip workflows; podcast partial regeneration; captions provenance; restart/idempotency/cancellation; MCP old approvals and opted-in unattended execution; batch partial failure; real decodable audio/video artifacts; local/offline media; safe URL ingestion.
 
 Do not mark the release complete until these checks have evidence.
+
+## Local-first expansion — PR 8
+
+The numbered 0.4 plan above remains the historical release record. The later
+local-first expansion has its own task numbering and ledgers. PR 8 implements
+expansion Tasks 26–29 on `feat/quick-produce`; its detailed evidence is in
+[`LOCAL_FIRST_PR8_TASKS.md`](LOCAL_FIRST_PR8_TASKS.md).
+
+- [x] Expansion 26. Off-by-default Quick Produce creates an editable project,
+      immutable `ProductionRevision`, and reconnectable durable video job. Revision
+      hashes expose conflicts without overwriting newer edits. SHA: `be1339b`.
+- [x] Expansion 27. The real eight-stage worker consumes the submitted snapshot,
+      synthesizes or reuses server audio, preserves media/timing/composition/render
+      caches, and requires explicit retry after uncertain paid voice work. SHA:
+      `2c92001`.
+- [x] Expansion 28. UI, REST, MCP, and video batches share Quick Produce/media
+      validators, provider and duration policy, idempotency, item-scoped
+      retry/cancel, revision reporting, and partial-failure semantics. SHA:
+      `13f8fa4`.
+- [x] Expansion 29. Release documentation, setup, Settings, licensing,
+      walkthroughs, architecture diagrams, and Gate 5 validation are complete.
+      Measured evidence is recorded in the PR 8 ledger. SHA: `37d9d1b`.
