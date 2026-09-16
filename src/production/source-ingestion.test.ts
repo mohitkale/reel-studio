@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   assertPublicArticleUrl,
+  createPublicLookup,
   ingestPublicArticle,
   isPublicAddress,
 } from "@/production/source-ingestion";
@@ -19,6 +20,25 @@ describe("public article ingestion", () => {
     expect(isPublicAddress("fd00::1")).toBe(false);
     expect(isPublicAddress("93.184.216.34")).toBe(true);
     expect(isPublicAddress("2606:2800:220:1:248:1893:25c8:1946")).toBe(true);
+  });
+
+  it("returns the address array requested by Node automatic family selection", async () => {
+    const lookup = createPublicLookup(async () => [
+      { address: "93.184.216.34", family: 4 },
+      { address: "2606:2800:220:1:248:1893:25c8:1946", family: 6 },
+    ]);
+
+    await expect(
+      new Promise((resolve, reject) =>
+        lookup("example.com", { all: true }, (error, addresses) => {
+          if (error) reject(error);
+          else resolve(addresses);
+        }),
+      ),
+    ).resolves.toEqual([
+      { address: "93.184.216.34", family: 4 },
+      { address: "2606:2800:220:1:248:1893:25c8:1946", family: 6 },
+    ]);
   });
 
   it("rejects local names, private DNS answers, credentials, and non-web protocols", async () => {

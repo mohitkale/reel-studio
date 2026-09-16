@@ -1,5 +1,5 @@
 import { lookup } from "node:dns/promises";
-import { isIP } from "node:net";
+import { isIP, type LookupFunction } from "node:net";
 import http from "node:http";
 import https from "node:https";
 
@@ -56,6 +56,65 @@ async function defaultResolveHost(hostname: string): Promise<Address[]> {
   return result.map(({ address, family }) => ({ address, family }));
 }
 
+function requestedFamily(value: number | "IPv4" | "IPv6" | undefined) {
+  if (value === 4 || value === "IPv4") return 4;
+  if (value === 6 || value === "IPv6") return 6;
+  return 0;
+}
+
+/**
+ * Pin an outbound request to DNS answers that passed the public-address check.
+ * Node 20+ may request every address for automatic IPv4/IPv6 selection, so the
+ * callback must preserve the `options.all` result shape.
+ */
+export function createPublicLookup(resolveHost: ResolveHost): LookupFunction {
+  return (hostname, options, callback) => {
+    void resolveHost(hostname)
+      .then((addresses) => {
+        if (
+          !addresses.length ||
+          addresses.some(({ address }) => !isPublicAddress(address))
+        ) {
+          callback(
+            new Error("Local and private network URLs are not allowed"),
+            options.all ? [] : "",
+            0,
+          );
+          return;
+        }
+
+        const family = requestedFamily(options.family);
+        const eligible = family
+          ? addresses.filter((address) => address.family === family)
+          : addresses;
+        if (!eligible.length) {
+          callback(
+            new Error(
+              "Article hostname has no address in the requested family",
+            ),
+            options.all ? [] : "",
+            0,
+          );
+          return;
+        }
+
+        if (options.all) {
+          callback(null, eligible);
+          return;
+        }
+        const selected = eligible[0]!;
+        callback(null, selected.address, selected.family);
+      })
+      .catch((error: unknown) =>
+        callback(
+          error instanceof Error ? error : new Error("DNS lookup failed"),
+          options.all ? [] : "",
+          0,
+        ),
+      );
+  };
+}
+
 /** Connect only through a DNS answer that passed the public-address check. */
 async function requestPublicPage(
   value: string,
@@ -73,28 +132,7 @@ async function requestPublicPage(
           "Accept-Encoding": "identity",
           "User-Agent": "Reel-Studio/0.3 article-import",
         },
-        lookup(hostname, _options, callback) {
-          void resolveHost(hostname)
-            .then((addresses) => {
-              const address = addresses.find((candidate) =>
-                isPublicAddress(candidate.address),
-              );
-              if (
-                !address ||
-                addresses.some(
-                  (candidate) => !isPublicAddress(candidate.address),
-                )
-              ) {
-                callback(
-                  new Error("Local and private network URLs are not allowed"),
-                  "",
-                );
-                return;
-              }
-              callback(null, address.address, address.family as 4 | 6);
-            })
-            .catch((error: unknown) => callback(error as Error, ""));
-        },
+        lookup: createPublicLookup(resolveHost),
       },
       (incoming) => {
         const chunks: Buffer[] = [];
