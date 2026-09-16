@@ -6,10 +6,7 @@ import { produceContentRequestSchema } from "@/production/api";
 import { authorizeRequest } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 import { submitProduction } from "@/library/production-service";
-import {
-  productionJobView,
-  productionJobViewWithRevision,
-} from "@/library/production-job-view";
+import { productionJobViewWithRevision } from "@/library/production-job-view";
 import { listProductionJobs } from "@/library/repositories/production-jobs";
 import { runProductionWorkerOnce } from "@/library/production-worker";
 import { executeProductionJob } from "@/library/production-job-executor";

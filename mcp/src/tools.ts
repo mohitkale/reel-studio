@@ -66,14 +66,6 @@ const sceneMood = z.enum([
 ]);
 /** Server-side TTS providers MCP can drive without browser upload. */
 const serverVoiceProvider = z.enum(["cartesia", "elevenlabs", "voiceforge"]);
-const productionVoiceProvider = z.enum([
-  "kokoro",
-  "kokoro-server",
-  "webspeech",
-  "cartesia",
-  "elevenlabs",
-  "voiceforge",
-]);
 const backgroundShape = z.object({
   type: z.enum(["image", "video"]),
   url: z.string().min(1).max(2048),

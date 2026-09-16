@@ -12,7 +12,7 @@ user requests publication.
 | ---: | ------------------------------------------------------------------------------- | -------- | -------------- |
 |   26 | Off-by-default Quick Produce UI, immutable revision, durable reconnectable job  | Complete | `be1339b`      |
 |   27 | Real local/optional-AI stages, reusable media/audio/composition/render outputs  | Complete | `2c92001`      |
-|   28 | Shared REST/MCP/batch Quick Produce semantics, limits, retry/cancel/idempotency | Complete | Recorded next  |
+|   28 | Shared REST/MCP/batch Quick Produce semantics, limits, retry/cancel/idempotency | Complete | `13f8fa4`      |
 |   29 | Release docs, examples, licensing, walkthroughs, and final Gate 5 validation    | Pending  | —              |
 
 ## Initial decisions
@@ -76,4 +76,4 @@ user requests publication.
   reporting continue through the shared production service and views.
 - Typecheck and focused REST schema, MCP policy, batch expansion, persistence,
   idempotency, partial failure, retry/cancel, and fresh/populated migration suites
-  passed (6 files, 34 tests).
+  passed (6 files, 34 tests). Completion commit: `13f8fa4`.

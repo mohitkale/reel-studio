@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680" role="img" aria-labelledby="title desc">
   <title id="title">Render Flow</title>
-  <desc id="desc">Flow diagram from script editing to final MP4 output, branching on Remotion vs HyperFrames.</desc>
+  <desc id="desc">Flow diagram from an editable script through immutable revision and durable cached stages to a verified MP4, branching on Remotion vs HyperFrames.</desc>
   <defs>
     <style>
       .bg { fill: #0d1323; }
@@ -19,24 +19,24 @@
   <text class="title" x="40" y="52">Reel Studio: End-to-End Render Flow</text>
 
   <rect class="step" x="50" y="110" width="220" height="110" />
-  <text class="label" x="72" y="150">1. Script + Scenes</text>
-  <text class="small" x="72" y="178">User edits scenes in UI</text>
-  <text class="small" x="72" y="198">Engine templates chosen</text>
+  <text class="label" x="72" y="150">1. Editable Project</text>
+  <text class="small" x="72" y="178">Brief, script, scenes, assets</text>
+  <text class="small" x="72" y="198">Quick Produce stays optional</text>
 
   <rect class="step" x="330" y="110" width="230" height="110" />
-  <text class="label" x="352" y="150">2. Voice Take</text>
-  <text class="small" x="352" y="178">Provider synth per scene</text>
-  <text class="small" x="352" y="198">Timeline frames measured</text>
+  <text class="label" x="352" y="150">2. Freeze Revision</text>
+  <text class="small" x="352" y="178">Immutable project snapshot</text>
+  <text class="small" x="352" y="198">Stable content hash</text>
 
   <rect class="step" x="620" y="110" width="240" height="110" />
-  <text class="label" x="642" y="150">3. Build Input Props</text>
-  <text class="small" x="642" y="178">Scene data + timeline</text>
-  <text class="small" x="642" y="198">Brand tokens + media URLs</text>
+  <text class="label" x="642" y="150">3. Durable Stages</text>
+  <text class="small" x="642" y="178">Plan, media, audio, timing</text>
+  <text class="small" x="642" y="198">Reuse valid cached outputs</text>
 
   <rect class="step" x="920" y="110" width="230" height="110" />
-  <text class="label" x="942" y="150">4. Queue Render Job</text>
-  <text class="small" x="942" y="178">DB row + in-memory queue</text>
-  <text class="small" x="942" y="198">SSE progress channel</text>
+  <text class="label" x="942" y="150">4. Prepare + Queue</text>
+  <text class="small" x="942" y="178">SQLite job + step records</text>
+  <text class="small" x="942" y="198">Persisted progress reconnect</text>
 
   <rect class="step" x="80" y="320" width="480" height="150" />
   <text class="label" x="102" y="360">5a. Remotion path</text>
@@ -51,9 +51,9 @@
   <text class="small" x="642" y="428">Spawn hyperframes-render-worker</text>
 
   <rect class="step" x="420" y="520" width="360" height="110" />
-  <text class="label" x="442" y="560">6. Output + Complete</text>
-  <text class="small" x="442" y="588">Write media/renders/*.mp4</text>
-  <text class="small" x="442" y="608">Mark render done + URL</text>
+  <text class="label" x="442" y="560">6. Verify + Complete</text>
+  <text class="small" x="442" y="588">Probe, checksum, record artifact</text>
+  <text class="small" x="442" y="608">Download or reopen revision</text>
 
   <path class="arrow" d="M 270 165 L 330 165" />
   <path class="arrow" d="M 560 165 L 620 165" />

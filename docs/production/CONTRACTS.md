@@ -41,6 +41,30 @@ assets, scenes, narration readiness, captions, audio cues, timing and requested
 artifacts. Workers must store this snapshot rather than reading mutable project
 records while a job is running.
 
+## Quick Produce revisions
+
+Quick Produce is an optional request contract and is off by default. An enabled
+request records a `ProductionRevision` before its video job is enqueued. The
+revision contains the canonical project/script snapshot, a stable SHA-256 hash,
+planner and media choices, narration choice, and its linked durable job. Editing
+the source project never mutates that row or the worker input derived from it.
+
+UI, REST, MCP, and video batch rows import the same strict
+`quickProduceOptionsSchema`. `ai_create_project` may use deterministic, Gemini,
+OpenAI, Ollama, or LM Studio planning before it persists the project; a prepared
+script request records planner metadata but does not re-plan existing scenes.
+Only server-capable narration providers can be selected for unattended work.
+
+The default no-key contract is deterministic planning, `auto` media with the
+existing stock-free fallback, and server-side Kokoro `af_heart`. Voice can be
+disabled explicitly. Paid planners/voices, duration, batch size, automatic mode,
+and provider allowlists remain subject to the existing scoped-token policy.
+
+An idempotency key identifies one job/revision. Repeating it returns the original
+work. A changed editable project requires a new submission and revision. Job
+views expose submitted/current hashes and conflict state; restoring a completed
+revision creates a new editable project rather than overwriting current edits.
+
 ## Presets and overrides
 
 The built-in `1.0.0` preset set is Product Launch, Editorial Explainer, Creator

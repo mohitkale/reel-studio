@@ -64,9 +64,10 @@ describe("bounded structured output", () => {
   });
 
   it("allows exactly one observable same-model repair request", async () => {
-    const repair = vi.fn(
-      async (_request: StructuredRepairRequest) => '{"still":"invalid"}',
-    );
+    const repair = vi.fn(async (request: StructuredRepairRequest) => {
+      void request;
+      return '{"still":"invalid"}';
+    });
     await expect(
       parseStructuredOutput({
         text: "not JSON",

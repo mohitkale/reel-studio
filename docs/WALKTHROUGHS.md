@@ -1,6 +1,6 @@
 # Reproducible launch walkthroughs
 
-These three workflows use shipped fixtures or local providers. Run `npm run setup`
+These four workflows use shipped fixtures or local providers. Run `npm run setup`
 and `npm run dev` first. Open **Diagnostics** and resolve every required check;
 whisper.cpp may remain an optional warning.
 
@@ -71,6 +71,33 @@ video excerpt that uses the original podcast audio.
 
 Use `npm run test:podcast-audiogram -- <take-id>` to repeat the audiogram render
 from the command line with a local take ID.
+
+## 4. Credential-free Quick Produce with revision recovery
+
+This proves the off-by-default control, unattended durable stages, immutable
+revision reporting, and editable result without a cloud or stock key.
+
+1. Open **Projects**, choose **Create with AI**, and confirm **Quick Produce** is
+   initially off.
+2. Enable it, choose the **Deterministic (no key)** planner, set stock media to
+   **None**, select **Editorial Explainer**, **HyperFrames**, and **Portrait**.
+3. Use this brief: “Explain why immutable inputs make a local video pipeline
+   easier to retry, inspect, and trust.” Choose **Create and produce**.
+4. The editor opens immediately. Follow the persisted plan, media, audio,
+   caption/timing, composition, render, and verification stages. Refresh during
+   the run and confirm the same job/revision reconnects.
+5. Edit one scene while the submitted revision runs. The completed artifact must
+   retain the submitted hash; the editor should report that the current project
+   differs, without discarding either version.
+6. Download the verified MP4, open the completed revision as a new editable
+   project, then use **Produce current revision** to create a separate job from
+   the newer edit.
+
+Quick Produce uses server-side Kokoro by default, which may download its model
+on first use. The equivalent REST/MCP fixture can set `voice.enabled` to `false`
+when validating on a host where that initial download is intentionally disabled.
+Duplicate idempotency, worker restart, cancellation/retry, and partial batch
+cases are covered by the production contract suite.
 
 ## What these examples cover
 

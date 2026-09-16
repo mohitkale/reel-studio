@@ -14,6 +14,24 @@ The deterministic planner works without an AI key. It keeps the complete source
 as narration and derives short display copy for readable scenes. AI planning is
 optional and produces the same validated, editable structure.
 
+## Quick Produce or review first
+
+**Quick Produce** appears in Create with AI and is off by default. Leave it off
+when you want to review scenes, media, voice, and captions before rendering.
+Enable it when the chosen planner and defaults are ready to run unattended.
+
+An enabled request still creates an ordinary editable project. Reel Studio also
+freezes the submitted revision and runs that snapshot through the durable job
+stages. Refreshing or restarting reconnects to the saved progress. Edits made
+after submission cannot alter the in-flight or completed output; the editor
+shows a conflict and lets you reopen the completed revision as a new project or
+produce the current revision separately.
+
+The credential-free choice is deterministic planning with stock media set to
+None and server-side Kokoro (or voice disabled). Ollama and LM Studio are local
+optional planners. Gemini, OpenAI, stock search, and paid voice providers are
+used only when explicitly selected and configured.
+
 ## Choose the right preset
 
 | Preset              | Best input                                              | Useful supplied assets                       |

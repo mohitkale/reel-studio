@@ -98,8 +98,8 @@ function checkReleaseMetadata() {
     withFileTypes: true,
   }).filter((entry) => entry.isDirectory()).length;
   assert(
-    migrationCount === 10,
-    `expected 10 database migrations, found ${migrationCount}`,
+    migrationCount === 11,
+    `expected 11 database migrations, found ${migrationCount}`,
   );
 
   for (const filename of [
@@ -110,6 +110,7 @@ function checkReleaseMetadata() {
     "docs/production/RELEASE_MATRIX_0.4.0.json",
     "docs/production/LOCAL_FIRST_PR2_RENDER_MATRIX.json",
     "docs/production/RELEASE_VALIDATION.md",
+    "docs/production/LOCAL_FIRST_PR8_TASKS.md",
     "mcp/README.md",
   ]) {
     assert(

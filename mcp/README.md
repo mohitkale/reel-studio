@@ -77,6 +77,11 @@ touches the database directly. By design it can do everything an editor can
 Call `list_video_engines` first to see each engine’s template catalog
 (Remotion vs `hf-*` HyperFrames templates).
 
+`ai_create_project` also accepts an optional `quickProduce` object. When present,
+it creates the editable project, records an immutable production revision, and
+returns the durable video job immediately. Omit it for the normal review-first
+flow; Quick Produce is never enabled implicitly.
+
 ### Voice: oneshot vs per-scene (video)
 
 | Mode                | How to set                                        | Generate audio                                                                   |
@@ -125,6 +130,29 @@ A bounded automatic video request looks like this after a project exists:
 }
 ```
 
+To freeze and produce that prepared script as a Quick Produce revision, add:
+
+```json
+{
+  "quickProduce": {
+    "enabled": true,
+    "planner": "deterministic",
+    "mediaPreference": "none",
+    "voice": {
+      "enabled": true,
+      "providerId": "kokoro-server",
+      "voiceId": "af_heart"
+    }
+  }
+}
+```
+
+For an existing script the planner fields are revision metadata; planning has
+already happened. Use the same object with `ai_create_project` to select the
+deterministic, Ollama, LM Studio, Gemini, or OpenAI planner for the original
+brief. Job responses include the submitted revision hash and current-project
+hash so an agent can report conflicts without overwriting either version.
+
 Create a named token with `production:create`, `production:read`,
 `production:download`, and `production:automatic` only when the caller should
 render without browser approval. Set its allowed providers, maximum duration,
@@ -143,11 +171,21 @@ For independent format variants, call `produce_batch`:
       "kind": "video",
       "scriptId": "<script-id>",
       "orientations": ["portrait", "landscape", "square"],
-      "quality": "standard"
+      "quality": "standard",
+      "quickProduce": {
+        "enabled": true,
+        "planner": "deterministic",
+        "mediaPreference": "none",
+        "voice": { "enabled": false }
+      }
     }
   ]
 }
 ```
+
+Each expanded Quick Produce format receives its own immutable revision/job.
+Duplicate batch and job idempotency keys return the original work; partial
+failure preserves completed siblings and their downloadable artifacts.
 
 ### Podcast
 
@@ -174,6 +212,33 @@ For independent format variants, call `produce_batch`:
 
 `scriptStyle: "detailed"` produces short on-screen `text` plus longer `spokenText`
 for narration. `"short"` keeps a single punchy line (voice inherits `text`).
+
+### No-key Quick Produce from a brief
+
+```json
+{
+  "mode": "idea",
+  "brief": "Explain why immutable release inputs make local rendering safer",
+  "productionPresetId": "editorial-explainer",
+  "videoEngine": "hyperframes",
+  "mediaPreference": "none",
+  "idempotencyKey": "immutable-inputs-v1",
+  "quickProduce": {
+    "enabled": true,
+    "planner": "deterministic",
+    "mediaPreference": "none",
+    "voice": {
+      "enabled": true,
+      "providerId": "kokoro-server",
+      "voiceId": "af_heart"
+    }
+  }
+}
+```
+
+This path requires no cloud key. Server-side Kokoro may fetch its Apache-2.0
+model weights on first use. Set `voice.enabled` to `false` for a silent local
+run, or choose a server-capable provider allowed by the named token.
 
 ### Override a scene’s voice script
 
