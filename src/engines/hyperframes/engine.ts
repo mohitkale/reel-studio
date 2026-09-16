@@ -13,6 +13,7 @@ import {
   PRODUCTION_SCENE_ROLES,
   type ProductionSceneRole,
 } from "@/production/roles";
+import { getCatalogBlockByTemplateId } from "@/engines/hyperframes/catalog/manifest";
 
 function rolesForTemplate(templateId: string): readonly ProductionSceneRole[] {
   if (templateId === "hf-statement")
@@ -25,6 +26,8 @@ function rolesForTemplate(templateId: string): readonly ProductionSceneRole[] {
   if (/quote/.test(templateId)) return ["quote", "testimonial"];
   if (/app-showcase/.test(templateId))
     return ["screenshot-demo", "feature", "hero", "browser"];
+  if (/carousel/.test(templateId))
+    return ["hero", "feature", "screenshot-demo", "comparison", "summary"];
   if (/list/.test(templateId))
     return ["tip", "feature", "comparison", "diagram", "summary"];
   if (/opener|kinetic/.test(templateId))
@@ -37,6 +40,8 @@ function requiredInputsForTemplate(templateId: string) {
     return ["displayText", "chartData"] as const;
   if (templateId === "hf-app-showcase")
     return ["displayText", "asset"] as const;
+  if (/^hf-carousel-/.test(templateId))
+    return ["displayText", "asset"] as const;
   return ["displayText"] as const;
 }
 
@@ -45,6 +50,8 @@ function effectsForTemplate(templateId: string): readonly string[] {
   if (/data-chart/.test(templateId)) return ["chart-reveal", "line-draw"];
   if (/app-showcase/.test(templateId))
     return ["device-stage", "floating-cards"];
+  if (/carousel/.test(templateId))
+    return ["seekable-carousel", "responsive-gallery"];
   if (/money-count|^(?:hf-)?stat$/.test(templateId))
     return ["count-up", "metric-slam"];
   if (/logo/.test(templateId)) return ["logo-assembly", "texture"];
@@ -57,6 +64,9 @@ const hyperframesTemplateCapabilities = Object.fromEntries(
   HF_TEMPLATES.map((template) => [
     template.id,
     {
+      capabilityId: getCatalogBlockByTemplateId(template.id)
+        ? `hf.catalog.block.${getCatalogBlockByTemplateId(template.id)!.id}`
+        : `hf.template.${template.id.replace(/^hf-/, "")}`,
       templateId: template.id,
       version: "legacy-v0.3.0",
       aspectRatios: ORIENTATIONS,

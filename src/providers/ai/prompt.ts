@@ -1,5 +1,5 @@
 import type { GeneratePlanInput } from "./types";
-import { allowedPresetTemplateIds } from "@/production/ai-preset-plan";
+import { allowedPresetCapabilityIds } from "@/production/ai-preset-plan";
 import { getProductionPreset } from "@/production/presets";
 
 // Rotated on every call to vary voice without changing the product rules below.
@@ -17,34 +17,35 @@ function pickCreativeAngle(): string {
 
 function remotionTemplateRules(): string[] {
   return [
-    "- For each scene pick templateId from: kinetic, lottie, three, stat-reveal, icon-grid, quote-card, emoji-punch.",
+    "- For each scene pick capabilityId from: remotion.template.kinetic, remotion.template.lottie, remotion.template.three, remotion.template.stat-reveal, remotion.template.icon-grid, remotion.template.quote-card, remotion.template.emoji-punch.",
     "  TEMPLATE RULES — follow precisely (wrong layout = unwatchable):",
-    "  • 'stat-reveal': scene centered on ONE number/metric. visual = that number (e.g. '73%', '10x'). Keep supporting text short.",
-    "  • 'icon-grid': ONLY when you have 3 to 5 SHORT tip/step lines (max ~8 words each). REQUIRED: put those lines in the 'items' array; put a short header (2–5 words) in 'text'; set visual to '✓' or '→'. NEVER use icon-grid for a single point, a long paragraph, or 1–2 long sentences. If you only have one idea, use 'kinetic' instead.",
-    "  • 'emoji-punch': short emotional punch / turn; visual = one emoji. Keep text under ~12 words.",
-    "  • 'quote-card': short attributed line; visual = speaker (optional).",
-    "  • 'lottie': one clear process/how-it-works beat — not a wall of text.",
-    "  • 'three': an optional hero moment when spatial depth helps the idea.",
-    "  • 'kinetic': default for one clear spoken idea / hook / insight. Prefer this over a fake checklist.",
+    "  • 'remotion.template.stat-reveal': scene centered on ONE number/metric. visual = that number (e.g. '73%', '10x'). Keep supporting text short.",
+    "  • 'remotion.template.icon-grid': ONLY when you have 3 to 5 SHORT tip/step lines (max ~8 words each). REQUIRED: put those lines in the 'items' array; put a short header (2–5 words) in 'text'; set visual to '✓' or '→'. NEVER use it for a single point, a long paragraph, or 1–2 long sentences. If you only have one idea, use 'remotion.template.kinetic' instead.",
+    "  • 'remotion.template.emoji-punch': short emotional punch / turn; visual = one emoji. Keep text under ~12 words.",
+    "  • 'remotion.template.quote-card': short attributed line; visual = speaker (optional).",
+    "  • 'remotion.template.lottie': one clear process/how-it-works beat — not a wall of text.",
+    "  • 'remotion.template.three': an optional hero moment when spatial depth helps the idea.",
+    "  • 'remotion.template.kinetic': default for one clear spoken idea / hook / insight. Prefer this over a fake checklist.",
     "  Choose layouts by content fit. Repeating a clear layout is better than forced variety.",
   ];
 }
 
 function hyperframesTemplateRules(): string[] {
   return [
-    "- For each scene pick templateId from: hf-kinetic-slam, hf-opener, hf-statement, hf-list, hf-stat, hf-money-count, hf-data-chart, hf-quote, hf-app-showcase, hf-cta, hf-logo-outro, hf-ig-follow, hf-tt-follow, hf-yt-lower-third.",
+    "- For each scene pick capabilityId from the supplied HyperFrames capability enum. Pick by scene role and required inputs; the app maps it to a version-compatible template.",
     "  TEMPLATE RULES — HyperFrames director (wrong layout = unwatchable):",
-    "  • Open with the layout that makes the supplied idea clearest; use 'hf-kinetic-slam' only when a caption slam fits.",
-    "  • For an explicit CTA, prefer 'hf-logo-outro' or 'hf-ig-follow' (use 'hf-tt-follow' only for TikTok-flavored briefs).",
-    "  • 'hf-money-count': ONE big number/metric. visual = that amount (e.g. '$10k', '73%', '10x').",
-    "  • 'hf-stat': short proof number beat. visual = the number.",
-    "  • 'hf-data-chart': use only when the brief supplies exact chart data. Return chart.labels plus chart.series values of matching length and optional units/sourceAttribution. Never estimate or invent values; otherwise choose hf-statement.",
-    "  • 'hf-list': ONLY with 3 to 5 SHORT tip/step lines in 'items' (max ~8 words each); 'text' = short header; visual = '✓' or '→'.",
-    "  • 'hf-quote': short attributed line; visual = speaker (optional).",
-    "  • 'hf-app-showcase': product/process hero beat — use at most once.",
-    "  • 'hf-statement' / 'hf-opener': one clear spoken idea / calm beat between hooks.",
-    "  • 'hf-yt-lower-third': mid-reel identity/subscribe beat — use sparingly (0–1).",
-    "  • 'hf-cta': text end-card when logo/social outros do not fit.",
+    "  • Use 'hf.catalog.block.caption-kinetic-slam' only when a caption slam fits.",
+    "  • For an explicit CTA, prefer 'hf.catalog.block.logo-outro' or 'hf.catalog.block.instagram-follow'.",
+    "  • 'hf.catalog.block.apple-money-count': ONE big number/metric. visual = that amount (e.g. '$10k', '73%', '10x').",
+    "  • 'hf.template.stat': short proof number beat. visual = the number.",
+    "  • 'hf.catalog.block.data-chart': use only when the brief supplies exact chart data. Return chart.labels plus chart.series values of matching length and optional units/sourceAttribution. Never estimate or invent values; otherwise choose hf.template.statement.",
+    "  • 'hf.template.list': ONLY with 3 to 5 SHORT tip/step lines in 'items' (max ~8 words each); 'text' = short header; visual = '✓' or '→'.",
+    "  • Carousel capabilities require at least three project-supplied images. Do not choose one from a text-only brief.",
+    "  • 'hf.template.quote': short attributed line; visual = speaker (optional).",
+    "  • 'hf.catalog.block.app-showcase': product/process hero beat — use at most once.",
+    "  • 'hf.template.statement' / 'hf.template.opener': one clear spoken idea / calm beat between hooks.",
+    "  • 'hf.catalog.block.yt-lower-third': mid-reel identity/subscribe beat — use sparingly (0–1).",
+    "  • 'hf.template.cta': text end-card when logo/social outros do not fit.",
     "  Choose layouts by content fit. Repeating a clear layout is better than forced variety.",
   ];
 }
@@ -130,7 +131,7 @@ export function buildPrompt(input: GeneratePlanInput): {
     ? getProductionPreset(input.productionPresetId)
     : undefined;
   const presetRule = preset
-    ? `- Production preset is ${preset.name}. Use only these capability-mapped templates: ${allowedPresetTemplateIds(
+    ? `- Production preset is ${preset.name}. Use only these capability IDs: ${allowedPresetCapabilityIds(
         preset.id,
         input.videoEngine ?? "remotion",
       ).join(", ")}. Choose by content fit.`

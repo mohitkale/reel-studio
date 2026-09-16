@@ -28,6 +28,7 @@ import {
   dimsFor,
   type Orientation,
 } from "../src/lib/orientation";
+import { CURRENT_HF_CATALOG_REVISION } from "../src/engines/hyperframes/catalog/revisions";
 
 async function main() {
   const run = promisify(execFile);
@@ -36,6 +37,7 @@ async function main() {
   const orientationArg = args.find((arg) => arg.startsWith("--orientation="));
   const briefIndexArg = args.find((arg) => arg.startsWith("--brief-index="));
   const renderStockVideo = args.includes("--stock-video");
+  const renderCarousel = args.includes("--carousel");
   const briefIndex = briefIndexArg
     ? Number(briefIndexArg.slice("--brief-index=".length))
     : undefined;
@@ -46,8 +48,10 @@ async function main() {
   const presetId = args.includes("--product-launch")
     ? "product-launch"
     : presetArg?.slice("--preset=".length);
-  if (renderStockVideo && presetId) {
-    throw new Error("Stock-video regression cannot be combined with a preset");
+  if ((renderStockVideo || renderCarousel) && presetId) {
+    throw new Error(
+      "Stock-video and carousel regressions cannot be combined with a preset",
+    );
   }
   const presetFixtures: Record<string, unknown> = {
     "product-launch": productLaunchFixture,
@@ -76,13 +80,21 @@ async function main() {
   const output = orientation
     ? path.resolve(
         ".artifacts/render-regression",
-        renderStockVideo ? "stock-video" : (presetId ?? "legacy"),
+        renderStockVideo
+          ? "stock-video"
+          : renderCarousel
+            ? "carousel"
+            : (presetId ?? "legacy"),
         ...(briefIndex === undefined ? [] : [`brief-${briefIndex + 1}`]),
         orientation,
       )
     : path.resolve(
         ".artifacts/render-regression",
-        renderStockVideo ? "stock-video" : (presetId ?? "legacy"),
+        renderStockVideo
+          ? "stock-video"
+          : renderCarousel
+            ? "carousel"
+            : (presetId ?? "legacy"),
       );
   await mkdir(output, { recursive: true });
   const stockVideoSource = path.join(output, "stock-video-source.mp4");
@@ -158,7 +170,72 @@ async function main() {
         await readFile(path.resolve("public/samples/cinematic-brand-hero.svg"))
       ).toString("base64")}`
     : undefined;
-  const selectedFixture = presetId ? presetFixtures[presetId] : fixture;
+  const carouselImages = renderCarousel
+    ? await Promise.all(
+        [
+          "public/samples/product-launch-dashboard.svg",
+          "public/samples/developer-demo-browser.svg",
+          "public/samples/cinematic-brand-hero.svg",
+        ].map(
+          async (filename) =>
+            `data:image/svg+xml;base64,${(await readFile(path.resolve(filename))).toString("base64")}`,
+        ),
+      )
+    : undefined;
+  const selectedFixture = renderCarousel
+    ? {
+        ...(fixture as ReelProps),
+        scenes: [
+          {
+            id: "carousel-circle-regression",
+            templateId: "hf-carousel-circle-v1",
+            text: "Supplied images orbit in a responsive circle.",
+            emphasis: ["responsive circle"],
+            carouselImages,
+            mood: "tech",
+          },
+          {
+            id: "carousel-path-regression",
+            templateId: "hf-carousel-path-v1",
+            text: "A local image path stays deterministic.",
+            emphasis: ["deterministic"],
+            carouselImages,
+            mood: "tech",
+          },
+          {
+            id: "carousel-vision-regression",
+            templateId: "hf-carousel-vision-v1",
+            text: "Project media becomes a cinematic gallery.",
+            emphasis: ["cinematic gallery"],
+            carouselImages,
+            mood: "tech",
+          },
+        ],
+        timeline: [
+          {
+            sceneId: "carousel-circle-regression",
+            startFrame: 0,
+            durationFrames: 60,
+          },
+          {
+            sceneId: "carousel-path-regression",
+            startFrame: 60,
+            durationFrames: 60,
+          },
+          {
+            sceneId: "carousel-vision-regression",
+            startFrame: 120,
+            durationFrames: 60,
+          },
+        ],
+        audioUrl: undefined,
+        musicUrl: undefined,
+        sfxCues: [],
+        catalogRevision: CURRENT_HF_CATALOG_REVISION,
+      }
+    : presetId
+      ? presetFixtures[presetId]
+      : fixture;
   const fixtureWithLocalAssets = (
     renderProductLaunch || renderDeveloperDemo || renderCinematicBrand
       ? {
@@ -219,20 +296,21 @@ async function main() {
           sfxCues: [],
         }
       : {}),
-    captions: renderStockVideo
-      ? { enabled: false, timingSource: "imported", cues: [] }
-      : (fixtureProps.captions ?? {
-          enabled: true,
-          timingSource: "imported",
-          cues: [
-            {
-              id: "regression-caption",
-              startFrame: 15,
-              endFrame: 75,
-              text: "Editable subtitles render separately from scene copy.",
-            },
-          ],
-        }),
+    captions:
+      renderStockVideo || renderCarousel
+        ? { enabled: false, timingSource: "imported", cues: [] }
+        : (fixtureProps.captions ?? {
+            enabled: true,
+            timingSource: "imported",
+            cues: [
+              {
+                id: "regression-caption",
+                startFrame: 15,
+                endFrame: 75,
+                text: "Editable subtitles render separately from scene copy.",
+              },
+            ],
+          }),
   };
   const expectedFrames = props.timeline.reduce(
     (max, beat) => Math.max(max, beat.startFrame + beat.durationFrames),
@@ -276,36 +354,50 @@ async function main() {
     ) {
       throw new Error(`${engine}: muted stock fixture leaked an audio track`);
     }
-    const sample = path.join(output, `${engine}-sample.png`);
-    await run("ffmpeg", [
-      "-hide_banner",
-      "-loglevel",
-      "error",
-      "-ss",
-      "1",
-      "-i",
-      mp4,
-      "-frames:v",
-      "1",
-      "-y",
-      sample,
-    ]);
-    const stats = (
+    const sampleTimes = renderCarousel ? [1, 3, 5] : [1];
+    for (const [sampleIndex, sampleTime] of sampleTimes.entries()) {
+      const sample = path.join(
+        output,
+        sampleIndex === 0
+          ? `${engine}-sample.png`
+          : `${engine}-sample-${sampleIndex + 1}.png`,
+      );
       await run("ffmpeg", [
         "-hide_banner",
+        "-loglevel",
+        "error",
+        "-ss",
+        String(sampleTime),
         "-i",
+        mp4,
+        "-frames:v",
+        "1",
+        "-y",
         sample,
-        "-vf",
-        "signalstats,metadata=print:file=-",
-        "-f",
-        "null",
-        "-",
-      ])
-    ).stdout;
-    const yMax = Number(stats.match(/lavfi\.signalstats\.YMAX=(\d+)/)?.[1]);
-    const yMin = Number(stats.match(/lavfi\.signalstats\.YMIN=(\d+)/)?.[1]);
-    if (!Number.isFinite(yMax) || !Number.isFinite(yMin) || yMax - yMin < 120) {
-      throw new Error(`${engine}: sampled frame has no visible foreground`);
+      ]);
+      const stats = (
+        await run("ffmpeg", [
+          "-hide_banner",
+          "-i",
+          sample,
+          "-vf",
+          "signalstats,metadata=print:file=-",
+          "-f",
+          "null",
+          "-",
+        ])
+      ).stdout;
+      const yMax = Number(stats.match(/lavfi\.signalstats\.YMAX=(\d+)/)?.[1]);
+      const yMin = Number(stats.match(/lavfi\.signalstats\.YMIN=(\d+)/)?.[1]);
+      if (
+        !Number.isFinite(yMax) ||
+        !Number.isFinite(yMin) ||
+        yMax - yMin < 120
+      ) {
+        throw new Error(
+          `${engine}: sampled frame at ${sampleTime}s has no visible foreground`,
+        );
+      }
     }
   }
   for (const engine of selected) {

@@ -64,6 +64,8 @@ export interface ReelScene {
   /** Explicit list items for list/checklist templates (overrides text splitting). */
   items?: string[];
   chart?: SceneChartData;
+  /** Resolved project-owned image URLs available to reviewed carousel adapters. */
+  carouselImages?: string[];
   /** Engine-independent purpose used by versioned production presets. */
   role?: ProductionSceneRole;
   /** When true, suppress the on-screen text/visual and show just the background. */
@@ -149,6 +151,8 @@ export type ReelProps = {
   layout?: ProductionLayout;
   /** Versioned preset identity retained by both preview and export. */
   preset?: { id: ProductionPresetId; version: string };
+  /** Immutable HyperFrames catalog selection used by saved production specs. */
+  catalogRevision?: string;
 };
 
 export const REEL_WIDTH = 1080;

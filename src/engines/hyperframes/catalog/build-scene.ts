@@ -11,6 +11,9 @@ const NATIVE_ONLY_BLOCKS = new Set([
   "apple-money-count",
   "data-chart",
   "app-showcase",
+  "carousel-circle-1",
+  "carousel-path-1",
+  "carousel-vision-1",
 ]);
 
 function hasExplicitMetric(value: string | undefined): boolean {
@@ -26,6 +29,8 @@ function hasRequiredInputs(
   if (meta.id === "data-chart") return Boolean(scene.chart);
   if (meta.id === "apple-money-count") return hasExplicitMetric(scene.visual);
   if (meta.id === "app-showcase") return Boolean(scene.background?.url);
+  if (meta.requiresCarouselImages)
+    return (scene.carouselImages?.length ?? 0) >= 3;
   return true;
 }
 
@@ -70,8 +75,12 @@ export function buildCatalogSceneBlock(args: {
   motionStiffness: string;
   inline: boolean;
   backgroundHtml: string;
+  catalogRevision?: string;
 }): CatalogSceneBuild | null {
-  const meta = getCatalogBlockByTemplateId(args.scene.templateId);
+  const meta = getCatalogBlockByTemplateId(
+    args.scene.templateId,
+    args.catalogRevision,
+  );
   if (!meta) return null;
   if (!hasRequiredInputs(meta, args.scene)) return null;
 
@@ -105,7 +114,7 @@ export function buildCatalogSceneBlock(args: {
                data-exit-window="${args.exitWindow.toFixed(3)}"
                style="--accent:${args.accent};--motion-stiffness:${args.motionStiffness}">
         ${bg}
-        <div class="catalog-host"${
+        <div id="catalog-host-${escapeHtml(args.scene.id)}" class="clip catalog-host"${
           nativeOnly
             ? ""
             : `

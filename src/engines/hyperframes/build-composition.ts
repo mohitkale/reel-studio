@@ -980,7 +980,10 @@ export function buildHyperframesCompositionHtml(
       }
     }
 
-    const catalog = getCatalogBlockByTemplateId(scene.templateId);
+    const catalog = getCatalogBlockByTemplateId(
+      scene.templateId,
+      props.catalogRevision,
+    );
     if (catalog) {
       const built = buildCatalogSceneBlock({
         scene,
@@ -993,6 +996,7 @@ export function buildHyperframesCompositionHtml(
         motionStiffness,
         inline: inlineCatalog,
         backgroundHtml: backgroundLayer(scene, absoluteStart, duration),
+        catalogRevision: props.catalogRevision,
       });
       if (built) {
         sceneBlocks.push(built.html);

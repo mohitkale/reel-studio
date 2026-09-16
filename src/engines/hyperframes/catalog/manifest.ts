@@ -15,7 +15,10 @@ export type HfCatalogBlockId =
   | "logo-outro"
   | "instagram-follow"
   | "tiktok-follow"
-  | "yt-lower-third";
+  | "yt-lower-third"
+  | "carousel-circle-1"
+  | "carousel-path-1"
+  | "carousel-vision-1";
 
 export interface HfCatalogBlockMeta {
   /** Registry / file id. */
@@ -41,6 +44,10 @@ export interface HfCatalogBlockMeta {
   sampleEmphasis: string[];
   sampleVisual?: string;
   visualHint?: string;
+  /** First immutable catalog version allowed to expose this adapter. */
+  availableSinceRevision?: string;
+  /** Native adapter requires project images and never uses upstream demos. */
+  requiresCarouselImages?: boolean;
 }
 
 /** Ad-focused subset of the upstream HyperFrames catalog. */
@@ -176,6 +183,57 @@ export const HF_CATALOG_BLOCKS: HfCatalogBlockMeta[] = [
     sampleEmphasis: ["Subscribe"],
     sampleVisual: "Subscribe",
   },
+  {
+    id: "carousel-circle-1",
+    templateId: "hf-carousel-circle-v1",
+    name: "Circle carousel",
+    description: "Project images orbit through a responsive circular gallery.",
+    compositionId: "carousel-circle-1",
+    width: 1920,
+    height: 1080,
+    duration: 6,
+    transparent: false,
+    file: "carousel-circle-1.html",
+    sampleText: "A collection built around your story.",
+    sampleEmphasis: ["your story"],
+    visualHint: "Requires at least three uploaded images",
+    availableSinceRevision: "cfe5dcfad310ced2a5844998628daa2b8a0f53d7",
+    requiresCarouselImages: true,
+  },
+  {
+    id: "carousel-path-1",
+    templateId: "hf-carousel-path-v1",
+    name: "Path carousel",
+    description: "Project images travel along a responsive editorial path.",
+    compositionId: "carousel-path-1",
+    width: 1920,
+    height: 1080,
+    duration: 6,
+    transparent: false,
+    file: "carousel-path-1.html",
+    sampleText: "See the process from every angle.",
+    sampleEmphasis: ["every angle"],
+    visualHint: "Requires at least three uploaded images",
+    availableSinceRevision: "cfe5dcfad310ced2a5844998628daa2b8a0f53d7",
+    requiresCarouselImages: true,
+  },
+  {
+    id: "carousel-vision-1",
+    templateId: "hf-carousel-vision-v1",
+    name: "Vision carousel",
+    description: "Project images fan through a cinematic responsive stage.",
+    compositionId: "carousel-vision-1",
+    width: 1920,
+    height: 1080,
+    duration: 6,
+    transparent: false,
+    file: "carousel-vision-1.html",
+    sampleText: "Bring the full vision into focus.",
+    sampleEmphasis: ["into focus"],
+    visualHint: "Requires at least three uploaded images",
+    availableSinceRevision: "cfe5dcfad310ced2a5844998628daa2b8a0f53d7",
+    requiresCarouselImages: true,
+  },
 ];
 
 const BY_TEMPLATE = new Map(
@@ -185,8 +243,17 @@ const BY_ID = new Map(HF_CATALOG_BLOCKS.map((b) => [b.id, b] as const));
 
 export function getCatalogBlockByTemplateId(
   templateId: string,
+  catalogRevision?: string,
 ): HfCatalogBlockMeta | undefined {
-  return BY_TEMPLATE.get(templateId);
+  const block = BY_TEMPLATE.get(templateId);
+  if (
+    block?.availableSinceRevision &&
+    catalogRevision &&
+    block.availableSinceRevision !== catalogRevision
+  ) {
+    return undefined;
+  }
+  return block;
 }
 
 export function getCatalogBlockById(

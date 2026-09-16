@@ -18,9 +18,7 @@ describe("AI production prompts", () => {
     expect(prompt.system).toContain(
       "Output exactly 2 replacement scenes for positions 2, 4",
     );
-    expect(prompt.system).toContain(
-      "Use only these capability-mapped templates",
-    );
+    expect(prompt.system).toContain("Use only these capability IDs");
     expect(prompt.user).toContain("Existing scenes and lock state");
     expect(prompt.user).toContain("Replace only scene positions 2, 4");
   });

@@ -53,6 +53,10 @@ export function resolveProductionComposition(
     const backgroundAsset = scene.assetRefs
       .map((assetRef) => assets.get(assetRef))
       .find((asset) => asset?.type === "image" || asset?.type === "video");
+    const carouselImages = scene.assetRefs.flatMap((assetRef) => {
+      const asset = assets.get(assetRef);
+      return asset?.type === "image" ? [resolveUri(asset)] : [];
+    });
 
     return {
       id: scene.id,
@@ -71,6 +75,7 @@ export function resolveProductionComposition(
             })),
           }
         : undefined,
+      carouselImages: carouselImages.length ? carouselImages : undefined,
       role: scene.role,
       background: backgroundAsset
         ? {
@@ -119,6 +124,7 @@ export function resolveProductionComposition(
       spec.preset.id === "legacy"
         ? undefined
         : { id: spec.preset.id, version: spec.preset.version },
+    catalogRevision: spec.engine.catalogRevision,
     captions: {
       enabled: spec.captions.enabled,
       timingSource: spec.captions.timingSource,

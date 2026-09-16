@@ -373,6 +373,7 @@ async function runRemotionRender({
           : undefined,
         items: s.items,
         chart: s.chart,
+        carouselImages: s.carouselImages?.map((url) => absolute(url)!),
         role: s.role,
         // Per-scene override wins; otherwise the script-wide default.
         hideText: s.hideText ?? script.hideText,
@@ -520,6 +521,7 @@ export function prepareVideoComposition(
         : undefined,
       items: s.items,
       chart: s.chart,
+      carouselImages: s.carouselImages?.map((url) => absolute(url)!),
       role: s.role,
       // Per-scene override wins; otherwise the script-wide default.
       hideText: s.hideText ?? script.hideText,

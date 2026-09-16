@@ -25,11 +25,24 @@ with 4+ employees typically need a Remotion Company License. See
 
 ## Template IDs
 
-**HyperFrames:** classic `hf-opener`, `hf-statement`, `hf-list`, `hf-stat`, `hf-quote`, `hf-cta` plus curated catalog blocks `hf-kinetic-slam`, `hf-money-count`, `hf-data-chart`, `hf-app-showcase`, `hf-logo-outro`, `hf-ig-follow`, `hf-tt-follow`, `hf-yt-lower-third` (vendored from the HyperFrames registry; host uses `data-composition-src`)
+**HyperFrames:** classic `hf-opener`, `hf-statement`, `hf-list`, `hf-stat`,
+`hf-quote`, `hf-cta`; curated composition blocks `hf-kinetic-slam`,
+`hf-money-count`, `hf-data-chart`, `hf-app-showcase`, `hf-logo-outro`,
+`hf-ig-follow`, `hf-tt-follow`, `hf-yt-lower-third`; and native reviewed
+carousel adapters `hf-carousel-circle-v1`, `hf-carousel-path-v1`, and
+`hf-carousel-vision-v1`. Carousel scenes require at least three project image
+assets and never use the upstream demo media.
 
 **Remotion:** `kinetic`, `lottie`, `three`, `stat-reveal`, `icon-grid`, `quote-card`, `emoji-punch`
 
 Registration lives in `src/engines/` and `src/compositions/`.
+
+AI planners select stable capability IDs such as
+`remotion.template.kinetic`, `hf.template.statement`, and
+`hf.catalog.block.carousel-circle-1`. The engine registry maps each capability
+to a compatible internal template ID. This keeps provider schemas independent
+of adapter naming and lets a saved catalog revision reject capabilities that
+did not exist when the project was created.
 
 ## Production presets
 

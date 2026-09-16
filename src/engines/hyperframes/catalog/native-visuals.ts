@@ -238,7 +238,7 @@ function stageShell(
     case "stack-cards":
       return `<div ${common}>
         <div class="fx-deep"></div>
-        <div class="fx-deep-orb" aria-hidden="true"></div>
+        <div class="fx-deep-orb" data-layout-allow-overflow aria-hidden="true"></div>
         <div class="fx-grain"></div>`;
 
     case "billboard":
@@ -306,6 +306,52 @@ function recipeForTemplate(templateId: string, mood?: SceneMood): string {
 function chipHtml(speaker: string, accent: string, ink: string): string {
   if (!speaker) return "";
   return `<p class="fx-chip" style="--chip:${accent};color:${ink}">${escapeHtml(speaker)}</p>`;
+}
+
+function carouselVisual(args: {
+  scene: ReelScene;
+  pal: Palette;
+  accent: string;
+  variant: "circle" | "path" | "vision";
+}): string | null {
+  const images = [...new Set(args.scene.carouselImages ?? [])].slice(0, 12);
+  if (images.length < 3) return null;
+  const middle = (images.length - 1) / 2;
+  const cards = images
+    .map((url, index) => {
+      const unit = middle === 0 ? 0 : (index - middle) / middle;
+      const angle = (index / images.length) * Math.PI * 2 - Math.PI / 2;
+      const x =
+        args.variant === "circle"
+          ? Math.cos(angle) * 31
+          : unit * (args.variant === "path" ? 40 : 36);
+      const y =
+        args.variant === "circle"
+          ? Math.sin(angle) * 24
+          : args.variant === "path"
+            ? Math.sin(unit * Math.PI) * 13
+            : Math.abs(unit) * 10;
+      const rotation =
+        args.variant === "circle"
+          ? (angle * 180) / Math.PI + 90
+          : args.variant === "path"
+            ? unit * 13
+            : unit * -24;
+      const scale =
+        args.variant === "circle"
+          ? 0.78 + ((Math.sin(angle) + 1) / 2) * 0.28
+          : 1 - Math.abs(unit) * 0.22;
+      return `<figure class="fx-carousel-card" data-carousel-card="${index}" style="--card-x:${x.toFixed(2)};--card-y:${y.toFixed(2)};--card-rotate:${rotation.toFixed(2)}deg;--card-scale:${scale.toFixed(3)};--card-z:${Math.round(scale * 100)}"><img src="${escapeHtml(url)}" alt="" draggable="false" /></figure>`;
+    })
+    .join("");
+  return `
+    ${stageShell(args.scene.id, args.pal, "stack-cards", `fx-carousel fx-carousel-${args.variant}`)}
+      <div class="fx-carousel-copy">
+        <p class="fx-kicker" style="color:${args.accent}">GALLERY</p>
+        <div class="fx-stack" style="color:${args.pal.ink}">${lineStackHtml(args.scene.text, args.scene.emphasis, 24, "fx-line sans", 5)}</div>
+      </div>
+      <div class="fx-carousel-track" data-carousel="${args.variant}" data-card-count="${images.length}">${cards}</div>
+    </div>`;
 }
 
 /**
@@ -452,6 +498,13 @@ export function buildNativeCatalogVisual(args: {
             <div class="fx-stack" style="color:${pal.ink}">${lineStackHtml(scene.text, scene.emphasis, 14)}</div>
           </div>
         </div>`;
+
+    case "carousel-circle-1":
+      return carouselVisual({ scene, pal, accent, variant: "circle" });
+    case "carousel-path-1":
+      return carouselVisual({ scene, pal, accent, variant: "path" });
+    case "carousel-vision-1":
+      return carouselVisual({ scene, pal, accent, variant: "vision" });
 
     default:
       return null;
@@ -948,6 +1001,43 @@ export const NATIVE_CATALOG_STYLES = `
     transform: rotate(18deg);
   }
   .fx-phone-cta { padding: 14px 22px; border-radius: 999px; font-weight: 800; color: #0b0f19; }
+  .fx-carousel-copy {
+    position: absolute; z-index: 120; left: 7%; right: 7%; top: 7%;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    text-shadow: 0 3px 22px rgba(0,0,0,.7);
+  }
+  .fx-carousel-copy .fx-stack { max-width: min(86cqw, 900px); }
+  .fx-carousel-copy .fx-line-inner { font-size: clamp(25px, 3.6cqw, 48px); }
+  .fx-carousel-track { position: absolute; inset: 19% 3% 4%; perspective: 1000px; }
+  .fx-carousel-card {
+    position: absolute;
+    left: calc(50% + var(--card-x) * 1cqw);
+    top: calc(50% + var(--card-y) * 1cqh);
+    z-index: var(--card-z);
+    width: clamp(120px, 19cqw, 310px);
+    aspect-ratio: 4 / 5;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.28);
+    border-radius: clamp(14px, 2cqw, 28px);
+    background: #111;
+    box-shadow: 0 24px 54px rgba(0,0,0,.46);
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--card-rotate)) scale(var(--card-scale));
+    transform-origin: center;
+  }
+  .fx-carousel-vision .fx-carousel-card { aspect-ratio: 3 / 4; }
+  .fx-carousel-card img { width: 100%; height: 100%; display: block; object-fit: cover; }
+  @container (max-aspect-ratio: 4 / 5) {
+    .fx-carousel-copy { top: 11%; }
+    .fx-carousel-track { inset: 23% 2% 8%; }
+    .fx-carousel-card { width: clamp(112px, 27cqw, 260px); }
+  }
+  @container (min-aspect-ratio: 4 / 3) {
+    .fx-carousel-copy { top: 5%; }
+    .fx-carousel-track { inset: 26% 3% 2%; }
+    .fx-carousel-card { width: min(15cqw, 24cqh); }
+  }
   .fx-dialogue { position: relative; width: 100%; max-width: 96%; }
   .fx-dlg-quote { text-align: left; }
   .fx-dlg-list { text-align: left; }
@@ -965,7 +1055,7 @@ export function buildGsapMotionBootScript(
 <script>
 (function () {
   function revealFallback() {
-    document.querySelectorAll('.fx-line-inner, .fx-kicker, .fx-rule, .fx-logo-mark, .fx-pill, .fx-social-card, .fx-yt-bar, .fx-money-num, .fx-money-line, .fx-chart-line, .fx-chart-title, .fx-phone, .fx-chip, .fx-qmark, .fx-check-item, .fx-cta-btn, .fx-lt-plate, .fx-slash, .fx-letterbox, .fx-term-grid, .fx-chart-bars i').forEach(function (el) {
+    document.querySelectorAll('.fx-line-inner, .fx-kicker, .fx-rule, .fx-logo-mark, .fx-pill, .fx-social-card, .fx-yt-bar, .fx-money-num, .fx-money-line, .fx-chart-line, .fx-chart-title, .fx-phone, .fx-chip, .fx-qmark, .fx-check-item, .fx-cta-btn, .fx-lt-plate, .fx-slash, .fx-letterbox, .fx-term-grid, .fx-chart-bars i, .fx-carousel-card').forEach(function (el) {
       el.style.opacity = '1';
       el.style.transform = 'none';
     });
@@ -1012,6 +1102,7 @@ export function buildGsapMotionBootScript(
       var blob = stage.querySelector('.fx-social-blob');
       var shine = stage.querySelector('.fx-bill-shine');
       var deepOrb = stage.querySelector('.fx-deep-orb');
+      var carouselCards = stage.querySelectorAll('.fx-carousel-card');
 
       // Recipe-specific backgrounds
       if (recipe === 'void-slash') {
@@ -1091,6 +1182,10 @@ export function buildGsapMotionBootScript(
       });
       if (phone) tl.fromTo(phone, { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 0.1);
       if (cta) tl.fromTo(cta, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.5);
+      carouselCards.forEach(function (carouselCard, i) {
+        tl.to(carouselCard, { opacity: 1, duration: 0.32, ease: 'power2.out' }, 0.12 + i * 0.045);
+        tl.to(carouselCard, { rotation: '+=4', scale: '+=0.025', duration: 1.8, yoyo: true, repeat: 2, ease: 'sine.inOut' }, 0.55 + i * 0.03);
+      });
 
       // Ambient life after the entrance so long VO doesn't freeze into a poster.
       var holdEnd = Math.max(tl.duration(), 1.35);

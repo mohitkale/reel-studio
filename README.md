@@ -90,6 +90,9 @@ three different briefs for every preset during release acceptance.
   same versioned caption-style snapshot.
 - The catalog is pinned for reproducible saved projects. It does not
   automatically track the full upstream HyperFrames registry.
+- AI scene planning uses stable engine capability IDs. The reviewed HyperFrames
+  catalog includes three responsive carousel adapters that render only supplied
+  project images and retain the project catalog revision.
 - Reel Studio does not call generative-video APIs or run model-produced code.
 
 ## Who is this for?

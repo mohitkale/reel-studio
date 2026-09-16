@@ -227,9 +227,11 @@ function escapeHtmlText(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-const PERSONALIZERS: Record<
-  HfCatalogBlockId,
-  (html: string, ctx: CatalogPersonalizeContext) => string
+const PERSONALIZERS: Partial<
+  Record<
+    HfCatalogBlockId,
+    (html: string, ctx: CatalogPersonalizeContext) => string
+  >
 > = {
   "caption-kinetic-slam": personalizeKineticSlam,
   "apple-money-count": personalizeMoneyCount,

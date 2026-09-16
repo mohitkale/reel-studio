@@ -1,14 +1,13 @@
-import { allowedPresetTemplateIds } from "@/production/ai-preset-plan";
+import { allowedPresetCapabilityIds } from "@/production/ai-preset-plan";
+import { capabilityIdsForEngine } from "@/engines/capabilities";
 
-import { planTemplateIdsForEngine, type GeneratePlanInput } from "./types";
+import type { GeneratePlanInput } from "./types";
 
 export function buildOpenAIVideoPlanJsonSchema(input: GeneratePlanInput) {
-  const templateIds = input.productionPresetId
-    ? allowedPresetTemplateIds(
-        input.productionPresetId,
-        input.videoEngine ?? "remotion",
-      )
-    : [...planTemplateIdsForEngine(input.videoEngine)];
+  const engineId = input.videoEngine ?? "remotion";
+  const capabilityIds = input.productionPresetId
+    ? allowedPresetCapabilityIds(input.productionPresetId, engineId)
+    : capabilityIdsForEngine(engineId);
   return {
     name: "scene_plan",
     strict: true,
@@ -34,7 +33,7 @@ export function buildOpenAIVideoPlanJsonSchema(input: GeneratePlanInput) {
             properties: {
               text: { type: "string" },
               spokenText: { type: "string" },
-              templateId: { type: "string", enum: templateIds },
+              capabilityId: { type: "string", enum: capabilityIds },
               emphasis: { type: "array", items: { type: "string" } },
               visual: { type: "string" },
               items: { type: "array", items: { type: "string" } },
@@ -64,7 +63,7 @@ export function buildOpenAIVideoPlanJsonSchema(input: GeneratePlanInput) {
               },
               musicMood: { type: "string" },
             },
-            required: ["text", "templateId", "emphasis"],
+            required: ["text", "capabilityId", "emphasis"],
           },
         },
       },

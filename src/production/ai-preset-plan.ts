@@ -7,6 +7,7 @@ import {
 } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
 import { scenePlanSchema, type ScenePlan } from "@/providers/ai/types";
+import { capabilityIdForTemplateId } from "@/engines/capabilities";
 
 const MEDIA_ROLES = new Set<ProductionSceneRole>([
   "screenshot-demo",
@@ -62,6 +63,16 @@ export function allowedPresetTemplateIds(
       }),
     ),
   ];
+}
+
+export function allowedPresetCapabilityIds(
+  presetId: ProductionPresetId,
+  engineId: VideoEngineId,
+): string[] {
+  return allowedPresetTemplateIds(presetId, engineId).flatMap((templateId) => {
+    const capabilityId = capabilityIdForTemplateId(engineId, templateId);
+    return capabilityId ? [capabilityId] : [];
+  });
 }
 
 export function applyPresetToAIPlan(

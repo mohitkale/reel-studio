@@ -13,6 +13,7 @@ import type {
   PodcastClipSuggestionCandidate,
 } from "./podcast-clip-suggestions";
 import { LOCAL_AI_PROVIDER_IDS, type LocalAIProviderId } from "./local-types";
+import { templateIdForCapabilityId } from "@/engines/capabilities";
 
 /**
  * AI "director" contract. Mirrors the voice provider factory: the app talks only
@@ -81,6 +82,9 @@ export const HF_PLAN_TEMPLATE_IDS = [
   "hf-ig-follow",
   "hf-tt-follow",
   "hf-yt-lower-third",
+  "hf-carousel-circle-v1",
+  "hf-carousel-path-v1",
+  "hf-carousel-vision-v1",
 ] as const;
 
 /** Union accepted by Zod after either engine-specific schema. */
@@ -98,7 +102,7 @@ export function planTemplateIdsForEngine(
     : REMOTION_PLAN_TEMPLATE_IDS;
 }
 
-export const aiSceneSchema = z.object({
+const aiSceneTemplateSchema = z.object({
   text: z.string().min(1),
   /**
    * Longer voiceover when scriptStyle is "detailed". Omit/empty for short style
@@ -143,6 +147,15 @@ export const aiSceneSchema = z.object({
   /** Free-text music vibe (e.g. "uplifting lo-fi", "tense cinematic") for auto music suggestions. */
   musicMood: z.string().trim().max(60).optional(),
 });
+
+export const aiSceneSchema = z.preprocess((input) => {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return input;
+  const scene = input as Record<string, unknown>;
+  if (typeof scene.templateId === "string") return input;
+  if (typeof scene.capabilityId !== "string") return input;
+  const templateId = templateIdForCapabilityId(scene.capabilityId);
+  return templateId ? { ...scene, templateId } : input;
+}, aiSceneTemplateSchema);
 
 function sanitizeAiScene(scene: z.infer<typeof aiSceneSchema>): AIScene {
   const text = stripMarkdown(scene.text);
