@@ -62,6 +62,40 @@ describe("buildHyperframesCompositionHtml", () => {
     expect(html).toContain('class="em"');
   });
 
+  it("scales the editor preview from the authored landscape dimensions", () => {
+    const html = buildHyperframesCompositionHtml({
+      scenes: [
+        {
+          id: "landscape-scene",
+          templateId: "hf-statement",
+          text: "Landscape content fills the preview.",
+          emphasis: [],
+        },
+      ],
+      timeline: [
+        {
+          sceneId: "landscape-scene",
+          startFrame: 0,
+          durationFrames: 60,
+        },
+      ],
+      width: 1920,
+      height: 1080,
+      fps: 30,
+      tokens: defaultBrandTokens,
+    });
+
+    expect(html).toContain('id="fit-wrap"');
+    expect(html).toContain('data-width="1920"');
+    expect(html).toContain('data-height="1080"');
+    expect(html).toContain("Number(wrap.getAttribute('data-width'))");
+    expect(html).toContain("Number(wrap.getAttribute('data-height'))");
+    expect(html).not.toContain("Number(root.getAttribute('data-width'))");
+    expect(html).toContain(
+      "el.style.visibility = on ? 'visible' : 'hidden'",
+    );
+  });
+
   it("renders editable subtitles as a separate timed track", () => {
     const html = buildHyperframesCompositionHtml({
       scenes: [
