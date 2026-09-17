@@ -578,6 +578,7 @@ function buildSeekScript(
     for (const el of scenes) {
       const on = el.dataset.sceneId === sceneId;
       el.classList.toggle('is-active', on);
+      el.style.visibility = on ? 'visible' : 'hidden';
       if (on) {
         const p = Math.min(1, Math.max(0, localT / Math.max(0.001, duration)));
         el.style.setProperty('--p', String(p));
@@ -685,7 +686,10 @@ function buildSeekScript(
       const inCover = CFG.coverSeconds > 0 && t < CFG.coverSeconds;
       cover.classList.toggle('is-active', inCover);
       if (inCover) {
-        for (const el of scenes) el.classList.remove('is-active');
+        for (const el of scenes) {
+          el.classList.remove('is-active');
+          el.style.visibility = 'hidden';
+        }
         if (progress && !CFG.hideProgressBar) progress.style.width = '0%';
         syncAudio(t);
         return;
@@ -881,8 +885,8 @@ function buildSeekScript(
       root.style.transform = '';
       return;
     }
-    const w = Number(root.getAttribute('data-width')) || 1080;
-    const h = Number(root.getAttribute('data-height')) || 1920;
+    const w = Number(wrap.getAttribute('data-width')) || 1080;
+    const h = Number(wrap.getAttribute('data-height')) || 1920;
     const scale = Math.min(window.innerWidth / w, window.innerHeight / h);
     wrap.style.width = (w * scale) + 'px';
     wrap.style.height = (h * scale) + 'px';
@@ -980,6 +984,11 @@ export function buildHyperframesCompositionHtml(
       }
     }
 
+    const presetMetadata =
+      props.preset && scene.role
+        ? ` data-production-preset="${escapeHtml(props.preset.id)}" data-preset-version="${escapeHtml(props.preset.version)}" data-scene-role="${escapeHtml(scene.role)}"`
+        : "";
+
     const catalog = getCatalogBlockByTemplateId(
       scene.templateId,
       props.catalogRevision,
@@ -999,13 +1008,17 @@ export function buildHyperframesCompositionHtml(
         catalogRevision: props.catalogRevision,
       });
       if (built) {
-        sceneBlocks.push(built.html);
+        sceneBlocks.push(
+          presetMetadata
+            ? built.html.replace("<section ", `<section${presetMetadata} `)
+            : built.html,
+        );
         continue;
       }
     }
 
     sceneBlocks.push(`
-      <section id="scene-${escapeHtml(scene.id)}" class="clip scene ${transitionClass}${scene.background?.type === "image" || scene.background?.type === "video" ? " has-photo" : ""}" data-scene-id="${escapeHtml(scene.id)}"
+      <section${presetMetadata} id="scene-${escapeHtml(scene.id)}" class="clip scene ${transitionClass}${scene.background?.type === "image" || scene.background?.type === "video" ? " has-photo" : ""}" data-scene-id="${escapeHtml(scene.id)}"
                data-start="${absoluteStart.toFixed(3)}"
                data-duration="${duration.toFixed(3)}"
                data-track-index="1"

@@ -51,6 +51,7 @@ const TEMPLATE_MOOD: Partial<Record<string, SceneMood>> = {
   kinetic: "energetic",
   "hf-opener": "dramatic",
   "hf-statement": "energetic",
+  "hf-broll": "tech",
   "hf-list": "tech",
   "hf-stat": "dramatic",
   "hf-quote": "inspiring",
@@ -89,9 +90,9 @@ const MOOD_STOCK_QUERIES: Record<SceneMood, string[]> = {
     "open road journey",
   ],
   tech: [
-    "modern technology abstract",
-    "futuristic digital grid",
-    "sleek office glass",
+    "software engineers working together",
+    "developer coding laptop closeup",
+    "technology team meeting office",
   ],
   nature: [
     "green forest sunlight",
@@ -151,6 +152,22 @@ const STOP_WORDS = new Set([
   "wolf",
   "you",
   "your",
+  "because",
+  "careful",
+  "confidence",
+  "decision",
+  "examples",
+  "first",
+  "give",
+  "hallucination",
+  "matters",
+  "need",
+  "part",
+  "speed",
+  "test",
+  "where",
+  "word",
+  "wrong",
 ]);
 
 const PAN_EFFECTS: NonNullable<AIScene["effect"]>[] = [
@@ -193,6 +210,13 @@ function defaultBackgroundQuery(
   mood: SceneMood,
   index: number,
 ): string {
+  if (
+    /\b(?:ai|code|coding|developer|engineer|model|software|system|technology)\b/i.test(
+      scene.text,
+    )
+  ) {
+    return MOOD_STOCK_QUERIES.tech[index % MOOD_STOCK_QUERIES.tech.length];
+  }
   return (
     keywordsFromText(scene.text) ??
     MOOD_STOCK_QUERIES[mood][index % MOOD_STOCK_QUERIES[mood].length]
@@ -311,6 +335,9 @@ export function enrichScenePlan(
       ...scene,
       mood,
       backgroundQuery,
+      mediaKind:
+        scene.mediaKind ??
+        (scene.templateId === "hf-broll" ? "video" : undefined),
       effect,
     };
   });

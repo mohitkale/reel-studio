@@ -3,6 +3,7 @@ import { z } from "zod";
 import { VIDEO_ENGINE_IDS, type VideoEngineId } from "@/engines/types";
 import { defaultTemplateIdForEngine } from "@/engines/registry";
 import { ORIENTATIONS } from "@/lib/orientation";
+import { mediaPreferenceSchema } from "@/lib/media-preference";
 import { getPresetTemplateId } from "@/production/preset-template-map";
 import { resolvePresetRoles } from "@/production/ai-preset-plan";
 import {
@@ -28,6 +29,7 @@ export const manualCreationSchema = z.object({
   videoEngine: z.enum(VIDEO_ENGINE_IDS),
   brandKitId: z.string().min(1).nullable().optional(),
   voiceMode: z.enum(["oneshot", "per_scene"]).default("oneshot"),
+  mediaPreference: mediaPreferenceSchema.default("auto"),
   assetIds: z.array(z.string().min(1).max(160)).max(12).default([]),
 });
 export type ManualCreationInput = z.input<typeof manualCreationSchema>;
@@ -129,6 +131,100 @@ export function segmentSourceText(text: string): string[] {
   return capSceneCount(scenes, 20);
 }
 
+function wordCount(text: string): number {
+  return text.split(/\s+/).filter(Boolean).length;
+}
+
+function splitForShortScenes(piece: string, maxWords = 28): string[] {
+  const words = piece.split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) return [piece];
+  const chunks: string[] = [];
+  for (let index = 0; index < words.length; index += maxWords) {
+    chunks.push(words.slice(index, index + maxWords).join(" "));
+  }
+  return chunks;
+}
+
+function polishedSentenceScore(
+  sentence: string,
+  index: number,
+  total: number,
+): number {
+  const words = wordCount(sentence);
+  const position = total <= 1 ? 0 : index / (total - 1);
+  let score = words >= 8 && words <= 26 ? 4 : words <= 32 ? 2 : 0;
+  if (/[?]$/.test(sentence)) score += 1.5;
+  if (
+    /\b(?:but|because|real|important|matters?|instead|question|need|should)\b/i.test(
+      sentence,
+    )
+  ) {
+    score += 1;
+  }
+  if (/\d|%|×|\bx\b/i.test(sentence)) score += 0.5;
+  if (/[:：]\s*$/.test(sentence)) score -= 3;
+  if (index === 0) score += 2;
+  if (/^(?:it|that|these|they|this|those)\b/i.test(sentence)) score -= 2;
+  if (
+    /\b(?:ultimately|finally|judgment|takeaway|lesson|therefore)\b/i.test(
+      sentence,
+    )
+  ) {
+    score += 1;
+  }
+  if (index === total - 1) score += 2;
+  if (position < 0.08 || position > 0.9) score += 1;
+  if (words < 5) score -= 4;
+  return score;
+}
+
+/**
+ * Extract a paced short-form cut from long source material. Unlike
+ * voiceover-first mode this is intentionally selective: one strong sentence
+ * per narrative section, in source order, with short scene-sized beats.
+ */
+export function segmentPolishedVideoText(text: string): string[] {
+  const normalized = normalizeText(text);
+  const all = sentencePieces(normalized).filter(
+    (piece) => wordCount(piece) >= 3,
+  );
+  if (!all.length) return [normalized];
+
+  const sourceWords = wordCount(normalized);
+  let selected = all;
+  if (sourceWords > 180 || all.length > 12) {
+    const targetScenes = Math.min(
+      10,
+      Math.max(6, Math.round(sourceWords / 100)),
+    );
+    selected = Array.from({ length: targetScenes }, (_, bucket) => {
+      const start = Math.floor((bucket * all.length) / targetScenes);
+      const end = Math.max(
+        start + 1,
+        Math.floor(((bucket + 1) * all.length) / targetScenes),
+      );
+      return all
+        .slice(start, end)
+        .map((sentence, offset) => ({
+          sentence,
+          score: polishedSentenceScore(sentence, start + offset, all.length),
+        }))
+        .sort((a, b) => b.score - a.score)[0]!.sentence;
+    });
+  }
+
+  const deduped = selected.filter(
+    (sentence, index) =>
+      selected.findIndex(
+        (candidate) => candidate.toLowerCase() === sentence.toLowerCase(),
+      ) === index,
+  );
+  return capSceneCount(
+    deduped.flatMap((piece) => splitForShortScenes(piece)),
+    12,
+  );
+}
+
 function displayCopy(narration: string): { text: string; shortened: boolean } {
   const words = narration.split(/\s+/).filter(Boolean);
   if (words.length <= 18 && Array.from(narration).length <= 150) {
@@ -144,13 +240,17 @@ function displayCopy(narration: string): { text: string; shortened: boolean } {
 export function createDeterministicProductionPlan(args: {
   name: string;
   text: string;
+  outputType?: "video" | "voiceover";
   presetId: ProductionPresetId;
   videoEngine: VideoEngineId;
   hasVisualAsset: boolean;
 }): ManualProductionPlan {
   const preset = getProductionPreset(args.presetId);
   if (!preset) throw new Error(`Unknown production preset: ${args.presetId}`);
-  const segments = segmentSourceText(args.text);
+  const segments =
+    args.outputType === "voiceover"
+      ? segmentSourceText(args.text)
+      : segmentPolishedVideoText(args.text);
   const roles = resolvePresetRoles(args.presetId, segments.length, {
     hasVisualAsset: args.hasVisualAsset,
   });
@@ -180,14 +280,23 @@ export function createDeterministicProductionPlan(args: {
     energy: preset.defaults.energy,
     scenes,
   });
+  const condensed =
+    args.outputType !== "voiceover" &&
+    normalizeText(args.text).replace(/\s+/g, " ") !==
+      segments.join(" ").replace(/\s+/g, " ");
   return {
     plan,
     roles,
     preset: { id: preset.id, version: preset.version },
-    warnings: shortened
-      ? [
-          "Long source passages use shorter display copy; the complete wording is retained as narration.",
-        ]
-      : [],
+    warnings: [
+      ...(condensed
+        ? [
+            "The polished-video cut selects the strongest source passages for short-form pacing. Choose Voiceover-first to retain every passage.",
+          ]
+        : []),
+      ...(shortened
+        ? ["Long narration beats use shorter display copy for readability."]
+        : []),
+    ],
   };
 }

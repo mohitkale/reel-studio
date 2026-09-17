@@ -14,7 +14,9 @@ export function stripMarkdown(text: string): string {
       .replace(/~~([^~]+)~~/g, "$1")
       .replace(/`([^`]+)`/g, "$1")
       // Stray emphasis markers the model sometimes leaves behind
-      .replace(/[*_~`]/g, "")
+      .replace(/[*~`]/g, "")
+      // Keep underscores inside technical identifiers such as manual_review.
+      .replace(/(?<![\p{L}\p{N}])_|_(?![\p{L}\p{N}])/gu, "")
       .replace(/\s{2,}/g, " ")
       .trim()
   );

@@ -16,6 +16,8 @@ import {
 import { getCatalogBlockByTemplateId } from "@/engines/hyperframes/catalog/manifest";
 
 function rolesForTemplate(templateId: string): readonly ProductionSceneRole[] {
+  if (templateId === "hf-broll")
+    return ["feature", "explanation", "tip", "payoff", "hero", "summary"];
   if (templateId === "hf-statement")
     return ["explanation", "feature", "payoff", "code", "diff", "terminal"];
   if (/logo/.test(templateId)) return ["logo", "cta"];
@@ -23,7 +25,7 @@ function rolesForTemplate(templateId: string): readonly ProductionSceneRole[] {
   if (/data-chart/.test(templateId)) return ["chart", "comparison"];
   if (/^(?:hf-)?stat$|money-count/.test(templateId))
     return ["metric", "comparison", "takeaway"];
-  if (/quote/.test(templateId)) return ["quote", "testimonial"];
+  if (/quote/.test(templateId)) return ["quote", "testimonial", "comparison"];
   if (/app-showcase/.test(templateId))
     return ["screenshot-demo", "feature", "hero", "browser"];
   if (/carousel/.test(templateId))
@@ -36,6 +38,7 @@ function rolesForTemplate(templateId: string): readonly ProductionSceneRole[] {
 }
 
 function requiredInputsForTemplate(templateId: string) {
+  if (templateId === "hf-broll") return ["displayText", "asset"] as const;
   if (templateId === "hf-data-chart")
     return ["displayText", "chartData"] as const;
   if (templateId === "hf-app-showcase")
@@ -46,6 +49,8 @@ function requiredInputsForTemplate(templateId: string) {
 }
 
 function effectsForTemplate(templateId: string): readonly string[] {
+  if (templateId === "hf-broll")
+    return ["media-pan", "lower-third", "scene-transition"];
   if (/kinetic/.test(templateId)) return ["gsap-word-slam", "beat-accents"];
   if (/data-chart/.test(templateId)) return ["chart-reveal", "line-draw"];
   if (/app-showcase/.test(templateId))

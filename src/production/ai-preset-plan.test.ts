@@ -49,6 +49,15 @@ describe("AI production preset planning", () => {
     ).not.toContain("hero");
   });
 
+  it("falls back from a B-roll template when that scene has no resolved media", () => {
+    const result = applyPresetToAIPlan(plan, "product-launch", "hyperframes", {
+      hasVisualAsset: true,
+      sceneHasVisual: [false, true, false, true, false],
+    });
+
+    expect(result.plan.scenes[2]?.templateId).toBe("hf-statement");
+  });
+
   it("uses continuation roles for appended scenes and prose-safe data roles", () => {
     expect(
       resolvePresetRoles("product-launch", 4, {

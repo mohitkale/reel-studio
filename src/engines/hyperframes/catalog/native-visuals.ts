@@ -274,6 +274,7 @@ function recipeForTemplate(templateId: string, mood?: SceneMood): string {
     case "hf-quote":
       return "editorial";
     case "hf-opener":
+    case "hf-broll":
       return "lower-third";
     case "hf-statement":
       return mood === "dramatic" ? "punch-block" : "billboard";
@@ -540,6 +541,15 @@ export function buildCinematicClassicVisual(args: {
           <div class="fx-lt-plate" style="--accent:${accent}">
             ${chip}
             <div class="fx-stack opener-stack" style="color:${pal.ink}">${lineStackHtml(scene.text, scene.emphasis, 24, "fx-line sans", 5)}</div>
+          </div>
+        </div>`;
+      break;
+    case "hf-broll":
+      body = `
+        <div class="fx-dialogue fx-dlg-broll">
+          <div class="fx-lt-plate fx-broll-plate" style="--accent:${accent}">
+            <p class="fx-kicker" style="color:${accent}">B-ROLL</p>
+            <div class="fx-stack opener-stack" style="color:${pal.ink}">${lineStackHtml(scene.text, scene.emphasis, 18, "fx-line sans", 3)}</div>
           </div>
         </div>`;
       break;
@@ -1042,6 +1052,9 @@ export const NATIVE_CATALOG_STYLES = `
   .fx-dlg-quote { text-align: left; }
   .fx-dlg-list { text-align: left; }
   .fx-dlg-opener { width: 100%; display: flex; justify-content: stretch; }
+  .fx-dlg-broll { width: 100%; display: flex; align-items: flex-end; }
+  .fx-broll-plate { max-width: min(760px, 84%); }
+  .fx-broll-plate .fx-kicker { margin-bottom: 12px; }
 `;
 
 /**

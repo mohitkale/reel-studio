@@ -4,7 +4,7 @@ import http from "node:http";
 import https from "node:https";
 
 const MAX_SOURCE_BYTES = 1_000_000;
-const MAX_SOURCE_CHARS = 12_000;
+const MAX_FETCHED_SOURCE_CHARS = 50_000;
 const MAX_REDIRECTS = 4;
 
 type Address = { address: string; family: number };
@@ -252,6 +252,100 @@ function removeRepeatedSuffix(text: string): string {
   return text.slice(0, repeatedSuffixStart).trim();
 }
 
+function cleanXArticleText(text: string): string {
+  const lines = text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  // X article pages render the useful body after the author's standalone
+  // handle. Everything before it is title/navigation chrome.
+  const handleIndex = lines.findIndex((line) =>
+    /^@[A-Za-z0-9_]{1,30}$/.test(line),
+  );
+  const start = handleIndex >= 0 ? handleIndex + 1 : 0;
+  const end = lines.findIndex(
+    (line, index) =>
+      index >= start &&
+      (/^Log in or sign up for X$/i.test(line) ||
+        /^Relevant people$/i.test(line) ||
+        /^\d{1,2}:\d{2}\s*[AP]M\s*·.+·\s*[\d,.]+$/i.test(line)),
+  );
+  const article = lines
+    .slice(start, end >= 0 ? end : undefined)
+    // X can concatenate an image caption with the opening word of adjacent
+    // article copy (for example, "… Jev Jev is …"). That fragment is page
+    // presentation text, not authored narration.
+    .filter((line) => !/\b([A-Za-z][\w'-]*)\s+\1\b/i.test(line));
+  return article.join("\n").trim();
+}
+
+function cleanExtractedText(text: string, url: URL): string {
+  const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
+  if (hostname === "x.com" || hostname === "twitter.com") {
+    const cleaned = cleanXArticleText(text);
+    if (cleaned.length >= 20) return cleaned;
+  }
+  return text;
+}
+
+function isGitHubRepositoryRoot(url: URL): boolean {
+  const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
+  const segments = url.pathname.split("/").filter(Boolean);
+  return hostname === "github.com" && segments.length === 2;
+}
+
+function selectGitHubOverviewHtml(readme: string): string {
+  const headings = Array.from(readme.matchAll(/<h2\b[^>]*>[\s\S]*?<\/h2>/gi));
+  if (!headings.length) return readme;
+
+  const selected = [readme.slice(0, headings[0]!.index)];
+  const usefulHeading =
+    /\b(?:about|benefits?|capabilities|example outputs?|features?|from .+ to .+|highlights?|how it works|local vs|overview|use cases?|video engines?|what you get|who is this for|why)\b/i;
+  for (const [index, heading] of headings.entries()) {
+    const title = htmlToText(heading[0]).text;
+    if (!usefulHeading.test(title)) continue;
+    const start = heading.index;
+    const end = headings[index + 1]?.index ?? readme.length;
+    selected.push(readme.slice(start, end));
+  }
+
+  return selected.length > 1 ? selected.join("\n") : readme;
+}
+
+function moveGitHubCallToActionLast(text: string): string {
+  const lines = text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => (line.match(/·/g)?.length ?? 0) < 2);
+  const callsToAction = lines.filter((line) =>
+    /\bstar (?:this|the) (?:repo|repository)\b/i.test(line),
+  );
+  if (!callsToAction.length) return text;
+  return [
+    ...lines.filter((line) => !callsToAction.includes(line)),
+    ...callsToAction,
+  ].join("\n");
+}
+
+/**
+ * GitHub repository pages contain global navigation, file tables and footer
+ * copy around the README. Feed only the rendered README to the planner so a
+ * repository URL describes the project instead of GitHub itself.
+ */
+function extractGitHubReadme(html: string, url: URL): string | undefined {
+  if (!isGitHubRepositoryRoot(url)) return undefined;
+  const article = html.match(
+    /<article\b[^>]*class=(?:"[^"]*\bmarkdown-body\b[^"]*"|'[^']*\bmarkdown-body\b[^']*')[^>]*>([\s\S]*?)<\/article>/i,
+  )?.[1];
+  if (!article) return undefined;
+  const text = moveGitHubCallToActionLast(
+    htmlToText(selectGitHubOverviewHtml(article)).text,
+  );
+  return text.length >= 20 ? text : undefined;
+}
+
 function htmlToText(html: string): { title?: string; text: string } {
   const titleMatch = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
   const title = titleMatch?.[1]
@@ -262,6 +356,7 @@ function htmlToText(html: string): { title?: string; text: string } {
   const text = removeRepeatedSuffix(
     decodeEntities(
       html
+        .replace(/<head\b[^>]*>[\s\S]*?<\/head>/gi, " ")
         .replace(
           /<(script|style|noscript|svg|canvas)\b[^>]*>[\s\S]*?<\/\1>/gi,
           " ",
@@ -347,18 +442,25 @@ export async function ingestPublicArticle(
     const extracted = contentType.includes("text/html")
       ? htmlToText(body)
       : { text: body.trim(), title: undefined };
-    if (extracted.text.length < 20) {
+    const focusedText = contentType.includes("text/html")
+      ? extractGitHubReadme(body, current)
+      : undefined;
+    const cleanedText = cleanExtractedText(
+      focusedText ?? extracted.text,
+      current,
+    );
+    if (cleanedText.length < 20) {
       throw new Error("The page did not contain enough readable text");
     }
-    if (extracted.text.length > MAX_SOURCE_CHARS) {
+    if (cleanedText.length > MAX_FETCHED_SOURCE_CHARS) {
       throw new Error(
-        `Article contains more than ${MAX_SOURCE_CHARS.toLocaleString()} readable characters; paste the section you want to produce`,
+        `Article contains more than ${MAX_FETCHED_SOURCE_CHARS.toLocaleString()} readable characters; paste the section you want to produce`,
       );
     }
     return {
       url: current.href,
       title: extracted.title?.slice(0, 160),
-      text: extracted.text,
+      text: cleanedText,
     };
   }
   throw new Error("Article redirected too many times");

@@ -141,8 +141,8 @@ export async function resolveAutomaticSceneMedia(
       background: options.explicitBackground,
     };
   }
-  const kind = resolvePreferredMediaKind(preference, intent.mediaKind);
-  if (!kind) {
+  const preferredKind = resolvePreferredMediaKind(preference, intent.mediaKind);
+  if (!preferredKind) {
     return {
       state: "disabled",
       attemptedProviders: [],
@@ -153,7 +153,7 @@ export async function resolveAutomaticSceneMedia(
   if (!query) {
     return {
       state: "no-intent",
-      kind,
+      kind: preferredKind,
       attemptedProviders: [],
       message: "No stock search intent; using animated mood background",
     };
@@ -162,57 +162,68 @@ export async function resolveAutomaticSceneMedia(
   const deps = dependencies(options.dependencies ?? {});
   const attemptedProviders: string[] = [];
   let readyProviderCount = 0;
-  for (const providerId of STOCK_MEDIA_FALLBACK_ORDER[kind]) {
-    const provider = deps.registry.get(providerId);
-    const health = await deps.registry.health(providerId);
-    if (
-      health.status !== "ready" ||
-      !provider.capabilities.kinds.includes(kind)
-    ) {
-      continue;
-    }
-    readyProviderCount += 1;
-    attemptedProviders.push(providerId);
-    try {
-      const search = await deps.registry.search(providerId, {
-        query,
-        kind,
-        orientation,
-        perPage: Math.min(12, provider.capabilities.maxPageSize),
-      });
-      const candidate = deterministicStockCandidate(
-        search.items,
-        `${options.seed ?? query}:${providerId}:${kind}:${orientation}`,
-      );
-      if (!candidate) continue;
-      const selected = rendition(candidate);
-      const resolved = await deps.registry.resolve(
-        providerId,
-        candidate,
-        selected.id,
-      );
-      const snapshot = await deps.materialize({
-        candidate: resolved.candidate,
-        rendition: resolved.rendition,
-        termsUrl: termsUrls[providerId]!,
-        usageRequired: provider.capabilities.usageReporting,
-      });
-      return {
-        state: "selected",
-        kind,
-        providerId,
-        attemptedProviders,
-        message: `${provider.label} ${kind} selected`,
-        snapshot,
-        background: await background(snapshot, intent.effect, deps),
-      };
-    } catch {
-      // Search/resolve/download failures fall through to the next configured source.
+  const kinds: StockMediaKind[] =
+    preference === "auto" && preferredKind === "video"
+      ? ["video", "image"]
+      : [preferredKind];
+  for (const kind of kinds) {
+    for (const providerId of STOCK_MEDIA_FALLBACK_ORDER[kind]) {
+      const provider = deps.registry.get(providerId);
+      const health = await deps.registry.health(providerId);
+      if (
+        health.status !== "ready" ||
+        !provider.capabilities.kinds.includes(kind)
+      ) {
+        continue;
+      }
+      readyProviderCount += 1;
+      if (!attemptedProviders.includes(providerId)) {
+        attemptedProviders.push(providerId);
+      }
+      try {
+        const search = await deps.registry.search(providerId, {
+          query,
+          kind,
+          orientation,
+          perPage: Math.min(12, provider.capabilities.maxPageSize),
+        });
+        const candidate = deterministicStockCandidate(
+          search.items,
+          `${options.seed ?? query}:${providerId}:${kind}:${orientation}`,
+        );
+        if (!candidate) continue;
+        const selected = rendition(candidate);
+        const resolved = await deps.registry.resolve(
+          providerId,
+          candidate,
+          selected.id,
+        );
+        const snapshot = await deps.materialize({
+          candidate: resolved.candidate,
+          rendition: resolved.rendition,
+          termsUrl: termsUrls[providerId]!,
+          usageRequired: provider.capabilities.usageReporting,
+        });
+        return {
+          state: "selected",
+          kind,
+          providerId,
+          attemptedProviders,
+          message:
+            kind === preferredKind
+              ? `${provider.label} ${kind} selected`
+              : `${provider.label} ${kind} selected as automatic fallback`,
+          snapshot,
+          background: await background(snapshot, intent.effect, deps),
+        };
+      } catch {
+        // Search/resolve/download failures fall through to the next source/kind.
+      }
     }
   }
   return {
     state: readyProviderCount ? "no-result" : "no-provider",
-    kind,
+    kind: preferredKind,
     attemptedProviders,
     message: readyProviderCount
       ? "No stock result; using animated mood background"

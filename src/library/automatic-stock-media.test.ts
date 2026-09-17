@@ -11,11 +11,15 @@ import type {
   StockMediaCandidate,
 } from "@/providers/stock/schemas";
 
-function candidate(id: string): StockMediaCandidate {
+function candidate(
+  id: string,
+  providerId = "pexels",
+  kind: "image" | "video" = "image",
+): StockMediaCandidate {
   return {
-    providerId: "pexels",
+    providerId,
     providerAssetId: id,
-    kind: "image",
+    kind,
     previewUrl: `https://images.example.test/${id}-preview.jpg`,
     sourcePageUrl: `https://www.example.test/${id}`,
     creator: "Creator",
@@ -59,6 +63,57 @@ describe("automatic stock-media selection", () => {
     expect(resolvePreferredMediaKind("none", "video")).toBeNull();
     expect(resolvePreferredMediaKind("auto", "video")).toBe("video");
     expect(resolvePreferredMediaKind("auto")).toBe("image");
+  });
+
+  it("falls back from requested B-roll video to an image when Auto has no video provider", async () => {
+    const item = candidate("fallback", "unsplash", "image");
+    const registry = {
+      get: vi.fn((id: string) => ({
+        id,
+        label: id,
+        capabilities: {
+          kinds: id === "unsplash" ? ["image"] : ["image", "video"],
+          maxPageSize: 30,
+          usageReporting: false,
+        },
+      })),
+      health: vi.fn(async (id: string) => ({
+        status: id === "unsplash" ? "ready" : "unconfigured",
+      })),
+      search: vi.fn(async () => ({ items: [item] })),
+      resolve: vi.fn(async () => ({
+        candidate: item,
+        rendition: item.renderRenditions[0]!,
+      })),
+    } as unknown as StockMediaProviderRegistry;
+
+    const result = await resolveAutomaticSceneMedia(
+      { backgroundQuery: "software engineering team", mediaKind: "video" },
+      "landscape",
+      "auto",
+      {
+        dependencies: {
+          registry,
+          materialize: async () => snapshot(item),
+          getLocalAsset: async () => ({
+            id: "stock-local",
+            type: "image",
+            name: "Stock fallback",
+            url: "/media/fallback.jpg",
+            meta: null,
+            createdAt: "2026-09-15T07:00:00.000Z",
+          }),
+        },
+      },
+    );
+
+    expect(result).toMatchObject({
+      state: "selected",
+      kind: "image",
+      providerId: "unsplash",
+      background: { type: "image", url: "/media/fallback.jpg" },
+    });
+    expect(result.message).toMatch(/automatic fallback/i);
   });
 
   it("chooses the same candidate for the same bounded intent", () => {

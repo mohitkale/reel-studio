@@ -91,7 +91,37 @@ describe("public article ingestion", () => {
     expect(result.text).toContain(
       "First clear paragraph.\nSecond clear paragraph",
     );
+    expect(result.text).not.toContain("Useful & Safe");
     expect(result.text).not.toContain("ignore()");
+  });
+
+  it("keeps the X article body while removing title, login, and footer chrome", async () => {
+    const result = await ingestPublicArticle(
+      "https://x.com/creator/status/123",
+      {
+        resolveHost: publicResolver,
+        fetchPage: async () =>
+          new Response(
+            `<html><head><title>Creator on X: &quot;Duplicated teaser&quot; / X</title></head><body>
+              <nav>Article</nav><div>Log in Sign up</div>
+              <main><p>Creator Name</p><p>@creator</p>
+                <p>The actual opening belongs in the production.</p>
+                <p>Comparison image Jev Jev is rendered beside this paragraph.</p>
+                <p>The second insight should remain available too.</p>
+                <p>6:33 PM · Sep 16, 2026 · 56</p><p>Views</p>
+              </main>
+              <aside>Log in or sign up for X</aside><footer>Trending now</footer>
+            </body></html>`,
+            { headers: { "content-type": "text/html" } },
+          ),
+      },
+    );
+
+    expect(result.title).toContain("Creator on X");
+    expect(result.text).toBe(
+      "The actual opening belongs in the production.\nThe second insight should remain available too.",
+    );
+    expect(result.text).not.toMatch(/Log in|Trending|Views/);
   });
 
   it("removes an exact repeated page suffix from responsive HTML markup", async () => {
@@ -110,6 +140,48 @@ describe("public article ingestion", () => {
 
     expect(result.text.match(/Article heading\./g)).toHaveLength(1);
     expect(result.text).toContain(article.trim());
+  });
+
+  it("extracts a GitHub repository README without navigation or file-list chrome", async () => {
+    const readme = `Reel Studio turns briefs into finished local videos. ${Array.from(
+      { length: 240 },
+      (_, index) =>
+        `Capability ${index + 1} adds production-ready creator context and a distinct workflow detail.`,
+    ).join(" ")}`;
+    const result = await ingestPublicArticle(
+      "https://github.com/mohitkale/reel-studio",
+      {
+        resolveHost: publicResolver,
+        fetchPage: async () =>
+          new Response(
+            `<html><head><title>GitHub - mohitkale/reel-studio</title></head><body>
+              <nav>GitHub Copilot Pricing Sign in Sign up</nav>
+              <main><h2>Folders and files</h2><p>src prisma package.json</p>
+                <article class="markdown-body entry-content container-lg" itemprop="text">
+                  <h1>Reel Studio</h1><p>${readme}</p>
+                  <p>Quick start · Creator guide · Walkthroughs · Roadmap</p>
+                  <p>If this workflow helps, star the repository.</p>
+                  <h2>Installation and migrations</h2>
+                  <p>Run internal_database_migration before launch.</p>
+                  <h2>What you get</h2>
+                  <p>Automatic scenes, reusable voiceovers, and local rendering.</p>
+                </article>
+              </main><footer>Terms Privacy Security Status Docs</footer>
+            </body></html>`,
+            { headers: { "content-type": "text/html" } },
+          ),
+      },
+    );
+
+    expect(result.title).toBe("GitHub - mohitkale/reel-studio");
+    expect(result.text.length).toBeGreaterThan(12_000);
+    expect(result.text).toContain("Reel Studio turns briefs");
+    expect(result.text).toContain("Automatic scenes, reusable voiceovers");
+    expect(result.text).toMatch(/star the repository\.$/);
+    expect(result.text).not.toMatch(
+      /GitHub Copilot|Folders and files|Terms Privacy|internal_database_migration/,
+    );
+    expect(result.text).not.toContain("Quick start · Creator guide");
   });
 
   it("blocks a redirect into a private network", async () => {
@@ -145,12 +217,12 @@ describe("public article ingestion", () => {
     ).rejects.toThrow(/too large/i);
   });
 
-  it("rejects extracted copy beyond the planner limit instead of truncating it", async () => {
+  it("rejects fetched copy beyond the bounded page limit instead of truncating it", async () => {
     await expect(
       ingestPublicArticle("https://example.com/long", {
         resolveHost: publicResolver,
         fetchPage: async () =>
-          new Response(`Useful article ${"word ".repeat(2_500)}`, {
+          new Response(`Useful article ${"word ".repeat(10_100)}`, {
             status: 200,
             headers: { "content-type": "text/plain" },
           }),

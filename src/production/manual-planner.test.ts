@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createDeterministicProductionPlan,
+  segmentPolishedVideoText,
   segmentSourceText,
 } from "@/production/manual-planner";
 
@@ -38,6 +39,7 @@ describe("deterministic production planning", () => {
     const result = createDeterministicProductionPlan({
       name: "Readable launch",
       text: source,
+      outputType: "voiceover",
       presetId: "product-launch",
       videoEngine: "hyperframes",
       hasVisualAsset: true,
@@ -54,6 +56,48 @@ describe("deterministic production planning", () => {
     expect(
       result.plan.scenes.every((scene) => scene.templateId.startsWith("hf-")),
     ).toBe(true);
+  });
+
+  it("turns a long article into short, ordered polished-video beats", () => {
+    const source = Array.from(
+      { length: 60 },
+      (_, index) =>
+        `Insight ${index + 1} explains why reliable production decisions matter for creators and their audience.`,
+    ).join(" ");
+
+    const segments = segmentPolishedVideoText(source);
+    const result = createDeterministicProductionPlan({
+      name: "Short-form cut",
+      text: source,
+      outputType: "video",
+      presetId: "creator-punch",
+      videoEngine: "hyperframes",
+      hasVisualAsset: false,
+    });
+
+    expect(segments.length).toBeGreaterThanOrEqual(6);
+    expect(segments.length).toBeLessThanOrEqual(12);
+    expect(segments.every((segment) => segment.split(/\s+/).length <= 28)).toBe(
+      true,
+    );
+    expect(segments.join(" ")).not.toBe(source);
+    expect(result.plan.scenes).toHaveLength(segments.length);
+    expect(result.warnings.join(" ")).toMatch(/strongest source passages/i);
+  });
+
+  it("keeps the opening thesis as the polished-video hook", () => {
+    const opening =
+      "Turn a rough brief into a finished video without surrendering local control.";
+    const source = [
+      opening,
+      ...Array.from(
+        { length: 48 },
+        (_, index) =>
+          `Detail ${index + 1} explains a different reliable production capability for creators and teams.`,
+      ),
+    ].join(" ");
+
+    expect(segmentPolishedVideoText(source)[0]).toBe(opening);
   });
 
   it("uses a non-data role when prose has no structured chart values", () => {

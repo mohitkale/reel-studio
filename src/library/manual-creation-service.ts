@@ -1,6 +1,13 @@
 import type { SceneBackground } from "@/compositions/types";
 import { getAssets } from "@/library/repositories/assets";
 import { createProjectFromPlan } from "@/library/repositories/projects";
+import { getScript } from "@/library/repositories/scripts";
+import {
+  resolveAutomaticSceneMediaBatch,
+  type AutomaticMediaDecision,
+} from "@/library/automatic-stock-media";
+import { enrichScenePlan } from "@/library/enrich-scene-plan";
+import { reportStockMediaSelectionUsage } from "@/library/stock-media-usage";
 import {
   createDeterministicProductionPlan,
   manualCreationSchema,
@@ -32,6 +39,7 @@ export async function createManualProject(input: ManualCreationInput) {
   const production = createDeterministicProductionPlan({
     name: body.name || source.title || "Untitled production",
     text: source.text,
+    outputType: body.outputType,
     presetId: body.presetId,
     videoEngine: body.videoEngine,
     hasVisualAsset: visualAssets.length > 0,
@@ -55,22 +63,61 @@ export async function createManualProject(input: ManualCreationInput) {
   ) {
     assetRefs[0]!.push(visualAssets[0]!.id);
   }
-  const backgrounds: (SceneBackground | undefined)[] = assetRefs.map((refs) => {
-    const asset = refs
-      .map((id) => assets.find((candidate) => candidate.id === id))
-      .find(
-        (candidate) =>
-          candidate?.type === "image" || candidate?.type === "video",
-      );
-    if (!asset || (asset.type !== "image" && asset.type !== "video"))
-      return undefined;
-    return asset.type === "image"
-      ? { type: "image", url: asset.url, effect: "ken-burns" }
-      : { type: "video", url: asset.url, muted: true };
-  });
+  const uploadedBackgrounds: (SceneBackground | undefined)[] = assetRefs.map(
+    (refs) => {
+      const asset = refs
+        .map((id) => assets.find((candidate) => candidate.id === id))
+        .find(
+          (candidate) =>
+            candidate?.type === "image" || candidate?.type === "video",
+        );
+      if (!asset || (asset.type !== "image" && asset.type !== "video"))
+        return undefined;
+      return asset.type === "image"
+        ? { type: "image", url: asset.url, effect: "ken-burns" }
+        : { type: "video", url: asset.url, muted: true };
+    },
+  );
+
+  const enrichedPlan = {
+    ...production.plan,
+    scenes: enrichScenePlan(production.plan.scenes, body.videoEngine),
+  };
+  let mediaDecisions: AutomaticMediaDecision[] = [];
+  if (body.mediaPreference === "none") {
+    mediaDecisions = uploadedBackgrounds.map((background) => ({
+      state: background ? "explicit" : "disabled",
+      attemptedProviders: [],
+      message: background
+        ? "Existing upload or selection kept"
+        : "Stock media disabled; using animated mood background",
+      background,
+    }));
+  } else {
+    mediaDecisions = await resolveAutomaticSceneMediaBatch(
+      enrichedPlan.scenes,
+      body.orientation,
+      enrichedPlan.scenes.map(() => body.mediaPreference),
+      uploadedBackgrounds,
+    );
+  }
+  const backgrounds = mediaDecisions.map((decision) => decision.background);
+  const plan = {
+    ...enrichedPlan,
+    scenes: enrichedPlan.scenes.map((scene, index) =>
+      scene.templateId === "hf-broll" && !backgrounds[index]
+        ? {
+            ...scene,
+            templateId: "hf-statement" as const,
+            backgroundQuery: undefined,
+            mediaKind: undefined,
+          }
+        : scene,
+    ),
+  };
 
   const created = await createProjectFromPlan(
-    production.plan,
+    plan,
     body.orientation,
     backgrounds,
     body.videoEngine,
@@ -83,6 +130,8 @@ export async function createManualProject(input: ManualCreationInput) {
       preset: production.preset,
       roles: production.roles,
       assetRefs,
+      mediaPreferences: plan.scenes.map(() => body.mediaPreference),
+      stockSelections: mediaDecisions.map((decision) => decision.snapshot),
       voiceMode: body.voiceMode,
       outputType: body.outputType,
       creationSource: {
@@ -93,11 +142,31 @@ export async function createManualProject(input: ManualCreationInput) {
     },
   );
 
+  const persisted = await getScript(created.scriptId);
+  for (const scene of persisted?.scenes ?? []) {
+    await reportStockMediaSelectionUsage(scene.id).catch(() => undefined);
+  }
+
+  const requestedAutomaticMedia = enrichedPlan.scenes.some(
+    (scene) => scene.templateId === "hf-broll",
+  );
+  const automaticMediaUnavailable =
+    requestedAutomaticMedia &&
+    body.mediaPreference !== "none" &&
+    !mediaDecisions.some((decision) => decision.state === "selected");
+
   return {
     ...created,
-    plan: production.plan,
+    plan,
     preset: production.preset,
-    warnings: production.warnings,
+    warnings: [
+      ...production.warnings,
+      ...(automaticMediaUnavailable
+        ? [
+            "Automatic media was unavailable, so B-roll beats use animated layouts. Configure a stock provider or add uploads for media-led scenes.",
+          ]
+        : []),
+    ],
     source: { kind: body.source.kind, url: source.url, title: source.title },
   };
 }

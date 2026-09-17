@@ -76,6 +76,24 @@ describe("enrichScenePlan", () => {
     );
     expect(out[0].templateId).toBe("kinetic");
   });
+
+  it("turns B-roll beats into concrete video-first stock intent", () => {
+    const out = enrichScenePlan(
+      [
+        scene({
+          templateId: "hf-broll",
+          text: "Engineers review calibrated software decisions together.",
+        }),
+      ],
+      "hyperframes",
+    );
+
+    expect(out[0]).toMatchObject({
+      templateId: "hf-broll",
+      mediaKind: "video",
+      backgroundQuery: expect.any(String),
+    });
+  });
 });
 
 describe("repairDataScene", () => {

@@ -70,6 +70,7 @@ export const REMOTION_PLAN_TEMPLATE_IDS = [
 export const HF_PLAN_TEMPLATE_IDS = [
   "hf-opener",
   "hf-statement",
+  "hf-broll",
   "hf-list",
   "hf-stat",
   "hf-quote",

@@ -102,6 +102,7 @@ export async function POST(req: Request) {
         name:
           body.brief.split(/[.!?\n]/, 1)[0]?.slice(0, 80) || "Quick Produce",
         text: body.brief,
+        outputType: "video",
         presetId: body.productionPresetId,
         videoEngine,
         hasVisualAsset: false,
@@ -152,7 +153,10 @@ export async function POST(req: Request) {
       enriched,
       body.productionPresetId,
       videoEngine,
-      { hasVisualAsset: backgrounds.some(Boolean) },
+      {
+        hasVisualAsset: backgrounds.some(Boolean),
+        sceneHasVisual: backgrounds.map(Boolean),
+      },
     );
 
     const created = await createProjectFromPlan(

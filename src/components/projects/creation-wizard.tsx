@@ -31,6 +31,11 @@ import {
   type Orientation,
 } from "@/lib/orientation";
 import {
+  MEDIA_PREFERENCES,
+  MEDIA_PREFERENCE_LABELS,
+  type MediaPreference,
+} from "@/lib/media-preference";
+import {
   PRODUCTION_PRESETS,
   type ProductionPresetId,
 } from "@/production/presets";
@@ -108,6 +113,8 @@ export function CreationWizard({
   const [voiceMode, setVoiceMode] = React.useState<"oneshot" | "per_scene">(
     "oneshot",
   );
+  const [mediaPreference, setMediaPreference] =
+    React.useState<MediaPreference>("auto");
 
   const busy = create.isPending || upload.isPending;
   const contentValid =
@@ -130,6 +137,7 @@ export function CreationWizard({
     setVideoEngine(DEFAULT_VIDEO_ENGINE);
     setBrandKitId("");
     setVoiceMode("oneshot");
+    setMediaPreference("auto");
   }
 
   async function submit() {
@@ -154,6 +162,7 @@ export function CreationWizard({
         videoEngine,
         brandKitId: brandKitId || undefined,
         voiceMode,
+        mediaPreference,
         assetIds: uploaded.map((asset) => asset.id),
       });
       setOpen(false);
@@ -293,7 +302,11 @@ export function CreationWizard({
                     value={text}
                     maxLength={12_000}
                     onChange={(event) => setText(event.target.value)}
-                    placeholder="Paste a brief, finished script, article, or notes. Every passage is retained in the narration."
+                    placeholder={
+                      outputType === "voiceover"
+                        ? "Paste a finished script or article. Every passage is retained in the narration."
+                        : "Paste a brief, article, or notes. Reel Studio selects the strongest passages for short-form pacing."
+                    }
                   />
                   <p className="text-muted-foreground text-xs">
                     {text.trim().length.toLocaleString()} / 12,000 characters
@@ -441,6 +454,27 @@ export function CreationWizard({
                   </ChoiceCard>
                 </div>
               </div>
+              <div className="grid gap-2">
+                <Label htmlFor="production-media">Automatic media</Label>
+                <NativeSelect
+                  id="production-media"
+                  value={mediaPreference}
+                  onChange={(event) =>
+                    setMediaPreference(event.target.value as MediaPreference)
+                  }
+                >
+                  {MEDIA_PREFERENCES.map((value) => (
+                    <option key={value} value={value}>
+                      {MEDIA_PREFERENCE_LABELS[value]}
+                    </option>
+                  ))}
+                </NativeSelect>
+                <p className="text-muted-foreground text-xs">
+                  Auto adds relevant B-roll when a stock provider is configured;
+                  uploads always win. If no result is available, Reel Studio
+                  uses an animated layout.
+                </p>
+              </div>
               <div className="bg-muted/30 rounded-xl border p-4 text-sm">
                 <p className="font-medium">Ready to build locally</p>
                 <p className="text-muted-foreground mt-1">
@@ -452,9 +486,10 @@ export function CreationWizard({
                   {ORIENTATION_LABELS[orientation]}
                 </p>
                 <p className="text-muted-foreground mt-2 text-xs">
-                  The planner creates readable display copy while retaining full
-                  source passages as narration. You can edit every scene
-                  afterward.
+                  {outputType === "voiceover"
+                    ? "The planner preserves every source passage as narration and builds readable visual beats around it."
+                    : "The planner selects a concise short-form cut, varies visual beats, and adds relevant media when available."}{" "}
+                  You can edit every scene afterward.
                 </p>
               </div>
             </div>
