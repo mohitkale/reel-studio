@@ -24,6 +24,14 @@ const CLASSIC_HF_TEMPLATES: EngineTemplateMeta[] = [
     sampleEmphasis: ["Clarity"],
   },
   {
+    id: "hf-broll",
+    name: "B-roll story",
+    description:
+      "Full-bleed image or video with a restrained lower-third for visual-first storytelling.",
+    sampleText: "Show the idea in motion, then let one clear line land.",
+    sampleEmphasis: ["one clear line"],
+  },
+  {
     id: "hf-list",
     name: "Paced list",
     description: "Numbered vertical stack that ticks in one beat at a time.",

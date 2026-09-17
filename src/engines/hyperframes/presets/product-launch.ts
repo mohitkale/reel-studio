@@ -92,6 +92,17 @@ export function buildProductLaunchScene(args: {
 }): string | null {
   const { scene, tokens } = args;
   if (!scene.role) return null;
+  // These templates are deliberate visual units. Let the general HyperFrames
+  // renderer honor them instead of flattening them into the preset's shared
+  // feature/comparison card.
+  if (
+    scene.templateId === "hf-broll" ||
+    scene.templateId === "hf-quote" ||
+    scene.templateId === "hf-kinetic-slam" ||
+    scene.templateId === "hf-logo-outro"
+  ) {
+    return null;
+  }
   const role = scene.role;
   const recipe =
     role === "screenshot-demo"

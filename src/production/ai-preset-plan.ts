@@ -55,7 +55,7 @@ export function allowedPresetTemplateIds(
 ): string[] {
   const preset = getProductionPreset(presetId);
   if (!preset) return [defaultTemplateIdForEngine(engineId)];
-  return [
+  const ids = [
     ...new Set(
       preset.sceneRoles.flatMap((role) => {
         const templateId = getPresetTemplateId({ presetId, engineId, role });
@@ -63,6 +63,10 @@ export function allowedPresetTemplateIds(
       }),
     ),
   ];
+  if (engineId === "hyperframes" && ids.includes("hf-broll")) {
+    ids.push("hf-statement");
+  }
+  return ids;
 }
 
 export function allowedPresetCapabilityIds(
@@ -79,19 +83,29 @@ export function applyPresetToAIPlan(
   plan: ScenePlan,
   presetId: ProductionPresetId,
   engineId: VideoEngineId,
-  options: { hasVisualAsset?: boolean; continuation?: boolean } = {},
+  options: {
+    hasVisualAsset?: boolean;
+    sceneHasVisual?: boolean[];
+    continuation?: boolean;
+  } = {},
 ): { plan: ScenePlan; roles: ProductionSceneRole[] } {
   const roles = resolvePresetRoles(presetId, plan.scenes.length, options);
   return {
     roles,
     plan: scenePlanSchema.parse({
       ...plan,
-      scenes: plan.scenes.map((scene, index) => ({
-        ...scene,
-        templateId:
+      scenes: plan.scenes.map((scene, index) => {
+        const mapped =
           getPresetTemplateId({ presetId, engineId, role: roles[index]! }) ??
-          defaultTemplateIdForEngine(engineId),
-      })),
+          defaultTemplateIdForEngine(engineId);
+        return {
+          ...scene,
+          templateId:
+            mapped === "hf-broll" && options.sceneHasVisual?.[index] === false
+              ? "hf-statement"
+              : mapped,
+        };
+      }),
     }),
   };
 }

@@ -7,7 +7,7 @@ import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 /** Create an editable production from supplied content without an AI provider. */
 export async function POST(req: Request) {

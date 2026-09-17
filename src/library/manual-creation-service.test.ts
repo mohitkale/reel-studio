@@ -1,17 +1,32 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getAssets, createProjectFromPlan, ingestPublicArticle } = vi.hoisted(
-  () => ({
-    getAssets: vi.fn(),
-    createProjectFromPlan: vi.fn(),
-    ingestPublicArticle: vi.fn(),
-  }),
-);
+const {
+  getAssets,
+  createProjectFromPlan,
+  ingestPublicArticle,
+  resolveAutomaticSceneMediaBatch,
+  getScript,
+  reportStockMediaSelectionUsage,
+} = vi.hoisted(() => ({
+  getAssets: vi.fn(),
+  createProjectFromPlan: vi.fn(),
+  ingestPublicArticle: vi.fn(),
+  resolveAutomaticSceneMediaBatch: vi.fn(),
+  getScript: vi.fn(),
+  reportStockMediaSelectionUsage: vi.fn(),
+}));
 
 vi.mock("@/library/repositories/assets", () => ({ getAssets }));
 vi.mock("@/library/repositories/projects", () => ({ createProjectFromPlan }));
 vi.mock("@/production/source-ingestion", () => ({ ingestPublicArticle }));
+vi.mock("@/library/automatic-stock-media", () => ({
+  resolveAutomaticSceneMediaBatch,
+}));
+vi.mock("@/library/repositories/scripts", () => ({ getScript }));
+vi.mock("@/library/stock-media-usage", () => ({
+  reportStockMediaSelectionUsage,
+}));
 
 import { createManualProject } from "@/library/manual-creation-service";
 
@@ -22,6 +37,22 @@ describe("manual creation service", () => {
       projectId: "project-1",
       scriptId: "script-1",
     });
+    resolveAutomaticSceneMediaBatch.mockImplementation(
+      async (
+        scenes: unknown[],
+        _orientation: unknown,
+        _preferences: unknown,
+        backgrounds: unknown[] = [],
+      ) =>
+        scenes.map((_, index) => ({
+          state: backgrounds[index] ? "explicit" : "no-provider",
+          attemptedProviders: [],
+          message: backgrounds[index] ? "Upload kept" : "No provider",
+          background: backgrounds[index],
+        })),
+    );
+    getScript.mockResolvedValue({ scenes: [] });
+    reportStockMediaSelectionUsage.mockResolvedValue(undefined);
   });
 
   it("persists preset, roles, brand, voice mode, and uploaded media", async () => {
@@ -51,6 +82,7 @@ describe("manual creation service", () => {
       videoEngine: "hyperframes",
       brandKitId: "brand-1",
       voiceMode: "per_scene",
+      mediaPreference: "auto",
       assetIds: ["image-1"],
     });
 
@@ -67,6 +99,7 @@ describe("manual creation service", () => {
       brandKitId: "brand-1",
       preset: { id: "product-launch", version: "1.0.0" },
       voiceMode: "per_scene",
+      mediaPreferences: expect.arrayContaining(["auto"]),
       creationSource: { kind: "text", assetIds: ["image-1"] },
     });
     expect(call[5].roles).toContain("screenshot-demo");

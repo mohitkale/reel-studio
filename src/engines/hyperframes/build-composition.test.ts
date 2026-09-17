@@ -91,9 +91,56 @@ describe("buildHyperframesCompositionHtml", () => {
     expect(html).toContain("Number(wrap.getAttribute('data-width'))");
     expect(html).toContain("Number(wrap.getAttribute('data-height'))");
     expect(html).not.toContain("Number(root.getAttribute('data-width'))");
-    expect(html).toContain(
-      "el.style.visibility = on ? 'visible' : 'hidden'",
-    );
+    expect(html).toContain("el.style.visibility = on ? 'visible' : 'hidden'");
+  });
+
+  it("honors catalog and B-roll templates instead of flattening preset scenes", () => {
+    const html = buildHyperframesCompositionHtml({
+      scenes: [
+        {
+          id: "hook",
+          role: "hook",
+          templateId: "hf-kinetic-slam",
+          text: "The speed headline is not the real story.",
+          emphasis: ["real story"],
+        },
+        {
+          id: "broll",
+          role: "feature",
+          templateId: "hf-broll",
+          text: "Software teams need calibrated decisions.",
+          emphasis: [],
+          background: {
+            type: "image",
+            url: "/media/team.jpg",
+            effect: "ken-burns",
+          },
+        },
+        {
+          id: "contrast",
+          role: "comparison",
+          templateId: "hf-quote",
+          text: "Valid typed output can still be the wrong decision.",
+          emphasis: [],
+        },
+      ],
+      timeline: [
+        { sceneId: "hook", startFrame: 0, durationFrames: 120 },
+        { sceneId: "broll", startFrame: 120, durationFrames: 120 },
+        { sceneId: "contrast", startFrame: 240, durationFrames: 120 },
+      ],
+      width: 1920,
+      height: 1080,
+      fps: 30,
+      tokens: defaultBrandTokens,
+      preset: { id: "product-launch", version: "1.0.0" },
+    });
+
+    expect(html).toContain('data-catalog-block="caption-kinetic-slam"');
+    expect(html).toContain("fx-dlg-broll");
+    expect(html).toContain("bg-photo");
+    expect(html).toContain("fx-dlg-quote");
+    expect(html).not.toContain("product-launch-scene");
   });
 
   it("renders editable subtitles as a separate timed track", () => {

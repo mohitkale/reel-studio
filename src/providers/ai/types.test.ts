@@ -56,6 +56,12 @@ describe("stripMarkdown", () => {
   it("removes bold markdown", () => {
     expect(stripMarkdown("**Strong** claim")).toBe("Strong claim");
   });
+
+  it("preserves underscores inside technical identifiers", () => {
+    expect(stripMarkdown("Return manual_review with high confidence.")).toBe(
+      "Return manual_review with high confidence.",
+    );
+  });
 });
 
 describe("scenePlanSchema markdown sanitization", () => {

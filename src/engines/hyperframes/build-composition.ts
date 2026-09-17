@@ -984,6 +984,11 @@ export function buildHyperframesCompositionHtml(
       }
     }
 
+    const presetMetadata =
+      props.preset && scene.role
+        ? ` data-production-preset="${escapeHtml(props.preset.id)}" data-preset-version="${escapeHtml(props.preset.version)}" data-scene-role="${escapeHtml(scene.role)}"`
+        : "";
+
     const catalog = getCatalogBlockByTemplateId(
       scene.templateId,
       props.catalogRevision,
@@ -1003,13 +1008,17 @@ export function buildHyperframesCompositionHtml(
         catalogRevision: props.catalogRevision,
       });
       if (built) {
-        sceneBlocks.push(built.html);
+        sceneBlocks.push(
+          presetMetadata
+            ? built.html.replace("<section ", `<section${presetMetadata} `)
+            : built.html,
+        );
         continue;
       }
     }
 
     sceneBlocks.push(`
-      <section id="scene-${escapeHtml(scene.id)}" class="clip scene ${transitionClass}${scene.background?.type === "image" || scene.background?.type === "video" ? " has-photo" : ""}" data-scene-id="${escapeHtml(scene.id)}"
+      <section${presetMetadata} id="scene-${escapeHtml(scene.id)}" class="clip scene ${transitionClass}${scene.background?.type === "image" || scene.background?.type === "video" ? " has-photo" : ""}" data-scene-id="${escapeHtml(scene.id)}"
                data-start="${absoluteStart.toFixed(3)}"
                data-duration="${duration.toFixed(3)}"
                data-track-index="1"

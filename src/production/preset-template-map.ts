@@ -19,8 +19,8 @@ export const PRESET_TEMPLATE_MAP: PresetTemplateMap = {
     hyperframes: {
       hook: "hf-kinetic-slam",
       "screenshot-demo": "hf-app-showcase",
-      feature: "hf-list",
-      comparison: "hf-list",
+      feature: "hf-broll",
+      comparison: "hf-quote",
       cta: "hf-logo-outro",
     },
     remotion: {
@@ -34,7 +34,7 @@ export const PRESET_TEMPLATE_MAP: PresetTemplateMap = {
   "editorial-explainer": {
     hyperframes: {
       headline: "hf-opener",
-      explanation: "hf-statement",
+      explanation: "hf-broll",
       diagram: "hf-list",
       quote: "hf-quote",
       summary: "hf-list",
@@ -50,7 +50,7 @@ export const PRESET_TEMPLATE_MAP: PresetTemplateMap = {
   "creator-punch": {
     hyperframes: {
       hook: "hf-kinetic-slam",
-      tip: "hf-list",
+      tip: "hf-broll",
       emphasis: "hf-kinetic-slam",
       payoff: "hf-statement",
       cta: "hf-logo-outro",
@@ -96,7 +96,7 @@ export const PRESET_TEMPLATE_MAP: PresetTemplateMap = {
   "cinematic-brand": {
     hyperframes: {
       hero: "hf-app-showcase",
-      feature: "hf-list",
+      feature: "hf-broll",
       testimonial: "hf-quote",
       logo: "hf-logo-outro",
     },

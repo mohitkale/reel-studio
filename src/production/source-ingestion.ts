@@ -252,6 +252,43 @@ function removeRepeatedSuffix(text: string): string {
   return text.slice(0, repeatedSuffixStart).trim();
 }
 
+function cleanXArticleText(text: string): string {
+  const lines = text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  // X article pages render the useful body after the author's standalone
+  // handle. Everything before it is title/navigation chrome.
+  const handleIndex = lines.findIndex((line) =>
+    /^@[A-Za-z0-9_]{1,30}$/.test(line),
+  );
+  const start = handleIndex >= 0 ? handleIndex + 1 : 0;
+  const end = lines.findIndex(
+    (line, index) =>
+      index >= start &&
+      (/^Log in or sign up for X$/i.test(line) ||
+        /^Relevant people$/i.test(line) ||
+        /^\d{1,2}:\d{2}\s*[AP]M\s*·.+·\s*[\d,.]+$/i.test(line)),
+  );
+  const article = lines
+    .slice(start, end >= 0 ? end : undefined)
+    // X can concatenate an image caption with the opening word of adjacent
+    // article copy (for example, "… Jev Jev is …"). That fragment is page
+    // presentation text, not authored narration.
+    .filter((line) => !/\b([A-Za-z][\w'-]*)\s+\1\b/i.test(line));
+  return article.join("\n").trim();
+}
+
+function cleanExtractedText(text: string, url: URL): string {
+  const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
+  if (hostname === "x.com" || hostname === "twitter.com") {
+    const cleaned = cleanXArticleText(text);
+    if (cleaned.length >= 20) return cleaned;
+  }
+  return text;
+}
+
 function htmlToText(html: string): { title?: string; text: string } {
   const titleMatch = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
   const title = titleMatch?.[1]
@@ -262,6 +299,7 @@ function htmlToText(html: string): { title?: string; text: string } {
   const text = removeRepeatedSuffix(
     decodeEntities(
       html
+        .replace(/<head\b[^>]*>[\s\S]*?<\/head>/gi, " ")
         .replace(
           /<(script|style|noscript|svg|canvas)\b[^>]*>[\s\S]*?<\/\1>/gi,
           " ",
@@ -347,10 +385,11 @@ export async function ingestPublicArticle(
     const extracted = contentType.includes("text/html")
       ? htmlToText(body)
       : { text: body.trim(), title: undefined };
-    if (extracted.text.length < 20) {
+    const cleanedText = cleanExtractedText(extracted.text, current);
+    if (cleanedText.length < 20) {
       throw new Error("The page did not contain enough readable text");
     }
-    if (extracted.text.length > MAX_SOURCE_CHARS) {
+    if (cleanedText.length > MAX_SOURCE_CHARS) {
       throw new Error(
         `Article contains more than ${MAX_SOURCE_CHARS.toLocaleString()} readable characters; paste the section you want to produce`,
       );
@@ -358,7 +397,7 @@ export async function ingestPublicArticle(
     return {
       url: current.href,
       title: extracted.title?.slice(0, 160),
-      text: extracted.text,
+      text: cleanedText,
     };
   }
   throw new Error("Article redirected too many times");

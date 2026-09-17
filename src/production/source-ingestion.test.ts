@@ -91,7 +91,37 @@ describe("public article ingestion", () => {
     expect(result.text).toContain(
       "First clear paragraph.\nSecond clear paragraph",
     );
+    expect(result.text).not.toContain("Useful & Safe");
     expect(result.text).not.toContain("ignore()");
+  });
+
+  it("keeps the X article body while removing title, login, and footer chrome", async () => {
+    const result = await ingestPublicArticle(
+      "https://x.com/creator/status/123",
+      {
+        resolveHost: publicResolver,
+        fetchPage: async () =>
+          new Response(
+            `<html><head><title>Creator on X: &quot;Duplicated teaser&quot; / X</title></head><body>
+              <nav>Article</nav><div>Log in Sign up</div>
+              <main><p>Creator Name</p><p>@creator</p>
+                <p>The actual opening belongs in the production.</p>
+                <p>Comparison image Jev Jev is rendered beside this paragraph.</p>
+                <p>The second insight should remain available too.</p>
+                <p>6:33 PM · Sep 16, 2026 · 56</p><p>Views</p>
+              </main>
+              <aside>Log in or sign up for X</aside><footer>Trending now</footer>
+            </body></html>`,
+            { headers: { "content-type": "text/html" } },
+          ),
+      },
+    );
+
+    expect(result.title).toContain("Creator on X");
+    expect(result.text).toBe(
+      "The actual opening belongs in the production.\nThe second insight should remain available too.",
+    );
+    expect(result.text).not.toMatch(/Log in|Trending|Views/);
   });
 
   it("removes an exact repeated page suffix from responsive HTML markup", async () => {
