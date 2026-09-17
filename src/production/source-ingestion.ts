@@ -4,7 +4,7 @@ import http from "node:http";
 import https from "node:https";
 
 const MAX_SOURCE_BYTES = 1_000_000;
-const MAX_SOURCE_CHARS = 12_000;
+const MAX_FETCHED_SOURCE_CHARS = 50_000;
 const MAX_REDIRECTS = 4;
 
 type Address = { address: string; family: number };
@@ -289,6 +289,63 @@ function cleanExtractedText(text: string, url: URL): string {
   return text;
 }
 
+function isGitHubRepositoryRoot(url: URL): boolean {
+  const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
+  const segments = url.pathname.split("/").filter(Boolean);
+  return hostname === "github.com" && segments.length === 2;
+}
+
+function selectGitHubOverviewHtml(readme: string): string {
+  const headings = Array.from(readme.matchAll(/<h2\b[^>]*>[\s\S]*?<\/h2>/gi));
+  if (!headings.length) return readme;
+
+  const selected = [readme.slice(0, headings[0]!.index)];
+  const usefulHeading =
+    /\b(?:about|benefits?|capabilities|example outputs?|features?|from .+ to .+|highlights?|how it works|local vs|overview|use cases?|video engines?|what you get|who is this for|why)\b/i;
+  for (const [index, heading] of headings.entries()) {
+    const title = htmlToText(heading[0]).text;
+    if (!usefulHeading.test(title)) continue;
+    const start = heading.index;
+    const end = headings[index + 1]?.index ?? readme.length;
+    selected.push(readme.slice(start, end));
+  }
+
+  return selected.length > 1 ? selected.join("\n") : readme;
+}
+
+function moveGitHubCallToActionLast(text: string): string {
+  const lines = text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => (line.match(/·/g)?.length ?? 0) < 2);
+  const callsToAction = lines.filter((line) =>
+    /\bstar (?:this|the) (?:repo|repository)\b/i.test(line),
+  );
+  if (!callsToAction.length) return text;
+  return [
+    ...lines.filter((line) => !callsToAction.includes(line)),
+    ...callsToAction,
+  ].join("\n");
+}
+
+/**
+ * GitHub repository pages contain global navigation, file tables and footer
+ * copy around the README. Feed only the rendered README to the planner so a
+ * repository URL describes the project instead of GitHub itself.
+ */
+function extractGitHubReadme(html: string, url: URL): string | undefined {
+  if (!isGitHubRepositoryRoot(url)) return undefined;
+  const article = html.match(
+    /<article\b[^>]*class=(?:"[^"]*\bmarkdown-body\b[^"]*"|'[^']*\bmarkdown-body\b[^']*')[^>]*>([\s\S]*?)<\/article>/i,
+  )?.[1];
+  if (!article) return undefined;
+  const text = moveGitHubCallToActionLast(
+    htmlToText(selectGitHubOverviewHtml(article)).text,
+  );
+  return text.length >= 20 ? text : undefined;
+}
+
 function htmlToText(html: string): { title?: string; text: string } {
   const titleMatch = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
   const title = titleMatch?.[1]
@@ -385,13 +442,19 @@ export async function ingestPublicArticle(
     const extracted = contentType.includes("text/html")
       ? htmlToText(body)
       : { text: body.trim(), title: undefined };
-    const cleanedText = cleanExtractedText(extracted.text, current);
+    const focusedText = contentType.includes("text/html")
+      ? extractGitHubReadme(body, current)
+      : undefined;
+    const cleanedText = cleanExtractedText(
+      focusedText ?? extracted.text,
+      current,
+    );
     if (cleanedText.length < 20) {
       throw new Error("The page did not contain enough readable text");
     }
-    if (cleanedText.length > MAX_SOURCE_CHARS) {
+    if (cleanedText.length > MAX_FETCHED_SOURCE_CHARS) {
       throw new Error(
-        `Article contains more than ${MAX_SOURCE_CHARS.toLocaleString()} readable characters; paste the section you want to produce`,
+        `Article contains more than ${MAX_FETCHED_SOURCE_CHARS.toLocaleString()} readable characters; paste the section you want to produce`,
       );
     }
     return {

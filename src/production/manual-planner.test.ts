@@ -85,6 +85,21 @@ describe("deterministic production planning", () => {
     expect(result.warnings.join(" ")).toMatch(/strongest source passages/i);
   });
 
+  it("keeps the opening thesis as the polished-video hook", () => {
+    const opening =
+      "Turn a rough brief into a finished video without surrendering local control.";
+    const source = [
+      opening,
+      ...Array.from(
+        { length: 48 },
+        (_, index) =>
+          `Detail ${index + 1} explains a different reliable production capability for creators and teams.`,
+      ),
+    ].join(" ");
+
+    expect(segmentPolishedVideoText(source)[0]).toBe(opening);
+  });
+
   it("uses a non-data role when prose has no structured chart values", () => {
     const result = createDeterministicProductionPlan({
       name: "Plain-language finding",

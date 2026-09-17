@@ -163,6 +163,7 @@ function polishedSentenceScore(
   }
   if (/\d|%|×|\bx\b/i.test(sentence)) score += 0.5;
   if (/[:：]\s*$/.test(sentence)) score -= 3;
+  if (index === 0) score += 2;
   if (/^(?:it|that|these|they|this|those)\b/i.test(sentence)) score -= 2;
   if (
     /\b(?:ultimately|finally|judgment|takeaway|lesson|therefore)\b/i.test(
