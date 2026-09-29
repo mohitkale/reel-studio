@@ -29,6 +29,13 @@ import { AssetThumbPicker } from "@/components/assets/asset-thumb-picker";
 import { StockMediaPicker } from "@/components/editor/stock-media-picker";
 import type { Orientation } from "@/lib/orientation";
 import {
+  TYPE_MOTION_RECIPES,
+  motionDirection,
+  resolveMotionDirection,
+  type MotionDirection,
+  type MotionRecipeId,
+} from "@/production/motion";
+import {
   MEDIA_PREFERENCES,
   MEDIA_PREFERENCE_LABELS,
   type MediaPreference,
@@ -81,6 +88,7 @@ type UpdateVars = {
   items?: string[] | null;
   hideText?: boolean | null;
   locks?: { copy: boolean; assets: boolean; scene: boolean };
+  motion?: MotionDirection | null;
 };
 
 /**
@@ -545,6 +553,15 @@ export function SceneInspector({
   const templates = engine.listTemplates();
   const normalId = engine.normalizeTemplateId(scene.templateId);
   const isChecklist = normalId === "icon-grid" || normalId === "hf-list";
+  const motionEligible = Boolean(scene.text.trim()) || Boolean(scene.motion);
+  const motionOptions = [
+    { value: "preset", label: "Preset look" },
+    ...TYPE_MOTION_RECIPES.filter(
+      (recipe) =>
+        Array.from(scene.text).length <= recipe.maxCharacters ||
+        recipe.id === scene.motion?.recipeId,
+    ).map((recipe) => ({ value: recipe.id, label: recipe.name })),
+  ];
 
   function commitText() {
     if (text !== scene.text) {
@@ -696,7 +713,9 @@ export function SceneInspector({
           <Combobox
             id="scene-template"
             value={normalId}
-            onChange={(v) => onUpdate({ id: scene.id, templateId: v })}
+            onChange={(v) =>
+              onUpdate({ id: scene.id, templateId: v, motion: null })
+            }
             options={templates.map((t) => ({ value: t.id, label: t.name }))}
             searchPlaceholder="Search templates…"
           />
@@ -704,6 +723,36 @@ export function SceneInspector({
             {templates.find((t) => t.id === normalId)?.description}
           </p>
         </div>
+
+        {motionEligible && (
+          <div className="grid gap-2">
+            <Label htmlFor="scene-motion">Motion treatment</Label>
+            <Combobox
+              id="scene-motion"
+              value={scene.motion?.recipeId ?? "preset"}
+              onChange={(value) =>
+                onUpdate({
+                  id: scene.id,
+                  motion:
+                    value === "preset"
+                      ? null
+                      : motionDirection(value as MotionRecipeId),
+                })
+              }
+              options={motionOptions}
+              searchPlaceholder="Search treatments…"
+            />
+            <p className="text-muted-foreground text-xs">
+              {scene.motion
+                ? resolveMotionDirection(scene.motion, scene.text)
+                  ? TYPE_MOTION_RECIPES.find(
+                      (recipe) => recipe.id === scene.motion?.recipeId,
+                    )?.description
+                  : "Copy is too long for this treatment; the preset look renders until you shorten it or choose another treatment."
+                : "Uses this production preset's original scene design."}
+            </p>
+          </div>
+        )}
 
         {isChecklist && (
           <ChecklistEditor

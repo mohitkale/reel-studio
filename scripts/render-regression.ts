@@ -29,6 +29,10 @@ import {
   type Orientation,
 } from "../src/lib/orientation";
 import { CURRENT_HF_CATALOG_REVISION } from "../src/engines/hyperframes/catalog/revisions";
+import {
+  motionDirection,
+  motionRecipeIdSchema,
+} from "../src/production/motion";
 
 async function main() {
   const run = promisify(execFile);
@@ -38,6 +42,10 @@ async function main() {
   const briefIndexArg = args.find((arg) => arg.startsWith("--brief-index="));
   const renderStockVideo = args.includes("--stock-video");
   const renderCarousel = args.includes("--carousel");
+  const motionArg = args.find((arg) => arg.startsWith("--motion-recipe="));
+  const motionRecipeId = motionArg
+    ? motionRecipeIdSchema.parse(motionArg.slice("--motion-recipe=".length))
+    : undefined;
   const briefIndex = briefIndexArg
     ? Number(briefIndexArg.slice("--brief-index=".length))
     : undefined;
@@ -73,7 +81,7 @@ async function main() {
   if (briefIndex !== undefined && !presetId) {
     throw new Error("Release brief renders require --preset");
   }
-  const renderPreset = Boolean(presetId);
+  const renderPreset = Boolean(presetId || motionRecipeId);
   const renderProductLaunch = presetId === "product-launch";
   const renderDeveloperDemo = presetId === "developer-demo";
   const renderCinematicBrand = presetId === "cinematic-brand";
@@ -84,7 +92,7 @@ async function main() {
           ? "stock-video"
           : renderCarousel
             ? "carousel"
-            : (presetId ?? "legacy"),
+            : (motionRecipeId ?? presetId ?? "legacy"),
         ...(briefIndex === undefined ? [] : [`brief-${briefIndex + 1}`]),
         orientation,
       )
@@ -94,7 +102,7 @@ async function main() {
           ? "stock-video"
           : renderCarousel
             ? "carousel"
-            : (presetId ?? "legacy"),
+            : (motionRecipeId ?? presetId ?? "legacy"),
       );
   await mkdir(output, { recursive: true });
   const stockVideoSource = path.join(output, "stock-video-source.mp4");
@@ -182,60 +190,82 @@ async function main() {
         ),
       )
     : undefined;
-  const selectedFixture = renderCarousel
+  const selectedFixture = motionRecipeId
     ? {
         ...(fixture as ReelProps),
         scenes: [
           {
-            id: "carousel-circle-regression",
-            templateId: "hf-carousel-circle-v1",
-            text: "Supplied images orbit in a responsive circle.",
-            emphasis: ["responsive circle"],
-            carouselImages,
-            mood: "tech",
-          },
-          {
-            id: "carousel-path-regression",
-            templateId: "hf-carousel-path-v1",
-            text: "A local image path stays deterministic.",
-            emphasis: ["deterministic"],
-            carouselImages,
-            mood: "tech",
-          },
-          {
-            id: "carousel-vision-regression",
-            templateId: "hf-carousel-vision-v1",
-            text: "Project media becomes a cinematic gallery.",
-            emphasis: ["cinematic gallery"],
-            carouselImages,
-            mood: "tech",
+            id: "motion-regression",
+            templateId: "hf-opener",
+            role: "hook" as const,
+            motion: motionDirection(motionRecipeId),
+            text: "Make every moment matter.",
+            emphasis: ["matter"],
+            order: 0,
           },
         ],
         timeline: [
-          {
-            sceneId: "carousel-circle-regression",
-            startFrame: 0,
-            durationFrames: 60,
-          },
-          {
-            sceneId: "carousel-path-regression",
-            startFrame: 60,
-            durationFrames: 60,
-          },
-          {
-            sceneId: "carousel-vision-regression",
-            startFrame: 120,
-            durationFrames: 60,
-          },
+          { sceneId: "motion-regression", startFrame: 0, durationFrames: 90 },
         ],
+        preset: { id: "creator-punch" as const, version: "1.0.0" },
         audioUrl: undefined,
         musicUrl: undefined,
         sfxCues: [],
-        catalogRevision: CURRENT_HF_CATALOG_REVISION,
       }
-    : presetId
-      ? presetFixtures[presetId]
-      : fixture;
+    : renderCarousel
+      ? {
+          ...(fixture as ReelProps),
+          scenes: [
+            {
+              id: "carousel-circle-regression",
+              templateId: "hf-carousel-circle-v1",
+              text: "Supplied images orbit in a responsive circle.",
+              emphasis: ["responsive circle"],
+              carouselImages,
+              mood: "tech",
+            },
+            {
+              id: "carousel-path-regression",
+              templateId: "hf-carousel-path-v1",
+              text: "A local image path stays deterministic.",
+              emphasis: ["deterministic"],
+              carouselImages,
+              mood: "tech",
+            },
+            {
+              id: "carousel-vision-regression",
+              templateId: "hf-carousel-vision-v1",
+              text: "Project media becomes a cinematic gallery.",
+              emphasis: ["cinematic gallery"],
+              carouselImages,
+              mood: "tech",
+            },
+          ],
+          timeline: [
+            {
+              sceneId: "carousel-circle-regression",
+              startFrame: 0,
+              durationFrames: 60,
+            },
+            {
+              sceneId: "carousel-path-regression",
+              startFrame: 60,
+              durationFrames: 60,
+            },
+            {
+              sceneId: "carousel-vision-regression",
+              startFrame: 120,
+              durationFrames: 60,
+            },
+          ],
+          audioUrl: undefined,
+          musicUrl: undefined,
+          sfxCues: [],
+          catalogRevision: CURRENT_HF_CATALOG_REVISION,
+        }
+      : presetId
+        ? presetFixtures[presetId]
+        : fixture;
   const fixtureWithLocalAssets = (
     renderProductLaunch || renderDeveloperDemo || renderCinematicBrand
       ? {
@@ -297,7 +327,7 @@ async function main() {
         }
       : {}),
     captions:
-      renderStockVideo || renderCarousel
+      renderStockVideo || renderCarousel || motionRecipeId
         ? { enabled: false, timingSource: "imported", cues: [] }
         : (fixtureProps.captions ?? {
             enabled: true,

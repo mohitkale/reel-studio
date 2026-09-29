@@ -147,6 +147,9 @@ a new production from the current project.
   Studio planning
 - Product Launch, Editorial Explainer, Creator Punch, Data Story, Developer Demo,
   and Cinematic Brand presets
+- Versioned Impact and Editorial motion treatments for short text scenes, chosen
+  automatically in new preset projects and adjustable per scene in the editor;
+  the same saved choice renders in HyperFrames and Remotion
 - Native portrait, landscape, and square layouts in both engines
 - Uploaded media, bounded public-page text import, or optional Pexels, Pixabay,
   and Unsplash image/video backgrounds
@@ -304,7 +307,9 @@ caption timing and text, persistent jobs, podcast and audiogram workflows,
 local AI, optional stock media, styled captions, Quick Produce, scoped MCP
 automation, and format-aware batches. The implementation plan and evidence are
 in [docs/LOCAL_FIRST_EXPANSION.md](docs/LOCAL_FIRST_EXPANSION.md) and the task
-ledgers under [docs/production](docs/production/). Follow longer-term work in
+ledgers under [docs/production](docs/production/). The motion graphics expansion
+is scoped in [docs/production/MOTION_GRAPHICS_PLAN.md](docs/production/MOTION_GRAPHICS_PLAN.md).
+Follow longer-term work in
 [ROADMAP.md](ROADMAP.md).
 
 ## Contributing

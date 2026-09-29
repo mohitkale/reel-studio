@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { chooseTypeMotion, type MotionDirection } from "@/production/motion";
 
 import type { SceneBackground, SceneChartData } from "@/compositions/types";
 import { defaultTemplateIdForEngine } from "@/engines/registry";
@@ -58,6 +59,7 @@ function layoutJsonFor(
     mediaPreference?: z.infer<typeof mediaPreferenceSchema>;
   },
   role?: ProductionSceneRole,
+  motion?: MotionDirection,
 ): string | null {
   const config: Record<string, unknown> = {};
   if (background) config.background = background;
@@ -67,6 +69,7 @@ function layoutJsonFor(
   if (scene.chart) config.chart = scene.chart;
   if (scene.mediaPreference) config.mediaPreference = scene.mediaPreference;
   if (role) config.role = role;
+  if (motion) config.motion = motion;
   return Object.keys(config).length ? JSON.stringify(config) : null;
 }
 
@@ -306,21 +309,41 @@ export async function POST(
       : { plan: enriched, roles: [] as ProductionSceneRole[] };
     const roles = resolved.roles;
     const startOrder = script.scenes.length;
+    let previousMotion = script.scenes.at(-1)?.motion;
     await prisma.scene.createMany({
-      data: resolved.plan.scenes.map((scene, index) => ({
-        scriptId,
-        order: startOrder + index,
-        templateId: scene.templateId,
-        text: scene.text,
-        spokenText: scene.spokenText ?? null,
-        emphasis: scene.emphasis.length ? JSON.stringify(scene.emphasis) : null,
-        visual: scene.visual ?? null,
-        layoutJson: layoutJsonFor(
-          backgrounds[index],
-          { ...scene, mediaPreference: body.mediaPreference },
-          roles[index],
-        ),
-      })),
+      data: resolved.plan.scenes.map((scene, index) => {
+        const motion = script.productionPreset
+          ? chooseTypeMotion({
+              role: roles[index],
+              text: scene.text,
+              previous: previousMotion,
+              hasVisualContent: Boolean(
+                backgrounds[index] ||
+                scene.visual ||
+                scene.items?.length ||
+                scene.chart,
+              ),
+            })
+          : undefined;
+        if (motion) previousMotion = motion;
+        return {
+          scriptId,
+          order: startOrder + index,
+          templateId: scene.templateId,
+          text: scene.text,
+          spokenText: scene.spokenText ?? null,
+          emphasis: scene.emphasis.length
+            ? JSON.stringify(scene.emphasis)
+            : null,
+          visual: scene.visual ?? null,
+          layoutJson: layoutJsonFor(
+            backgrounds[index],
+            { ...scene, mediaPreference: body.mediaPreference },
+            roles[index],
+            motion,
+          ),
+        };
+      }),
     });
 
     const appended = await prisma.scene.findMany({

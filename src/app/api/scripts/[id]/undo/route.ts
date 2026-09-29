@@ -11,6 +11,7 @@ import {
 } from "@/library/schemas";
 import { productionChartDataSchema } from "@/production/spec";
 import { productionSceneRoleSchema } from "@/production/roles";
+import { motionDirectionSchema } from "@/production/motion";
 import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
@@ -30,6 +31,7 @@ const sceneSnapshotSchema = z.object({
   mood: sceneMoodSchema.optional(),
   musicMood: z.string().max(60).optional(),
   role: productionSceneRoleSchema.optional(),
+  motion: motionDirectionSchema.optional(),
   assetRefs: assetRefsSchema.optional(),
   locks: sceneLocksSchema.optional(),
   hideText: z.boolean().nullable().optional(),
@@ -49,6 +51,7 @@ function layoutJsonFor(scene: SceneSnapshot): string | null {
   if (scene.mood) config.mood = scene.mood;
   if (scene.musicMood) config.musicMood = scene.musicMood;
   if (scene.role) config.role = scene.role;
+  if (scene.motion) config.motion = scene.motion;
   if (scene.locks) config.locks = scene.locks;
   return Object.keys(config).length ? JSON.stringify(config) : null;
 }

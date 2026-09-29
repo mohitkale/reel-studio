@@ -5,6 +5,7 @@ import { productionChartDataSchema } from "@/production/spec";
 import { mediaPreferenceSchema } from "@/lib/media-preference";
 import { productionPresetIdSchema } from "@/production/presets";
 import { productionSceneRoleSchema } from "@/production/roles";
+import { motionDirectionSchema } from "@/production/motion";
 
 /** Zod schemas for JSON-shaped DB columns and API inputs. */
 
@@ -144,6 +145,8 @@ export const DEFAULT_SCENE_LOCKS: SceneLocks = {
 
 /** Per-scene config stored in the Scene.layoutJson column. */
 export const sceneConfigSchema = z.object({
+  /** Explicit, versioned visual direction. Absent means the legacy preset renderer. */
+  motion: motionDirectionSchema.optional(),
   background: sceneBackgroundSchema.optional(),
   /** Automatic stock-media preference; explicit scene backgrounds still win. */
   mediaPreference: mediaPreferenceSchema.optional(),

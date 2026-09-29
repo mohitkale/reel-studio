@@ -6,6 +6,7 @@ import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { VideoEngineId } from "@/engines/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
+import type { MotionDirection } from "@/production/motion";
 import type { CaptionTimingSource, CaptionWord } from "@/lib/captions";
 import type { CaptionStyleSnapshot } from "@/lib/caption-style";
 import type { MediaPreference } from "@/lib/media-preference";
@@ -53,6 +54,7 @@ export interface SceneDTO {
   selectedVoiceClipId: string | null;
   /** Engine-independent role selected by a versioned production preset. */
   role?: ProductionSceneRole;
+  motion?: MotionDirection;
   /** Uploaded assets retained by id for reproducible planning and regeneration. */
   assetRefs?: string[];
   /** Image asset URLs resolved server-side for carousel preview and export. */

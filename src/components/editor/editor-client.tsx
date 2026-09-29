@@ -197,6 +197,7 @@ export function EditorClient({
         chart: s.chart,
         carouselImages: s.carouselImages,
         role: s.role,
+        motion: s.motion,
         // Per-scene override wins; otherwise the script-wide default.
         hideText: s.hideText ?? script?.hideText,
         mood: s.mood as ReelScene["mood"],
@@ -222,6 +223,7 @@ export function EditorClient({
             chart: selectedScene.chart,
             carouselImages: selectedScene.carouselImages,
             role: selectedScene.role,
+            motion: selectedScene.motion,
             hideText: selectedScene.hideText ?? script?.hideText,
             mood: selectedScene.mood as ReelScene["mood"],
             order: selectedScene.order,
@@ -543,6 +545,7 @@ export function EditorClient({
                       musicMood: s.musicMood,
                       chart: s.chart,
                       role: s.role,
+                      motion: s.motion,
                       assetRefs: s.assetRefs,
                       locks: s.locks,
                       hideText: s.hideText,

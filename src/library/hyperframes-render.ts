@@ -328,6 +328,7 @@ export async function runHyperframesRender(
             Boolean(url),
           ),
           role: s.role,
+          motion: s.motion,
           hideText: s.hideText ?? script.hideText,
           mood: s.mood as ReelScene["mood"],
           order: s.order,

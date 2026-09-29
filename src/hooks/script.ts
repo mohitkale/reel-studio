@@ -21,6 +21,7 @@ import type { VideoEngineId } from "@/engines/types";
 import type { AIScene, ScriptStyle } from "@/providers/ai/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { ManualCreationInput } from "@/production/manual-planner";
+import type { MotionDirection } from "@/production/motion";
 
 async function apiSend<T>(
   url: string,
@@ -379,6 +380,7 @@ export function useUpdateScene(scriptId: string) {
       musicMood?: string | null;
       selectedVoiceClipId?: string | null;
       locks?: { copy: boolean; assets: boolean; scene: boolean };
+      motion?: MotionDirection | null;
     }) =>
       apiSend<{ scene: SceneDTO; take?: VoiceTakeDTO | null }>(
         `/api/scenes/${vars.id}`,
@@ -439,6 +441,9 @@ export function useUpdateScene(scriptId: string) {
                     ? { selectedVoiceClipId: vars.selectedVoiceClipId }
                     : {}),
                   ...(vars.locks !== undefined ? { locks: vars.locks } : {}),
+                  ...(vars.motion !== undefined
+                    ? { motion: vars.motion ?? undefined }
+                    : {}),
                 }
               : s,
           ),
@@ -733,6 +738,7 @@ export function useImportScenes(scriptId: string) {
         mood?: string;
         musicMood?: string;
         role?: SceneDTO["role"];
+        motion?: MotionDirection;
         assetRefs?: string[];
         locks?: SceneDTO["locks"];
         hideText?: boolean | null;
@@ -763,6 +769,7 @@ export function useUndoScript(scriptId: string) {
         mood?: string;
         musicMood?: string;
         role?: SceneDTO["role"];
+        motion?: MotionDirection;
         assetRefs?: string[];
         locks?: SceneDTO["locks"];
         hideText?: boolean | null;

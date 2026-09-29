@@ -47,6 +47,7 @@ export function mergeGeneratedScene(
       ? { musicMood: generated.musicMood ?? existing.musicMood }
       : {}),
     ...(existing.role ? { role: existing.role } : {}),
+    ...(existing.motion ? { motion: existing.motion } : {}),
     locks,
   };
 

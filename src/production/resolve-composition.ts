@@ -77,6 +77,7 @@ export function resolveProductionComposition(
         : undefined,
       carouselImages: carouselImages.length ? carouselImages : undefined,
       role: scene.role,
+      motion: scene.motion,
       background: backgroundAsset
         ? {
             type: backgroundAsset.type as "image" | "video",

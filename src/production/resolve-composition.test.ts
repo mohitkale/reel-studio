@@ -19,6 +19,7 @@ import cinematicBrandFixture from "../../tests/fixtures/cinematic-brand-reel.jso
 import type { ReelProps } from "@/compositions/types";
 import { reelDurationFrames } from "@/compositions/types";
 import { CURRENT_HF_CATALOG_REVISION } from "@/engines/hyperframes/catalog/revisions";
+import { motionDirection } from "@/production/motion";
 
 function productionSpec(
   engineId: VideoEngineId,
@@ -103,6 +104,19 @@ function productionSpec(
 }
 
 describe("resolved production composition", () => {
+  it("carries an explicit recipe through the snapshot and into HyperFrames markup", () => {
+    const spec = productionSpec("hyperframes", "portrait");
+    spec.scenes[0].motion = motionDirection("type-impact");
+    const resolved = resolveProductionComposition(spec);
+    expect(resolved.reelProps.scenes[0].motion).toEqual(
+      motionDirection("type-impact"),
+    );
+    const html = buildHyperframesCompositionHtml(resolved.reelProps);
+    expect(html).toContain('data-motion-recipe="type-impact"');
+    expect(html).toContain('data-recipe="type-impact"');
+    expect(html).not.toContain('data-production-preset="product-launch"');
+  });
+
   it.each(ORIENTATIONS)(
     "uses one format-aware input for both engines in %s",
     (orientation) => {

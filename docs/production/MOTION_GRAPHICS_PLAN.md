@@ -1,6 +1,11 @@
 # Motion graphics in Reel Studio — scope and implementation plan
 
-Status: proposal, 2026-09-29. Planning branch: `codex/motion-graphics-plan`.
+Status: implementation started, 2026-09-29. Branch: `feature/motion-graphics`.
+
+The first vertical slice ships two type treatments, Impact and Editorial, with
+versioned scene decisions, editor selection, production snapshot persistence,
+and render paths in both engines. The metric, diagram, media, sound, review,
+and long-form milestones below remain planned work.
 
 ## Product decision
 

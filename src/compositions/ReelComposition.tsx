@@ -17,6 +17,8 @@ import {
 import { resolveProductionLayout } from "@/production/layout";
 import { getPresetSceneComponent } from "./presets/registry";
 import { SubtitleOverlay } from "./components/subtitle-overlay";
+import { TypeMotionScene } from "./motion/type-scenes";
+import { resolveMotionDirection } from "@/production/motion";
 import {
   buildAudioMixPlan,
   clipVolumeAtFrame,
@@ -122,6 +124,10 @@ export const ReelComposition = React.memo(function ReelComposition({
               const scene = sceneById.get(beat.sceneId);
               if (!scene) return null;
               const Template =
+                (!scene.hideText &&
+                resolveMotionDirection(scene.motion, scene.text)
+                  ? TypeMotionScene
+                  : undefined) ??
                 getPresetSceneComponent(preset?.id) ??
                 getTemplateComponent(scene.templateId);
               // Hold each scene until the next one starts so the inter-beat audio gap

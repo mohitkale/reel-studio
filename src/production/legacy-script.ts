@@ -223,6 +223,7 @@ export function productionSpecFromLegacyScript(
         id: scene.id,
         order: scene.order,
         role: scene.role ?? inferLegacyRole(scene.templateId),
+        motion: scene.motion,
         template: {
           sourceId: scene.templateId,
           resolvedId: engine.normalizeTemplateId(scene.templateId),

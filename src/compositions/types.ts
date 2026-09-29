@@ -3,6 +3,7 @@ import type { EnergyId, StyleId } from "./visual-style";
 import type { ProductionLayout } from "@/production/layout";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
+import type { MotionDirection } from "@/production/motion";
 import type { CaptionStyleSnapshot } from "@/lib/caption-style";
 
 /** Image pan/zoom animations available for a background image. */
@@ -68,6 +69,8 @@ export interface ReelScene {
   carouselImages?: string[];
   /** Engine-independent purpose used by versioned production presets. */
   role?: ProductionSceneRole;
+  /** Explicit scene recipe; absent keeps the existing preset/template appearance. */
+  motion?: MotionDirection;
   /** When true, suppress the on-screen text/visual and show just the background. */
   hideText?: boolean;
   /** Emotional/visual tone; picks the dynamic background treatment when there's no photo/video background. */

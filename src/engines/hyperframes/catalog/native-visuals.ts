@@ -1068,7 +1068,7 @@ export function buildGsapMotionBootScript(
 <script>
 (function () {
   function revealFallback() {
-    document.querySelectorAll('.fx-line-inner, .fx-kicker, .fx-rule, .fx-logo-mark, .fx-pill, .fx-social-card, .fx-yt-bar, .fx-money-num, .fx-money-line, .fx-chart-line, .fx-chart-title, .fx-phone, .fx-chip, .fx-qmark, .fx-check-item, .fx-cta-btn, .fx-lt-plate, .fx-slash, .fx-letterbox, .fx-term-grid, .fx-chart-bars i, .fx-carousel-card').forEach(function (el) {
+    document.querySelectorAll('.fx-line-inner, .fx-kicker, .fx-rule, .fx-logo-mark, .fx-pill, .fx-social-card, .fx-yt-bar, .fx-money-num, .fx-money-line, .fx-chart-line, .fx-chart-title, .fx-phone, .fx-chip, .fx-qmark, .fx-check-item, .fx-cta-btn, .fx-lt-plate, .fx-slash, .fx-letterbox, .fx-term-grid, .fx-chart-bars i, .fx-carousel-card, .tm-impact-shape, .tm-impact-rule, .tm-editorial-rail').forEach(function (el) {
       el.style.opacity = '1';
       el.style.transform = 'none';
     });
@@ -1116,6 +1116,17 @@ export function buildGsapMotionBootScript(
       var shine = stage.querySelector('.fx-bill-shine');
       var deepOrb = stage.querySelector('.fx-deep-orb');
       var carouselCards = stage.querySelectorAll('.fx-carousel-card');
+      var typeShape = stage.querySelector('.tm-impact-shape');
+      var typeRule = stage.querySelector('.tm-impact-rule');
+      var typeRail = stage.querySelector('.tm-editorial-rail');
+
+      if (recipe === 'type-impact') {
+        if (typeShape) tl.fromTo(typeShape, { scaleX: 0, rotation: -11 }, { scaleX: 1, rotation: -11, duration: 0.58, ease: 'power4.out' }, 0.02);
+        if (typeRule) tl.fromTo(typeRule, { scaleX: 0 }, { scaleX: 1, duration: 0.42, ease: 'power3.out' }, 0.58);
+      }
+      if (recipe === 'type-editorial' && typeRail) {
+        tl.fromTo(typeRail, { scaleY: 0 }, { scaleY: 1, duration: 0.78, ease: 'power2.out' }, 0.04);
+      }
 
       // Recipe-specific backgrounds
       if (recipe === 'void-slash') {

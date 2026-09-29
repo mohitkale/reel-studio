@@ -3,6 +3,7 @@ import type { ScenePlan } from "@/providers/ai/types";
 import type { SceneBackground } from "@/compositions/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
+import { chooseTypeMotion, type MotionDirection } from "@/production/motion";
 import type { MediaPreference } from "@/lib/media-preference";
 import type { ResolvedStockAsset } from "@/providers/stock/schemas";
 import {
@@ -129,6 +130,7 @@ export async function createProjectFromPlan(
       : production.brandKitId;
   const styleId = visualStyle?.styleId ?? plan.styleId ?? DEFAULT_STYLE_ID;
   const energy = visualStyle?.energy ?? plan.energy ?? DEFAULT_ENERGY_ID;
+  let previousMotion: MotionDirection | undefined;
   const project = await prisma.project.create({
     data: {
       name: plan.projectName,
@@ -166,6 +168,23 @@ export async function createProjectFromPlan(
               if (scene.chart) config.chart = scene.chart;
               const role = production?.roles?.[order];
               if (role) config.role = role;
+              const motion = production?.preset
+                ? chooseTypeMotion({
+                    role,
+                    text: scene.text,
+                    previous: previousMotion,
+                    hasVisualContent: Boolean(
+                      background ||
+                      scene.visual ||
+                      scene.items?.length ||
+                      scene.chart,
+                    ),
+                  })
+                : undefined;
+              if (motion) {
+                config.motion = motion;
+                previousMotion = motion;
+              }
               return {
                 order,
                 templateId: scene.templateId || fallbackTemplate,
