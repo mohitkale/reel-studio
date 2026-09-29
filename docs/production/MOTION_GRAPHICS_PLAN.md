@@ -4,11 +4,13 @@ Status: implementation started, 2026-09-29. Branch: `feature/motion-graphics`.
 
 The first usable pack ships two treatments each for type (Impact and
 Editorial), supplied data (Spotlight and Comparison bars), diagrams (Path and
-Orbit), and supplied images (Product frame and Cinematic cover). They include
+Orbit), and supplied media (Product frame and Cinematic cover). They include
 versioned scene decisions, editor selection and input, production snapshot
-persistence, and render paths in both engines. Video footage keeps the existing
-media path while motion treatment support for footage, review, and long-form
-milestones below remain planned work.
+persistence, and render paths in both engines. Supplied footage now uses both
+media treatments: Product frame contains the whole source, and Cinematic cover uses a full-frame crop. Curated footage stays
+muted beneath narration; each scene has one timed source, and arbitrary preview
+seeks use the same media windows as export. Short source clips hold their final
+frame. Review and long-form milestones below remain planned work.
 
 Sequence direction now ships with Clean / Expressive / Showcase ambition in
 manual and AI creation (including the AI MCP tool). A saved seed gives

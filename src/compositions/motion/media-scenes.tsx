@@ -8,7 +8,7 @@ import { CinematicBrandScene } from "@/compositions/presets/cinematic-brand";
 import { ProductLaunchScene } from "@/compositions/presets/product-launch";
 import { resolveMotionDirection } from "@/production/motion";
 
-/** Adapt two proven preset compositions to a versioned, image-backed decision. */
+/** Adapt two proven preset compositions to a versioned media decision. */
 export function MediaMotionScene(props: TemplateProps) {
   const { scene } = props;
   const motion = resolveMotionDirection(
@@ -29,7 +29,15 @@ export function MediaMotionScene(props: TemplateProps) {
     >
       <Component
         {...props}
-        scene={{ ...scene, role: device ? "screenshot-demo" : "hero" }}
+        scene={{
+          ...scene,
+          role: device ? "screenshot-demo" : "hero",
+          // Curated footage is visual accompaniment; narration/audio is mixed separately.
+          background:
+            scene.background?.type === "video"
+              ? { ...scene.background, muted: true }
+              : scene.background,
+        }}
       />
     </AbsoluteFill>
   );

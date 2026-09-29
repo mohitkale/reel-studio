@@ -965,6 +965,7 @@ export function EditorClient({
               <SceneInspector
                 key={selectedScene.id}
                 scene={selectedScene}
+                hideTextDefault={script.hideText}
                 sceneIndex={scenes.findIndex((s) => s.id === effectiveSceneId)}
                 totalScenes={scenes.length}
                 onNavigate={(dir) => {

@@ -158,12 +158,14 @@ function BackgroundEditor({
   background,
   onChange,
   onPreferenceChange,
+  forceMuted = false,
 }: {
   scriptId: string;
   sceneId: string;
   orientation: Orientation;
   mediaPreference: MediaPreference;
   background: SceneBackground | undefined;
+  forceMuted?: boolean;
   onChange: (bg: SceneBackground | null) => void;
   onPreferenceChange: (preference: MediaPreference) => void;
 }) {
@@ -392,14 +394,16 @@ function BackgroundEditor({
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
-                  checked={background?.stock ? true : muted}
-                  disabled={background?.stock}
+                  checked={background?.stock || forceMuted ? true : muted}
+                  disabled={background?.stock || forceMuted}
                   onChange={(e) => changeMuted(e.target.checked)}
                   className="border-border size-4 rounded"
                 />
                 {background?.stock
                   ? "Stock video audio is always muted"
-                  : "Mute video audio track"}
+                  : forceMuted
+                    ? "Motion footage plays silently under narration"
+                    : "Mute video audio track"}
               </label>
               {url.trim() ? <VideoUrlStatus url={url} /> : null}
             </>
@@ -699,6 +703,7 @@ export function SceneInspector({
   saving,
   videoEngine = "remotion",
   orientation = "portrait",
+  hideTextDefault = false,
 }: {
   scene: SceneDTO;
   sceneIndex: number;
@@ -709,6 +714,7 @@ export function SceneInspector({
   saving?: boolean;
   videoEngine?: VideoEngineId;
   orientation?: Orientation;
+  hideTextDefault?: boolean;
 }) {
   const [text, setText] = React.useState(scene.text);
   const [spokenText, setSpokenText] = React.useState(
@@ -1031,6 +1037,19 @@ export function SceneInspector({
           orientation={orientation}
           mediaPreference={scene.mediaPreference ?? "auto"}
           background={scene.background}
+          forceMuted={Boolean(
+            !(scene.hideText ?? hideTextDefault) &&
+              scene.motion &&
+              isMediaMotionRecipe(scene.motion.recipeId) &&
+              resolveMotionDirection(
+                scene.motion,
+                scene.text,
+                scene.chart,
+                Boolean(scene.visual),
+                scene.items,
+                scene.background,
+              ),
+          )}
           onChange={(bg) => {
             const mediaMotion = Boolean(
               scene.motion && isMediaMotionRecipe(scene.motion.recipeId),

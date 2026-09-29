@@ -91,6 +91,22 @@ describe("sequence motion direction", () => {
     ).toBe("type-impact");
   });
 
+  it("stages supplied footage according to its role without changing source inputs", () => {
+    const video = { type: "video" as const, url: "/media/clip.mp4" };
+    const scenes: MotionPlanScene[] = [
+      { role: "screenshot-demo", text: "See it in action", background: video },
+      { role: "hero", text: "The wider story", background: video },
+      { role: "feature", text: "A closer look", background: video },
+    ];
+    const before = structuredClone(scenes);
+    const planned = planMotionSequence(scenes, settings);
+    expect(planned[0]?.recipeId).toBe("media-device");
+    expect(planned[1]?.recipeId).toBe("media-cinematic");
+    expect(["media-device", "media-cinematic"]).toContain(planned[2]?.recipeId);
+    expect(planMotionSequence(scenes, settings)).toEqual(planned);
+    expect(scenes).toEqual(before);
+  });
+
   it("keeps semantic roles, values and authored diagram meaning ahead of variety", () => {
     const image = { type: "image" as const, url: "/media/product.png" };
     const scenes: MotionPlanScene[] = [

@@ -308,8 +308,10 @@ local AI, optional stock media, styled captions, Quick Produce, scoped MCP
 automation, and format-aware batches. The implementation plan and evidence are
 in [docs/LOCAL_FIRST_EXPANSION.md](docs/LOCAL_FIRST_EXPANSION.md) and the task
 ledgers under [docs/production](docs/production/). The motion graphics expansion
-now includes editable type, supplied-data, diagram, and supplied-image treatments
-in both video engines. Manual and AI creation offer Clean, Expressive, and
+now includes editable type, supplied-data, diagram, and supplied-media treatments
+in both video engines. Product frame and Cinematic cover accept images or
+video clips; curated footage plays silently beneath narration and holds its
+last frame if the scene lasts longer than the clip. Manual and AI creation offer Clean, Expressive, and
 Showcase visual ambition; a deterministic sequence planner balances type
 reveals, remembers recent layouts on append, and preserves supplied diagram
 order and data. Settings and chosen treatments are frozen in production

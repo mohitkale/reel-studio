@@ -208,7 +208,7 @@ describe("type motion direction", () => {
     ).toBeUndefined();
   });
 
-  it("uses supplied images for media treatments and keeps video on the legacy path", () => {
+  it("uses supplied images and footage for media treatments", () => {
     const image = { type: "image" as const, url: "/media/shot.png" };
     expect(
       chooseSceneMotion({
@@ -240,7 +240,7 @@ describe("type motion direction", () => {
         text: "See the editor",
         background: { type: "video", url: "/media/shot.mp4" },
       }),
-    ).toBeUndefined();
+    ).toEqual(motionDirection("media-device"));
     expect(
       chooseSceneMotion({
         role: "hero",

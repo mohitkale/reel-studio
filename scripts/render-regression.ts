@@ -102,7 +102,9 @@ async function main() {
     ? path.resolve(
         ".artifacts/render-regression",
         renderStockVideo
-          ? "stock-video"
+          ? motionRecipeId
+            ? `${motionRecipeId}-video`
+            : "stock-video"
           : renderCarousel
             ? "carousel"
             : renderMotionSound
@@ -114,7 +116,9 @@ async function main() {
     : path.resolve(
         ".artifacts/render-regression",
         renderStockVideo
-          ? "stock-video"
+          ? motionRecipeId
+            ? `${motionRecipeId}-video`
+            : "stock-video"
           : renderCarousel
             ? "carousel"
             : renderMotionSound
@@ -137,7 +141,7 @@ async function main() {
       "-i",
       "sine=frequency=440:sample_rate=48000",
       "-t",
-      "4",
+      motionRecipeId ? "1.75" : "4",
       "-c:v",
       "libx264",
       "-pix_fmt",
@@ -530,7 +534,11 @@ async function main() {
         );
       }
     }
-    const sampleTimes = renderCarousel ? [1, 3, 5] : [1];
+    const sampleTimes = renderCarousel
+      ? [1, 3, 5]
+      : renderStockVideo && motionRecipeId
+        ? [1, 2.5]
+        : [1];
     for (const [sampleIndex, sampleTime] of sampleTimes.entries()) {
       const sample = path.join(
         output,
@@ -563,6 +571,31 @@ async function main() {
           "-",
         ])
       ).stdout;
+      if (renderStockVideo && motionRecipeId) {
+        // Inspect the center of the media, away from labels and brand chrome.
+        // The colorful source fixture must remain visible even after it ends.
+        const mediaStats = (
+          await run("ffmpeg", [
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-i",
+            sample,
+            "-vf",
+            "crop=iw*0.5:ih*0.15:iw*0.25:ih*0.4,signalstats,metadata=print:file=-",
+            "-f",
+            "null",
+            "-",
+          ])
+        ).stdout;
+        const saturation = Number(
+          mediaStats.match(/lavfi\.signalstats\.SATAVG=([\d.]+)/)?.[1],
+        );
+        if (!Number.isFinite(saturation) || saturation < 35)
+          throw new Error(
+            `${engine}: footage missing at ${sampleTime}s (saturation ${saturation})`,
+          );
+      }
       const yMax = Number(stats.match(/lavfi\.signalstats\.YMAX=(\d+)/)?.[1]);
       const yMin = Number(stats.match(/lavfi\.signalstats\.YMIN=(\d+)/)?.[1]);
       if (

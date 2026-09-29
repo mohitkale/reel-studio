@@ -32,7 +32,7 @@ export function buildMediaMotionScene(args: {
     role: device ? "screenshot-demo" : "hero",
     templateId: "hf-opener",
   };
-  const html = device
+  let html = device
     ? buildProductLaunchScene({
         ...args,
         scene: directedScene,
@@ -40,9 +40,29 @@ export function buildMediaMotionScene(args: {
       })
     : buildCinematicBrandScene({
         ...args,
-        scene: directedScene,
+        scene:
+          scene.background?.type === "video"
+            ? { ...directedScene, background: undefined }
+            : directedScene,
         motionStiffness: "1",
       });
+  if (html && scene.background?.type === "video") {
+    const escape = (value: string) =>
+      value
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    const video = `<video id="scene-${escape(scene.id)}-motion-video" class="motion-video${device ? "" : " cb-media"}" src="${escape(scene.background.url)}" data-start="${args.absoluteStart.toFixed(3)}" data-duration="${args.duration.toFixed(3)}" data-media-start="0" data-track-index="0" muted playsinline preload="auto"></video>`;
+    // The producer discovers timed media at any depth. Animate the enclosing
+    // device/stage; the producer owns source-frame decoding and playback.
+    html = device
+      ? html.replace(/<video[^>]*><\/video>/, video)
+      : html.replace(
+          '<div class="cb-scrim">',
+          `${video}<div class="cb-scrim">`,
+        );
+  }
   return (
     html
       ?.replace(
@@ -57,5 +77,5 @@ export function buildMediaMotionScene(args: {
 }
 
 export const MEDIA_MOTION_STYLES = `
-  .media-device .pl-media img { object-fit: contain; background: #080c14; }
+  .media-device .pl-media img, .media-device .pl-media video { object-fit: contain; background: #080c14; }
 `;

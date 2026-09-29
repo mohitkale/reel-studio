@@ -49,13 +49,15 @@ export const MEDIA_MOTION_RECIPES = [
   {
     id: "media-device",
     name: "Product frame",
-    description: "A supplied image appears in a precise product window.",
+    description:
+      "A supplied image or video appears in a precise product window.",
     maxCharacters: 100,
   },
   {
     id: "media-cinematic",
     name: "Cinematic cover",
-    description: "A supplied image fills the scene behind a strong headline.",
+    description:
+      "A supplied image or video fills the scene behind a strong headline.",
     maxCharacters: 140,
   },
 ] as const;
@@ -157,8 +159,8 @@ export function motionFallbackReason(
   if (hasOtherVisualContent)
     return "This scene already has a visual or list that this treatment would hide.";
   if (isMediaMotionRecipe(direction.recipeId)) {
-    if (!background?.url || background.type !== "image")
-      return "Add a supplied image for this media treatment.";
+    if (!background?.url)
+      return "Add a supplied image or video for this media treatment.";
     if (!text.trim()) return "Add a short headline for this media treatment.";
     if (chart || items?.length)
       return "This media treatment cannot hide chart data or diagram ideas.";
@@ -293,8 +295,7 @@ export function chooseSceneMotion(input: {
   hasVisualContent?: boolean;
 }): MotionDirection | undefined {
   if (
-    input.background?.type === "image" &&
-    input.background.url &&
+    input.background?.url &&
     input.role &&
     (input.role === "screenshot-demo" ||
       input.role === "hero" ||

@@ -604,16 +604,6 @@ function buildSeekScript(
           ? Math.min(1, Math.max(0, (p - (1 - exitWindow)) / Math.max(0.001, exitWindow)))
           : 0;
         el.style.setProperty('--exit', String(exit));
-        const bgVideo = el.querySelector('.bg-video');
-        if (bgVideo) {
-          try {
-            if (Math.abs((bgVideo.currentTime || 0) - localT) > 0.12) {
-              bgVideo.currentTime = Math.max(0, localT);
-            }
-            if (playing && bgVideo.paused) bgVideo.play().catch(function () {});
-            if (!playing && !bgVideo.paused) bgVideo.pause();
-          } catch (_) { /* ignore seek races */ }
-        }
         el.querySelectorAll('.list-item').forEach((item, i) => {
           const threshold = (i + 1) / (el.querySelectorAll('.list-item').length + 1);
           const show = p >= threshold * 0.85;
@@ -646,11 +636,32 @@ function buildSeekScript(
           const enter = Math.min(1, Math.max(0.45, p * 3.5));
           prod.style.opacity = String(enter);
         }
-      } else {
-        const bgVideo = el.querySelector('.bg-video');
-        if (bgVideo && !bgVideo.paused) bgVideo.pause();
       }
     }
+  }
+
+  // Standalone editor preview has no producer runtime. Its adapter drives the
+  // same declared media windows; export omits this script and uses the producer.
+  function syncTimedVideos(time) {
+    document.querySelectorAll('video[data-start]').forEach(function (video) {
+      const start = Number(video.dataset.start || 0);
+      const duration = Number(video.dataset.duration || 0);
+      const atFinalHold = Math.abs(time - CFG.totalSeconds) < 0.001 && Math.abs(start + duration - CFG.totalSeconds) < 0.001;
+      const active = time >= start && (time < start + duration || atFinalHold);
+      video.style.visibility = active ? 'visible' : 'hidden';
+      video.muted = true;
+      if (!active) { if (!video.paused) video.pause(); return; }
+      const sourceStart = Number(video.dataset.mediaStart || 0);
+      const local = Math.max(0, time - start + sourceStart);
+      const target = Number.isFinite(video.duration) && video.duration > 0
+        ? Math.min(local, Math.max(0, video.duration - 1 / CFG.fps)) : local;
+      try {
+        if (Math.abs((video.currentTime || 0) - target) > (playing ? 0.12 : 0.001)) video.currentTime = target;
+        const exhausted = Number.isFinite(video.duration) && local >= Math.max(0, video.duration - 1 / CFG.fps);
+        if (playing && !exhausted && video.paused) video.play().catch(function () {});
+        if ((!playing || exhausted) && !video.paused) video.pause();
+      } catch (_) { /* metadata may still be loading */ }
+    });
   }
 
   function syncAudio(time) {
@@ -698,6 +709,7 @@ function buildSeekScript(
     const t = Math.max(0, Math.min(CFG.totalSeconds, time));
     root._t = t;
     syncAllBgPhotos(t);
+    syncTimedVideos(t);
     syncSubtitles(t);
     if (cover) {
       const inCover = CFG.coverSeconds > 0 && t < CFG.coverSeconds;
@@ -772,6 +784,7 @@ function buildSeekScript(
   window.__reelSetPlaying = function (next) {
     playing = !!next;
     syncAudio(root._t || 0);
+    syncTimedVideos(root._t || 0);
   };
 
   // Frame-adapter style hook: in-editor iframe preview seeks via currentTime.
@@ -872,6 +885,7 @@ function buildSeekScript(
       seek(CFG.totalSeconds);
       playing = false;
       syncAudio(CFG.totalSeconds);
+      syncTimedVideos(CFG.totalSeconds);
       return;
     }
     seek(next);
@@ -882,6 +896,7 @@ function buildSeekScript(
     startWall = performance.now();
     startT = root._t || 0;
     syncAudio(startT);
+    syncTimedVideos(startT);
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(tick);
   };
@@ -889,6 +904,7 @@ function buildSeekScript(
     playing = false;
     cancelAnimationFrame(raf);
     syncAudio(root._t || 0);
+    syncTimedVideos(root._t || 0);
   };
 
   function fitStage() {
@@ -971,8 +987,6 @@ export function buildHyperframesCompositionHtml(
     const duration = framesToSeconds(holdFrames, fps);
     beats.push({ id: scene.id, start, duration });
     const absoluteStart = start + coverSeconds;
-    const videoBlock = timedVideoLayer(scene, absoluteStart, duration);
-    if (videoBlock) videoBlocks.push(videoBlock);
     const exitWindow = Math.min(
       0.35,
       framesToSeconds(transitionFrames, fps) / Math.max(0.05, duration),
@@ -991,6 +1005,15 @@ export function buildHyperframesCompositionHtml(
       buildDiagramMotionScene(motionArgs) ??
       buildDataMotionScene(motionArgs) ??
       buildTypeMotionScene(motionArgs);
+    // Media recipes stage their own timed source. Keep a single decoder;
+    // all other treatments continue using the shared background video layer.
+    if (
+      !motionScene ||
+      !isMediaMotionRecipe(scene.motion?.recipeId ?? "type-impact")
+    ) {
+      const videoBlock = timedVideoLayer(scene, absoluteStart, duration);
+      if (videoBlock) videoBlocks.push(videoBlock);
+    }
     if (motionScene) {
       sceneBlocks.push(
         scene.background?.url &&

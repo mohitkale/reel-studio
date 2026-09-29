@@ -66,7 +66,7 @@ function candidates(scene: MotionPlanScene): MotionDirection[] {
     first.recipeId.startsWith("type-")
   ) {
     ids = ["type-impact", "type-editorial"];
-  } else if (scene.role === "feature" && scene.background?.type === "image") {
+  } else if (scene.role === "feature" && scene.background?.url) {
     ids = ["media-device", "media-cinematic"];
   }
   // Ordered ideas and screenshot/hero roles have meaning. Variety never changes
