@@ -16,8 +16,12 @@ repeatable choices, four-scene history discourages layout repetition, and
 append continues that history. Quiet preset beats count toward spacing.
 Ordered diagrams keep Path automatically; Orbit remains an explicit authored
 choice. Screenshot and hero roles retain their appropriate image treatments.
-Ambition currently controls type-hit frequency; richer choreography, chapter
-planning, direction refresh, and motion character controls remain future work.
+Ambition currently controls type-hit frequency. The editor direction menu and
+`replan_motion_direction` MCP tool can apply another ambition or seed without
+rewriting content, data, narration, or media. Scene locks and hidden-text scenes
+are protected; revision restore retains saved choices, settings, and locks.
+Richer choreography, chapter planning, and motion character controls remain
+future work.
 
 ## Product decision
 

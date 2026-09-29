@@ -93,9 +93,15 @@ describe("project motion persistence", () => {
       roles: [...roles],
       motionPlan: settings,
       motions: decisions,
+      sceneLocks: [{ copy: false, assets: false, scene: true }],
     });
     const script = create.mock.calls[0][0].data.scripts.create;
     expect(JSON.parse(script.brandOverrides).motionPlan).toEqual(settings);
+    expect(JSON.parse(script.scenes.create[0].layoutJson).locks).toEqual({
+      copy: false,
+      assets: false,
+      scene: true,
+    });
     expect(
       script.scenes.create.map(
         (scene: { layoutJson: string }) => JSON.parse(scene.layoutJson).motion,

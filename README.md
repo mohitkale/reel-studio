@@ -313,7 +313,9 @@ in both video engines. Manual and AI creation offer Clean, Expressive, and
 Showcase visual ambition; a deterministic sequence planner balances type
 reveals, remembers recent layouts on append, and preserves supplied diagram
 order and data. Settings and chosen treatments are frozen in production
-snapshots. Its remaining scope is in
+snapshots. The editor direction menu and `replan_motion_direction` MCP tool
+can change ambition or try another variation while preserving content, audio,
+media, and locked scenes. Its remaining scope is in
 [docs/production/MOTION_GRAPHICS_PLAN.md](docs/production/MOTION_GRAPHICS_PLAN.md).
 Follow longer-term work in
 [ROADMAP.md](ROADMAP.md).

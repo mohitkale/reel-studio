@@ -532,6 +532,22 @@ export function registerTools(server: McpServer): void {
   );
 
   server.registerTool(
+    "replan_motion_direction",
+    {
+      description:
+        "Replan a preset video's visual treatments with Clean, Expressive or Showcase ambition. Preserves copy, narration, data, media, locked scenes and hidden-text scenes. newVariation chooses a new saved seed; eligible choices may remain unchanged.",
+      inputSchema: {
+        scriptId: z.string().min(1),
+        ambition: visualAmbitionSchema.optional(),
+        newVariation: z.boolean().optional(),
+      },
+    },
+    guard(async ({ scriptId, ...body }) =>
+      ok(await apiPost(`/api/scripts/${encode(scriptId)}/motion`, body)),
+    ),
+  );
+
+  server.registerTool(
     "update_script",
     {
       description:

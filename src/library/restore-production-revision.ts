@@ -46,6 +46,7 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
       preset: snapshot.script.productionPreset,
       motionPlan: snapshot.script.motionPlan,
       motions: snapshot.script.scenes.map((scene) => scene.motion),
+      sceneLocks: snapshot.script.scenes.map((scene) => scene.locks),
       roles: snapshot.script.scenes.map((scene) => scene.role ?? "explanation"),
       assetRefs: snapshot.script.scenes.map((scene) => scene.assetRefs ?? []),
       mediaPreferences: snapshot.script.scenes.map(

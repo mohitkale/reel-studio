@@ -31,6 +31,7 @@ import {
 } from "@/engines/types";
 import { defaultTemplateIdForEngine } from "@/engines/registry";
 import { prisma } from "@/library/db";
+import type { SceneLocks } from "@/library/schemas";
 import {
   SAMPLE_PROJECT_NAME,
   SAMPLE_SCRIPT_NAME,
@@ -122,6 +123,7 @@ export async function createProjectFromPlan(
     /** Frozen revision decisions bypass planning when restoring a production. */
     motionPlan?: MotionPlanSettings;
     motions?: Array<MotionDirection | undefined>;
+    sceneLocks?: Array<SceneLocks | undefined>;
     voiceMode?: "oneshot" | "per_scene";
     outputType?: "video" | "voiceover";
     creationSource?: {
@@ -203,6 +205,8 @@ export async function createProjectFromPlan(
               if (scene.chart) config.chart = scene.chart;
               const role = production?.roles?.[order];
               if (role) config.role = role;
+              if (production?.sceneLocks?.[order])
+                config.locks = production.sceneLocks[order];
               const motion = motions[order];
               if (motion) config.motion = motion;
               return {

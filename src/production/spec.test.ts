@@ -143,12 +143,14 @@ describe("legacy production specification", () => {
       seed: "saved-direction",
       ambition: "showcase",
     };
+    script.scenes[0].locks = { copy: false, assets: false, scene: true };
     script.scenes[0].motion = { recipeId: "type-impact", version: "1.0.0" };
     const spec = productionSpecFromLegacyScript(script, {
       sourceRevision: "revision",
     });
     expect(spec.motionPlan).toEqual(script.motionPlan);
     expect(spec.scenes[0].motion).toEqual(script.scenes[0].motion);
+    expect(spec.scenes[0].locks.scene).toBe(true);
     script.motionPlan.ambition = "clean";
     const edited = productionSpecFromLegacyScript(script, {
       sourceRevision: "revision",

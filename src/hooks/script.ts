@@ -22,6 +22,7 @@ import type { AIScene, ScriptStyle } from "@/providers/ai/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { ManualCreationInput } from "@/production/manual-planner";
 import type { MotionDirection } from "@/production/motion";
+import type { VisualAmbition } from "@/production/motion-plan";
 
 async function apiSend<T>(
   url: string,
@@ -255,6 +256,20 @@ export function useAutoSoundtrack(scriptId: string) {
     onSuccess: (data) => {
       qc.setQueryData(["script", scriptId], data.script);
     },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+  });
+}
+
+/** Replan only visual direction, preserving scene content and audio. */
+export function useReplanMotionDirection(scriptId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { ambition?: VisualAmbition; newVariation?: boolean }) =>
+      apiPost<{
+        result: { changedSceneIds: string[]; protectedSceneCount: number };
+        script: ScriptDTO;
+      }>(`/api/scripts/${scriptId}/motion`, vars),
+    onSuccess: (data) => qc.setQueryData(["script", scriptId], data.script),
     onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
   });
 }

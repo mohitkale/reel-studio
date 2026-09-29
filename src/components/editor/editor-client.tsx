@@ -69,6 +69,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SceneList } from "@/components/editor/scene-list";
 import { SceneInspector } from "@/components/editor/scene-inspector";
+import { MotionDirectionMenu } from "@/components/editor/motion-direction-menu";
 import {
   EnginePlayer,
   type EnginePlayerHandle,
@@ -521,6 +522,12 @@ export function EditorClient({
               />
             </div>
           </HintTooltip>
+          {script.productionPreset ? (
+            <MotionDirectionMenu
+              scriptId={scriptId}
+              ambition={script.motionPlan?.ambition ?? "expressive"}
+            />
+          ) : null}
           {undoSnapshot && (
             <HintTooltip
               label="Restore scenes to how they were before the last AI change"

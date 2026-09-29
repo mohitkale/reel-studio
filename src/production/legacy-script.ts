@@ -242,7 +242,7 @@ export function productionSpecFromLegacyScript(
           startFrame: timing.startFrame,
           durationFrames: Math.max(1, timing.durationFrames),
         },
-        locks: { copy: false, assets: false, scene: false },
+        locks: scene.locks ?? { copy: false, assets: false, scene: false },
         presentation: {
           hideText: scene.hideText ?? script.hideText,
           mood: scene.mood,
