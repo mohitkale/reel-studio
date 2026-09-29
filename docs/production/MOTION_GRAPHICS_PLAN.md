@@ -30,8 +30,12 @@ freezes absolute cue frames and each clip's shaped attack into preview, exports,
 and production snapshots. It suppresses stale events, short-scene spill and
 clashing automatic sounds, with at least two seconds between automatic peaks.
 Editorial and image treatments stay quiet by default. Refresh preserves
-manual, legacy, muted and locked cues. Music beat maps, word-aware suppression,
-creator cue controls, and final loudness targets remain later sound work.
+manual, legacy, muted and locked cues. The music panel now includes sound
+choice, level/mute, timing shift, and an explicit return to automatic direction.
+Saved edits are protected from refresh; stale saves get an actionable conflict.
+REST and MCP share the same edit contract. Transactional updates are verified
+against SQLite, including competing edits and refreshes. Music beat maps,
+word-aware suppression, and final loudness targets remain later sound work.
 
 ## Product decision
 

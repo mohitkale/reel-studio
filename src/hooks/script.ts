@@ -21,6 +21,7 @@ import type { VideoEngineId } from "@/engines/types";
 import type { AIScene, ScriptStyle } from "@/providers/ai/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { ManualCreationInput } from "@/production/manual-planner";
+import type { SfxCueEditRequest } from "@/lib/sfx-cue-edit";
 import type { MotionDirection } from "@/production/motion";
 import type { VisualAmbition } from "@/production/motion-plan";
 
@@ -256,6 +257,17 @@ export function useAutoSoundtrack(scriptId: string) {
     onSuccess: (data) => {
       qc.setQueryData(["script", scriptId], data.script);
     },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+  });
+}
+
+/** Save a single cue with a stale-edit guard. */
+export function useEditSfxCue(scriptId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SfxCueEditRequest) =>
+      apiSend<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/sfx`, "PATCH", body),
+    onSuccess: (data) => qc.setQueryData(["script", scriptId], data.script),
     onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
   });
 }

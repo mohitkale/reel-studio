@@ -14,6 +14,7 @@ import type { RemoteMusicTrack } from "@/providers/music/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SfxCueEditor } from "@/components/editor/sfx-cue-editor";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -197,7 +198,7 @@ export function MusicControl({
       </HintTooltip>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Background music</DialogTitle>
             <DialogDescription>
@@ -432,7 +433,7 @@ export function MusicControl({
             </Label>
             <p className="text-xs text-muted-foreground">
               {sfxEnabled
-                ? `${sfxCueCount} cue${sfxCueCount === 1 ? "" : "s"} on this reel.`
+                ? `${sfxCueCount} audible cue${sfxCueCount === 1 ? "" : "s"} with current timing.`
                 : "SFX are off for this reel."}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -483,6 +484,8 @@ export function MusicControl({
               </Button>
             </div>
           </div>
+
+          <SfxCueEditor scriptId={scriptId} disabled={busy} />
 
           <DialogFooter>
             <Button size="sm" onClick={() => setOpen(false)}>

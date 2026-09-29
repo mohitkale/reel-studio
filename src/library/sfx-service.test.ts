@@ -4,7 +4,15 @@ const { getScript, updateScript } = vi.hoisted(() => ({
   getScript: vi.fn(),
   updateScript: vi.fn(),
 }));
-vi.mock("@/library/repositories/scripts", () => ({ getScript, updateScript }));
+vi.mock("@/library/db", () => ({
+  prisma: {
+    $transaction: (callback: (tx: unknown) => unknown) =>
+      callback({ script: { findUnique: getScript, update: updateScript } }),
+  },
+}));
+vi.mock("@/library/repositories/map", () => ({
+  toSceneDTO: (scene: unknown) => scene,
+}));
 
 import { buildAutomaticSfxCues, ensureSfxCues } from "@/library/sfx-service";
 import { motionDirection } from "@/production/motion";
@@ -85,7 +93,7 @@ describe("scene-aware SFX suggestions", () => {
       sfxJson: JSON.stringify({ enabled: true, cues: original }),
     });
     await ensureSfxCues("script", { force: true });
-    const saved = parseSfxState(updateScript.mock.calls[0][1].sfxJson);
+    const saved = parseSfxState(updateScript.mock.calls[0][0].data.sfxJson);
     expect(saved.cues.slice(0, 3)).toEqual(original.slice(0, 3));
     expect(saved.cues[3]).toMatchObject({
       sceneId: "refresh",

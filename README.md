@@ -318,7 +318,11 @@ can change ambition or try another variation while preserving content, audio,
 media, and locked scenes. Automatic SFX now follow versioned visual anchors
 with measured clip peaks, scene bounds, and sparse spacing. Refresh keeps
 manual, legacy, muted, and locked cues; existing scenes retain their template
-cue behavior. Its remaining scope is in
+cue behavior. Music → Adjust sound cues lets creators choose the clip, set its
+level (including mute), shift its timing, or restore automatic direction.
+Edits also work through `PATCH /api/scripts/:id/sfx` and the `edit_sfx_cue` MCP
+tool; a stale cue is rejected with 409 instead of overwriting a newer edit.
+Its remaining scope is in
 [docs/production/MOTION_GRAPHICS_PLAN.md](docs/production/MOTION_GRAPHICS_PLAN.md).
 Follow longer-term work in
 [ROADMAP.md](ROADMAP.md).
