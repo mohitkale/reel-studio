@@ -321,6 +321,8 @@ media, and locked scenes. Automatic SFX now follow versioned visual anchors
 with measured clip peaks, scene bounds, and sparse spacing. The direction menu
 also lists treatment compatibility warnings across the video; select a warning
 to jump to its scene and fix the supplied inputs or choose another treatment.
+Variety suggestions highlight runs of three or more consecutive scenes using
+the same active treatment, with a shortcut to review each run.
 Refresh keeps manual, legacy, muted, and locked cues; existing scenes retain their template
 cue behavior. Music → Adjust sound cues lets creators choose the clip, set its
 level (including mute), shift its timing, or restore automatic direction.

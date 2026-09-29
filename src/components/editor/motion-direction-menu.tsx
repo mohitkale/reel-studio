@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { HintTooltip } from "@/components/ui/hint-tooltip";
 import { useReplanMotionDirection } from "@/hooks/script";
+import { MOTION_RECIPES } from "@/production/motion";
 import {
   VISUAL_AMBITIONS,
   VISUAL_AMBITION_DESCRIPTIONS,
@@ -26,6 +27,7 @@ import {
 } from "@/production/motion-plan";
 import {
   reviewMotionTreatments,
+  reviewMotionRepetition,
   type MotionReviewScene,
 } from "@/production/motion-review";
 
@@ -42,6 +44,7 @@ export function MotionDirectionMenu({
 }) {
   const replan = useReplanMotionDirection(scriptId);
   const issues = reviewMotionTreatments(scenes);
+  const repetitions = reviewMotionRepetition(scenes);
   function apply(input: { ambition?: VisualAmbition; newVariation?: boolean }) {
     replan.mutate(input, {
       onSuccess: ({ result }) =>
@@ -120,6 +123,39 @@ export function MotionDirectionMenu({
             No treatment compatibility issues. Preview to review readability and
             timing.
           </p>
+        )}
+        {repetitions.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Variety suggestions</DropdownMenuLabel>
+            <p className="text-muted-foreground px-2 pb-2 text-xs">
+              Three or more consecutive scenes share a treatment. Keep it for
+              continuity, or change a scene for contrast.
+            </p>
+            <div className="max-h-48 overflow-y-auto">
+              {repetitions.map((run) => (
+                <DropdownMenuItem
+                  key={run.sceneId}
+                  onSelect={() => onSelectScene(run.sceneId)}
+                  className="items-start"
+                >
+                  <div>
+                    <p>
+                      Scenes {run.firstSceneNumber}–{run.lastSceneNumber}
+                    </p>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {
+                        MOTION_RECIPES.find(
+                          (recipe) => recipe.id === run.recipeId,
+                        )?.name
+                      }
+                      {" · Select to review"}
+                    </p>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </div>
+          </>
         )}
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Replan visual direction</DropdownMenuLabel>

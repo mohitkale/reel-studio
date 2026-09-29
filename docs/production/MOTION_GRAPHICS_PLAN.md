@@ -42,8 +42,12 @@ word-aware suppression, and final loudness targets remain later sound work.
 The editor now checks treatment input compatibility across the video in the
 direction menu. Warnings explain each preset fallback and jump to the affected
 scene. Hidden-text scenes intentionally bypass these checks. This uses the
-same input contract as both renderers; rendered stills, phone-size legibility,
-timing and repetition review remain planned work.
+same input contract as both renderers. Variety suggestions now flag runs of
+three or more consecutive scenes using the same active treatment and jump to
+the start of each run. Preset, hidden and fallback scenes break the run; these
+suggestions preserve intentional continuity and never block export. Rendered
+stills, phone-size legibility, timing and broader visual repetition review
+remain planned work.
 
 ## Product decision
 
