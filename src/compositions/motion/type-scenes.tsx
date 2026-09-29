@@ -11,6 +11,7 @@ import {
 
 import { Stage } from "@/compositions/components/stage";
 import type { TemplateProps } from "@/compositions/types";
+import { MOTION_EVENT_TIMINGS } from "@/production/motion-events";
 import { resolveMotionDirection } from "@/production/motion";
 
 export function TypeMotionScene({
@@ -27,10 +28,12 @@ export function TypeMotionScene({
     Boolean(scene.visual || scene.items?.length),
   );
   const impact = direction?.recipeId === "type-impact";
+  const timing =
+    MOTION_EVENT_TIMINGS.remotion[impact ? "type-impact" : "type-editorial"];
   const hasMedia = Boolean(scene.background?.url);
   const portrait = height > width;
   const enter = spring({
-    frame: frame - (impact ? 4 : 8),
+    frame: frame - timing.reveal,
     fps,
     config: {
       damping: impact ? 18 : 26,
@@ -44,7 +47,7 @@ export function TypeMotionScene({
     config: { damping: 24, stiffness: 115 },
   });
   const rule = spring({
-    frame: frame - 17,
+    frame: frame - MOTION_EVENT_TIMINGS.remotion["type-impact"].impact!,
     fps,
     config: { damping: 22, stiffness: 110 },
   });

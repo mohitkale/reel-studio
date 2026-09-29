@@ -447,7 +447,7 @@ export function MusicControl({
                       onSuccess: (data) => {
                         if (data.result.attached) {
                           toast.success("SFX cues ready", {
-                            description: `${data.result.cueCount ?? 0} template cues attached.`,
+                            description: `${data.result.cueCount ?? 0} cues saved. Edited cues are preserved.`,
                           });
                         } else {
                           toast.message("SFX unchanged");
@@ -461,7 +461,7 @@ export function MusicControl({
                   )
                 }
               >
-                {sfxCueCount ? "Regenerate SFX" : "Auto SFX"}
+                {sfxCueCount ? "Refresh automatic SFX" : "Auto SFX"}
               </Button>
               <Button
                 size="sm"

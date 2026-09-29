@@ -265,10 +265,21 @@ export function EditorClient({
       resolveReelSfxCues({
         sfxEnabled: script?.sfxEnabled ?? true,
         sfxJson: script?.sfxJson ?? null,
+        scenes: script?.scenes,
+        videoEngine: script?.videoEngine,
+        hideText: script?.hideText,
         timeline,
         fps,
       }),
-    [script?.sfxEnabled, script?.sfxJson, timeline, fps],
+    [
+      script?.sfxEnabled,
+      script?.sfxJson,
+      script?.scenes,
+      script?.videoEngine,
+      script?.hideText,
+      timeline,
+      fps,
+    ],
   );
 
   function selectTake(id: string) {

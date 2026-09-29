@@ -122,7 +122,12 @@ export type ReelProps = {
    * Timed SFX one-shots (absolute content timeline frames, pre-cover).
    * Cover offset is applied inside the composition via the wrapping Sequence.
    */
-  sfxCues?: Array<{ url: string; startFrame: number; volume: number }>;
+  sfxCues?: Array<{
+    url: string;
+    startFrame: number;
+    volume: number;
+    fadeSeconds?: number;
+  }>;
   /** Editable subtitle track on the content timeline, separate from scene copy. */
   captions?: {
     enabled: boolean;

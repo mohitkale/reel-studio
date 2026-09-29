@@ -111,6 +111,9 @@ export function resolveProductionComposition(
       url: resolveAsset(assets, cue.assetRef, resolveUri)!,
       startFrame: cue.startFrame,
       volume: cue.volume,
+      ...(cue.fadeSeconds !== undefined
+        ? { fadeSeconds: cue.fadeSeconds }
+        : {}),
     })),
     tokens: { ...spec.brand.tokens },
     coverUrl: coverAsset ? resolveUri(coverAsset) : undefined,

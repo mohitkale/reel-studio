@@ -8,6 +8,7 @@ import {
   useVideoConfig,
 } from "remotion";
 
+import { MOTION_EVENT_TIMINGS } from "@/production/motion-events";
 import { Stage } from "@/compositions/components/stage";
 import type { TemplateProps } from "@/compositions/types";
 import {
@@ -36,7 +37,7 @@ export function DataMotionScene({
   const bars = direction.recipeId === "data-bars";
   const portrait = height > width;
   const enter = spring({
-    frame: frame - 4,
+    frame: frame - MOTION_EVENT_TIMINGS.remotion["data-spotlight"].reveal,
     fps,
     config: { damping: 24, stiffness: 115 },
   });
@@ -167,7 +168,10 @@ export function DataMotionScene({
             >
               {series.values.map((item, index) => {
                 const progress = spring({
-                  frame: frame - 10 - index * 4,
+                  frame:
+                    frame -
+                    MOTION_EVENT_TIMINGS.remotion["data-bars"].reveal -
+                    index * 4,
                   fps,
                   config: { damping: 26, stiffness: 95 },
                 });

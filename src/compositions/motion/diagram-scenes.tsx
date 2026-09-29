@@ -8,6 +8,7 @@ import {
   useVideoConfig,
 } from "remotion";
 
+import { MOTION_EVENT_TIMINGS } from "@/production/motion-events";
 import { Stage } from "@/compositions/components/stage";
 import type { TemplateProps } from "@/compositions/types";
 import { diagramLabelLines, orbitNodes } from "@/production/diagram-geometry";
@@ -119,7 +120,10 @@ export function DiagramMotionScene({
             />
             {positions.map((point, index) => {
               const progress = spring({
-                frame: frame - 11 - index * 5,
+                frame:
+                  frame -
+                  MOTION_EVENT_TIMINGS.remotion["diagram-orbit"].reveal -
+                  index * 5,
                 fps,
                 config: { damping: 27, stiffness: 86 },
               });
@@ -235,7 +239,10 @@ export function DiagramMotionScene({
             </svg>
             {items.map((item, index) => {
               const progress = spring({
-                frame: frame - 8 - index * 5,
+                frame:
+                  frame -
+                  MOTION_EVENT_TIMINGS.remotion["diagram-path"].reveal -
+                  index * 5,
                 fps,
                 config: { damping: 26, stiffness: 105 },
               });

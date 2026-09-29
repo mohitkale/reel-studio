@@ -35,7 +35,11 @@ export async function produceReelAudio(
     script.sfxEnabled === false
       ? { attached: false as const, reason: "disabled" as const }
       : await ensureSfxCues(scriptId, {
-          force: sfxState.cues.length === 0,
+          force:
+            sfxState.cues.length === 0 ||
+            sfxState.cues.some(
+              (cue) => cue.source === "automatic" && !cue.locked,
+            ),
         });
   if (sfx.attached) steps.push("sfx");
 

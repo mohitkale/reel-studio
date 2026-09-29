@@ -248,6 +248,7 @@ export const productionSpecSchema = z
       sfx: z.array(
         z.object({
           assetRef: assetIdSchema,
+          fadeSeconds: z.number().min(0).max(2).optional(),
           startFrame: frameSchema,
           volume: z.number().min(0).max(1),
         }),

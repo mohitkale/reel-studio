@@ -136,6 +136,31 @@ describe("production presets", () => {
 });
 
 describe("legacy production specification", () => {
+  it("freezes event audio timing and preserves the clip's shaped attack", () => {
+    const script = legacyScript();
+    script.scenes[0].motion = { recipeId: "type-impact", version: "1.0.0" };
+    script.sfxJson = JSON.stringify({
+      enabled: true,
+      cues: [
+        {
+          sceneId: "scene-1",
+          sfxId: "soft-hit",
+          volume: 0.14,
+          offsetSeconds: 0,
+          source: "automatic",
+          event: { ...script.scenes[0].motion, anchor: "impact" },
+        },
+      ],
+    });
+    const spec = productionSpecFromLegacyScript(script, {
+      sourceRevision: "revision",
+      voiceTakeId: "take-1",
+    });
+    expect(spec.audio.sfx).toEqual([
+      { assetRef: "asset:sfx:0", startFrame: 17, volume: 0.14, fadeSeconds: 0 },
+    ]);
+  });
+
   it("freezes motion settings and detects subsequent direction changes", () => {
     const script = legacyScript();
     script.motionPlan = {

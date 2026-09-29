@@ -366,6 +366,9 @@ export async function runHyperframesRender(
       resolveReelSfxCues({
         sfxEnabled: script.sfxEnabled,
         sfxJson: script.sfxJson,
+        scenes: script.scenes,
+        videoEngine: script.videoEngine,
+        hideText: script.hideText,
         timeline: resolved.timeline,
         fps: script.fps,
       });

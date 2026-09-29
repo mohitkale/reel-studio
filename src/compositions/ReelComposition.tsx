@@ -202,7 +202,7 @@ export const ReelComposition = React.memo(function ReelComposition({
                       frame,
                       fps * 2,
                       cue.volume,
-                      Math.round(fps * 0.08),
+                      Math.round(fps * (cue.fadeSeconds ?? 0.08)),
                     )
                   }
                 />

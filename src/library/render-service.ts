@@ -391,6 +391,9 @@ async function runRemotionRender({
       sfxCues: resolveReelSfxCues({
         sfxEnabled: script.sfxEnabled,
         sfxJson: script.sfxJson,
+        scenes: script.scenes,
+        videoEngine: script.videoEngine,
+        hideText: script.hideText,
         timeline,
         fps: script.fps,
       }).map((c) => ({ ...c, url: absolute(c.url)! })),
@@ -540,6 +543,9 @@ export function prepareVideoComposition(
     sfxCues: resolveReelSfxCues({
       sfxEnabled: script.sfxEnabled,
       sfxJson: script.sfxJson,
+      scenes: script.scenes,
+      videoEngine: script.videoEngine,
+      hideText: script.hideText,
       timeline,
       fps: script.fps,
     }).map((c) => ({

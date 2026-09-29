@@ -7,8 +7,8 @@ Editorial), supplied data (Spotlight and Comparison bars), diagrams (Path and
 Orbit), and supplied images (Product frame and Cinematic cover). They include
 versioned scene decisions, editor selection and input, production snapshot
 persistence, and render paths in both engines. Video footage keeps the existing
-media path while motion treatment support for footage, sound, review, and
-long-form milestones below remain planned work.
+media path while motion treatment support for footage, review, and long-form
+milestones below remain planned work.
 
 Sequence direction now ships with Clean / Expressive / Showcase ambition in
 manual and AI creation (including the AI MCP tool). A saved seed gives
@@ -22,6 +22,16 @@ rewriting content, data, narration, or media. Scene locks and hidden-text scenes
 are protected; revision restore retains saved choices, settings, and locks.
 Richer choreography, chapter planning, and motion character controls remain
 future work.
+
+Sound event timing now ships for the current recipe pack. Authored reveal /
+impact landmarks share timing with both renderers; bundled WAV duration and
+10 ms RMS peak metadata are verified against the files. The shared resolver
+freezes absolute cue frames and each clip's shaped attack into preview, exports,
+and production snapshots. It suppresses stale events, short-scene spill and
+clashing automatic sounds, with at least two seconds between automatic peaks.
+Editorial and image treatments stay quiet by default. Refresh preserves
+manual, legacy, muted and locked cues. Music beat maps, word-aware suppression,
+creator cue controls, and final loudness targets remain later sound work.
 
 ## Product decision
 

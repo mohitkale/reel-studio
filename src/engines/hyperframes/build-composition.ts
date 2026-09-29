@@ -673,9 +673,9 @@ function buildSeekScript(
         const fadeOut = fadeFrames > 0 ? Math.min(1, remaining / fadeFrames) : 1;
         vol = baseVol * Math.min(fadeIn, fadeOut) * (narrated ? CFG.audioMix.duckRatio : 1);
       } else if (audio.dataset.role === 'sfx') {
-        const fade = 0.08;
-        const fadeIn = Math.min(1, Math.max(0, local) / fade);
-        const fadeOut = Math.min(1, Math.max(0, duration - local) / fade);
+        const fade = Number(audio.dataset.fadeSeconds ?? 0.08);
+        const fadeIn = fade > 0 ? Math.min(1, Math.max(0, local) / fade) : 1;
+        const fadeOut = fade > 0 ? Math.min(1, Math.max(0, duration - local) / fade) : 1;
         vol = baseVol * Math.min(fadeIn, fadeOut);
       }
       audio.volume = Math.max(0, Math.min(1, vol));
@@ -1108,7 +1108,7 @@ export function buildHyperframesCompositionHtml(
   for (const [i, cue] of (props.sfxCues ?? []).entries()) {
     const startSec = coverSeconds + cue.startFrame / fpsSafe;
     audioTags.push(
-      `<audio id="sfx-${i}" preload="auto" data-role="sfx" data-start="${startSec.toFixed(3)}" data-duration="2" data-track-index="${12 + i}" data-volume="${Math.max(0, Math.min(1, cue.volume)).toFixed(3)}" src="${escapeHtml(cue.url)}"></audio>`,
+      `<audio id="sfx-${i}" preload="auto" data-role="sfx" data-fade-seconds="${cue.fadeSeconds ?? 0.08}" data-start="${startSec.toFixed(3)}" data-duration="2" data-track-index="${12 + i}" data-volume="${Math.max(0, Math.min(1, cue.volume)).toFixed(3)}" src="${escapeHtml(cue.url)}"></audio>`,
     );
   }
 

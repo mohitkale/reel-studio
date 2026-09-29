@@ -151,6 +151,9 @@ export function productionSpecFromLegacyScript(
   const sfx = resolveReelSfxCues({
     sfxEnabled: script.sfxEnabled,
     sfxJson: script.sfxJson,
+    scenes: script.scenes,
+    videoEngine: script.videoEngine,
+    hideText: script.hideText,
     timeline: resolved.timeline,
     fps: script.fps,
   }).map((cue, index) => {
@@ -161,7 +164,14 @@ export function productionSpecFromLegacyScript(
       uri: cue.url,
       source: "bundled",
     });
-    return { assetRef, startFrame: cue.startFrame, volume: cue.volume };
+    return {
+      assetRef,
+      startFrame: cue.startFrame,
+      volume: cue.volume,
+      ...(cue.fadeSeconds !== undefined
+        ? { fadeSeconds: cue.fadeSeconds }
+        : {}),
+    };
   });
 
   const orientation = orientationFromDims(script.width, script.height);
