@@ -1,6 +1,9 @@
 import type { BrandTokens } from "@/compositions/tokens";
 import type { ReelScene } from "@/compositions/types";
-import { resolveMotionDirection } from "@/production/motion";
+import {
+  isDataMotionRecipe,
+  resolveMotionDirection,
+} from "@/production/motion";
 
 function escapeHtml(value: string): string {
   return value
@@ -20,8 +23,14 @@ export function buildTypeMotionScene(args: {
   transitionClass: string;
 }): string | null {
   const { scene, tokens } = args;
-  const motion = resolveMotionDirection(scene.motion, scene.text);
-  if (!motion || scene.hideText) return null;
+  const motion = resolveMotionDirection(
+    scene.motion,
+    scene.text,
+    scene.chart,
+    Boolean(scene.visual || scene.items?.length),
+  );
+  if (!motion || isDataMotionRecipe(motion.recipeId) || scene.hideText)
+    return null;
   const impact = motion.recipeId === "type-impact";
   const role = escapeHtml(scene.role ?? "statement");
   const copy = escapeHtml(scene.text);

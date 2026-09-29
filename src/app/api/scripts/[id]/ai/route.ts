@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { chooseTypeMotion, type MotionDirection } from "@/production/motion";
+import { chooseSceneMotion, type MotionDirection } from "@/production/motion";
 
 import type { SceneBackground, SceneChartData } from "@/compositions/types";
 import { defaultTemplateIdForEngine } from "@/engines/registry";
@@ -313,15 +313,13 @@ export async function POST(
     await prisma.scene.createMany({
       data: resolved.plan.scenes.map((scene, index) => {
         const motion = script.productionPreset
-          ? chooseTypeMotion({
+          ? chooseSceneMotion({
               role: roles[index],
               text: scene.text,
+              chart: scene.chart,
               previous: previousMotion,
               hasVisualContent: Boolean(
-                backgrounds[index] ||
-                scene.visual ||
-                scene.items?.length ||
-                scene.chart,
+                backgrounds[index] || scene.visual || scene.items?.length,
               ),
             })
           : undefined;

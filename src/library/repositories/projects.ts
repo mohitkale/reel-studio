@@ -3,7 +3,7 @@ import type { ScenePlan } from "@/providers/ai/types";
 import type { SceneBackground } from "@/compositions/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
-import { chooseTypeMotion, type MotionDirection } from "@/production/motion";
+import { chooseSceneMotion, type MotionDirection } from "@/production/motion";
 import type { MediaPreference } from "@/lib/media-preference";
 import type { ResolvedStockAsset } from "@/providers/stock/schemas";
 import {
@@ -169,15 +169,13 @@ export async function createProjectFromPlan(
               const role = production?.roles?.[order];
               if (role) config.role = role;
               const motion = production?.preset
-                ? chooseTypeMotion({
+                ? chooseSceneMotion({
                     role,
                     text: scene.text,
+                    chart: scene.chart,
                     previous: previousMotion,
                     hasVisualContent: Boolean(
-                      background ||
-                      scene.visual ||
-                      scene.items?.length ||
-                      scene.chart,
+                      background || scene.visual || scene.items?.length,
                     ),
                   })
                 : undefined;

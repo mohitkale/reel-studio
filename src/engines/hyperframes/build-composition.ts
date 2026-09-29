@@ -41,6 +41,10 @@ import {
   TYPE_MOTION_STYLES,
 } from "@/engines/hyperframes/motion/type-scenes";
 import {
+  buildDataMotionScene,
+  DATA_MOTION_STYLES,
+} from "@/engines/hyperframes/motion/data-scenes";
+import {
   resolveCaptionRenderStyle,
   splitCaptionText,
   splitCaptionWords,
@@ -965,14 +969,16 @@ export function buildHyperframesCompositionHtml(
       framesToSeconds(transitionFrames, fps) / Math.max(0.05, duration),
     );
 
-    const motionScene = buildTypeMotionScene({
+    const motionArgs = {
       scene,
       tokens,
       absoluteStart,
       duration,
       exitWindow,
       transitionClass,
-    });
+    };
+    const motionScene =
+      buildDataMotionScene(motionArgs) ?? buildTypeMotionScene(motionArgs);
     if (motionScene) {
       sceneBlocks.push(
         scene.background?.url
@@ -1140,7 +1146,7 @@ export function buildHyperframesCompositionHtml(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reel Studio · HyperFrames</title>
-  <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}${TYPE_MOTION_STYLES}
+  <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}${TYPE_MOTION_STYLES}${DATA_MOTION_STYLES}
     .rs-subtitle{position:absolute;z-index:50;inset:0;box-sizing:border-box;display:flex;flex-direction:column;justify-content:${captionResolved.outer.justifyContent};align-items:${captionResolved.outer.alignItems};padding:${captionResolved.outer.paddingTop}px ${captionResolved.outer.paddingRight}px ${captionResolved.outer.paddingBottom}px ${captionResolved.outer.paddingLeft}px;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
     .rs-subtitle>span{display:block;max-width:${captionInner.maxWidth}px;padding:${captionInner.padding};border-radius:${captionInner.borderRadius}px;background:${captionInner.background};color:${captionInner.color};font-family:${escapeHtml(captionInner.fontFamily)};font-weight:${captionInner.fontWeight};line-height:${captionInner.lineHeight};letter-spacing:${captionInner.letterSpacing};text-align:${captionInner.textAlign};text-shadow:${captionInner.textShadow};${captionInner.WebkitTextStroke ? `-webkit-text-stroke:${captionInner.WebkitTextStroke};` : ""}overflow-wrap:anywhere}
     .rs-caption-line{display:block}.rs-caption-word{display:inline-block;position:relative}.rs-caption-active{position:absolute;inset:0;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}

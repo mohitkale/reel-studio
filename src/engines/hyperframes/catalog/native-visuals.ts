@@ -1068,10 +1068,11 @@ export function buildGsapMotionBootScript(
 <script>
 (function () {
   function revealFallback() {
-    document.querySelectorAll('.fx-line-inner, .fx-kicker, .fx-rule, .fx-logo-mark, .fx-pill, .fx-social-card, .fx-yt-bar, .fx-money-num, .fx-money-line, .fx-chart-line, .fx-chart-title, .fx-phone, .fx-chip, .fx-qmark, .fx-check-item, .fx-cta-btn, .fx-lt-plate, .fx-slash, .fx-letterbox, .fx-term-grid, .fx-chart-bars i, .fx-carousel-card, .tm-impact-shape, .tm-impact-rule, .tm-editorial-rail').forEach(function (el) {
+    document.querySelectorAll('.fx-line-inner, .fx-kicker, .fx-rule, .fx-logo-mark, .fx-pill, .fx-social-card, .fx-yt-bar, .fx-money-num, .fx-money-line, .fx-chart-line, .fx-chart-title, .fx-phone, .fx-chip, .fx-qmark, .fx-check-item, .fx-cta-btn, .fx-lt-plate, .fx-slash, .fx-letterbox, .fx-term-grid, .fx-chart-bars i, .fx-carousel-card, .tm-impact-shape, .tm-impact-rule, .tm-editorial-rail, .dm-row, .dm-bar-fill').forEach(function (el) {
       el.style.opacity = '1';
       el.style.transform = 'none';
     });
+    document.querySelectorAll('.dm-orbit-draw').forEach(function (el) { el.style.strokeDashoffset = el.getAttribute('data-dash-end') || '0'; });
   }
   function boot() {
     if (!window.gsap) { revealFallback(); return; }
@@ -1119,6 +1120,9 @@ export function buildGsapMotionBootScript(
       var typeShape = stage.querySelector('.tm-impact-shape');
       var typeRule = stage.querySelector('.tm-impact-rule');
       var typeRail = stage.querySelector('.tm-editorial-rail');
+      var dataOrbit = stage.querySelector('.dm-orbit-draw');
+      var dataRows = stage.querySelectorAll('.dm-row');
+      var dataBars = stage.querySelectorAll('.dm-bar-fill');
 
       if (recipe === 'type-impact') {
         if (typeShape) tl.fromTo(typeShape, { scaleX: 0, rotation: -11 }, { scaleX: 1, rotation: -11, duration: 0.58, ease: 'power4.out' }, 0.02);
@@ -1126,6 +1130,18 @@ export function buildGsapMotionBootScript(
       }
       if (recipe === 'type-editorial' && typeRail) {
         tl.fromTo(typeRail, { scaleY: 0 }, { scaleY: 1, duration: 0.78, ease: 'power2.out' }, 0.04);
+      }
+      if (recipe === 'data-spotlight' && dataOrbit) {
+        var orbitEnd = Number(dataOrbit.getAttribute('data-dash-end') || '0');
+        tl.fromTo(dataOrbit, { strokeDashoffset: 893 }, { strokeDashoffset: orbitEnd, duration: 1.25, ease: 'power2.out' }, 0.1);
+      }
+      if (recipe === 'data-bars') {
+        dataRows.forEach(function (row, i) {
+          tl.fromTo(row, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.42, ease: 'power2.out' }, 0.2 + i * 0.11);
+        });
+        dataBars.forEach(function (bar, i) {
+          tl.fromTo(bar, { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: 'power3.out' }, 0.3 + i * 0.11);
+        });
       }
 
       // Recipe-specific backgrounds

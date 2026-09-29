@@ -117,6 +117,26 @@ describe("resolved production composition", () => {
     expect(html).not.toContain('data-production-preset="product-launch"');
   });
 
+  it("keeps chart numbers and source attribution in a saved data recipe", () => {
+    const spec = productionSpec("hyperframes", "square");
+    spec.preset = { id: "data-story", version: "1.0.0" };
+    spec.scenes[0].role = "chart";
+    spec.scenes[0].assetRefs = [];
+    spec.scenes[0].displayText = "Completion across groups";
+    spec.scenes[0].chart = {
+      labels: ["Before", "After"],
+      series: [{ label: "Survey", values: [32, 72], unit: "%" }],
+      sourceAttribution: "Creator survey",
+    };
+    spec.scenes[0].motion = motionDirection("data-bars");
+    const resolved = resolveProductionComposition(spec);
+    const html = buildHyperframesCompositionHtml(resolved.reelProps);
+    expect(html).toContain('data-motion-recipe="data-bars"');
+    expect(html).toContain("32%");
+    expect(html).toContain("72%");
+    expect(html).toContain("Source: Creator survey");
+  });
+
   it.each(ORIENTATIONS)(
     "uses one format-aware input for both engines in %s",
     (orientation) => {

@@ -147,9 +147,9 @@ a new production from the current project.
   Studio planning
 - Product Launch, Editorial Explainer, Creator Punch, Data Story, Developer Demo,
   and Cinematic Brand presets
-- Versioned Impact and Editorial motion treatments for short text scenes, chosen
-  automatically in new preset projects and adjustable per scene in the editor;
-  the same saved choice renders in HyperFrames and Remotion
+- Versioned Impact and Editorial text treatments plus Spotlight and Comparison
+  bars for supplied data; eligible treatments are chosen in new preset projects
+  and adjustable per scene, with the same saved choice rendered in both engines
 - Native portrait, landscape, and square layouts in both engines
 - Uploaded media, bounded public-page text import, or optional Pexels, Pixabay,
   and Unsplash image/video backgrounds

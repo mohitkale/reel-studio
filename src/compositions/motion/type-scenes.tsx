@@ -20,7 +20,12 @@ export function TypeMotionScene({
 }: TemplateProps) {
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
-  const direction = resolveMotionDirection(scene.motion, scene.text);
+  const direction = resolveMotionDirection(
+    scene.motion,
+    scene.text,
+    scene.chart,
+    Boolean(scene.visual || scene.items?.length),
+  );
   const impact = direction?.recipeId === "type-impact";
   const hasMedia = Boolean(scene.background?.url);
   const portrait = height > width;

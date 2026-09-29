@@ -30,6 +30,7 @@ import {
 } from "../src/lib/orientation";
 import { CURRENT_HF_CATALOG_REVISION } from "../src/engines/hyperframes/catalog/revisions";
 import {
+  isDataMotionRecipe,
   motionDirection,
   motionRecipeIdSchema,
 } from "../src/production/motion";
@@ -197,10 +198,35 @@ async function main() {
           {
             id: "motion-regression",
             templateId: "hf-opener",
-            role: "hook" as const,
+            role: isDataMotionRecipe(motionRecipeId)
+              ? motionRecipeId === "data-bars"
+                ? "chart"
+                : "metric"
+              : "hook",
             motion: motionDirection(motionRecipeId),
-            text: "Make every moment matter.",
-            emphasis: ["matter"],
+            text: isDataMotionRecipe(motionRecipeId)
+              ? "Completion across groups"
+              : "Make every moment matter.",
+            emphasis: isDataMotionRecipe(motionRecipeId) ? [] : ["matter"],
+            chart: isDataMotionRecipe(motionRecipeId)
+              ? {
+                  labels:
+                    motionRecipeId === "data-bars"
+                      ? ["Before", "After", "Control", "Pilot"]
+                      : ["Completion"],
+                  series: [
+                    {
+                      label: "Creator survey",
+                      values:
+                        motionRecipeId === "data-bars"
+                          ? [32, 72, 48, 61]
+                          : [72],
+                      unit: "%",
+                    },
+                  ],
+                  sourceAttribution: "Reel Studio example data",
+                }
+              : undefined,
             order: 0,
           },
         ],

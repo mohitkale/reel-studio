@@ -18,7 +18,11 @@ import { resolveProductionLayout } from "@/production/layout";
 import { getPresetSceneComponent } from "./presets/registry";
 import { SubtitleOverlay } from "./components/subtitle-overlay";
 import { TypeMotionScene } from "./motion/type-scenes";
-import { resolveMotionDirection } from "@/production/motion";
+import { DataMotionScene } from "./motion/data-scenes";
+import {
+  isDataMotionRecipe,
+  resolveMotionDirection,
+} from "@/production/motion";
 import {
   buildAudioMixPlan,
   clipVolumeAtFrame,
@@ -123,10 +127,19 @@ export const ReelComposition = React.memo(function ReelComposition({
             {timeline.map((beat, i) => {
               const scene = sceneById.get(beat.sceneId);
               if (!scene) return null;
+              const motion = !scene.hideText
+                ? resolveMotionDirection(
+                    scene.motion,
+                    scene.text,
+                    scene.chart,
+                    Boolean(scene.visual || scene.items?.length),
+                  )
+                : undefined;
               const Template =
-                (!scene.hideText &&
-                resolveMotionDirection(scene.motion, scene.text)
-                  ? TypeMotionScene
+                (motion
+                  ? isDataMotionRecipe(motion.recipeId)
+                    ? DataMotionScene
+                    : TypeMotionScene
                   : undefined) ??
                 getPresetSceneComponent(preset?.id) ??
                 getTemplateComponent(scene.templateId);
