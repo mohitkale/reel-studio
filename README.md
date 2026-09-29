@@ -308,8 +308,8 @@ local AI, optional stock media, styled captions, Quick Produce, scoped MCP
 automation, and format-aware batches. The implementation plan and evidence are
 in [docs/LOCAL_FIRST_EXPANSION.md](docs/LOCAL_FIRST_EXPANSION.md) and the task
 ledgers under [docs/production](docs/production/). The motion graphics expansion
-now includes editable type, supplied-data, and diagram treatments in both video
-engines. Its remaining scope is in
+now includes editable type, supplied-data, diagram, and supplied-image treatments
+in both video engines. Its remaining scope is in
 [docs/production/MOTION_GRAPHICS_PLAN.md](docs/production/MOTION_GRAPHICS_PLAN.md).
 Follow longer-term work in
 [ROADMAP.md](ROADMAP.md).

@@ -20,9 +20,11 @@ import { SubtitleOverlay } from "./components/subtitle-overlay";
 import { TypeMotionScene } from "./motion/type-scenes";
 import { DataMotionScene } from "./motion/data-scenes";
 import { DiagramMotionScene } from "./motion/diagram-scenes";
+import { MediaMotionScene } from "./motion/media-scenes";
 import {
   isDataMotionRecipe,
   isDiagramMotionRecipe,
+  isMediaMotionRecipe,
   resolveMotionDirection,
 } from "@/production/motion";
 import {
@@ -136,6 +138,7 @@ export const ReelComposition = React.memo(function ReelComposition({
                     scene.chart,
                     Boolean(scene.visual),
                     scene.items,
+                    scene.background,
                   )
                 : undefined;
               const Template =
@@ -144,7 +147,9 @@ export const ReelComposition = React.memo(function ReelComposition({
                     ? DataMotionScene
                     : isDiagramMotionRecipe(motion.recipeId)
                       ? DiagramMotionScene
-                      : TypeMotionScene
+                      : isMediaMotionRecipe(motion.recipeId)
+                        ? MediaMotionScene
+                        : TypeMotionScene
                   : undefined) ??
                 getPresetSceneComponent(preset?.id) ??
                 getTemplateComponent(scene.templateId);

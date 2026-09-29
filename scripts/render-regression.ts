@@ -32,6 +32,7 @@ import { CURRENT_HF_CATALOG_REVISION } from "../src/engines/hyperframes/catalog/
 import {
   isDataMotionRecipe,
   isDiagramMotionRecipe,
+  isMediaMotionRecipe,
   motionDirection,
   motionRecipeIdSchema,
 } from "../src/production/motion";
@@ -180,6 +181,19 @@ async function main() {
         await readFile(path.resolve("public/samples/cinematic-brand-hero.svg"))
       ).toString("base64")}`
     : undefined;
+  const mediaMotionAssetDataUrl = isMediaMotionRecipe(
+    motionRecipeId ?? "type-impact",
+  )
+    ? `data:image/svg+xml;base64,${(
+        await readFile(
+          path.resolve(
+            motionRecipeId === "media-device"
+              ? "public/samples/product-launch-dashboard.svg"
+              : "public/samples/cinematic-brand-hero.svg",
+          ),
+        )
+      ).toString("base64")}`
+    : undefined;
   const carouselImages = renderCarousel
     ? await Promise.all(
         [
@@ -205,16 +219,25 @@ async function main() {
                 : "metric"
               : isDiagramMotionRecipe(motionRecipeId)
                 ? "diagram"
-                : "hook",
+                : isMediaMotionRecipe(motionRecipeId)
+                  ? motionRecipeId === "media-device"
+                    ? "screenshot-demo"
+                    : "hero"
+                  : "hook",
             motion: motionDirection(motionRecipeId),
             text: isDataMotionRecipe(motionRecipeId)
               ? "Completion across groups"
               : isDiagramMotionRecipe(motionRecipeId)
                 ? "From idea to release"
-                : "Make every moment matter.",
+                : isMediaMotionRecipe(motionRecipeId)
+                  ? motionRecipeId === "media-device"
+                    ? "A clearer creative workspace"
+                    : "Every frame tells the story"
+                  : "Make every moment matter.",
             emphasis:
               isDataMotionRecipe(motionRecipeId) ||
-              isDiagramMotionRecipe(motionRecipeId)
+              isDiagramMotionRecipe(motionRecipeId) ||
+              isMediaMotionRecipe(motionRecipeId)
                 ? []
                 : ["matter"],
             items: isDiagramMotionRecipe(motionRecipeId)
@@ -226,6 +249,9 @@ async function main() {
                     "Build the visuals",
                     "Review the cut",
                   ]
+              : undefined,
+            background: mediaMotionAssetDataUrl
+              ? { type: "image" as const, url: mediaMotionAssetDataUrl }
               : undefined,
             chart: isDataMotionRecipe(motionRecipeId)
               ? {

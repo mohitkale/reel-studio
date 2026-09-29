@@ -153,6 +153,18 @@ describe("resolved production composition", () => {
     expect(html).toContain("Sound");
   });
 
+  it("uses the supplied image in a saved media treatment", () => {
+    const spec = productionSpec("hyperframes", "landscape");
+    spec.scenes[0].role = "screenshot-demo";
+    spec.scenes[0].displayText = "See the editor";
+    spec.scenes[0].motion = motionDirection("media-device");
+    const resolved = resolveProductionComposition(spec);
+    const html = buildHyperframesCompositionHtml(resolved.reelProps);
+    expect(html).toContain('data-motion-recipe="media-device"');
+    expect(html).toContain("/media/hero.png");
+    expect(html).toContain("pl-device");
+  });
+
   it.each(ORIENTATIONS)(
     "uses one format-aware input for both engines in %s",
     (orientation) => {

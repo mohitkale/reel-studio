@@ -2,11 +2,13 @@
 
 Status: implementation started, 2026-09-29. Branch: `feature/motion-graphics`.
 
-The first three vertical slices ship two treatments each for type (Impact and
-Editorial), supplied data (Spotlight and Comparison bars), and diagrams (Path
-and Orbit). They include versioned scene decisions, editor selection and input,
-production snapshot persistence, and render paths in both engines. Media,
-sound, review, and long-form milestones below remain planned work.
+The first usable pack ships two treatments each for type (Impact and
+Editorial), supplied data (Spotlight and Comparison bars), diagrams (Path and
+Orbit), and supplied images (Product frame and Cinematic cover). They include
+versioned scene decisions, editor selection and input, production snapshot
+persistence, and render paths in both engines. Video footage keeps the existing
+media path while motion treatment support for footage, sound, review, and
+long-form milestones below remain planned work.
 
 ## Product decision
 

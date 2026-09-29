@@ -45,10 +45,25 @@ export const DIAGRAM_MOTION_RECIPES = [
     maxCharacters: 90,
   },
 ] as const;
+export const MEDIA_MOTION_RECIPES = [
+  {
+    id: "media-device",
+    name: "Product frame",
+    description: "A supplied image appears in a precise product window.",
+    maxCharacters: 100,
+  },
+  {
+    id: "media-cinematic",
+    name: "Cinematic cover",
+    description: "A supplied image fills the scene behind a strong headline.",
+    maxCharacters: 140,
+  },
+] as const;
 export const MOTION_RECIPES = [
   ...TYPE_MOTION_RECIPES,
   ...DATA_MOTION_RECIPES,
   ...DIAGRAM_MOTION_RECIPES,
+  ...MEDIA_MOTION_RECIPES,
 ] as const;
 
 export const motionRecipeIdSchema = z.enum([
@@ -58,6 +73,8 @@ export const motionRecipeIdSchema = z.enum([
   "data-bars",
   "diagram-path",
   "diagram-orbit",
+  "media-device",
+  "media-cinematic",
 ]);
 export type MotionRecipeId = z.infer<typeof motionRecipeIdSchema>;
 
@@ -94,6 +111,15 @@ export function isDiagramMotionRecipe(id: MotionRecipeId): boolean {
   return id === "diagram-path" || id === "diagram-orbit";
 }
 
+export function isMediaMotionRecipe(id: MotionRecipeId): boolean {
+  return id === "media-device" || id === "media-cinematic";
+}
+
+export interface MotionMediaInput {
+  type: "image" | "video";
+  url: string;
+}
+
 export function formatMotionValue(value: number, unit = ""): string {
   return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 4 }).format(value)}${unit}`;
 }
@@ -121,6 +147,7 @@ export function motionFallbackReason(
   chart?: MotionChartInput,
   hasOtherVisualContent = false,
   items?: string[],
+  background?: MotionMediaInput,
 ): string | undefined {
   const recipe = MOTION_RECIPES.find((item) => item.id === direction.recipeId);
   if (!recipe || direction.version !== MOTION_RECIPE_VERSION)
@@ -129,6 +156,14 @@ export function motionFallbackReason(
     return `This treatment supports up to ${recipe.maxCharacters} characters of copy.`;
   if (hasOtherVisualContent)
     return "This scene already has a visual or list that this treatment would hide.";
+  if (isMediaMotionRecipe(direction.recipeId)) {
+    if (!background?.url || background.type !== "image")
+      return "Add a supplied image for this media treatment.";
+    if (!text.trim()) return "Add a short headline for this media treatment.";
+    if (chart || items?.length)
+      return "This media treatment cannot hide chart data or diagram ideas.";
+    return undefined;
+  }
   if (isDiagramMotionRecipe(direction.recipeId)) {
     if (chart) return "This scene has chart data; choose a data treatment.";
     if (
@@ -202,9 +237,17 @@ export function resolveMotionDirection(
   chart?: MotionChartInput,
   hasOtherVisualContent = false,
   items?: string[],
+  background?: MotionMediaInput,
 ): MotionDirection | undefined {
   return direction &&
-    !motionFallbackReason(direction, text, chart, hasOtherVisualContent, items)
+    !motionFallbackReason(
+      direction,
+      text,
+      chart,
+      hasOtherVisualContent,
+      items,
+      background,
+    )
     ? direction
     : undefined;
 }
@@ -244,11 +287,55 @@ export function chooseSceneMotion(input: {
   text: string;
   chart?: MotionChartInput;
   items?: string[];
+  background?: MotionMediaInput;
   previous?: MotionDirection;
   current?: MotionDirection;
   hasVisualContent?: boolean;
 }): MotionDirection | undefined {
+  if (
+    input.background?.type === "image" &&
+    input.background.url &&
+    input.role &&
+    (input.role === "screenshot-demo" ||
+      input.role === "hero" ||
+      input.role === "feature")
+  ) {
+    if (
+      !input.hasVisualContent &&
+      input.current &&
+      isMediaMotionRecipe(input.current.recipeId) &&
+      !motionFallbackReason(
+        input.current,
+        input.text,
+        input.chart,
+        false,
+        input.items,
+        input.background,
+      )
+    )
+      return input.current;
+    const choices: MotionRecipeId[] =
+      input.role === "screenshot-demo" ||
+      (input.role === "feature" &&
+        input.previous?.recipeId === "media-cinematic")
+        ? ["media-device", "media-cinematic"]
+        : ["media-cinematic", "media-device"];
+    return choices
+      .map(motionDirection)
+      .find(
+        (direction) =>
+          !motionFallbackReason(
+            direction,
+            input.text,
+            input.chart,
+            Boolean(input.hasVisualContent),
+            input.items,
+            input.background,
+          ),
+      );
+  }
   if (input.hasVisualContent) return undefined;
+  if (input.background?.url) return undefined;
   if (input.items?.length && input.role === "diagram") {
     if (
       input.current &&

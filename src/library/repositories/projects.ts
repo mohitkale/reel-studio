@@ -174,8 +174,9 @@ export async function createProjectFromPlan(
                     text: scene.text,
                     chart: scene.chart,
                     items: scene.items,
+                    background: background ?? undefined,
                     previous: previousMotion,
-                    hasVisualContent: Boolean(background || scene.visual),
+                    hasVisualContent: Boolean(scene.visual),
                   })
                 : undefined;
               if (motion) {

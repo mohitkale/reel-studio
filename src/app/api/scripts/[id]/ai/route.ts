@@ -318,8 +318,9 @@ export async function POST(
               text: scene.text,
               chart: scene.chart,
               items: scene.items,
+              background: backgrounds[index] ?? undefined,
               previous: previousMotion,
-              hasVisualContent: Boolean(backgrounds[index] || scene.visual),
+              hasVisualContent: Boolean(scene.visual),
             })
           : undefined;
         if (motion) previousMotion = motion;

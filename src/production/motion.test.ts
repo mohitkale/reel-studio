@@ -207,4 +207,47 @@ describe("type motion direction", () => {
       ),
     ).toBeUndefined();
   });
+
+  it("uses supplied images for media treatments and keeps video on the legacy path", () => {
+    const image = { type: "image" as const, url: "/media/shot.png" };
+    expect(
+      chooseSceneMotion({
+        role: "screenshot-demo",
+        text: "See the editor",
+        background: image,
+      }),
+    ).toEqual(motionDirection("media-device"));
+    expect(
+      chooseSceneMotion({
+        role: "hero",
+        text: "A cinematic introduction",
+        background: image,
+      }),
+    ).toEqual(motionDirection("media-cinematic"));
+    expect(
+      resolveMotionDirection(
+        motionDirection("media-device"),
+        "See the editor",
+        undefined,
+        false,
+        undefined,
+        image,
+      ),
+    ).toEqual(motionDirection("media-device"));
+    expect(
+      chooseSceneMotion({
+        role: "screenshot-demo",
+        text: "See the editor",
+        background: { type: "video", url: "/media/shot.mp4" },
+      }),
+    ).toBeUndefined();
+    expect(
+      chooseSceneMotion({
+        role: "hero",
+        text: "A cinematic introduction",
+        background: image,
+        items: ["Do not hide me"],
+      }),
+    ).toBeUndefined();
+  });
 });

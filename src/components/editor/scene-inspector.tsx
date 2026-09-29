@@ -33,6 +33,7 @@ import {
   chooseSceneMotion,
   isDataMotionRecipe,
   isDiagramMotionRecipe,
+  isMediaMotionRecipe,
   motionDirection,
   motionFallbackReason,
   resolveMotionDirection,
@@ -734,7 +735,11 @@ export function SceneInspector({
     normalId === "hf-data-chart" ||
     normalId === "stat-reveal";
   const motionEligible = Boolean(
-    scene.text.trim() || scene.motion || scene.chart || scene.items?.length,
+    scene.text.trim() ||
+    scene.motion ||
+    scene.chart ||
+    scene.items?.length ||
+    scene.background?.url,
   );
   const motionOptions = [
     { value: "preset", label: "Preset look" },
@@ -747,6 +752,7 @@ export function SceneInspector({
           scene.chart,
           Boolean(scene.visual),
           scene.items,
+          scene.background,
         ),
     ).map((recipe) => ({ value: recipe.id, label: recipe.name })),
   ];
@@ -938,11 +944,12 @@ export function SceneInspector({
                     scene.chart,
                     Boolean(scene.visual),
                     scene.items,
+                    scene.background,
                   )
                   ? MOTION_RECIPES.find(
                       (recipe) => recipe.id === scene.motion?.recipeId,
                     )?.description
-                  : `${motionFallbackReason(scene.motion, scene.text, scene.chart, Boolean(scene.visual), scene.items)} The preset look renders until it fits or you choose another treatment.`
+                  : `${motionFallbackReason(scene.motion, scene.text, scene.chart, Boolean(scene.visual), scene.items, scene.background)} The preset look renders until it fits or you choose another treatment.`
                 : "Uses this production preset's original scene design."}
             </p>
           </div>
@@ -971,10 +978,9 @@ export function SceneInspector({
                       text: scene.text,
                       chart,
                       items: scene.items,
+                      background: scene.background,
                       current: scene.motion,
-                      hasVisualContent: Boolean(
-                        scene.visual || scene.items?.length || scene.background,
-                      ),
+                      hasVisualContent: Boolean(scene.visual),
                     }) ?? null,
                 })
               }
@@ -1004,10 +1010,9 @@ export function SceneInspector({
                       text: scene.text,
                       chart: scene.chart,
                       items,
+                      background: scene.background,
                       current: scene.motion,
-                      hasVisualContent: Boolean(
-                        scene.visual || scene.background,
-                      ),
+                      hasVisualContent: Boolean(scene.visual),
                     })
                   : scene.motion;
               onUpdate({
@@ -1026,7 +1031,26 @@ export function SceneInspector({
           orientation={orientation}
           mediaPreference={scene.mediaPreference ?? "auto"}
           background={scene.background}
-          onChange={(bg) => onUpdate({ id: scene.id, background: bg })}
+          onChange={(bg) => {
+            const mediaMotion = Boolean(
+              scene.motion && isMediaMotionRecipe(scene.motion.recipeId),
+            );
+            const motion =
+              !scene.motion || mediaMotion
+                ? bg
+                  ? (chooseSceneMotion({
+                      role: scene.role,
+                      text: scene.text,
+                      chart: scene.chart,
+                      items: scene.items,
+                      background: bg,
+                      current: scene.motion,
+                      hasVisualContent: Boolean(scene.visual),
+                    }) ?? null)
+                  : null
+                : undefined;
+            onUpdate({ id: scene.id, background: bg, motion });
+          }}
           onPreferenceChange={(mediaPreference) =>
             onUpdate({ id: scene.id, mediaPreference })
           }
