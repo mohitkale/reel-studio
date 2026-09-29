@@ -2,11 +2,11 @@
 
 Status: implementation started, 2026-09-29. Branch: `feature/motion-graphics`.
 
-The first two vertical slices ship two type treatments (Impact and Editorial)
-and two supplied-data treatments (Spotlight and Comparison bars), with versioned
-scene decisions, editor selection and data entry, production snapshot
-persistence, and render paths in both engines. The diagram, media, sound,
-review, and long-form milestones below remain planned work.
+The first three vertical slices ship two treatments each for type (Impact and
+Editorial), supplied data (Spotlight and Comparison bars), and diagrams (Path
+and Orbit). They include versioned scene decisions, editor selection and input,
+production snapshot persistence, and render paths in both engines. Media,
+sound, review, and long-form milestones below remain planned work.
 
 ## Product decision
 

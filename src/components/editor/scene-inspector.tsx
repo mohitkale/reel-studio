@@ -32,6 +32,7 @@ import {
   MOTION_RECIPES,
   chooseSceneMotion,
   isDataMotionRecipe,
+  isDiagramMotionRecipe,
   motionDirection,
   motionFallbackReason,
   resolveMotionDirection,
@@ -415,9 +416,11 @@ function BackgroundEditor({
 function ChecklistEditor({
   items,
   onChange,
+  diagram = false,
 }: {
   items: string[];
   onChange: (items: string[]) => void;
+  diagram?: boolean;
 }) {
   // Initialized once per mount; SceneInspector is keyed by scene.id, so switching
   // scenes remounts this with the right items — no resync effect needed.
@@ -446,10 +449,11 @@ function ChecklistEditor({
 
   return (
     <div className="grid gap-2">
-      <Label>Checklist items</Label>
+      <Label>{diagram ? "Diagram ideas" : "Checklist items"}</Label>
       <p className="text-muted-foreground text-xs">
-        Each item becomes its own row with an icon badge. Leave empty to fall
-        back to splitting the scene text.
+        {diagram
+          ? "Add 2–5 short ideas. Path follows their order; Orbit places the first idea at the center."
+          : "Each item becomes its own row with an icon badge. Leave empty to fall back to splitting the scene text."}
       </p>
       <div className="grid gap-1.5">
         {draft.map((item, i) => (
@@ -717,7 +721,11 @@ export function SceneInspector({
   const engine = getVideoEngine(videoEngine);
   const templates = engine.listTemplates();
   const normalId = engine.normalizeTemplateId(scene.templateId);
-  const isChecklist = normalId === "icon-grid" || normalId === "hf-list";
+  const isChecklist =
+    normalId === "icon-grid" ||
+    normalId === "hf-list" ||
+    scene.role === "diagram" ||
+    Boolean(scene.motion && isDiagramMotionRecipe(scene.motion.recipeId));
   const chartEligible =
     Boolean(scene.chart) ||
     scene.role === "metric" ||
@@ -726,20 +734,20 @@ export function SceneInspector({
     normalId === "hf-data-chart" ||
     normalId === "stat-reveal";
   const motionEligible = Boolean(
-    scene.text.trim() || scene.motion || scene.chart,
+    scene.text.trim() || scene.motion || scene.chart || scene.items?.length,
   );
   const motionOptions = [
     { value: "preset", label: "Preset look" },
     ...MOTION_RECIPES.filter(
       (recipe) =>
         recipe.id === scene.motion?.recipeId ||
-        (isDataMotionRecipe(recipe.id) === Boolean(scene.chart) &&
-          !motionFallbackReason(
-            motionDirection(recipe.id),
-            scene.text,
-            scene.chart,
-            Boolean(scene.visual || scene.items?.length),
-          )),
+        !motionFallbackReason(
+          motionDirection(recipe.id),
+          scene.text,
+          scene.chart,
+          Boolean(scene.visual),
+          scene.items,
+        ),
     ).map((recipe) => ({ value: recipe.id, label: recipe.name })),
   ];
 
@@ -928,12 +936,13 @@ export function SceneInspector({
                     scene.motion,
                     scene.text,
                     scene.chart,
-                    Boolean(scene.visual || scene.items?.length),
+                    Boolean(scene.visual),
+                    scene.items,
                   )
                   ? MOTION_RECIPES.find(
                       (recipe) => recipe.id === scene.motion?.recipeId,
                     )?.description
-                  : `${motionFallbackReason(scene.motion, scene.text, scene.chart, Boolean(scene.visual || scene.items?.length))} The preset look renders until it fits or you choose another treatment.`
+                  : `${motionFallbackReason(scene.motion, scene.text, scene.chart, Boolean(scene.visual), scene.items)} The preset look renders until it fits or you choose another treatment.`
                 : "Uses this production preset's original scene design."}
             </p>
           </div>
@@ -961,7 +970,8 @@ export function SceneInspector({
                         (chart.labels.length === 1 ? "metric" : "chart"),
                       text: scene.text,
                       chart,
-                      previous: scene.motion,
+                      items: scene.items,
+                      current: scene.motion,
                       hasVisualContent: Boolean(
                         scene.visual || scene.items?.length || scene.background,
                       ),
@@ -985,9 +995,27 @@ export function SceneInspector({
         {isChecklist && (
           <ChecklistEditor
             items={scene.items ?? []}
-            onChange={(items) =>
-              onUpdate({ id: scene.id, items: items.length ? items : null })
-            }
+            diagram={scene.role === "diagram"}
+            onChange={(items) => {
+              const motion =
+                scene.role === "diagram"
+                  ? chooseSceneMotion({
+                      role: scene.role,
+                      text: scene.text,
+                      chart: scene.chart,
+                      items,
+                      current: scene.motion,
+                      hasVisualContent: Boolean(
+                        scene.visual || scene.background,
+                      ),
+                    })
+                  : scene.motion;
+              onUpdate({
+                id: scene.id,
+                items: items.length ? items : null,
+                motion: scene.role === "diagram" ? (motion ?? null) : undefined,
+              });
+            }}
           />
         )}
 

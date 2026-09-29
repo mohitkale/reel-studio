@@ -31,9 +31,24 @@ export const DATA_MOTION_RECIPES = [
     maxCharacters: 110,
   },
 ] as const;
+export const DIAGRAM_MOTION_RECIPES = [
+  {
+    id: "diagram-path",
+    name: "Path",
+    description: "Ordered ideas travel along a numbered route.",
+    maxCharacters: 90,
+  },
+  {
+    id: "diagram-orbit",
+    name: "Orbit",
+    description: "The first idea anchors its related ideas in a radial layout.",
+    maxCharacters: 90,
+  },
+] as const;
 export const MOTION_RECIPES = [
   ...TYPE_MOTION_RECIPES,
   ...DATA_MOTION_RECIPES,
+  ...DIAGRAM_MOTION_RECIPES,
 ] as const;
 
 export const motionRecipeIdSchema = z.enum([
@@ -41,6 +56,8 @@ export const motionRecipeIdSchema = z.enum([
   "type-editorial",
   "data-spotlight",
   "data-bars",
+  "diagram-path",
+  "diagram-orbit",
 ]);
 export type MotionRecipeId = z.infer<typeof motionRecipeIdSchema>;
 
@@ -73,6 +90,10 @@ export function isDataMotionRecipe(id: MotionRecipeId): boolean {
   return id === "data-spotlight" || id === "data-bars";
 }
 
+export function isDiagramMotionRecipe(id: MotionRecipeId): boolean {
+  return id === "diagram-path" || id === "diagram-orbit";
+}
+
 export function formatMotionValue(value: number, unit = ""): string {
   return `${new Intl.NumberFormat("en-US", { maximumFractionDigits: 4 }).format(value)}${unit}`;
 }
@@ -99,6 +120,7 @@ export function motionFallbackReason(
   text: string,
   chart?: MotionChartInput,
   hasOtherVisualContent = false,
+  items?: string[],
 ): string | undefined {
   const recipe = MOTION_RECIPES.find((item) => item.id === direction.recipeId);
   if (!recipe || direction.version !== MOTION_RECIPE_VERSION)
@@ -107,6 +129,20 @@ export function motionFallbackReason(
     return `This treatment supports up to ${recipe.maxCharacters} characters of copy.`;
   if (hasOtherVisualContent)
     return "This scene already has a visual or list that this treatment would hide.";
+  if (isDiagramMotionRecipe(direction.recipeId)) {
+    if (chart) return "This scene has chart data; choose a data treatment.";
+    if (
+      !items ||
+      items.length < (direction.recipeId === "diagram-orbit" ? 3 : 2) ||
+      items.length > 5
+    )
+      return "Add two to five diagram ideas (at least three for Orbit).";
+    if (items.some((item) => !item.trim() || Array.from(item).length > 24))
+      return "Keep every diagram idea to 24 characters or fewer.";
+    return undefined;
+  }
+  if (items?.length)
+    return "Choose a diagram treatment to keep the supplied ideas visible.";
   if (!isDataMotionRecipe(direction.recipeId))
     return chart
       ? "Choose a data treatment to keep the supplied chart visible."
@@ -165,9 +201,10 @@ export function resolveMotionDirection(
   text: string,
   chart?: MotionChartInput,
   hasOtherVisualContent = false,
+  items?: string[],
 ): MotionDirection | undefined {
   return direction &&
-    !motionFallbackReason(direction, text, chart, hasOtherVisualContent)
+    !motionFallbackReason(direction, text, chart, hasOtherVisualContent, items)
     ? direction
     : undefined;
 }
@@ -206,21 +243,54 @@ export function chooseSceneMotion(input: {
   role: ProductionSceneRole | undefined;
   text: string;
   chart?: MotionChartInput;
+  items?: string[];
   previous?: MotionDirection;
+  current?: MotionDirection;
   hasVisualContent?: boolean;
 }): MotionDirection | undefined {
   if (input.hasVisualContent) return undefined;
+  if (input.items?.length && input.role === "diagram") {
+    if (
+      input.current &&
+      isDiagramMotionRecipe(input.current.recipeId) &&
+      !motionFallbackReason(
+        input.current,
+        input.text,
+        input.chart,
+        false,
+        input.items,
+      )
+    )
+      return input.current;
+    const choices: MotionRecipeId[] =
+      input.previous?.recipeId === "diagram-path"
+        ? ["diagram-orbit", "diagram-path"]
+        : ["diagram-path", "diagram-orbit"];
+    return choices
+      .map(motionDirection)
+      .find(
+        (direction) =>
+          !motionFallbackReason(
+            direction,
+            input.text,
+            input.chart,
+            false,
+            input.items,
+          ),
+      );
+  }
+  if (input.items?.length) return undefined;
   if (input.chart && input.role && DATA_ROLES.has(input.role)) {
     const preferBars = input.role !== "metric";
     const choices: MotionRecipeId[] = preferBars
       ? ["data-bars", "data-spotlight"]
       : ["data-spotlight", "data-bars"];
     if (
-      input.previous &&
-      isDataMotionRecipe(input.previous.recipeId) &&
-      !motionFallbackReason(input.previous, input.text, input.chart)
+      input.current &&
+      isDataMotionRecipe(input.current.recipeId) &&
+      !motionFallbackReason(input.current, input.text, input.chart)
     )
-      return input.previous;
+      return input.current;
     return choices
       .map(motionDirection)
       .find(

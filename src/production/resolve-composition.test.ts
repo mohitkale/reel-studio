@@ -137,6 +137,22 @@ describe("resolved production composition", () => {
     expect(html).toContain("Source: Creator survey");
   });
 
+  it("keeps supplied diagram ideas in a saved motion recipe", () => {
+    const spec = productionSpec("hyperframes", "portrait");
+    spec.preset = { id: "editorial-explainer", version: "1.0.0" };
+    spec.scenes[0].role = "diagram";
+    spec.scenes[0].assetRefs = [];
+    spec.scenes[0].displayText = "From concept to cut";
+    spec.scenes[0].items = ["Idea", "Story", "Motion", "Sound"];
+    spec.scenes[0].motion = motionDirection("diagram-orbit");
+    const resolved = resolveProductionComposition(spec);
+    const html = buildHyperframesCompositionHtml(resolved.reelProps);
+    expect(resolved.reelProps.scenes[0].items).toEqual(spec.scenes[0].items);
+    expect(html).toContain('data-motion-recipe="diagram-orbit"');
+    expect(html).toContain("Idea");
+    expect(html).toContain("Sound");
+  });
+
   it.each(ORIENTATIONS)(
     "uses one format-aware input for both engines in %s",
     (orientation) => {

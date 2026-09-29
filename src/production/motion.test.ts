@@ -75,7 +75,7 @@ describe("type motion direction", () => {
         role: "metric",
         text: "Completion rose",
         chart: single,
-        previous: motionDirection("data-spotlight"),
+        current: motionDirection("data-spotlight"),
       }),
     ).toEqual(motionDirection("data-spotlight"));
     expect(
@@ -148,6 +148,63 @@ describe("type motion direction", () => {
           series: [{ label: "Sample", values: [0.000001] }],
         },
       }),
+    ).toBeUndefined();
+  });
+
+  it("selects and preserves diagrams only with short supplied ideas", () => {
+    const items = ["Idea", "Storyboard", "Animation", "Review"];
+    expect(
+      chooseSceneMotion({ role: "diagram", text: "Build the story", items }),
+    ).toEqual(motionDirection("diagram-path"));
+    expect(
+      chooseSceneMotion({
+        role: "diagram",
+        text: "Build the story",
+        items,
+        previous: motionDirection("diagram-path"),
+      }),
+    ).toEqual(motionDirection("diagram-orbit"));
+    expect(
+      chooseSceneMotion({
+        role: "diagram",
+        text: "Build the story",
+        items,
+        current: motionDirection("diagram-orbit"),
+      }),
+    ).toEqual(motionDirection("diagram-orbit"));
+    expect(
+      resolveMotionDirection(
+        motionDirection("diagram-orbit"),
+        "Build the story",
+        undefined,
+        false,
+        items,
+      ),
+    ).toEqual(motionDirection("diagram-orbit"));
+    expect(
+      chooseSceneMotion({
+        role: "diagram",
+        text: "Build",
+        items: ["Only one"],
+      }),
+    ).toBeUndefined();
+    expect(
+      resolveMotionDirection(
+        motionDirection("type-impact"),
+        "Build",
+        undefined,
+        false,
+        items,
+      ),
+    ).toBeUndefined();
+    expect(
+      resolveMotionDirection(
+        motionDirection("diagram-path"),
+        "Build",
+        undefined,
+        true,
+        items,
+      ),
     ).toBeUndefined();
   });
 });

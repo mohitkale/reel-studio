@@ -31,6 +31,7 @@ import {
 import { CURRENT_HF_CATALOG_REVISION } from "../src/engines/hyperframes/catalog/revisions";
 import {
   isDataMotionRecipe,
+  isDiagramMotionRecipe,
   motionDirection,
   motionRecipeIdSchema,
 } from "../src/production/motion";
@@ -202,12 +203,30 @@ async function main() {
               ? motionRecipeId === "data-bars"
                 ? "chart"
                 : "metric"
-              : "hook",
+              : isDiagramMotionRecipe(motionRecipeId)
+                ? "diagram"
+                : "hook",
             motion: motionDirection(motionRecipeId),
             text: isDataMotionRecipe(motionRecipeId)
               ? "Completion across groups"
-              : "Make every moment matter.",
-            emphasis: isDataMotionRecipe(motionRecipeId) ? [] : ["matter"],
+              : isDiagramMotionRecipe(motionRecipeId)
+                ? "From idea to release"
+                : "Make every moment matter.",
+            emphasis:
+              isDataMotionRecipe(motionRecipeId) ||
+              isDiagramMotionRecipe(motionRecipeId)
+                ? []
+                : ["matter"],
+            items: isDiagramMotionRecipe(motionRecipeId)
+              ? motionRecipeId === "diagram-orbit"
+                ? ["Creative system", "Story", "Motion", "Sound", "Review"]
+                : [
+                    "Find the idea",
+                    "Shape the story",
+                    "Build the visuals",
+                    "Review the cut",
+                  ]
+              : undefined,
             chart: isDataMotionRecipe(motionRecipeId)
               ? {
                   labels:
