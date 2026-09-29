@@ -309,7 +309,11 @@ automation, and format-aware batches. The implementation plan and evidence are
 in [docs/LOCAL_FIRST_EXPANSION.md](docs/LOCAL_FIRST_EXPANSION.md) and the task
 ledgers under [docs/production](docs/production/). The motion graphics expansion
 now includes editable type, supplied-data, diagram, and supplied-image treatments
-in both video engines. Its remaining scope is in
+in both video engines. Manual and AI creation offer Clean, Expressive, and
+Showcase visual ambition; a deterministic sequence planner balances type
+reveals, remembers recent layouts on append, and preserves supplied diagram
+order and data. Settings and chosen treatments are frozen in production
+snapshots. Its remaining scope is in
 [docs/production/MOTION_GRAPHICS_PLAN.md](docs/production/MOTION_GRAPHICS_PLAN.md).
 Follow longer-term work in
 [ROADMAP.md](ROADMAP.md).

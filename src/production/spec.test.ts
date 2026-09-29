@@ -136,6 +136,26 @@ describe("production presets", () => {
 });
 
 describe("legacy production specification", () => {
+  it("freezes motion settings and detects subsequent direction changes", () => {
+    const script = legacyScript();
+    script.motionPlan = {
+      version: "1.0.0",
+      seed: "saved-direction",
+      ambition: "showcase",
+    };
+    script.scenes[0].motion = { recipeId: "type-impact", version: "1.0.0" };
+    const spec = productionSpecFromLegacyScript(script, {
+      sourceRevision: "revision",
+    });
+    expect(spec.motionPlan).toEqual(script.motionPlan);
+    expect(spec.scenes[0].motion).toEqual(script.scenes[0].motion);
+    script.motionPlan.ambition = "clean";
+    const edited = productionSpecFromLegacyScript(script, {
+      sourceRevision: "revision",
+    });
+    expect(edited.source.contentHash).not.toBe(spec.source.contentHash);
+  });
+
   it("snapshots engine, brand, timing, media, narration, and stored template ids", () => {
     const spec = productionSpecFromLegacyScript(legacyScript(), {
       sourceRevision: "revision-7",

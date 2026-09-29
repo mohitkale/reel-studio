@@ -40,6 +40,8 @@ import {
   type ProductionPresetId,
 } from "@/production/presets";
 import { cn } from "@/lib/utils";
+import type { VisualAmbition } from "@/production/motion-plan";
+import { VisualAmbitionControl } from "@/components/visual/visual-ambition-control";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -113,6 +115,8 @@ export function CreationWizard({
   const [voiceMode, setVoiceMode] = React.useState<"oneshot" | "per_scene">(
     "oneshot",
   );
+  const [visualAmbition, setVisualAmbition] =
+    React.useState<VisualAmbition>("expressive");
   const [mediaPreference, setMediaPreference] =
     React.useState<MediaPreference>("auto");
 
@@ -138,6 +142,7 @@ export function CreationWizard({
     setBrandKitId("");
     setVoiceMode("oneshot");
     setMediaPreference("auto");
+    setVisualAmbition("expressive");
   }
 
   async function submit() {
@@ -163,6 +168,7 @@ export function CreationWizard({
         brandKitId: brandKitId || undefined,
         voiceMode,
         mediaPreference,
+        visualAmbition,
         assetIds: uploaded.map((asset) => asset.id),
       });
       setOpen(false);
@@ -374,6 +380,13 @@ export function CreationWizard({
                   </ChoiceCard>
                 ))}
               </div>
+              {outputType === "video" ? (
+                <VisualAmbitionControl
+                  id="production-ambition"
+                  value={visualAmbition}
+                  onChange={setVisualAmbition}
+                />
+              ) : null}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
                   <Label htmlFor="production-engine">Video engine</Label>

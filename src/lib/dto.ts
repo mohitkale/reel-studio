@@ -7,6 +7,7 @@ import type { VideoEngineId } from "@/engines/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
 import type { MotionDirection } from "@/production/motion";
+import type { MotionPlanSettings } from "@/production/motion-plan";
 import type { CaptionTimingSource, CaptionWord } from "@/lib/captions";
 import type { CaptionStyleSnapshot } from "@/lib/caption-style";
 import type { MediaPreference } from "@/lib/media-preference";
@@ -131,6 +132,7 @@ export interface ScriptDTO {
   energy: EnergyId;
   /** Versioned preset snapshot; absent for legacy and manually empty projects. */
   productionPreset?: { id: ProductionPresetId; version: string };
+  motionPlan?: MotionPlanSettings;
   captionTracks?: CaptionTrackDTO[];
 }
 

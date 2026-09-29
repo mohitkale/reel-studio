@@ -128,6 +128,7 @@ export async function createManualProject(input: ManualCreationInput) {
     {
       brandKitId: body.brandKitId,
       preset: production.preset,
+      visualAmbition: body.visualAmbition,
       roles: production.roles,
       assetRefs,
       mediaPreferences: plan.scenes.map(() => body.mediaPreference),

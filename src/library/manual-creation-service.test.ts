@@ -81,6 +81,7 @@ describe("manual creation service", () => {
       orientation: "portrait",
       videoEngine: "hyperframes",
       brandKitId: "brand-1",
+      visualAmbition: "showcase",
       voiceMode: "per_scene",
       mediaPreference: "auto",
       assetIds: ["image-1"],
@@ -98,6 +99,7 @@ describe("manual creation service", () => {
     expect(call[5]).toMatchObject({
       brandKitId: "brand-1",
       preset: { id: "product-launch", version: "1.0.0" },
+      visualAmbition: "showcase",
       voiceMode: "per_scene",
       mediaPreferences: expect.arrayContaining(["auto"]),
       creationSource: { kind: "text", assetIds: ["image-1"] },

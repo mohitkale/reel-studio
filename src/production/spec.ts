@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { motionPlanSettingsSchema } from "@/production/motion-plan";
 
 import { ENERGY_IDS, STYLE_IDS } from "@/compositions/visual-style";
 import { VIDEO_ENGINE_IDS } from "@/engines/types";
@@ -208,6 +209,7 @@ export const productionSpecSchema = z
       id: z.union([productionPresetIdSchema, z.literal(LEGACY_PRESET_ID)]),
       version: z.string().min(1).max(80),
     }),
+    motionPlan: motionPlanSettingsSchema.optional(),
     brand: brandSnapshotSchema,
     canvas: z.object({
       orientation: z.enum(ORIENTATIONS),

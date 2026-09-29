@@ -6,6 +6,7 @@ import { z } from "zod";
 import { AI_PROVIDER_IDS } from "@/providers/ai/types";
 import { mediaPreferenceSchema } from "@/lib/media-preference";
 import { productionPresetIdSchema } from "@/production/presets";
+import { visualAmbitionSchema } from "@/production/motion-plan";
 import { productionBatchRowSchema } from "@/production/batch";
 import { quickProduceOptionsSchema } from "@/production/quick-produce";
 
@@ -265,6 +266,7 @@ export function registerTools(server: McpServer): void {
           ),
         videoEngine,
         productionPresetId: productionPresetIdSchema.optional(),
+        visualAmbition: visualAmbitionSchema.optional(),
         mediaPreference: mediaPreferenceSchema.optional(),
         quickProduce: quickProduceOptionsSchema.optional(),
         idempotencyKey: z.string().min(8).max(240).optional(),

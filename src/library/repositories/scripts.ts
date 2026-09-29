@@ -98,6 +98,7 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     styleId: normalizeStyleId(overrides.styleId),
     energy: normalizeEnergyId(overrides.energy),
     productionPreset: overrides.productionPreset,
+    motionPlan: overrides.motionPlan,
     captionTracks,
   };
 }

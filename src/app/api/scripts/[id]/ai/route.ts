@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { chooseSceneMotion, type MotionDirection } from "@/production/motion";
+import type { MotionDirection } from "@/production/motion";
+import { planMotionSequence } from "@/production/motion-plan";
 
 import type { SceneBackground, SceneChartData } from "@/compositions/types";
 import { defaultTemplateIdForEngine } from "@/engines/registry";
@@ -309,21 +310,27 @@ export async function POST(
       : { plan: enriched, roles: [] as ProductionSceneRole[] };
     const roles = resolved.roles;
     const startOrder = script.scenes.length;
-    let previousMotion = script.scenes.at(-1)?.motion;
+    const motions = script.productionPreset
+      ? planMotionSequence(
+          resolved.plan.scenes.map((scene, index) => ({
+            role: roles[index],
+            text: scene.text,
+            chart: scene.chart,
+            items: scene.items,
+            background: backgrounds[index],
+            hasVisualContent: Boolean(scene.visual),
+          })),
+          script.motionPlan ?? {
+            version: "1.0.0",
+            seed: script.id,
+            ambition: "expressive",
+          },
+          script.scenes.map((scene) => scene.motion),
+        )
+      : [];
     await prisma.scene.createMany({
       data: resolved.plan.scenes.map((scene, index) => {
-        const motion = script.productionPreset
-          ? chooseSceneMotion({
-              role: roles[index],
-              text: scene.text,
-              chart: scene.chart,
-              items: scene.items,
-              background: backgrounds[index] ?? undefined,
-              previous: previousMotion,
-              hasVisualContent: Boolean(scene.visual),
-            })
-          : undefined;
-        if (motion) previousMotion = motion;
+        const motion = motions[index];
         return {
           scriptId,
           order: startOrder + index,

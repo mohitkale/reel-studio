@@ -1,9 +1,16 @@
+import { randomUUID } from "node:crypto";
+
 import type { ProjectDTO } from "@/lib/dto";
 import type { ScenePlan } from "@/providers/ai/types";
 import type { SceneBackground } from "@/compositions/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
-import { chooseSceneMotion, type MotionDirection } from "@/production/motion";
+import {
+  planMotionSequence,
+  type MotionPlanSettings,
+  type VisualAmbition,
+} from "@/production/motion-plan";
+import type { MotionDirection } from "@/production/motion";
 import type { MediaPreference } from "@/lib/media-preference";
 import type { ResolvedStockAsset } from "@/providers/stock/schemas";
 import {
@@ -111,6 +118,10 @@ export async function createProjectFromPlan(
     assetRefs?: string[][];
     mediaPreferences?: MediaPreference[];
     stockSelections?: Array<ResolvedStockAsset | undefined>;
+    visualAmbition?: VisualAmbition;
+    /** Frozen revision decisions bypass planning when restoring a production. */
+    motionPlan?: MotionPlanSettings;
+    motions?: Array<MotionDirection | undefined>;
     voiceMode?: "oneshot" | "per_scene";
     outputType?: "video" | "voiceover";
     creationSource?: {
@@ -130,7 +141,30 @@ export async function createProjectFromPlan(
       : production.brandKitId;
   const styleId = visualStyle?.styleId ?? plan.styleId ?? DEFAULT_STYLE_ID;
   const energy = visualStyle?.energy ?? plan.energy ?? DEFAULT_ENERGY_ID;
-  let previousMotion: MotionDirection | undefined;
+  const motionPlan: MotionPlanSettings | undefined =
+    production?.motionPlan ??
+    (production?.preset && !production.motions
+      ? {
+          version: "1.0.0",
+          seed: randomUUID(),
+          ambition: production.visualAmbition ?? "expressive",
+        }
+      : undefined);
+  const motions =
+    production?.motions ??
+    (motionPlan
+      ? planMotionSequence(
+          plan.scenes.map((scene, order) => ({
+            role: production?.roles?.[order],
+            text: scene.text,
+            chart: scene.chart,
+            items: scene.items,
+            background: backgrounds[order],
+            hasVisualContent: Boolean(scene.visual),
+          })),
+          motionPlan,
+        )
+      : []);
   const project = await prisma.project.create({
     data: {
       name: plan.projectName,
@@ -144,6 +178,7 @@ export async function createProjectFromPlan(
           brandOverrides: JSON.stringify({
             styleId,
             energy,
+            ...(motionPlan ? { motionPlan } : {}),
             ...(production?.preset
               ? { productionPreset: production.preset }
               : {}),
@@ -168,21 +203,8 @@ export async function createProjectFromPlan(
               if (scene.chart) config.chart = scene.chart;
               const role = production?.roles?.[order];
               if (role) config.role = role;
-              const motion = production?.preset
-                ? chooseSceneMotion({
-                    role,
-                    text: scene.text,
-                    chart: scene.chart,
-                    items: scene.items,
-                    background: background ?? undefined,
-                    previous: previousMotion,
-                    hasVisualContent: Boolean(scene.visual),
-                  })
-                : undefined;
-              if (motion) {
-                config.motion = motion;
-                previousMotion = motion;
-              }
+              const motion = motions[order];
+              if (motion) config.motion = motion;
               return {
                 order,
                 templateId: scene.templateId || fallbackTemplate,

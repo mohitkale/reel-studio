@@ -10,6 +10,15 @@ persistence, and render paths in both engines. Video footage keeps the existing
 media path while motion treatment support for footage, sound, review, and
 long-form milestones below remain planned work.
 
+Sequence direction now ships with Clean / Expressive / Showcase ambition in
+manual and AI creation (including the AI MCP tool). A saved seed gives
+repeatable choices, four-scene history discourages layout repetition, and
+append continues that history. Quiet preset beats count toward spacing.
+Ordered diagrams keep Path automatically; Orbit remains an explicit authored
+choice. Screenshot and hero roles retain their appropriate image treatments.
+Ambition currently controls type-hit frequency; richer choreography, chapter
+planning, direction refresh, and motion character controls remain future work.
+
 ## Product decision
 
 Keep Reel Studio's production presets as **story and brand direction**. Add a

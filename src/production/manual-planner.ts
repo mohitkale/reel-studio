@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { visualAmbitionSchema } from "@/production/motion-plan";
 
 import { VIDEO_ENGINE_IDS, type VideoEngineId } from "@/engines/types";
 import { defaultTemplateIdForEngine } from "@/engines/registry";
@@ -24,6 +25,7 @@ export const manualCreationSchema = z.object({
     }),
     z.object({ kind: z.literal("url"), url: z.string().url().max(2_048) }),
   ]),
+  visualAmbition: visualAmbitionSchema.default("expressive"),
   presetId: productionPresetIdSchema,
   orientation: z.enum(ORIENTATIONS),
   videoEngine: z.enum(VIDEO_ENGINE_IDS),

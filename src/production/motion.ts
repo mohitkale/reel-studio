@@ -349,10 +349,7 @@ export function chooseSceneMotion(input: {
       )
     )
       return input.current;
-    const choices: MotionRecipeId[] =
-      input.previous?.recipeId === "diagram-path"
-        ? ["diagram-orbit", "diagram-path"]
-        : ["diagram-path", "diagram-orbit"];
+    const choices: MotionRecipeId[] = ["diagram-path"];
     return choices
       .map(motionDirection)
       .find(

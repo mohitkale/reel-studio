@@ -163,7 +163,7 @@ describe("type motion direction", () => {
         items,
         previous: motionDirection("diagram-path"),
       }),
-    ).toEqual(motionDirection("diagram-orbit"));
+    ).toEqual(motionDirection("diagram-path"));
     expect(
       chooseSceneMotion({
         role: "diagram",

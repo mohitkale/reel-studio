@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { motionPlanSettingsSchema } from "@/production/motion-plan";
 
 import { assertSafeMediaUrl } from "@/lib/media-url-safety";
 import { productionChartDataSchema } from "@/production/spec";
@@ -72,6 +73,7 @@ export const brandOverridesSchema = z
       .enum(["bold-hook", "clean-story", "teach-me", "soft-brand"])
       .optional(),
     energy: z.enum(["calm", "normal", "high"]).optional(),
+    motionPlan: motionPlanSettingsSchema.optional(),
     productionPreset: z
       .object({
         id: productionPresetIdSchema,

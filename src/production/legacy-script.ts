@@ -57,6 +57,7 @@ function contentHash(script: ScriptDTO): string {
     styleId: script.styleId,
     energy: script.energy,
     productionPreset: script.productionPreset,
+    motionPlan: script.motionPlan,
     captionTracks: script.captionTracks,
   };
   return `sha256:${createHash("sha256").update(stableJson(content)).digest("hex")}`;
@@ -201,6 +202,7 @@ export function productionSpecFromLegacyScript(
       id: preset.id,
       version: preset.version,
     },
+    motionPlan: script.motionPlan,
     brand: {
       brandKitId: script.brandKitId,
       tokens: { ...script.brandTokens },

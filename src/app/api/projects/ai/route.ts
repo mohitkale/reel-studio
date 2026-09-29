@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { visualAmbitionSchema } from "@/production/motion-plan";
 
 import { after, NextResponse } from "next/server";
 import { z } from "zod";
@@ -52,6 +53,7 @@ const bodySchema = z.object({
     .optional(),
   /** "auto" lets the AI choose; otherwise lock Energy. */
   energy: z.enum(["auto", "calm", "normal", "high"]).optional(),
+  visualAmbition: visualAmbitionSchema.default("expressive"),
   productionPresetId: productionPresetIdSchema.default("product-launch"),
   mediaPreference: mediaPreferenceSchema.default("auto"),
   quickProduce: quickProduceOptionsSchema.optional(),
@@ -171,6 +173,7 @@ export async function POST(req: Request) {
           version: preset.version,
         },
         roles,
+        visualAmbition: body.visualAmbition,
         mediaPreferences: enriched.scenes.map(() => mediaPreference),
         stockSelections: mediaDecisions.map((decision) => decision.snapshot),
         outputType: "video",

@@ -13,6 +13,7 @@ import type {
 import type { Orientation } from "@/lib/orientation";
 import type { VideoEngineId } from "@/engines/types";
 import type { ProductionPresetId } from "@/production/presets";
+import type { VisualAmbition } from "@/production/motion-plan";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { MediaPreference } from "@/lib/media-preference";
 import type { AutomaticMediaState } from "@/library/automatic-stock-media";
@@ -117,6 +118,7 @@ export function useGenerateProject() {
       styleId?: StyleId | "auto";
       energy?: EnergyId | "auto";
       productionPresetId?: ProductionPresetId;
+      visualAmbition?: VisualAmbition;
       mediaPreference?: MediaPreference;
       quickProduce?: {
         enabled: true;
