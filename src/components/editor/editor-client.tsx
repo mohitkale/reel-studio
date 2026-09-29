@@ -537,6 +537,12 @@ export function EditorClient({
             <MotionDirectionMenu
               scriptId={scriptId}
               ambition={script.motionPlan?.ambition ?? "expressive"}
+              scenes={scenes.map((scene) => ({
+                ...scene,
+                hideText: scene.hideText ?? script.hideText,
+                hasVisualContent: Boolean(scene.visual),
+              }))}
+              onSelectScene={selectScene}
             />
           ) : null}
           {undoSnapshot && (

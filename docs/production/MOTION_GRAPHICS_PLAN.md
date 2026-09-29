@@ -39,6 +39,12 @@ REST and MCP share the same edit contract. Transactional updates are verified
 against SQLite, including competing edits and refreshes. Music beat maps,
 word-aware suppression, and final loudness targets remain later sound work.
 
+The editor now checks treatment input compatibility across the video in the
+direction menu. Warnings explain each preset fallback and jump to the affected
+scene. Hidden-text scenes intentionally bypass these checks. This uses the
+same input contract as both renderers; rendered stills, phone-size legibility,
+timing and repetition review remain planned work.
+
 ## Product decision
 
 Keep Reel Studio's production presets as **story and brand direction**. Add a

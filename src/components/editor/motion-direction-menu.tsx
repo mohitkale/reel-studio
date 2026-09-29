@@ -1,6 +1,11 @@
 "use client";
 
-import { ChevronDown, Clapperboard, Loader2 } from "lucide-react";
+import {
+  ChevronDown,
+  Clapperboard,
+  Loader2,
+  TriangleAlert,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,15 +24,24 @@ import {
   VISUAL_AMBITION_LABELS,
   type VisualAmbition,
 } from "@/production/motion-plan";
+import {
+  reviewMotionTreatments,
+  type MotionReviewScene,
+} from "@/production/motion-review";
 
 export function MotionDirectionMenu({
   scriptId,
   ambition,
+  scenes,
+  onSelectScene,
 }: {
   scriptId: string;
   ambition: VisualAmbition;
+  scenes: readonly MotionReviewScene[];
+  onSelectScene: (id: string) => void;
 }) {
   const replan = useReplanMotionDirection(scriptId);
+  const issues = reviewMotionTreatments(scenes);
   function apply(input: { ambition?: VisualAmbition; newVariation?: boolean }) {
     replan.mutate(input, {
       onSuccess: ({ result }) =>
@@ -55,7 +69,7 @@ export function MotionDirectionMenu({
             size="sm"
             variant="outline"
             disabled={replan.isPending}
-            aria-label={`Visual direction: ${VISUAL_AMBITION_LABELS[ambition]}`}
+            aria-label={`Visual direction: ${VISUAL_AMBITION_LABELS[ambition]}${issues.length ? `, ${issues.length} treatment warnings` : ""}`}
           >
             {replan.isPending ? (
               <Loader2 className="size-3.5 animate-spin" />
@@ -63,11 +77,51 @@ export function MotionDirectionMenu({
               <Clapperboard className="size-3.5" />
             )}
             {VISUAL_AMBITION_LABELS[ambition]}
+            {issues.length > 0 && (
+              <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                <TriangleAlert className="size-3.5" />
+                {issues.length}
+              </span>
+            )}
             <ChevronDown className="size-3.5" />
           </Button>
         </DropdownMenuTrigger>
       </HintTooltip>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent
+        align="end"
+        className="max-h-[var(--radix-dropdown-menu-content-available-height)] w-80 overflow-y-auto"
+      >
+        <DropdownMenuLabel>Treatment checks</DropdownMenuLabel>
+        {issues.length ? (
+          <>
+            <p className="text-muted-foreground px-2 pb-2 text-xs">
+              These scenes use the preset look until their treatment fits.
+              Select a scene to adjust it.
+            </p>
+            <div className="max-h-48 overflow-y-auto">
+              {issues.map((issue) => (
+                <DropdownMenuItem
+                  key={issue.sceneId}
+                  onSelect={() => onSelectScene(issue.sceneId)}
+                  className="items-start"
+                >
+                  <div>
+                    <p>Scene {issue.sceneNumber}</p>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {issue.reason}
+                    </p>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="text-muted-foreground px-2 pb-2 text-xs">
+            No treatment compatibility issues. Preview to review readability and
+            timing.
+          </p>
+        )}
+        <DropdownMenuSeparator />
         <DropdownMenuLabel>Replan visual direction</DropdownMenuLabel>
         {VISUAL_AMBITIONS.map((value) => (
           <DropdownMenuItem
