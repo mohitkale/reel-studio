@@ -756,14 +756,16 @@ export function registerTools(server: McpServer): void {
     "ai_generate_scenes",
     {
       description:
-        "Use the AI director to append new scenes or fully rewrite a script's scenes. 'append' is the safe way to extend a storyboard in chunks (existing scenes are untouched); 'rewrite' replaces ALL scenes. Requires an AI key configured in the website.",
+        "Append scenes or rewrite up to 20 unlocked scenes, preserving copy/asset locks and scene IDs. For a saved outline, use chapterId to rewrite only that chapter; optional sceneIds narrow it further. Rewrites use neighboring context and reject edits made during generation. Requires a configured AI provider.",
       inputSchema: {
         scriptId: z.string().min(1),
-        providerId: z.enum(["gemini", "openai"]),
+        providerId: z.enum(AI_PROVIDER_IDS),
         modelId: z.string().optional(),
         mode: z.enum(["rewrite", "append"]),
         brief: z.string().trim().min(3).max(4000),
         sceneCount: z.number().int().min(2).max(20).optional(),
+        sceneIds: z.array(z.string().min(1)).max(20).optional(),
+        chapterId: z.string().min(1).max(160).optional(),
         scriptStyle: scriptStyle
           .optional()
           .describe(

@@ -9,6 +9,7 @@ import type { SceneDTO } from "@/lib/dto";
 import { createPrismaClient } from "@/library/prisma-client";
 import {
   mergeGeneratedScene,
+  prepareRegenerationScope,
   selectRegenerationTargets,
 } from "@/library/selective-scene-regeneration";
 import type { AIScene } from "@/providers/ai/types";
@@ -193,5 +194,74 @@ describe("selective scene regeneration", () => {
       else process.env.DATABASE_URL = previous;
       rmSync(directory, { recursive: true, force: true });
     }
+  });
+});
+
+describe("chapter regeneration scopes", () => {
+  it("bounds calls, retains global scene numbering and includes only neighboring continuity context", () => {
+    const scenes = Array.from({ length: 24 }, (_, index) =>
+      scene({ id: `scene-${index}`, order: index, text: `Story ${index}` }),
+    );
+    scenes[22] = {
+      ...scenes[22],
+      locks: { copy: false, assets: false, scene: true },
+    };
+    const script = {
+      scenes,
+      chapterPlan: {
+        version: "1.0.0" as const,
+        chapters: [
+          { id: "intro", title: "Question", firstSceneId: "scene-0" },
+          { id: "proof", title: "Proof", firstSceneId: "scene-20" },
+        ],
+      },
+    };
+    const result = prepareRegenerationScope(script, { chapterId: "proof" });
+    expect(result.positions).toEqual([21, 22, 24]);
+    expect(result.context).toContain("Chapter: Proof");
+    expect(result.context).toContain(
+      "Context only (do not replace; excerpt): Scene 20",
+    );
+    expect(result.context).not.toContain("Story 0");
+    expect(
+      prepareRegenerationScope(script, {
+        chapterId: "proof",
+        sceneIds: ["scene-23"],
+      }).positions,
+    ).toEqual([24]);
+    expect(() => prepareRegenerationScope(script, {})).toThrow(/20 scenes/);
+    expect(() =>
+      prepareRegenerationScope(script, { chapterId: "missing" }),
+    ).toThrow(/no longer exists/);
+    expect(() =>
+      prepareRegenerationScope(script, {
+        chapterId: "proof",
+        sceneIds: ["scene-0"],
+      }),
+    ).toThrow(/belong/);
+    expect(() =>
+      prepareRegenerationScope(script, {
+        chapterId: "proof",
+        sceneIds: ["scene-22"],
+      }),
+    ).toThrow(/unlocked/);
+    expect(() =>
+      prepareRegenerationScope(
+        { ...script, chapterPlan: undefined },
+        { chapterId: "proof" },
+      ),
+    ).toThrow(/outline/);
+    expect(() =>
+      prepareRegenerationScope(
+        { ...script, scenes: [...scenes].reverse() },
+        { chapterId: "proof" },
+      ),
+    ).toThrow(/outline/);
+    expect(() =>
+      prepareRegenerationScope(
+        { scenes: [scene({ text: "x".repeat(40_001) })] },
+        { sceneIds: ["scene-1"] },
+      ),
+    ).toThrow(/too much copy/);
   });
 });

@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useAIProviders } from "@/hooks/ai";
 import { useEnhanceScript, useUpdateScene } from "@/hooks/script";
 import type { SceneDTO } from "@/lib/dto";
+import { chapterPlanIssue, type ChapterPlan } from "@/production/chapters";
 import { cn } from "@/lib/utils";
 import type { AIProviderId, AIScene, ScriptStyle } from "@/providers/ai/types";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,7 @@ export function AIEnhanceDialog({
   scriptId,
   scriptName,
   scenes,
+  chapterPlan,
   open,
   onOpenChange,
   onBeforeEnhance,
@@ -69,6 +71,7 @@ export function AIEnhanceDialog({
   scriptId: string;
   scriptName: string;
   scenes: SceneDTO[];
+  chapterPlan?: ChapterPlan;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onBeforeEnhance?: () => void;
@@ -90,6 +93,7 @@ export function AIEnhanceDialog({
   const [selectionOverrides, setSelectionOverrides] = React.useState<
     Record<string, boolean>
   >({});
+  const [chapterId, setChapterId] = React.useState<string>("");
   const [alternatives, setAlternatives] = React.useState<AIScene[]>([]);
   const [mediaPreference, setMediaPreference] =
     React.useState<MediaPreference>("auto");
@@ -98,9 +102,42 @@ export function AIEnhanceDialog({
     (provider) => provider.configured,
   );
   const effectiveProvider = providerId ?? configured[0]?.id;
-  const validSelectedIds = scenes
+  const outlineIssue = chapterPlan
+    ? chapterPlanIssue(
+        chapterPlan,
+        scenes.map((scene) => scene.id),
+      )
+    : undefined;
+  const chapterIndex =
+    chapterPlan?.chapters.findIndex((chapter) => chapter.id === chapterId) ??
+    -1;
+  const scopeValid = !chapterId || (chapterIndex >= 0 && !outlineIssue);
+  const first =
+    chapterIndex >= 0
+      ? scenes.findIndex(
+          (scene) =>
+            scene.id === chapterPlan!.chapters[chapterIndex].firstSceneId,
+        )
+      : 0;
+  const end =
+    chapterIndex >= 0 && chapterIndex + 1 < chapterPlan!.chapters.length
+      ? scenes.findIndex(
+          (scene) =>
+            scene.id === chapterPlan!.chapters[chapterIndex + 1].firstSceneId,
+        )
+      : scenes.length;
+  const scopeScenes = chapterId ? scenes.slice(first, end) : scenes;
+  const defaultSelectedIds = new Set(
+    scopeScenes
+      .filter((scene) => !scene.locks?.scene)
+      .slice(0, 20)
+      .map((scene) => scene.id),
+  );
+  const validSelectedIds = scopeScenes
     .filter(
-      (scene) => !scene.locks?.scene && selectionOverrides[scene.id] !== false,
+      (scene) =>
+        !scene.locks?.scene &&
+        (selectionOverrides[scene.id] ?? defaultSelectedIds.has(scene.id)),
     )
     .map((scene) => scene.id);
   const selectedSet = new Set(validSelectedIds);
@@ -110,7 +147,13 @@ export function AIEnhanceDialog({
   function submit() {
     const trimmed = brief.trim();
     if (!trimmed || !effectiveProvider) return;
-    if (mode === "rewrite" && validSelectedIds.length === 0) return;
+    if (
+      mode === "rewrite" &&
+      (!scopeValid ||
+        validSelectedIds.length === 0 ||
+        validSelectedIds.length > 20)
+    )
+      return;
     if (mode !== "hook_variants") onBeforeEnhance?.();
     enhance.mutate(
       {
@@ -122,6 +165,7 @@ export function AIEnhanceDialog({
             ? Number(sceneCount)
             : undefined,
         sceneIds: mode === "rewrite" ? validSelectedIds : undefined,
+        chapterId: mode === "rewrite" && chapterId ? chapterId : undefined,
         scriptStyle,
         mediaPreference,
       },
@@ -198,7 +242,10 @@ export function AIEnhanceDialog({
   const pending = enhance.isPending || updateScene.isPending;
   const canSubmit =
     Boolean(brief.trim() && effectiveProvider) &&
-    (mode !== "rewrite" || validSelectedIds.length > 0) &&
+    (mode !== "rewrite" ||
+      (scopeValid &&
+        validSelectedIds.length > 0 &&
+        validSelectedIds.length <= 20)) &&
     (mode !== "hook_variants" || scenes.length > 0);
 
   return (
@@ -261,12 +308,47 @@ export function AIEnhanceDialog({
 
             {mode === "rewrite" && scenes.length > 0 && (
               <div className="grid gap-2 rounded-lg border p-3">
+                {chapterPlan && !outlineIssue && (
+                  <div className="grid gap-2">
+                    <Label htmlFor="ai-rewrite-chapter">Rewrite scope</Label>
+                    <select
+                      id="ai-rewrite-chapter"
+                      className="border-input bg-background h-9 rounded-md border px-3 text-sm"
+                      value={chapterId}
+                      disabled={pending}
+                      onChange={(event) => {
+                        setChapterId(event.target.value);
+                        setSelectionOverrides({});
+                      }}
+                    >
+                      <option value="">
+                        Choose scenes across the storyboard
+                      </option>
+                      {chapterPlan.chapters.map((chapter) => (
+                        <option key={chapter.id} value={chapter.id}>
+                          {chapter.title}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-muted-foreground text-xs">
+                      A chapter uses its own copy and neighboring context. Other
+                      chapters stay unchanged.
+                    </p>
+                  </div>
+                )}
+                {(outlineIssue || !scopeValid) && (
+                  <p className="text-destructive text-xs">
+                    Update the chapter outline before rewriting that chapter.
+                  </p>
+                )}
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Scenes to regenerate</Label>
                     <p className="text-muted-foreground text-xs">
                       Copy and asset locks preserve those parts. Whole-scene
-                      locks cannot be selected.
+                      locks cannot be selected. Each rewrite supports up to 20
+                      scenes; the first 20 unlocked scenes are selected
+                      initially.
                     </p>
                   </div>
                   <Button
@@ -275,11 +357,14 @@ export function AIEnhanceDialog({
                     variant="ghost"
                     onClick={() => setSelectionOverrides({})}
                   >
-                    Select unlocked
+                    Select up to 20 unlocked
                   </Button>
                 </div>
                 <div className="max-h-48 space-y-1 overflow-y-auto">
-                  {scenes.map((scene, index) => {
+                  {scopeScenes.map((scene) => {
+                    const index = scenes.findIndex(
+                      (item) => item.id === scene.id,
+                    );
                     const locked = scene.locks?.scene === true;
                     return (
                       <label
@@ -322,6 +407,11 @@ export function AIEnhanceDialog({
                     );
                   })}
                 </div>
+                {validSelectedIds.length > 20 && (
+                  <p className="text-destructive text-xs">
+                    Choose at most 20 scenes for this rewrite.
+                  </p>
+                )}
               </div>
             )}
 

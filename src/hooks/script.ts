@@ -737,6 +737,7 @@ export function useEnhanceScript(scriptId: string) {
       brief: string;
       sceneCount?: number;
       sceneIds?: string[];
+      chapterId?: string;
       scriptStyle?: ScriptStyle;
       mediaPreference?: MediaPreference;
     }) =>

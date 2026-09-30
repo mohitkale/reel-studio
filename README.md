@@ -352,6 +352,11 @@ contain up to 20 scenes, with at most 12 chapters. Saving checks the current
 outline and scene order; content and timing are preserved. REST/MCP share
 `POST`/`PATCH /api/scripts/:id/chapters`, `suggest_chapters`, and `save_chapters`.
 Boundaries survive snapshots and revision restore, including remapped scene IDs.
+AI → Rewrite scope can target a saved chapter and optionally narrow its scenes.
+Each call changes at most 20 unlocked scenes, uses neighboring copy for continuity,
+and rejects storyboard edits made during generation. Scene IDs, motion choices,
+and copy/asset locks survive. REST/MCP `ai_generate_scenes` accepts `chapterId`
+and `sceneIds`; larger storyboards must use bounded selections.
 This is the chapter-planning foundation; video production remains limited to
 180 seconds until section rendering, retry and audio continuity pass their gates.
 Refresh keeps manual, legacy, muted, and locked cues; existing scenes retain their template

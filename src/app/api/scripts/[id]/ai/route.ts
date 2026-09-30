@@ -12,9 +12,13 @@ import { enrichScenePlan } from "@/library/enrich-scene-plan";
 import { getScript } from "@/library/repositories/scripts";
 import {
   describeSceneForAI,
-  mergeGeneratedScene,
-  selectRegenerationTargets,
+  prepareRegenerationScope,
 } from "@/library/selective-scene-regeneration";
+import {
+  captureSceneRewriteState,
+  assertSceneRewriteState,
+  commitSceneRewrite,
+} from "@/library/scene-rewrite-service";
 import { resolveAutomaticSceneMediaBatch } from "@/library/automatic-stock-media";
 import { applyStockMediaSelection } from "@/library/repositories/stock-media-selections";
 import { reportStockMediaSelectionUsage } from "@/library/stock-media-usage";
@@ -45,6 +49,7 @@ const bodySchema = z.object({
   brief: z.string().trim().min(3).max(4000),
   sceneCount: z.number().int().min(1).max(20).optional(),
   sceneIds: z.array(z.string().min(1)).max(20).optional(),
+  chapterId: z.string().min(1).max(160).optional(),
   scriptStyle: z.enum(SCRIPT_STYLES).optional(),
   mediaPreference: mediaPreferenceSchema.default("auto"),
 });
@@ -97,17 +102,42 @@ export async function POST(
 ) {
   try {
     const { id: scriptId } = await ctx.params;
-    const body = bodySchema.parse(await req.json());
+    const parsed = bodySchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success)
+      return NextResponse.json(
+        { error: "Invalid AI request", issues: parsed.error.issues },
+        { status: 400 },
+      );
+    const body = parsed.data;
+    if (body.chapterId && body.mode !== "rewrite")
+      return NextResponse.json(
+        { error: "Chapter selection is only supported for rewrites" },
+        { status: 400 },
+      );
     await authorizeProviderRequest(req, [body.providerId]);
 
     if (!isAIProviderId(body.providerId)) {
       throw new AIError(`Unknown AI provider "${body.providerId}"`, 404);
     }
 
+    const expectedRewriteState =
+      body.mode === "rewrite"
+        ? await captureSceneRewriteState(scriptId)
+        : undefined;
     const script = await getScript(scriptId);
     if (!script) {
       return NextResponse.json({ error: "Script not found" }, { status: 404 });
     }
+
+    if (expectedRewriteState)
+      assertSceneRewriteState(
+        expectedRewriteState,
+        await captureSceneRewriteState(scriptId),
+      );
+    const rewriteScope =
+      body.mode === "rewrite"
+        ? prepareRegenerationScope(script, body)
+        : undefined;
 
     const provider = getAIProvider(body.providerId);
     if (!provider.isConfigured()) {
@@ -128,7 +158,10 @@ export async function POST(
 
     const orientation = orientationFromDims(script.width, script.height);
     const videoEngine = script.videoEngine;
-    const existingContext = script.scenes.map(describeSceneForAI).join("\n");
+    const existingContext =
+      body.mode === "rewrite"
+        ? ""
+        : script.scenes.map(describeSceneForAI).join("\n");
 
     if (body.mode === "hook_variants") {
       const opening = script.scenes[0];
@@ -167,22 +200,12 @@ export async function POST(
     }
 
     if (body.mode === "rewrite") {
-      const targets = selectRegenerationTargets(script.scenes, body.sceneIds);
-      if (!targets.length) {
-        throw new AIError(
-          "No unlocked scenes are selected. Unlock a scene or choose another one.",
-          400,
-        );
-      }
-      const positions = targets.map(
-        (target) =>
-          script.scenes.findIndex((scene) => scene.id === target.id) + 1,
-      );
+      const { targets, positions, context } = rewriteScope!;
       const raw = await provider.generatePlan({
         mode: "rewrite",
         brief: body.brief,
         sceneCount: targets.length,
-        existingContext,
+        existingContext: context,
         existingSceneCount: script.scenes.length,
         replacementSceneNumbers: positions,
         modelId: body.modelId,
@@ -210,50 +233,19 @@ export async function POST(
       const mediaDecisions = await resolveAutomaticSceneMediaBatch(
         generated,
         orientation,
-        targets.map((target) => target.mediaPreference ?? "auto"),
+        targets.map((target) =>
+          target.locks?.assets ? "none" : (target.mediaPreference ?? "auto"),
+        ),
         targets.map((target) => target.background),
       );
-      const backgrounds = mediaDecisions.map((decision) => decision.background);
-
-      await prisma.$transaction(
-        targets.flatMap((target, index) => {
-          const snapshot = mediaDecisions[index]?.snapshot;
-          return [
-            prisma.scene.update({
-              where: { id: target.id },
-              data: mergeGeneratedScene(
-                target,
-                generated[index]!,
-                backgrounds[index],
-              ),
-            }),
-            ...(snapshot
-              ? [
-                  prisma.stockMediaSelection.upsert({
-                    where: { sceneId: target.id },
-                    create: {
-                      sceneId: target.id,
-                      providerId: snapshot.providerSnapshot.providerId,
-                      providerAssetId:
-                        snapshot.providerSnapshot.providerAssetId,
-                      kind: snapshot.providerSnapshot.kind,
-                      snapshotJson: JSON.stringify(snapshot),
-                      localAssetId: snapshot.localAssetId ?? null,
-                    },
-                    update: {
-                      providerId: snapshot.providerSnapshot.providerId,
-                      providerAssetId:
-                        snapshot.providerSnapshot.providerAssetId,
-                      kind: snapshot.providerSnapshot.kind,
-                      snapshotJson: JSON.stringify(snapshot),
-                      localAssetId: snapshot.localAssetId ?? null,
-                    },
-                  }),
-                ]
-              : []),
-          ];
-        }),
-      );
+      await commitSceneRewrite({
+        scriptId,
+        expectedState: expectedRewriteState!,
+        targets,
+        generated,
+        mediaDecisions,
+        signal: req.signal,
+      });
       for (const [index, target] of targets.entries()) {
         if (mediaDecisions[index]?.snapshot?.usageEvent.state === "pending") {
           await reportStockMediaSelectionUsage(target.id).catch(

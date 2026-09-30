@@ -237,7 +237,12 @@ Saving rejects changed scene order or a competing outline without touching
 copy, narration, media, motion or timing. REST/MCP share the same contract;
 immutable snapshots retain the outline and revision restore maps boundaries to
 new scene IDs. Frozen revision validation supports bounded 20-scene slices.
-Chapter-wise generation, rendering, retry and audio continuity remain pending;
+Chapter-scoped rewrites now use a bounded provider call with adjacent copy for
+continuity, optional narrower scene selection, preserved locks/IDs/motion, and
+an atomic stale-draft check. Larger unscoped rewrites are rejected before provider
+work; the editor initially selects at most 20 unlocked scenes. REST/MCP share
+`chapterId` and `sceneIds` through the existing AI endpoint/tool.
+Whole-video chapter generation, section rendering, retry and audio continuity remain pending;
 the 180-second production limit is unchanged.
 
 Plan long work in **chapters**, each with its own small arc and visual motif,

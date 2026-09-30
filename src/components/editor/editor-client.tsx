@@ -1045,6 +1045,7 @@ export function EditorClient({
         scriptId={scriptId}
         scriptName={script.name}
         scenes={scenes}
+        chapterPlan={script.chapterPlan}
         open={aiOpen}
         onOpenChange={setAiOpen}
         onBeforeEnhance={() => setUndoSnapshot([...scenes])}
