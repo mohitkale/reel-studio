@@ -125,6 +125,8 @@ valid saved chapter videos at 24/30/60 fps. Other video storyboards and standalo
 audio retain the three-minute policy; named MCP token allowances and old queued
 job limits remain unchanged. Actual prepared timing, including covers, is checked
 against the frozen allowance before rendering.
+The migration chain now contains twelve migrations, including additive caption
+take/frame-rate provenance; the fast release contract checks that exact count.
 
 Reproduce the native section gates with the installed render dependencies:
 
