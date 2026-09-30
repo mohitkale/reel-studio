@@ -1,10 +1,18 @@
 // @vitest-environment node
 import { promises as fs } from "node:fs";
+import path from "node:path";
+import { EventEmitter } from "node:events";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   capture: vi.fn(),
   render: vi.fn(),
+  spawn: vi.fn(),
+  wrongFrame: false,
   files: new Map<string, Buffer>(),
+}));
+vi.mock("node:child_process", async (original) => ({
+  ...(await original<typeof import("node:child_process")>()),
+  spawn: mocks.spawn,
 }));
 vi.mock("@/library/video-snapshot", () => ({
   captureVideoSnapshot: mocks.capture,
@@ -45,6 +53,9 @@ vi.mock("@/library/video-stage-media", async (original) => ({
     snapshot,
     assets: [],
   }),
+}));
+vi.mock("@/library/visual-review-contrast", () => ({
+  reviewPixelContrast: async (_file: string, evidence: unknown) => evidence,
 }));
 import { createVisualReview } from "./visual-review";
 import { videoSnapshotSchema } from "@/production/video-snapshot";
@@ -91,6 +102,44 @@ const input = { sceneIds: ["scene"], samples: 1 as const };
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.files.clear();
+  mocks.wrongFrame = false;
+  mocks.spawn.mockImplementation((_binary, args, options) => {
+    const child = Object.assign(new EventEmitter(), {
+      stdout: new EventEmitter(),
+      stderr: new EventEmitter(),
+    });
+    queueMicrotask(async () => {
+      const config = JSON.parse(
+        await fs.readFile(options.env.REEL_REVIEW_CAPTURE_CONFIG, "utf8"),
+      );
+      const output = args[args.indexOf("--output") + 1];
+      await fs.writeFile(
+        path.join(output, "frame-00-at-1.000s.png"),
+        "native HyperFrames still",
+      );
+      await fs.writeFile(
+        config.output,
+        JSON.stringify(
+          config.frames.map((frame: number) => ({
+            frame: frame + (mocks.wrongFrame ? 1 : 0),
+            checkedTextNodes: 1,
+            truncated: false,
+            contrastCheckedTextNodes: 1,
+            issues: [
+              {
+                kind: "contrast",
+                text: "A clear idea",
+                contrastRatio: 1.2,
+                bounds: { left: 100, top: 200, right: 700, bottom: 300 },
+              },
+            ],
+          })),
+        ),
+      );
+      child.emit("close", 0);
+    });
+    return child;
+  });
   mocks.capture.mockImplementation(async () => structuredClone(snapshot));
   mocks.render.mockImplementation(
     async ({
@@ -258,6 +307,55 @@ describe("cached visual review", () => {
     mocks.files.set(key, Buffer.from("broken evidence"));
     await createVisualReview("script", input, "http://localhost:3000");
     expect(mocks.render).toHaveBeenCalledTimes(2);
+  });
+  it("captures and caches HyperFrames evidence at the same native screenshot point", async () => {
+    const edited = structuredClone(snapshot);
+    edited.script.videoEngine = "hyperframes";
+    edited.script.scenes[0].spokenText =
+      "This narration gives the text a clear and sufficiently long reading hold";
+    mocks.capture.mockResolvedValue(edited);
+    const first = await createVisualReview(
+      "script",
+      input,
+      "http://localhost:3000",
+    );
+    expect(first.layoutReview).toMatchObject({
+      status: "sampled",
+      contrastCheckedTextNodes: 1,
+    });
+    expect(first.stills[0].layout?.frame).toBe(first.stills[0].frame);
+    expect(
+      first.findings.some(
+        (value) => value.kind === "contrast" && value.message.includes("1.2:1"),
+      ),
+    ).toBe(true);
+    expect(mocks.spawn).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.arrayContaining([
+        "--import",
+        "tsx",
+        "snapshot",
+        "--describe",
+        "false",
+      ]),
+      expect.any(Object),
+    );
+    expect(
+      await createVisualReview("script", input, "http://localhost:3000"),
+    ).toEqual(first);
+    expect(mocks.spawn).toHaveBeenCalledOnce();
+  });
+  it("rejects HyperFrames evidence that disagrees with its captured frame", async () => {
+    const edited = structuredClone(snapshot);
+    edited.script.videoEngine = "hyperframes";
+    edited.script.scenes[0].spokenText =
+      "This narration gives the text a clear and sufficiently long reading hold";
+    mocks.capture.mockResolvedValue(edited);
+    mocks.wrongFrame = true;
+    await expect(
+      createVisualReview("script", input, "http://localhost:3000"),
+    ).rejects.toThrow("did not match captured frames");
+    expect(mocks.files.size).toBe(0);
   });
   it("rejects missing native measurements before publishing a reading still", async () => {
     const edited = structuredClone(snapshot);

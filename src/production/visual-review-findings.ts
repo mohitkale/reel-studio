@@ -9,7 +9,12 @@ export interface VisualReviewFinding {
   sceneNumber: number;
   frame: number;
   kind:
-    "fallback" | "repetition" | "reading-time" | "text-clipping" | "safe-area";
+    | "fallback"
+    | "repetition"
+    | "reading-time"
+    | "text-clipping"
+    | "safe-area"
+    | "contrast";
   message: string;
 }
 

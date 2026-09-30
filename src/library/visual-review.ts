@@ -3,6 +3,9 @@ import {
   layoutEvidenceSchema,
   type LayoutEvidence,
 } from "@/production/visual-review-layout";
+import { reviewPixelContrast } from "@/library/visual-review-contrast";
+import { resolveProductionLayout } from "@/production/layout";
+import { z } from "zod";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { tmpdir } from "node:os";
@@ -38,7 +41,11 @@ import {
   cancelableRemotion,
 } from "@/library/production-cancellation";
 
-function runSnapshot(args: string[], signal?: AbortSignal): Promise<string> {
+function runSnapshot(
+  args: string[],
+  signal?: AbortSignal,
+  configPath?: string,
+): Promise<string> {
   const captureSignal = AbortSignal.any([
     AbortSignal.timeout(120_000),
     ...(signal ? [signal] : []),
@@ -48,7 +55,11 @@ function runSnapshot(args: string[], signal?: AbortSignal): Promise<string> {
     const child = spawn(process.execPath, args, {
       detached: process.platform !== "win32",
       stdio: ["ignore", "pipe", "pipe"],
-      env: { ...process.env, HYPERFRAMES_NO_TELEMETRY: "1" },
+      env: {
+        ...process.env,
+        HYPERFRAMES_NO_TELEMETRY: "1",
+        ...(configPath ? { REEL_REVIEW_CAPTURE_CONFIG: configPath } : {}),
+      },
     });
     cancelChild(child, captureSignal);
     let output = "";
@@ -119,6 +130,7 @@ export async function renderVisualReviewFrames(
     const paths: string[] = [];
     for (const frame of frames) {
       const outputLocation = path.join(outputDir, `frame-${frame}.png`);
+      let nativeEvidence: LayoutEvidence | undefined;
       await cancelableRemotion(
         (cancelSignal) =>
           renderStill({
@@ -134,7 +146,7 @@ export async function renderVisualReviewFrames(
                     const evidence = layoutEvidenceSchema.parse(
                       JSON.parse(log.text.slice(LAYOUT_LOG_PREFIX.length)),
                     );
-                    if (evidence.frame === frame) onLayout(evidence);
+                    if (evidence.frame === frame) nativeEvidence = evidence;
                   } catch {
                     /* Invalid browser evidence is rejected before publishing. */
                   }
@@ -147,6 +159,13 @@ export async function renderVisualReviewFrames(
           }),
         signal,
       );
+      if (onLayout) {
+        if (!nativeEvidence)
+          throw new Error(
+            "Native layout measurement did not complete. Try again.",
+          );
+        onLayout(await reviewPixelContrast(outputLocation, nativeEvidence));
+      }
       paths.push(outputLocation);
     }
     return paths;
@@ -154,8 +173,32 @@ export async function renderVisualReviewFrames(
   const projectDir = await fs.mkdtemp(path.join(tmpdir(), "reel-review-hf-"));
   try {
     await writeHyperframesReviewProject(projectDir, props, serverBaseUrl);
+    const configPath = path.join(projectDir, "review-capture.json");
+    const evidencePath = path.join(projectDir, "review-evidence.json");
+    if (onLayout)
+      await fs.writeFile(
+        configPath,
+        JSON.stringify({
+          frames,
+          layout:
+            props.layout ??
+            resolveProductionLayout({
+              width: props.width ?? 1080,
+              height: props.height ?? 1920,
+            }),
+          output: evidencePath,
+        }),
+      );
     const output = await runSnapshot(
       [
+        ...(onLayout
+          ? [
+              "--import",
+              "tsx",
+              "--import",
+              path.join(process.cwd(), "scripts/hyperframes-review-hook.mts"),
+            ]
+          : []),
         path.join(
           process.cwd(),
           "node_modules/hyperframes/bin/hyperframes.mjs",
@@ -172,6 +215,7 @@ export async function renderVisualReviewFrames(
         "--no-browser-gpu",
       ],
       signal,
+      onLayout ? configPath : undefined,
     );
     // Refuse misleading stills when the CLI reports a correctness warning.
     if (
@@ -187,7 +231,24 @@ export async function renderVisualReviewFrames(
       .sort();
     if (images.length !== frames.length)
       throw new Error("Review capture did not produce every requested frame.");
-    return images.map((name) => path.join(outputDir, name));
+    const paths = images.map((name) => path.join(outputDir, name));
+    if (onLayout) {
+      const evidence = z
+        .array(layoutEvidenceSchema)
+        .min(1)
+        .max(8)
+        .parse(JSON.parse(await fs.readFile(evidencePath, "utf8")));
+      if (
+        evidence.length !== frames.length ||
+        evidence.some((value, index) => value.frame !== frames[index])
+      )
+        throw new Error(
+          "Native layout measurement did not match captured frames.",
+        );
+      for (const [index, file] of paths.entries())
+        onLayout(await reviewPixelContrast(file, evidence[index]));
+    }
+    return paths;
   } finally {
     await fs.rm(projectDir, { recursive: true, force: true });
   }
@@ -266,7 +327,7 @@ export async function createVisualReview(
       sfxCues: [],
     };
     const revision = videoStageHash({
-      contract: 2,
+      contract: 3,
       engine: captured.script.videoEngine,
       props,
       totalFrames: prepared.totalFrames,
@@ -284,7 +345,6 @@ export async function createVisualReview(
           )!;
           const localFrame = point.frame - cover - beat.startFrame;
           return (
-            captured.script.videoEngine === "remotion" &&
             input.mode !== "transition" &&
             point.label === "Reading" &&
             localFrame >= props.fps &&
@@ -350,7 +410,15 @@ export async function createVisualReview(
     }
     return {
       layoutReview: {
-        status: evidence.size ? "sampled" : "unavailable",
+        status: [...evidence.values()].some(
+          (value) => value.checkedTextNodes > 0,
+        )
+          ? "sampled"
+          : "unavailable",
+        contrastCheckedTextNodes: [...evidence.values()].reduce(
+          (sum, value) => sum + (value.contrastCheckedTextNodes ?? 0),
+          0,
+        ),
         frames: [...evidence.keys()].sort((a, b) => a - b),
       },
       revision,
@@ -374,9 +442,11 @@ export async function createVisualReview(
             frame: point.frame,
             kind: issue.kind,
             message:
-              issue.kind === "text-clipping"
-                ? `Text may be clipped in this sampled frame: “${issue.text}”. Shorten the copy or adjust its layout.`
-                : `Text extends beyond the content safe area in this sampled frame: “${issue.text}”. Check placement at phone size.`,
+              issue.kind === "contrast"
+                ? `Low contrast in this sampled text area (${issue.contrastRatio}:1): “${issue.text}”. Try stronger text/background contrast and review at phone size.`
+                : issue.kind === "text-clipping"
+                  ? `Text may be clipped in this sampled frame: “${issue.text}”. Shorten the copy or adjust its layout.`
+                  : `Text extends beyond the content safe area in this sampled frame: “${issue.text}”. Check placement at phone size.`,
           })),
         ),
       ].sort((a, b) => a.frame - b.frame),
