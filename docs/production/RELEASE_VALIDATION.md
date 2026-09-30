@@ -263,3 +263,38 @@ The full suite passed 568 tests before the final guards; 20 focused checks then
 covered native glyph metrics, late-chapter traversal, pixel contrast, caching and
 rejected HyperFrames frame mismatches. Typecheck, lint, secret scan, release
 contract and production build passed.
+
+## Authored comparison, quiet and brand treatments
+
+The October 1 choreography milestone completes the three remaining recipe
+families with two distinct layouts each: Split/Stacked comparison, Quiet
+divider/center and Brand lockup/frame. Inputs are existing scene copy, exactly two
+supplied comparison labels (up to 60 characters each), and a usable supplied brand
+name. No logo, comparison result or numerical claim is synthesized. Blank or
+overlong brand names are omitted; authored scenes own brand placement instead of
+repeating the legacy Remotion footer. Copy limits are 90/160/110 characters for
+comparison/quiet/brand respectively. Shared geometry reduces type size for longer
+copy and labels. Both engines preserve reading space and finish their authored
+entrances early; quiet decorative motion ends at 2.4 seconds. Existing scene
+lengths and creator cut timing remain authoritative.
+
+Run `node --import tsx scripts/verify-story-motion.ts --baseline` to review the
+existing generic preset on garden, workflow and archival fixture briefs before
+adding a recipe. The normal command captures six authored treatments on those
+briefs, distributed across portrait, landscape and square in both native engines.
+It checks native clipping/safe-area findings and compares decoded hashes for
+reverse seeking. `--limits` additionally checks wide-glyph copy/labels and the
+wordmark at their supported limits; `--engine=remotion` scopes a follow-up after a
+Remotion-only change. Evidence lives under `.artifacts/story-motion-*`.
+
+The gate passed 48 authored native stills and 14 matching reverse recaptures,
+plus 36 maximum-length native captures. Content measurements reported no
+clipping/safe-area findings; all evidence sheets were manually reviewed. The
+baseline comprised 18 native stills. The full 577-test suite passed with two
+workers after media fixture timeouts under simultaneous capture load; 18 focused
+motion checks then passed on the final code. The CI unit step also uses two
+workers after an existing five-second SQLite fixture timed out under contention;
+assertions and timeouts are unchanged. All 576 unit checks passed with this
+exact command. Typecheck, lint, secret scan, fast
+release contract and production build passed. No provider calls, dependencies or
+long-render matrix were required.

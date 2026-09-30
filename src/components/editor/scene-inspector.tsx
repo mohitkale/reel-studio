@@ -422,10 +422,12 @@ function ChecklistEditor({
   items,
   onChange,
   diagram = false,
+  comparison = false,
 }: {
   items: string[];
   onChange: (items: string[]) => void;
   diagram?: boolean;
+  comparison?: boolean;
 }) {
   // Initialized once per mount; SceneInspector is keyed by scene.id, so switching
   // scenes remounts this with the right items — no resync effect needed.
@@ -454,11 +456,19 @@ function ChecklistEditor({
 
   return (
     <div className="grid gap-2">
-      <Label>{diagram ? "Diagram ideas" : "Checklist items"}</Label>
+      <Label>
+        {comparison
+          ? "Comparison labels"
+          : diagram
+            ? "Diagram ideas"
+            : "Checklist items"}
+      </Label>
       <p className="text-muted-foreground text-xs">
-        {diagram
-          ? "Add 2–5 short ideas. Path follows their order; Orbit places the first idea at the center."
-          : "Each item becomes its own row with an icon badge. Leave empty to fall back to splitting the scene text."}
+        {comparison
+          ? "Supply two labels, up to 60 characters each. Their order stays the same in both comparison layouts."
+          : diagram
+            ? "Add 2–5 short ideas. Path follows their order; Orbit places the first idea at the center."
+            : "Each item becomes its own row with an icon badge. Leave empty to fall back to splitting the scene text."}
       </p>
       <div className="grid gap-1.5">
         {draft.map((item, i) => (
@@ -472,7 +482,12 @@ function ChecklistEditor({
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  commit([...draft.slice(0, i + 1), "", ...draft.slice(i + 1)]);
+                  if (!comparison || draft.length < 2)
+                    commit([
+                      ...draft.slice(0, i + 1),
+                      "",
+                      ...draft.slice(i + 1),
+                    ]);
                 }
               }}
             />
@@ -514,6 +529,7 @@ function ChecklistEditor({
         size="sm"
         variant="outline"
         className="justify-start"
+        disabled={comparison && draft.length >= 2}
         onClick={() => commit([...draft, ""])}
       >
         <Plus className="size-3.5" />
@@ -728,7 +744,11 @@ export function SceneInspector({
   const engine = getVideoEngine(videoEngine);
   const templates = engine.listTemplates();
   const normalId = engine.normalizeTemplateId(scene.templateId);
+  const isComparison =
+    scene.role === "comparison" ||
+    Boolean(scene.motion?.recipeId.startsWith("comparison-"));
   const isChecklist =
+    isComparison ||
     normalId === "icon-grid" ||
     normalId === "hf-list" ||
     scene.role === "diagram" ||
@@ -1008,9 +1028,10 @@ export function SceneInspector({
           <ChecklistEditor
             items={scene.items ?? []}
             diagram={scene.role === "diagram"}
+            comparison={isComparison}
             onChange={(items) => {
               const motion =
-                scene.role === "diagram"
+                scene.role === "diagram" || scene.role === "comparison"
                   ? chooseSceneMotion({
                       role: scene.role,
                       text: scene.text,
@@ -1024,7 +1045,10 @@ export function SceneInspector({
               onUpdate({
                 id: scene.id,
                 items: items.length ? items : null,
-                motion: scene.role === "diagram" ? (motion ?? null) : undefined,
+                motion:
+                  scene.role === "diagram" || scene.role === "comparison"
+                    ? (motion ?? null)
+                    : undefined,
               });
             }}
           />

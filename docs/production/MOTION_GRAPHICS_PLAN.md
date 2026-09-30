@@ -28,8 +28,18 @@ Impact and Editorial. The saved seed and outline alternate adjacent chapters
 and keep one motif within each chapter; compatible chapter openings gain anchor
 priority. Replan/append freeze the choice in each scene, protect locks and retain
 it through revision restore. Both engines preserve reveal/impact timing, with
-no new audio accents or provider calls. Broader choreography and visual motifs
-for other families remain future work.
+no new audio accents or provider calls. Broader choreography
+now extends to the other three planned families: Split/Stacked comparison,
+Quiet divider/center and Brand lockup/frame. Each pair changes layout and reveal,
+rather than only color or easing. Native baseline review across garden, workflow
+and archival briefs showed generic headlines did not stage comparison labels,
+reading pauses or brand hierarchy. All six new treatments use saved copy, exactly
+two supplied comparison labels where required, and the supplied brand name when
+usable (blank/overlong names are omitted; no logo is synthesized). Content limits
+and longer-copy geometry are shared by both engines. Seeded planning chooses
+within compatible roles, respects locks/history and keeps supplied charts/media
+on their existing paths. The existing scene menu and list editor expose them;
+reading holds and all six treatments remain silent by default.
 
 Sound event timing now ships for the current recipe pack. Authored reveal /
 impact landmarks share timing with both renderers; bundled WAV duration and
@@ -429,13 +439,14 @@ The first recipe pack, deterministic direction, synchronized accents, music
 maps, measured audio mastering, native review, chapter authoring and bounded
 chapter production are implemented. Follow-ups should remain distinct tasks:
 
-1. Broader authored choreography and motifs beyond the shipped chapter type
-   Sweep/Rise slice. Review unrelated briefs before adding comparison,
-   quiet-beat and brand-payoff recipes.
-2. Narration-aware cut suggestions from reviewed music anchors, preserving
+The broader choreography item is complete with two authored treatments per
+family in both engines, in addition to chapter Sweep/Rise. Three original
+follow-up items remain:
+
+1. Narration-aware cut suggestions from reviewed music anchors, preserving
    speaking windows and creator timing.
-3. Selective HyperFrames visual reuse when compiled native inputs can be safely
+2. Selective HyperFrames visual reuse when compiled native inputs can be safely
    scoped; its current retries reuse unchanged whole-composition sections.
-4. Broader five-minute footage/quality/resolution benchmarks, followed by an
+3. Broader five-minute footage/quality/resolution benchmarks, followed by an
    opt-in finishing experiment for heavier effects or motion blur with measured
    cost. No default multi-sample blur is enabled.
