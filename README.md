@@ -366,6 +366,19 @@ Each call changes at most 20 unlocked scenes, uses neighboring copy for continui
 and rejects storyboard edits made during generation. Scene IDs, motion choices,
 and copy/asset locks survive. REST/MCP `ai_generate_scenes` accepts `chapterId`
 and `sceneIds`; larger storyboards must use bounded selections.
+Chapters → Plan next chapters from a topic saves an editable writing draft using
+one bounded AI generation. Choose the number of chapters and scenes per chapter;
+existing plus planned content must fit 12 chapters / 240 scenes / 20 scenes per
+chapter. Planning sends only saved chapter titles and the final two bounded copy
+excerpts. It preserves the storyboard, chapter boundaries, locks and audio.
+Failures or concurrent storyboard edits retain the previous writing draft.
+Edit saved titles, briefs and scene counts without another AI request. Drafts
+survive reload and revision restore. Provider/token policies remain unchanged;
+planning does not create scenes or launch production. Use AI → Add scenes with a
+saved outline to write a named chapter; automated draft execution is future work.
+REST uses `POST`/`PATCH /api/scripts/:id/chapter-draft`; MCP uses
+`plan_topic_chapters` and `save_topic_chapter_draft`.
+
 Create production → Chaptered video keeps the full supplied script and builds
 editable chapters locally. It supports up to 240 scenes in 12 chapters, with
 at most 20 scenes each. Longer drafts warn about export limits without dropping

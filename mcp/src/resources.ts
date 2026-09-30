@@ -65,6 +65,7 @@ optional photo **background**.
   2. \`ai_generate_scenes\` with mode "append" — or \`add_scene\` + \`update_scene\` — to extend in parts. Existing scenes are never touched by append.
   - With a valid saved outline, pass \`chapterTitle\` to append a named chapter; omit it to extend the last one. One generation supports 1–20 scenes (Auto asks for 3–5), within 12 chapters / 240 scenes / 20 scenes per chapter. Storyboard edits during generation reject the whole append. Reload before retrying.
   3. Use web search (your own tools) to populate up-to-date facts the model may not know, then write them into scenes.
+- \`plan_topic_chapters\` saves an editable topic writing draft in one bounded generation. It leaves scenes and chapter boundaries unchanged. Read \`script.chapterDraft\` with \`get_script\`; \`save_topic_chapter_draft\` edits it without a provider call, using expected/new drafts. Planning checks remaining chapter/scene capacity. Draft execution and automatic retries are not enabled.
 - \`reorder_scenes\` re-sequences; nothing is ever deleted via MCP.
 
 ## Audio podcasts (separate from video projects)

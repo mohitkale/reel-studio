@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { audioMasteringSchema } from "@/production/audio-mastering";
 import { chapterPlanSchema } from "@/production/chapters";
+import { chapterDraftSchema } from "@/production/chapter-draft";
 import { motionPlanSettingsSchema } from "@/production/motion-plan";
 import { musicMapSchema } from "@/production/music-map";
 
@@ -80,6 +81,7 @@ export const brandOverridesSchema = z
     musicMap: musicMapSchema.optional(),
     audioMastering: audioMasteringSchema.optional(),
     chapterPlan: chapterPlanSchema.optional(),
+    chapterDraft: chapterDraftSchema.optional(),
     productionPreset: z
       .object({
         id: productionPresetIdSchema,

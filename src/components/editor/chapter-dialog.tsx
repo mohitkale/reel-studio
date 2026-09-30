@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { TopicChapterDraft } from "@/components/editor/topic-chapter-draft";
 import {
   Dialog,
   DialogContent,
@@ -54,17 +55,20 @@ export function ChapterDialog({
             </DialogDescription>
           </DialogHeader>
           {open && (
-            <ChapterForm
-              script={script}
-              timeline={timeline}
-              fps={fps}
-              takeId={takeId}
-              selectedSceneId={selectedSceneId}
-              onSelectScene={(id) => {
-                onSelectScene(id);
-                setOpen(false);
-              }}
-            />
+            <div>
+              <ChapterForm
+                script={script}
+                timeline={timeline}
+                fps={fps}
+                takeId={takeId}
+                selectedSceneId={selectedSceneId}
+                onSelectScene={(id) => {
+                  onSelectScene(id);
+                  setOpen(false);
+                }}
+              />
+              <TopicChapterDraft script={script} />
+            </div>
           )}
         </DialogContent>
       </Dialog>

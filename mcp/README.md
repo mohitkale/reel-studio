@@ -112,6 +112,10 @@ TTS always uses each scene’s `spokenText ?? text`.
    (Auto asks for 3–5), with at most 12 chapters / 240 total scenes / 20 scenes
    per chapter. Earlier work stays intact. If the storyboard changes during
    generation, the entire append is rejected; reload before requesting a retry.
+   `plan_topic_chapters` saves topic writing briefs in one bounded request.
+   Inspect `get_script` → `script.chapterDraft`, then edit it with
+   `save_topic_chapter_draft` using the complete expected and new drafts.
+   Planning preserves scenes; it does not execute the draft or launch production.
 3. Add narration (oneshot **or** per-scene).
 4. `produce_content` → poll `get_production_job` →
    `download_production_artifact`. A legacy or approval-only token pauses video

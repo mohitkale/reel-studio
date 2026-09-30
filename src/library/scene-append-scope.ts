@@ -45,6 +45,17 @@ export function prepareSceneAppendScope(
         );
     }
   }
+  return { context: sceneContinuityContext(script) };
+}
+
+/** Shared bounded context for append and topic planning, independent of capacity. */
+export function sceneContinuityContext(
+  script: Pick<ScriptDTO, "chapterPlan"> & {
+    scenes: Pick<ScriptDTO["scenes"][number], "text" | "spokenText">[];
+  },
+) {
+  const plan = script.chapterPlan;
+  const count = script.scenes.length;
   const context = [
     ...(plan
       ? [
@@ -52,10 +63,10 @@ export function prepareSceneAppendScope(
         ]
       : []),
     ...script.scenes.slice(-2).map((scene, index, neighbors) => {
-      const position = ids.length - neighbors.length + index + 1;
+      const position = count - neighbors.length + index + 1;
       // Bounded excerpts even when earlier chapters have long narration.
       return `Context only (do not replace): Scene ${position}: ${scene.text.slice(0, 500)} | voice: ${(scene.spokenText ?? scene.text).slice(0, 500)}`;
     }),
   ].join("\n");
-  return { context };
+  return context;
 }

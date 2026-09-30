@@ -59,6 +59,16 @@ export function buildPrompt(input: GeneratePlanInput): {
   system: string;
   user: string;
 } {
+  if (input.mode === "chapter_outline") {
+    const capability =
+      input.videoEngine === "hyperframes"
+        ? "hf.template.statement"
+        : "remotion.template.kinetic";
+    return {
+      system: `Plan a coherent chapter outline for a creator. Return the existing JSON plan schema, with exactly ${input.sceneCount} entries in scenes. Each entry is a proposed chapter, not a finished scene: text is a distinct chapter title (1–120 characters), spokenText is a writing brief (3–2000 characters) with purpose, supplied facts and a takeaway. Use plain conversational English. Preserve supplied facts; never invent statistics, sources, product claims or URLs. Do not repeat previous chapters or write full narration. Set capabilityId to ${capability}, emphasis to [], styleId to clean-story and energy to calm. Omit media, charts and visual fields. Include short projectName and scriptName values. Return only JSON that matches the provided schema.`,
+      user: `Topic and supplied source:\n${input.brief}\n\nPrior context (do not rewrite):\n${input.existingContext ?? "None"}`,
+    };
+  }
   const isAppend = input.mode === "append";
   const isRewrite = input.mode === "rewrite";
   const isHookVariants = input.mode === "hook_variants";

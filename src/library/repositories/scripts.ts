@@ -106,6 +106,7 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     captionTracks,
     audioMastering: overrides.audioMastering ?? "original",
     chapterPlan: overrides.chapterPlan,
+    chapterDraft: overrides.chapterDraft,
   };
 }
 
@@ -124,6 +125,7 @@ export async function updateScript(
     energy?: EnergyId;
     voiceMode?: VoiceMode;
     audioMastering?: import("@/production/audio-mastering").AudioMastering;
+    chapterDraft?: import("@/production/chapter-draft").ChapterDraft;
   },
 ): Promise<void> {
   const patch: Record<string, unknown> = {
@@ -148,7 +150,8 @@ export async function updateScript(
     if (
       data.styleId !== undefined ||
       data.energy !== undefined ||
-      data.audioMastering !== undefined
+      data.audioMastering !== undefined ||
+      data.chapterDraft !== undefined
     ) {
       const current = await tx.script.findUnique({
         where: { id },
@@ -163,6 +166,9 @@ export async function updateScript(
         ...overrides,
         ...(data.styleId !== undefined ? { styleId: data.styleId } : {}),
         ...(data.energy !== undefined ? { energy: data.energy } : {}),
+        ...(data.chapterDraft !== undefined
+          ? { chapterDraft: data.chapterDraft }
+          : {}),
         ...(data.audioMastering !== undefined
           ? { audioMastering: data.audioMastering }
           : {}),
