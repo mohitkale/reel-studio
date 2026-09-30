@@ -82,6 +82,7 @@ import { AIEnhanceDialog } from "@/components/editor/ai-enhance-dialog";
 import { ScenesJsonDialog } from "@/components/editor/scenes-json-dialog";
 import { CoverControl } from "@/components/editor/cover-control";
 import { MusicControl } from "@/components/editor/music-control";
+import { ChapterDialog } from "@/components/editor/chapter-dialog";
 import { CaptionsMenu } from "@/components/editor/captions-menu";
 import { Combobox } from "@/components/ui/combobox";
 import { HintTooltip } from "@/components/ui/hint-tooltip";
@@ -561,6 +562,14 @@ export function EditorClient({
             selectedSceneId={effectiveSceneId}
             voiceTakeId={effectiveTakeId ?? undefined}
             sourceKey={JSON.stringify([script, effectiveTakeId])}
+            onSelectScene={selectScene}
+          />
+          <ChapterDialog
+            script={script}
+            timeline={timeline}
+            fps={fps}
+            takeId={effectiveTakeId}
+            selectedSceneId={effectiveSceneId ?? undefined}
             onSelectScene={selectScene}
           />
           {undoSnapshot && (

@@ -346,6 +346,14 @@ packets are copied; silent/unmeasurable audio stays untouched. Editor playback
 uses the original levels. The setting survives snapshots and revision restore;
 REST/MCP `update_script` accepts `audioMastering: "balanced" | "original"`.
 Completed production metadata includes the checksum-matched audio report.
+Chapters in the editor suggests a draft outline, supports named storyboard
+sections and editable scene boundaries, and jumps to each section. Chapters
+contain up to 20 scenes, with at most 12 chapters. Saving checks the current
+outline and scene order; content and timing are preserved. REST/MCP share
+`POST`/`PATCH /api/scripts/:id/chapters`, `suggest_chapters`, and `save_chapters`.
+Boundaries survive snapshots and revision restore, including remapped scene IDs.
+This is the chapter-planning foundation; video production remains limited to
+180 seconds until section rendering, retry and audio continuity pass their gates.
 Refresh keeps manual, legacy, muted, and locked cues; existing scenes retain their template
 cue behavior. Music → Adjust sound cues lets creators choose the clip, set its
 level (including mute), shift its timing, or restore automatic direction.

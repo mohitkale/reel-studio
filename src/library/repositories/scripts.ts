@@ -105,6 +105,7 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
         : undefined,
     captionTracks,
     audioMastering: overrides.audioMastering ?? "original",
+    chapterPlan: overrides.chapterPlan,
   };
 }
 

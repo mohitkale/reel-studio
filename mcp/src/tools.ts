@@ -10,6 +10,7 @@ import { visualAmbitionSchema } from "@/production/motion-plan";
 import { sfxCueEditRequestSchema } from "@/lib/sfx-cue-edit";
 import { musicMapEditSchema } from "@/production/music-map";
 import { audioMasteringSchema } from "@/production/audio-mastering";
+import { chapterEditSchema } from "@/production/chapters";
 import { productionBatchRowSchema } from "@/production/batch";
 import { quickProduceOptionsSchema } from "@/production/quick-produce";
 
@@ -547,6 +548,37 @@ export function registerTools(server: McpServer): void {
     },
     guard(async ({ scriptId, ...body }) =>
       ok(await apiPost(`/api/scripts/${encode(scriptId)}/motion`, body)),
+    ),
+  );
+
+  server.registerTool(
+    "suggest_chapters",
+    {
+      description:
+        "Propose storyboard chapter boundaries using the selected take's matching timing, or estimates. Returns a draft and its exact expected saved plan/scene order; does not write or retime content. Current video export limits still apply.",
+      inputSchema: {
+        scriptId: z.string().min(1),
+        takeId: z.string().min(1).optional(),
+      },
+    },
+    guard(async ({ scriptId, ...body }) =>
+      ok(await apiPost(`/api/scripts/${encode(scriptId)}/chapters`, body)),
+    ),
+  );
+  server.registerTool(
+    "save_chapters",
+    {
+      description:
+        "Save storyboard chapter titles/boundaries, with up to 20 scenes per chapter and 12 chapters. Get a proposal or script first and supply its exact expected chapter plan (null when absent) and scene order. Rejects stale edits; preserves all scene content and timing.",
+      inputSchema: { scriptId: z.string().min(1), ...chapterEditSchema.shape },
+    },
+    guard(async ({ scriptId, ...body }) =>
+      ok(
+        await apiPatch(
+          `/api/scripts/${encode(scriptId)}/chapters`,
+          chapterEditSchema.parse(body),
+        ),
+      ),
     ),
   );
 

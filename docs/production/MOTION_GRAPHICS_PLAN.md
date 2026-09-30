@@ -22,8 +22,7 @@ Ambition currently controls type-hit frequency. The editor direction menu and
 `replan_motion_direction` MCP tool can apply another ambition or seed without
 rewriting content, data, narration, or media. Scene locks and hidden-text scenes
 are protected; revision restore retains saved choices, settings, and locks.
-Richer choreography, chapter planning, and motion character controls remain
-future work.
+Richer choreography and motion character controls remain future work.
 
 Sound event timing now ships for the current recipe pack. Authored reveal /
 impact landmarks share timing with both renderers; bundled WAV duration and
@@ -229,6 +228,17 @@ opt-in finishing quality after base motion is excellent.
   award-winning design.
 
 ## Long videos
+
+The chapter-outline foundation now ships: creators can suggest an outline from
+matching take timing (or labeled estimates), name sections, choose their first
+scene, merge boundaries, and jump to each section. Suggestions remain drafts
+until saved. Each chapter contains at most 20 scenes, with at most 12 chapters.
+Saving rejects changed scene order or a competing outline without touching
+copy, narration, media, motion or timing. REST/MCP share the same contract;
+immutable snapshots retain the outline and revision restore maps boundaries to
+new scene IDs. Frozen revision validation supports bounded 20-scene slices.
+Chapter-wise generation, rendering, retry and audio continuity remain pending;
+the 180-second production limit is unchanged.
 
 Plan long work in **chapters**, each with its own small arc and visual motif,
 while retaining a shared brand language. Use quiet beats and footage or

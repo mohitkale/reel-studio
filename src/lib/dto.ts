@@ -136,6 +136,7 @@ export interface ScriptDTO {
   motionPlan?: MotionPlanSettings;
   musicMap?: MusicMap;
   audioMastering?: import("@/production/audio-mastering").AudioMastering;
+  chapterPlan?: import("@/production/chapters").ChapterPlan;
   captionTracks?: CaptionTrackDTO[];
 }
 
