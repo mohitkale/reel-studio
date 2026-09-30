@@ -110,6 +110,14 @@ export async function generateSceneAppend(input: {
     ? planMotionSequence(
         resolved.plan.scenes.map((scene, index) => ({
           role: roles[index],
+          chapterIndex:
+            body.chapterTitle !== undefined
+              ? (script.chapterPlan?.chapters.length ??
+                (draftChapterId && !script.scenes.length ? 0 : undefined))
+              : script.chapterPlan
+                ? script.chapterPlan.chapters.length - 1
+                : undefined,
+          chapterStart: body.chapterTitle !== undefined && index === 0,
           text: scene.text,
           chart: scene.chart,
           items: scene.items,

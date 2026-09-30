@@ -126,6 +126,13 @@ it("generates one reviewed chapter, resumes/retries pending work and atomically 
               chapterDraft: draft,
               customBrandField: "kept",
               audioMastering: "balanced",
+              productionPreset: { id: "creator-punch", version: "1.0.0" },
+              motionPlan: {
+                version: "1.0.0",
+                seed: "motifs",
+                ambition: "expressive",
+                chapterMotifs: true,
+              },
             }),
             scenes: {
               create: Array.from({ length: 3 }, (_, index) => ({
@@ -204,6 +211,25 @@ it("generates one reviewed chapter, resumes/retries pending work and atomically 
     });
     expect(authorize).not.toHaveBeenCalled();
     expect(mocks.generate).not.toHaveBeenCalled();
+    const originalOverrides = JSON.parse(
+      (await prisma.script.findUniqueOrThrow({ where: { id: "script" } }))
+        .brandOverrides!,
+    );
+    await prisma.script.update({
+      where: { id: "script" },
+      data: {
+        brandOverrides: JSON.stringify({
+          ...originalOverrides,
+          productionPreset: { id: "creator-punch", version: "1.0.0" },
+          motionPlan: {
+            version: "1.0.0",
+            seed: "motifs",
+            ambition: "expressive",
+            chapterMotifs: true,
+          },
+        }),
+      },
+    });
     const first = await generateDraftChapter("script", input(draft), authorize);
     expect(mocks.generate).toHaveBeenCalledTimes(1);
     expect(authorize).toHaveBeenCalledTimes(1);
@@ -221,6 +247,12 @@ it("generates one reviewed chapter, resumes/retries pending work and atomically 
     expect(context).toContain("Original 1");
     expect(context).not.toContain("Original 0");
     expect(first.scenes.slice(0, 3)).toEqual(before.scenes);
+    expect(
+      first.scenes
+        .slice(3)
+        .filter((scene) => scene.motion?.recipeId.startsWith("type-"))
+        .every((scene) => scene.motion?.typeEntrance),
+    ).toBe(true);
     expect(first.chapterPlan!.chapters.slice(0, 1)).toEqual(
       before.chapterPlan!.chapters,
     );

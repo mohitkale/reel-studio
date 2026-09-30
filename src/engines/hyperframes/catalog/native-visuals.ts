@@ -1,3 +1,4 @@
+import { TYPE_MOTIF_OFFSETS } from "@/production/motion";
 import { MOTION_EVENT_TIMINGS } from "@/production/motion-events";
 import type { BrandTokens } from "@/compositions/tokens";
 import type { ReelScene, SceneMood } from "@/compositions/types";
@@ -1083,10 +1084,13 @@ export function buildGsapMotionBootScript(
     var compositionId = compositionRoot && compositionRoot.getAttribute('data-composition-id');
     var compositionTimelines = [];
     var motionEvents = ${JSON.stringify(MOTION_EVENT_TIMINGS.hyperframes)};
+    var typeMotifOffsets = ${JSON.stringify(TYPE_MOTIF_OFFSETS)};
     document.querySelectorAll('[data-motion-scene]').forEach(function (stage) {
       var id = stage.getAttribute('data-motion-scene');
       if (!id) return;
       var recipe = stage.getAttribute('data-recipe') || '';
+      var typeEntrance = (recipe === 'type-impact' || recipe === 'type-editorial') ? stage.getAttribute('data-type-entrance') : null;
+      var motif = typeMotifOffsets[typeEntrance];
       var tl = gsap.timeline({ paused: true });
       var events = motionEvents[recipe];
       if (events) {
@@ -1136,7 +1140,10 @@ export function buildGsapMotionBootScript(
       var diagramSatellites = stage.querySelectorAll('.gm-satellite');
 
       if (recipe === 'type-impact') {
-        if (typeShape) tl.fromTo(typeShape, { scaleX: 0, rotation: -11 }, { scaleX: 1, rotation: -11, duration: 0.58, ease: 'power4.out' }, 0.02);
+        if (typeShape) {
+          if (typeEntrance === 'rise') tl.fromTo(typeShape, { scaleX: 1, scaleY: 0, rotation: -11 }, { scaleX: 1, scaleY: 1, rotation: -11, duration: 0.58, ease: 'power4.out' }, 0.02);
+          else tl.fromTo(typeShape, { scaleX: 0, rotation: -11 }, { scaleX: 1, rotation: -11, duration: 0.58, ease: 'power4.out' }, 0.02);
+        }
         if (typeRule) tl.fromTo(typeRule, { scaleX: 0 }, { scaleX: 1, duration: 0.42, ease: 'power3.out' }, events.impact);
       }
       if (recipe === 'type-editorial' && typeRail) {
@@ -1206,11 +1213,15 @@ export function buildGsapMotionBootScript(
 
       if (chip) tl.fromTo(chip, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.28, ease: 'power2.out' }, 0.12);
       if (qmark) tl.fromTo(qmark, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.15);
-      if (kicker) tl.fromTo(kicker, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }, 0.1);
+      if (kicker) {
+        if (motif) tl.fromTo(kicker, { opacity: 0, x: motif.kickerX, y: motif.kickerY }, { opacity: 1, x: 0, y: 0, force3D: false, duration: 0.3, ease: 'power2.out' }, 0.1);
+        else tl.fromTo(kicker, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }, 0.1);
+      }
 
       // Line reveals — clipped, never overlapping
       lines.forEach(function (inner, i) {
-        tl.to(inner, { y: '0%', duration: 0.42, ease: 'power3.out' }, (recipe === 'type-impact' || recipe === 'type-editorial' ? events.reveal : 0.22) + i * 0.1);
+        if (motif) tl.fromTo(inner, { x: motif.x, y: motif.y, opacity: 0 }, { x: 0, y: 0, opacity: 1, force3D: false, duration: 0.42, ease: 'power3.out' }, events.reveal + i * 0.1);
+        else tl.to(inner, { y: '0%', duration: 0.42, ease: 'power3.out' }, (recipe === 'type-impact' || recipe === 'type-editorial' ? events.reveal : 0.22) + i * 0.1);
       });
 
       if (rule) tl.fromTo(rule, { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: 'power3.out' }, Math.max(0.55, 0.22 + lines.length * 0.1));

@@ -75,3 +75,17 @@ it("returns the newly saved script and change report", async () => {
     script: { motionPlan: { ambition: "clean" } },
   });
 });
+
+it("forwards the chapter motif setting and rejects unbounded choreography input", async () => {
+  replan.mockResolvedValue({ state: "planned", changedSceneIds: [] });
+  expect((await POST(request('{"chapterMotifs":true}'), context)).status).toBe(
+    200,
+  );
+  expect(replan).toHaveBeenLastCalledWith("script", {
+    chapterMotifs: true,
+    newVariation: false,
+  });
+  expect(
+    (await POST(request('{"chapterMotifs":"random"}'), context)).status,
+  ).toBe(400);
+});

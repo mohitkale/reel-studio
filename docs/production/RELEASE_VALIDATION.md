@@ -208,3 +208,20 @@ budget. No renderer/audio changes or paid provider calls are needed for this gat
 ```bash
 npm test -- src/library/chapter-generation-service.test.ts src/production/chapter-draft.test.ts src/library/chapter-draft-mcp.test.ts src/components/editor/topic-chapter-draft.test.tsx 'src/app/api/scripts/[id]/chapter-draft/generate/route.test.ts' 'src/app/api/scripts/[id]/ai/route.test.ts'
 ```
+
+Chapter type motif fixtures cover opt-in compatibility, deterministic per-chapter
+choices, boundary anchors, whole/partial append equivalence, chapter outline
+validation, protected scenes, unchanged content/audio, SQLite save/restore and
+REST/MCP parity. Native still review uses three unrelated synthetic briefs across
+portrait, landscape and square in both engines; it includes early reveal/hold
+frames and reverse-order recapture. It creates bounded evidence sheets under
+`.artifacts/chapter-motifs-<timestamp>/` without paid calls or long renders.
+The September 30 gate passed 48 native stills and 8 additional reverse-order
+recaptures. Decoded pixel hashes matched for all reverse recaptures. Explicit
+2D transforms avoid seek-order-dependent text compositing in the new HyperFrames
+motif branch; existing choreography stays unchanged when the saved field is absent.
+
+```bash
+node --import tsx scripts/verify-chapter-motifs.ts
+npm test -- src/production/motion-plan.test.ts src/library/motion-direction-service.test.ts src/library/motion-direction-persistence.test.ts src/library/motion-direction-mcp.test.ts 'src/app/api/scripts/[id]/motion/route.test.ts' src/library/chapter-generation-service.test.ts
+```

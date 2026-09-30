@@ -287,7 +287,11 @@ export function useEditSfxCue(scriptId: string) {
 export function useReplanMotionDirection(scriptId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { ambition?: VisualAmbition; newVariation?: boolean }) =>
+    mutationFn: (vars: {
+      ambition?: VisualAmbition;
+      newVariation?: boolean;
+      chapterMotifs?: boolean;
+    }) =>
       apiPost<{
         result: { changedSceneIds: string[]; protectedSceneCount: number };
         script: ScriptDTO;

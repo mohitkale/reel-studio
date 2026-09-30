@@ -1,3 +1,5 @@
+import { chapterPlanIssue } from "@/production/chapters";
+import { AIError } from "@/providers/ai/types";
 import { randomUUID } from "node:crypto";
 
 import { prisma } from "@/library/db";
@@ -19,6 +21,7 @@ export async function replanMotionDirection(
   input: {
     ambition?: VisualAmbition;
     newVariation?: boolean;
+    chapterMotifs?: boolean;
   },
 ) {
   return prisma.$transaction(async (tx) => {
@@ -33,8 +36,23 @@ export async function replanMotionDirection(
       {},
     );
     if (!overrides.productionPreset) return { state: "legacy" as const };
+    const chapterMotifs =
+      input.chapterMotifs ?? overrides.motionPlan?.chapterMotifs;
+    if (
+      chapterMotifs &&
+      (!overrides.chapterPlan ||
+        chapterPlanIssue(
+          overrides.chapterPlan,
+          script.scenes.map((scene) => scene.id),
+        ))
+    )
+      throw new AIError(
+        "Save a valid chapter outline before using chapter type motifs.",
+        400,
+      );
     const settings: MotionPlanSettings = {
       version: "1.0.0",
+      ...(chapterMotifs !== undefined ? { chapterMotifs } : {}),
       seed: input.newVariation
         ? randomUUID()
         : (overrides.motionPlan?.seed ?? script.id),
@@ -47,17 +65,27 @@ export async function replanMotionDirection(
         scenes[index].locks?.scene ||
         (scenes[index].hideText ?? script.hideText),
       );
+    let chapterIndex = -1;
     const motions = planMotionSequence(
-      scenes.map((scene, index) => ({
-        role: scene.role,
-        text: scene.text,
-        chart: scene.chart,
-        items: scene.items,
-        background: scene.background,
-        hasVisualContent: Boolean(scene.visual),
-        current: scene.motion,
-        locked: protectedScene(index),
-      })),
+      scenes.map((scene, index) => {
+        const chapterStart =
+          overrides.chapterPlan?.chapters.some(
+            (chapter) => chapter.firstSceneId === scene.id,
+          ) ?? false;
+        if (chapterStart) chapterIndex++;
+        return {
+          role: scene.role,
+          text: scene.text,
+          chart: scene.chart,
+          items: scene.items,
+          background: scene.background,
+          hasVisualContent: Boolean(scene.visual),
+          current: scene.motion,
+          locked: protectedScene(index),
+          chapterIndex: chapterIndex >= 0 ? chapterIndex : undefined,
+          chapterStart,
+        };
+      }),
       settings,
     );
     const changedSceneIds: string[] = [];
@@ -67,7 +95,8 @@ export async function replanMotionDirection(
       const after = motions[index];
       if (
         before?.recipeId === after?.recipeId &&
-        before?.version === after?.version
+        before?.version === after?.version &&
+        before?.typeEntrance === after?.typeEntrance
       )
         continue;
       const config = parseJsonColumn(

@@ -556,10 +556,11 @@ export function registerTools(server: McpServer): void {
     "replan_motion_direction",
     {
       description:
-        "Replan a preset video's visual treatments with Clean, Expressive or Showcase ambition. Preserves copy, narration, data, media, locked scenes and hidden-text scenes. newVariation chooses a new saved seed; eligible choices may remain unchanged.",
+        "Replan a preset video's visual treatments with Clean, Expressive or Showcase ambition. Preserves copy, narration, data, media, locked scenes and hidden-text scenes. newVariation chooses a new saved seed; eligible choices may remain unchanged. chapterMotifs enables alternating sweep/rise type choreography from a valid saved chapter outline; false returns unlocked scenes to standard choreography.",
       inputSchema: {
         scriptId: z.string().min(1),
         ambition: visualAmbitionSchema.optional(),
+        chapterMotifs: z.boolean().optional(),
         newVariation: z.boolean().optional(),
       },
     },

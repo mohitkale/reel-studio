@@ -23,7 +23,13 @@ Ambition currently controls type-hit frequency. The editor direction menu and
 `replan_motion_direction` MCP tool can apply another ambition or seed without
 rewriting content, data, narration, or media. Scene locks and hidden-text scenes
 are protected; revision restore retains saved choices, settings, and locks.
-Richer choreography and motion character controls remain future work.
+Opt-in chapter type motifs now add authored Sweep and Rise entrances across
+Impact and Editorial. The saved seed and outline alternate adjacent chapters
+and keep one motif within each chapter; compatible chapter openings gain anchor
+priority. Replan/append freeze the choice in each scene, protect locks and retain
+it through revision restore. Both engines preserve reveal/impact timing, with
+no new audio accents or provider calls. Broader choreography and visual motifs
+for other families remain future work.
 
 Sound event timing now ships for the current recipe pack. Authored reveal /
 impact landmarks share timing with both renderers; bundled WAV duration and
@@ -414,8 +420,9 @@ The first recipe pack, deterministic direction, synchronized accents, music
 maps, measured audio mastering, native review, chapter authoring and bounded
 chapter production are implemented. Follow-ups should remain distinct tasks:
 
-1. Richer authored choreography and chapter motifs, reviewed against unrelated
-   briefs before adding comparison, quiet-beat and brand-payoff recipes.
+1. Broader authored choreography and motifs beyond the shipped chapter type
+   Sweep/Rise slice. Review unrelated briefs before adding comparison,
+   quiet-beat and brand-payoff recipes.
 2. Native pixel/layout evidence for text clipping, safe areas and contrast;
    current review findings check saved inputs and timing only.
 3. Narration-aware cut suggestions from reviewed music anchors, preserving

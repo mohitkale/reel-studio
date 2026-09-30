@@ -34,18 +34,26 @@ import {
 export function MotionDirectionMenu({
   scriptId,
   ambition,
+  chapterMotifs,
+  hasChapters,
   scenes,
   onSelectScene,
 }: {
   scriptId: string;
   ambition: VisualAmbition;
+  chapterMotifs?: boolean;
+  hasChapters?: boolean;
   scenes: readonly MotionReviewScene[];
   onSelectScene: (id: string) => void;
 }) {
   const replan = useReplanMotionDirection(scriptId);
   const issues = reviewMotionTreatments(scenes);
   const repetitions = reviewMotionRepetition(scenes);
-  function apply(input: { ambition?: VisualAmbition; newVariation?: boolean }) {
+  function apply(input: {
+    ambition?: VisualAmbition;
+    newVariation?: boolean;
+    chapterMotifs?: boolean;
+  }) {
     replan.mutate(input, {
       onSuccess: ({ result }) =>
         toast.success(
@@ -177,6 +185,17 @@ export function MotionDirectionMenu({
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
+        <DropdownMenuItem
+          disabled={!hasChapters && !chapterMotifs}
+          onSelect={() => apply({ chapterMotifs: !chapterMotifs })}
+        >
+          Chapter type motifs{chapterMotifs ? " · on" : " · off"}
+        </DropdownMenuItem>
+        <p className="text-muted-foreground px-2 py-2 text-xs">
+          Sweep or rise choreography repeats within each chapter and alternates
+          at the next. Save a chapter outline first. Locked scenes keep their
+          look.
+        </p>
         <DropdownMenuItem onSelect={() => apply({ newVariation: true })}>
           Try another variation
         </DropdownMenuItem>

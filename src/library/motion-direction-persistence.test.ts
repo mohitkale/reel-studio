@@ -106,6 +106,49 @@ it("persists visual direction in SQLite without changing content and rolls back 
       await replanMotionDirection("script", { ambition: "clean" }),
     ).toMatchObject({ changedSceneIds: [] });
 
+    await prisma.script.update({
+      where: { id: "script" },
+      data: {
+        brandOverrides: JSON.stringify({
+          ...JSON.parse(saved.brandOverrides!),
+          chapterPlan: {
+            version: "1.0.0",
+            chapters: [
+              { id: "one", title: "One", firstSceneId: "scene-0" },
+              { id: "two", title: "Two", firstSceneId: "scene-1" },
+            ],
+          },
+        }),
+      },
+    });
+    await replanMotionDirection("script", { chapterMotifs: true });
+    const { getScript } = await import("./repositories/scripts");
+    const directed = (await getScript("script"))!;
+    expect(directed.scenes[0].motion!.typeEntrance).not.toBe(
+      directed.scenes[1].motion!.typeEntrance,
+    );
+    expect((await replanMotionDirection("script", {})).state).toBe("planned");
+    expect(await replanMotionDirection("script", {})).toMatchObject({
+      changedSceneIds: [],
+    });
+    const { captureVideoSnapshot } = await import("./video-snapshot");
+    const { restoreProductionRevision } =
+      await import("./restore-production-revision");
+    const restored = await restoreProductionRevision(
+      await captureVideoSnapshot("script"),
+    );
+    const restoredScript = (await getScript(restored.scriptId))!;
+    expect(restoredScript.motionPlan!.chapterMotifs).toBe(true);
+    expect(restoredScript.scenes.map((scene) => scene.motion)).toEqual(
+      directed.scenes.map((scene) => scene.motion),
+    );
+    await replanMotionDirection("script", { chapterMotifs: false });
+    expect(
+      (await getScript("script"))!.scenes.every(
+        (scene) => !scene.motion?.typeEntrance,
+      ),
+    ).toBe(true);
+
     await prisma.scene.updateMany({
       where: { scriptId: "script" },
       data: { layoutJson: originalLayout },

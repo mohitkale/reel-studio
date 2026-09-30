@@ -83,6 +83,7 @@ export type MotionRecipeId = z.infer<typeof motionRecipeIdSchema>;
 export const motionDirectionSchema = z.object({
   recipeId: motionRecipeIdSchema,
   version: z.literal(MOTION_RECIPE_VERSION),
+  typeEntrance: z.enum(["sweep", "rise"]).optional(),
 });
 export type MotionDirection = z.infer<typeof motionDirectionSchema>;
 
@@ -386,3 +387,9 @@ export function chooseSceneMotion(input: {
   if (input.chart) return undefined;
   return chooseTypeMotion(input);
 }
+
+/** Frozen authored offsets, shared by frame-driven and seekable type choreography. */
+export const TYPE_MOTIF_OFFSETS = {
+  sweep: { x: -110, y: 0, kickerX: -16, kickerY: 0 },
+  rise: { x: 0, y: 80, kickerX: 0, kickerY: 16 },
+} as const;
