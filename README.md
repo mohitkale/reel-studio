@@ -373,11 +373,20 @@ chapter. Planning sends only saved chapter titles and the final two bounded copy
 excerpts. It preserves the storyboard, chapter boundaries, locks and audio.
 Failures or concurrent storyboard edits retain the previous writing draft.
 Edit saved titles, briefs and scene counts without another AI request. Drafts
-survive reload and revision restore. Provider/token policies remain unchanged;
-planning does not create scenes or launch production. Use AI → Add scenes with a
-saved outline to write a named chapter; automated draft execution is future work.
-REST uses `POST`/`PATCH /api/scripts/:id/chapter-draft`; MCP uses
-`plan_topic_chapters` and `save_topic_chapter_draft`.
+survive reload and revision restore. Generate this chapter writes the next pending
+chapter in draft order, one explicit bounded request at a time. Save brief edits
+first. Existing storyboards need a saved chapter outline; empty storyboards create
+the first boundary atomically. Completed chapters, scenes and progress save together
+and cannot be appended twice. Failures stay pending for a chosen retry; completed
+chapters use the storyboard's existing chapter-scoped rewrite. Generation sends a
+bounded topic excerpt, that chapter's brief, saved titles and the final two scene
+excerpts. Only pending chapters count toward remaining capacity. Discard the draft
+to plan another; generated storyboard scenes remain. Provider/token policies stay
+unchanged, and no automatic retry or production launch is enabled.
+REST uses `POST`/`PATCH /api/scripts/:id/chapter-draft` for planning/editing and
+`POST /api/scripts/:id/chapter-draft/generate` with the expected saved draft,
+chapterId and `maxProviderCalls:1` for generation. MCP uses `plan_topic_chapters`,
+`save_topic_chapter_draft` and `generate_topic_chapter`.
 
 Create production → Chaptered video keeps the full supplied script and builds
 editable chapters locally. It supports up to 240 scenes in 12 chapters, with

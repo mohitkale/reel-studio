@@ -321,10 +321,13 @@ limits. Browser, REST and MCP use the same bounds and reject concurrent storyboa
 edits. Saved draft edits use optimistic comparison without another provider call;
 failed/malformed/canceled generation preserves previous work. Writing drafts
 survive reload and revision restore without creating scenes or changing render
-inputs. Executing the reviewed draft chapter by chapter, preserving generated
-progress and selectively retrying failed chapters remains a separate milestone.
-Multi-call orchestration and broader duration/quality/media benchmarks remain
-separate work.
+inputs. Reviewed drafts now generate the next pending chapter with one explicit
+bounded request at a time. Scenes, chapter boundaries and completion progress
+commit atomically; failures stay pending for a chosen retry and completed chapters
+cannot append twice. Progress survives reload/restoration with remapped scene IDs;
+completed chapter revisions use the existing scoped rewrite. Capacity counts only
+pending work. Browser/REST/MCP share the same fixed one-call budget and provider
+quotas. Automatic multi-call orchestration and retry stay disabled.
 
 Plan long work in **chapters**, each with its own small arc and visual motif,
 while retaining a shared brand language. Use quiet beats and footage or
@@ -332,9 +335,8 @@ explanation holds; do not force social-video cuts every 2–4 seconds. Reintrodu
 motifs at chapter boundaries, vary scene families across the whole piece, and
 reserve hero animation for chapter openings and conclusions.
 
-Further long-form work should add topic-based chapter-wise AI planning and
-broader duration/quality/media benchmarks. Preserve bounded calls, selective
-chapter rewriting and existing token policies. Extend selective visual reuse to
+Further long-form work should add broader duration/quality/media benchmarks.
+Preserve bounded calls, selective chapter rewriting and existing token policies. Extend selective visual reuse to
 HyperFrames only when the native compiled inputs can be safely scoped.
 
 ## Implementation order
@@ -412,18 +414,14 @@ The first recipe pack, deterministic direction, synchronized accents, music
 maps, measured audio mastering, native review, chapter authoring and bounded
 chapter production are implemented. Follow-ups should remain distinct tasks:
 
-1. Execute reviewed topic writing drafts chapter by chapter, with bounded calls,
-   explicit usage limits, persisted generated progress and selective retry.
-   Saved/editable topic planning and single named-chapter append now ship; no
-   automatic multi-call orchestration or provider retry is enabled.
-2. Richer authored choreography and chapter motifs, reviewed against unrelated
+1. Richer authored choreography and chapter motifs, reviewed against unrelated
    briefs before adding comparison, quiet-beat and brand-payoff recipes.
-3. Native pixel/layout evidence for text clipping, safe areas and contrast;
+2. Native pixel/layout evidence for text clipping, safe areas and contrast;
    current review findings check saved inputs and timing only.
-4. Narration-aware cut suggestions from reviewed music anchors, preserving
+3. Narration-aware cut suggestions from reviewed music anchors, preserving
    speaking windows and creator timing.
-5. Selective HyperFrames visual reuse when compiled native inputs can be safely
+4. Selective HyperFrames visual reuse when compiled native inputs can be safely
    scoped; its current retries reuse unchanged whole-composition sections.
-6. Broader five-minute footage/quality/resolution benchmarks, followed by an
+5. Broader five-minute footage/quality/resolution benchmarks, followed by an
    opt-in finishing experiment for heavier effects or motion blur with measured
    cost. No default multi-sample blur is enabled.

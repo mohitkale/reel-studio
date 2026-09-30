@@ -11,7 +11,10 @@ import { sfxCueEditRequestSchema } from "@/lib/sfx-cue-edit";
 import { musicMapEditSchema } from "@/production/music-map";
 import { audioMasteringSchema } from "@/production/audio-mastering";
 import { aiEnhanceRequestSchema } from "@/library/ai-enhance-input";
-import { chapterDraftRequestSchema } from "@/library/chapter-draft-input";
+import {
+  chapterGenerationRequestSchema,
+  chapterDraftRequestSchema,
+} from "@/library/chapter-draft-input";
 import { chapterDraftEditSchema } from "@/production/chapter-draft";
 import { chapterEditSchema } from "@/production/chapters";
 import { productionBatchRowSchema } from "@/production/batch";
@@ -778,6 +781,25 @@ export function registerTools(server: McpServer): void {
     },
     guard(async ({ scriptId, ...body }) =>
       ok(await apiPost(`/api/scripts/${encode(scriptId)}/chapter-draft`, body)),
+    ),
+  );
+  server.registerTool(
+    "generate_topic_chapter",
+    {
+      description:
+        "Generate the next pending chapter of a reviewed saved writing draft. Pass expected from get_script and maxProviderCalls:1. One bounded adapter invocation (1–20 scenes), existing provider/token quotas, no automatic multi-call or retry. Completed scenes, outline and progress commit together; concurrent edits reject everything. Failed chapters stay pending for an explicitly requested retry. Completed chapters cannot be appended again; use chapter-scoped ai_generate_scenes rewrite instead.",
+      inputSchema: {
+        scriptId: z.string().min(1),
+        ...chapterGenerationRequestSchema.shape,
+      },
+    },
+    guard(async ({ scriptId, ...body }) =>
+      ok(
+        await apiPost(
+          `/api/scripts/${encode(scriptId)}/chapter-draft/generate`,
+          body,
+        ),
+      ),
     ),
   );
   server.registerTool(

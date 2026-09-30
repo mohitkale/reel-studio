@@ -1,15 +1,11 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
-import type { MotionDirection } from "@/production/motion";
-import { planMotionSequence } from "@/production/motion-plan";
 
-import type { SceneBackground, SceneChartData } from "@/compositions/types";
 import { defaultTemplateIdForEngine } from "@/engines/registry";
 import type { VideoEngineId } from "@/engines/types";
 import { orientationFromDims } from "@/lib/orientation";
 import { aiEnhanceRequestSchema } from "@/library/ai-enhance-input";
+import { generateSceneAppend } from "@/library/generate-scene-append";
 import { prepareSceneAppendScope } from "@/library/scene-append-scope";
-import { commitSceneAppend } from "@/library/scene-append-service";
 import { enrichScenePlan } from "@/library/enrich-scene-plan";
 import { getScript } from "@/library/repositories/scripts";
 import {
@@ -23,44 +19,17 @@ import {
 } from "@/library/scene-rewrite-service";
 import { resolveAutomaticSceneMediaBatch } from "@/library/automatic-stock-media";
 import { reportStockMediaSelectionUsage } from "@/library/stock-media-usage";
-import { applyPresetToAIPlan } from "@/production/ai-preset-plan";
 import { getPresetTemplateId } from "@/production/preset-template-map";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
 import { getAIProvider, isAIProviderId } from "@/providers/ai/registry";
-import { AIError, scenePlanSchema, type AIScene } from "@/providers/ai/types";
+import { AIError, type AIScene } from "@/providers/ai/types";
 import { errorResponse } from "@/server/api-helpers";
 import { authorizeProviderRequest } from "@/server/auth";
-import { mediaPreferenceSchema } from "@/lib/media-preference";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
-
-/** Build the Scene.layoutJson payload for a newly appended AI scene. */
-function layoutJsonFor(
-  background: SceneBackground | undefined,
-  scene: {
-    mood?: string;
-    musicMood?: string;
-    items?: string[];
-    chart?: SceneChartData;
-    mediaPreference?: z.infer<typeof mediaPreferenceSchema>;
-  },
-  role?: ProductionSceneRole,
-  motion?: MotionDirection,
-): string | null {
-  const config: Record<string, unknown> = {};
-  if (background) config.background = background;
-  if (scene.mood) config.mood = scene.mood;
-  if (scene.musicMood) config.musicMood = scene.musicMood;
-  if (scene.items?.length) config.items = scene.items;
-  if (scene.chart) config.chart = scene.chart;
-  if (scene.mediaPreference) config.mediaPreference = scene.mediaPreference;
-  if (role) config.role = role;
-  if (motion) config.motion = motion;
-  return Object.keys(config).length ? JSON.stringify(config) : null;
-}
 
 function mapTemplateForRole(
   scene: AIScene,
@@ -134,10 +103,7 @@ export async function POST(
         ? prepareRegenerationScope(script, body)
         : undefined;
 
-    const appendScope =
-      body.mode === "append"
-        ? prepareSceneAppendScope(script, body)
-        : undefined;
+    if (body.mode === "append") prepareSceneAppendScope(script, body);
 
     const provider = getAIProvider(body.providerId);
     if (!provider.isConfigured()) {
@@ -265,105 +231,12 @@ export async function POST(
       });
     }
 
-    const raw = await provider.generatePlan({
-      mode: "append",
-      brief: body.brief,
-      sceneCount: body.sceneCount,
-      existingContext: appendScope!.context,
-      chapterTitle: body.chapterTitle,
-      existingSceneCount: script.scenes.length,
-      modelId: body.modelId,
-      orientation,
-      scriptStyle: body.scriptStyle,
-      videoEngine,
-      productionPresetId: script.productionPreset?.id,
-      mediaPreference: body.mediaPreference,
-      signal: req.signal,
-    });
-    const enriched = scenePlanSchema.parse({
-      ...raw,
-      scenes: enrichScenePlan(raw.scenes, videoEngine),
-    });
-    if (
-      !enriched.scenes.length ||
-      (body.sceneCount === undefined && enriched.scenes.length > 5) ||
-      (body.sceneCount !== undefined &&
-        enriched.scenes.length !== body.sceneCount)
-    )
-      throw new AIError(
-        "The AI provider did not return the requested scene count",
-        502,
-      );
-    prepareSceneAppendScope(script, {
-      ...body,
-      sceneCount: enriched.scenes.length,
-    });
-    const mediaDecisions = await resolveAutomaticSceneMediaBatch(
-      enriched.scenes,
-      orientation,
-      enriched.scenes.map(() => body.mediaPreference),
-    );
-    const backgrounds = mediaDecisions.map((decision) => decision.background);
-    const resolved = script.productionPreset
-      ? applyPresetToAIPlan(enriched, script.productionPreset.id, videoEngine, {
-          continuation: true,
-          hasVisualAsset: backgrounds.some(Boolean),
-        })
-      : { plan: enriched, roles: [] as ProductionSceneRole[] };
-    const roles = resolved.roles;
-    const motions = script.productionPreset
-      ? planMotionSequence(
-          resolved.plan.scenes.map((scene, index) => ({
-            role: roles[index],
-            text: scene.text,
-            chart: scene.chart,
-            items: scene.items,
-            background: backgrounds[index],
-            hasVisualContent: Boolean(scene.visual),
-          })),
-          script.motionPlan ?? {
-            version: "1.0.0",
-            seed: script.id,
-            ambition: "expressive",
-          },
-          script.scenes.map((scene) => scene.motion),
-        )
-      : [];
-    const appendedIds = await commitSceneAppend({
-      scriptId,
+    const { mediaDecisions } = await generateSceneAppend({
+      script,
       expectedState: expectedStoryboardState!,
-      chapterTitle: body.chapterTitle,
-      mediaDecisions,
+      body,
       signal: req.signal,
-      scenes: resolved.plan.scenes.map((scene, index) => {
-        const motion = motions[index];
-        return {
-          templateId: scene.templateId,
-          text: scene.text,
-          spokenText: scene.spokenText ?? null,
-          emphasis: scene.emphasis.length
-            ? JSON.stringify(scene.emphasis)
-            : null,
-          visual: scene.visual ?? null,
-          layoutJson: layoutJsonFor(
-            backgrounds[index],
-            {
-              ...scene,
-              mediaPreference:
-                mediaDecisions[index]?.snapshot?.providerSnapshot.kind ??
-                body.mediaPreference,
-            },
-            roles[index],
-            motion,
-          ),
-        };
-      }),
     });
-
-    for (const [index, id] of appendedIds.entries()) {
-      if (mediaDecisions[index]?.snapshot?.usageEvent.state === "pending")
-        await reportStockMediaSelectionUsage(id).catch(() => undefined);
-    }
 
     const updated = await getScript(scriptId);
     return NextResponse.json({

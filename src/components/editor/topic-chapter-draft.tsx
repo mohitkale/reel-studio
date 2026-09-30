@@ -8,6 +8,7 @@ import type { AIProviderId } from "@/providers/ai/types";
 import {
   chapterDraftSchema,
   chapterDraftCapacityIssue,
+  pendingChapterDraftIssue,
   type ChapterDraft,
 } from "@/production/chapter-draft";
 import { Button } from "@/components/ui/button";
@@ -66,9 +67,36 @@ export function TopicChapterDraft({
     onSuccess: saved,
     onSettled: refresh,
   });
+  const execute = useMutation({
+    retry: false,
+    mutationFn: (chapterId: string) =>
+      apiPost<Result>(`/api/scripts/${script.id}/chapter-draft/generate`, {
+        providerId: provider,
+        expected,
+        chapterId,
+        maxProviderCalls: 1,
+        mediaPreference: "none",
+      }),
+    onSuccess: saved,
+    onSettled: refresh,
+  });
+  const discard = useMutation({
+    retry: false,
+    mutationFn: () =>
+      apiPatch<Result>(`/api/scripts/${script.id}/chapter-draft`, {
+        expected,
+        draft: null,
+      }),
+    onSuccess: saved,
+    onSettled: refresh,
+  });
   const stale =
     JSON.stringify(expected) !== JSON.stringify(script.chapterDraft ?? null);
-  const busy = generate.isPending || save.isPending;
+  const busy =
+    generate.isPending ||
+    save.isPending ||
+    execute.isPending ||
+    discard.isPending;
   const requestIssue = chapterDraftCapacityIssue(
     script,
     Array.from(
@@ -78,10 +106,7 @@ export function TopicChapterDraft({
   );
   const validDraft = !draft || chapterDraftSchema.safeParse(draft).success;
   const draftIssue = draft
-    ? chapterDraftCapacityIssue(
-        script,
-        draft.chapters.map((chapter) => chapter.sceneCount),
-      )
+    ? pendingChapterDraftIssue(script, draft)
     : undefined;
   function edit(
     index: number,
@@ -109,8 +134,10 @@ export function TopicChapterDraft({
       <div className="mt-3 grid gap-3">
         <p className="text-muted-foreground text-xs">
           Generate and save writing briefs in one AI request. Scenes and saved
-          chapter boundaries stay unchanged. Review the facts and edit the
-          briefs before using Add scenes.
+          chapter boundaries stay unchanged during planning. Review the facts
+          and edit the briefs, then generate the next chapter. Each click uses
+          one bounded AI request under your existing provider limits. Failed
+          chapters stay pending; retry only when you choose.
         </p>
         <div className="grid gap-2">
           <Label htmlFor="chapter-topic">Topic and supplied facts</Label>
@@ -184,6 +211,7 @@ export function TopicChapterDraft({
             busy ||
             stale ||
             !provider ||
+            Boolean(draft?.chapters.some((chapter) => chapter.generated)) ||
             topic.trim().length < 3 ||
             chapterCount < 1 ||
             chapterCount > 12 ||
@@ -206,8 +234,11 @@ export function TopicChapterDraft({
                 (sum, chapter) => sum + chapter.sceneCount,
                 0,
               )}{" "}
-              planned scenes. This draft does not reserve production time;
-              export timing is checked after scenes and narration are prepared.
+              planned scenes.{" "}
+              {draft.chapters.filter((chapter) => chapter.generated).length}/
+              {draft.chapters.length} chapters generated. This draft does not
+              reserve production time; export timing is checked after scenes and
+              narration are prepared.
             </p>
             {draft.chapters.map((chapter, index) => (
               <div
@@ -221,7 +252,7 @@ export function TopicChapterDraft({
                   id={`chapter-draft-title-${index}`}
                   value={chapter.title}
                   maxLength={120}
-                  disabled={busy}
+                  disabled={busy || Boolean(chapter.generated)}
                   onChange={(event) =>
                     edit(index, { title: event.target.value })
                   }
@@ -234,7 +265,7 @@ export function TopicChapterDraft({
                   rows={3}
                   maxLength={2000}
                   value={chapter.brief}
-                  disabled={busy}
+                  disabled={busy || Boolean(chapter.generated)}
                   onChange={(event) =>
                     edit(index, { brief: event.target.value })
                   }
@@ -248,13 +279,52 @@ export function TopicChapterDraft({
                   min={1}
                   max={20}
                   value={chapter.sceneCount}
-                  disabled={busy}
+                  disabled={busy || Boolean(chapter.generated)}
                   onChange={(event) =>
                     edit(index, { sceneCount: Number(event.target.value) })
                   }
                 />
+                {chapter.generated ? (
+                  <p className="text-muted-foreground text-xs">
+                    Generated — edit or rewrite this chapter in the storyboard.
+                  </p>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={
+                      busy ||
+                      stale ||
+                      !provider ||
+                      !validDraft ||
+                      Boolean(draftIssue) ||
+                      JSON.stringify(expected) !== JSON.stringify(draft) ||
+                      draft.chapters.find((item) => !item.generated)?.id !==
+                        chapter.id ||
+                      Boolean(script.scenes.length && !script.chapterPlan)
+                    }
+                    onClick={() => execute.mutate(chapter.id)}
+                  >
+                    {execute.isPending && execute.variables === chapter.id
+                      ? "Generating chapter…"
+                      : "Generate this chapter"}
+                  </Button>
+                )}
               </div>
             ))}
+            {Boolean(script.scenes.length && !script.chapterPlan) && (
+              <p role="alert" className="text-destructive text-xs">
+                Save a chapter outline before generating a named chapter.
+              </p>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={busy || stale}
+              onClick={() => discard.mutate()}
+            >
+              Discard writing draft
+            </Button>
             {(!validDraft || draftIssue) && (
               <p role="alert" className="text-destructive text-xs">
                 {draftIssue ??
@@ -290,15 +360,20 @@ export function TopicChapterDraft({
                 setExpected(script.chapterDraft ?? null);
                 generate.reset();
                 save.reset();
+                execute.reset();
+                discard.reset();
               }}
             >
               Reload writing draft
             </Button>
           </div>
         )}
-        {(generate.error || save.error) && (
+        {(generate.error || save.error || execute.error || discard.error) && (
           <p role="alert" className="text-destructive text-xs">
-            {(generate.error ?? save.error)?.message}
+            {
+              (generate.error ?? save.error ?? execute.error ?? discard.error)
+                ?.message
+            }
           </p>
         )}
       </div>

@@ -196,3 +196,15 @@ contracts. No rendering or audio code changes in this milestone.
 ```bash
 npm test -- src/production/chapter-draft.test.ts src/library/chapter-draft-service.test.ts src/library/chapter-draft-mcp.test.ts src/components/editor/topic-chapter-draft.test.tsx 'src/app/api/scripts/[id]/chapter-draft/route.test.ts' src/providers/ai/prompt.test.ts
 ```
+
+Reviewed chapter generation fixtures verify one explicit bounded call, pending-only
+capacity, ordered chapter selection, provider quota checks before invocation,
+atomic scenes/boundary/progress, preserved earlier work, retry after failure,
+concurrent duplicate rejection, cancellation, stale edits, protected completion
+metadata, empty-storyboard initialization and revision restoration with remapped
+scene IDs. The editor, REST and registered MCP contract share a fixed single-call
+budget. No renderer/audio changes or paid provider calls are needed for this gate.
+
+```bash
+npm test -- src/library/chapter-generation-service.test.ts src/production/chapter-draft.test.ts src/library/chapter-draft-mcp.test.ts src/components/editor/topic-chapter-draft.test.tsx 'src/app/api/scripts/[id]/chapter-draft/generate/route.test.ts' 'src/app/api/scripts/[id]/ai/route.test.ts'
+```
