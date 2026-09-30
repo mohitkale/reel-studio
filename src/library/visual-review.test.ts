@@ -27,6 +27,11 @@ vi.mock("@remotion/renderer", async (original) => ({
 vi.mock("@/library/storage", () => ({
   getAssetStore: () => ({
     exists: async (key: string) => mocks.files.has(key),
+    get: async (key: string) => {
+      const value = mocks.files.get(key);
+      if (!value) throw new Error("Missing");
+      return value;
+    },
     put: async (key: string, value: Buffer) => {
       mocks.files.set(key, value);
       return { key };
@@ -87,9 +92,29 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.files.clear();
   mocks.capture.mockImplementation(async () => structuredClone(snapshot));
-  mocks.render.mockImplementation(async ({ output }: { output: string }) => {
-    await fs.writeFile(output, Buffer.from("captured frame"));
-  });
+  mocks.render.mockImplementation(
+    async ({
+      output,
+      frame,
+      onBrowserLog,
+    }: {
+      output: string;
+      frame: number;
+      onBrowserLog?: (log: { text: string }) => void;
+    }) => {
+      onBrowserLog?.({
+        text:
+          "REEL_REVIEW_LAYOUT " +
+          JSON.stringify({
+            frame,
+            checkedTextNodes: 1,
+            truncated: false,
+            issues: [],
+          }),
+      });
+      await fs.writeFile(output, Buffer.from("captured frame"));
+    },
+  );
 });
 describe("cached visual review", () => {
   it("cancels queued requests without reading or rendering a video", async () => {
@@ -185,6 +210,67 @@ describe("cached visual review", () => {
       (await createVisualReview("script", input, "http://localhost:3000"))
         .findings,
     ).toEqual([]);
+  });
+  it("caches native layout evidence and repairs corrupt evidence with the same still", async () => {
+    const edited = structuredClone(snapshot);
+    edited.script.scenes[0].spokenText =
+      "This narration gives the text a clear and sufficiently long reading hold";
+    mocks.capture.mockResolvedValue(edited);
+    mocks.render.mockImplementation(async ({ output, frame, onBrowserLog }) => {
+      onBrowserLog?.({
+        text:
+          "REEL_REVIEW_LAYOUT " +
+          JSON.stringify({
+            frame,
+            checkedTextNodes: 1,
+            truncated: false,
+            issues: [
+              {
+                kind: "text-clipping",
+                text: "A clear idea",
+                bounds: { left: -20, top: 200, right: 700, bottom: 300 },
+              },
+            ],
+          }),
+      });
+      await fs.writeFile(output, "captured frame");
+    });
+    const first = await createVisualReview(
+      "script",
+      input,
+      "http://localhost:3000",
+    );
+    expect(first.layoutReview?.status).toBe("sampled");
+    expect(
+      first.findings.some(
+        (finding) =>
+          finding.kind === "text-clipping" &&
+          finding.frame === first.stills[0].frame,
+      ),
+    ).toBe(true);
+    expect(
+      await createVisualReview("script", input, "http://localhost:3000"),
+    ).toEqual(first);
+    expect(mocks.render).toHaveBeenCalledOnce();
+    const key = [...mocks.files.keys()].find((key) =>
+      key.endsWith(".layout.json"),
+    )!;
+    mocks.files.set(key, Buffer.from("broken evidence"));
+    await createVisualReview("script", input, "http://localhost:3000");
+    expect(mocks.render).toHaveBeenCalledTimes(2);
+  });
+  it("rejects missing native measurements before publishing a reading still", async () => {
+    const edited = structuredClone(snapshot);
+    edited.script.scenes[0].spokenText =
+      "This narration gives the text a clear and sufficiently long reading hold";
+    mocks.capture.mockResolvedValue(edited);
+    mocks.render.mockImplementation(async ({ output }) => {
+      await fs.writeFile(output, "captured frame");
+    });
+    await expect(
+      createVisualReview("script", input, "http://localhost:3000"),
+    ).rejects.toThrow("measurement did not complete");
+    expect(mocks.files.size).toBe(0);
   });
   it("does not publish a failed capture and retries successfully", async () => {
     mocks.render.mockRejectedValueOnce(new Error("Media unavailable"));

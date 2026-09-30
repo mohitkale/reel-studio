@@ -423,8 +423,10 @@ chapter production are implemented. Follow-ups should remain distinct tasks:
 1. Broader authored choreography and motifs beyond the shipped chapter type
    Sweep/Rise slice. Review unrelated briefs before adding comparison,
    quiet-beat and brand-payoff recipes.
-2. Native pixel/layout evidence for text clipping, safe areas and contrast;
-   current review findings check saved inputs and timing only.
+2. Extend native layout evidence to HyperFrames and add contrast coverage.
+   Remotion review now measures Stage content text in settled reading stills
+   for clipping and safe-area breaches, with cached bounds and explicit coverage.
+   Captions, decorative chrome and animated entrances still need manual review.
 3. Narration-aware cut suggestions from reviewed music anchors, preserving
    speaking windows and creator timing.
 4. Selective HyperFrames visual reuse when compiled native inputs can be safely

@@ -225,3 +225,18 @@ motif branch; existing choreography stays unchanged when the saved field is abse
 node --import tsx scripts/verify-chapter-motifs.ts
 npm test -- src/production/motion-plan.test.ts src/library/motion-direction-service.test.ts src/library/motion-direction-persistence.test.ts src/library/motion-direction-mcp.test.ts 'src/app/api/scripts/[id]/motion/route.test.ts' src/library/chapter-generation-service.test.ts
 ```
+
+## Native reading-frame layout review
+
+The first layout-evidence slice measures Remotion Stage content text after fonts
+load, only in reading samples at least one second into a scene and 0.4 seconds
+before its end. Native bounds and advisory clipping/safe-area findings are cached
+with the frozen still revision and shared by the review API and editor. Missing
+or corrupt evidence requires recapture; failed measurement does not publish a
+reading still. HyperFrames, captions, chrome, contrast and animated/cut frames
+retain manual review with explicit coverage wording. No provider calls are used.
+
+Run `node --import tsx scripts/verify-review-layout.ts` for six bounded native
+reading captures: clean and intentionally overflowing layouts in portrait,
+landscape and square. A seventh capture checks that measurement preserves the
+clean portrait pixels. Evidence and stills are saved under `.artifacts/review-layout-*`.

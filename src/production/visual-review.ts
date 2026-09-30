@@ -1,3 +1,4 @@
+import type { LayoutEvidence } from "@/production/visual-review-layout";
 import { z } from "zod";
 import type { ReelBeat } from "@/compositions/types";
 import type { VisualReviewFinding } from "@/production/visual-review-findings";
@@ -74,6 +75,7 @@ export function planVisualReview(
 }
 
 export interface VisualReviewResult {
+  layoutReview?: { status: "sampled" | "unavailable"; frames: number[] };
   revision: string;
   videoEngine: "remotion" | "hyperframes";
   width: number;
@@ -81,7 +83,7 @@ export interface VisualReviewResult {
   fps: number;
   takeUsable: boolean;
   findings: VisualReviewFinding[];
-  stills: Array<ReviewPoint & { url: string }>;
+  stills: Array<ReviewPoint & { url: string; layout?: LayoutEvidence }>;
 }
 
 /** Eight bounded frames around an actual cut, including the outgoing hold. */

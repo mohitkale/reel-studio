@@ -8,7 +8,8 @@ export interface VisualReviewFinding {
   sceneId: string;
   sceneNumber: number;
   frame: number;
-  kind: "fallback" | "repetition" | "reading-time";
+  kind:
+    "fallback" | "repetition" | "reading-time" | "text-clipping" | "safe-area";
   message: string;
 }
 

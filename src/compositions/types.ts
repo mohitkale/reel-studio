@@ -111,6 +111,8 @@ export interface TemplateProps {
  * is assignable to Remotion's `Record<string, unknown>` props constraint.
  */
 export type ReelProps = {
+  /** Internal native still measurement; omitted from playback and exports. */
+  reviewLayout?: boolean;
   scenes: ReelScene[];
   timeline: ReelBeat[];
   audioUrl?: string;
