@@ -67,3 +67,21 @@ it("asks for a bounded named chapter arc with earlier work preserved", () => {
   expect(prompt.user).toContain("Do not rewrite earlier chapters");
   expect(prompt.user).toContain("Prior takeaway");
 });
+
+it("plans source-grounded chapter briefs through the existing structured scene carrier for both engines", () => {
+  for (const videoEngine of ["hyperframes", "remotion"] as const) {
+    const prompt = buildPrompt({
+      mode: "chapter_outline",
+      brief: "Supplied source",
+      sceneCount: 2,
+      videoEngine,
+      existingContext: "Prior chapters",
+    });
+    expect(prompt.system).toContain("exactly 2 entries");
+    expect(prompt.system).toContain("not a finished scene");
+    expect(prompt.system).toContain("never invent statistics");
+    expect(prompt.system).toContain("Omit media, charts and visual fields");
+    expect(prompt.user).toContain("Supplied source");
+    expect(prompt.user).toContain("Prior chapters");
+  }
+});

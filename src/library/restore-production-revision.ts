@@ -131,9 +131,13 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
           ],
     ),
   ]);
-  if (snapshot.script.audioMastering !== undefined)
+  if (
+    snapshot.script.audioMastering !== undefined ||
+    snapshot.script.chapterDraft !== undefined
+  )
     await updateScript(created.scriptId, {
       audioMastering: snapshot.script.audioMastering,
+      chapterDraft: snapshot.script.chapterDraft,
     });
   if (snapshot.script.chapterPlan) {
     await saveChapterPlan(created.scriptId, {

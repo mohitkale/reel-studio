@@ -78,6 +78,7 @@ export const videoScriptSnapshotSchema = z.object({
   musicMap: brandOverridesSchema.shape.musicMap,
   audioMastering: brandOverridesSchema.shape.audioMastering,
   chapterPlan: brandOverridesSchema.shape.chapterPlan,
+  chapterDraft: brandOverridesSchema.shape.chapterDraft,
   captionTracks: z
     .array(
       z.object({

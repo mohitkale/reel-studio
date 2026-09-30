@@ -223,7 +223,13 @@ export type AIScene = Omit<ParsedAIScene, "visual"> & {
 export type ScenePlan = z.infer<typeof scenePlanSchema>;
 
 export interface GeneratePlanInput {
-  mode: "idea" | "story" | "rewrite" | "append" | "hook_variants";
+  mode:
+    | "idea"
+    | "story"
+    | "rewrite"
+    | "append"
+    | "hook_variants"
+    | "chapter_outline";
   /** The one-line idea (mode "idea") or the full text/story (mode "story"). */
   brief: string;
   sceneCount?: number;

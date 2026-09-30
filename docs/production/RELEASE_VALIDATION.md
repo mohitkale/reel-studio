@@ -186,3 +186,13 @@ partial append. No rendering or audio behavior changes in this milestone.
 ```bash
 npm test -- src/library/scene-append-scope.test.ts src/library/scene-append-service.test.ts src/library/ai-enhance-mcp.test.ts src/components/editor/ai-enhance-dialog.test.tsx 'src/app/api/scripts/[id]/ai/route.test.ts' src/providers/ai/prompt.test.ts
 ```
+
+Topic writing-draft fixtures verify strict chapter/brief/count schemas, one bounded
+provider invocation, capacity validation before quota reservation, preserved
+storyboard/outline/settings, failure/cancellation/conflict preservation, draft-only
+edits without provider work, revision restore, editor controls and shared REST/MCP
+contracts. No rendering or audio code changes in this milestone.
+
+```bash
+npm test -- src/production/chapter-draft.test.ts src/library/chapter-draft-service.test.ts src/library/chapter-draft-mcp.test.ts src/components/editor/topic-chapter-draft.test.tsx 'src/app/api/scripts/[id]/chapter-draft/route.test.ts' src/providers/ai/prompt.test.ts
+```

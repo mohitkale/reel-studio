@@ -11,6 +11,8 @@ import { sfxCueEditRequestSchema } from "@/lib/sfx-cue-edit";
 import { musicMapEditSchema } from "@/production/music-map";
 import { audioMasteringSchema } from "@/production/audio-mastering";
 import { aiEnhanceRequestSchema } from "@/library/ai-enhance-input";
+import { chapterDraftRequestSchema } from "@/library/chapter-draft-input";
+import { chapterDraftEditSchema } from "@/production/chapter-draft";
 import { chapterEditSchema } from "@/production/chapters";
 import { productionBatchRowSchema } from "@/production/batch";
 import { quickProduceOptionsSchema } from "@/production/quick-produce";
@@ -760,6 +762,37 @@ export function registerTools(server: McpServer): void {
         await apiPatch(`/api/scripts/${encode(scriptId)}/scenes`, {
           orderedIds,
         }),
+      ),
+    ),
+  );
+
+  server.registerTool(
+    "plan_topic_chapters",
+    {
+      description:
+        "Save an editable writing draft for the next chapters from a topic and supplied facts, using one bounded AI generation. Does not create or change storyboard scenes. Choose chapterCount (1–12) and scenesPerChapter (1–20), within remaining storyboard capacity. Existing provider/token policies apply. Concurrent storyboard edits reject the draft; retry only when explicitly requested.",
+      inputSchema: {
+        scriptId: z.string().min(1),
+        ...chapterDraftRequestSchema.shape,
+      },
+    },
+    guard(async ({ scriptId, ...body }) =>
+      ok(await apiPost(`/api/scripts/${encode(scriptId)}/chapter-draft`, body)),
+    ),
+  );
+  server.registerTool(
+    "save_topic_chapter_draft",
+    {
+      description:
+        "Edit a saved topic chapter draft without an AI call. Pass expected from get_script → script.chapterDraft (or null) and the complete edited draft. draft:null discards it. Does not change storyboard scenes or chapter boundaries; stale edits are rejected.",
+      inputSchema: {
+        scriptId: z.string().min(1),
+        ...chapterDraftEditSchema.shape,
+      },
+    },
+    guard(async ({ scriptId, ...body }) =>
+      ok(
+        await apiPatch(`/api/scripts/${encode(scriptId)}/chapter-draft`, body),
       ),
     ),
   );

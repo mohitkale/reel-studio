@@ -315,8 +315,16 @@ chapter IDs/boundaries and brand/audio settings are preserved. Scenes, stock
 snapshots and the new boundary commit together, or a storyboard edit during
 generation rejects the entire append with a reload/retry message. No new
 provider calls, token allowances or automatic retries are introduced.
-Topic-wide outline generation, multi-call orchestration, selective chapter
-retry and broader duration/quality/media benchmarks remain separate work.
+Topic planning now saves an editable writing draft of titles, source-grounded
+briefs and scene counts in one bounded generation, with existing provider/token
+limits. Browser, REST and MCP use the same bounds and reject concurrent storyboard
+edits. Saved draft edits use optimistic comparison without another provider call;
+failed/malformed/canceled generation preserves previous work. Writing drafts
+survive reload and revision restore without creating scenes or changing render
+inputs. Executing the reviewed draft chapter by chapter, preserving generated
+progress and selectively retrying failed chapters remains a separate milestone.
+Multi-call orchestration and broader duration/quality/media benchmarks remain
+separate work.
 
 Plan long work in **chapters**, each with its own small arc and visual motif,
 while retaining a shared brand language. Use quiet beats and footage or
@@ -404,9 +412,10 @@ The first recipe pack, deterministic direction, synchronized accents, music
 maps, measured audio mastering, native review, chapter authoring and bounded
 chapter production are implemented. Follow-ups should remain distinct tasks:
 
-1. Topic-wide AI outline planning and multi-chapter orchestration with bounded
-   provider calls, explicit usage limits, preserved partial work and selective
-   retry. Single named-chapter append through Add scenes now ships.
+1. Execute reviewed topic writing drafts chapter by chapter, with bounded calls,
+   explicit usage limits, persisted generated progress and selective retry.
+   Saved/editable topic planning and single named-chapter append now ship; no
+   automatic multi-call orchestration or provider retry is enabled.
 2. Richer authored choreography and chapter motifs, reviewed against unrelated
    briefs before adding comparison, quiet-beat and brand-payoff recipes.
 3. Native pixel/layout evidence for text clipping, safe areas and contrast;
