@@ -20,6 +20,7 @@ import { coverFrames, type ReelProps } from "@/compositions/types";
 import { ProviderError } from "@/providers/voice/types";
 import {
   planVisualReview,
+  planTransitionReview,
   visualReviewRequestSchema,
   type VisualReviewRequest,
   type VisualReviewResult,
@@ -202,12 +203,20 @@ export async function createVisualReview(
       );
     let points;
     try {
-      points = planVisualReview(
-        timing.timeline,
-        input.sceneIds,
-        input.samples,
-        cover,
-      );
+      points =
+        input.mode === "transition"
+          ? planTransitionReview(
+              timing.timeline,
+              input.sceneIds[0],
+              captured.script.fps,
+              cover,
+            )
+          : planVisualReview(
+              timing.timeline,
+              input.sceneIds,
+              input.samples,
+              cover,
+            );
     } catch (error) {
       throw new ProviderError(
         error instanceof Error ? error.message : "Invalid review scenes",

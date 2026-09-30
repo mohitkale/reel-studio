@@ -78,8 +78,11 @@ paths include frozen visual media, cover offsets, enabled captions and matching
 take timing (otherwise clearly labeled estimates). Stills use revision-keyed
 local PNG caches; the editor hides results after saved edits. Capture sessions
 are serialized and bounded, with cleanup on cancellation and failure. Dense
-transition strips, pixel-based legibility/safe-area checks and broader visual
-repetition review remain future review work.
+transition strips now capture up to eight native frames around a selected
+incoming cut, from the outgoing hold through the reveal. Frame-rate-scaled
+sampling stays inside the two scenes and includes cover offsets. First scenes
+have no incoming storyboard cut. Pixel-based legibility/safe-area checks and
+broader visual repetition review remain future review work.
 
 ## Product decision
 

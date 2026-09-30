@@ -328,6 +328,10 @@ moments of a selected scene, and a 320 px phone-size view. Both engines use
 their native still capture with the selected take's matching timing and enabled
 captions. Revision-keyed PNGs are cached locally; changed videos require a new
 review. Stills review layout; playback remains necessary for motion and sound.
+Select any scene after the first and choose Cut into selected scene for up to
+eight frames around its incoming cut, including the outgoing hold. REST review
+accepts `mode: "transition"` with one incoming scene ID; capture remains bounded
+and available through the editor's authorization flow.
 Music → Review music beats analyzes a local track once and saves a reviewable
 tempo/phase proposal. Creators can change BPM, shift the first beat, disable
 beats and mark a drop; audio fingerprints and optimistic checks protect edits.

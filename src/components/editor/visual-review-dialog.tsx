@@ -44,6 +44,7 @@ export function VisualReviewDialog({
       sceneIds: string[];
       samples: 1 | 4;
       sourceKey: string;
+      mode: "scene" | "transition";
     }) => ({
       ...(await apiPost<{ review: VisualReviewResult }>(
         `/api/scripts/${scriptId}/review`,
@@ -51,6 +52,7 @@ export function VisualReviewDialog({
           sceneIds: input.sceneIds,
           samples: input.samples,
           voiceTakeId,
+          mode: input.mode,
         },
       )),
       sourceKey: input.sourceKey,
@@ -59,8 +61,12 @@ export function VisualReviewDialog({
   const current =
     review.data?.sourceKey === sourceKey ? review.data.review : null;
   const stale = Boolean(review.data && !current);
-  function generate(sceneIds: string[], samples: 1 | 4) {
-    review.mutate({ sceneIds, samples, sourceKey });
+  function generate(
+    sceneIds: string[],
+    samples: 1 | 4,
+    mode: "scene" | "transition" = "scene",
+  ) {
+    review.mutate({ sceneIds, samples, sourceKey, mode });
   }
   function changePage(next: number) {
     review.reset();
@@ -103,6 +109,20 @@ export function VisualReviewDialog({
             onClick={() => selectedSceneId && generate([selectedSceneId], 4)}
           >
             Four moments · selected scene
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={
+              review.isPending ||
+              !selectedSceneId ||
+              scenes.findIndex((scene) => scene.id === selectedSceneId) < 1
+            }
+            onClick={() =>
+              selectedSceneId && generate([selectedSceneId], 1, "transition")
+            }
+          >
+            Cut into selected scene
           </Button>
           <Button
             size="sm"

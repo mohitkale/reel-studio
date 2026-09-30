@@ -33,6 +33,7 @@ it("rejects malformed and unbounded input before starting capture", async () => 
     "{}",
     '{"sceneIds":["a","b","c"],"samples":4}',
     '{"sceneIds":["a"],"url":"https://example.test"}',
+    '{"sceneIds":["a","b"],"mode":"transition"}',
   ])
     expect((await POST(request(body), context)).status).toBe(400);
   expect(createVisualReview).not.toHaveBeenCalled();
@@ -46,7 +47,7 @@ it("uses only saved script and selected take inputs", async () => {
   expect(response.status).toBe(200);
   expect(createVisualReview).toHaveBeenCalledWith(
     "script",
-    { sceneIds: ["a"], samples: 1, voiceTakeId: "take" },
+    { sceneIds: ["a"], samples: 1, voiceTakeId: "take", mode: "scene" },
     "http://localhost",
     expect.any(AbortSignal),
   );

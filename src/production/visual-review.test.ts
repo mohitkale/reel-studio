@@ -1,11 +1,61 @@
 import { describe, expect, it } from "vitest";
-import { planVisualReview, visualReviewRequestSchema } from "./visual-review";
+import {
+  planVisualReview,
+  planTransitionReview,
+  visualReviewRequestSchema,
+} from "./visual-review";
 
 const timeline = [
   { sceneId: "a", startFrame: 0, durationFrames: 90 },
   { sceneId: "b", startFrame: 90, durationFrames: 60 },
 ];
 describe("visual review frames", () => {
+  it("samples both sides of a cut with cover offsets, frame-rate timing and bounded tiny scenes", () => {
+    const strip = planTransitionReview(timeline, "b", 30, 30);
+    expect(strip.map((point) => point.frame)).toEqual([
+      113, 117, 119, 120, 121, 123, 128, 132,
+    ]);
+    expect(strip[0]).toMatchObject({
+      sceneId: "a",
+      sceneNumber: 1,
+      label: "Before cut",
+    });
+    expect(strip[3]).toMatchObject({
+      sceneId: "b",
+      sceneNumber: 2,
+      label: "Cut",
+    });
+    expect(
+      planTransitionReview(
+        [
+          { sceneId: "a", startFrame: 0, durationFrames: 1 },
+          { sceneId: "b", startFrame: 1, durationFrames: 1 },
+        ],
+        "b",
+        60,
+      ).map((point) => point.frame),
+    ).toEqual([0, 1]);
+    expect(() => planTransitionReview(timeline, "a", 30)).toThrow(/preceding/);
+    expect(
+      visualReviewRequestSchema.safeParse({
+        sceneIds: ["b"],
+        mode: "transition",
+      }).success,
+    ).toBe(true);
+    expect(
+      visualReviewRequestSchema.safeParse({
+        sceneIds: ["a", "b"],
+        mode: "transition",
+      }).success,
+    ).toBe(false);
+    expect(
+      visualReviewRequestSchema.safeParse({
+        sceneIds: ["b"],
+        mode: "transition",
+        samples: 4,
+      }).success,
+    ).toBe(false);
+  });
   it("samples playback order, uses cover offsets and never samples the next scene", () => {
     const points = planVisualReview(timeline, ["b", "a"], 4, 30);
     expect(points.map((point) => point.frame)).toEqual([
