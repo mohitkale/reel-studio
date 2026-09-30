@@ -410,6 +410,8 @@ export async function executeVideoProductionJob(
     const prepared = await stage(
       "prepare_composition",
       {
+        // Invalidate checkpoints written before prepared scenes retained motion.
+        compositionContract: 2,
         media: { ...media, snapshot: snapshotWithAudio },
         timing,
         orientation: input.orientation,

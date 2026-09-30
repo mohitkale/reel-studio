@@ -74,6 +74,71 @@ const stageDependencies = {
 };
 
 describe("video production orchestration", () => {
+  it.each(["remotion", "hyperframes"] as const)(
+    "retains motion decisions through prepared checkpoints for %s",
+    async (videoEngine) => {
+      const directed = structuredClone(snapshot);
+      directed.script.videoEngine = videoEngine;
+      directed.script.scenes[0].motion = {
+        recipeId: "type-impact",
+        version: "1.0.0",
+      };
+      directed.script.productionPreset = {
+        id: "creator-punch",
+        version: "1.0.0",
+      };
+      const render = vi.fn(async () => undefined);
+      const step = vi.fn(async () => ({}) as never);
+      await executeVideoProductionJob(
+        job,
+        { signal: new AbortController().signal, heartbeat: async () => true },
+        {
+          ...stageDependencies,
+          capture: async () => directed,
+          render,
+          step,
+          artifact: async () => ({
+            path: "/tmp/render-1.mp4",
+            expectsAudio: false,
+          }),
+          verify: async () => ({ checksum: "sha256:verified" }),
+          output: vi.fn(async () => ({}) as never),
+        },
+      );
+      expect(render).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prepared: expect.objectContaining({
+            props: expect.objectContaining({
+              scenes: [
+                expect.objectContaining({
+                  motion: directed.script.scenes[0].motion,
+                }),
+              ],
+            }),
+          }),
+        }),
+      );
+      expect(step).toHaveBeenCalledWith(
+        "job-1",
+        "prepare_composition",
+        expect.objectContaining({
+          state: "succeeded",
+          detail: expect.objectContaining({
+            composition: expect.objectContaining({
+              props: expect.objectContaining({
+                scenes: [
+                  expect.objectContaining({
+                    motion: directed.script.scenes[0].motion,
+                  }),
+                ],
+              }),
+            }),
+          }),
+        }),
+      );
+    },
+  );
+
   it("runs the ordered pipeline and records only a verified output", async () => {
     const completed: string[] = [];
     const render = vi.fn(async () => undefined);

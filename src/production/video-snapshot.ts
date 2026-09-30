@@ -156,6 +156,7 @@ export const preparedVideoCompositionSchema = z
             chart: true,
             carouselImages: true,
             role: true,
+            motion: true,
             mood: true,
             order: true,
           })
