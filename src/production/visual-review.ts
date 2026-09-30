@@ -75,7 +75,11 @@ export function planVisualReview(
 }
 
 export interface VisualReviewResult {
-  layoutReview?: { status: "sampled" | "unavailable"; frames: number[] };
+  layoutReview?: {
+    status: "sampled" | "unavailable";
+    frames: number[];
+    contrastCheckedTextNodes?: number;
+  };
   revision: string;
   videoEngine: "remotion" | "hyperframes";
   width: number;

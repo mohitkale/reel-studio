@@ -228,15 +228,38 @@ npm test -- src/production/motion-plan.test.ts src/library/motion-direction-serv
 
 ## Native reading-frame layout review
 
-The first layout-evidence slice measures Remotion Stage content text after fonts
-load, only in reading samples at least one second into a scene and 0.4 seconds
-before its end. Native bounds and advisory clipping/safe-area findings are cached
-with the frozen still revision and shared by the review API and editor. Missing
-or corrupt evidence requires recapture; failed measurement does not publish a
-reading still. HyperFrames, captions, chrome, contrast and animated/cut frames
-retain manual review with explicit coverage wording. No provider calls are used.
+Both engines measure content text after fonts load, only in reading samples at
+least one second into a scene and 0.4 seconds before its end. The HyperFrames
+adapter wraps the pinned CLI's public Puppeteer screenshot method in an isolated
+process, after its normal native seek and footage injection. It reads the frozen
+frame immediately after that screenshot so diagnostic style/font reads cannot
+affect its rasterization, and rejects unexpected/missing capture points. The existing
+CLI retains image capture and media behavior. Remotion uses its review-only probe.
+Native glyph metrics remove unused ascent/descent from measured text boxes.
 
-Run `node --import tsx scripts/verify-review-layout.ts` for six bounded native
-reading captures: clean and intentionally overflowing layouts in portrait,
-landscape and square. A seventh capture checks that measurement preserves the
-clean portrait pixels. Evidence and stills are saved under `.artifacts/review-layout-*`.
+Bounds and advisory clipping/safe-area findings are cached with the exact frozen
+still revision. Conservative contrast warnings combine opaque native text paints
+with sampled captured pixels; a warning requires even the strongest sampled
+contrast to be below 3:1 for native large text or 4.5:1 for other text. This can
+miss localized problems and is not an accessibility or whole-video quality score.
+Transparent/gradient paints, strokes, shadows and blending are skipped. Captions,
+chrome, unknown imported content and animated/cut frames retain manual review.
+Coverage, checked counts and traversal limits accompany the evidence. Corrupt or
+missing evidence requires recapture; failed measurement does not publish a
+reading still. No provider calls or export/timing/audio changes are involved.
+
+Run `node --import tsx scripts/verify-review-layout.ts` for bounded native reading
+captures in both engines: clean and intentionally overflowing layouts in all three
+ratios, native low-contrast copy, reverse point ordering, and pixel comparison
+against capture without measurement. Evidence and stills are saved under
+`.artifacts/review-layout-*`. Native proof is appropriate after changing this
+adapter or upgrading its pinned dependencies; no long render matrix is required.
+
+The October 1 gate passed 18 native still captures: 12 clean/overflow cases, two
+additional portrait pixel comparisons using the deterministic Sweep fixture, and
+four low-contrast samples in reverse order. Both engines returned the expected
+warnings; clean samples stayed quiet and comparison hashes matched exactly.
+The full suite passed 568 tests before the final guards; 20 focused checks then
+covered native glyph metrics, late-chapter traversal, pixel contrast, caching and
+rejected HyperFrames frame mismatches. Typecheck, lint, secret scan, release
+contract and production build passed.

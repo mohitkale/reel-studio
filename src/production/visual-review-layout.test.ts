@@ -35,6 +35,7 @@ function fixture(bounds = [120, 200, 700, 300]) {
 }
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   document.body.innerHTML = "";
 });
 describe("native reading-frame measurements", () => {
@@ -44,6 +45,7 @@ describe("native reading-frame measurements", () => {
       checkedTextNodes: 1,
       truncated: false,
       issues: [],
+      contrastSamples: [],
     });
   });
   it("distinguishes safe-area breaches from canvas clipping", () => {
@@ -67,6 +69,86 @@ describe("native reading-frame measurements", () => {
     );
     copy.setAttribute("data-opacity", "0.5");
     expect(measureReviewLayout(root, layout, 39).checkedTextNodes).toBe(0);
+  });
+  it("uses native glyph metrics to avoid false clipping from unused font ascent/descent", () => {
+    const root = fixture([120, 200, 700, 300]);
+    vi.stubGlobal("CanvasRenderingContext2D", class {});
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+      measureText: () => ({
+        fontBoundingBoxAscent: 80,
+        fontBoundingBoxDescent: 20,
+        actualBoundingBoxAscent: 60,
+        actualBoundingBoxDescent: 10,
+      }),
+    } as unknown as CanvasRenderingContext2D);
+    const copy = document.getElementById("copy")!;
+    vi.spyOn(copy, "getBoundingClientRect").mockReturnValue(
+      new DOMRect(60, 110, 300, 35),
+    );
+    vi.mocked(window.getComputedStyle).mockImplementation(
+      (element) =>
+        ({
+          opacity: "1",
+          display: "block",
+          visibility: "visible",
+          overflowX: "visible",
+          overflowY: element === copy ? "hidden" : "visible",
+          fontSize: "100px",
+          fontFamily: "sans-serif",
+        }) as CSSStyleDeclaration,
+    );
+    expect(measureReviewLayout(root, layout, 39).issues).toEqual([]);
+  });
+  it("collects opaque native foregrounds and skips shadows, gradients and blending", () => {
+    const root = fixture();
+    const style = {
+      opacity: "1",
+      display: "block",
+      visibility: "visible",
+      overflowX: "visible",
+      overflowY: "visible",
+      color: "rgb(80, 80, 80)",
+      fontSize: "24px",
+      fontWeight: "700",
+      textShadow: "none",
+      filter: "none",
+      mixBlendMode: "normal",
+      getPropertyValue: () => "",
+    } as unknown as CSSStyleDeclaration;
+    vi.mocked(window.getComputedStyle).mockReturnValue(style);
+    expect(measureReviewLayout(root, layout, 39).contrastSamples).toHaveLength(
+      1,
+    );
+    expect(
+      measureReviewLayout(root, layout, 39).contrastSamples![0],
+    ).toMatchObject({ color: [80, 80, 80], minimumRatio: 3 });
+    vi.mocked(window.getComputedStyle).mockReturnValue({
+      ...style,
+      textShadow: "1px 1px black",
+    } as CSSStyleDeclaration);
+    expect(measureReviewLayout(root, layout, 39).contrastSamples).toEqual([]);
+    vi.mocked(window.getComputedStyle).mockReturnValue({
+      ...style,
+      mixBlendMode: "difference",
+    } as CSSStyleDeclaration);
+    expect(measureReviewLayout(root, layout, 39).contrastSamples).toEqual([]);
+    vi.mocked(window.getComputedStyle).mockReturnValue({
+      ...style,
+      getPropertyValue: () => "transparent",
+    } as CSSStyleDeclaration);
+    expect(measureReviewLayout(root, layout, 39).contrastSamples).toEqual([]);
+  });
+  it("preserves the budget for visible late-chapter copy after inactive scenes", () => {
+    const root = fixture();
+    root.insertAdjacentHTML(
+      "afterbegin",
+      '<div data-opacity="0"><div>Inactive copy</div></div>'.repeat(600),
+    );
+    expect(measureReviewLayout(root, layout, 9999)).toMatchObject({
+      checkedTextNodes: 1,
+      truncated: false,
+      issues: [],
+    });
   });
   it("bounds text traversal and findings", () => {
     const root = fixture([-20, 200, 700, 300]);

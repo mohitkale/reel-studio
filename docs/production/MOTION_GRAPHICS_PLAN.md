@@ -93,8 +93,17 @@ treatment fallbacks, repeated active treatments across sheet boundaries, and
 advisory copy-length reading allowances against actual scene holds. Hidden text
 does not trigger copy checks; cover offsets and the selected/estimated timeline
 are shared with still capture. These are saved-input heuristics, not measured
-pixel legibility, language-specific reading rates or design scores. Pixel-based
-legibility/safe-area checks and broader visual grammar review remain future work.
+pixel legibility, language-specific reading rates or design scores.
+
+Native review now measures content text in settled reading frames in both
+engines for clipping and safe-area breaches, using native glyph metrics to avoid
+false warnings from unused font ascent/descent. Conservative contrast warnings
+combine opaque native text paints with captured pixels: a warning requires even
+the strongest sampled contrast to fall below its threshold. Bounds, sample
+counts and warnings share the frozen still cache. Captions, decorative chrome,
+complex text paint, imported blocks without recognized content and animated/cut
+frames retain explicit manual review. Passing samples are not whole-video
+legibility or accessibility scores. Broader visual grammar review remains below.
 
 ## Product decision
 
@@ -423,14 +432,10 @@ chapter production are implemented. Follow-ups should remain distinct tasks:
 1. Broader authored choreography and motifs beyond the shipped chapter type
    Sweep/Rise slice. Review unrelated briefs before adding comparison,
    quiet-beat and brand-payoff recipes.
-2. Extend native layout evidence to HyperFrames and add contrast coverage.
-   Remotion review now measures Stage content text in settled reading stills
-   for clipping and safe-area breaches, with cached bounds and explicit coverage.
-   Captions, decorative chrome and animated entrances still need manual review.
-3. Narration-aware cut suggestions from reviewed music anchors, preserving
+2. Narration-aware cut suggestions from reviewed music anchors, preserving
    speaking windows and creator timing.
-4. Selective HyperFrames visual reuse when compiled native inputs can be safely
+3. Selective HyperFrames visual reuse when compiled native inputs can be safely
    scoped; its current retries reuse unchanged whole-composition sections.
-5. Broader five-minute footage/quality/resolution benchmarks, followed by an
+4. Broader five-minute footage/quality/resolution benchmarks, followed by an
    opt-in finishing experiment for heavier effects or motion blur with measured
    cost. No default multi-sample blur is enabled.

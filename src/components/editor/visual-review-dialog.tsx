@@ -224,7 +224,7 @@ export function VisualReviewDialog({
             )}
             <p className="text-muted-foreground text-xs">
               {current.layoutReview?.status === "sampled"
-                ? "Content text checked in sampled reading frames. Decorative chrome, captions, contrast and animated entrances need manual review."
+                ? "Content text checked in sampled reading frames. Contrast warnings use conservative pixel samples. Captions, chrome and complex or animated text need visual review."
                 : "Native layout measurements are unavailable for these frames. Check clipping and safe areas visually."}
             </p>
             {phoneSize && (
