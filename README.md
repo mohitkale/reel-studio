@@ -393,6 +393,16 @@ audio is always assembled from the complete graph. HyperFrames visual edits
 currently invalidate the whole composition cache.
 HyperFrames validates the native plan manifest and keys silent sections from
 their frozen inputs, excluding the freshly encoded assembler-only audio mix.
+
+Run `npm run test:video-sections` for an isolated, credential-free 32-second
+native export/retry/review gate in both engines. Add `-- --long --speech --cancel`
+for a 210-second, six-chapter sample using the already-installed macOS voice;
+omit `--speech` on other hosts to use the labeled calibration signal.
+`--engine=remotion --edit` checks full/scoped frame parity and reuse after a
+last-scene visual edit. Existing Node/FFmpeg/Chromium render dependencies are
+required; the gate does not install software or call a paid provider. Reports,
+MP4s and review PNGs are saved in `.artifacts/video-sections-<timestamp>/`.
+
 Refresh keeps manual, legacy, muted, and locked cues; existing scenes retain their template
 cue behavior. Music → Adjust sound cues lets creators choose the clip, set its
 level (including mute), shift its timing, or restore automatic direction.

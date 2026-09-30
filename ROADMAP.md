@@ -18,6 +18,20 @@ See [the changelog](CHANGELOG.md) and
 [release validation](docs/production/RELEASE_VALIDATION.md) for the exact
 behavior and evidence.
 
+## Motion graphics branch
+
+- Eight authored treatments across type, supplied data, diagrams and media in
+  both engines, with seeded direction, ambition, scene locks and visible fallbacks
+- Native scene sheets, selected-scene samples, phone view and transition strips
+- Peak-aligned sound accents, narration protection, editable music beat maps and
+  optional measured final audio mastering
+- Full-source chapter drafts, outline editing and chapter-scoped AI rewriting
+- Controlled five-minute chapter production, resumable sections and continuous
+  audio; Remotion reuses sections unaffected by visual edits
+
+The exact shipped behavior and remaining motion scope are in
+[the motion plan](docs/production/MOTION_GRAPHICS_PLAN.md).
+
 ## Next
 
 - A richer structured-data form for charts and comparisons
