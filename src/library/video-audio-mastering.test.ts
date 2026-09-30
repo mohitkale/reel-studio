@@ -14,7 +14,7 @@ import { withProductionSignal } from "@/library/production-cancellation";
 import { createHash } from "node:crypto";
 
 const run = promisify(execFile);
-async function fixture(filename: string, audio?: string) {
+async function fixture(filename: string, audio?: string, seconds = 6) {
   await run("ffmpeg", [
     "-hide_banner",
     "-loglevel",
@@ -23,7 +23,7 @@ async function fixture(filename: string, audio?: string) {
     "-f",
     "lavfi",
     "-i",
-    "color=c=navy:s=320x180:r=15:d=6",
+    `color=c=navy:s=320x180:r=15:d=${seconds}`,
     ...(audio ? ["-f", "lavfi", "-i", audio] : []),
     "-c:v",
     "libx264",
@@ -101,6 +101,32 @@ it("measures real encoded audio, preserves video packets, and rejects stale audi
     await expect(
       fs.access(audioMasteringReportPath(file)),
     ).rejects.toBeDefined();
+  } finally {
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+}, 20_000);
+it("balances high-range narration and quiet music holds without forced dynamic normalization", async () => {
+  const directory = await fs.mkdtemp(
+    path.join(tmpdir(), "reel-mastering-range-"),
+  );
+  try {
+    const file = path.join(directory, "mix.mp4");
+    await fixture(
+      file,
+      "aevalsrc=(0.012+0.12*lt(mod(t\\,10)\\,2))*sin(2*PI*220*t):s=48000:d=32",
+      32,
+    );
+    const before = await videoHash(file);
+    const report = await masterVideoAudio(file, "balanced");
+    expect(report?.before?.loudnessRangeLu).toBeGreaterThan(11);
+    expect(report?.status).toBe("verified");
+    expect(report?.after?.integratedLufs).toBeCloseTo(-16, 0);
+    expect(report?.after?.truePeakDbtp).toBeLessThanOrEqual(-1);
+    expect(report?.after?.loudnessRangeLu).toBeCloseTo(
+      report!.before!.loudnessRangeLu,
+      0,
+    );
+    expect(await videoHash(file)).toBe(before);
   } finally {
     await fs.rm(directory, { recursive: true, force: true });
   }

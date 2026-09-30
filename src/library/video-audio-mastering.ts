@@ -103,7 +103,14 @@ export async function masterVideoAudio(
     if (before) {
       // Leave headroom for AAC reconstruction overshoot. Re-measure the encoded
       // file rather than asserting that filter configuration proves true peak.
-      const filter = `loudnorm=I=-16:TP=-1.5:LRA=11:measured_I=${before.input_i}:measured_TP=${before.input_tp}:measured_LRA=${before.input_lra}:measured_thresh=${before.input_thresh}:offset=${before.target_offset}:linear=true`;
+      // A lower target range silently forces loudnorm into dynamic mode even
+      // with linear=true. Preserve authored quiet holds when constant gain can
+      // meet the loudness/peak target; the encoded audit remains authoritative.
+      const range = Math.min(
+        50,
+        Math.max(BALANCED_AUDIO_TARGET.loudnessRangeLu, before.input_lra),
+      );
+      const filter = `loudnorm=I=-16:TP=-1.5:LRA=${range}:measured_I=${before.input_i}:measured_TP=${before.input_tp}:measured_LRA=${before.input_lra}:measured_thresh=${before.input_thresh}:offset=${before.target_offset}:linear=true`;
       await run("ffmpeg", [
         "-hide_banner",
         "-loglevel",

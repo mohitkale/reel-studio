@@ -52,7 +52,11 @@ snapshots share this resolver. Optional balanced export audio now targets
 −16 LUFS with a −1 dBTP ceiling. Two-pass processing finishes the whole mix;
 encoded AAC is measured against ±1 LU tolerance and the peak ceiling before
 delivery. Video packets are copied, cancellation leaves no partial deliverable,
-and checksum-matched measurements accompany production metadata. Original mix
+and authored quiet/loud passages retain their source range when linear gain can
+meet the loudness/peak target. The range parameter follows the measured source
+so FFmpeg does not silently force dynamic normalization solely because a quiet
+hold exceeds the default range; see the [loudnorm contract](https://ffmpeg.org/ffmpeg-filters.html#loudnorm).
+Checksum-matched measurements accompany production metadata. Original mix
 levels remain the default and preview behavior; silent/unmeasurable audio is
 explicitly skipped. These are product targets, not platform compliance claims.
 
