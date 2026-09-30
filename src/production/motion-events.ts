@@ -30,6 +30,12 @@ export const MOTION_EVENT_TIMINGS: Record<
     "diagram-orbit": { reveal: 0.55 },
     "media-device": { reveal: 0.22 },
     "media-cinematic": { reveal: 0.22 },
+    "comparison-split": { reveal: 0.2 },
+    "comparison-stack": { reveal: 0.2 },
+    "quiet-divider": { reveal: 0.2 },
+    "quiet-center": { reveal: 0.2 },
+    "brand-lockup": { reveal: 0.42 },
+    "brand-frame": { reveal: 0.2 },
   },
   remotion: {
     "type-impact": { reveal: 4, impact: 17 },
@@ -40,6 +46,12 @@ export const MOTION_EVENT_TIMINGS: Record<
     "diagram-orbit": { reveal: 11 },
     "media-device": { reveal: 0 },
     "media-cinematic": { reveal: 0 },
+    "comparison-split": { reveal: 6 },
+    "comparison-stack": { reveal: 6 },
+    "quiet-divider": { reveal: 6 },
+    "quiet-center": { reveal: 6 },
+    "brand-lockup": { reveal: 13 },
+    "brand-frame": { reveal: 6 },
   },
 };
 

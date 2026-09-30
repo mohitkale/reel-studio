@@ -317,6 +317,7 @@ export const Stage = React.memo(function Stage({
   tokens,
   children,
   contentStyle,
+  hideBrandBug = false,
   backdrop,
   background,
   durationInFrames,
@@ -326,6 +327,8 @@ export const Stage = React.memo(function Stage({
   tokens: BrandTokens;
   children?: React.ReactNode;
   contentStyle?: React.CSSProperties;
+  /** Authored brand layouts own their wordmark; preserve the legacy bug by default. */
+  hideBrandBug?: boolean;
   /** Full-bleed layer rendered above the lighting but below grain/vignette (e.g. a 3D canvas). */
   backdrop?: React.ReactNode;
   /** Per-scene image/video background — takes precedence over `backdrop` when set. */
@@ -385,7 +388,7 @@ export const Stage = React.memo(function Stage({
         {children}
       </AbsoluteFill>
       <ProgressBar tokens={tokens} />
-      <BrandBug tokens={tokens} />
+      {hideBrandBug ? null : <BrandBug tokens={tokens} />}
     </AbsoluteFill>
   );
 });

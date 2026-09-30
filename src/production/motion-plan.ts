@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
   chooseSceneMotion,
+  isStoryMotionRecipe,
   motionDirection,
   motionFallbackReason,
   supportsTypeMotion,
@@ -61,7 +62,15 @@ function candidates(scene: MotionPlanScene): MotionDirection[] {
   const first = chooseSceneMotion({ ...scene, role: scene.role });
   if (!first) return [];
   let ids: MotionRecipeId[] = [first.recipeId];
-  if (scene.role === "screenshot-demo") {
+  if (isStoryMotionRecipe(first.recipeId)) {
+    const family = first.recipeId.split("-")[0];
+    ids =
+      family === "comparison"
+        ? ["comparison-split", "comparison-stack"]
+        : family === "quiet"
+          ? ["quiet-divider", "quiet-center"]
+          : ["brand-lockup", "brand-frame"];
+  } else if (scene.role === "screenshot-demo") {
     ids = ["media-device"];
   } else if (scene.role === "hero") {
     ids = ["media-cinematic"];
@@ -117,7 +126,17 @@ export function planMotionSequence(
       (settings.ambition !== "clean" &&
         (recent.length + offset) % interval === 0);
     const score = (choice: MotionDirection): number => {
-      let value =
+      let value = isStoryMotionRecipe(choice.recipeId)
+        ? (recent.length + offset) % 2 ===
+          (choice.recipeId.endsWith("split") ||
+          choice.recipeId.endsWith("divider") ||
+          choice.recipeId.endsWith("lockup")
+            ? 0
+            : 1)
+          ? 1
+          : 0
+        : 0;
+      value +=
         choice.recipeId === "type-impact"
           ? settings.ambition === "clean" && !anchor
             ? -100

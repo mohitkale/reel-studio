@@ -61,11 +61,54 @@ export const MEDIA_MOTION_RECIPES = [
     maxCharacters: 140,
   },
 ] as const;
+/** Two distinct layouts per family; all content comes from saved scene inputs. */
+export const STORY_MOTION_RECIPES = [
+  {
+    id: "comparison-split",
+    name: "Split comparison",
+    description: "Two supplied labels slide into equal side-by-side panels.",
+    maxCharacters: 90,
+  },
+  {
+    id: "comparison-stack",
+    name: "Stacked comparison",
+    description: "Two supplied labels rise into numbered horizontal rows.",
+    maxCharacters: 90,
+  },
+  {
+    id: "quiet-divider",
+    name: "Quiet divider",
+    description:
+      "An understated scene marker and rule introduce a generous reading hold.",
+    maxCharacters: 160,
+  },
+  {
+    id: "quiet-center",
+    name: "Quiet center",
+    description: "Centered copy fades over a slowly opening decorative ring.",
+    maxCharacters: 160,
+  },
+  {
+    id: "brand-lockup",
+    name: "Brand lockup",
+    description:
+      "The saved brand name leads a centered headline assembly and final hold.",
+    maxCharacters: 110,
+  },
+  {
+    id: "brand-frame",
+    name: "Brand frame",
+    description:
+      "A corner rule frames a left-aligned payoff with the saved brand name below.",
+    maxCharacters: 110,
+  },
+] as const;
 export const MOTION_RECIPES = [
   ...TYPE_MOTION_RECIPES,
   ...DATA_MOTION_RECIPES,
   ...DIAGRAM_MOTION_RECIPES,
   ...MEDIA_MOTION_RECIPES,
+  ...STORY_MOTION_RECIPES,
 ] as const;
 
 export const motionRecipeIdSchema = z.enum([
@@ -77,6 +120,12 @@ export const motionRecipeIdSchema = z.enum([
   "diagram-orbit",
   "media-device",
   "media-cinematic",
+  "comparison-split",
+  "comparison-stack",
+  "quiet-divider",
+  "quiet-center",
+  "brand-lockup",
+  "brand-frame",
 ]);
 export type MotionRecipeId = z.infer<typeof motionRecipeIdSchema>;
 
@@ -116,6 +165,10 @@ export function isDiagramMotionRecipe(id: MotionRecipeId): boolean {
 
 export function isMediaMotionRecipe(id: MotionRecipeId): boolean {
   return id === "media-device" || id === "media-cinematic";
+}
+
+export function isStoryMotionRecipe(id: MotionRecipeId): boolean {
+  return STORY_MOTION_RECIPES.some((recipe) => recipe.id === id);
 }
 
 export interface MotionMediaInput {
@@ -159,6 +212,20 @@ export function motionFallbackReason(
     return `This treatment supports up to ${recipe.maxCharacters} characters of copy.`;
   if (hasOtherVisualContent)
     return "This scene already has a visual or list that this treatment would hide.";
+  if (isStoryMotionRecipe(direction.recipeId)) {
+    if (!text.trim()) return "Add copy for this treatment.";
+    if (background?.url || chart)
+      return "This treatment cannot hide supplied media or chart data.";
+    if (direction.recipeId.startsWith("comparison-")) {
+      if (
+        items?.length !== 2 ||
+        items.some((item) => !item.trim() || Array.from(item).length > 60)
+      )
+        return "Supply exactly two comparison labels, each up to 60 characters.";
+    } else if (items?.length)
+      return "This treatment cannot hide supplied list items.";
+    return undefined;
+  }
   if (isMediaMotionRecipe(direction.recipeId)) {
     if (!background?.url)
       return "Add a supplied image or video for this media treatment.";
@@ -338,6 +405,42 @@ export function chooseSceneMotion(input: {
   }
   if (input.hasVisualContent) return undefined;
   if (input.background?.url) return undefined;
+  const storyChoices: MotionRecipeId[] =
+    input.role === "comparison" && !input.chart
+      ? ["comparison-split", "comparison-stack"]
+      : input.role === "summary" || input.role === "explanation"
+        ? ["quiet-divider", "quiet-center"]
+        : input.role === "cta" || input.role === "logo"
+          ? ["brand-lockup", "brand-frame"]
+          : [];
+  if (storyChoices.length) {
+    if (
+      input.current &&
+      storyChoices.includes(input.current.recipeId) &&
+      !motionFallbackReason(
+        input.current,
+        input.text,
+        input.chart,
+        false,
+        input.items,
+        input.background,
+      )
+    )
+      return input.current;
+    return storyChoices
+      .map(motionDirection)
+      .find(
+        (direction) =>
+          !motionFallbackReason(
+            direction,
+            input.text,
+            input.chart,
+            false,
+            input.items,
+            input.background,
+          ),
+      );
+  }
   if (input.items?.length && input.role === "diagram") {
     if (
       input.current &&

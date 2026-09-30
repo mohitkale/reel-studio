@@ -1,3 +1,4 @@
+import { STORY_MOTION_TRACKS } from "@/production/story-motion";
 import { TYPE_MOTIF_OFFSETS } from "@/production/motion";
 import { MOTION_EVENT_TIMINGS } from "@/production/motion-events";
 import type { BrandTokens } from "@/compositions/tokens";
@@ -1083,6 +1084,7 @@ export function buildGsapMotionBootScript(
     var compositionRoot = document.querySelector('[data-composition-id]');
     var compositionId = compositionRoot && compositionRoot.getAttribute('data-composition-id');
     var compositionTimelines = [];
+    var storyTracks = ${JSON.stringify(STORY_MOTION_TRACKS)};
     var motionEvents = ${JSON.stringify(MOTION_EVENT_TIMINGS.hyperframes)};
     var typeMotifOffsets = ${JSON.stringify(TYPE_MOTIF_OFFSETS)};
     document.querySelectorAll('[data-motion-scene]').forEach(function (stage) {
@@ -1092,6 +1094,10 @@ export function buildGsapMotionBootScript(
       var typeEntrance = (recipe === 'type-impact' || recipe === 'type-editorial') ? stage.getAttribute('data-type-entrance') : null;
       var motif = typeMotifOffsets[typeEntrance];
       var tl = gsap.timeline({ paused: true });
+      (storyTracks[recipe] || []).forEach(function(track) {
+        var element = stage.querySelector(".sm-" + track.part);
+        if (element) tl.fromTo(element, { opacity:0, x:track.x, y:track.y, scaleX:track.scaleX === undefined ? 1 : track.scaleX, scaleY:track.scaleY === undefined ? 1 : track.scaleY }, { opacity:1, x:0, y:0, scaleX:1, scaleY:1, force3D:false, duration:track.duration, ease:"power2.out" }, track.at);
+      });
       var events = motionEvents[recipe];
       if (events) {
         tl.addLabel("reveal", events.reveal);

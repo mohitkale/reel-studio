@@ -2,6 +2,7 @@ import type { BrandTokens } from "@/compositions/tokens";
 import type { ReelScene } from "@/compositions/types";
 import {
   isDataMotionRecipe,
+  isStoryMotionRecipe,
   resolveMotionDirection,
 } from "@/production/motion";
 
@@ -29,7 +30,12 @@ export function buildTypeMotionScene(args: {
     scene.chart,
     Boolean(scene.visual || scene.items?.length),
   );
-  if (!motion || isDataMotionRecipe(motion.recipeId) || scene.hideText)
+  if (
+    !motion ||
+    isDataMotionRecipe(motion.recipeId) ||
+    isStoryMotionRecipe(motion.recipeId) ||
+    scene.hideText
+  )
     return null;
   const impact = motion.recipeId === "type-impact";
   const role = escapeHtml(scene.role ?? "statement");
