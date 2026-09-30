@@ -219,3 +219,62 @@ describe("sequence motion direction", () => {
     ).toBe(false);
   });
 });
+
+it("freezes a chapter motif across type recipes, alternates chapters and matches partial append", () => {
+  const scenes: MotionPlanScene[] = Array.from({ length: 12 }, (_, index) => ({
+    text: `Supplied chapter idea ${index}`,
+    role: "headline",
+    chapterIndex: Math.floor(index / 4),
+    chapterStart: index % 4 === 0,
+  }));
+  const enabled = { ...settings, chapterMotifs: true };
+  const whole = planMotionSequence(scenes, enabled);
+  expect(whole.every((motion) => motion?.typeEntrance)).toBe(true);
+  for (let index = 0; index < 3; index++)
+    expect(
+      new Set(
+        whole
+          .slice(index * 4, index * 4 + 4)
+          .map((motion) => motion?.typeEntrance),
+      ).size,
+    ).toBe(1);
+  expect(whole[0]?.typeEntrance).not.toBe(whole[4]?.typeEntrance);
+  expect(whole[0]?.typeEntrance).toBe(whole[8]?.typeEntrance);
+  const first = planMotionSequence(scenes.slice(0, 6), enabled);
+  expect([
+    ...first,
+    ...planMotionSequence(scenes.slice(6), enabled, first),
+  ]).toEqual(whole);
+  expect(planMotionSequence(scenes, enabled)).toEqual(whole);
+  expect(
+    planMotionSequence(scenes, settings).every(
+      (motion) => !motion?.typeEntrance,
+    ),
+  ).toBe(true);
+  const locked = {
+    ...motionDirection("type-impact"),
+    typeEntrance: "rise" as const,
+  };
+  expect(
+    planMotionSequence(
+      [{ ...scenes[0], locked: true, current: locked }],
+      enabled,
+    ),
+  ).toEqual([locked]);
+  expect(
+    planMotionSequence(
+      [
+        {
+          text: "Data",
+          role: "metric",
+          chapterIndex: 0,
+          chart: {
+            labels: ["Supplied"],
+            series: [{ label: "Count", values: [12] }],
+          },
+        },
+      ],
+      enabled,
+    )[0]?.typeEntrance,
+  ).toBeUndefined();
+});

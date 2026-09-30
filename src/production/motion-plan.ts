@@ -29,6 +29,7 @@ export const motionPlanSettingsSchema = z.object({
   version: z.literal("1.0.0"),
   seed: z.string().min(1).max(160),
   ambition: visualAmbitionSchema,
+  chapterMotifs: z.boolean().optional(),
 });
 export type MotionPlanSettings = z.infer<typeof motionPlanSettingsSchema>;
 
@@ -42,6 +43,9 @@ export interface MotionPlanScene {
   current?: MotionDirection;
   /** A scene lock protects both a chosen treatment and an intentional preset look. */
   locked?: boolean;
+  /** Resolved from the saved outline, never inferred from copy. */
+  chapterIndex?: number;
+  chapterStart?: boolean;
 }
 
 /** Stable variation at planning time only; renderers consume frozen decisions. */
@@ -103,7 +107,10 @@ export function planMotionSequence(
       return scene.current;
     }
     const choices = candidates(scene);
-    const anchor = scene.role === "hook" || scene.role === "payoff";
+    const anchor =
+      scene.role === "hook" ||
+      scene.role === "payoff" ||
+      Boolean(settings.chapterMotifs && scene.chapterStart);
     const interval = settings.ambition === "showcase" ? 2 : 3;
     const wantImpact =
       anchor ||
@@ -130,7 +137,21 @@ export function planMotionSequence(
       }
       return value;
     };
-    const selected = choices.sort((a, b) => score(b) - score(a))[0];
+    let selected = choices.sort((a, b) => score(b) - score(a))[0];
+    if (
+      selected &&
+      settings.chapterMotifs &&
+      scene.chapterIndex !== undefined &&
+      Number.isInteger(scene.chapterIndex) &&
+      scene.chapterIndex >= 0 &&
+      (selected.recipeId === "type-impact" ||
+        selected.recipeId === "type-editorial")
+    ) {
+      selected = {
+        ...selected,
+        typeEntrance: (offset + scene.chapterIndex) % 2 ? "rise" : "sweep",
+      };
+    }
     recent.push(selected);
     return selected;
   });

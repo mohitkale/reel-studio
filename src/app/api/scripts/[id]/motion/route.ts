@@ -12,6 +12,7 @@ export const dynamic = "force-dynamic";
 const bodySchema = z
   .object({
     ambition: visualAmbitionSchema.optional(),
+    chapterMotifs: z.boolean().optional(),
     newVariation: z.boolean().default(false),
   })
   .strict();

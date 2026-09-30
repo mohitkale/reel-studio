@@ -52,18 +52,23 @@ export function buildTypeMotionScene(args: {
     data-scene-id="${escapeHtml(scene.id)}"
     data-motion-recipe="${motion.recipeId}"
     data-motion-version="${motion.version}"
+    ${motion.typeEntrance ? `data-type-entrance="${motion.typeEntrance}"` : ""}
     data-start="${args.absoluteStart.toFixed(3)}"
     data-duration="${args.duration.toFixed(3)}"
     data-track-index="1"
     data-exit-window="${args.exitWindow.toFixed(3)}"
     style="--accent:${escapeHtml(tokens.accent)};--accent-2:${escapeHtml(tokens.accentSecondary)}">
       <div class="fx-stage tm-stage ${impact ? "tm-impact-stage" : "tm-editorial-stage"}"
-        data-motion-scene="${escapeHtml(scene.id)}" data-recipe="${motion.recipeId}">${content}</div>
+        data-motion-scene="${escapeHtml(scene.id)}" data-recipe="${motion.recipeId}"
+        ${motion.typeEntrance ? `data-type-entrance="${motion.typeEntrance}"` : ""}>${content}</div>
     </section>`;
 }
 
 export const TYPE_MOTION_STYLES = `
   .tm-stage { container-type: inline-size; }
+  .tm-stage[data-type-entrance] .fx-line-inner { transform: none; will-change: auto; }
+  .tm-stage[data-type-entrance] .tm-impact-shape { transform: rotate(-11deg); }
+  .tm-stage[data-type-entrance="rise"] .tm-impact-shape { transform-origin: center bottom; }
   .tm-impact-stage { color: #fffdf7; background: #0b0c12; }
   .tm-impact-stage::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 88% 16%, color-mix(in oklab, var(--accent) 42%, transparent), transparent 48%); }
   .tm-impact-shape { position: absolute; left: -12%; top: 18%; width: 128%; height: 26%; background: var(--accent); transform: rotate(-11deg) scaleX(0); transform-origin: left center; opacity: .88; }

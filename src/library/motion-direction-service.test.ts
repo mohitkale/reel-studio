@@ -159,6 +159,42 @@ describe("direction replanning", () => {
     }
   });
 
+  it("requires a valid outline, saves chapter motifs and detects changes within the same recipe", async () => {
+    findUnique.mockResolvedValue(script());
+    await expect(
+      replanMotionDirection("script", { chapterMotifs: true }),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(updateScene).not.toHaveBeenCalled();
+    const original = script([
+      row("a", { motion: motionDirection("type-editorial") }),
+      row("b", { motion: motionDirection("type-editorial") }),
+    ]);
+    original.brandOverrides = JSON.stringify({
+      ...JSON.parse(original.brandOverrides),
+      chapterPlan: {
+        version: "1.0.0",
+        chapters: [
+          { id: "one", title: "One", firstSceneId: "a" },
+          { id: "two", title: "Two", firstSceneId: "b" },
+        ],
+      },
+    });
+    findUnique.mockResolvedValue(original);
+    const result = await replanMotionDirection("script", {
+      chapterMotifs: true,
+      ambition: "clean",
+    });
+    expect(result).toMatchObject({
+      changedSceneIds: ["a", "b"],
+      settings: { chapterMotifs: true },
+    });
+    const motifs = updateScene.mock.calls.map(
+      ([input]) => JSON.parse(input.data.layoutJson).motion.typeEntrance,
+    );
+    expect(motifs[0]).not.toBe(motifs[1]);
+    expect(motifs.sort()).toEqual(["rise", "sweep"]);
+  });
+
   it("does not write unchanged choices or legacy projects", async () => {
     findUnique.mockResolvedValue(
       script([row("scene", { motion: motionDirection("type-editorial") })]),

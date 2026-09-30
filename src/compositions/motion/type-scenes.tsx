@@ -12,7 +12,10 @@ import {
 import { Stage } from "@/compositions/components/stage";
 import type { TemplateProps } from "@/compositions/types";
 import { MOTION_EVENT_TIMINGS } from "@/production/motion-events";
-import { resolveMotionDirection } from "@/production/motion";
+import {
+  TYPE_MOTIF_OFFSETS,
+  resolveMotionDirection,
+} from "@/production/motion";
 
 export function TypeMotionScene({
   scene,
@@ -28,6 +31,9 @@ export function TypeMotionScene({
     Boolean(scene.visual || scene.items?.length),
   );
   const impact = direction?.recipeId === "type-impact";
+  const motif = direction?.typeEntrance
+    ? TYPE_MOTIF_OFFSETS[direction.typeEntrance]
+    : undefined;
   const timing =
     MOTION_EVENT_TIMINGS.remotion[impact ? "type-impact" : "type-editorial"];
   const hasMedia = Boolean(scene.background?.url);
@@ -66,6 +72,7 @@ export function TypeMotionScene({
       <div
         data-motion-recipe={direction?.recipeId}
         data-motion-version={direction?.version}
+        data-type-entrance={direction?.typeEntrance}
         style={{
           position: "relative",
           display: "flex",
@@ -91,8 +98,14 @@ export function TypeMotionScene({
               height: "27%",
               background: tokens.accent,
               opacity: 0.88,
-              transform: `rotate(-11deg) scaleX(${accent})`,
-              transformOrigin: "left center",
+              transform:
+                direction?.typeEntrance === "rise"
+                  ? `rotate(-11deg) scaleY(${accent})`
+                  : `rotate(-11deg) scaleX(${accent})`,
+              transformOrigin:
+                direction?.typeEntrance === "rise"
+                  ? "center bottom"
+                  : "left center",
             }}
           />
         ) : (
@@ -121,7 +134,9 @@ export function TypeMotionScene({
             letterSpacing: ".16em",
             textTransform: "uppercase",
             opacity: enter,
-            transform: `translateY(${(1 - enter) * 16}px)`,
+            transform: motif
+              ? `translate(${(1 - enter) * motif.kickerX}px, ${(1 - enter) * motif.kickerY}px)`
+              : `translateY(${(1 - enter) * 16}px)`,
           }}
         >
           <span
@@ -161,9 +176,11 @@ export function TypeMotionScene({
               textTransform: impact ? "uppercase" : "none",
               overflowWrap: "anywhere",
               color: foreground,
-              transform: impact
-                ? `translateX(${(1 - enter) * -110}px) scale(${0.93 + enter * 0.07})`
-                : `translateY(${(1 - enter) * 80}px)`,
+              transform: motif
+                ? `translate(${(1 - enter) * motif.x}px, ${(1 - enter) * motif.y}px)`
+                : impact
+                  ? `translateX(${(1 - enter) * -110}px) scale(${0.93 + enter * 0.07})`
+                  : `translateY(${(1 - enter) * 80}px)`,
               opacity: interpolate(enter, [0, 0.28, 1], [0, 0.7, 1], {
                 extrapolateRight: "clamp",
               }),

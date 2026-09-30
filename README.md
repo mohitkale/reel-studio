@@ -354,6 +354,17 @@ stays untouched. Editor playback uses the original levels. The setting survives
 snapshots and revision restore;
 REST/MCP `update_script` accepts `audioMastering: "balanced" | "original"`.
 Completed production metadata includes the checksum-matched audio report.
+Visual direction → Chapter type motifs opts into two authored type entrances:
+horizontal Sweep and vertical Rise. A saved chapter outline and seed keep the
+same motif inside each chapter and alternate adjacent chapters. Compatible
+chapter openings receive anchor priority; data, diagram and media treatments
+keep their own choreography. New chapter appends continue the saved motif;
+copy/narration, timing and audio anchors stay unchanged. Replanning preserves
+locked and hidden-text scenes. Turning motifs off returns unlocked scenes to
+standard direction; earlier snapshots without motifs retain their original look.
+REST `/api/scripts/:id/motion` and MCP `replan_motion_direction` accept the same
+optional `chapterMotifs` boolean. No provider call is needed.
+
 Chapters in the editor suggests a draft outline, supports named storyboard
 sections and editable scene boundaries, and jumps to each section. Chapters
 contain up to 20 scenes, with at most 12 chapters. Saving checks the current

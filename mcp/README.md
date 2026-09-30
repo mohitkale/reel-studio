@@ -322,3 +322,9 @@ Then `create_podcast_take` with `{ "podcastId": "<id>" }` and poll
 The MCP server code in this folder is part of Reel Studio and is MIT-licensed
 with the rest of the app. Rendering goes through **Remotion** or **HyperFrames**
 depending on the project’s `videoEngine`. See [`docs/LICENSING.md`](../docs/LICENSING.md).
+
+`replan_motion_direction` accepts `chapterMotifs:true` to apply alternating
+Sweep/Rise type choreography from a valid saved outline and seed. Turning it off
+replans unlocked scenes to standard choreography. Locks, copy, narration, media
+and audio anchors remain intact; no provider request is made. Appended chapters
+inherit the saved setting, and saved production revisions freeze each choice.
