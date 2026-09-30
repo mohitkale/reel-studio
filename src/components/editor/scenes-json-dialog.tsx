@@ -18,6 +18,14 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { productionChartDataSchema } from "@/production/spec";
+import {
+  motionDirectionSchema,
+  type MotionDirection,
+} from "@/production/motion";
+import {
+  productionSceneRoleSchema,
+  type ProductionSceneRole,
+} from "@/production/roles";
 
 /** The editable shape of one scene in the JSON view (ids/order are derived). */
 interface SceneJson {
@@ -31,6 +39,8 @@ interface SceneJson {
   chart?: SceneChartData;
   mood?: string;
   musicMood?: string;
+  role?: ProductionSceneRole;
+  motion?: MotionDirection;
 }
 
 function toJson(scenes: SceneDTO[], videoEngine: VideoEngineId): string {
@@ -46,6 +56,8 @@ function toJson(scenes: SceneDTO[], videoEngine: VideoEngineId): string {
     ...(s.chart ? { chart: s.chart } : {}),
     ...(s.mood ? { mood: s.mood } : {}),
     ...(s.musicMood ? { musicMood: s.musicMood } : {}),
+    ...(s.role ? { role: s.role } : {}),
+    ...(s.motion ? { motion: s.motion } : {}),
   }));
   return JSON.stringify(payload, null, 2);
 }
@@ -165,6 +177,10 @@ function parseScenes(raw: string, videoEngine: VideoEngineId): SceneJson[] {
     } else if (s.musicMood != null) {
       throw new Error(`Scene ${i + 1}: "musicMood" must be a string.`);
     }
+    const role =
+      s.role == null ? undefined : productionSceneRoleSchema.parse(s.role);
+    const motion =
+      s.motion == null ? undefined : motionDirectionSchema.parse(s.motion);
     let spokenText: string | null | undefined;
     if (s.spokenText === null) {
       spokenText = null;
@@ -184,6 +200,8 @@ function parseScenes(raw: string, videoEngine: VideoEngineId): SceneJson[] {
       chart,
       mood,
       musicMood,
+      role,
+      motion,
     };
   });
 }

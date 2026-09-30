@@ -98,7 +98,14 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     styleId: normalizeStyleId(overrides.styleId),
     energy: normalizeEnergyId(overrides.energy),
     productionPreset: overrides.productionPreset,
+    motionPlan: overrides.motionPlan,
+    musicMap:
+      overrides.musicMap?.sourceUrl === script.musicUrl
+        ? overrides.musicMap
+        : undefined,
     captionTracks,
+    audioMastering: overrides.audioMastering ?? "original",
+    chapterPlan: overrides.chapterPlan,
   };
 }
 
@@ -116,6 +123,7 @@ export async function updateScript(
     styleId?: StyleId;
     energy?: EnergyId;
     voiceMode?: VoiceMode;
+    audioMastering?: import("@/production/audio-mastering").AudioMastering;
   },
 ): Promise<void> {
   const patch: Record<string, unknown> = {
@@ -136,26 +144,35 @@ export async function updateScript(
     ...(data.voiceMode !== undefined ? { voiceMode: data.voiceMode } : {}),
   };
 
-  if (data.styleId !== undefined || data.energy !== undefined) {
-    const current = await prisma.script.findUnique({
-      where: { id },
-      select: { brandOverrides: true },
-    });
-    const overrides = parseJsonColumn(
-      current?.brandOverrides,
-      brandOverridesSchema,
-      {},
-    );
-    patch.brandOverrides = JSON.stringify({
-      ...overrides,
-      ...(data.styleId !== undefined ? { styleId: data.styleId } : {}),
-      ...(data.energy !== undefined ? { energy: data.energy } : {}),
-    });
-  }
+  await prisma.$transaction(async (tx) => {
+    if (
+      data.styleId !== undefined ||
+      data.energy !== undefined ||
+      data.audioMastering !== undefined
+    ) {
+      const current = await tx.script.findUnique({
+        where: { id },
+        select: { brandOverrides: true },
+      });
+      const overrides = parseJsonColumn(
+        current?.brandOverrides,
+        brandOverridesSchema,
+        {},
+      );
+      patch.brandOverrides = JSON.stringify({
+        ...overrides,
+        ...(data.styleId !== undefined ? { styleId: data.styleId } : {}),
+        ...(data.energy !== undefined ? { energy: data.energy } : {}),
+        ...(data.audioMastering !== undefined
+          ? { audioMastering: data.audioMastering }
+          : {}),
+      });
+    }
 
-  await prisma.script.update({
-    where: { id },
-    data: patch as Parameters<typeof prisma.script.update>[0]["data"],
+    await tx.script.update({
+      where: { id },
+      data: patch as Parameters<typeof prisma.script.update>[0]["data"],
+    });
   });
 }
 

@@ -4,6 +4,7 @@ import type { ScriptDTO, VoiceTakeDTO } from "@/lib/dto";
 import { orientationFromDims } from "@/lib/orientation";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveReelSfxCues } from "@/lib/sfx-cues";
+import { resolveSpokenWordWindows } from "@/lib/spoken-word-windows";
 import { resolveSpokenText } from "@/lib/spoken-text";
 import { LEGACY_CAPTION_STYLE } from "@/lib/caption-style";
 import { getVideoEngine } from "@/engines/registry";
@@ -50,6 +51,8 @@ function contentHash(script: ScriptDTO): string {
     coverUrl: script.coverUrl,
     musicUrl: script.musicUrl,
     musicVolume: script.musicVolume,
+    audioMastering: script.audioMastering,
+    chapterPlan: script.chapterPlan,
     sfxEnabled: script.sfxEnabled,
     sfxJson: script.sfxJson,
     hideText: script.hideText,
@@ -57,6 +60,7 @@ function contentHash(script: ScriptDTO): string {
     styleId: script.styleId,
     energy: script.energy,
     productionPreset: script.productionPreset,
+    motionPlan: script.motionPlan,
     captionTracks: script.captionTracks,
   };
   return `sha256:${createHash("sha256").update(stableJson(content)).digest("hex")}`;
@@ -150,6 +154,14 @@ export function productionSpecFromLegacyScript(
   const sfx = resolveReelSfxCues({
     sfxEnabled: script.sfxEnabled,
     sfxJson: script.sfxJson,
+    scenes: script.scenes,
+    videoEngine: script.videoEngine,
+    hideText: script.hideText,
+    spokenWords: resolveSpokenWordWindows(
+      script.captionTracks,
+      resolved.takeUsable ? take?.id : null,
+      script.fps,
+    ),
     timeline: resolved.timeline,
     fps: script.fps,
   }).map((cue, index) => {
@@ -160,7 +172,14 @@ export function productionSpecFromLegacyScript(
       uri: cue.url,
       source: "bundled",
     });
-    return { assetRef, startFrame: cue.startFrame, volume: cue.volume };
+    return {
+      assetRef,
+      startFrame: cue.startFrame,
+      volume: cue.volume,
+      ...(cue.fadeSeconds !== undefined
+        ? { fadeSeconds: cue.fadeSeconds }
+        : {}),
+    };
   });
 
   const orientation = orientationFromDims(script.width, script.height);
@@ -201,6 +220,7 @@ export function productionSpecFromLegacyScript(
       id: preset.id,
       version: preset.version,
     },
+    motionPlan: script.motionPlan,
     brand: {
       brandKitId: script.brandKitId,
       tokens: { ...script.brandTokens },
@@ -223,6 +243,7 @@ export function productionSpecFromLegacyScript(
         id: scene.id,
         order: scene.order,
         role: scene.role ?? inferLegacyRole(scene.templateId),
+        motion: scene.motion,
         template: {
           sourceId: scene.templateId,
           resolvedId: engine.normalizeTemplateId(scene.templateId),
@@ -239,7 +260,7 @@ export function productionSpecFromLegacyScript(
           startFrame: timing.startFrame,
           durationFrames: Math.max(1, timing.durationFrames),
         },
-        locks: { copy: false, assets: false, scene: false },
+        locks: scene.locks ?? { copy: false, assets: false, scene: false },
         presentation: {
           hideText: scene.hideText ?? script.hideText,
           mood: scene.mood,

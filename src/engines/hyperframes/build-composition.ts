@@ -37,6 +37,23 @@ import {
 import { buildAudioMixPlan, type AudioMixPlan } from "@/lib/audio-mix";
 import { localizeHyperframesRenderFonts } from "@/engines/hyperframes/render-fonts";
 import {
+  buildTypeMotionScene,
+  TYPE_MOTION_STYLES,
+} from "@/engines/hyperframes/motion/type-scenes";
+import {
+  buildDataMotionScene,
+  DATA_MOTION_STYLES,
+} from "@/engines/hyperframes/motion/data-scenes";
+import {
+  buildDiagramMotionScene,
+  DIAGRAM_MOTION_STYLES,
+} from "@/engines/hyperframes/motion/diagram-scenes";
+import {
+  buildMediaMotionScene,
+  MEDIA_MOTION_STYLES,
+} from "@/engines/hyperframes/motion/media-scenes";
+import { isMediaMotionRecipe } from "@/production/motion";
+import {
   resolveCaptionRenderStyle,
   splitCaptionText,
   splitCaptionWords,
@@ -587,16 +604,6 @@ function buildSeekScript(
           ? Math.min(1, Math.max(0, (p - (1 - exitWindow)) / Math.max(0.001, exitWindow)))
           : 0;
         el.style.setProperty('--exit', String(exit));
-        const bgVideo = el.querySelector('.bg-video');
-        if (bgVideo) {
-          try {
-            if (Math.abs((bgVideo.currentTime || 0) - localT) > 0.12) {
-              bgVideo.currentTime = Math.max(0, localT);
-            }
-            if (playing && bgVideo.paused) bgVideo.play().catch(function () {});
-            if (!playing && !bgVideo.paused) bgVideo.pause();
-          } catch (_) { /* ignore seek races */ }
-        }
         el.querySelectorAll('.list-item').forEach((item, i) => {
           const threshold = (i + 1) / (el.querySelectorAll('.list-item').length + 1);
           const show = p >= threshold * 0.85;
@@ -629,11 +636,32 @@ function buildSeekScript(
           const enter = Math.min(1, Math.max(0.45, p * 3.5));
           prod.style.opacity = String(enter);
         }
-      } else {
-        const bgVideo = el.querySelector('.bg-video');
-        if (bgVideo && !bgVideo.paused) bgVideo.pause();
       }
     }
+  }
+
+  // Standalone editor preview has no producer runtime. Its adapter drives the
+  // same declared media windows; export omits this script and uses the producer.
+  function syncTimedVideos(time) {
+    document.querySelectorAll('video[data-start]').forEach(function (video) {
+      const start = Number(video.dataset.start || 0);
+      const duration = Number(video.dataset.duration || 0);
+      const atFinalHold = Math.abs(time - CFG.totalSeconds) < 0.001 && Math.abs(start + duration - CFG.totalSeconds) < 0.001;
+      const active = time >= start && (time < start + duration || atFinalHold);
+      video.style.visibility = active ? 'visible' : 'hidden';
+      video.muted = true;
+      if (!active) { if (!video.paused) video.pause(); return; }
+      const sourceStart = Number(video.dataset.mediaStart || 0);
+      const local = Math.max(0, time - start + sourceStart);
+      const target = Number.isFinite(video.duration) && video.duration > 0
+        ? Math.min(local, Math.max(0, video.duration - 1 / CFG.fps)) : local;
+      try {
+        if (Math.abs((video.currentTime || 0) - target) > (playing ? 0.12 : 0.001)) video.currentTime = target;
+        const exhausted = Number.isFinite(video.duration) && local >= Math.max(0, video.duration - 1 / CFG.fps);
+        if (playing && !exhausted && video.paused) video.play().catch(function () {});
+        if ((!playing || exhausted) && !video.paused) video.pause();
+      } catch (_) { /* metadata may still be loading */ }
+    });
   }
 
   function syncAudio(time) {
@@ -656,9 +684,9 @@ function buildSeekScript(
         const fadeOut = fadeFrames > 0 ? Math.min(1, remaining / fadeFrames) : 1;
         vol = baseVol * Math.min(fadeIn, fadeOut) * (narrated ? CFG.audioMix.duckRatio : 1);
       } else if (audio.dataset.role === 'sfx') {
-        const fade = 0.08;
-        const fadeIn = Math.min(1, Math.max(0, local) / fade);
-        const fadeOut = Math.min(1, Math.max(0, duration - local) / fade);
+        const fade = Number(audio.dataset.fadeSeconds ?? 0.08);
+        const fadeIn = fade > 0 ? Math.min(1, Math.max(0, local) / fade) : 1;
+        const fadeOut = fade > 0 ? Math.min(1, Math.max(0, duration - local) / fade) : 1;
         vol = baseVol * Math.min(fadeIn, fadeOut);
       }
       audio.volume = Math.max(0, Math.min(1, vol));
@@ -666,8 +694,10 @@ function buildSeekScript(
         if (!audio.paused) audio.pause();
         return;
       }
-      if (Math.abs((audio.currentTime || 0) - local) > 0.12) {
-        try { audio.currentTime = Math.max(0, local); } catch (_) { /* ignore seek races */ }
+      const seekTime = audio.dataset.role === 'music' && Number.isFinite(audio.duration) && audio.duration > 0
+        ? Math.max(0, local) % audio.duration : Math.max(0, local);
+      if (Math.abs((audio.currentTime || 0) - seekTime) > 0.12) {
+        try { audio.currentTime = seekTime; } catch (_) { /* ignore seek races */ }
       }
       if (playing) {
         if (audio.paused) audio.play().catch(function () { /* autoplay blocked until gesture */ });
@@ -681,6 +711,7 @@ function buildSeekScript(
     const t = Math.max(0, Math.min(CFG.totalSeconds, time));
     root._t = t;
     syncAllBgPhotos(t);
+    syncTimedVideos(t);
     syncSubtitles(t);
     if (cover) {
       const inCover = CFG.coverSeconds > 0 && t < CFG.coverSeconds;
@@ -755,6 +786,7 @@ function buildSeekScript(
   window.__reelSetPlaying = function (next) {
     playing = !!next;
     syncAudio(root._t || 0);
+    syncTimedVideos(root._t || 0);
   };
 
   // Frame-adapter style hook: in-editor iframe preview seeks via currentTime.
@@ -855,6 +887,7 @@ function buildSeekScript(
       seek(CFG.totalSeconds);
       playing = false;
       syncAudio(CFG.totalSeconds);
+      syncTimedVideos(CFG.totalSeconds);
       return;
     }
     seek(next);
@@ -865,6 +898,7 @@ function buildSeekScript(
     startWall = performance.now();
     startT = root._t || 0;
     syncAudio(startT);
+    syncTimedVideos(startT);
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(tick);
   };
@@ -872,6 +906,7 @@ function buildSeekScript(
     playing = false;
     cancelAnimationFrame(raf);
     syncAudio(root._t || 0);
+    syncTimedVideos(root._t || 0);
   };
 
   function fitStage() {
@@ -954,12 +989,45 @@ export function buildHyperframesCompositionHtml(
     const duration = framesToSeconds(holdFrames, fps);
     beats.push({ id: scene.id, start, duration });
     const absoluteStart = start + coverSeconds;
-    const videoBlock = timedVideoLayer(scene, absoluteStart, duration);
-    if (videoBlock) videoBlocks.push(videoBlock);
     const exitWindow = Math.min(
       0.35,
       framesToSeconds(transitionFrames, fps) / Math.max(0.05, duration),
     );
+
+    const motionArgs = {
+      scene,
+      tokens,
+      absoluteStart,
+      duration,
+      exitWindow,
+      transitionClass,
+    };
+    const motionScene =
+      buildMediaMotionScene(motionArgs) ??
+      buildDiagramMotionScene(motionArgs) ??
+      buildDataMotionScene(motionArgs) ??
+      buildTypeMotionScene(motionArgs);
+    // Media recipes stage their own timed source. Keep a single decoder;
+    // all other treatments continue using the shared background video layer.
+    if (
+      !motionScene ||
+      !isMediaMotionRecipe(scene.motion?.recipeId ?? "type-impact")
+    ) {
+      const videoBlock = timedVideoLayer(scene, absoluteStart, duration);
+      if (videoBlock) videoBlocks.push(videoBlock);
+    }
+    if (motionScene) {
+      sceneBlocks.push(
+        scene.background?.url &&
+          !isMediaMotionRecipe(scene.motion?.recipeId ?? "type-impact")
+          ? addBackgroundToPresetScene(
+              motionScene,
+              backgroundLayer(scene, absoluteStart, duration),
+            )
+          : motionScene,
+      );
+      continue;
+    }
 
     if (props.preset) {
       const presetScene = buildHyperframesPresetScene(props.preset.id, {
@@ -1058,14 +1126,14 @@ export function buildHyperframesCompositionHtml(
   if (props.musicUrl) {
     const vol = Math.max(0, Math.min(1, (props.musicVolume ?? 20) / 100));
     audioTags.push(
-      `<audio id="music" preload="auto" data-role="music" data-start="0" data-duration="${totalSeconds.toFixed(3)}" data-track-index="11" data-volume="${vol}" data-fade-in="${audioMix.fadeFrames}" data-fade-out="${audioMix.fadeFrames}" src="${escapeHtml(props.musicUrl)}"></audio>`,
+      `<audio id="music" preload="auto" loop data-loop="true" data-role="music" data-start="0" data-duration="${totalSeconds.toFixed(3)}" data-track-index="11" data-volume="${vol}" data-fade-in="${audioMix.fadeFrames}" data-fade-out="${audioMix.fadeFrames}" src="${escapeHtml(props.musicUrl)}"></audio>`,
     );
   }
   const fpsSafe = Math.max(1, fps);
   for (const [i, cue] of (props.sfxCues ?? []).entries()) {
     const startSec = coverSeconds + cue.startFrame / fpsSafe;
     audioTags.push(
-      `<audio id="sfx-${i}" preload="auto" data-role="sfx" data-start="${startSec.toFixed(3)}" data-duration="2" data-track-index="${12 + i}" data-volume="${Math.max(0, Math.min(1, cue.volume)).toFixed(3)}" src="${escapeHtml(cue.url)}"></audio>`,
+      `<audio id="sfx-${i}" preload="auto" data-role="sfx" data-fade-seconds="${cue.fadeSeconds ?? 0.08}" data-start="${startSec.toFixed(3)}" data-duration="2" data-track-index="${12 + i}" data-volume="${Math.max(0, Math.min(1, cue.volume)).toFixed(3)}" src="${escapeHtml(cue.url)}"></audio>`,
     );
   }
 
@@ -1116,7 +1184,7 @@ export function buildHyperframesCompositionHtml(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reel Studio · HyperFrames</title>
-  <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}
+  <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}${TYPE_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_MOTION_STYLES}
     .rs-subtitle{position:absolute;z-index:50;inset:0;box-sizing:border-box;display:flex;flex-direction:column;justify-content:${captionResolved.outer.justifyContent};align-items:${captionResolved.outer.alignItems};padding:${captionResolved.outer.paddingTop}px ${captionResolved.outer.paddingRight}px ${captionResolved.outer.paddingBottom}px ${captionResolved.outer.paddingLeft}px;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
     .rs-subtitle>span{display:block;max-width:${captionInner.maxWidth}px;padding:${captionInner.padding};border-radius:${captionInner.borderRadius}px;background:${captionInner.background};color:${captionInner.color};font-family:${escapeHtml(captionInner.fontFamily)};font-weight:${captionInner.fontWeight};line-height:${captionInner.lineHeight};letter-spacing:${captionInner.letterSpacing};text-align:${captionInner.textAlign};text-shadow:${captionInner.textShadow};${captionInner.WebkitTextStroke ? `-webkit-text-stroke:${captionInner.WebkitTextStroke};` : ""}overflow-wrap:anywhere}
     .rs-caption-line{display:block}.rs-caption-word{display:inline-block;position:relative}.rs-caption-active{position:absolute;inset:0;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}

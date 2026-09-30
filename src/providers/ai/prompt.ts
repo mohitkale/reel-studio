@@ -196,7 +196,9 @@ export function buildPrompt(input: GeneratePlanInput): {
     const ctx = input.existingContext
       ? `\n\nExisting scenes (do NOT repeat these):\n${input.existingContext}`
       : "";
-    user = `Add scenes ${startNum}+ to a short video that already has ${input.existingSceneCount ?? "several"} scenes.\n\nRules:\n- Fresh value only.\n- No CTA (the video already ends with one).\n- Start with a curiosity gap that still feels kind and clear.${ctx}\n\nFocus: ${input.brief}`;
+    user = input.chapterTitle
+      ? `Append a new chapter titled ${JSON.stringify(input.chapterTitle)}, starting at scene ${startNum}, to this video. Build one small arc: introduce the chapter, explain the supplied topic, then resolve its takeaway. Use fresh value and preserve supplied facts. Do not rewrite earlier chapters or add a whole-video intro or CTA.${ctx}\n\nFocus: ${input.brief}`
+      : `Add scenes ${startNum}+ to a short video that already has ${input.existingSceneCount ?? "several"} scenes.\n\nRules:\n- Fresh value only.\n- No CTA (the video already ends with one).\n- Start with a curiosity gap that still feels kind and clear.${ctx}\n\nFocus: ${input.brief}`;
   }
 
   return { system, user };

@@ -232,6 +232,8 @@ export interface GeneratePlanInput {
   existingContext?: string;
   /** For "append": how many scenes already exist, so AI knows its starting position. */
   existingSceneCount?: number;
+  /** An explicitly named new chapter, appended in one bounded call. */
+  chapterTitle?: string;
   /** Target video orientation, so the director frames visuals appropriately. */
   orientation?: Orientation;
   /** Short = same short line on screen + in voice. Detailed = short on-screen text + longer spokenText (~2–3×). Defaults to "short". */

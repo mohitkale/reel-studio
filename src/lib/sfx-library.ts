@@ -1,56 +1,67 @@
+import type { MotionEvent } from "@/production/motion-events";
+
 /**
  * Bundled SFX starter pack (CC0 / public domain via scripts/generate-sfx.mjs).
  * Cue ids map templates → short one-shots mixed under VO.
  */
 
-export type SfxId =
-  | "whoosh"
-  | "soft-hit"
-  | "pop"
-  | "click"
-  | "riser"
-  | "swipe";
+export type SfxId = "whoosh" | "soft-hit" | "pop" | "click" | "riser" | "swipe";
 
 export interface SfxClip {
   id: SfxId;
   name: string;
   url: string;
   description: string;
+  /** Duration and peak of a 10 ms RMS window measured from the bundled WAV. */
+  durationSeconds: number;
+  peakOffsetSeconds: number;
 }
 
 export const SFX_LIBRARY: SfxClip[] = [
   {
     id: "whoosh",
+    durationSeconds: 0.62,
+    peakOffsetSeconds: 0.345,
     name: "Whoosh",
     url: "/sfx/whoosh.wav",
     description: "Soft cinematic sweep — transitions and CTAs.",
   },
   {
     id: "soft-hit",
+    durationSeconds: 0.42,
+    peakOffsetSeconds: 0.005,
     name: "Soft hit",
     url: "/sfx/soft-hit.wav",
     description: "Low impact — hooks and slam captions.",
   },
   {
     id: "pop",
+    durationSeconds: 0.22,
+    peakOffsetSeconds: 0.005,
     name: "Pop",
     url: "/sfx/pop.wav",
     description: "Bright accent — stats and number reveals.",
   },
   {
     id: "click",
+    durationSeconds: 0.054989,
+    peakOffsetSeconds: 0.005,
     name: "Click",
     url: "/sfx/click.wav",
     description: "Soft UI tick — list items and subtle beats.",
   },
   {
     id: "riser",
+    durationSeconds: 0.95,
+    peakOffsetSeconds: 0.935,
     name: "Riser",
     url: "/sfx/riser.wav",
     description: "Rising tone — climax / end-card energy.",
   },
   {
     id: "swipe",
+    durationSeconds: 0.38,
+    peakOffsetSeconds: 0.185,
     name: "Swipe",
     url: "/sfx/swipe.wav",
     description: "Light transition swipe between scenes.",
@@ -104,6 +115,12 @@ export interface SfxCue {
   offsetSeconds: number;
   /** 0–1 linear gain for this one-shot. */
   volume: number;
+  /** Missing source is a legacy/authored cue and is protected on refresh. */
+  source?: "automatic" | "manual";
+  /** A creator can preserve an automatic cue during refresh. */
+  locked?: boolean;
+  /** Offset becomes a trim relative to this visual event, after peak alignment. */
+  event?: MotionEvent;
 }
 
 export interface ScriptSfxState {

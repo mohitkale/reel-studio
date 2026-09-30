@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { motionPlanSettingsSchema } from "@/production/motion-plan";
 
 import { ENERGY_IDS, STYLE_IDS } from "@/compositions/visual-style";
 import { VIDEO_ENGINE_IDS } from "@/engines/types";
@@ -12,6 +13,7 @@ import {
   productionPresetIdSchema,
 } from "@/production/presets";
 import { productionSceneRoleSchema } from "@/production/roles";
+import { motionDirectionSchema } from "@/production/motion";
 
 export const PRODUCTION_SPEC_VERSION = 1 as const;
 export const LEGACY_PRESET_ID = "legacy" as const;
@@ -66,6 +68,7 @@ export const productionSceneSchema = z.object({
   id: sceneIdSchema,
   order: z.number().int().nonnegative(),
   role: productionSceneRoleSchema,
+  motion: motionDirectionSchema.optional(),
   template: z.object({
     /** Stored source id remains available when a legacy id resolves to a fallback. */
     sourceId: z.string().min(1).max(160),
@@ -206,6 +209,7 @@ export const productionSpecSchema = z
       id: z.union([productionPresetIdSchema, z.literal(LEGACY_PRESET_ID)]),
       version: z.string().min(1).max(80),
     }),
+    motionPlan: motionPlanSettingsSchema.optional(),
     brand: brandSnapshotSchema,
     canvas: z.object({
       orientation: z.enum(ORIENTATIONS),
@@ -244,6 +248,7 @@ export const productionSpecSchema = z
       sfx: z.array(
         z.object({
           assetRef: assetIdSchema,
+          fadeSeconds: z.number().min(0).max(2).optional(),
           startFrame: frameSchema,
           volume: z.number().min(0).max(1),
         }),

@@ -6,8 +6,15 @@ import { z } from "zod";
 import { AI_PROVIDER_IDS } from "@/providers/ai/types";
 import { mediaPreferenceSchema } from "@/lib/media-preference";
 import { productionPresetIdSchema } from "@/production/presets";
+import { visualAmbitionSchema } from "@/production/motion-plan";
+import { sfxCueEditRequestSchema } from "@/lib/sfx-cue-edit";
+import { musicMapEditSchema } from "@/production/music-map";
+import { audioMasteringSchema } from "@/production/audio-mastering";
+import { aiEnhanceRequestSchema } from "@/library/ai-enhance-input";
+import { chapterEditSchema } from "@/production/chapters";
 import { productionBatchRowSchema } from "@/production/batch";
 import { quickProduceOptionsSchema } from "@/production/quick-produce";
+import { manualCreationSchema } from "@/production/manual-planner";
 
 import {
   apiGet,
@@ -235,6 +242,16 @@ export function registerTools(server: McpServer): void {
   );
 
   server.registerTool(
+    "create_production_draft",
+    {
+      description:
+        "Create an editable draft from supplied text or a public article without an AI call. structure='chapters' preserves all narration in bounded chapters; 'single' retains the short-cut or voiceover-first workflow. Uploads can be referenced by assetIds. Rendering is a separate action subject to production and token duration limits.",
+      inputSchema: manualCreationSchema.shape,
+    },
+    guard(async (args) => ok(await apiPost("/api/projects/manual", args))),
+  );
+
+  server.registerTool(
     "ai_create_project",
     {
       description:
@@ -265,6 +282,7 @@ export function registerTools(server: McpServer): void {
           ),
         videoEngine,
         productionPresetId: productionPresetIdSchema.optional(),
+        visualAmbition: visualAmbitionSchema.optional(),
         mediaPreference: mediaPreferenceSchema.optional(),
         quickProduce: quickProduceOptionsSchema.optional(),
         idempotencyKey: z.string().min(8).max(240).optional(),
@@ -530,14 +548,99 @@ export function registerTools(server: McpServer): void {
   );
 
   server.registerTool(
+    "replan_motion_direction",
+    {
+      description:
+        "Replan a preset video's visual treatments with Clean, Expressive or Showcase ambition. Preserves copy, narration, data, media, locked scenes and hidden-text scenes. newVariation chooses a new saved seed; eligible choices may remain unchanged.",
+      inputSchema: {
+        scriptId: z.string().min(1),
+        ambition: visualAmbitionSchema.optional(),
+        newVariation: z.boolean().optional(),
+      },
+    },
+    guard(async ({ scriptId, ...body }) =>
+      ok(await apiPost(`/api/scripts/${encode(scriptId)}/motion`, body)),
+    ),
+  );
+
+  server.registerTool(
+    "suggest_chapters",
+    {
+      description:
+        "Propose storyboard chapter boundaries using the selected take's matching timing, or estimates. Returns a draft and its exact expected saved plan/scene order; does not write or retime content. Current video export limits still apply.",
+      inputSchema: {
+        scriptId: z.string().min(1),
+        takeId: z.string().min(1).optional(),
+      },
+    },
+    guard(async ({ scriptId, ...body }) =>
+      ok(await apiPost(`/api/scripts/${encode(scriptId)}/chapters`, body)),
+    ),
+  );
+  server.registerTool(
+    "save_chapters",
+    {
+      description:
+        "Save storyboard chapter titles/boundaries, with up to 20 scenes per chapter and 12 chapters. Get a proposal or script first and supply its exact expected chapter plan (null when absent) and scene order. Rejects stale edits; preserves all scene content and timing.",
+      inputSchema: { scriptId: z.string().min(1), ...chapterEditSchema.shape },
+    },
+    guard(async ({ scriptId, ...body }) =>
+      ok(
+        await apiPatch(
+          `/api/scripts/${encode(scriptId)}/chapters`,
+          chapterEditSchema.parse(body),
+        ),
+      ),
+    ),
+  );
+
+  server.registerTool(
+    "edit_music_map",
+    {
+      description:
+        "Edit a saved music beat map's BPM, first beat offset, disabled beat indices or drop marker. Analyze the local track in the editor first, then get the script and supply its exact current musicMap as expected. Stale changes are rejected. This changes review anchors, not narration or scene timings.",
+      inputSchema: { scriptId: z.string().min(1), ...musicMapEditSchema.shape },
+    },
+    guard(async ({ scriptId, ...body }) =>
+      ok(
+        await apiPatch(
+          `/api/scripts/${encode(scriptId)}/music-map`,
+          musicMapEditSchema.parse(body),
+        ),
+      ),
+    ),
+  );
+
+  server.registerTool(
+    "edit_sfx_cue",
+    {
+      description:
+        "Edit one sound cue or restore its automatic direction. Get the script first; supply the zero-based cue index and exact expected cue from parsed sfxJson to detect stale edits. Edits are preserved on automatic refresh. volume 0 mutes; motion timing shifts allow +/-2 seconds. Restoring automatic can remove a cue for quieter scenes.",
+      inputSchema: {
+        scriptId: z.string().min(1),
+        ...sfxCueEditRequestSchema.shape,
+      },
+    },
+    guard(async ({ scriptId, ...body }) =>
+      ok(
+        await apiPatch(
+          `/api/scripts/${encode(scriptId)}/sfx`,
+          sfxCueEditRequestSchema.parse(body),
+        ),
+      ),
+    ),
+  );
+
+  server.registerTool(
     "update_script",
     {
       description:
-        "Update a script's name, cover, Style/Energy look, and/or voiceMode. voiceMode 'oneshot' = one full-reel take; 'per_scene' = generate/select clips per scene then assemble.",
+        "Update a script's name, cover, Style/Energy look, voiceMode, or export audio mastering. audioMastering balanced targets -16 LUFS with measured true peak below -1 dBTP; original keeps mix levels. Editor playback remains unmastered. voiceMode 'oneshot' = one full-reel take; 'per_scene' = generate/select clips per scene then assemble.",
       inputSchema: {
         scriptId: z.string().min(1),
         name: z.string().trim().min(1).max(120).optional(),
         coverUrl: z.string().max(2048).nullable().optional(),
+        audioMastering: audioMasteringSchema.optional(),
         styleId: styleId
           .optional()
           .describe(
@@ -665,19 +768,11 @@ export function registerTools(server: McpServer): void {
     "ai_generate_scenes",
     {
       description:
-        "Use the AI director to append new scenes or fully rewrite a script's scenes. 'append' is the safe way to extend a storyboard in chunks (existing scenes are untouched); 'rewrite' replaces ALL scenes. Requires an AI key configured in the website.",
+        "Append scenes or rewrite up to 20 unlocked scenes, preserving copy/asset locks and scene IDs. For a saved outline, use chapterId to rewrite only that chapter; optional sceneIds narrow it further. For append, pass chapterTitle to add a named chapter to a valid saved outline (up to 12 chapters / 240 scenes / 20 scenes per chapter). Appends and rewrites use bounded neighboring context and atomically reject edits made during generation. Requires a configured AI provider.",
       inputSchema: {
         scriptId: z.string().min(1),
-        providerId: z.enum(["gemini", "openai"]),
-        modelId: z.string().optional(),
+        ...aiEnhanceRequestSchema.shape,
         mode: z.enum(["rewrite", "append"]),
-        brief: z.string().trim().min(3).max(4000),
-        sceneCount: z.number().int().min(2).max(20).optional(),
-        scriptStyle: scriptStyle
-          .optional()
-          .describe(
-            "'short' = punchy on-screen text; voice inherits. 'detailed' = short on-screen + longer spokenText for TTS.",
-          ),
       },
     },
     guard(async ({ scriptId, ...body }) =>

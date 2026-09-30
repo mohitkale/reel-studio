@@ -29,6 +29,20 @@ import {
   type Orientation,
 } from "../src/lib/orientation";
 import { CURRENT_HF_CATALOG_REVISION } from "../src/engines/hyperframes/catalog/revisions";
+import {
+  isDataMotionRecipe,
+  isDiagramMotionRecipe,
+  isMediaMotionRecipe,
+  motionDirection,
+  motionRecipeIdSchema,
+} from "../src/production/motion";
+
+import { buildAutomaticSfxCues } from "../src/lib/sfx-planner";
+import { parseWav } from "../src/lib/wav";
+import { getSfxClip } from "../src/lib/sfx-library";
+import { resolveReelSfxCues } from "../src/lib/sfx-cues";
+import type { VideoEngineId } from "../src/engines/types";
+import type { SceneDTO } from "../src/lib/dto";
 
 async function main() {
   const run = promisify(execFile);
@@ -38,6 +52,13 @@ async function main() {
   const briefIndexArg = args.find((arg) => arg.startsWith("--brief-index="));
   const renderStockVideo = args.includes("--stock-video");
   const renderCarousel = args.includes("--carousel");
+  const renderMotionSound = args.includes("--motion-sfx");
+  const motionArg = args.find((arg) => arg.startsWith("--motion-recipe="));
+  const motionRecipeId = motionArg
+    ? motionRecipeIdSchema.parse(motionArg.slice("--motion-recipe=".length))
+    : undefined;
+  if (renderMotionSound && !motionRecipeId)
+    throw new Error("--motion-sfx requires --motion-recipe");
   const briefIndex = briefIndexArg
     ? Number(briefIndexArg.slice("--brief-index=".length))
     : undefined;
@@ -73,7 +94,7 @@ async function main() {
   if (briefIndex !== undefined && !presetId) {
     throw new Error("Release brief renders require --preset");
   }
-  const renderPreset = Boolean(presetId);
+  const renderPreset = Boolean(presetId || motionRecipeId);
   const renderProductLaunch = presetId === "product-launch";
   const renderDeveloperDemo = presetId === "developer-demo";
   const renderCinematicBrand = presetId === "cinematic-brand";
@@ -81,20 +102,28 @@ async function main() {
     ? path.resolve(
         ".artifacts/render-regression",
         renderStockVideo
-          ? "stock-video"
+          ? motionRecipeId
+            ? `${motionRecipeId}-video`
+            : "stock-video"
           : renderCarousel
             ? "carousel"
-            : (presetId ?? "legacy"),
+            : renderMotionSound
+              ? `${motionRecipeId}-sound`
+              : (motionRecipeId ?? presetId ?? "legacy"),
         ...(briefIndex === undefined ? [] : [`brief-${briefIndex + 1}`]),
         orientation,
       )
     : path.resolve(
         ".artifacts/render-regression",
         renderStockVideo
-          ? "stock-video"
+          ? motionRecipeId
+            ? `${motionRecipeId}-video`
+            : "stock-video"
           : renderCarousel
             ? "carousel"
-            : (presetId ?? "legacy"),
+            : renderMotionSound
+              ? `${motionRecipeId}-sound`
+              : (motionRecipeId ?? presetId ?? "legacy"),
       );
   await mkdir(output, { recursive: true });
   const stockVideoSource = path.join(output, "stock-video-source.mp4");
@@ -112,7 +141,7 @@ async function main() {
       "-i",
       "sine=frequency=440:sample_rate=48000",
       "-t",
-      "4",
+      motionRecipeId ? "1.75" : "4",
       "-c:v",
       "libx264",
       "-pix_fmt",
@@ -170,6 +199,19 @@ async function main() {
         await readFile(path.resolve("public/samples/cinematic-brand-hero.svg"))
       ).toString("base64")}`
     : undefined;
+  const mediaMotionAssetDataUrl = isMediaMotionRecipe(
+    motionRecipeId ?? "type-impact",
+  )
+    ? `data:image/svg+xml;base64,${(
+        await readFile(
+          path.resolve(
+            motionRecipeId === "media-device"
+              ? "public/samples/product-launch-dashboard.svg"
+              : "public/samples/cinematic-brand-hero.svg",
+          ),
+        )
+      ).toString("base64")}`
+    : undefined;
   const carouselImages = renderCarousel
     ? await Promise.all(
         [
@@ -182,60 +224,137 @@ async function main() {
         ),
       )
     : undefined;
-  const selectedFixture = renderCarousel
+  const selectedFixture = motionRecipeId
     ? {
         ...(fixture as ReelProps),
         scenes: [
           {
-            id: "carousel-circle-regression",
-            templateId: "hf-carousel-circle-v1",
-            text: "Supplied images orbit in a responsive circle.",
-            emphasis: ["responsive circle"],
-            carouselImages,
-            mood: "tech",
-          },
-          {
-            id: "carousel-path-regression",
-            templateId: "hf-carousel-path-v1",
-            text: "A local image path stays deterministic.",
-            emphasis: ["deterministic"],
-            carouselImages,
-            mood: "tech",
-          },
-          {
-            id: "carousel-vision-regression",
-            templateId: "hf-carousel-vision-v1",
-            text: "Project media becomes a cinematic gallery.",
-            emphasis: ["cinematic gallery"],
-            carouselImages,
-            mood: "tech",
+            id: "motion-regression",
+            templateId: "hf-opener",
+            role: isDataMotionRecipe(motionRecipeId)
+              ? motionRecipeId === "data-bars"
+                ? "chart"
+                : "metric"
+              : isDiagramMotionRecipe(motionRecipeId)
+                ? "diagram"
+                : isMediaMotionRecipe(motionRecipeId)
+                  ? motionRecipeId === "media-device"
+                    ? "screenshot-demo"
+                    : "hero"
+                  : "hook",
+            motion: motionDirection(motionRecipeId),
+            text: isDataMotionRecipe(motionRecipeId)
+              ? "Completion across groups"
+              : isDiagramMotionRecipe(motionRecipeId)
+                ? "From idea to release"
+                : isMediaMotionRecipe(motionRecipeId)
+                  ? motionRecipeId === "media-device"
+                    ? "A clearer creative workspace"
+                    : "Every frame tells the story"
+                  : "Make every moment matter.",
+            emphasis:
+              isDataMotionRecipe(motionRecipeId) ||
+              isDiagramMotionRecipe(motionRecipeId) ||
+              isMediaMotionRecipe(motionRecipeId)
+                ? []
+                : ["matter"],
+            items: isDiagramMotionRecipe(motionRecipeId)
+              ? motionRecipeId === "diagram-orbit"
+                ? ["Creative system", "Story", "Motion", "Sound", "Review"]
+                : [
+                    "Find the idea",
+                    "Shape the story",
+                    "Build the visuals",
+                    "Review the cut",
+                  ]
+              : undefined,
+            background: mediaMotionAssetDataUrl
+              ? { type: "image" as const, url: mediaMotionAssetDataUrl }
+              : undefined,
+            chart: isDataMotionRecipe(motionRecipeId)
+              ? {
+                  labels:
+                    motionRecipeId === "data-bars"
+                      ? ["Before", "After", "Control", "Pilot"]
+                      : ["Completion"],
+                  series: [
+                    {
+                      label: "Creator survey",
+                      values:
+                        motionRecipeId === "data-bars"
+                          ? [32, 72, 48, 61]
+                          : [72],
+                      unit: "%",
+                    },
+                  ],
+                  sourceAttribution: "Reel Studio example data",
+                }
+              : undefined,
+            order: 0,
           },
         ],
         timeline: [
-          {
-            sceneId: "carousel-circle-regression",
-            startFrame: 0,
-            durationFrames: 60,
-          },
-          {
-            sceneId: "carousel-path-regression",
-            startFrame: 60,
-            durationFrames: 60,
-          },
-          {
-            sceneId: "carousel-vision-regression",
-            startFrame: 120,
-            durationFrames: 60,
-          },
+          { sceneId: "motion-regression", startFrame: 0, durationFrames: 90 },
         ],
+        preset: { id: "creator-punch" as const, version: "1.0.0" },
         audioUrl: undefined,
         musicUrl: undefined,
         sfxCues: [],
-        catalogRevision: CURRENT_HF_CATALOG_REVISION,
       }
-    : presetId
-      ? presetFixtures[presetId]
-      : fixture;
+    : renderCarousel
+      ? {
+          ...(fixture as ReelProps),
+          scenes: [
+            {
+              id: "carousel-circle-regression",
+              templateId: "hf-carousel-circle-v1",
+              text: "Supplied images orbit in a responsive circle.",
+              emphasis: ["responsive circle"],
+              carouselImages,
+              mood: "tech",
+            },
+            {
+              id: "carousel-path-regression",
+              templateId: "hf-carousel-path-v1",
+              text: "A local image path stays deterministic.",
+              emphasis: ["deterministic"],
+              carouselImages,
+              mood: "tech",
+            },
+            {
+              id: "carousel-vision-regression",
+              templateId: "hf-carousel-vision-v1",
+              text: "Project media becomes a cinematic gallery.",
+              emphasis: ["cinematic gallery"],
+              carouselImages,
+              mood: "tech",
+            },
+          ],
+          timeline: [
+            {
+              sceneId: "carousel-circle-regression",
+              startFrame: 0,
+              durationFrames: 60,
+            },
+            {
+              sceneId: "carousel-path-regression",
+              startFrame: 60,
+              durationFrames: 60,
+            },
+            {
+              sceneId: "carousel-vision-regression",
+              startFrame: 120,
+              durationFrames: 60,
+            },
+          ],
+          audioUrl: undefined,
+          musicUrl: undefined,
+          sfxCues: [],
+          catalogRevision: CURRENT_HF_CATALOG_REVISION,
+        }
+      : presetId
+        ? presetFixtures[presetId]
+        : fixture;
   const fixtureWithLocalAssets = (
     renderProductLaunch || renderDeveloperDemo || renderCinematicBrand
       ? {
@@ -297,7 +416,7 @@ async function main() {
         }
       : {}),
     captions:
-      renderStockVideo || renderCarousel
+      renderStockVideo || renderCarousel || motionRecipeId
         ? { enabled: false, timingSource: "imported", cues: [] }
         : (fixtureProps.captions ?? {
             enabled: true,
@@ -354,7 +473,72 @@ async function main() {
     ) {
       throw new Error(`${engine}: muted stock fixture leaked an audio track`);
     }
-    const sampleTimes = renderCarousel ? [1, 3, 5] : [1];
+    if (renderMotionSound) {
+      const planned = JSON.parse(
+        await readFile(path.join(output, `${engine}-sfx.json`), "utf8"),
+      ) as Array<{ url: string; startFrame: number }>;
+      if (planned.length) {
+        if (
+          !probe.streams.some(
+            (stream: { codec_type?: string }) => stream.codec_type === "audio",
+          )
+        )
+          throw new Error(`${engine}: anchored sound is missing`);
+        const audioPath = path.join(output, `${engine}-sound.wav`);
+        await run("ffmpeg", [
+          "-v",
+          "error",
+          "-i",
+          mp4,
+          "-vn",
+          "-ac",
+          "1",
+          "-ar",
+          "44100",
+          "-c:a",
+          "pcm_s16le",
+          "-y",
+          audioPath,
+        ]);
+        const wav = await readFile(audioPath);
+        const info = parseWav(wav);
+        const window = Math.round(info.sampleRate * 0.01);
+        let maxEnergy = -1,
+          peakTime = 0;
+        for (let start = 0; start < info.dataLength / 2; start += window) {
+          const length = Math.min(window, info.dataLength / 2 - start);
+          let energy = 0;
+          for (let i = 0; i < length; i++) {
+            const value = wav.readInt16LE(info.dataOffset + (start + i) * 2);
+            energy += value * value;
+          }
+          if (energy / length > maxEnergy) {
+            maxEnergy = energy / length;
+            peakTime = (start + length / 2) / info.sampleRate;
+          }
+        }
+        const clip = getSfxClip(path.basename(planned[0].url, ".wav"))!;
+        const expectedPeak =
+          planned[0].startFrame / (props.fps ?? 30) + clip.peakOffsetSeconds;
+        if (maxEnergy < 1 || Math.abs(peakTime - expectedPeak) > 0.05)
+          throw new Error(
+            `${engine}: sound peak ${peakTime.toFixed(3)}s missed ${expectedPeak.toFixed(3)}s`,
+          );
+        await writeFile(
+          path.join(output, `${engine}-sound-evidence.json`),
+          JSON.stringify(
+            { expectedPeak, peakTime, toleranceSeconds: 0.05 },
+            null,
+            2,
+          ),
+        );
+      }
+    }
+    const sampleTimes = renderCarousel
+      ? [1, 3, 5]
+      : renderStockVideo && motionRecipeId
+        ? [1, 2.5]
+        : [1];
     for (const [sampleIndex, sampleTime] of sampleTimes.entries()) {
       const sample = path.join(
         output,
@@ -387,6 +571,31 @@ async function main() {
           "-",
         ])
       ).stdout;
+      if (renderStockVideo && motionRecipeId) {
+        // Inspect the center of the media, away from labels and brand chrome.
+        // The colorful source fixture must remain visible even after it ends.
+        const mediaStats = (
+          await run("ffmpeg", [
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-i",
+            sample,
+            "-vf",
+            "crop=iw*0.5:ih*0.15:iw*0.25:ih*0.4,signalstats,metadata=print:file=-",
+            "-f",
+            "null",
+            "-",
+          ])
+        ).stdout;
+        const saturation = Number(
+          mediaStats.match(/lavfi\.signalstats\.SATAVG=([\d.]+)/)?.[1],
+        );
+        if (!Number.isFinite(saturation) || saturation < 35)
+          throw new Error(
+            `${engine}: footage missing at ${sampleTime}s (saturation ${saturation})`,
+          );
+      }
       const yMax = Number(stats.match(/lavfi\.signalstats\.YMAX=(\d+)/)?.[1]);
       const yMin = Number(stats.match(/lavfi\.signalstats\.YMIN=(\d+)/)?.[1]);
       if (
@@ -400,11 +609,11 @@ async function main() {
       }
     }
   }
-  for (const engine of selected) {
+  for (const engine of selected as VideoEngineId[]) {
     const mp4 = path.join(output, `${engine}.mp4`);
     const stockVideoUrl =
       engine === "hyperframes" ? "stock-video.mp4" : "/public/stock-video.mp4";
-    const engineProps: ReelProps = renderStockVideo
+    let engineProps: ReelProps = renderStockVideo
       ? {
           ...props,
           scenes: props.scenes.map((scene, index) =>
@@ -417,11 +626,49 @@ async function main() {
           ),
         }
       : props;
+    if (renderMotionSound) {
+      const scenes: SceneDTO[] = engineProps.scenes.map((scene, order) => ({
+        ...scene,
+        scriptId: "regression",
+        order,
+        spokenText: null,
+        hideText: false,
+        selectedVoiceClipId: null,
+      }));
+      const cues = buildAutomaticSfxCues(scenes);
+      const resolved = resolveReelSfxCues({
+        sfxEnabled: true,
+        sfxJson: JSON.stringify({ enabled: true, cues }),
+        timeline: engineProps.timeline,
+        fps: engineProps.fps ?? 30,
+        videoEngine: engine,
+        scenes,
+      });
+      engineProps = {
+        ...engineProps,
+        sfxCues: resolved.map((cue) => ({
+          ...cue,
+          url:
+            engine === "hyperframes" ? cue.url.slice(1) : `/public${cue.url}`,
+        })),
+      };
+      await writeFile(
+        path.join(output, `${engine}-sfx.json`),
+        JSON.stringify(resolved, null, 2),
+      );
+    }
     if (engine === "hyperframes") {
       const project = path.join(output, "hyperframes");
       await mkdir(project, { recursive: true });
       if (renderStockVideo) {
         await copyFile(stockVideoSource, path.join(project, "stock-video.mp4"));
+      }
+      if (renderMotionSound) {
+        for (const cue of engineProps.sfxCues ?? []) {
+          const target = path.join(project, cue.url);
+          await mkdir(path.dirname(target), { recursive: true });
+          await copyFile(path.resolve("public", cue.url), target);
+        }
       }
       const runtime = path.join(project, "_runtime");
       await mkdir(runtime, { recursive: true });

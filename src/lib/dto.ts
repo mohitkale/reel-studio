@@ -6,6 +6,9 @@ import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { VideoEngineId } from "@/engines/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
+import type { MotionDirection } from "@/production/motion";
+import type { MotionPlanSettings } from "@/production/motion-plan";
+import type { MusicMap } from "@/production/music-map";
 import type { CaptionTimingSource, CaptionWord } from "@/lib/captions";
 import type { CaptionStyleSnapshot } from "@/lib/caption-style";
 import type { MediaPreference } from "@/lib/media-preference";
@@ -53,6 +56,7 @@ export interface SceneDTO {
   selectedVoiceClipId: string | null;
   /** Engine-independent role selected by a versioned production preset. */
   role?: ProductionSceneRole;
+  motion?: MotionDirection;
   /** Uploaded assets retained by id for reproducible planning and regeneration. */
   assetRefs?: string[];
   /** Image asset URLs resolved server-side for carousel preview and export. */
@@ -129,6 +133,10 @@ export interface ScriptDTO {
   energy: EnergyId;
   /** Versioned preset snapshot; absent for legacy and manually empty projects. */
   productionPreset?: { id: ProductionPresetId; version: string };
+  motionPlan?: MotionPlanSettings;
+  musicMap?: MusicMap;
+  audioMastering?: import("@/production/audio-mastering").AudioMastering;
+  chapterPlan?: import("@/production/chapters").ChapterPlan;
   captionTracks?: CaptionTrackDTO[];
 }
 
@@ -147,6 +155,8 @@ export interface CaptionTrackDTO {
   label: string;
   language: string;
   timingSource: CaptionTimingSource;
+  sourceTakeId?: string | null;
+  sourceFps?: number | null;
   enabled: boolean;
   style: CaptionStyleSnapshot;
   cues: CaptionCueDTO[];

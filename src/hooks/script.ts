@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { AIEnhanceRequest } from "@/library/ai-enhance-input";
 import { apiGet, apiPost } from "@/lib/api-client";
 import type {
   ProjectDTO,
@@ -18,9 +19,12 @@ import type { ProviderId } from "@/providers/voice/types";
 import type { Orientation } from "@/lib/orientation";
 import type { MediaPreference } from "@/lib/media-preference";
 import type { VideoEngineId } from "@/engines/types";
-import type { AIScene, ScriptStyle } from "@/providers/ai/types";
+import type { AIScene } from "@/providers/ai/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { ManualCreationInput } from "@/production/manual-planner";
+import type { SfxCueEditRequest } from "@/lib/sfx-cue-edit";
+import type { MotionDirection } from "@/production/motion";
+import type { VisualAmbition } from "@/production/motion-plan";
 
 async function apiSend<T>(
   url: string,
@@ -217,8 +221,11 @@ export function useSetScriptCover(scriptId: string) {
 export function useSetScriptMusic(scriptId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { musicUrl?: string | null; musicVolume?: number }) =>
-      apiSend(`/api/scripts/${scriptId}`, "PATCH", vars),
+    mutationFn: (vars: {
+      musicUrl?: string | null;
+      musicVolume?: number;
+      audioMastering?: import("@/production/audio-mastering").AudioMastering;
+    }) => apiSend(`/api/scripts/${scriptId}`, "PATCH", vars),
     onMutate: async (vars) => {
       await qc.cancelQueries({ queryKey: ["script", scriptId] });
       const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
@@ -228,6 +235,9 @@ export function useSetScriptMusic(scriptId: string) {
           ...(vars.musicUrl !== undefined ? { musicUrl: vars.musicUrl } : {}),
           ...(vars.musicVolume !== undefined
             ? { musicVolume: vars.musicVolume }
+            : {}),
+          ...(vars.audioMastering !== undefined
+            ? { audioMastering: vars.audioMastering }
             : {}),
         });
       }
@@ -254,6 +264,35 @@ export function useAutoSoundtrack(scriptId: string) {
     onSuccess: (data) => {
       qc.setQueryData(["script", scriptId], data.script);
     },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+  });
+}
+
+/** Save a single cue with a stale-edit guard. */
+export function useEditSfxCue(scriptId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SfxCueEditRequest) =>
+      apiSend<{ script: ScriptDTO }>(
+        `/api/scripts/${scriptId}/sfx`,
+        "PATCH",
+        body,
+      ),
+    onSuccess: (data) => qc.setQueryData(["script", scriptId], data.script),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+  });
+}
+
+/** Replan only visual direction, preserving scene content and audio. */
+export function useReplanMotionDirection(scriptId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { ambition?: VisualAmbition; newVariation?: boolean }) =>
+      apiPost<{
+        result: { changedSceneIds: string[]; protectedSceneCount: number };
+        script: ScriptDTO;
+      }>(`/api/scripts/${scriptId}/motion`, vars),
+    onSuccess: (data) => qc.setQueryData(["script", scriptId], data.script),
     onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
   });
 }
@@ -379,6 +418,7 @@ export function useUpdateScene(scriptId: string) {
       musicMood?: string | null;
       selectedVoiceClipId?: string | null;
       locks?: { copy: boolean; assets: boolean; scene: boolean };
+      motion?: MotionDirection | null;
     }) =>
       apiSend<{ scene: SceneDTO; take?: VoiceTakeDTO | null }>(
         `/api/scenes/${vars.id}`,
@@ -439,6 +479,9 @@ export function useUpdateScene(scriptId: string) {
                     ? { selectedVoiceClipId: vars.selectedVoiceClipId }
                     : {}),
                   ...(vars.locks !== undefined ? { locks: vars.locks } : {}),
+                  ...(vars.motion !== undefined
+                    ? { motion: vars.motion ?? undefined }
+                    : {}),
                 }
               : s,
           ),
@@ -689,15 +732,7 @@ export function useProduceReel(scriptId: string) {
 export function useEnhanceScript(scriptId: string) {
   const invalidate = useScriptInvalidator(scriptId);
   return useMutation({
-    mutationFn: (vars: {
-      providerId: string;
-      mode: "rewrite" | "append" | "hook_variants";
-      brief: string;
-      sceneCount?: number;
-      sceneIds?: string[];
-      scriptStyle?: ScriptStyle;
-      mediaPreference?: MediaPreference;
-    }) =>
+    mutationFn: (vars: AIEnhanceRequest) =>
       apiPost<{
         script: ScriptDTO;
         alternatives?: AIScene[];
@@ -733,6 +768,7 @@ export function useImportScenes(scriptId: string) {
         mood?: string;
         musicMood?: string;
         role?: SceneDTO["role"];
+        motion?: MotionDirection;
         assetRefs?: string[];
         locks?: SceneDTO["locks"];
         hideText?: boolean | null;
@@ -763,6 +799,7 @@ export function useUndoScript(scriptId: string) {
         mood?: string;
         musicMood?: string;
         role?: SceneDTO["role"];
+        motion?: MotionDirection;
         assetRefs?: string[];
         locks?: SceneDTO["locks"];
         hideText?: boolean | null;

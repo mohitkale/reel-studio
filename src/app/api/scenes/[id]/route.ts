@@ -8,6 +8,7 @@ import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
 import { productionChartDataSchema } from "@/production/spec";
 import { mediaPreferenceSchema } from "@/lib/media-preference";
+import { motionDirectionSchema } from "@/production/motion";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,6 +58,7 @@ const patchSchema = z.object({
   locks: z
     .object({ copy: z.boolean(), assets: z.boolean(), scene: z.boolean() })
     .optional(),
+  motion: motionDirectionSchema.nullable().optional(),
 });
 
 export async function PATCH(

@@ -79,9 +79,14 @@ export async function resolveVideoStageMedia(
     assets.push({ url, resolvedUrl, checksum });
     return resolvedUrl;
   };
-  for (const scene of result.script.scenes)
+  for (const scene of result.script.scenes) {
     if (scene.background)
       scene.background.url = (await resolve(scene.background.url))!;
+    if (scene.carouselImages)
+      scene.carouselImages = await Promise.all(
+        scene.carouselImages.map(async (url) => (await resolve(url))!),
+      );
+  }
   result.script.coverUrl = await resolve(result.script.coverUrl);
   result.script.musicUrl = await resolve(result.script.musicUrl);
   if (result.take)

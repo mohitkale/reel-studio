@@ -82,6 +82,9 @@ model CaptionTrack {
   enabled      Boolean  @default(true)
   /// Versioned CaptionStyleSnapshot JSON. Null preserves the 0.4 legacy appearance.
   styleJson    String?
+  /// Measured word timing is trusted only for this take and frame rate.
+  sourceTakeId String?
+  sourceFps    Int?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

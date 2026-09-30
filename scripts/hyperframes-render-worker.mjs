@@ -13,8 +13,15 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-const [projectDir, outputPath, fpsRaw, quality = "standard"] =
-  process.argv.slice(2);
+const [
+  projectDir,
+  outputPath,
+  fpsRaw,
+  quality = "standard",
+  mode,
+  widthRaw,
+  heightRaw,
+] = process.argv.slice(2);
 
 if (!projectDir || !outputPath || !fpsRaw) {
   console.error(
@@ -36,7 +43,14 @@ const producerUrl = pathToFileURL(
   ),
 ).href;
 
-const { createRenderJob, executeRenderJob } = await import(producerUrl);
+const {
+  createRenderJob,
+  executeRenderJob,
+  planV2,
+  renderChunkV2,
+  assembleV2,
+  readPlanV2Manifest,
+} = await import(producerUrl);
 
 /** Normalize HyperFrames 0–100 progress to a 0–1 fraction for the parent. */
 function toFraction(raw) {
@@ -62,16 +76,32 @@ process.once("SIGTERM", () => cancellation.abort());
 process.once("SIGINT", () => cancellation.abort());
 
 try {
-  await executeRenderJob(
-    job,
-    projectDir,
-    outputPath,
-    (renderJob) => {
-      const pct = toFraction(renderJob.progress);
-      console.log(`HF_PROGRESS ${pct.toFixed(4)}`);
-    },
-    cancellation.signal,
-  );
+  if (mode === "sections") {
+    const { renderHyperframesSections } =
+      await import("./hyperframes-section-render.ts");
+    await renderHyperframesSections(
+      {
+        projectDir,
+        outputPath,
+        fps,
+        quality,
+        width: Number(widthRaw),
+        height: Number(heightRaw),
+        signal: cancellation.signal,
+      },
+      { planV2, renderChunkV2, assembleV2, readPlanV2Manifest },
+    );
+  } else
+    await executeRenderJob(
+      job,
+      projectDir,
+      outputPath,
+      (renderJob) => {
+        const pct = toFraction(renderJob.progress);
+        console.log(`HF_PROGRESS ${pct.toFixed(4)}`);
+      },
+      cancellation.signal,
+    );
   console.log("HF_DONE");
 } catch (err) {
   const message = err instanceof Error ? err.message : String(err);

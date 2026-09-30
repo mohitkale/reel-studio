@@ -71,7 +71,7 @@ export const CinematicBrandScene = React.memo(function CinematicBrandScene({
             opacity: enter,
           }}
         >
-          {role}
+          {scene.motion?.recipeId === "media-cinematic" ? "In focus" : role}
         </div>
         {role === "testimonial" ? (
           <div

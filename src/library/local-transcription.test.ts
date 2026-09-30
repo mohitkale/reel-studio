@@ -55,4 +55,39 @@ writeFileSync(output + ".srt", "1\\n00:00:00,250 --> 00:00:01,500\\nLocal words\
       rmSync(directory, { recursive: true, force: true });
     }
   });
+
+  it("requests native token timing and retains measured speech gaps", async () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "reel-whisper-words-"));
+    try {
+      const binary = path.join(directory, "fake-whisper.mjs");
+      const model = path.join(directory, "model.bin");
+      writeFileSync(model, "fixture");
+      writeFileSync(
+        binary,
+        `#!/usr/bin/env node
+import { writeFileSync } from "node:fs";
+if (!process.argv.includes("-ojf")) process.exit(1);
+const output = process.argv[process.argv.indexOf("-of") + 1];
+writeFileSync(output + ".srt", "1\\n00:00:00,250 --> 00:00:01,500\\nLocal words\\n");
+writeFileSync(output + ".json", JSON.stringify({transcription:[{text:" Local words",offsets:{from:250,to:1500},tokens:[{text:" Local",offsets:{from:250,to:600}},{text:" words",offsets:{from:1000,to:1400}}]}]}));
+`,
+      );
+      chmodSync(binary, 0o755);
+      process.env.WHISPER_CPP_BIN = binary;
+      process.env.WHISPER_CPP_MODEL = model;
+      expect(
+        (
+          await transcribeWithWhisperCpp({
+            audio: Buffer.from("RIFF"),
+            fps: 20,
+          })
+        )[0].words,
+      ).toEqual([
+        { text: "Local", startFrame: 5, endFrame: 12 },
+        { text: "words", startFrame: 20, endFrame: 28 },
+      ]);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
 });

@@ -19,6 +19,7 @@ import cinematicBrandFixture from "../../tests/fixtures/cinematic-brand-reel.jso
 import type { ReelProps } from "@/compositions/types";
 import { reelDurationFrames } from "@/compositions/types";
 import { CURRENT_HF_CATALOG_REVISION } from "@/engines/hyperframes/catalog/revisions";
+import { motionDirection } from "@/production/motion";
 
 function productionSpec(
   engineId: VideoEngineId,
@@ -103,6 +104,67 @@ function productionSpec(
 }
 
 describe("resolved production composition", () => {
+  it("carries an explicit recipe through the snapshot and into HyperFrames markup", () => {
+    const spec = productionSpec("hyperframes", "portrait");
+    spec.scenes[0].motion = motionDirection("type-impact");
+    const resolved = resolveProductionComposition(spec);
+    expect(resolved.reelProps.scenes[0].motion).toEqual(
+      motionDirection("type-impact"),
+    );
+    const html = buildHyperframesCompositionHtml(resolved.reelProps);
+    expect(html).toContain('data-motion-recipe="type-impact"');
+    expect(html).toContain('data-recipe="type-impact"');
+    expect(html).not.toContain('data-production-preset="product-launch"');
+  });
+
+  it("keeps chart numbers and source attribution in a saved data recipe", () => {
+    const spec = productionSpec("hyperframes", "square");
+    spec.preset = { id: "data-story", version: "1.0.0" };
+    spec.scenes[0].role = "chart";
+    spec.scenes[0].assetRefs = [];
+    spec.scenes[0].displayText = "Completion across groups";
+    spec.scenes[0].chart = {
+      labels: ["Before", "After"],
+      series: [{ label: "Survey", values: [32, 72], unit: "%" }],
+      sourceAttribution: "Creator survey",
+    };
+    spec.scenes[0].motion = motionDirection("data-bars");
+    const resolved = resolveProductionComposition(spec);
+    const html = buildHyperframesCompositionHtml(resolved.reelProps);
+    expect(html).toContain('data-motion-recipe="data-bars"');
+    expect(html).toContain("32%");
+    expect(html).toContain("72%");
+    expect(html).toContain("Source: Creator survey");
+  });
+
+  it("keeps supplied diagram ideas in a saved motion recipe", () => {
+    const spec = productionSpec("hyperframes", "portrait");
+    spec.preset = { id: "editorial-explainer", version: "1.0.0" };
+    spec.scenes[0].role = "diagram";
+    spec.scenes[0].assetRefs = [];
+    spec.scenes[0].displayText = "From concept to cut";
+    spec.scenes[0].items = ["Idea", "Story", "Motion", "Sound"];
+    spec.scenes[0].motion = motionDirection("diagram-orbit");
+    const resolved = resolveProductionComposition(spec);
+    const html = buildHyperframesCompositionHtml(resolved.reelProps);
+    expect(resolved.reelProps.scenes[0].items).toEqual(spec.scenes[0].items);
+    expect(html).toContain('data-motion-recipe="diagram-orbit"');
+    expect(html).toContain("Idea");
+    expect(html).toContain("Sound");
+  });
+
+  it("uses the supplied image in a saved media treatment", () => {
+    const spec = productionSpec("hyperframes", "landscape");
+    spec.scenes[0].role = "screenshot-demo";
+    spec.scenes[0].displayText = "See the editor";
+    spec.scenes[0].motion = motionDirection("media-device");
+    const resolved = resolveProductionComposition(spec);
+    const html = buildHyperframesCompositionHtml(resolved.reelProps);
+    expect(html).toContain('data-motion-recipe="media-device"');
+    expect(html).toContain("/media/hero.png");
+    expect(html).toContain("pl-device");
+  });
+
   it.each(ORIENTATIONS)(
     "uses one format-aware input for both engines in %s",
     (orientation) => {

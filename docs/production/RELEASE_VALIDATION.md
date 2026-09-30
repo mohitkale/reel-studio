@@ -117,3 +117,72 @@ Launch validation covers short-form videos up to three minutes and podcasts up
 to ten minutes. Arbitrary prompts may still require custom design or supplied
 media; the release promises repeatable production from the supported presets and
 inputs described in [the walkthroughs](../WALKTHROUGHS.md).
+
+## Motion graphics and bounded chapter production
+
+The September 30, 2026 continuation adds a controlled five-minute allowance for
+valid saved chapter videos at 24/30/60 fps. Other video storyboards and standalone
+audio retain the three-minute policy; named MCP token allowances and old queued
+job limits remain unchanged. Actual prepared timing, including covers, is checked
+against the frozen allowance before rendering.
+The migration chain now contains twelve migrations, including additive caption
+take/frame-rate provenance; the fast release contract checks that exact count.
+
+Reproduce the native section gates with the installed render dependencies:
+
+```bash
+npm run test:video-sections -- --cancel
+npm run test:video-sections -- --long --speech --cancel
+npm run test:video-sections -- --engine=remotion --edit
+```
+
+The default fixture uses 32 seconds, portrait, 30 fps and two chapters. `--long`
+uses 210 seconds, landscape, 24 fps and six chapters. `--speech` requires the
+already-installed macOS `say` voice and performs no download or provider call;
+omit it elsewhere for a labeled calibration narration signal. `--engine` narrows
+the gate to one engine. `--seed=<UUID>` repeats media identity for diagnostics;
+the owned media directory must not already exist, preventing concurrent runs
+from sharing it. Tests use an isolated migrated SQLite database and local assets.
+
+Assertions cover exact video packet counts, continuous narration/music through
+joins, verified encoded loudness/peak targets, cancellation cleanup, committed
+section reuse, unchanged video packets and decoded audio across retry. Each
+successful run saves MP4s, audio measurements, native chapter sheets, eight-frame
+cut strips and `result.json` in `.artifacts/video-sections-<timestamp>/`.
+`--edit` additionally compares full/scoped native Remotion stills, then requires
+unchanged sections to reuse while the changed final visual renders again.
+
+Measured local results (draft quality, separate runs):
+
+| Fixture                              | Engine      | Verified frames | Export / unchanged retry                 | Sampled process-tree RSS |
+| ------------------------------------ | ----------- | --------------- | ---------------------------------------- | ------------------------ |
+| 210 s installed local speech         | Remotion    | 5,040           | 121.5 s / 112.0 s, cached video sections | 1.12 / 0.93 GiB          |
+| 210 s installed local speech         | HyperFrames | 5,040           | 108.5 s / 122.1 s, cached video sections | 0.93 / 0.99 GiB          |
+| 32 s calibration, scoped visual edit | Remotion    | 960             | 54.9 s cold / 21.3 s retry / 36.5 s edit | 1.88 / 0.95 / 1.71 GiB   |
+
+The 210-second retries had identical encoded audio and zero decoded RMS error;
+both delivered exactly 210 seconds. A separate cold cancellation/resume gate
+retained the first completed section in each engine. HyperFrames local music
+loop expansion and final mastering sample clocks were exercised with real speech.
+The scoped Remotion gate also preserved opening decoded frames after the edit
+and changed the final frames. Browser/SQLite creation retained all 40 supplied
+passages in seven editable chapters.
+
+RSS is sampled once per second and sums descendants, so shared pages can be
+counted twice. These figures describe the fixture host, not speed or memory
+promises. Audio is still assembled once per retry, so cached video does not make
+export instantaneous. This is a bounded first long-video gate; heavy footage,
+all quality/resolution combinations, pixel-based legibility audits, chapter-wise
+AI topic generation and selective HyperFrames visual reuse remain follow-ups.
+
+The bounded named-chapter append gate uses credential-free provider fixtures,
+the rendered editor dialog, the registered MCP schema/forwarder and migrated
+SQLite. It verifies one bounded generation invocation, preflight outline limits,
+neighboring context, preserved earlier chapters/scenes/settings, atomic stock
+metadata and chapter boundaries, and rejection of competing content/lock/order/
+outline/add/delete/engine changes. Cancellation and metadata failure leave no
+partial append. No rendering or audio behavior changes in this milestone.
+
+```bash
+npm test -- src/library/scene-append-scope.test.ts src/library/scene-append-service.test.ts src/library/ai-enhance-mcp.test.ts src/components/editor/ai-enhance-dialog.test.tsx 'src/app/api/scripts/[id]/ai/route.test.ts' src/providers/ai/prompt.test.ts
+```

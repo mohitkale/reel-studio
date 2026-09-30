@@ -1,5 +1,6 @@
 import { parseWav } from "@/lib/wav";
 import { z } from "zod";
+import { readAudioMasteringReport } from "@/library/video-audio-mastering";
 import { captureVideoSnapshot } from "@/library/video-snapshot";
 import {
   videoSnapshotSchema,
@@ -14,6 +15,7 @@ import {
 import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveSpokenText } from "@/lib/spoken-text";
 import { prepareVideoComposition } from "@/library/render-service";
+import { assertVideoDuration, videoDurationLimit } from "@/production/limits";
 import type { StartRenderOptions } from "@/library/render-service";
 import {
   productionSignal,
@@ -115,6 +117,7 @@ export async function verifyProductionMp4(
     duration: Number(probe.format?.duration),
     hasAudio: Boolean(audio),
     checksum: `sha256:${checksum}`,
+    audioMastering: await readAudioMasteringReport(filePath, checksum),
   };
 }
 
@@ -410,6 +413,8 @@ export async function executeVideoProductionJob(
     const prepared = await stage(
       "prepare_composition",
       {
+        // Version 3 adds measured-word SFX protection to prepared cue decisions.
+        compositionContract: 3,
         media: { ...media, snapshot: snapshotWithAudio },
         timing,
         orientation: input.orientation,
@@ -432,6 +437,15 @@ export async function executeVideoProductionJob(
       },
     );
     const composition = prepared.composition;
+    // Check actual timing after synthesis, also when resuming cached stages.
+    assertVideoDuration(
+      composition.totalFrames,
+      composition.props.fps,
+      Math.min(
+        input.maxDurationSeconds,
+        videoDurationLimit(prepared.snapshot.script),
+      ),
+    );
     const artifact = await stage(
       "render_export",
       { prepared, quality: input.quality },

@@ -17,12 +17,18 @@ import type { ProduceContentRequest } from "@/production/api";
 import { ProviderError } from "@/providers/voice/types";
 import { reserveNamedMcpPaidRequest } from "@/server/secrets";
 import { createProductionRevision } from "@/library/production-revision";
+import { PRODUCTION_LIMITS, videoDurationLimit } from "@/production/limits";
+import { resolveReelTimeline } from "@/lib/reel-timeline";
+import { resolveSpokenText } from "@/lib/spoken-text";
+import { coverFrames } from "@/compositions/types";
+import { videoSnapshotSchema } from "@/production/video-snapshot";
 
 interface ResolvedRequest {
   kind: ProduceContentRequest["kind"];
   durationSeconds: number;
   providerIds: string[];
   inputSnapshot: Record<string, unknown>;
+  durationLimit?: number;
 }
 
 function estimateTextDuration(texts: readonly string[]): number {
@@ -37,36 +43,32 @@ async function resolveRequest(
   serverBaseUrl: string,
 ): Promise<ResolvedRequest> {
   if (request.kind === "video") {
-    const script = await prisma.script.findUnique({
-      where: { id: request.scriptId },
-      include: {
-        scenes: { orderBy: { order: "asc" } },
-        takes: request.voiceTakeId
-          ? { where: { id: request.voiceTakeId } }
-          : { orderBy: { createdAt: "desc" }, take: 1 },
-      },
-    });
-    if (!script) throw new ProviderError("Script not found", 404);
-    if (request.voiceTakeId && !script.takes.length) {
-      throw new ProviderError("Voice take does not belong to this script", 400);
-    }
-    const durationSeconds = script.takes[0]
-      ? script.takes[0].totalFrames / script.takes[0].fps
-      : estimateTextDuration(
-          script.scenes.map((scene) => scene.spokenText ?? scene.text),
-        );
+    const snapshot = await captureVideoSnapshot(
+      request.scriptId,
+      request.voiceTakeId,
+    );
+    const script = snapshot.script;
+    const timing = resolveReelTimeline(
+      script.scenes.map((scene) => ({
+        id: scene.id,
+        text: resolveSpokenText(scene),
+      })),
+      snapshot.take,
+      script.fps,
+    );
+    const durationSeconds =
+      (timing.totalFrames + coverFrames(script.fps, Boolean(script.coverUrl))) /
+      script.fps;
     return {
       kind: request.kind,
       durationSeconds,
+      durationLimit: videoDurationLimit(script),
       providerIds:
         request.quickProduce?.voice.enabled === true
           ? [request.quickProduce.voice.providerId]
           : [],
       inputSnapshot: {
-        snapshot: await captureVideoSnapshot(
-          request.scriptId,
-          request.voiceTakeId,
-        ),
+        snapshot,
         scriptId: request.scriptId,
         voiceTakeId: request.voiceTakeId,
         orientation: request.orientation,
@@ -170,11 +172,12 @@ export async function submitProduction(args: {
 
   const resolved = await resolveRequest(args.request, args.serverBaseUrl);
   const launchLimit =
-    resolved.kind === "podcast"
-      ? 600
+    resolved.durationLimit ??
+    (resolved.kind === "podcast"
+      ? PRODUCTION_LIMITS.podcastSeconds
       : resolved.kind === "audiogram"
-        ? 90
-        : 180;
+        ? PRODUCTION_LIMITS.audiogramSeconds
+        : PRODUCTION_LIMITS.audioSeconds);
   if (resolved.durationSeconds > launchLimit) {
     throw new ProviderError(
       `${resolved.kind} production is limited to ${launchLimit} seconds in this release`,
@@ -184,6 +187,8 @@ export async function submitProduction(args: {
   let state: "queued" | "awaiting_approval" =
     args.request.runMode === "approval" ? "awaiting_approval" : "queued";
   let approvalReason: string | undefined;
+  if (resolved.kind === "video")
+    resolved.inputSnapshot.maxDurationSeconds = launchLimit;
 
   if (resolved.kind === "video" || resolved.kind === "audiogram") {
     if (args.auth.origin === "mcp") {
@@ -200,6 +205,11 @@ export async function submitProduction(args: {
 
   if (args.auth.origin === "mcp" && args.auth.token.kind === "named") {
     const policy = args.auth.token.record;
+    if (resolved.kind === "video")
+      resolved.inputSnapshot.maxDurationSeconds = Math.min(
+        launchLimit,
+        policy.maxDurationSeconds,
+      );
     if (resolved.durationSeconds > policy.maxDurationSeconds) {
       throw new ProviderError(
         `Requested duration ${Math.ceil(resolved.durationSeconds)}s exceeds this token's ${policy.maxDurationSeconds}s limit`,
@@ -242,9 +252,8 @@ export async function submitProduction(args: {
     });
     resolved.inputSnapshot.renderId = render.id;
     if (request.quickProduce) {
-      const snapshot = await captureVideoSnapshot(
-        request.scriptId,
-        request.voiceTakeId,
+      const snapshot = videoSnapshotSchema.parse(
+        resolved.inputSnapshot.snapshot,
       );
       const revision = await createProductionRevision(snapshot);
       resolved.inputSnapshot.snapshot = snapshot;

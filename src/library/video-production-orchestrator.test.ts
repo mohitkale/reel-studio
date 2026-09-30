@@ -74,6 +74,130 @@ const stageDependencies = {
 };
 
 describe("video production orchestration", () => {
+  it("rejects actual synthesized timing that exceeds the frozen submission policy before render", async () => {
+    const render = vi.fn(async () => undefined);
+    await expect(
+      executeVideoProductionJob(
+        {
+          ...job,
+          inputSnapshot: {
+            ...(job.inputSnapshot as Record<string, unknown>),
+            maxDurationSeconds: 2,
+            quickProduce: {
+              enabled: true,
+              planner: "deterministic",
+              mediaPreference: "none",
+              voice: {
+                enabled: true,
+                providerId: "kokoro-server",
+                voiceId: "af_heart",
+              },
+            },
+          },
+        },
+        { signal: new AbortController().signal, heartbeat: async () => true },
+        {
+          ...stageDependencies,
+          render,
+          synthesize: async () => ({
+            id: "synthesized",
+            scriptId: "script-1",
+            label: null,
+            providerId: "kokoro-server",
+            voiceId: "af_heart",
+            modelId: null,
+            fps: 30,
+            totalFrames: 90,
+            timeline: [
+              {
+                sceneId: "scene-1",
+                startFrame: 0,
+                durationFrames: 90,
+                text: "A real saved plan",
+              },
+            ],
+            audioUrl: "https://example.com/voice.wav",
+            isPlaceholder: false,
+            source: "oneshot",
+            createdAt: new Date().toISOString(),
+          }),
+          step: vi.fn(async () => ({}) as never),
+          output: vi.fn(async () => ({}) as never),
+          artifact: async () => ({
+            path: "/tmp/unused.mp4",
+            expectsAudio: true,
+          }),
+          verify: async () => ({ checksum: "sha256:unused" }),
+        },
+      ),
+    ).rejects.toThrow(/up to 2 seconds/);
+    expect(render).not.toHaveBeenCalled();
+  });
+  it.each(["remotion", "hyperframes"] as const)(
+    "retains motion decisions through prepared checkpoints for %s",
+    async (videoEngine) => {
+      const directed = structuredClone(snapshot);
+      directed.script.videoEngine = videoEngine;
+      directed.script.scenes[0].motion = {
+        recipeId: "type-impact",
+        version: "1.0.0",
+      };
+      directed.script.productionPreset = {
+        id: "creator-punch",
+        version: "1.0.0",
+      };
+      const render = vi.fn(async () => undefined);
+      const step = vi.fn(async () => ({}) as never);
+      await executeVideoProductionJob(
+        job,
+        { signal: new AbortController().signal, heartbeat: async () => true },
+        {
+          ...stageDependencies,
+          capture: async () => directed,
+          render,
+          step,
+          artifact: async () => ({
+            path: "/tmp/render-1.mp4",
+            expectsAudio: false,
+          }),
+          verify: async () => ({ checksum: "sha256:verified" }),
+          output: vi.fn(async () => ({}) as never),
+        },
+      );
+      expect(render).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prepared: expect.objectContaining({
+            props: expect.objectContaining({
+              scenes: [
+                expect.objectContaining({
+                  motion: directed.script.scenes[0].motion,
+                }),
+              ],
+            }),
+          }),
+        }),
+      );
+      expect(step).toHaveBeenCalledWith(
+        "job-1",
+        "prepare_composition",
+        expect.objectContaining({
+          state: "succeeded",
+          detail: expect.objectContaining({
+            composition: expect.objectContaining({
+              props: expect.objectContaining({
+                scenes: [
+                  expect.objectContaining({
+                    motion: directed.script.scenes[0].motion,
+                  }),
+                ],
+              }),
+            }),
+          }),
+        }),
+      );
+    },
+  );
+
   it("runs the ordered pipeline and records only a verified output", async () => {
     const completed: string[] = [];
     const render = vi.fn(async () => undefined);
@@ -459,6 +583,7 @@ describe("video production orchestration", () => {
     try {
       const input = structuredClone(snapshot);
       input.script.musicUrl = `/media/${name}`;
+      input.script.scenes[0].carouselImages = [`/media/${name}`];
       input.script.coverUrl =
         "https://images.unsplash.com/photo-fixture?ixid=retained";
       const resolved = await resolveVideoStageMedia(
@@ -469,6 +594,9 @@ describe("video production orchestration", () => {
         "media",
         resolved.snapshot.script.musicUrl!.slice(7),
       );
+      expect(resolved.snapshot.script.scenes[0].carouselImages).toEqual([
+        resolved.snapshot.script.musicUrl,
+      ]);
       await fs.writeFile(copied, "truncated cache");
       await resolveVideoStageMedia(input, "http://localhost:3000");
       expect(await fs.readFile(copied)).toEqual(content);

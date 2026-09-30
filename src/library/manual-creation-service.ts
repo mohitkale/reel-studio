@@ -40,6 +40,7 @@ export async function createManualProject(input: ManualCreationInput) {
     name: body.name || source.title || "Untitled production",
     text: source.text,
     outputType: body.outputType,
+    structure: body.structure,
     presetId: body.presetId,
     videoEngine: body.videoEngine,
     hasVisualAsset: visualAssets.length > 0,
@@ -128,7 +129,9 @@ export async function createManualProject(input: ManualCreationInput) {
     {
       brandKitId: body.brandKitId,
       preset: production.preset,
+      visualAmbition: body.visualAmbition,
       roles: production.roles,
+      chapterStarts: production.chapterStarts,
       assetRefs,
       mediaPreferences: plan.scenes.map(() => body.mediaPreference),
       stockSelections: mediaDecisions.map((decision) => decision.snapshot),

@@ -107,6 +107,11 @@ TTS always uses each scene’s `spokenText ?? text`.
 
 1. Optionally `list_video_engines`, then `ai_create_project` / `create_project`.
 2. `ai_generate_scenes` with mode `append` (or `add_scene` / `update_scene`).
+   With a valid saved outline, pass `chapterTitle` to append a named chapter;
+   omit it to extend the last chapter. Each generation supports 1–20 scenes
+   (Auto asks for 3–5), with at most 12 chapters / 240 total scenes / 20 scenes
+   per chapter. Earlier work stays intact. If the storyboard changes during
+   generation, the entire append is rejected; reload before requesting a retry.
 3. Add narration (oneshot **or** per-scene).
 4. `produce_content` → poll `get_production_job` →
    `download_production_artifact`. A legacy or approval-only token pauses video

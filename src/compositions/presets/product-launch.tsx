@@ -20,7 +20,7 @@ function ProductMedia({ scene }: Pick<TemplateProps, "scene">) {
   const style: React.CSSProperties = {
     width: "100%",
     height: "100%",
-    objectFit: "cover",
+    objectFit: scene.motion?.recipeId === "media-device" ? "contain" : "cover",
   };
   return media.type === "video" ? (
     <OffthreadVideo src={media.url} muted={media.muted ?? true} style={style} />

@@ -74,6 +74,10 @@ export const videoScriptSnapshotSchema = z.object({
   styleId: z.enum(["bold-hook", "clean-story", "teach-me", "soft-brand"]),
   energy: z.enum(["calm", "normal", "high"]),
   productionPreset: brandOverridesSchema.shape.productionPreset,
+  motionPlan: brandOverridesSchema.shape.motionPlan,
+  musicMap: brandOverridesSchema.shape.musicMap,
+  audioMastering: brandOverridesSchema.shape.audioMastering,
+  chapterPlan: brandOverridesSchema.shape.chapterPlan,
   captionTracks: z
     .array(
       z.object({
@@ -82,6 +86,8 @@ export const videoScriptSnapshotSchema = z.object({
         label: z.string(),
         language: z.string(),
         timingSource: captionTimingSourceSchema,
+        sourceTakeId: z.string().nullable().optional(),
+        sourceFps: z.number().int().positive().nullable().optional(),
         enabled: z.boolean(),
         style: captionStyleSnapshotSchema.default(LEGACY_CAPTION_STYLE),
         updatedAt: z.string(),
@@ -155,6 +161,7 @@ export const preparedVideoCompositionSchema = z
             chart: true,
             carouselImages: true,
             role: true,
+            motion: true,
             mood: true,
             order: true,
           })

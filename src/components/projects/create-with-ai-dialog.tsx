@@ -27,6 +27,8 @@ import {
   type StylePick,
 } from "@/components/visual/style-energy-controls";
 import { cn } from "@/lib/utils";
+import type { VisualAmbition } from "@/production/motion-plan";
+import { VisualAmbitionControl } from "@/components/visual/visual-ambition-control";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -81,6 +83,8 @@ export function CreateWithAIDialog() {
   const [energy, setEnergy] = React.useState<EnergyPick>("auto");
   const [productionPresetId, setProductionPresetId] =
     React.useState<ProductionPresetId>("product-launch");
+  const [visualAmbition, setVisualAmbition] =
+    React.useState<VisualAmbition>("expressive");
   const [mediaPreference, setMediaPreference] =
     React.useState<MediaPreference>("auto");
   const [quickProduce, setQuickProduce] = React.useState(
@@ -110,6 +114,7 @@ export function CreateWithAIDialog() {
         energy,
         productionPresetId,
         mediaPreference,
+        visualAmbition,
         ...(quickProduce
           ? {
               idempotencyKey: `quick-produce:${crypto.randomUUID()}`,
@@ -286,6 +291,13 @@ export function CreateWithAIDialog() {
                 </div>
               ) : null}
             </div>
+
+            <VisualAmbitionControl
+              id="ai-visual-ambition"
+              value={visualAmbition}
+              onChange={setVisualAmbition}
+              disabled={generate.isPending}
+            />
 
             <StyleEnergyControls
               styleId={styleId}

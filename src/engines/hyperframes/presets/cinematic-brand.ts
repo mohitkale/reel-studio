@@ -29,7 +29,7 @@ function content(scene: ReelScene): string {
     .map((item) => item.trim())
     .filter(Boolean)
     .slice(0, 3);
-  const label = `<div class="cb-label fx-kicker">${escapeHtml(role)}</div>`;
+  const label = `<div class="cb-label fx-kicker">${scene.motion?.recipeId === "media-cinematic" ? "In focus" : escapeHtml(role)}</div>`;
   if (role === "testimonial")
     return `${label}<div class="cb-quote-mark">“</div><blockquote class="cb-quote fx-line"><span class="fx-line-inner">${copy}</span></blockquote>${scene.visual ? `<p class="cb-credit">— ${escapeHtml(scene.visual)}</p>` : ""}`;
   if (role === "feature" && items.length)

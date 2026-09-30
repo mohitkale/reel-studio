@@ -1,3 +1,4 @@
+import { MOTION_EVENT_TIMINGS } from "@/production/motion-events";
 import type { BrandTokens } from "@/compositions/tokens";
 import type { ReelScene, SceneMood } from "@/compositions/types";
 import type { HfCatalogBlockMeta } from "@/engines/hyperframes/catalog/manifest";
@@ -1068,10 +1069,12 @@ export function buildGsapMotionBootScript(
 <script>
 (function () {
   function revealFallback() {
-    document.querySelectorAll('.fx-line-inner, .fx-kicker, .fx-rule, .fx-logo-mark, .fx-pill, .fx-social-card, .fx-yt-bar, .fx-money-num, .fx-money-line, .fx-chart-line, .fx-chart-title, .fx-phone, .fx-chip, .fx-qmark, .fx-check-item, .fx-cta-btn, .fx-lt-plate, .fx-slash, .fx-letterbox, .fx-term-grid, .fx-chart-bars i, .fx-carousel-card').forEach(function (el) {
+    document.querySelectorAll('.fx-line-inner, .fx-kicker, .fx-rule, .fx-logo-mark, .fx-pill, .fx-social-card, .fx-yt-bar, .fx-money-num, .fx-money-line, .fx-chart-line, .fx-chart-title, .fx-phone, .fx-chip, .fx-qmark, .fx-check-item, .fx-cta-btn, .fx-lt-plate, .fx-slash, .fx-letterbox, .fx-term-grid, .fx-chart-bars i, .fx-carousel-card, .tm-impact-shape, .tm-impact-rule, .tm-editorial-rail, .dm-row, .dm-bar-fill, .gm-step, .gm-core, .gm-satellite').forEach(function (el) {
       el.style.opacity = '1';
       el.style.transform = 'none';
     });
+    document.querySelectorAll('.dm-orbit-draw').forEach(function (el) { el.style.strokeDashoffset = el.getAttribute('data-dash-end') || '0'; });
+    document.querySelectorAll('.gm-connector').forEach(function (el) { el.style.strokeDashoffset = '0'; });
   }
   function boot() {
     if (!window.gsap) { revealFallback(); return; }
@@ -1079,11 +1082,17 @@ export function buildGsapMotionBootScript(
     var compositionRoot = document.querySelector('[data-composition-id]');
     var compositionId = compositionRoot && compositionRoot.getAttribute('data-composition-id');
     var compositionTimelines = [];
+    var motionEvents = ${JSON.stringify(MOTION_EVENT_TIMINGS.hyperframes)};
     document.querySelectorAll('[data-motion-scene]').forEach(function (stage) {
       var id = stage.getAttribute('data-motion-scene');
       if (!id) return;
       var recipe = stage.getAttribute('data-recipe') || '';
       var tl = gsap.timeline({ paused: true });
+      var events = motionEvents[recipe];
+      if (events) {
+        tl.addLabel("reveal", events.reveal);
+        if (events.impact !== undefined) tl.addLabel("impact", events.impact);
+      }
 
       var lines = stage.querySelectorAll('.fx-line-inner');
       var kicker = stage.querySelector('.fx-kicker');
@@ -1116,6 +1125,48 @@ export function buildGsapMotionBootScript(
       var shine = stage.querySelector('.fx-bill-shine');
       var deepOrb = stage.querySelector('.fx-deep-orb');
       var carouselCards = stage.querySelectorAll('.fx-carousel-card');
+      var typeShape = stage.querySelector('.tm-impact-shape');
+      var typeRule = stage.querySelector('.tm-impact-rule');
+      var typeRail = stage.querySelector('.tm-editorial-rail');
+      var dataOrbit = stage.querySelector('.dm-orbit-draw');
+      var dataRows = stage.querySelectorAll('.dm-row');
+      var dataBars = stage.querySelectorAll('.dm-bar-fill');
+      var diagramSteps = stage.querySelectorAll('.gm-step');
+      var diagramCore = stage.querySelector('.gm-core');
+      var diagramSatellites = stage.querySelectorAll('.gm-satellite');
+
+      if (recipe === 'type-impact') {
+        if (typeShape) tl.fromTo(typeShape, { scaleX: 0, rotation: -11 }, { scaleX: 1, rotation: -11, duration: 0.58, ease: 'power4.out' }, 0.02);
+        if (typeRule) tl.fromTo(typeRule, { scaleX: 0 }, { scaleX: 1, duration: 0.42, ease: 'power3.out' }, events.impact);
+      }
+      if (recipe === 'type-editorial' && typeRail) {
+        tl.fromTo(typeRail, { scaleY: 0 }, { scaleY: 1, duration: 0.78, ease: 'power2.out' }, 0.04);
+      }
+      if (recipe === 'data-spotlight' && dataOrbit) {
+        var orbitEnd = Number(dataOrbit.getAttribute('data-dash-end') || '0');
+        tl.fromTo(dataOrbit, { strokeDashoffset: 893 }, { strokeDashoffset: orbitEnd, duration: 1.25, ease: 'power2.out' }, events.reveal);
+      }
+      if (recipe === 'data-bars') {
+        dataRows.forEach(function (row, i) {
+          tl.fromTo(row, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.42, ease: 'power2.out' }, 0.2 + i * 0.11);
+        });
+        dataBars.forEach(function (bar, i) {
+          tl.fromTo(bar, { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: 'power3.out' }, events.reveal + i * 0.11);
+        });
+      }
+      if (recipe === 'diagram-path') {
+        diagramSteps.forEach(function (step, i) {
+          tl.fromTo(step, { opacity: 0, x: 46 }, { opacity: 1, x: 0, duration: 0.48, ease: 'power3.out' }, events.reveal + i * 0.15);
+        });
+      }
+      if (recipe === 'diagram-orbit') {
+        if (diagramCore) tl.fromTo(diagramCore, { opacity: 0, scale: 0.65, transformOrigin: '500px 500px' }, { opacity: 1, scale: 1, duration: 0.65, ease: 'back.out(1.4)' }, 0.2);
+        diagramSatellites.forEach(function (node, i) {
+          tl.fromTo(node, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: 'power2.out' }, events.reveal + i * 0.16);
+          var path = node.querySelector('.gm-connector');
+          if (path) tl.fromTo(path, { strokeDashoffset: 700 }, { strokeDashoffset: 0, duration: 0.6, ease: 'power2.out' }, 0.52 + i * 0.16);
+        });
+      }
 
       // Recipe-specific backgrounds
       if (recipe === 'void-slash') {
@@ -1159,7 +1210,7 @@ export function buildGsapMotionBootScript(
 
       // Line reveals — clipped, never overlapping
       lines.forEach(function (inner, i) {
-        tl.to(inner, { y: '0%', duration: 0.42, ease: 'power3.out' }, 0.22 + i * 0.1);
+        tl.to(inner, { y: '0%', duration: 0.42, ease: 'power3.out' }, (recipe === 'type-impact' || recipe === 'type-editorial' ? events.reveal : 0.22) + i * 0.1);
       });
 
       if (rule) tl.fromTo(rule, { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: 'power3.out' }, Math.max(0.55, 0.22 + lines.length * 0.1));

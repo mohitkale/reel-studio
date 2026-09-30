@@ -77,6 +77,7 @@ export function resolveProductionComposition(
         : undefined,
       carouselImages: carouselImages.length ? carouselImages : undefined,
       role: scene.role,
+      motion: scene.motion,
       background: backgroundAsset
         ? {
             type: backgroundAsset.type as "image" | "video",
@@ -110,6 +111,9 @@ export function resolveProductionComposition(
       url: resolveAsset(assets, cue.assetRef, resolveUri)!,
       startFrame: cue.startFrame,
       volume: cue.volume,
+      ...(cue.fadeSeconds !== undefined
+        ? { fadeSeconds: cue.fadeSeconds }
+        : {}),
     })),
     tokens: { ...spec.brand.tokens },
     coverUrl: coverAsset ? resolveUri(coverAsset) : undefined,

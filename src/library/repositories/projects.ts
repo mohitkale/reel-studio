@@ -1,8 +1,16 @@
+import { randomUUID } from "node:crypto";
+
 import type { ProjectDTO } from "@/lib/dto";
 import type { ScenePlan } from "@/providers/ai/types";
 import type { SceneBackground } from "@/compositions/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
+import {
+  planMotionSequence,
+  type MotionPlanSettings,
+  type VisualAmbition,
+} from "@/production/motion-plan";
+import type { MotionDirection } from "@/production/motion";
 import type { MediaPreference } from "@/lib/media-preference";
 import type { ResolvedStockAsset } from "@/providers/stock/schemas";
 import {
@@ -23,12 +31,14 @@ import {
 } from "@/engines/types";
 import { defaultTemplateIdForEngine } from "@/engines/registry";
 import { prisma } from "@/library/db";
+import type { SceneLocks } from "@/library/schemas";
 import {
   SAMPLE_PROJECT_NAME,
   SAMPLE_SCRIPT_NAME,
   SAMPLE_SCENES,
 } from "@/library/sample-content";
 import { getDefaultBrandKit } from "./brandkits";
+import { chapterPlanFromStarts } from "@/production/chapters";
 
 function resolveEngine(engine?: VideoEngineId | string | null): VideoEngineId {
   return engine && isVideoEngineId(engine) ? engine : DEFAULT_VIDEO_ENGINE;
@@ -107,9 +117,15 @@ export async function createProjectFromPlan(
     brandKitId?: string | null;
     preset?: { id: ProductionPresetId; version: string };
     roles?: ProductionSceneRole[];
+    chapterStarts?: Array<{ title: string; firstSceneIndex: number }>;
     assetRefs?: string[][];
     mediaPreferences?: MediaPreference[];
     stockSelections?: Array<ResolvedStockAsset | undefined>;
+    visualAmbition?: VisualAmbition;
+    /** Frozen revision decisions bypass planning when restoring a production. */
+    motionPlan?: MotionPlanSettings;
+    motions?: Array<MotionDirection | undefined>;
+    sceneLocks?: Array<SceneLocks | undefined>;
     voiceMode?: "oneshot" | "per_scene";
     outputType?: "video" | "voiceover";
     creationSource?: {
@@ -122,6 +138,12 @@ export async function createProjectFromPlan(
   const { width, height } = dimsFor(orientation);
   const engine = resolveEngine(videoEngine);
   const fallbackTemplate = defaultTemplateIdForEngine(engine);
+  const sceneIds = production?.chapterStarts
+    ? plan.scenes.map(() => randomUUID())
+    : [];
+  const chapterPlan = production?.chapterStarts
+    ? chapterPlanFromStarts(production.chapterStarts, sceneIds)
+    : undefined;
   const defaultKit = await getDefaultBrandKit();
   const brandKitId =
     production?.brandKitId === undefined
@@ -129,6 +151,30 @@ export async function createProjectFromPlan(
       : production.brandKitId;
   const styleId = visualStyle?.styleId ?? plan.styleId ?? DEFAULT_STYLE_ID;
   const energy = visualStyle?.energy ?? plan.energy ?? DEFAULT_ENERGY_ID;
+  const motionPlan: MotionPlanSettings | undefined =
+    production?.motionPlan ??
+    (production?.preset && !production.motions
+      ? {
+          version: "1.0.0",
+          seed: randomUUID(),
+          ambition: production.visualAmbition ?? "expressive",
+        }
+      : undefined);
+  const motions =
+    production?.motions ??
+    (motionPlan
+      ? planMotionSequence(
+          plan.scenes.map((scene, order) => ({
+            role: production?.roles?.[order],
+            text: scene.text,
+            chart: scene.chart,
+            items: scene.items,
+            background: backgrounds[order],
+            hasVisualContent: Boolean(scene.visual),
+          })),
+          motionPlan,
+        )
+      : []);
   const project = await prisma.project.create({
     data: {
       name: plan.projectName,
@@ -142,6 +188,8 @@ export async function createProjectFromPlan(
           brandOverrides: JSON.stringify({
             styleId,
             energy,
+            ...(motionPlan ? { motionPlan } : {}),
+            ...(chapterPlan ? { chapterPlan } : {}),
             ...(production?.preset
               ? { productionPreset: production.preset }
               : {}),
@@ -166,7 +214,12 @@ export async function createProjectFromPlan(
               if (scene.chart) config.chart = scene.chart;
               const role = production?.roles?.[order];
               if (role) config.role = role;
+              if (production?.sceneLocks?.[order])
+                config.locks = production.sceneLocks[order];
+              const motion = motions[order];
+              if (motion) config.motion = motion;
               return {
+                ...(chapterPlan ? { id: sceneIds[order] } : {}),
                 order,
                 templateId: scene.templateId || fallbackTemplate,
                 text: scene.text,

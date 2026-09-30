@@ -5,6 +5,7 @@ import { prisma } from "@/library/db";
 import { ProviderError } from "@/providers/voice/types";
 import { sceneConfigSchema, parseJsonColumn } from "../schemas";
 import type { SceneLocks } from "../schemas";
+import type { MotionDirection } from "@/production/motion";
 import type { MediaPreference } from "@/lib/media-preference";
 import { toSceneDTO } from "./map";
 
@@ -60,6 +61,8 @@ export async function updateScene(
     /** Active clip in per_scene mode; null clears selection. */
     selectedVoiceClipId?: string | null;
     locks?: SceneLocks;
+    /** null restores this scene's original preset/template treatment. */
+    motion?: MotionDirection | null;
   },
 ): Promise<SceneDTO> {
   // Structured scene options live together in the layoutJson config
@@ -73,7 +76,8 @@ export async function updateScene(
     data.chart !== undefined ||
     data.mood !== undefined ||
     data.musicMood !== undefined ||
-    data.locks !== undefined
+    data.locks !== undefined ||
+    data.motion !== undefined
   ) {
     const current = await prisma.scene.findUnique({
       where: { id },
@@ -112,6 +116,10 @@ export async function updateScene(
       else config.musicMood = data.musicMood;
     }
     if (data.locks !== undefined) config.locks = data.locks;
+    if (data.motion !== undefined) {
+      if (data.motion === null) delete config.motion;
+      else config.motion = data.motion;
+    }
     layoutJson = Object.keys(config).length ? JSON.stringify(config) : "";
   }
 

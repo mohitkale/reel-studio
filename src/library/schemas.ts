@@ -1,10 +1,15 @@
 import { z } from "zod";
+import { audioMasteringSchema } from "@/production/audio-mastering";
+import { chapterPlanSchema } from "@/production/chapters";
+import { motionPlanSettingsSchema } from "@/production/motion-plan";
+import { musicMapSchema } from "@/production/music-map";
 
 import { assertSafeMediaUrl } from "@/lib/media-url-safety";
 import { productionChartDataSchema } from "@/production/spec";
 import { mediaPreferenceSchema } from "@/lib/media-preference";
 import { productionPresetIdSchema } from "@/production/presets";
 import { productionSceneRoleSchema } from "@/production/roles";
+import { motionDirectionSchema } from "@/production/motion";
 
 /** Zod schemas for JSON-shaped DB columns and API inputs. */
 
@@ -71,6 +76,10 @@ export const brandOverridesSchema = z
       .enum(["bold-hook", "clean-story", "teach-me", "soft-brand"])
       .optional(),
     energy: z.enum(["calm", "normal", "high"]).optional(),
+    motionPlan: motionPlanSettingsSchema.optional(),
+    musicMap: musicMapSchema.optional(),
+    audioMastering: audioMasteringSchema.optional(),
+    chapterPlan: chapterPlanSchema.optional(),
     productionPreset: z
       .object({
         id: productionPresetIdSchema,
@@ -144,6 +153,8 @@ export const DEFAULT_SCENE_LOCKS: SceneLocks = {
 
 /** Per-scene config stored in the Scene.layoutJson column. */
 export const sceneConfigSchema = z.object({
+  /** Explicit, versioned visual direction. Absent means the legacy preset renderer. */
+  motion: motionDirectionSchema.optional(),
   background: sceneBackgroundSchema.optional(),
   /** Automatic stock-media preference; explicit scene backgrounds still win. */
   mediaPreference: mediaPreferenceSchema.optional(),

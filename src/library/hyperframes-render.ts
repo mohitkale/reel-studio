@@ -1,5 +1,9 @@
 import type { VideoSnapshot } from "@/production/video-snapshot";
 import {
+  masterVideoAudio,
+  audioMasteringReportPath,
+} from "@/library/video-audio-mastering";
+import {
   assertProductionActive,
   cancelChild,
 } from "@/library/production-cancellation";
@@ -16,7 +20,12 @@ import path from "node:path";
 import { promises as fs } from "node:fs";
 import { spawn } from "node:child_process";
 
-import type { ReelProps, ReelScene } from "@/compositions/types";
+import {
+  coverFrames,
+  type ReelProps,
+  type ReelScene,
+} from "@/compositions/types";
+import { extendHyperframesMusic } from "@/library/hyperframes-music-loop";
 import { type Orientation, dimsFor } from "@/lib/orientation";
 import { getAssetStore } from "@/library/storage";
 import { sanitizeKey } from "@/library/storage/local-disk";
@@ -159,14 +168,17 @@ async function materializeUrl(
   return url;
 }
 
-function runWorker(args: {
+async function runWorker(args: {
   projectDir: string;
   outputPath: string;
   fps: number;
   quality: RenderQuality;
+  sections?: { width: number; height: number };
   onProgress: (pct: number) => void;
 }): Promise<void> {
   assertProductionActive();
+  const scratch = `${args.projectDir}-sections`;
+  if (args.sections) await fs.mkdir(scratch, { recursive: true });
   return new Promise((resolve, reject) => {
     const worker = path.join(
       process.cwd(),
@@ -175,16 +187,26 @@ function runWorker(args: {
     const child = spawn(
       process.execPath,
       [
+        ...(args.sections ? ["--import", "tsx"] : []),
         worker,
         args.projectDir,
         args.outputPath,
         String(args.fps),
         args.quality,
+        ...(args.sections
+          ? [
+              "sections",
+              String(args.sections.width),
+              String(args.sections.height),
+            ]
+          : []),
       ],
       {
         detached: process.platform !== "win32",
         cwd: process.cwd(),
-        env: process.env,
+        env: args.sections
+          ? { ...process.env, TMPDIR: scratch, TMP: scratch, TEMP: scratch }
+          : process.env,
         stdio: ["ignore", "pipe", "pipe"],
       },
     );
@@ -205,7 +227,7 @@ function runWorker(args: {
     });
     child.stderr.on("data", (buf: Buffer) => {
       const text = buf.toString("utf8");
-      stderr += text;
+      stderr = (stderr + text).slice(-65_536);
       for (const line of text.split(/\r?\n/)) {
         const trimmed = line.trim();
         if (!trimmed) continue;
@@ -237,6 +259,147 @@ function runWorker(args: {
         );
       }
     });
+  });
+}
+
+/** Write the same runtime, fonts, catalog and HTML used by export. */
+async function writeHyperframesProject(
+  projectDir: string,
+  inputProps: ReelProps,
+) {
+  const scenes = inputProps.scenes;
+  const runtimeDir = path.join(projectDir, "_runtime");
+  await fs.mkdir(runtimeDir, { recursive: true });
+  await fs.copyFile(
+    path.join(process.cwd(), "node_modules", "gsap", "dist", "gsap.min.js"),
+    path.join(runtimeDir, "gsap.min.js"),
+  );
+  await Promise.all([
+    fs.copyFile(
+      path.join(
+        process.cwd(),
+        "node_modules",
+        "@fontsource-variable",
+        "geist",
+        "files",
+        HYPERFRAMES_RENDER_FONT_FILES.sans,
+      ),
+      path.join(runtimeDir, HYPERFRAMES_RENDER_FONT_FILES.sans),
+    ),
+    fs.copyFile(
+      path.join(
+        process.cwd(),
+        "node_modules",
+        "@fontsource-variable",
+        "geist-mono",
+        "files",
+        HYPERFRAMES_RENDER_FONT_FILES.mono,
+      ),
+      path.join(runtimeDir, HYPERFRAMES_RENDER_FONT_FILES.mono),
+    ),
+  ]);
+
+  // Materialize curated catalog blocks as compositions/*.html so the producer
+  // can resolve data-composition-src on the host index.html.
+  const tokens = inputProps.tokens ?? defaultBrandTokens;
+  const catalogScenes = scenes.filter((s) =>
+    getCatalogBlockByTemplateId(s.templateId, inputProps.catalogRevision),
+  );
+  if (catalogScenes.length) {
+    const compositionsDir = path.join(projectDir, "compositions");
+    await fs.mkdir(compositionsDir, { recursive: true });
+    for (const scene of catalogScenes) {
+      const meta = getCatalogBlockByTemplateId(
+        scene.templateId,
+        inputProps.catalogRevision,
+      );
+      if (!meta) continue;
+      if (meta.requiresCarouselImages) continue;
+      const personalized = personalizeCatalogBlock(meta, {
+        scene,
+        tokens,
+      });
+      await fs.writeFile(
+        path.join(
+          compositionsDir,
+          catalogCompositionFileName(meta.id, scene.id),
+        ),
+        localizeHyperframesRenderFonts(localizeGsapRuntime(personalized)),
+        "utf8",
+      );
+    }
+  }
+
+  const fps = inputProps.fps || 30;
+  const durationFrames =
+    (Math.max(
+      0,
+      ...inputProps.timeline.map(
+        (beat) => beat.startFrame + beat.durationFrames,
+      ),
+    ) || fps) + coverFrames(fps, Boolean(inputProps.coverUrl));
+  const musicUrl = await extendHyperframesMusic(
+    projectDir,
+    inputProps.musicUrl,
+    durationFrames / fps,
+  );
+  const html = buildHyperframesCompositionHtml(
+    { ...inputProps, musicUrl },
+    {
+      producerMode: true,
+      runtimeUrl: GSAP_RENDER_URL,
+    },
+  );
+  await fs.writeFile(path.join(projectDir, "index.html"), html, "utf8");
+}
+
+/** Review uses silent export props, with project-owned media localized identically. */
+export async function writeHyperframesReviewProject(
+  projectDir: string,
+  props: ReelProps,
+  serverBaseUrl: string,
+) {
+  await fs.mkdir(projectDir, { recursive: true });
+  const scenes = await Promise.all(
+    props.scenes.map(async (scene, index) => ({
+      ...scene,
+      background: scene.background
+        ? {
+            ...scene.background,
+            url: (await materializeUrl(
+              scene.background.url,
+              projectDir,
+              `bg-${index}`,
+              serverBaseUrl,
+            ))!,
+          }
+        : undefined,
+      carouselImages: await Promise.all(
+        (scene.carouselImages ?? []).map(
+          async (url, imageIndex) =>
+            (await materializeUrl(
+              url,
+              projectDir,
+              `carousel-${index}-${imageIndex}`,
+              serverBaseUrl,
+            ))!,
+        ),
+      ),
+    })),
+  );
+  const coverUrl = await materializeUrl(
+    props.coverUrl,
+    projectDir,
+    "cover",
+    serverBaseUrl,
+  );
+  await writeHyperframesProject(projectDir, {
+    ...props,
+    scenes,
+    coverUrl,
+    audioUrl: undefined,
+    musicUrl: undefined,
+    sfxCues: [],
   });
 }
 
@@ -328,6 +491,7 @@ export async function runHyperframesRender(
             Boolean(url),
           ),
           role: s.role,
+          motion: s.motion,
           hideText: s.hideText ?? script.hideText,
           mood: s.mood as ReelScene["mood"],
           order: s.order,
@@ -360,11 +524,21 @@ export async function runHyperframesRender(
     );
 
     const { resolveReelSfxCues } = await import("@/lib/sfx-cues");
+    const { resolveSpokenWordWindows } =
+      await import("@/lib/spoken-word-windows");
     const rawSfx =
       prepared?.props.sfxCues ??
       resolveReelSfxCues({
         sfxEnabled: script.sfxEnabled,
         sfxJson: script.sfxJson,
+        scenes: script.scenes,
+        videoEngine: script.videoEngine,
+        hideText: script.hideText,
+        spokenWords: resolveSpokenWordWindows(
+          script.captionTracks,
+          resolved.takeUsable ? take?.id : null,
+          script.fps,
+        ),
         timeline: resolved.timeline,
         fps: script.fps,
       });
@@ -415,76 +589,7 @@ export async function runHyperframesRender(
       ? { ...prepared.props, scenes, audioUrl, musicUrl, sfxCues, coverUrl }
       : legacyInputProps;
 
-    const runtimeDir = path.join(projectDir, "_runtime");
-    await fs.mkdir(runtimeDir, { recursive: true });
-    await fs.copyFile(
-      path.join(process.cwd(), "node_modules", "gsap", "dist", "gsap.min.js"),
-      path.join(runtimeDir, "gsap.min.js"),
-    );
-    await Promise.all([
-      fs.copyFile(
-        path.join(
-          process.cwd(),
-          "node_modules",
-          "@fontsource-variable",
-          "geist",
-          "files",
-          HYPERFRAMES_RENDER_FONT_FILES.sans,
-        ),
-        path.join(runtimeDir, HYPERFRAMES_RENDER_FONT_FILES.sans),
-      ),
-      fs.copyFile(
-        path.join(
-          process.cwd(),
-          "node_modules",
-          "@fontsource-variable",
-          "geist-mono",
-          "files",
-          HYPERFRAMES_RENDER_FONT_FILES.mono,
-        ),
-        path.join(runtimeDir, HYPERFRAMES_RENDER_FONT_FILES.mono),
-      ),
-    ]);
-
-    // Materialize curated catalog blocks as compositions/*.html so the producer
-    // can resolve data-composition-src on the host index.html.
-    const tokens = script.brandTokens ?? defaultBrandTokens;
-    const catalogScenes = scenes.filter((s) =>
-      getCatalogBlockByTemplateId(
-        s.templateId,
-        prepared?.props.catalogRevision,
-      ),
-    );
-    if (catalogScenes.length) {
-      const compositionsDir = path.join(projectDir, "compositions");
-      await fs.mkdir(compositionsDir, { recursive: true });
-      for (const scene of catalogScenes) {
-        const meta = getCatalogBlockByTemplateId(
-          scene.templateId,
-          prepared?.props.catalogRevision,
-        );
-        if (!meta) continue;
-        if (meta.requiresCarouselImages) continue;
-        const personalized = personalizeCatalogBlock(meta, {
-          scene,
-          tokens,
-        });
-        await fs.writeFile(
-          path.join(
-            compositionsDir,
-            catalogCompositionFileName(meta.id, scene.id),
-          ),
-          localizeHyperframesRenderFonts(localizeGsapRuntime(personalized)),
-          "utf8",
-        );
-      }
-    }
-
-    const html = buildHyperframesCompositionHtml(inputProps, {
-      producerMode: true,
-      runtimeUrl: GSAP_RENDER_URL,
-    });
-    await fs.writeFile(path.join(projectDir, "index.html"), html, "utf8");
+    await writeHyperframesProject(projectDir, inputProps);
 
     const store = getAssetStore();
     const fileName = `render-${renderId}.mp4`;
@@ -500,9 +605,16 @@ export async function runHyperframesRender(
       outputPath,
       fps: script.fps,
       quality,
+      sections:
+        script.chapterPlan && [24, 30, 60].includes(script.fps)
+          ? nativeDims
+          : undefined,
       onProgress: (pct) => {
         // Keep a little headroom so "100%" only lands after completeRender.
-        const capped = Math.min(0.99, Math.max(0.02, pct));
+        const capped = Math.min(
+          script.audioMastering === "balanced" ? 0.96 : 0.99,
+          Math.max(0.02, pct),
+        );
         progress(capped, "rendering");
         if (Math.round(capped * 100) % 5 === 0) {
           console.log(
@@ -512,6 +624,7 @@ export async function runHyperframesRender(
       },
     });
 
+    await masterVideoAudio(outputPath, script.audioMastering);
     assertProductionActive();
     await completeRender(renderId, outputKey);
     upsertJob({
@@ -525,6 +638,12 @@ export async function runHyperframesRender(
     await fs.rm(projectDir, { recursive: true, force: true }).catch(() => {});
   } catch (err) {
     await fs.rm(
+      audioMasteringReportPath(
+        path.join(process.cwd(), "media", "renders", `render-${renderId}.mp4`),
+      ),
+      { force: true },
+    );
+    await fs.rm(
       path.join(process.cwd(), "media", "renders", `render-${renderId}.mp4`),
       { force: true },
     );
@@ -537,5 +656,9 @@ export async function runHyperframesRender(
       recursive: true,
       force: true,
     });
+    await fs.rm(
+      path.join(process.cwd(), "media", "hf-work", `${renderId}-sections`),
+      { recursive: true, force: true },
+    );
   }
 }

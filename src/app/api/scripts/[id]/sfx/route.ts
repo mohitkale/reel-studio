@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { ensureSfxCues, setSfxEnabled } from "@/library/sfx-service";
+import { editSfxCue } from "@/library/sfx-cue-edit-service";
+import { sfxCueEditRequestSchema } from "@/lib/sfx-cue-edit";
 import { getScript } from "@/library/repositories/scripts";
 import { authorize } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
@@ -14,7 +16,7 @@ const bodySchema = z.object({
   enabled: z.boolean().optional(),
 });
 
-/** POST /api/scripts/[id]/sfx — ensure / regenerate template SFX cues, or toggle. */
+/** Refresh automatic SFX suggestions, preserving creator edits, or toggle SFX. */
 export async function POST(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
@@ -48,5 +50,43 @@ export async function POST(
     return NextResponse.json({ result, script });
   } catch (e) {
     return errorResponse(e);
+  }
+}
+
+/** Adjust one cue while leaving narration, music and other cues intact. */
+export async function PATCH(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> },
+) {
+  try {
+    authorize(req);
+    const body = sfxCueEditRequestSchema.safeParse(
+      await req.json().catch(() => null),
+    );
+    if (!body.success)
+      return NextResponse.json(
+        { error: "Invalid cue edit", issues: body.error.issues },
+        { status: 400 },
+      );
+    const { id } = await ctx.params;
+    const result = await editSfxCue(id, body.data);
+    if (result.state === "not_found")
+      return NextResponse.json({ error: "Script not found" }, { status: 404 });
+    if (result.state === "conflict")
+      return NextResponse.json(
+        { error: "This cue changed. Review the latest cues and try again." },
+        { status: 409 },
+      );
+    if (result.state === "invalid_timing")
+      return NextResponse.json(
+        {
+          error:
+            "Use a shift of up to two seconds for a motion cue, or a nonnegative scene offset.",
+        },
+        { status: 400 },
+      );
+    return NextResponse.json({ script: await getScript(id) });
+  } catch (error) {
+    return errorResponse(error);
   }
 }

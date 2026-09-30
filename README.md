@@ -147,6 +147,9 @@ a new production from the current project.
   Studio planning
 - Product Launch, Editorial Explainer, Creator Punch, Data Story, Developer Demo,
   and Cinematic Brand presets
+- Versioned Impact and Editorial text treatments plus Spotlight and Comparison
+  bars for supplied data; eligible treatments are chosen in new preset projects
+  and adjustable per scene, with the same saved choice rendered in both engines
 - Native portrait, landscape, and square layouts in both engines
 - Uploaded media, bounded public-page text import, or optional Pexels, Pixabay,
   and Unsplash image/video backgrounds
@@ -304,7 +307,116 @@ caption timing and text, persistent jobs, podcast and audiogram workflows,
 local AI, optional stock media, styled captions, Quick Produce, scoped MCP
 automation, and format-aware batches. The implementation plan and evidence are
 in [docs/LOCAL_FIRST_EXPANSION.md](docs/LOCAL_FIRST_EXPANSION.md) and the task
-ledgers under [docs/production](docs/production/). Follow longer-term work in
+ledgers under [docs/production](docs/production/). The motion graphics expansion
+now includes editable type, supplied-data, diagram, and supplied-media treatments
+in both video engines. Product frame and Cinematic cover accept images or
+video clips; curated footage plays silently beneath narration and holds its
+last frame if the scene lasts longer than the clip. Manual and AI creation offer Clean, Expressive, and
+Showcase visual ambition; a deterministic sequence planner balances type
+reveals, remembers recent layouts on append, and preserves supplied diagram
+order and data. Settings and chosen treatments are frozen in production
+snapshots. The editor direction menu and `replan_motion_direction` MCP tool
+can change ambition or try another variation while preserving content, audio,
+media, and locked scenes. Automatic SFX now follow versioned visual anchors
+with measured clip peaks, scene bounds, and sparse spacing. The direction menu
+also lists treatment compatibility warnings across the video; select a warning
+to jump to its scene and fix the supplied inputs or choose another treatment.
+Variety suggestions highlight runs of three or more consecutive scenes using
+the same active treatment, with a shortcut to review each run.
+Visual review generates a scene sheet (up to eight scenes at a time), four
+moments of a selected scene, and a 320 px phone-size view. Both engines use
+their native still capture with the selected take's matching timing and enabled
+captions. Revision-keyed PNGs are cached locally; changed videos require a new
+review. Stills review layout; playback remains necessary for motion and sound.
+Select any scene after the first and choose Cut into selected scene for up to
+eight frames around its incoming cut, including the outgoing hold. REST review
+accepts `mode: "transition"` with one incoming scene ID; capture remains bounded
+and available through the editor's authorization flow.
+Music → Review music beats analyzes a local track once and saves a reviewable
+tempo/phase proposal. Creators can change BPM, shift the first beat, disable
+beats and mark a drop; audio fingerprints and optimistic checks protect edits.
+Beat maps repeat with the track's loop, are frozen in production snapshots,
+and can be edited through `PATCH /api/scripts/:id/music-map` or `edit_music_map`.
+They provide directing references; scene and narration timing stays as edited.
+Automatic SFX avoid measured spoken-word windows from the audible voice take,
+including when captions are hidden. Local transcription retains native token
+timing when available; old, imported, estimated, edited or mismatched tracks do
+not guess word timing. Manual and locked cues retain creator priority. Existing
+databases need `npm run db:migrate` for caption take/frame-rate provenance.
+Music → Balance export loudness optionally finishes the complete mix toward
+−16 LUFS with a −1 dBTP true peak ceiling. Both engines use two-pass FFmpeg
+processing and measure the encoded delivery before marking it complete. Video
+packets are copied; authored quiet/loud passages retain their range when linear
+gain can meet the loudness/peak target. Finite mixes outside the encoded target
+get at most two measured correction passes. A continuous sample clock, authored
+start delays and the video endpoint are preserved. Silent/unmeasurable audio
+stays untouched. Editor playback uses the original levels. The setting survives
+snapshots and revision restore;
+REST/MCP `update_script` accepts `audioMastering: "balanced" | "original"`.
+Completed production metadata includes the checksum-matched audio report.
+Chapters in the editor suggests a draft outline, supports named storyboard
+sections and editable scene boundaries, and jumps to each section. Chapters
+contain up to 20 scenes, with at most 12 chapters. Saving checks the current
+outline and scene order; content and timing are preserved. REST/MCP share
+`POST`/`PATCH /api/scripts/:id/chapters`, `suggest_chapters`, and `save_chapters`.
+Boundaries and saved sound cues survive revision restore with remapped scene IDs;
+per-scene text visibility is preserved. Cues for already-deleted scenes are omitted.
+AI → Rewrite scope can target a saved chapter and optionally narrow its scenes.
+Each call changes at most 20 unlocked scenes, uses neighboring copy for continuity,
+and rejects storyboard edits made during generation. Scene IDs, motion choices,
+and copy/asset locks survive. REST/MCP `ai_generate_scenes` accepts `chapterId`
+and `sceneIds`; larger storyboards must use bounded selections.
+Create production → Chaptered video keeps the full supplied script and builds
+editable chapters locally. It supports up to 240 scenes in 12 chapters, with
+at most 20 scenes each. Longer drafts warn about export limits without dropping
+narration. REST `/api/projects/manual` and MCP `create_production_draft` accept
+`structure: "chapters"`; topic-based AI generation still uses bounded calls.
+Valid saved chapter plans at 24/30/60 fps support production up to 300 seconds;
+other video storyboards and standalone audio retain their 180-second limits.
+Named MCP token allowances remain unchanged. Video jobs freeze their duration
+policy and check actual prepared timing after synthesis, including the cover.
+Submission uses only the explicitly selected, matching take, otherwise the
+same estimated timeline as preview/export.
+
+Saved chapter projects now export in bounded sections, preserving global frame
+timing. Remotion uses chapter boundaries with a 30-second cap; HyperFrames uses
+native 30-second chunks at 24/30/60 fps. Checksum-verified sections in
+`media/render-cache` survive retry of unchanged inputs. Remotion requires frozen
+local media for this path; other jobs keep the existing whole-video renderer.
+Audio is mixed continuously and muxed once, then optionally mastered. Short local
+music tracks are expanded for HyperFrames export to preserve looping. Recent
+retry caches are retained; inactive caches are trimmed toward 1 GiB and expire
+after seven days. Remotion renders each silent section with only its visible
+scenes and captions, so unrelated visual edits reuse unchanged sections.
+Shared timing, brand, cover, and renderer changes invalidate dependent sections;
+audio is always assembled from the complete graph. HyperFrames visual edits
+currently invalidate the whole composition cache.
+HyperFrames validates the native plan manifest and keys silent sections from
+their frozen inputs, excluding the freshly encoded assembler-only audio mix.
+
+Run `npm run test:video-sections` for an isolated, credential-free 32-second
+native export/retry/review gate in both engines. Add `-- --long --speech --cancel`
+for a 210-second, six-chapter sample using the already-installed macOS voice;
+omit `--speech` on other hosts to use the labeled calibration signal.
+`--engine=remotion --edit` checks full/scoped frame parity and reuse after a
+last-scene visual edit. Existing Node/FFmpeg/Chromium render dependencies are
+required; the gate does not install software or call a paid provider. Reports,
+MP4s and review PNGs are saved in `.artifacts/video-sections-<timestamp>/`.
+
+Visual review includes scene-linked treatment fallback and repetition findings,
+plus advisory copy reading-time estimates. These checks use saved inputs and
+the same selected-take or estimated timeline as the stills. They preserve
+intentional continuity and fast cuts; playback and phone-size review remain
+necessary for visual legibility.
+
+Refresh keeps manual, legacy, muted, and locked cues; existing scenes retain their template
+cue behavior. Music → Adjust sound cues lets creators choose the clip, set its
+level (including mute), shift its timing, or restore automatic direction.
+Edits also work through `PATCH /api/scripts/:id/sfx` and the `edit_sfx_cue` MCP
+tool; a stale cue is rejected with 409 instead of overwriting a newer edit.
+Its remaining scope is in
+[docs/production/MOTION_GRAPHICS_PLAN.md](docs/production/MOTION_GRAPHICS_PLAN.md).
+Follow longer-term work in
 [ROADMAP.md](ROADMAP.md).
 
 ## Contributing

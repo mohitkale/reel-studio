@@ -14,7 +14,7 @@ import {
   Lock,
 } from "lucide-react";
 
-import type { SceneDTO, SceneBackground } from "@/lib/dto";
+import type { SceneDTO, SceneBackground, SceneChartData } from "@/lib/dto";
 import { getVideoEngine } from "@/engines/registry";
 import type { VideoEngineId } from "@/engines/types";
 import { useAssets, useUploadAsset } from "@/hooks/assets";
@@ -28,6 +28,18 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AssetThumbPicker } from "@/components/assets/asset-thumb-picker";
 import { StockMediaPicker } from "@/components/editor/stock-media-picker";
 import type { Orientation } from "@/lib/orientation";
+import {
+  MOTION_RECIPES,
+  chooseSceneMotion,
+  isDataMotionRecipe,
+  isDiagramMotionRecipe,
+  isMediaMotionRecipe,
+  motionDirection,
+  motionFallbackReason,
+  resolveMotionDirection,
+  type MotionDirection,
+  type MotionRecipeId,
+} from "@/production/motion";
 import {
   MEDIA_PREFERENCES,
   MEDIA_PREFERENCE_LABELS,
@@ -79,8 +91,10 @@ type UpdateVars = {
   background?: SceneBackground | null;
   mediaPreference?: MediaPreference;
   items?: string[] | null;
+  chart?: SceneChartData | null;
   hideText?: boolean | null;
   locks?: { copy: boolean; assets: boolean; scene: boolean };
+  motion?: MotionDirection | null;
 };
 
 /**
@@ -144,12 +158,14 @@ function BackgroundEditor({
   background,
   onChange,
   onPreferenceChange,
+  forceMuted = false,
 }: {
   scriptId: string;
   sceneId: string;
   orientation: Orientation;
   mediaPreference: MediaPreference;
   background: SceneBackground | undefined;
+  forceMuted?: boolean;
   onChange: (bg: SceneBackground | null) => void;
   onPreferenceChange: (preference: MediaPreference) => void;
 }) {
@@ -378,14 +394,16 @@ function BackgroundEditor({
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
-                  checked={background?.stock ? true : muted}
-                  disabled={background?.stock}
+                  checked={background?.stock || forceMuted ? true : muted}
+                  disabled={background?.stock || forceMuted}
                   onChange={(e) => changeMuted(e.target.checked)}
                   className="border-border size-4 rounded"
                 />
                 {background?.stock
                   ? "Stock video audio is always muted"
-                  : "Mute video audio track"}
+                  : forceMuted
+                    ? "Motion footage plays silently under narration"
+                    : "Mute video audio track"}
               </label>
               {url.trim() ? <VideoUrlStatus url={url} /> : null}
             </>
@@ -403,9 +421,11 @@ function BackgroundEditor({
 function ChecklistEditor({
   items,
   onChange,
+  diagram = false,
 }: {
   items: string[];
   onChange: (items: string[]) => void;
+  diagram?: boolean;
 }) {
   // Initialized once per mount; SceneInspector is keyed by scene.id, so switching
   // scenes remounts this with the right items — no resync effect needed.
@@ -434,10 +454,11 @@ function ChecklistEditor({
 
   return (
     <div className="grid gap-2">
-      <Label>Checklist items</Label>
+      <Label>{diagram ? "Diagram ideas" : "Checklist items"}</Label>
       <p className="text-muted-foreground text-xs">
-        Each item becomes its own row with an icon badge. Leave empty to fall
-        back to splitting the scene text.
+        {diagram
+          ? "Add 2–5 short ideas. Path follows their order; Orbit places the first idea at the center."
+          : "Each item becomes its own row with an icon badge. Leave empty to fall back to splitting the scene text."}
       </p>
       <div className="grid gap-1.5">
         {draft.map((item, i) => (
@@ -502,6 +523,167 @@ function ChecklistEditor({
   );
 }
 
+function ChartDataEditor({
+  chart,
+  onSave,
+  onClear,
+}: {
+  chart?: SceneChartData;
+  onSave: (chart: SceneChartData) => void;
+  onClear: () => void;
+}) {
+  const [label, setLabel] = React.useState(chart?.series[0]?.label ?? "");
+  const [unit, setUnit] = React.useState(chart?.series[0]?.unit ?? "");
+  const [source, setSource] = React.useState(chart?.sourceAttribution ?? "");
+  const [rows, setRows] = React.useState(
+    chart?.labels.map((name, index) => ({
+      label: name,
+      value: String(chart.series[0]?.values[index] ?? ""),
+    })) ?? [{ label: "", value: "" }],
+  );
+  const [error, setError] = React.useState<string | null>(null);
+  const multipleSeries = Boolean(chart && chart.series.length > 1);
+
+  function save() {
+    const cleanRows = rows.map((row) => ({
+      label: row.label.trim(),
+      value: row.value.trim(),
+    }));
+    if (
+      !label.trim() ||
+      label.trim().length > 30 ||
+      unit.length > 12 ||
+      source.length > 120 ||
+      cleanRows.length < 1 ||
+      cleanRows.length > 6 ||
+      cleanRows.some(
+        (row) =>
+          !row.label ||
+          row.label.length > 24 ||
+          !/^\d+(?:\.\d+)?$/.test(row.value) ||
+          !Number.isFinite(Number(row.value)),
+      )
+    ) {
+      setError(
+        "Add a short series name and 1–6 rows with short labels and nonnegative numbers. Keep units and source brief.",
+      );
+      return;
+    }
+    setError(null);
+    onSave({
+      labels: cleanRows.map((row) => row.label),
+      series: [
+        {
+          label: label.trim(),
+          values: cleanRows.map((row) => Number(row.value)),
+          ...(unit.trim() ? { unit: unit.trim() } : {}),
+        },
+      ],
+      ...(source.trim() ? { sourceAttribution: source.trim() } : {}),
+    });
+  }
+
+  if (multipleSeries) {
+    return (
+      <p className="text-muted-foreground text-xs">
+        This chart has multiple series. Use the scene JSON editor to preserve
+        all values when changing it.
+      </p>
+    );
+  }
+
+  return (
+    <div className="grid gap-3">
+      <p className="text-muted-foreground text-xs">
+        Enter supplied values. The video keeps your labels, units, and source.
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        <Input
+          aria-label="Series name"
+          placeholder="Series name"
+          value={label}
+          onChange={(event) => setLabel(event.target.value)}
+        />
+        <Input
+          aria-label="Unit"
+          placeholder="Unit, e.g. %"
+          value={unit}
+          onChange={(event) => setUnit(event.target.value)}
+        />
+      </div>
+      {rows.map((row, index) => (
+        <div key={index} className="grid grid-cols-[1fr_110px_32px] gap-2">
+          <Input
+            aria-label={`Label ${index + 1}`}
+            placeholder="Label"
+            value={row.label}
+            onChange={(event) =>
+              setRows((current) =>
+                current.map((item, i) =>
+                  i === index ? { ...item, label: event.target.value } : item,
+                ),
+              )
+            }
+          />
+          <Input
+            aria-label={`Value ${index + 1}`}
+            inputMode="decimal"
+            placeholder="Value"
+            value={row.value}
+            onChange={(event) =>
+              setRows((current) =>
+                current.map((item, i) =>
+                  i === index ? { ...item, value: event.target.value } : item,
+                ),
+              )
+            }
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={`Remove row ${index + 1}`}
+            disabled={rows.length === 1}
+            onClick={() =>
+              setRows((current) => current.filter((_, i) => i !== index))
+            }
+          >
+            <X className="size-4" />
+          </Button>
+        </div>
+      ))}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={rows.length >= 6}
+        onClick={() =>
+          setRows((current) => [...current, { label: "", value: "" }])
+        }
+      >
+        <Plus className="size-4" /> Add row
+      </Button>
+      <Input
+        aria-label="Data source"
+        placeholder="Source or attribution (optional)"
+        value={source}
+        onChange={(event) => setSource(event.target.value)}
+      />
+      {error && <p className="text-destructive text-xs">{error}</p>}
+      <div className="flex gap-2">
+        <Button type="button" size="sm" onClick={save}>
+          Save data
+        </Button>
+        {chart && (
+          <Button type="button" variant="ghost" size="sm" onClick={onClear}>
+            Clear data
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* Scene inspector                                                     */
 /* ------------------------------------------------------------------ */
@@ -521,6 +703,7 @@ export function SceneInspector({
   saving,
   videoEngine = "remotion",
   orientation = "portrait",
+  hideTextDefault = false,
 }: {
   scene: SceneDTO;
   sceneIndex: number;
@@ -531,6 +714,7 @@ export function SceneInspector({
   saving?: boolean;
   videoEngine?: VideoEngineId;
   orientation?: Orientation;
+  hideTextDefault?: boolean;
 }) {
   const [text, setText] = React.useState(scene.text);
   const [spokenText, setSpokenText] = React.useState(
@@ -544,7 +728,40 @@ export function SceneInspector({
   const engine = getVideoEngine(videoEngine);
   const templates = engine.listTemplates();
   const normalId = engine.normalizeTemplateId(scene.templateId);
-  const isChecklist = normalId === "icon-grid" || normalId === "hf-list";
+  const isChecklist =
+    normalId === "icon-grid" ||
+    normalId === "hf-list" ||
+    scene.role === "diagram" ||
+    Boolean(scene.motion && isDiagramMotionRecipe(scene.motion.recipeId));
+  const chartEligible =
+    Boolean(scene.chart) ||
+    scene.role === "metric" ||
+    scene.role === "chart" ||
+    scene.role === "comparison" ||
+    normalId === "hf-data-chart" ||
+    normalId === "stat-reveal";
+  const motionEligible = Boolean(
+    scene.text.trim() ||
+    scene.motion ||
+    scene.chart ||
+    scene.items?.length ||
+    scene.background?.url,
+  );
+  const motionOptions = [
+    { value: "preset", label: "Preset look" },
+    ...MOTION_RECIPES.filter(
+      (recipe) =>
+        recipe.id === scene.motion?.recipeId ||
+        !motionFallbackReason(
+          motionDirection(recipe.id),
+          scene.text,
+          scene.chart,
+          Boolean(scene.visual),
+          scene.items,
+          scene.background,
+        ),
+    ).map((recipe) => ({ value: recipe.id, label: recipe.name })),
+  ];
 
   function commitText() {
     if (text !== scene.text) {
@@ -696,7 +913,9 @@ export function SceneInspector({
           <Combobox
             id="scene-template"
             value={normalId}
-            onChange={(v) => onUpdate({ id: scene.id, templateId: v })}
+            onChange={(v) =>
+              onUpdate({ id: scene.id, templateId: v, motion: null })
+            }
             options={templates.map((t) => ({ value: t.id, label: t.name }))}
             searchPlaceholder="Search templates…"
           />
@@ -705,12 +924,109 @@ export function SceneInspector({
           </p>
         </div>
 
+        {motionEligible && (
+          <div className="grid gap-2">
+            <Label htmlFor="scene-motion">Motion treatment</Label>
+            <Combobox
+              id="scene-motion"
+              value={scene.motion?.recipeId ?? "preset"}
+              onChange={(value) =>
+                onUpdate({
+                  id: scene.id,
+                  motion:
+                    value === "preset"
+                      ? null
+                      : motionDirection(value as MotionRecipeId),
+                })
+              }
+              options={motionOptions}
+              searchPlaceholder="Search treatments…"
+            />
+            <p className="text-muted-foreground text-xs">
+              {scene.motion
+                ? resolveMotionDirection(
+                    scene.motion,
+                    scene.text,
+                    scene.chart,
+                    Boolean(scene.visual),
+                    scene.items,
+                    scene.background,
+                  )
+                  ? MOTION_RECIPES.find(
+                      (recipe) => recipe.id === scene.motion?.recipeId,
+                    )?.description
+                  : `${motionFallbackReason(scene.motion, scene.text, scene.chart, Boolean(scene.visual), scene.items, scene.background)} The preset look renders until it fits or you choose another treatment.`
+                : "Uses this production preset's original scene design."}
+            </p>
+          </div>
+        )}
+
+        {chartEligible && (
+          <div className="grid gap-2">
+            <Label>Data values</Label>
+            {scene.visual && (
+              <p className="text-muted-foreground text-xs">
+                This scene also has a visual label. Clear that field to use a
+                data motion treatment.
+              </p>
+            )}
+            <ChartDataEditor
+              chart={scene.chart}
+              onSave={(chart) =>
+                onUpdate({
+                  id: scene.id,
+                  chart,
+                  motion:
+                    chooseSceneMotion({
+                      role:
+                        scene.role ??
+                        (chart.labels.length === 1 ? "metric" : "chart"),
+                      text: scene.text,
+                      chart,
+                      items: scene.items,
+                      background: scene.background,
+                      current: scene.motion,
+                      hasVisualContent: Boolean(scene.visual),
+                    }) ?? null,
+                })
+              }
+              onClear={() =>
+                onUpdate({
+                  id: scene.id,
+                  chart: null,
+                  motion:
+                    scene.motion && isDataMotionRecipe(scene.motion.recipeId)
+                      ? null
+                      : undefined,
+                })
+              }
+            />
+          </div>
+        )}
+
         {isChecklist && (
           <ChecklistEditor
             items={scene.items ?? []}
-            onChange={(items) =>
-              onUpdate({ id: scene.id, items: items.length ? items : null })
-            }
+            diagram={scene.role === "diagram"}
+            onChange={(items) => {
+              const motion =
+                scene.role === "diagram"
+                  ? chooseSceneMotion({
+                      role: scene.role,
+                      text: scene.text,
+                      chart: scene.chart,
+                      items,
+                      background: scene.background,
+                      current: scene.motion,
+                      hasVisualContent: Boolean(scene.visual),
+                    })
+                  : scene.motion;
+              onUpdate({
+                id: scene.id,
+                items: items.length ? items : null,
+                motion: scene.role === "diagram" ? (motion ?? null) : undefined,
+              });
+            }}
           />
         )}
 
@@ -721,7 +1037,39 @@ export function SceneInspector({
           orientation={orientation}
           mediaPreference={scene.mediaPreference ?? "auto"}
           background={scene.background}
-          onChange={(bg) => onUpdate({ id: scene.id, background: bg })}
+          forceMuted={Boolean(
+            !(scene.hideText ?? hideTextDefault) &&
+              scene.motion &&
+              isMediaMotionRecipe(scene.motion.recipeId) &&
+              resolveMotionDirection(
+                scene.motion,
+                scene.text,
+                scene.chart,
+                Boolean(scene.visual),
+                scene.items,
+                scene.background,
+              ),
+          )}
+          onChange={(bg) => {
+            const mediaMotion = Boolean(
+              scene.motion && isMediaMotionRecipe(scene.motion.recipeId),
+            );
+            const motion =
+              !scene.motion || mediaMotion
+                ? bg
+                  ? (chooseSceneMotion({
+                      role: scene.role,
+                      text: scene.text,
+                      chart: scene.chart,
+                      items: scene.items,
+                      background: bg,
+                      current: scene.motion,
+                      hasVisualContent: Boolean(scene.visual),
+                    }) ?? null)
+                  : null
+                : undefined;
+            onUpdate({ id: scene.id, background: bg, motion });
+          }}
           onPreferenceChange={(mediaPreference) =>
             onUpdate({ id: scene.id, mediaPreference })
           }

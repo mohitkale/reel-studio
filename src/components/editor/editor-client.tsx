@@ -63,12 +63,15 @@ import { estimateTimeline } from "@/lib/preview-timeline";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveSpokenText } from "@/lib/spoken-text";
 import { resolveReelSfxCues } from "@/lib/sfx-cues";
+import { resolveSpokenWordWindows } from "@/lib/spoken-word-windows";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SceneList } from "@/components/editor/scene-list";
 import { SceneInspector } from "@/components/editor/scene-inspector";
+import { MotionDirectionMenu } from "@/components/editor/motion-direction-menu";
+import { VisualReviewDialog } from "@/components/editor/visual-review-dialog";
 import {
   EnginePlayer,
   type EnginePlayerHandle,
@@ -79,6 +82,7 @@ import { AIEnhanceDialog } from "@/components/editor/ai-enhance-dialog";
 import { ScenesJsonDialog } from "@/components/editor/scenes-json-dialog";
 import { CoverControl } from "@/components/editor/cover-control";
 import { MusicControl } from "@/components/editor/music-control";
+import { ChapterDialog } from "@/components/editor/chapter-dialog";
 import { CaptionsMenu } from "@/components/editor/captions-menu";
 import { Combobox } from "@/components/ui/combobox";
 import { HintTooltip } from "@/components/ui/hint-tooltip";
@@ -197,6 +201,7 @@ export function EditorClient({
         chart: s.chart,
         carouselImages: s.carouselImages,
         role: s.role,
+        motion: s.motion,
         // Per-scene override wins; otherwise the script-wide default.
         hideText: s.hideText ?? script?.hideText,
         mood: s.mood as ReelScene["mood"],
@@ -222,6 +227,7 @@ export function EditorClient({
             chart: selectedScene.chart,
             carouselImages: selectedScene.carouselImages,
             role: selectedScene.role,
+            motion: selectedScene.motion,
             hideText: selectedScene.hideText ?? script?.hideText,
             mood: selectedScene.mood as ReelScene["mood"],
             order: selectedScene.order,
@@ -262,10 +268,29 @@ export function EditorClient({
       resolveReelSfxCues({
         sfxEnabled: script?.sfxEnabled ?? true,
         sfxJson: script?.sfxJson ?? null,
+        scenes: script?.scenes,
+        videoEngine: script?.videoEngine,
+        hideText: script?.hideText,
+        spokenWords: resolveSpokenWordWindows(
+          script?.captionTracks,
+          takeUsable ? selectedTake?.id : null,
+          fps,
+        ),
         timeline,
         fps,
       }),
-    [script?.sfxEnabled, script?.sfxJson, timeline, fps],
+    [
+      script?.sfxEnabled,
+      script?.sfxJson,
+      script?.scenes,
+      script?.videoEngine,
+      script?.hideText,
+      script?.captionTracks,
+      takeUsable,
+      selectedTake?.id,
+      timeline,
+      fps,
+    ],
   );
 
   function selectTake(id: string) {
@@ -519,6 +544,34 @@ export function EditorClient({
               />
             </div>
           </HintTooltip>
+          {script.productionPreset ? (
+            <MotionDirectionMenu
+              scriptId={scriptId}
+              ambition={script.motionPlan?.ambition ?? "expressive"}
+              scenes={scenes.map((scene) => ({
+                ...scene,
+                hideText: scene.hideText ?? script.hideText,
+                hasVisualContent: Boolean(scene.visual),
+              }))}
+              onSelectScene={selectScene}
+            />
+          ) : null}
+          <VisualReviewDialog
+            scriptId={scriptId}
+            scenes={scenes}
+            selectedSceneId={effectiveSceneId}
+            voiceTakeId={effectiveTakeId ?? undefined}
+            sourceKey={JSON.stringify([script, effectiveTakeId])}
+            onSelectScene={selectScene}
+          />
+          <ChapterDialog
+            script={script}
+            timeline={timeline}
+            fps={fps}
+            takeId={effectiveTakeId}
+            selectedSceneId={effectiveSceneId ?? undefined}
+            onSelectScene={selectScene}
+          />
           {undoSnapshot && (
             <HintTooltip
               label="Restore scenes to how they were before the last AI change"
@@ -543,6 +596,7 @@ export function EditorClient({
                       musicMood: s.musicMood,
                       chart: s.chart,
                       role: s.role,
+                      motion: s.motion,
                       assetRefs: s.assetRefs,
                       locks: s.locks,
                       hideText: s.hideText,
@@ -944,6 +998,7 @@ export function EditorClient({
               <SceneInspector
                 key={selectedScene.id}
                 scene={selectedScene}
+                hideTextDefault={script.hideText}
                 sceneIndex={scenes.findIndex((s) => s.id === effectiveSceneId)}
                 totalScenes={scenes.length}
                 onNavigate={(dir) => {
@@ -990,6 +1045,7 @@ export function EditorClient({
         scriptId={scriptId}
         scriptName={script.name}
         scenes={scenes}
+        chapterPlan={script.chapterPlan}
         open={aiOpen}
         onOpenChange={setAiOpen}
         onBeforeEnhance={() => setUndoSnapshot([...scenes])}
