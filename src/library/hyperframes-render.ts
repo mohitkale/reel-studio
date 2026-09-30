@@ -486,6 +486,8 @@ export async function runHyperframesRender(
     );
 
     const { resolveReelSfxCues } = await import("@/lib/sfx-cues");
+    const { resolveSpokenWordWindows } =
+      await import("@/lib/spoken-word-windows");
     const rawSfx =
       prepared?.props.sfxCues ??
       resolveReelSfxCues({
@@ -494,6 +496,11 @@ export async function runHyperframesRender(
         scenes: script.scenes,
         videoEngine: script.videoEngine,
         hideText: script.hideText,
+        spokenWords: resolveSpokenWordWindows(
+          script.captionTracks,
+          resolved.takeUsable ? take?.id : null,
+          script.fps,
+        ),
         timeline: resolved.timeline,
         fps: script.fps,
       });

@@ -42,8 +42,14 @@ Creators can set BPM and first-beat offset, disable beats and mark a drop. Maps
 are cached by audio fingerprint, use transactional stale-save checks, repeat
 with each track loop, and persist in production snapshots. REST and MCP share
 the edit contract. These are directing references; narration-aware cut snapping
-is a separate gate. Remote tracks must be imported locally first. Word-aware
-suppression and final loudness targets remain later sound work.
+is a separate gate. Remote tracks must be imported locally first. Automatic SFX
+now avoid measured spoken-word windows with 80 ms clearance. Caption tracks
+record source take/frame rate; only matching, untouched local/provider timing
+protects audible speech. Caption visibility does not affect this protection;
+manual, legacy and locked accents retain creator priority. Local transcription
+retains native token timing when available; missing timing never becomes an
+estimated word grid. Both engines, preview, prepared exports and durable
+snapshots share this resolver. Final loudness targets remain later sound work.
 
 The editor now checks treatment input compatibility across the video in the
 direction menu. Warnings explain each preset fallback and jump to the affected

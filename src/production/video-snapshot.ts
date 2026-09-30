@@ -84,6 +84,8 @@ export const videoScriptSnapshotSchema = z.object({
         label: z.string(),
         language: z.string(),
         timingSource: captionTimingSourceSchema,
+        sourceTakeId: z.string().nullable().optional(),
+        sourceFps: z.number().int().positive().nullable().optional(),
         enabled: z.boolean(),
         style: captionStyleSnapshotSchema.default(LEGACY_CAPTION_STYLE),
         updatedAt: z.string(),

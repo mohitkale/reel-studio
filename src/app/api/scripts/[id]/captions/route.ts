@@ -180,6 +180,8 @@ export async function POST(
         label: "Local transcription",
         language: body.language,
         timingSource: "local-transcription",
+        sourceTakeId: body.takeId,
+        sourceFps: script.fps,
         enabled: true,
         style:
           script.captionTracks?.find(

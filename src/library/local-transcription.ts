@@ -9,6 +9,7 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 
 import { parseCaptions, type CaptionCue } from "@/lib/captions";
+import { attachWhisperWordTiming } from "@/lib/whisper-word-timing";
 import { ProviderError } from "@/providers/voice/types";
 
 export interface LocalTranscriptionStatus {
@@ -126,6 +127,7 @@ export async function transcribeWithWhisperCpp(input: {
       "-f",
       audioPath,
       "-osrt",
+      "-ojf",
       "-of",
       outputBase,
     ];
@@ -136,7 +138,14 @@ export async function transcribeWithWhisperCpp(input: {
     if (!cues.length) {
       throw new Error("whisper.cpp completed without producing caption cues");
     }
-    return cues;
+    // Older/configured wrappers may return SRT only. Never invent word timing.
+    let tokens: unknown;
+    try {
+      tokens = JSON.parse(await readFile(`${outputBase}.json`, "utf8"));
+    } catch {
+      return cues;
+    }
+    return attachWhisperWordTiming(cues, tokens, input.fps);
   } catch (error) {
     if (error instanceof ProviderError) throw error;
     throw new ProviderError(

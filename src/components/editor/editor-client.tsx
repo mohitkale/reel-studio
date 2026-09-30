@@ -63,6 +63,7 @@ import { estimateTimeline } from "@/lib/preview-timeline";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveSpokenText } from "@/lib/spoken-text";
 import { resolveReelSfxCues } from "@/lib/sfx-cues";
+import { resolveSpokenWordWindows } from "@/lib/spoken-word-windows";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -269,6 +270,11 @@ export function EditorClient({
         scenes: script?.scenes,
         videoEngine: script?.videoEngine,
         hideText: script?.hideText,
+        spokenWords: resolveSpokenWordWindows(
+          script?.captionTracks,
+          takeUsable ? selectedTake?.id : null,
+          fps,
+        ),
         timeline,
         fps,
       }),
@@ -278,6 +284,9 @@ export function EditorClient({
       script?.scenes,
       script?.videoEngine,
       script?.hideText,
+      script?.captionTracks,
+      takeUsable,
+      selectedTake?.id,
       timeline,
       fps,
     ],

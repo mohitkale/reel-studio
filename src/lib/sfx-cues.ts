@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { ReelBeat } from "@/compositions/types";
 import type { SceneDTO } from "@/lib/dto";
 import type { VideoEngineId } from "@/engines/types";
+import type { SpokenWordWindow } from "@/lib/spoken-word-windows";
 import { resolveMotionDirection } from "@/production/motion";
 import {
   motionEventSchema,
@@ -88,6 +89,7 @@ export function resolveReelSfxCues(args: {
   videoEngine?: VideoEngineId;
   scenes?: readonly SfxScene[];
   hideText?: boolean;
+  spokenWords?: readonly SpokenWordWindow[];
 }): Array<{
   url: string;
   startFrame: number;
@@ -174,8 +176,17 @@ export function resolveReelSfxCues(args: {
   let lastPeak = -Infinity;
   const gap = Math.round(2 * args.fps);
   const clearance = Math.round(0.12 * args.fps);
+  const speechClearance = Math.ceil(0.08 * args.fps);
   for (const cue of automatic) {
     if (
+      args.spokenWords?.some(
+        (word) =>
+          Number.isFinite(word.startFrame) &&
+          Number.isFinite(word.endFrame) &&
+          word.endFrame > word.startFrame &&
+          cue.startFrame < word.endFrame + speechClearance &&
+          cue.endFrame > word.startFrame - speechClearance,
+      ) ||
       cue.peakFrame - lastPeak < gap ||
       accepted.some(
         (other) =>

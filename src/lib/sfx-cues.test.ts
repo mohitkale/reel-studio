@@ -41,6 +41,38 @@ function resolve(
 }
 
 describe("event sound timing", () => {
+  it.each(["remotion", "hyperframes"] as const)(
+    "protects spoken words from automatic clips in %s, preserving creator choices",
+    (videoEngine) => {
+      const spokenWords = [{ startFrame: 110, endFrame: 120 }];
+      expect(resolve([event], { videoEngine, spokenWords })).toEqual([]);
+      expect(
+        resolve([{ ...event, source: "manual" }], { videoEngine, spokenWords }),
+      ).toHaveLength(1);
+      expect(
+        resolve([{ ...event, locked: true }], { videoEngine, spokenWords }),
+      ).toHaveLength(1);
+      expect(
+        resolve([{ ...event, source: undefined }], {
+          videoEngine,
+          spokenWords,
+        }),
+      ).toHaveLength(1);
+      // A word ending immediately before the clip gets a small safety margin.
+      expect(
+        resolve([event], {
+          videoEngine,
+          spokenWords: [{ startFrame: 95, endFrame: 106 }],
+        }),
+      ).toEqual([]);
+      expect(
+        resolve([event], {
+          videoEngine,
+          spokenWords: [{ startFrame: 90, endFrame: 100 }],
+        }),
+      ).toHaveLength(1);
+    },
+  );
   it("aligns the audible peak to an engine's authored landmark and follows retiming", () => {
     // HF impact at .58s, soft hit RMS peak at .005s: clip begins at frame 17.
     expect(resolve([event])[0].startFrame).toBe(107);

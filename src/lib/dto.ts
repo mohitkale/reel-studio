@@ -153,6 +153,8 @@ export interface CaptionTrackDTO {
   label: string;
   language: string;
   timingSource: CaptionTimingSource;
+  sourceTakeId?: string | null;
+  sourceFps?: number | null;
   enabled: boolean;
   style: CaptionStyleSnapshot;
   cues: CaptionCueDTO[];

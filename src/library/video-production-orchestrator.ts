@@ -410,8 +410,8 @@ export async function executeVideoProductionJob(
     const prepared = await stage(
       "prepare_composition",
       {
-        // Invalidate checkpoints written before prepared scenes retained motion.
-        compositionContract: 2,
+        // Version 3 adds measured-word SFX protection to prepared cue decisions.
+        compositionContract: 3,
         media: { ...media, snapshot: snapshotWithAudio },
         timing,
         orientation: input.orientation,

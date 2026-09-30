@@ -334,6 +334,11 @@ beats and mark a drop; audio fingerprints and optimistic checks protect edits.
 Beat maps repeat with the track's loop, are frozen in production snapshots,
 and can be edited through `PATCH /api/scripts/:id/music-map` or `edit_music_map`.
 They provide directing references; scene and narration timing stays as edited.
+Automatic SFX avoid measured spoken-word windows from the audible voice take,
+including when captions are hidden. Local transcription retains native token
+timing when available; old, imported, estimated, edited or mismatched tracks do
+not guess word timing. Manual and locked cues retain creator priority. Existing
+databases need `npm run db:migrate` for caption take/frame-rate provenance.
 Refresh keeps manual, legacy, muted, and locked cues; existing scenes retain their template
 cue behavior. Music → Adjust sound cues lets creators choose the clip, set its
 level (including mute), shift its timing, or restore automatic direction.

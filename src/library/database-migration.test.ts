@@ -153,6 +153,12 @@ describe("SQLite migration preparation", () => {
         "utf8",
       ),
     );
+    db.exec(
+      readFileSync(
+        "prisma/migrations/20260930000100_caption_take_provenance/migration.sql",
+        "utf8",
+      ),
+    );
     db.close();
     process.env.DATABASE_URL = `file:${filename}`;
     const client = createPrismaClient();

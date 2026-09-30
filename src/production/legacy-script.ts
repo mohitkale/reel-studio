@@ -4,6 +4,7 @@ import type { ScriptDTO, VoiceTakeDTO } from "@/lib/dto";
 import { orientationFromDims } from "@/lib/orientation";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveReelSfxCues } from "@/lib/sfx-cues";
+import { resolveSpokenWordWindows } from "@/lib/spoken-word-windows";
 import { resolveSpokenText } from "@/lib/spoken-text";
 import { LEGACY_CAPTION_STYLE } from "@/lib/caption-style";
 import { getVideoEngine } from "@/engines/registry";
@@ -154,6 +155,11 @@ export function productionSpecFromLegacyScript(
     scenes: script.scenes,
     videoEngine: script.videoEngine,
     hideText: script.hideText,
+    spokenWords: resolveSpokenWordWindows(
+      script.captionTracks,
+      resolved.takeUsable ? take?.id : null,
+      script.fps,
+    ),
     timeline: resolved.timeline,
     fps: script.fps,
   }).map((cue, index) => {

@@ -36,6 +36,8 @@ function toCaptionTrackDTO(
     label: track.label,
     language: track.language,
     timingSource,
+    sourceTakeId: track.sourceTakeId,
+    sourceFps: track.sourceFps,
     enabled: track.enabled,
     style: parseJsonColumn(
       track.styleJson,
@@ -71,6 +73,8 @@ export async function replaceCaptionTrack(input: {
   label?: string;
   language?: string;
   timingSource: CaptionTimingSource;
+  sourceTakeId?: string;
+  sourceFps?: number;
   enabled?: boolean;
   style?: CaptionStyleSnapshot;
   cues: CaptionCue[];
@@ -90,6 +94,8 @@ export async function replaceCaptionTrack(input: {
           label: input.label,
           language: input.language,
           timingSource: input.timingSource,
+          sourceTakeId: input.sourceTakeId ?? null,
+          sourceFps: input.sourceFps ?? null,
           enabled: input.enabled,
           styleJson:
             input.style === undefined ? undefined : JSON.stringify(input.style),
@@ -106,6 +112,8 @@ export async function replaceCaptionTrack(input: {
           label: input.label,
           language: input.language,
           timingSource: input.timingSource,
+          sourceTakeId: input.sourceTakeId ?? null,
+          sourceFps: input.sourceFps ?? null,
           enabled: input.enabled,
           styleJson: input.style ? JSON.stringify(input.style) : null,
         },
@@ -188,7 +196,8 @@ export async function updateCaptionCue(
     });
     await tx.captionTrack.update({
       where: { id: cue.trackId },
-      data: { updatedAt: new Date() },
+      // Edited caption timing/text is no longer an untouched audio measurement.
+      data: { updatedAt: new Date(), sourceTakeId: null, sourceFps: null },
     });
     return tx.captionTrack.findUniqueOrThrow({
       where: { id: cue.trackId },

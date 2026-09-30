@@ -35,6 +35,7 @@ import {
 } from "@/compositions/types";
 import { type Orientation, dimsFor } from "@/lib/orientation";
 import { resolveReelSfxCues } from "@/lib/sfx-cues";
+import { resolveSpokenWordWindows } from "@/lib/spoken-word-windows";
 import { getAssetStore } from "@/library/storage";
 import { listTakes } from "@/library/repositories/takes";
 import { normalizeTemplateId } from "@/compositions/templates";
@@ -394,6 +395,11 @@ async function runRemotionRender({
         scenes: script.scenes,
         videoEngine: script.videoEngine,
         hideText: script.hideText,
+        spokenWords: resolveSpokenWordWindows(
+          script.captionTracks,
+          resolved.takeUsable ? take?.id : null,
+          script.fps,
+        ),
         timeline,
         fps: script.fps,
       }).map((c) => ({ ...c, url: absolute(c.url)! })),
@@ -546,6 +552,11 @@ export function prepareVideoComposition(
       scenes: script.scenes,
       videoEngine: script.videoEngine,
       hideText: script.hideText,
+      spokenWords: resolveSpokenWordWindows(
+        script.captionTracks,
+        resolved.takeUsable ? take?.id : null,
+        script.fps,
+      ),
       timeline,
       fps: script.fps,
     }).map((c) => ({
