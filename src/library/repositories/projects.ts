@@ -38,6 +38,7 @@ import {
   SAMPLE_SCENES,
 } from "@/library/sample-content";
 import { getDefaultBrandKit } from "./brandkits";
+import { chapterPlanFromStarts } from "@/production/chapters";
 
 function resolveEngine(engine?: VideoEngineId | string | null): VideoEngineId {
   return engine && isVideoEngineId(engine) ? engine : DEFAULT_VIDEO_ENGINE;
@@ -116,6 +117,7 @@ export async function createProjectFromPlan(
     brandKitId?: string | null;
     preset?: { id: ProductionPresetId; version: string };
     roles?: ProductionSceneRole[];
+    chapterStarts?: Array<{ title: string; firstSceneIndex: number }>;
     assetRefs?: string[][];
     mediaPreferences?: MediaPreference[];
     stockSelections?: Array<ResolvedStockAsset | undefined>;
@@ -136,6 +138,12 @@ export async function createProjectFromPlan(
   const { width, height } = dimsFor(orientation);
   const engine = resolveEngine(videoEngine);
   const fallbackTemplate = defaultTemplateIdForEngine(engine);
+  const sceneIds = production?.chapterStarts
+    ? plan.scenes.map(() => randomUUID())
+    : [];
+  const chapterPlan = production?.chapterStarts
+    ? chapterPlanFromStarts(production.chapterStarts, sceneIds)
+    : undefined;
   const defaultKit = await getDefaultBrandKit();
   const brandKitId =
     production?.brandKitId === undefined
@@ -181,6 +189,7 @@ export async function createProjectFromPlan(
             styleId,
             energy,
             ...(motionPlan ? { motionPlan } : {}),
+            ...(chapterPlan ? { chapterPlan } : {}),
             ...(production?.preset
               ? { productionPreset: production.preset }
               : {}),
@@ -210,6 +219,7 @@ export async function createProjectFromPlan(
               const motion = motions[order];
               if (motion) config.motion = motion;
               return {
+                ...(chapterPlan ? { id: sceneIds[order] } : {}),
                 order,
                 templateId: scene.templateId || fallbackTemplate,
                 text: scene.text,

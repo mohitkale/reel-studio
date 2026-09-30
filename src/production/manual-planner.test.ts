@@ -31,6 +31,47 @@ describe("deterministic production planning", () => {
     expect(segments).toHaveLength(20);
     expect(segments.join(" ")).toBe(source);
   });
+  it("plans a full source in chapters beyond one provider-sized scene batch without dropping narration", () => {
+    const source = Array.from(
+      { length: 80 },
+      (_, index) =>
+        `Sentence ${index + 1} explains a supplied idea with enough context for the audience to understand this section.`,
+    ).join(" ");
+    const result = createDeterministicProductionPlan({
+      name: "Complete explainer",
+      text: source,
+      structure: "chapters",
+      presetId: "editorial-explainer",
+      videoEngine: "hyperframes",
+      hasVisualAsset: false,
+    });
+    expect(result.plan.scenes.length).toBeGreaterThan(20);
+    expect(result.plan.scenes.length).toBeLessThanOrEqual(240);
+    expect(
+      result.plan.scenes
+        .map((scene) => scene.spokenText ?? scene.text)
+        .join(" "),
+    ).toBe(source);
+    expect(result.chapterStarts![0].firstSceneIndex).toBe(0);
+    expect(result.chapterStarts!.length).toBeGreaterThan(1);
+    expect(result.chapterStarts!.length).toBeLessThanOrEqual(12);
+    expect(
+      result.chapterStarts!.every(
+        (chapter, index, chapters) =>
+          (chapters[index + 1]?.firstSceneIndex ?? result.plan.scenes.length) -
+            chapter.firstSceneIndex <=
+          20,
+      ),
+    ).toBe(true);
+    expect(
+      result
+        .chapterStarts!.slice(1)
+        .every(
+          (chapter) => result.roles[chapter.firstSceneIndex] === "headline",
+        ),
+    ).toBe(true);
+    expect(result.warnings.join(" ")).not.toMatch(/selects the strongest/);
+  });
 
   it("keeps long display copy separate from complete narration", () => {
     const sentence =

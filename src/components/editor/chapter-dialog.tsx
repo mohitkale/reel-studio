@@ -48,8 +48,9 @@ export function ChapterDialog({
             <DialogTitle>Chapter structure</DialogTitle>
             <DialogDescription>
               Name storyboard sections and choose where they begin. Suggestions
-              use the selected take&apos;s timing when available. Exports currently
-              support up to 3 minutes; longer rendering is still being built.
+              use the selected take&apos;s timing when available. Exports
+              currently support up to 5 minutes with a valid saved chapter plan
+              at 24, 30, or 60 fps. Other storyboards support up to 3 minutes.
             </DialogDescription>
           </DialogHeader>
           {open && (

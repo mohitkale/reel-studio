@@ -25,6 +25,25 @@ export const chapterPlanSchema = z
     { message: "Chapter IDs must be unique." },
   );
 export type ChapterPlan = z.infer<typeof chapterPlanSchema>;
+/** Creation has scene positions; persist boundaries only after IDs are assigned. */
+export function chapterPlanFromStarts(
+  starts: readonly { title: string; firstSceneIndex: number }[],
+  sceneIds: readonly string[],
+): ChapterPlan {
+  const plan = chapterPlanSchema.parse({
+    version: "1.0.0",
+    chapters: starts.map((chapter, index) => ({
+      id: `chapter:${index + 1}`,
+      title: chapter.title,
+      firstSceneId: Number.isInteger(chapter.firstSceneIndex)
+        ? sceneIds[chapter.firstSceneIndex]
+        : undefined,
+    })),
+  });
+  const issue = chapterPlanIssue(plan, sceneIds);
+  if (issue) throw new Error(issue);
+  return plan;
+}
 export const chapterEditSchema = z
   .object({
     expected: chapterPlanSchema.nullable(),

@@ -13,6 +13,7 @@ import { audioMasteringSchema } from "@/production/audio-mastering";
 import { chapterEditSchema } from "@/production/chapters";
 import { productionBatchRowSchema } from "@/production/batch";
 import { quickProduceOptionsSchema } from "@/production/quick-produce";
+import { manualCreationSchema } from "@/production/manual-planner";
 
 import {
   apiGet,
@@ -237,6 +238,16 @@ export function registerTools(server: McpServer): void {
       },
     },
     guard(async (args) => ok(await apiPost("/api/projects", args))),
+  );
+
+  server.registerTool(
+    "create_production_draft",
+    {
+      description:
+        "Create an editable draft from supplied text or a public article without an AI call. structure='chapters' preserves all narration in bounded chapters; 'single' retains the short-cut or voiceover-first workflow. Uploads can be referenced by assetIds. Rendering is a separate action subject to production and token duration limits.",
+      inputSchema: manualCreationSchema.shape,
+    },
+    guard(async (args) => ok(await apiPost("/api/projects/manual", args))),
   );
 
   server.registerTool(

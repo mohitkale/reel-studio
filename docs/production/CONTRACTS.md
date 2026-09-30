@@ -251,8 +251,13 @@ requires both allowlisting and an explicit paid allowance; unknown-price work
 waits for approval instead of being retried speculatively. Provider and quota
 checks also protect the existing paid generation routes.
 
-The launch limits are three minutes for video and standalone audio, ten minutes
-for podcasts and 90 seconds for audiograms. Legacy tokens retain their current
+The default limits are three minutes for video and standalone audio, ten minutes
+for podcasts and 90 seconds for audiograms. A valid saved chapter plan at
+24/30/60 fps enables video production up to five minutes. Video submissions use
+the selected matching take or preview's estimated timeline, including the cover.
+Each job freezes the smaller release/token allowance and rechecks actual timing
+after voice synthesis; old queued jobs retain their three-minute allowance.
+Legacy tokens retain their current
 approval flow. MCP has no secret-management, project-deletion or executable-code
 capability, and the server never returns a named token after its one-time
 creation response.

@@ -74,6 +74,65 @@ const stageDependencies = {
 };
 
 describe("video production orchestration", () => {
+  it("rejects actual synthesized timing that exceeds the frozen submission policy before render", async () => {
+    const render = vi.fn(async () => undefined);
+    await expect(
+      executeVideoProductionJob(
+        {
+          ...job,
+          inputSnapshot: {
+            ...(job.inputSnapshot as Record<string, unknown>),
+            maxDurationSeconds: 2,
+            quickProduce: {
+              enabled: true,
+              planner: "deterministic",
+              mediaPreference: "none",
+              voice: {
+                enabled: true,
+                providerId: "kokoro-server",
+                voiceId: "af_heart",
+              },
+            },
+          },
+        },
+        { signal: new AbortController().signal, heartbeat: async () => true },
+        {
+          ...stageDependencies,
+          render,
+          synthesize: async () => ({
+            id: "synthesized",
+            scriptId: "script-1",
+            label: null,
+            providerId: "kokoro-server",
+            voiceId: "af_heart",
+            modelId: null,
+            fps: 30,
+            totalFrames: 90,
+            timeline: [
+              {
+                sceneId: "scene-1",
+                startFrame: 0,
+                durationFrames: 90,
+                text: "A real saved plan",
+              },
+            ],
+            audioUrl: "https://example.com/voice.wav",
+            isPlaceholder: false,
+            source: "oneshot",
+            createdAt: new Date().toISOString(),
+          }),
+          step: vi.fn(async () => ({}) as never),
+          output: vi.fn(async () => ({}) as never),
+          artifact: async () => ({
+            path: "/tmp/unused.mp4",
+            expectsAudio: true,
+          }),
+          verify: async () => ({ checksum: "sha256:unused" }),
+        },
+      ),
+    ).rejects.toThrow(/up to 2 seconds/);
+    expect(render).not.toHaveBeenCalled();
+  });
   it.each(["remotion", "hyperframes"] as const)(
     "retains motion decisions through prepared checkpoints for %s",
     async (videoEngine) => {

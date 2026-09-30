@@ -100,6 +100,9 @@ export function CreationWizard({
   const [open, setOpen] = React.useState(false);
   const [step, setStep] = React.useState(0);
   const [outputType, setOutputType] = React.useState<OutputType>("video");
+  const [structure, setStructure] = React.useState<"single" | "chapters">(
+    "single",
+  );
   const [sourceKind, setSourceKind] = React.useState<SourceKind>("text");
   const [name, setName] = React.useState("");
   const [text, setText] = React.useState("");
@@ -124,13 +127,14 @@ export function CreationWizard({
   const contentValid =
     name.trim().length > 0 &&
     (sourceKind === "text"
-      ? text.trim().length >= 20
+      ? text.trim().length >= 20 && text.trim().length <= 12_000
       : /^https?:\/\//i.test(url.trim()));
   const canContinue = step !== 1 || contentValid;
 
   function reset() {
     setStep(0);
     setOutputType("video");
+    setStructure("single");
     setSourceKind("text");
     setName("");
     setText("");
@@ -158,6 +162,7 @@ export function CreationWizard({
       const result = await create.mutateAsync({
         name: name.trim(),
         outputType,
+        structure,
         source:
           sourceKind === "text"
             ? { kind: "text", text: text.trim() }
@@ -241,26 +246,47 @@ export function CreationWizard({
 
         <div className="min-h-80 py-2">
           {step === 0 ? (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-3">
               <ChoiceCard
-                active={outputType === "video"}
-                onClick={() => setOutputType("video")}
+                active={outputType === "video" && structure === "single"}
+                onClick={() => {
+                  setOutputType("video");
+                  setStructure("single");
+                }}
               >
                 <Film className="text-primary mb-3 size-6" />
                 <p className="font-medium">Polished video</p>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  Scenes, visual styling, captions, and optional narration.
+                  A concise short cut with visual styling and optional
+                  narration.
                 </p>
               </ChoiceCard>
               <ChoiceCard
-                active={outputType === "voiceover"}
-                onClick={() => setOutputType("voiceover")}
+                active={outputType === "voiceover" && structure === "single"}
+                onClick={() => {
+                  setOutputType("voiceover");
+                  setStructure("single");
+                }}
               >
                 <FileAudio className="text-primary mb-3 size-6" />
                 <p className="font-medium">Voiceover-first video</p>
                 <p className="text-muted-foreground mt-1 text-sm">
                   Preserve the full narration and prepare visual scenes around
                   it.
+                </p>
+              </ChoiceCard>
+              <ChoiceCard
+                active={structure === "chapters"}
+                onClick={() => {
+                  setOutputType("video");
+                  setStructure("chapters");
+                }}
+              >
+                <Film className="text-primary mb-3 size-6" />
+                <p className="font-medium">Chaptered video</p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Keep your full script in editable chapters, with varied visual
+                  beats.
                 </p>
               </ChoiceCard>
             </div>
@@ -309,7 +335,7 @@ export function CreationWizard({
                     maxLength={12_000}
                     onChange={(event) => setText(event.target.value)}
                     placeholder={
-                      outputType === "voiceover"
+                      outputType === "voiceover" || structure === "chapters"
                         ? "Paste a finished script or article. Every passage is retained in the narration."
                         : "Paste a brief, article, or notes. Reel Studio selects the strongest passages for short-form pacing."
                     }
@@ -499,9 +525,11 @@ export function CreationWizard({
                   {ORIENTATION_LABELS[orientation]}
                 </p>
                 <p className="text-muted-foreground mt-2 text-xs">
-                  {outputType === "voiceover"
-                    ? "The planner preserves every source passage as narration and builds readable visual beats around it."
-                    : "The planner selects a concise short-form cut, varies visual beats, and adds relevant media when available."}{" "}
+                  {structure === "chapters"
+                    ? "The planner keeps the full narration and builds editable chapters. Exports support up to 5 minutes with a valid chapter plan. Review the estimated timing before generating a voice take."
+                    : outputType === "voiceover"
+                      ? "The planner preserves every source passage as narration and builds readable visual beats around it."
+                      : "The planner selects a concise short-form cut, varies visual beats, and adds relevant media when available."}{" "}
                   You can edit every scene afterward.
                 </p>
               </div>

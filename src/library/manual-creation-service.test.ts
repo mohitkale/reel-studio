@@ -54,6 +54,33 @@ describe("manual creation service", () => {
     getScript.mockResolvedValue({ scenes: [] });
     reportStockMediaSelectionUsage.mockResolvedValue(undefined);
   });
+  it("passes full-source chapter positions to atomic project creation without a provider call", async () => {
+    getAssets.mockResolvedValue([]);
+    const source = Array.from(
+      { length: 80 },
+      (_, index) =>
+        `Sentence ${index + 1} explains a supplied idea with enough context for the audience to understand this section.`,
+    ).join(" ");
+    const result = await createManualProject({
+      name: "Whole story",
+      structure: "chapters",
+      source: { kind: "text", text: source },
+      presetId: "editorial-explainer",
+      orientation: "landscape",
+      videoEngine: "hyperframes",
+      mediaPreference: "none",
+    });
+    expect(result.plan.scenes.length).toBeGreaterThan(20);
+    expect(
+      result.plan.scenes
+        .map((scene) => scene.spokenText ?? scene.text)
+        .join(" "),
+    ).toBe(source);
+    expect(
+      createProjectFromPlan.mock.calls[0][5].chapterStarts.length,
+    ).toBeGreaterThan(1);
+    expect(resolveAutomaticSceneMediaBatch).not.toHaveBeenCalled();
+  });
 
   it("persists preset, roles, brand, voice mode, and uploaded media", async () => {
     getAssets.mockResolvedValue([

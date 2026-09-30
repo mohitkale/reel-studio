@@ -25,6 +25,7 @@ import {
   type VisualReviewResult,
 } from "@/production/visual-review";
 import type { VideoEngineId } from "@/engines/types";
+import { videoDurationLimit } from "@/production/limits";
 import {
   cancelChild,
   cancelableRemotion,
@@ -193,9 +194,10 @@ export async function createVisualReview(
       captured.script.fps,
       Boolean(captured.script.coverUrl),
     );
-    if ((timing.totalFrames + cover) / captured.script.fps > 180)
+    const durationLimit = videoDurationLimit(captured.script);
+    if ((timing.totalFrames + cover) / captured.script.fps > durationLimit)
       throw new ProviderError(
-        "Visual review currently supports videos up to 180 seconds.",
+        `Visual review supports up to ${durationLimit} seconds for this storyboard.`,
         400,
       );
     let points;

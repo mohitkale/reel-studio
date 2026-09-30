@@ -362,6 +362,18 @@ Each call changes at most 20 unlocked scenes, uses neighboring copy for continui
 and rejects storyboard edits made during generation. Scene IDs, motion choices,
 and copy/asset locks survive. REST/MCP `ai_generate_scenes` accepts `chapterId`
 and `sceneIds`; larger storyboards must use bounded selections.
+Create production → Chaptered video keeps the full supplied script and builds
+editable chapters locally. It supports up to 240 scenes in 12 chapters, with
+at most 20 scenes each. Longer drafts warn about export limits without dropping
+narration. REST `/api/projects/manual` and MCP `create_production_draft` accept
+`structure: "chapters"`; topic-based AI generation still uses bounded calls.
+Valid saved chapter plans at 24/30/60 fps support production up to 300 seconds;
+other video storyboards and standalone audio retain their 180-second limits.
+Named MCP token allowances remain unchanged. Video jobs freeze their duration
+policy and check actual prepared timing after synthesis, including the cover.
+Submission uses only the explicitly selected, matching take, otherwise the
+same estimated timeline as preview/export.
+
 Saved chapter projects now export in bounded sections, preserving global frame
 timing. Remotion uses chapter boundaries with a 30-second cap; HyperFrames uses
 native 30-second chunks at 24/30/60 fps. Checksum-verified sections in
@@ -373,8 +385,6 @@ retry caches are retained; inactive caches are trimmed toward 1 GiB and expire
 after seven days. Changes currently invalidate the whole composition cache.
 HyperFrames validates the native plan manifest and keys silent sections from
 their frozen inputs, excluding the freshly encoded assembler-only audio mix.
-Video production remains limited to 180 seconds pending longer sample and
-resource gates; whole-video chapter generation remains separate work.
 Refresh keeps manual, legacy, muted, and locked cues; existing scenes retain their template
 cue behavior. Music → Adjust sound cues lets creators choose the clip, set its
 level (including mute), shift its timing, or restore automatic direction.

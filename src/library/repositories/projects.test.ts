@@ -33,6 +33,42 @@ describe("project motion persistence", () => {
     getDefaultBrandKit.mockResolvedValue(null);
     create.mockResolvedValue({ id: "project", scripts: [{ id: "script" }] });
   });
+  it("creates scene IDs and their chapter boundaries in the same nested database write", async () => {
+    const long = {
+      ...plan,
+      scenes: Array.from({ length: 24 }, () => plan.scenes[0]!),
+    };
+    await createProjectFromPlan(
+      long,
+      "landscape",
+      [],
+      "hyperframes",
+      undefined,
+      {
+        preset: { id: "editorial-explainer", version: "1.0.0" },
+        chapterStarts: [
+          { title: "Question", firstSceneIndex: 0 },
+          { title: "Explanation", firstSceneIndex: 12 },
+        ],
+      },
+    );
+    const script = create.mock.calls[0][0].data.scripts.create;
+    const ids = script.scenes.create.map((scene: { id: string }) => scene.id);
+    expect(new Set(ids).size).toBe(24);
+    expect(
+      JSON.parse(script.brandOverrides).chapterPlan.chapters.map(
+        (chapter: { firstSceneId: string }) => chapter.firstSceneId,
+      ),
+    ).toEqual([ids[0], ids[12]]);
+    expect(script.scenes.create).toHaveLength(24);
+    create.mockClear();
+    await expect(
+      createProjectFromPlan(long, "portrait", [], "hyperframes", undefined, {
+        chapterStarts: [{ title: "Invalid start", firstSceneIndex: 1 }],
+      }),
+    ).rejects.toThrow(/first scene/);
+    expect(create).not.toHaveBeenCalled();
+  });
 
   it("saves planning settings and their selected decisions together", async () => {
     await createProjectFromPlan(

@@ -14,10 +14,14 @@ import {
 } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
 import { scenePlanSchema, type ScenePlan } from "@/providers/ai/types";
+import { proposeChapterPlan } from "@/production/chapters";
+import { estimateTimeline } from "@/lib/preview-timeline";
+import { PRODUCTION_LIMITS } from "@/production/limits";
 
 export const manualCreationSchema = z.object({
   name: z.string().trim().min(1).max(120),
   outputType: z.enum(["video", "voiceover"]).default("video"),
+  structure: z.enum(["single", "chapters"]).default("single"),
   source: z.discriminatedUnion("kind", [
     z.object({
       kind: z.literal("text"),
@@ -41,6 +45,7 @@ export interface ManualProductionPlan {
   roles: ProductionSceneRole[];
   preset: { id: ProductionPresetId; version: string };
   warnings: string[];
+  chapterStarts?: Array<{ title: string; firstSceneIndex: number }>;
 }
 
 function normalizeText(text: string): string {
@@ -111,10 +116,15 @@ function capSceneCount(scenes: string[], maxScenes: number): string[] {
   return capped;
 }
 
-/** Preserve every source character while producing at most 20 narration scenes. */
-export function segmentSourceText(text: string): string[] {
+/** Preserve supplied narration in bounded scenes (20 by default). */
+export function segmentSourceText(text: string, maxScenes = 20): string[] {
+  if (!Number.isInteger(maxScenes) || maxScenes < 1 || maxScenes > 240)
+    throw new Error("Source planning supports 1–240 scenes.");
   const normalized = normalizeText(text);
-  const maxChars = Math.max(260, Math.ceil(Array.from(normalized).length / 20));
+  const maxChars = Math.max(
+    260,
+    Math.ceil(Array.from(normalized).length / maxScenes),
+  );
   const pieces = sentencePieces(normalized).flatMap((piece) =>
     splitLongPiece(piece, maxChars),
   );
@@ -130,7 +140,7 @@ export function segmentSourceText(text: string): string[] {
     }
   }
   if (current) scenes.push(current);
-  return capSceneCount(scenes, 20);
+  return capSceneCount(scenes, maxScenes);
 }
 
 function wordCount(text: string): number {
@@ -243,6 +253,7 @@ export function createDeterministicProductionPlan(args: {
   name: string;
   text: string;
   outputType?: "video" | "voiceover";
+  structure?: "single" | "chapters";
   presetId: ProductionPresetId;
   videoEngine: VideoEngineId;
   hasVisualAsset: boolean;
@@ -250,12 +261,32 @@ export function createDeterministicProductionPlan(args: {
   const preset = getProductionPreset(args.presetId);
   if (!preset) throw new Error(`Unknown production preset: ${args.presetId}`);
   const segments =
-    args.outputType === "voiceover"
-      ? segmentSourceText(args.text)
+    args.structure === "chapters" || args.outputType === "voiceover"
+      ? segmentSourceText(args.text, args.structure === "chapters" ? 240 : 20)
       : segmentPolishedVideoText(args.text);
+  const sourceScenes = segments.map((text, index) => ({
+    id: String(index),
+    text,
+  }));
+  const chapterStarts =
+    args.structure === "chapters"
+      ? proposeChapterPlan(
+          sourceScenes,
+          estimateTimeline(sourceScenes, 30).timeline,
+          30,
+        ).chapters.map((chapter) => ({
+          firstSceneIndex: Number(chapter.firstSceneId),
+          title: displayCopy(
+            segments[Number(chapter.firstSceneId)]!,
+          ).text.slice(0, 120),
+        }))
+      : undefined;
   const roles = resolvePresetRoles(args.presetId, segments.length, {
     hasVisualAsset: args.hasVisualAsset,
   });
+  for (const chapter of chapterStarts ?? [])
+    if (chapter.firstSceneIndex > 0)
+      roles[chapter.firstSceneIndex] = "headline";
   let shortened = false;
   const scenes = segments.map((narration, index) => {
     const display = displayCopy(narration);
@@ -274,15 +305,28 @@ export function createDeterministicProductionPlan(args: {
       musicMood: preset.defaults.musicMood,
     };
   });
+  if (!scenes.length)
+    throw new Error("Supply narration before creating a draft.");
 
-  const plan = scenePlanSchema.parse({
+  const identity = {
     projectName: args.name,
     scriptName: `${args.name} script`,
     styleId: preset.defaults.styleId,
     energy: preset.defaults.energy,
-    scenes,
-  });
+  };
+  // Keep the provider's 20-scene contract intact. Full-source local planning
+  // validates each bounded chapter slice through that same scene contract.
+  const validated = [];
+  for (let index = 0; index < scenes.length; index += 20)
+    validated.push(
+      ...scenePlanSchema.parse({
+        ...identity,
+        scenes: scenes.slice(index, index + 20),
+      }).scenes,
+    );
+  const plan: ScenePlan = { ...identity, scenes: validated };
   const condensed =
+    !chapterStarts &&
     args.outputType !== "voiceover" &&
     normalizeText(args.text).replace(/\s+/g, " ") !==
       segments.join(" ").replace(/\s+/g, " ");
@@ -290,7 +334,19 @@ export function createDeterministicProductionPlan(args: {
     plan,
     roles,
     preset: { id: preset.id, version: preset.version },
+    ...(chapterStarts ? { chapterStarts } : {}),
     warnings: [
+      ...(chapterStarts &&
+      estimateTimeline(
+        segments.map((text, index) => ({ id: String(index), text })),
+        30,
+      ).totalFrames /
+        30 >
+        PRODUCTION_LIMITS.chapterVideoSeconds
+        ? [
+            "This full script is estimated to exceed the 5-minute chaptered export limit. The draft keeps all narration; shorten it or produce separate parts before exporting.",
+          ]
+        : []),
       ...(condensed
         ? [
             "The polished-video cut selects the strongest source passages for short-form pacing. Choose Voiceover-first to retain every passage.",

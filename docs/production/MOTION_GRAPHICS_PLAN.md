@@ -118,8 +118,10 @@ guarantee it.
   and timed near scene start. That cannot accurately land sounds on visual hits.
 - Automatic creation is short-form today: the manual planner caps a source at
   20 scenes, AI endpoints cap a generation at 20 scenes, and durable video
-  production rejects outputs over 180 seconds. The spec's 240-scene ceiling
-  does not make long-form production available.
+  production originally rejected outputs over 180 seconds. Full-source local
+  chapter planning now removes the 20-scene bottleneck; valid saved chapter
+  projects at 24/30/60 fps have a controlled 300-second export limit. AI calls
+  remain bounded to 20 scenes each.
 - HyperFrames already has local GSAP, seekable preview, pinned catalog assets,
   and a worker render path. Remotion already has frame-based motion, preview,
   and export. Preserve those working paths.
@@ -272,8 +274,22 @@ invalidates every section. Verified 32-second exports preserve every frame and
 looping music across joins, with
 identical video packets on retry. The full test suite covers corruption, canceled
 work, retention and concat paths containing spaces/apostrophes.
-Whole-video chapter generation, reuse across chapter edits and the longer
-resource/voice/visual gates remain pending; the 180-second limit is unchanged.
+Full-source chapter creation now ships through the wizard, REST and MCP:
+`structure: "chapters"` retains every supplied passage, validates bounded
+scene slices and persists chapter boundaries atomically with assigned scene IDs.
+The browser/SQLite check retained 40 scenes in seven editable chapters.
+Drafts over the export limit receive a warning without losing narration.
+Valid saved chapter plans at 24/30/60 fps now support 300-second production;
+other videos and standalone audio remain at 180 seconds. Submission estimates
+match the renderer and include covers, use only the explicitly selected take,
+and reject stale timing. Actual prepared timing is checked after synthesis
+against the frozen release/token allowance. Token settings and old queued-job
+allowances remain unchanged.
+Both engines passed the 210-second six-chapter local-speech sample: 5,040 frames,
+continuous music through loops/joins, measured encoded audio, cancellation and
+unchanged section reuse. Native chapter sheets were captured.
+This enables a bounded first long-video release; topic-based chapter-wise AI
+generation and broader duration/quality/media benchmarks remain separate work.
 
 Plan long work in **chapters**, each with its own small arc and visual motif,
 while retaining a shared brand language. Use quiet beats and footage or

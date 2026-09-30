@@ -15,6 +15,7 @@ import {
 import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveSpokenText } from "@/lib/spoken-text";
 import { prepareVideoComposition } from "@/library/render-service";
+import { assertVideoDuration, videoDurationLimit } from "@/production/limits";
 import type { StartRenderOptions } from "@/library/render-service";
 import {
   productionSignal,
@@ -436,6 +437,15 @@ export async function executeVideoProductionJob(
       },
     );
     const composition = prepared.composition;
+    // Check actual timing after synthesis, also when resuming cached stages.
+    assertVideoDuration(
+      composition.totalFrames,
+      composition.props.fps,
+      Math.min(
+        input.maxDurationSeconds,
+        videoDurationLimit(prepared.snapshot.script),
+      ),
+    );
     const artifact = await stage(
       "render_export",
       { prepared, quality: input.quality },
