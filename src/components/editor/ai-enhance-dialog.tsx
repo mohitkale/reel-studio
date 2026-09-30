@@ -13,6 +13,7 @@ import { toast } from "sonner";
 
 import { useAIProviders } from "@/hooks/ai";
 import { useEnhanceScript, useUpdateScene } from "@/hooks/script";
+import { prepareSceneAppendScope } from "@/library/scene-append-scope";
 import type { SceneDTO } from "@/lib/dto";
 import { chapterPlanIssue, type ChapterPlan } from "@/production/chapters";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   MEDIA_PREFERENCES,
@@ -94,6 +96,7 @@ export function AIEnhanceDialog({
     Record<string, boolean>
   >({});
   const [chapterId, setChapterId] = React.useState<string>("");
+  const [chapterTitle, setChapterTitle] = React.useState("");
   const [alternatives, setAlternatives] = React.useState<AIScene[]>([]);
   const [mediaPreference, setMediaPreference] =
     React.useState<MediaPreference>("auto");
@@ -143,10 +146,26 @@ export function AIEnhanceDialog({
   const selectedSet = new Set(validSelectedIds);
   const openingLocked =
     scenes[0]?.locks?.scene === true || scenes[0]?.locks?.copy === true;
+  let appendIssue: string | undefined;
+  if (mode === "append") {
+    try {
+      prepareSceneAppendScope(
+        { scenes, chapterPlan },
+        {
+          chapterTitle: chapterTitle.trim() || undefined,
+          sceneCount: sceneCount === "auto" ? undefined : Number(sceneCount),
+        },
+      );
+    } catch (error) {
+      appendIssue =
+        error instanceof Error ? error.message : "Update the chapter outline.";
+    }
+  }
 
   function submit() {
     const trimmed = brief.trim();
     if (!trimmed || !effectiveProvider) return;
+    if (mode === "append" && appendIssue) return;
     if (
       mode === "rewrite" &&
       (!scopeValid ||
@@ -166,6 +185,8 @@ export function AIEnhanceDialog({
             : undefined,
         sceneIds: mode === "rewrite" ? validSelectedIds : undefined,
         chapterId: mode === "rewrite" && chapterId ? chapterId : undefined,
+        chapterTitle:
+          mode === "append" ? chapterTitle.trim() || undefined : undefined,
         scriptStyle,
         mediaPreference,
       },
@@ -178,7 +199,11 @@ export function AIEnhanceDialog({
           onOpenChange(false);
           onEnhanceSuccess?.();
           toast.success(
-            mode === "rewrite" ? "Selected scenes rewritten" : "Scenes added",
+            mode === "rewrite"
+              ? "Selected scenes rewritten"
+              : chapterTitle.trim()
+                ? "Chapter added"
+                : "Scenes added",
             {
               description:
                 mode === "rewrite"
@@ -246,7 +271,8 @@ export function AIEnhanceDialog({
       (scopeValid &&
         validSelectedIds.length > 0 &&
         validSelectedIds.length <= 20)) &&
-    (mode !== "hook_variants" || scenes.length > 0);
+    (mode !== "hook_variants" || scenes.length > 0) &&
+    (mode !== "append" || !appendIssue);
 
   return (
     <Dialog
@@ -447,6 +473,32 @@ export function AIEnhanceDialog({
                 Scene 1 copy is locked. You can compare ideas, then unlock it in
                 the inspector before applying one.
               </p>
+            )}
+
+            {mode === "append" && (
+              <div className="grid gap-2">
+                <Label htmlFor="ai-append-chapter">
+                  New chapter title (optional)
+                </Label>
+                <Input
+                  id="ai-append-chapter"
+                  value={chapterTitle}
+                  maxLength={120}
+                  disabled={pending || !chapterPlan}
+                  onChange={(event) => setChapterTitle(event.target.value)}
+                  placeholder="e.g. Common mistakes"
+                />
+                <p className="text-muted-foreground text-xs">
+                  {chapterPlan
+                    ? "Name a new chapter, or leave blank to extend the last one. One generation uses up to 20 scenes; Auto asks for 3–5."
+                    : "Save a chapter outline in the direction menu to add a named chapter."}
+                </p>
+                {appendIssue && (
+                  <p className="text-destructive text-xs" role="alert">
+                    {appendIssue}
+                  </p>
+                )}
+              </div>
             )}
 
             <div className="grid gap-2">

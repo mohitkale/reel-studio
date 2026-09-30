@@ -10,6 +10,7 @@ import { visualAmbitionSchema } from "@/production/motion-plan";
 import { sfxCueEditRequestSchema } from "@/lib/sfx-cue-edit";
 import { musicMapEditSchema } from "@/production/music-map";
 import { audioMasteringSchema } from "@/production/audio-mastering";
+import { aiEnhanceRequestSchema } from "@/library/ai-enhance-input";
 import { chapterEditSchema } from "@/production/chapters";
 import { productionBatchRowSchema } from "@/production/batch";
 import { quickProduceOptionsSchema } from "@/production/quick-produce";
@@ -767,21 +768,11 @@ export function registerTools(server: McpServer): void {
     "ai_generate_scenes",
     {
       description:
-        "Append scenes or rewrite up to 20 unlocked scenes, preserving copy/asset locks and scene IDs. For a saved outline, use chapterId to rewrite only that chapter; optional sceneIds narrow it further. Rewrites use neighboring context and reject edits made during generation. Requires a configured AI provider.",
+        "Append scenes or rewrite up to 20 unlocked scenes, preserving copy/asset locks and scene IDs. For a saved outline, use chapterId to rewrite only that chapter; optional sceneIds narrow it further. For append, pass chapterTitle to add a named chapter to a valid saved outline (up to 12 chapters / 240 scenes / 20 scenes per chapter). Appends and rewrites use bounded neighboring context and atomically reject edits made during generation. Requires a configured AI provider.",
       inputSchema: {
         scriptId: z.string().min(1),
-        providerId: z.enum(AI_PROVIDER_IDS),
-        modelId: z.string().optional(),
+        ...aiEnhanceRequestSchema.shape,
         mode: z.enum(["rewrite", "append"]),
-        brief: z.string().trim().min(3).max(4000),
-        sceneCount: z.number().int().min(2).max(20).optional(),
-        sceneIds: z.array(z.string().min(1)).max(20).optional(),
-        chapterId: z.string().min(1).max(160).optional(),
-        scriptStyle: scriptStyle
-          .optional()
-          .describe(
-            "'short' = punchy on-screen text; voice inherits. 'detailed' = short on-screen + longer spokenText for TTS.",
-          ),
       },
     },
     guard(async ({ scriptId, ...body }) =>

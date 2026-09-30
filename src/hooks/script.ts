@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import type { AIEnhanceRequest } from "@/library/ai-enhance-input";
 import { apiGet, apiPost } from "@/lib/api-client";
 import type {
   ProjectDTO,
@@ -18,7 +19,7 @@ import type { ProviderId } from "@/providers/voice/types";
 import type { Orientation } from "@/lib/orientation";
 import type { MediaPreference } from "@/lib/media-preference";
 import type { VideoEngineId } from "@/engines/types";
-import type { AIScene, ScriptStyle } from "@/providers/ai/types";
+import type { AIScene } from "@/providers/ai/types";
 import type { EnergyId, StyleId } from "@/compositions/visual-style";
 import type { ManualCreationInput } from "@/production/manual-planner";
 import type { SfxCueEditRequest } from "@/lib/sfx-cue-edit";
@@ -731,16 +732,7 @@ export function useProduceReel(scriptId: string) {
 export function useEnhanceScript(scriptId: string) {
   const invalidate = useScriptInvalidator(scriptId);
   return useMutation({
-    mutationFn: (vars: {
-      providerId: string;
-      mode: "rewrite" | "append" | "hook_variants";
-      brief: string;
-      sceneCount?: number;
-      sceneIds?: string[];
-      chapterId?: string;
-      scriptStyle?: ScriptStyle;
-      mediaPreference?: MediaPreference;
-    }) =>
+    mutationFn: (vars: AIEnhanceRequest) =>
       apiPost<{
         script: ScriptDTO;
         alternatives?: AIScene[];

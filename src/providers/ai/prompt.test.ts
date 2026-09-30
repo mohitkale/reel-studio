@@ -49,3 +49,21 @@ describe("AI production prompts", () => {
     expect(prompt.system).toContain("mediaKind must be video");
   });
 });
+
+it("asks for a bounded named chapter arc with earlier work preserved", () => {
+  const prompt = buildPrompt({
+    mode: "append",
+    brief: "Supplied workflow facts",
+    sceneCount: 4,
+    chapterTitle: "The proof",
+    existingSceneCount: 40,
+    existingContext: "Context only: Scene 40: Prior takeaway",
+  });
+  expect(prompt.system).toContain("4");
+  expect(prompt.user).toContain(
+    'chapter titled "The proof", starting at scene 41',
+  );
+  expect(prompt.user).toContain("one small arc");
+  expect(prompt.user).toContain("Do not rewrite earlier chapters");
+  expect(prompt.user).toContain("Prior takeaway");
+});

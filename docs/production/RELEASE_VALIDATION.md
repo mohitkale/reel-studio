@@ -172,3 +172,15 @@ promises. Audio is still assembled once per retry, so cached video does not make
 export instantaneous. This is a bounded first long-video gate; heavy footage,
 all quality/resolution combinations, pixel-based legibility audits, chapter-wise
 AI topic generation and selective HyperFrames visual reuse remain follow-ups.
+
+The bounded named-chapter append gate uses credential-free provider fixtures,
+the rendered editor dialog, the registered MCP schema/forwarder and migrated
+SQLite. It verifies one bounded generation invocation, preflight outline limits,
+neighboring context, preserved earlier chapters/scenes/settings, atomic stock
+metadata and chapter boundaries, and rejection of competing content/lock/order/
+outline/add/delete/engine changes. Cancellation and metadata failure leave no
+partial append. No rendering or audio behavior changes in this milestone.
+
+```bash
+npm test -- src/library/scene-append-scope.test.ts src/library/scene-append-service.test.ts src/library/ai-enhance-mcp.test.ts src/components/editor/ai-enhance-dialog.test.tsx 'src/app/api/scripts/[id]/ai/route.test.ts' src/providers/ai/prompt.test.ts
+```

@@ -20,8 +20,11 @@ async function rewriteState(db: Prisma.TransactionClient, scriptId: string) {
   return createHash("sha256").update(JSON.stringify(row)).digest("hex");
 }
 
-export function captureSceneRewriteState(scriptId: string) {
-  return rewriteState(prisma, scriptId);
+export function captureSceneRewriteState(
+  scriptId: string,
+  db: Prisma.TransactionClient = prisma,
+) {
+  return rewriteState(db, scriptId);
 }
 
 export function assertSceneRewriteState(expected: string, actual: string) {

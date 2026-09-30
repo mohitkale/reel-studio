@@ -304,8 +304,19 @@ Both engines passed the 210-second six-chapter local-speech sample: 5,040 frames
 continuous music through loops/joins, measured encoded audio, cancellation and
 unchanged section reuse. Native chapter sheets and eight-frame cut strips were
 captured.
-This enables a bounded first long-video release; topic-based chapter-wise AI
-generation and broader duration/quality/media benchmarks remain separate work.
+This enables a bounded first long-video release. The existing AI Add scenes
+workflow can now append a named chapter to a valid saved outline in one bounded
+generation. Browser, REST and MCP accept an optional `chapterTitle`; leaving it
+blank extends the last chapter. Capacity is validated before generation: 12
+chapters, 240 total scenes and 20 scenes per chapter. Automatic append asks for
+3–5 scenes; explicit requests support 1–20. Only the final two scene excerpts
+and saved chapter titles provide continuity context. Existing scenes, locks,
+chapter IDs/boundaries and brand/audio settings are preserved. Scenes, stock
+snapshots and the new boundary commit together, or a storyboard edit during
+generation rejects the entire append with a reload/retry message. No new
+provider calls, token allowances or automatic retries are introduced.
+Topic-wide outline generation, multi-call orchestration, selective chapter
+retry and broader duration/quality/media benchmarks remain separate work.
 
 Plan long work in **chapters**, each with its own small arc and visual motif,
 while retaining a shared brand language. Use quiet beats and footage or
@@ -393,8 +404,9 @@ The first recipe pack, deterministic direction, synchronized accents, music
 maps, measured audio mastering, native review, chapter authoring and bounded
 chapter production are implemented. Follow-ups should remain distinct tasks:
 
-1. Topic-based chapter-wise AI planning with bounded provider calls, explicit
-   usage limits, preserved partial work and selective retry.
+1. Topic-wide AI outline planning and multi-chapter orchestration with bounded
+   provider calls, explicit usage limits, preserved partial work and selective
+   retry. Single named-chapter append through Add scenes now ships.
 2. Richer authored choreography and chapter motifs, reviewed against unrelated
    briefs before adding comparison, quiet-beat and brand-payoff recipes.
 3. Native pixel/layout evidence for text clipping, safe areas and contrast;

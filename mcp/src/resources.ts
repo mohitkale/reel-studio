@@ -63,6 +63,7 @@ optional photo **background**.
 - Models and single AI calls cap out around 20 scenes. To go bigger or stay current:
   1. \`ai_create_project\` (or \`create_project\`) for the first chunk.
   2. \`ai_generate_scenes\` with mode "append" — or \`add_scene\` + \`update_scene\` — to extend in parts. Existing scenes are never touched by append.
+  - With a valid saved outline, pass \`chapterTitle\` to append a named chapter; omit it to extend the last one. One generation supports 1–20 scenes (Auto asks for 3–5), within 12 chapters / 240 scenes / 20 scenes per chapter. Storyboard edits during generation reject the whole append. Reload before retrying.
   3. Use web search (your own tools) to populate up-to-date facts the model may not know, then write them into scenes.
 - \`reorder_scenes\` re-sequences; nothing is ever deleted via MCP.
 
