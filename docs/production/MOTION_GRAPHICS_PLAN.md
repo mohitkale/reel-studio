@@ -10,7 +10,8 @@ persistence, and render paths in both engines. Supplied footage now uses both
 media treatments: Product frame contains the whole source, and Cinematic cover uses a full-frame crop. Curated footage stays
 muted beneath narration; each scene has one timed source, and arbitrary preview
 seeks use the same media windows as export. Short source clips hold their final
-frame. Review and long-form milestones below remain planned work.
+frame. Native visual review and bounded chapter production now ship; the
+remaining design and quality work is listed below.
 
 Sequence direction now ships with Clean / Expressive / Showcase ambition in
 manual and AI creation (including the AI MCP tool). A saved seed gives
@@ -272,8 +273,14 @@ HyperFrames verifies the native manifest before computing its silent-section
 cache identity. The aggregate plan hash includes freshly encoded assembly
 audio, so assembler-only audio and its aggregate plan.json are excluded from
 the visual key; all frozen chunk inputs and encoder metadata remain included.
-Cache identities include the complete composition, so editing one chapter still
-invalidates every section. Verified 32-second exports preserve every frame and
+HyperFrames cache identities include the complete visual composition, so editing
+one chapter still invalidates every section there. Remotion scopes the actual
+silent render to visible scenes and overlapping captions, retaining global
+timing and outgoing holds. A visual edit reuses unaffected sections; shared
+direction, cover, timing or renderer changes invalidate dependent sections.
+The complete audio graph is rebuilt once. Native full/scoped stills match, and
+a last-scene edit preserves the opening frames while changing the final visual.
+Verified 32-second exports preserve every frame and
 looping music across joins, with
 identical video packets on retry. The full test suite covers corruption, canceled
 work, retention and concat paths containing spaces/apostrophes.
@@ -290,7 +297,8 @@ against the frozen release/token allowance. Token settings and old queued-job
 allowances remain unchanged.
 Both engines passed the 210-second six-chapter local-speech sample: 5,040 frames,
 continuous music through loops/joins, measured encoded audio, cancellation and
-unchanged section reuse. Native chapter sheets were captured.
+unchanged section reuse. Native chapter sheets and eight-frame cut strips were
+captured.
 This enables a bounded first long-video release; topic-based chapter-wise AI
 generation and broader duration/quality/media benchmarks remain separate work.
 
@@ -300,13 +308,10 @@ explanation holds; do not force social-video cuts every 2–4 seconds. Reintrodu
 motifs at chapter boundaries, vary scene families across the whole piece, and
 reserve hero animation for chapter openings and conclusions.
 
-Long-form support is a separate product milestone. Remove the 20-scene
-planning bottleneck with chapter-wise planning and selective regeneration.
-Raise the 180-second production limit only after bounded chapter render,
-resume/cancel, audio continuity, memory use, and export stitching are verified.
-Do not silently change existing API/MCP limits or token policies. A long video
-should be renderable in sections so a change to one chapter does not require
-rebuilding every frame.
+Further long-form work should add topic-based chapter-wise AI planning and
+broader duration/quality/media benchmarks. Preserve bounded calls, selective
+chapter rewriting and existing token policies. Extend selective visual reuse to
+HyperFrames only when the native compiled inputs can be safely scoped.
 
 ## Implementation order
 
@@ -362,8 +367,9 @@ rebuilding every frame.
   Portrait, square, and landscape stay readable at phone size and within safe
   areas. Captions, voice, music, and SFX remain synchronized.
 - A short sample and a multi-chapter long sample pass preview, export,
-  cancellation/retry, and visual review. The long sample is a gate for raising
-  the current 180-second limit, not a claim about today's release.
+  cancellation/retry, and visual review. The 210-second sample passed the first
+  controlled 300-second chapter release gate. Broader media and quality settings
+  need their own measured fixtures before expanding the policy again.
 - Track render time and memory per minute and per quality setting. The default
   should not acquire an unbounded per-frame or multi-sample cost.
 

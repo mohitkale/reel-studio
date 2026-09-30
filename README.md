@@ -386,7 +386,11 @@ local media for this path; other jobs keep the existing whole-video renderer.
 Audio is mixed continuously and muxed once, then optionally mastered. Short local
 music tracks are expanded for HyperFrames export to preserve looping. Recent
 retry caches are retained; inactive caches are trimmed toward 1 GiB and expire
-after seven days. Changes currently invalidate the whole composition cache.
+after seven days. Remotion renders each silent section with only its visible
+scenes and captions, so unrelated visual edits reuse unchanged sections.
+Shared timing, brand, cover, and renderer changes invalidate dependent sections;
+audio is always assembled from the complete graph. HyperFrames visual edits
+currently invalidate the whole composition cache.
 HyperFrames validates the native plan manifest and keys silent sections from
 their frozen inputs, excluding the freshly encoded assembler-only audio mix.
 Refresh keeps manual, legacy, muted, and locked cues; existing scenes retain their template

@@ -5,6 +5,7 @@ import { renderMedia, type RenderMediaOptions } from "@remotion/renderer";
 import type { VideoConfig } from "remotion";
 import type { ReelProps } from "@/compositions/types";
 import { planRenderSections } from "@/production/render-sections";
+import { sectionVisualProps } from "@/production/section-visuals";
 import { assertPathInsideRoot } from "@/server/url-safety";
 import {
   cancelableRemotion,
@@ -82,7 +83,7 @@ async function mediaHashes(props: ReelProps, serverBaseUrl: string) {
         await fs.realpath(root),
         await fs.realpath(filename),
       );
-      return [parsed.pathname + parsed.search, await hashRenderFile(real)];
+      return [parsed.pathname + parsed.search, await hashRenderFile(real)] as const;
     }),
   );
 }
@@ -109,23 +110,23 @@ export async function renderRemotionSections(args: {
       ? parsed.pathname + parsed.search
       : url;
   };
-  const cacheProps = {
-    ...inputProps,
-    audioUrl: localUrl(inputProps.audioUrl),
-    musicUrl: localUrl(inputProps.musicUrl),
-    coverUrl: localUrl(inputProps.coverUrl),
-    sfxCues: inputProps.sfxCues?.map((cue) => ({
+  const canonicalProps = (props: ReelProps) => ({
+    ...props,
+    audioUrl: localUrl(props.audioUrl),
+    musicUrl: localUrl(props.musicUrl),
+    coverUrl: localUrl(props.coverUrl),
+    sfxCues: props.sfxCues?.map((cue) => ({
       ...cue,
       url: localUrl(cue.url),
     })),
-    scenes: inputProps.scenes.map((scene) => ({
+    scenes: props.scenes.map((scene) => ({
       ...scene,
       background: scene.background
         ? { ...scene.background, url: localUrl(scene.background.url) }
         : undefined,
       carouselImages: scene.carouselImages?.map(localUrl),
     })),
-  };
+  });
   const sections = planRenderSections(
     composition.durationInFrames,
     composition.fps,
@@ -142,13 +143,12 @@ export async function renderRemotionSections(args: {
       "utf8",
     ),
   ) as { version: string };
-  const key = renderCacheKey({
-    version: 1,
+  const identity = {
+    version: 2,
     engine: "remotion",
     renderer: renderer.version,
     node: process.version,
     bundle: await bundleHash,
-    inputProps: cacheProps,
     composition: {
       id: composition.id,
       width: composition.width,
@@ -157,8 +157,8 @@ export async function renderRemotionSections(args: {
       durationInFrames: composition.durationInFrames,
     },
     settings: args.settings,
-    media: await mediaHashes(inputProps, args.serverBaseUrl),
-  });
+  };
+  const media = new Map(await mediaHashes(inputProps, args.serverBaseUrl));
   const common = {
     serveUrl: args.serveUrl,
     composition,
@@ -170,6 +170,20 @@ export async function renderRemotionSections(args: {
   };
   const paths: string[] = [];
   for (const section of sections) {
+    const scoped = sectionVisualProps(inputProps, section, composition.fps);
+    const key = renderCacheKey({
+      ...identity,
+      inputProps: canonicalProps(scoped),
+      media: mediaUrls(scoped).map((url) => {
+        const local = localUrl(url)!;
+        const fingerprint = media.get(local);
+        if (!fingerprint)
+          throw new Error(
+            "A section visual is missing its frozen media fingerprint.",
+          );
+        return [local, fingerprint];
+      }),
+    });
     const result = await renderCachedSection({
       key,
       section,
@@ -177,6 +191,7 @@ export async function renderRemotionSections(args: {
         cancelableRemotion((cancelSignal) =>
           renderMedia({
             ...common,
+            inputProps: scoped,
             ...args.settings,
             cancelSignal,
             outputLocation,
