@@ -343,8 +343,11 @@ Music → Balance export loudness optionally finishes the complete mix toward
 −16 LUFS with a −1 dBTP true peak ceiling. Both engines use two-pass FFmpeg
 processing and measure the encoded delivery before marking it complete. Video
 packets are copied; authored quiet/loud passages retain their range when linear
-gain can meet the loudness/peak target. Silent/unmeasurable audio stays untouched. Editor playback
-uses the original levels. The setting survives snapshots and revision restore;
+gain can meet the loudness/peak target. Finite mixes outside the encoded target
+get at most two measured correction passes. A continuous sample clock, authored
+start delays and the video endpoint are preserved. Silent/unmeasurable audio
+stays untouched. Editor playback uses the original levels. The setting survives
+snapshots and revision restore;
 REST/MCP `update_script` accepts `audioMastering: "balanced" | "original"`.
 Completed production metadata includes the checksum-matched audio report.
 Chapters in the editor suggests a draft outline, supports named storyboard

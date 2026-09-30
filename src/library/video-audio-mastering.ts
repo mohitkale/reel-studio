@@ -64,6 +64,86 @@ function measurement(stats: NonNullable<Awaited<ReturnType<typeof measure>>>) {
     thresholdLufs: stats.input_thresh,
   };
 }
+function meetsTarget(stats: Awaited<ReturnType<typeof measure>>) {
+  return Boolean(
+    stats &&
+    Math.abs(stats.input_i - BALANCED_AUDIO_TARGET.integratedLufs) <= 1 &&
+    stats.input_tp <= BALANCED_AUDIO_TARGET.maxTruePeakDbtp,
+  );
+}
+function normalizationFilter(
+  stats: NonNullable<Awaited<ReturnType<typeof measure>>>,
+  peak = -1.5,
+) {
+  const range = Math.min(
+    50,
+    Math.max(BALANCED_AUDIO_TARGET.loudnessRangeLu, stats.input_lra),
+  );
+  return `loudnorm=I=-16:TP=${peak}:LRA=${range}:measured_I=${stats.input_i}:measured_TP=${stats.input_tp}:measured_LRA=${stats.input_lra}:measured_thresh=${stats.input_thresh}:offset=${stats.target_offset}:linear=true`;
+}
+async function finishAudio(
+  source: string,
+  destination: string,
+  filter: string,
+) {
+  // loudnorm can add a filter tail. Bound each pass to the unchanged video
+  // stream so a correction cannot extend delivery or accumulate AAC padding.
+  const { stdout } = await run("ffprobe", [
+    "-v",
+    "error",
+    "-select_streams",
+    "v:0",
+    "-show_entries",
+    "stream=duration",
+    "-of",
+    "json",
+    source,
+  ]);
+  const duration = z
+    .object({
+      streams: z
+        .array(
+          z.object({
+            duration: z.coerce.number().finite().positive(),
+          }),
+        )
+        .length(1),
+    })
+    .parse(JSON.parse(stdout)).streams[0].duration;
+  await run("ffmpeg", [
+    "-hide_banner",
+    "-loglevel",
+    "error",
+    "-nostdin",
+    "-y",
+    "-i",
+    source,
+    "-map",
+    "0:v:0",
+    "-map",
+    "0:a:0",
+    "-map_metadata",
+    "0",
+    "-c:v",
+    "copy",
+    "-af",
+    // Freeze a continuous sample clock through buffered loudnorm passes. Honor
+    // intentional source offsets as silence, then reset filter output timestamps
+    // and pad to the exact video endpoint before AAC encoding.
+    `aresample=48000:async=1:first_pts=0,${filter},asetpts=N/SR/TB,apad`,
+    "-ar",
+    "48000",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "192k",
+    "-t",
+    String(duration),
+    "-movflags",
+    "+faststart",
+    destination,
+  ]);
+}
 export function audioMasteringReportPath(filename: string) {
   return `${filename}.audio.json`;
 }
@@ -97,6 +177,7 @@ export async function masterVideoAudio(
     .parse(JSON.parse(stdout));
   const before = probe.streams.length ? await measure(filename) : null;
   const temporary = `${filename}.${randomUUID()}.master.mp4`;
+  const correction = `${filename}.${randomUUID()}.correction.mp4`;
   const reportTemporary = `${reportPath}.${randomUUID()}.tmp`;
   try {
     let after: typeof before = null;
@@ -106,47 +187,34 @@ export async function masterVideoAudio(
       // A lower target range silently forces loudnorm into dynamic mode even
       // with linear=true. Preserve authored quiet holds when constant gain can
       // meet the loudness/peak target; the encoded audit remains authoritative.
-      const range = Math.min(
-        50,
-        Math.max(BALANCED_AUDIO_TARGET.loudnessRangeLu, before.input_lra),
-      );
-      const filter = `loudnorm=I=-16:TP=-1.5:LRA=${range}:measured_I=${before.input_i}:measured_TP=${before.input_tp}:measured_LRA=${before.input_lra}:measured_thresh=${before.input_thresh}:offset=${before.target_offset}:linear=true`;
-      await run("ffmpeg", [
-        "-hide_banner",
-        "-loglevel",
-        "error",
-        "-nostdin",
-        "-y",
-        "-i",
-        filename,
-        "-map",
-        "0:v:0",
-        "-map",
-        "0:a:0",
-        "-map_metadata",
-        "0",
-        "-c:v",
-        "copy",
-        "-af",
-        filter,
-        "-ar",
-        "48000",
-        "-c:a",
-        "aac",
-        "-b:a",
-        "192k",
-        "-movflags",
-        "+faststart",
-        temporary,
-      ]);
+      await finishAudio(filename, temporary, normalizationFilter(before));
       after = await measure(temporary);
-      if (
-        !after ||
-        Math.abs(after.input_i - BALANCED_AUDIO_TARGET.integratedLufs) > 1 ||
-        after.input_tp > BALANCED_AUDIO_TARGET.maxTruePeakDbtp
-      )
+      // Correct from actual encoded measurements, with a strict bounded retry.
+      // Constant gain keeps the envelope when feasible; otherwise the measured
+      // limiter pass receives extra AAC headroom. Source video stays untouched.
+      for (
+        let attempt = 0;
+        attempt < 2 && after && !meetsTarget(after);
+        attempt++
+      ) {
+        const gain = Math.min(
+          BALANCED_AUDIO_TARGET.integratedLufs - after.input_i,
+          -1.5 - after.input_tp,
+        );
+        const filter =
+          Math.abs(
+            after.input_i + gain - BALANCED_AUDIO_TARGET.integratedLufs,
+          ) <= 0.8
+            ? `volume=${gain}dB`
+            : normalizationFilter(after, -2.5);
+        await finishAudio(temporary, correction, filter);
+        after = await measure(correction);
+        assertProductionActive();
+        await fs.rename(correction, temporary);
+      }
+      if (!meetsTarget(after))
         throw new Error(
-          "Balanced audio could not meet its measured loudness/peak target. Keep the current mix or adjust the source audio.",
+          `Balanced audio could not meet its measured loudness/peak target${after ? ` (${after.input_i} LUFS, ${after.input_tp} dBTP)` : ""}. Keep the current mix or adjust the source audio.`,
         );
     }
     const hash = createHash("sha256");
@@ -177,6 +245,7 @@ export async function masterVideoAudio(
     return report;
   } finally {
     await fs.rm(temporary, { force: true });
+    await fs.rm(correction, { force: true });
     await fs.rm(reportTemporary, { force: true });
   }
 }

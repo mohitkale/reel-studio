@@ -105,6 +105,72 @@ it("measures real encoded audio, preserves video packets, and rejects stale audi
     await fs.rm(directory, { recursive: true, force: true });
   }
 }, 20_000);
+it("keeps a complete audio sample clock and honors authored start delays", async () => {
+  const directory = await fs.mkdtemp(
+    path.join(tmpdir(), "reel-mastering-clock-"),
+  );
+  try {
+    const file = path.join(directory, "delayed.mp4");
+    await run("ffmpeg", [
+      "-v",
+      "error",
+      "-y",
+      "-f",
+      "lavfi",
+      "-i",
+      "color=c=navy:s=320x180:r=15:d=6",
+      "-f",
+      "lavfi",
+      "-i",
+      "sine=frequency=220:sample_rate=48000:duration=5.9",
+      "-af",
+      "asetpts=PTS+0.1/TB",
+      "-c:v",
+      "libx264",
+      "-pix_fmt",
+      "yuv420p",
+      "-c:a",
+      "aac",
+      "-t",
+      "6",
+      file,
+    ]);
+    const before = await videoHash(file);
+    const report = await masterVideoAudio(file, "balanced");
+    expect(report?.status).toBe("verified");
+    expect(await videoHash(file)).toBe(before);
+    const { stdout } = await run(
+      "ffmpeg",
+      [
+        "-v",
+        "error",
+        "-i",
+        file,
+        "-map",
+        "0:a:0",
+        "-f",
+        "f32le",
+        "-ar",
+        "48000",
+        "-ac",
+        "1",
+        "-",
+      ],
+      { encoding: "buffer", maxBuffer: 4 * 1024 * 1024 },
+    );
+    expect(stdout.length / 4 / 48000).toBeGreaterThanOrEqual(6);
+    const rms = (start: number, end: number) => {
+      let sum = 0;
+      for (let index = start * 48000; index < end * 48000; index++)
+        sum += stdout.readFloatLE(index * 4) ** 2;
+      return Math.sqrt(sum / ((end - start) * 48000));
+    };
+    expect(rms(0, 0.05)).toBeLessThan(0.0001);
+    expect(rms(0.2, 0.3)).toBeGreaterThan(0.01);
+  } finally {
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+}, 20_000);
 it("balances high-range narration and quiet music holds without forced dynamic normalization", async () => {
   const directory = await fs.mkdtemp(
     path.join(tmpdir(), "reel-mastering-range-"),
@@ -162,6 +228,47 @@ it("leaves silent and audio-free media unchanged and safely cancels finishing", 
         (name) => name.includes(".master.") || name.endsWith(".tmp"),
       ),
     ).toEqual([]);
+  } finally {
+    await fs.rm(directory, { recursive: true, force: true });
+  }
+}, 20_000);
+it("verifies the encoded ceiling on high-crest sound accents over a quiet bed", async () => {
+  const directory = await fs.mkdtemp(
+    path.join(tmpdir(), "reel-mastering-peaks-"),
+  );
+  try {
+    const file = path.join(directory, "mix.mp4");
+    await fixture(
+      file,
+      "aevalsrc=(0.012+0.87*lt(mod(t\\,10)\\,0.05))*sin(2*PI*220*t):s=48000:d=32",
+      32,
+    );
+    const before = await videoHash(file);
+    const report = await masterVideoAudio(file, "balanced");
+    expect(report?.status).toBe("verified");
+    expect(Math.abs(report!.after!.integratedLufs + 16)).toBeLessThanOrEqual(1);
+    expect(report?.after?.truePeakDbtp).toBeLessThanOrEqual(-1);
+    expect(await videoHash(file)).toBe(before);
+    const { stdout } = await run("ffprobe", [
+      "-v",
+      "error",
+      "-show_entries",
+      "format=duration",
+      "-of",
+      "json",
+      file,
+    ]);
+    expect(
+      Math.abs(Number(JSON.parse(stdout).format.duration) - 32),
+    ).toBeLessThan(1 / 30);
+    expect(
+      (await fs.readdir(directory)).some(
+        (filename) =>
+          filename.includes(".correction.") ||
+          filename.includes(".master.") ||
+          filename.endsWith(".tmp"),
+      ),
+    ).toBe(false);
   } finally {
     await fs.rm(directory, { recursive: true, force: true });
   }

@@ -56,6 +56,10 @@ and authored quiet/loud passages retain their source range when linear gain can
 meet the loudness/peak target. The range parameter follows the measured source
 so FFmpeg does not silently force dynamic normalization solely because a quiet
 hold exceeds the default range; see the [loudnorm contract](https://ffmpeg.org/ffmpeg-filters.html#loudnorm).
+Finite mixes outside the encoded target receive at most two measured
+corrections. Each pass retains authored start delays, resets the buffered
+filter's sample clock and pads/trims to the unchanged video endpoint before
+AAC encoding. High-crest accents and speech mixes are verified after encoding.
 Checksum-matched measurements accompany production metadata. Original mix
 levels remain the default and preview behavior; silent/unmeasurable audio is
 explicitly skipped. These are product targets, not platform compliance claims.
