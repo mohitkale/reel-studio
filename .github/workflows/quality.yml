@@ -18,7 +18,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
-      - run: npm run test:unit
+      - run: npm run test:unit -- --maxWorkers=2
       - run: npm run security:scan
       - run: npm run release:check
       - run: npm run build

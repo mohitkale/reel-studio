@@ -292,6 +292,9 @@ plus 36 maximum-length native captures. Content measurements reported no
 clipping/safe-area findings; all evidence sheets were manually reviewed. The
 baseline comprised 18 native stills. The full 577-test suite passed with two
 workers after media fixture timeouts under simultaneous capture load; 18 focused
-motion checks then passed on the final code. Typecheck, lint, secret scan, fast
+motion checks then passed on the final code. The CI unit step also uses two
+workers after an existing five-second SQLite fixture timed out under contention;
+assertions and timeouts are unchanged. All 576 unit checks passed with this
+exact command. Typecheck, lint, secret scan, fast
 release contract and production build passed. No provider calls, dependencies or
 long-render matrix were required.
