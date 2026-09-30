@@ -27,6 +27,7 @@ import {
 } from "@/production/visual-review";
 import type { VideoEngineId } from "@/engines/types";
 import { videoDurationLimit } from "@/production/limits";
+import { reviewVisualInputs } from "@/production/visual-review-findings";
 import {
   cancelChild,
   cancelableRemotion,
@@ -282,6 +283,13 @@ export async function createVisualReview(
       height: props.height,
       fps: props.fps,
       takeUsable: timing.takeUsable,
+      findings: reviewVisualInputs(
+        props.scenes,
+        timing.timeline,
+        points.map((point) => point.sceneId),
+        props.fps,
+        cover,
+      ),
       stills: points.map((point) => ({
         ...point,
         url: store.url(key(point.frame)),

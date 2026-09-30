@@ -82,8 +82,13 @@ are serialized and bounded, with cleanup on cancellation and failure. Dense
 transition strips now capture up to eight native frames around a selected
 incoming cut, from the outgoing hold through the reveal. Frame-rate-scaled
 sampling stays inside the two scenes and includes cover offsets. First scenes
-have no incoming storyboard cut. Pixel-based legibility/safe-area checks and
-broader visual repetition review remain future review work.
+have no incoming storyboard cut. Scene-linked review findings now include
+treatment fallbacks, repeated active treatments across sheet boundaries, and
+advisory copy-length reading allowances against actual scene holds. Hidden text
+does not trigger copy checks; cover offsets and the selected/estimated timeline
+are shared with still capture. These are saved-input heuristics, not measured
+pixel legibility, language-specific reading rates or design scores. Pixel-based
+legibility/safe-area checks and broader visual grammar review remain future work.
 
 ## Product decision
 
@@ -381,3 +386,23 @@ composition, make a new video renderer, or enable expensive blur for every
 frame. Build a small set of excellent authored recipes and a planner that uses
 them with judgment. Expand the library only after real renders show where its
 creative range is lacking.
+
+## Remaining implementation and evaluation
+
+The first recipe pack, deterministic direction, synchronized accents, music
+maps, measured audio mastering, native review, chapter authoring and bounded
+chapter production are implemented. Follow-ups should remain distinct tasks:
+
+1. Topic-based chapter-wise AI planning with bounded provider calls, explicit
+   usage limits, preserved partial work and selective retry.
+2. Richer authored choreography and chapter motifs, reviewed against unrelated
+   briefs before adding comparison, quiet-beat and brand-payoff recipes.
+3. Native pixel/layout evidence for text clipping, safe areas and contrast;
+   current review findings check saved inputs and timing only.
+4. Narration-aware cut suggestions from reviewed music anchors, preserving
+   speaking windows and creator timing.
+5. Selective HyperFrames visual reuse when compiled native inputs can be safely
+   scoped; its current retries reuse unchanged whole-composition sections.
+6. Broader five-minute footage/quality/resolution benchmarks, followed by an
+   opt-in finishing experiment for heavier effects or motion blur with measured
+   cost. No default multi-sample blur is enabled.

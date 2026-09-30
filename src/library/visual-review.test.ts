@@ -160,6 +160,32 @@ describe("cached visual review", () => {
     ).rejects.toThrow("no longer exists");
     expect(mocks.render).toHaveBeenCalledTimes(2);
   });
+  it("returns advisory findings from the same saved scene and estimated timing as its stills", async () => {
+    const edited = structuredClone(snapshot);
+    edited.script.scenes[0].text = "a".repeat(121);
+    edited.script.scenes[0].spokenText = "Short narration";
+    mocks.capture.mockResolvedValue(edited);
+    const result = await createVisualReview(
+      "script",
+      input,
+      "http://localhost:3000",
+    );
+    expect(result.findings.map((finding) => finding.kind)).toEqual([
+      "fallback",
+      "reading-time",
+    ]);
+    expect(
+      result.findings.every(
+        (finding) => finding.sceneId === "scene" && finding.frame === 0,
+      ),
+    ).toBe(true);
+    edited.script.hideText = true;
+    mocks.capture.mockResolvedValue(edited);
+    expect(
+      (await createVisualReview("script", input, "http://localhost:3000"))
+        .findings,
+    ).toEqual([]);
+  });
   it("does not publish a failed capture and retries successfully", async () => {
     mocks.render.mockRejectedValueOnce(new Error("Media unavailable"));
     await expect(

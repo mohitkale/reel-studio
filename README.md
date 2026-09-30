@@ -403,6 +403,12 @@ last-scene visual edit. Existing Node/FFmpeg/Chromium render dependencies are
 required; the gate does not install software or call a paid provider. Reports,
 MP4s and review PNGs are saved in `.artifacts/video-sections-<timestamp>/`.
 
+Visual review includes scene-linked treatment fallback and repetition findings,
+plus advisory copy reading-time estimates. These checks use saved inputs and
+the same selected-take or estimated timeline as the stills. They preserve
+intentional continuity and fast cuts; playback and phone-size review remain
+necessary for visual legibility.
+
 Refresh keeps manual, legacy, muted, and locked cues; existing scenes retain their template
 cue behavior. Music → Adjust sound cues lets creators choose the clip, set its
 level (including mute), shift its timing, or restore automatic direction.

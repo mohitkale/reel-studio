@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { ReelBeat } from "@/compositions/types";
+import type { VisualReviewFinding } from "@/production/visual-review-findings";
 
 export const visualReviewRequestSchema = z
   .object({
@@ -79,6 +80,7 @@ export interface VisualReviewResult {
   height: number;
   fps: number;
   takeUsable: boolean;
+  findings: VisualReviewFinding[];
   stills: Array<ReviewPoint & { url: string }>;
 }
 

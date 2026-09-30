@@ -186,6 +186,40 @@ export function VisualReviewDialog({
                 : "Remotion"}
               {" · Select a still to edit its scene"}
             </p>
+            {current.findings?.length > 0 && (
+              <section
+                aria-label="Review suggestions"
+                className="rounded-lg border p-3"
+              >
+                <p className="text-sm font-medium">Review suggestions</p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Saved input and copy-length checks. Reading time is an
+                  estimate; review playback and phone-size stills for
+                  legibility.
+                </p>
+                <ul className="mt-2 space-y-2">
+                  {current.findings.map((finding) => (
+                    <li key={`${finding.sceneId}-${finding.kind}`}>
+                      <button
+                        type="button"
+                        className="hover:text-primary focus-visible:outline-primary w-full text-left text-xs focus-visible:outline-2 focus-visible:outline-offset-2"
+                        onClick={() => {
+                          onSelectScene(finding.sceneId);
+                          setOpen(false);
+                        }}
+                      >
+                        <span className="font-medium">
+                          Scene {finding.sceneNumber} ·{" "}
+                          {(finding.frame / current.fps).toFixed(2)}s
+                        </span>
+                        {" — "}
+                        {finding.message}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
             {phoneSize && (
               <p className="text-muted-foreground text-xs">
                 320 px wide, scaled down further only if your window is
