@@ -236,7 +236,10 @@ until saved. Each chapter contains at most 20 scenes, with at most 12 chapters.
 Saving rejects changed scene order or a competing outline without touching
 copy, narration, media, motion or timing. REST/MCP share the same contract;
 immutable snapshots retain the outline and revision restore maps boundaries to
-new scene IDs. Frozen revision validation supports bounded 20-scene slices.
+new scene IDs, including saved sound-cue references. Per-scene text visibility,
+muted cues, manual trims, motion anchors and locks survive restore. Cues that
+already refer to deleted scenes are omitted. Frozen revision validation supports
+bounded 20-scene slices.
 Chapter-scoped rewrites now use a bounded provider call with adjacent copy for
 continuity, optional narrower scene selection, preserved locks/IDs/motion, and
 an atomic stale-draft check. Larger unscoped rewrites are rejected before provider

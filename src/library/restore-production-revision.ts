@@ -1,5 +1,6 @@
 import { prisma } from "@/library/db";
-import { updateScript, getScript } from "@/library/repositories/scripts";
+import { updateScript } from "@/library/repositories/scripts";
+import { parseSfxState } from "@/lib/sfx-cues";
 import { chapterPlanIssue } from "@/production/chapters";
 import { saveChapterPlan } from "@/library/chapter-service";
 import { createProjectFromPlan } from "@/library/repositories/projects";
@@ -85,30 +86,56 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
       creationSource: { kind: "text" },
     },
   );
-  await prisma.script.update({
-    where: { id: created.scriptId },
-    data: {
-      fps: snapshot.script.fps,
-      coverUrl: snapshot.script.coverUrl,
-      musicUrl: snapshot.script.musicUrl,
-      musicVolume: snapshot.script.musicVolume,
-      sfxEnabled: snapshot.script.sfxEnabled,
-      sfxJson: snapshot.script.sfxJson,
-      hideText: snapshot.script.hideText,
-      hideProgressBar: snapshot.script.hideProgressBar,
-    },
+  const restoredScenes = await prisma.scene.findMany({
+    where: { scriptId: created.scriptId },
+    orderBy: { order: "asc" },
+    select: { id: true },
   });
+  const newIds = restoredScenes.map((scene) => scene.id);
+  const sceneMap = new Map(
+    snapshot.script.scenes.map((scene, index) => [scene.id, newIds[index]]),
+  );
+  const sfx = parseSfxState(snapshot.script.sfxJson);
+  const restoredSfx =
+    snapshot.script.sfxJson === null
+      ? null
+      : JSON.stringify({
+          ...sfx,
+          cues: sfx.cues.flatMap((cue) => {
+            const sceneId = sceneMap.get(cue.sceneId);
+            return sceneId ? [{ ...cue, sceneId }] : [];
+          }),
+        });
+  await prisma.$transaction([
+    prisma.script.update({
+      where: { id: created.scriptId },
+      data: {
+        fps: snapshot.script.fps,
+        coverUrl: snapshot.script.coverUrl,
+        musicUrl: snapshot.script.musicUrl,
+        musicVolume: snapshot.script.musicVolume,
+        sfxEnabled: snapshot.script.sfxEnabled,
+        sfxJson: restoredSfx,
+        hideText: snapshot.script.hideText,
+        hideProgressBar: snapshot.script.hideProgressBar,
+      },
+    }),
+    ...snapshot.script.scenes.flatMap((scene, index) =>
+      scene.hideText === null || scene.hideText === undefined
+        ? []
+        : [
+            prisma.scene.update({
+              where: { id: newIds[index] },
+              data: { hideText: scene.hideText },
+            }),
+          ],
+    ),
+  ]);
   if (snapshot.script.audioMastering !== undefined)
     await updateScript(created.scriptId, {
       audioMastering: snapshot.script.audioMastering,
     });
   if (snapshot.script.chapterPlan) {
-    const restored = await getScript(created.scriptId);
-    if (!restored) throw new Error("Restored script not found");
-    const newIds = restored.scenes.map((scene) => scene.id);
-    const sceneMap = new Map(
-      snapshot.script.scenes.map((scene, index) => [scene.id, newIds[index]]),
-    );
     await saveChapterPlan(created.scriptId, {
       expected: null,
       expectedSceneIds: newIds,
