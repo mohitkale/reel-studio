@@ -220,8 +220,11 @@ export function useSetScriptCover(scriptId: string) {
 export function useSetScriptMusic(scriptId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { musicUrl?: string | null; musicVolume?: number }) =>
-      apiSend(`/api/scripts/${scriptId}`, "PATCH", vars),
+    mutationFn: (vars: {
+      musicUrl?: string | null;
+      musicVolume?: number;
+      audioMastering?: import("@/production/audio-mastering").AudioMastering;
+    }) => apiSend(`/api/scripts/${scriptId}`, "PATCH", vars),
     onMutate: async (vars) => {
       await qc.cancelQueries({ queryKey: ["script", scriptId] });
       const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
@@ -231,6 +234,9 @@ export function useSetScriptMusic(scriptId: string) {
           ...(vars.musicUrl !== undefined ? { musicUrl: vars.musicUrl } : {}),
           ...(vars.musicVolume !== undefined
             ? { musicVolume: vars.musicVolume }
+            : {}),
+          ...(vars.audioMastering !== undefined
+            ? { audioMastering: vars.audioMastering }
             : {}),
         });
       }
@@ -266,7 +272,11 @@ export function useEditSfxCue(scriptId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: SfxCueEditRequest) =>
-      apiSend<{ script: ScriptDTO }>(`/api/scripts/${scriptId}/sfx`, "PATCH", body),
+      apiSend<{ script: ScriptDTO }>(
+        `/api/scripts/${scriptId}/sfx`,
+        "PATCH",
+        body,
+      ),
     onSuccess: (data) => qc.setQueryData(["script", scriptId], data.script),
     onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
   });

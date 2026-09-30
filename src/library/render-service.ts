@@ -36,6 +36,10 @@ import {
 import { type Orientation, dimsFor } from "@/lib/orientation";
 import { resolveReelSfxCues } from "@/lib/sfx-cues";
 import { resolveSpokenWordWindows } from "@/lib/spoken-word-windows";
+import {
+  masterVideoAudio,
+  audioMasteringReportPath,
+} from "@/library/video-audio-mastering";
 import { getAssetStore } from "@/library/storage";
 import { listTakes } from "@/library/repositories/takes";
 import { normalizeTemplateId } from "@/compositions/templates";
@@ -466,7 +470,9 @@ async function runRemotionRender({
         timeoutInMilliseconds: 300_000,
         logLevel: "error",
         onProgress: ({ progress: p }) => {
-          const pct = Math.round(p * 100) / 100;
+          const pct =
+            Math.round(p * (script.audioMastering === "balanced" ? 96 : 100)) /
+            100;
           progress(pct, "rendering");
           if (Math.round(pct * 100) % 5 === 0) {
             console.log(`[render] Job ${renderId}: ${Math.round(pct * 100)}%`);
@@ -475,7 +481,9 @@ async function runRemotionRender({
       }),
     );
 
-    // 6. Mark done.
+    await masterVideoAudio(outputPath, script.audioMastering);
+    assertProductionActive();
+    // 6. Mark done only after requested audio finishing succeeds.
     await completeRender(renderId, outputKey);
     upsertJob({
       id: renderId,
@@ -485,6 +493,12 @@ async function runRemotionRender({
     });
     console.log("[render] Job", renderId, "complete:", outputPath);
   } catch (err) {
+    await fs.rm(
+      audioMasteringReportPath(
+        path.join(process.cwd(), "media", "renders", `render-${renderId}.mp4`),
+      ),
+      { force: true },
+    );
     await fs.rm(
       path.join(process.cwd(), "media", "renders", `render-${renderId}.mp4`),
       { force: true },

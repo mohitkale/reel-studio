@@ -135,6 +135,7 @@ export interface ScriptDTO {
   productionPreset?: { id: ProductionPresetId; version: string };
   motionPlan?: MotionPlanSettings;
   musicMap?: MusicMap;
+  audioMastering?: import("@/production/audio-mastering").AudioMastering;
   captionTracks?: CaptionTrackDTO[];
 }
 

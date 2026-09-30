@@ -51,6 +51,7 @@ function contentHash(script: ScriptDTO): string {
     coverUrl: script.coverUrl,
     musicUrl: script.musicUrl,
     musicVolume: script.musicVolume,
+    audioMastering: script.audioMastering,
     sfxEnabled: script.sfxEnabled,
     sfxJson: script.sfxJson,
     hideText: script.hideText,

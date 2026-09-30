@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SfxCueEditor } from "@/components/editor/sfx-cue-editor";
 import { MusicBeatMap } from "@/components/editor/music-beat-map";
+import { AudioMasteringControl } from "@/components/editor/audio-mastering-control";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -520,6 +521,7 @@ export function MusicControl({
           </div>
 
           <SfxCueEditor scriptId={scriptId} disabled={busy} />
+          <AudioMasteringControl scriptId={scriptId} disabled={busy} />
           <MusicBeatMap
             scriptId={scriptId}
             disabled={busy}

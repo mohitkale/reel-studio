@@ -1,5 +1,9 @@
 import type { VideoSnapshot } from "@/production/video-snapshot";
 import {
+  masterVideoAudio,
+  audioMasteringReportPath,
+} from "@/library/video-audio-mastering";
+import {
   assertProductionActive,
   cancelChild,
 } from "@/library/production-cancellation";
@@ -579,6 +583,7 @@ export async function runHyperframesRender(
       },
     });
 
+    await masterVideoAudio(outputPath, script.audioMastering);
     assertProductionActive();
     await completeRender(renderId, outputKey);
     upsertJob({
@@ -591,6 +596,12 @@ export async function runHyperframesRender(
 
     await fs.rm(projectDir, { recursive: true, force: true }).catch(() => {});
   } catch (err) {
+    await fs.rm(
+      audioMasteringReportPath(
+        path.join(process.cwd(), "media", "renders", `render-${renderId}.mp4`),
+      ),
+      { force: true },
+    );
     await fs.rm(
       path.join(process.cwd(), "media", "renders", `render-${renderId}.mp4`),
       { force: true },

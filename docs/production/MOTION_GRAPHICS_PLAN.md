@@ -49,7 +49,13 @@ protects audible speech. Caption visibility does not affect this protection;
 manual, legacy and locked accents retain creator priority. Local transcription
 retains native token timing when available; missing timing never becomes an
 estimated word grid. Both engines, preview, prepared exports and durable
-snapshots share this resolver. Final loudness targets remain later sound work.
+snapshots share this resolver. Optional balanced export audio now targets
+−16 LUFS with a −1 dBTP ceiling. Two-pass processing finishes the whole mix;
+encoded AAC is measured against ±1 LU tolerance and the peak ceiling before
+delivery. Video packets are copied, cancellation leaves no partial deliverable,
+and checksum-matched measurements accompany production metadata. Original mix
+levels remain the default and preview behavior; silent/unmeasurable audio is
+explicitly skipped. These are product targets, not platform compliance claims.
 
 The editor now checks treatment input compatibility across the video in the
 direction menu. Warnings explain each preset fallback and jump to the affected

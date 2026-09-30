@@ -54,7 +54,7 @@ it("analyzes local audio once, saves safe manual edits and freezes them in snaps
   try {
     const { analyzeMusicMap, editMusicMap } =
       await import("./music-map-service");
-    const { getScript } = await import("./repositories/scripts");
+    const { getScript, updateScript } = await import("./repositories/scripts");
     const { captureVideoSnapshot } = await import("./video-snapshot");
     await prisma.project.create({
       data: {
@@ -97,6 +97,20 @@ it("analyzes local audio once, saves safe manual edits and freezes them in snaps
       edited,
     );
     expect((await getScript("script"))?.musicMap).toEqual(edited);
+    await updateScript("script", { audioMastering: "balanced" });
+    await updateScript("script", { energy: "calm" });
+    expect((await getScript("script"))?.audioMastering).toBe("balanced");
+    expect((await captureVideoSnapshot("script")).script.audioMastering).toBe(
+      "balanced",
+    );
+    const { restoreProductionRevision } =
+      await import("./restore-production-revision");
+    const restored = await restoreProductionRevision(
+      await captureVideoSnapshot("script"),
+    );
+    expect((await getScript(restored.scriptId))?.audioMastering).toBe(
+      "balanced",
+    );
     expect((await captureVideoSnapshot("script")).script.musicMap).toEqual(
       edited,
     );

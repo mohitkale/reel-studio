@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { audioMasteringSchema } from "@/production/audio-mastering";
 
 import { getScript, updateScript } from "@/library/repositories/scripts";
 import { authorize } from "@/server/auth";
@@ -30,10 +31,13 @@ const patchSchema = z.object({
   musicUrl: z.string().max(2048).nullable().optional(),
   musicVolume: z.number().int().min(0).max(100).optional(),
   sfxEnabled: z.boolean().optional(),
+  audioMastering: audioMasteringSchema.optional(),
   sfxJson: z.string().max(50_000).nullable().optional(),
   hideText: z.boolean().optional(),
   hideProgressBar: z.boolean().optional(),
-  styleId: z.enum(["bold-hook", "clean-story", "teach-me", "soft-brand"]).optional(),
+  styleId: z
+    .enum(["bold-hook", "clean-story", "teach-me", "soft-brand"])
+    .optional(),
   energy: z.enum(["calm", "normal", "high"]).optional(),
   voiceMode: z.enum(["oneshot", "per_scene"]).optional(),
 });
@@ -45,8 +49,13 @@ export async function PATCH(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const body = patchSchema.parse(await req.json());
-    await updateScript(id, body);
+    const body = patchSchema.safeParse(await req.json().catch(() => null));
+    if (!body.success)
+      return NextResponse.json(
+        { error: "Invalid script edit", issues: body.error.issues },
+        { status: 400 },
+      );
+    await updateScript(id, body.data);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return errorResponse(e);

@@ -9,6 +9,7 @@ import { productionPresetIdSchema } from "@/production/presets";
 import { visualAmbitionSchema } from "@/production/motion-plan";
 import { sfxCueEditRequestSchema } from "@/lib/sfx-cue-edit";
 import { musicMapEditSchema } from "@/production/music-map";
+import { audioMasteringSchema } from "@/production/audio-mastering";
 import { productionBatchRowSchema } from "@/production/batch";
 import { quickProduceOptionsSchema } from "@/production/quick-produce";
 
@@ -590,11 +591,12 @@ export function registerTools(server: McpServer): void {
     "update_script",
     {
       description:
-        "Update a script's name, cover, Style/Energy look, and/or voiceMode. voiceMode 'oneshot' = one full-reel take; 'per_scene' = generate/select clips per scene then assemble.",
+        "Update a script's name, cover, Style/Energy look, voiceMode, or export audio mastering. audioMastering balanced targets -16 LUFS with measured true peak below -1 dBTP; original keeps mix levels. Editor playback remains unmastered. voiceMode 'oneshot' = one full-reel take; 'per_scene' = generate/select clips per scene then assemble.",
       inputSchema: {
         scriptId: z.string().min(1),
         name: z.string().trim().min(1).max(120).optional(),
         coverUrl: z.string().max(2048).nullable().optional(),
+        audioMastering: audioMasteringSchema.optional(),
         styleId: styleId
           .optional()
           .describe(

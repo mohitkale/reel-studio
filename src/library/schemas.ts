@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { audioMasteringSchema } from "@/production/audio-mastering";
 import { motionPlanSettingsSchema } from "@/production/motion-plan";
 import { musicMapSchema } from "@/production/music-map";
 
@@ -76,6 +77,7 @@ export const brandOverridesSchema = z
     energy: z.enum(["calm", "normal", "high"]).optional(),
     motionPlan: motionPlanSettingsSchema.optional(),
     musicMap: musicMapSchema.optional(),
+    audioMastering: audioMasteringSchema.optional(),
     productionPreset: z
       .object({
         id: productionPresetIdSchema,

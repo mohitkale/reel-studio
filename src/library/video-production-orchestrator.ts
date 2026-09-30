@@ -1,5 +1,6 @@
 import { parseWav } from "@/lib/wav";
 import { z } from "zod";
+import { readAudioMasteringReport } from "@/library/video-audio-mastering";
 import { captureVideoSnapshot } from "@/library/video-snapshot";
 import {
   videoSnapshotSchema,
@@ -115,6 +116,7 @@ export async function verifyProductionMp4(
     duration: Number(probe.format?.duration),
     hasAudio: Boolean(audio),
     checksum: `sha256:${checksum}`,
+    audioMastering: await readAudioMasteringReport(filePath, checksum),
   };
 }
 

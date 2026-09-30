@@ -76,6 +76,7 @@ export const videoScriptSnapshotSchema = z.object({
   productionPreset: brandOverridesSchema.shape.productionPreset,
   motionPlan: brandOverridesSchema.shape.motionPlan,
   musicMap: brandOverridesSchema.shape.musicMap,
+  audioMastering: brandOverridesSchema.shape.audioMastering,
   captionTracks: z
     .array(
       z.object({

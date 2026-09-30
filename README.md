@@ -339,6 +339,13 @@ including when captions are hidden. Local transcription retains native token
 timing when available; old, imported, estimated, edited or mismatched tracks do
 not guess word timing. Manual and locked cues retain creator priority. Existing
 databases need `npm run db:migrate` for caption take/frame-rate provenance.
+Music → Balance export loudness optionally finishes the complete mix toward
+−16 LUFS with a −1 dBTP true peak ceiling. Both engines use two-pass FFmpeg
+processing and measure the encoded delivery before marking it complete. Video
+packets are copied; silent/unmeasurable audio stays untouched. Editor playback
+uses the original levels. The setting survives snapshots and revision restore;
+REST/MCP `update_script` accepts `audioMastering: "balanced" | "original"`.
+Completed production metadata includes the checksum-matched audio report.
 Refresh keeps manual, legacy, muted, and locked cues; existing scenes retain their template
 cue behavior. Music → Adjust sound cues lets creators choose the clip, set its
 level (including mute), shift its timing, or restore automatic direction.

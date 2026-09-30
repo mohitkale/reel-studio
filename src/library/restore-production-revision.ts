@@ -1,4 +1,5 @@
 import { prisma } from "@/library/db";
+import { updateScript } from "@/library/repositories/scripts";
 import { createProjectFromPlan } from "@/library/repositories/projects";
 import { videoSnapshotSchema } from "@/production/video-snapshot";
 import { normalizeTemplateIdForEngine } from "@/engines/registry";
@@ -72,5 +73,9 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
       hideProgressBar: snapshot.script.hideProgressBar,
     },
   });
+  if (snapshot.script.audioMastering !== undefined)
+    await updateScript(created.scriptId, {
+      audioMastering: snapshot.script.audioMastering,
+    });
   return created;
 }
