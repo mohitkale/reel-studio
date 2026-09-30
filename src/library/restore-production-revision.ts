@@ -137,7 +137,27 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
   )
     await updateScript(created.scriptId, {
       audioMastering: snapshot.script.audioMastering,
-      chapterDraft: snapshot.script.chapterDraft,
+      chapterDraft: snapshot.script.chapterDraft
+        ? {
+            ...snapshot.script.chapterDraft,
+            chapters: snapshot.script.chapterDraft.chapters.map((chapter) => ({
+              ...chapter,
+              generated: chapter.generated
+                ? {
+                    ...chapter.generated,
+                    sceneIds: chapter.generated.sceneIds.map((id) => {
+                      const restoredId = sceneMap.get(id);
+                      if (!restoredId)
+                        throw new Error(
+                          "A generated chapter references a missing scene.",
+                        );
+                      return restoredId;
+                    }),
+                  }
+                : undefined,
+            })),
+          }
+        : undefined,
     });
   if (snapshot.script.chapterPlan) {
     await saveChapterPlan(created.scriptId, {

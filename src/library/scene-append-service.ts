@@ -8,6 +8,7 @@ import {
   captureSceneRewriteState,
 } from "@/library/scene-rewrite-service";
 import { prepareSceneAppendScope } from "@/library/scene-append-scope";
+import { chapterDraftSchema } from "@/production/chapter-draft";
 import { chapterPlanSchema } from "@/production/chapters";
 import { AIError } from "@/providers/ai/types";
 import { resolvedStockAssetSchema } from "@/providers/stock/schemas";
@@ -17,6 +18,7 @@ export async function commitSceneAppend(input: {
   scriptId: string;
   expectedState: string;
   chapterTitle?: string;
+  draftChapterId?: string;
   scenes: Pick<
     Prisma.SceneCreateManyInput,
     "templateId" | "text" | "spokenText" | "emphasis" | "visual" | "layoutJson"
@@ -25,6 +27,8 @@ export async function commitSceneAppend(input: {
   signal?: AbortSignal;
 }) {
   if (input.signal?.aborted) throw new AIError("Generation canceled", 499);
+  if (input.draftChapterId && input.chapterTitle === undefined)
+    throw new AIError("Draft generation requires a named chapter.", 400);
   if (
     !input.scenes.length ||
     input.scenes.length > 20 ||
@@ -48,13 +52,14 @@ export async function commitSceneAppend(input: {
       brandOverridesSchema,
       {},
     );
-    prepareSceneAppendScope(
-      { scenes: row.scenes, chapterPlan: overrides.chapterPlan },
-      {
-        chapterTitle: input.chapterTitle,
-        sceneCount: input.scenes.length,
-      },
-    );
+    if (row.scenes.length || !input.draftChapterId)
+      prepareSceneAppendScope(
+        { scenes: row.scenes, chapterPlan: overrides.chapterPlan },
+        {
+          chapterTitle: input.chapterTitle,
+          sceneCount: input.scenes.length,
+        },
+      );
     const startOrder = (row.scenes.at(-1)?.order ?? -1) + 1;
     const ids: string[] = [];
     for (const [index, scene] of input.scenes.entries()) {
@@ -95,9 +100,9 @@ export async function commitSceneAppend(input: {
     }
     if (input.chapterTitle !== undefined) {
       const chapterPlan = chapterPlanSchema.parse({
-        ...overrides.chapterPlan!,
+        version: "1.0.0",
         chapters: [
-          ...overrides.chapterPlan!.chapters,
+          ...(overrides.chapterPlan?.chapters ?? []),
           {
             id: `chapter:${randomUUID()}`,
             title: input.chapterTitle,
@@ -105,6 +110,36 @@ export async function commitSceneAppend(input: {
           },
         ],
       });
+      if (input.draftChapterId) {
+        const draft = overrides.chapterDraft;
+        const chapter = draft?.chapters.find(
+          (item) => item.id === input.draftChapterId,
+        );
+        if (
+          !draft ||
+          !chapter ||
+          chapter.generated ||
+          chapter.sceneCount !== ids.length
+        )
+          throw new AIError(
+            "The selected writing chapter changed. Reload before generating.",
+            409,
+          );
+        overrides.chapterDraft = chapterDraftSchema.parse({
+          ...draft,
+          chapters: draft.chapters.map((item) =>
+            item.id === input.draftChapterId
+              ? {
+                  ...item,
+                  generated: {
+                    chapterId: chapterPlan.chapters.at(-1)!.id,
+                    sceneIds: ids,
+                  },
+                }
+              : item,
+          ),
+        });
+      }
       await tx.script.update({
         where: { id: input.scriptId },
         data: {

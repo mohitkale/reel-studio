@@ -10,6 +10,7 @@ import { sceneContinuityContext } from "@/library/scene-append-scope";
 import {
   chapterDraftSchema,
   chapterDraftCapacityIssue,
+  pendingChapterDraftIssue,
   type ChapterDraft,
 } from "@/production/chapter-draft";
 import type { ChapterDraftRequest } from "@/library/chapter-draft-input";
@@ -30,6 +31,11 @@ export async function generateChapterDraft(
     expectedState,
     await captureSceneRewriteState(scriptId),
   );
+  if (script.chapterDraft?.chapters.some((chapter) => chapter.generated))
+    throw new AIError(
+      "Discard the completed writing draft before planning another.",
+      400,
+    );
   const issue = chapterDraftCapacityIssue(
     script,
     Array(input.chapterCount).fill(input.scenesPerChapter),
@@ -120,9 +126,19 @@ export async function saveChapterDraft(
         409,
       );
     if (draft) {
-      const issue = chapterDraftCapacityIssue(
+      const priorCompleted =
+        overrides.chapterDraft?.chapters.filter(
+          (chapter) => chapter.generated,
+        ) ?? [];
+      const completed = draft.chapters.filter((chapter) => chapter.generated);
+      if (JSON.stringify(priorCompleted) !== JSON.stringify(completed))
+        throw new AIError(
+          "Generated chapter progress cannot be edited. Edit its scenes in the storyboard.",
+          400,
+        );
+      const issue = pendingChapterDraftIssue(
         { scenes: row.scenes, chapterPlan: overrides.chapterPlan },
-        draft.chapters.map((chapter) => chapter.sceneCount),
+        draft,
       );
       if (issue) throw new AIError(issue, 400);
       overrides.chapterDraft = draft;

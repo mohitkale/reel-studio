@@ -115,7 +115,12 @@ TTS always uses each scene’s `spokenText ?? text`.
    `plan_topic_chapters` saves topic writing briefs in one bounded request.
    Inspect `get_script` → `script.chapterDraft`, then edit it with
    `save_topic_chapter_draft` using the complete expected and new drafts.
-   Planning preserves scenes; it does not execute the draft or launch production.
+   Planning preserves scenes. `generate_topic_chapter` writes the next pending
+   chapter in order with the saved expected draft and `maxProviderCalls:1`.
+   Scenes, boundary and progress save together; failed work stays pending for an
+   explicitly requested retry. Completed chapters cannot append twice; use the
+   chapter-scoped rewrite. Provider/token quotas stay unchanged. No automatic
+   multi-call execution, retry or production launch is enabled.
 3. Add narration (oneshot **or** per-scene).
 4. `produce_content` → poll `get_production_job` →
    `download_production_artifact`. A legacy or approval-only token pauses video

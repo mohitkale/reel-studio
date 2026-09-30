@@ -127,3 +127,61 @@ it("loads a saved draft and edits it without a provider call", async () => {
   );
   expect(mocks.post).not.toHaveBeenCalled();
 });
+
+it("generates only the next saved chapter with an explicit single-call budget and keeps failures retryable", async () => {
+  const two = {
+    ...draft,
+    chapters: [
+      ...draft.chapters,
+      { ...draft.chapters[0], id: "later", title: "Later" },
+    ],
+  };
+  await mount(two);
+  const actions = Array.from(container.querySelectorAll("button")).filter(
+    (item) => item.textContent === "Generate this chapter",
+  );
+  expect(actions[0].disabled).toBe(false);
+  expect(actions[1].disabled).toBe(true);
+  mocks.post.mockRejectedValueOnce(new Error("Provider offline"));
+  await act(async () => {
+    actions[0].click();
+    await new Promise((resolve) => setTimeout(resolve, 30));
+  });
+  expect(mocks.post).toHaveBeenCalledExactlyOnceWith(
+    "/api/scripts/script/chapter-draft/generate",
+    {
+      providerId: "openai",
+      expected: two,
+      chapterId: "next",
+      maxProviderCalls: 1,
+      mediaPreference: "none",
+    },
+  );
+  expect(container.textContent).toContain("Provider offline");
+  expect(button("Generate this chapter").disabled).toBe(false);
+  const completed: ChapterDraft = {
+    ...draft,
+    chapters: [
+      {
+        ...draft.chapters[0],
+        generated: { chapterId: "proof", sceneIds: ["a", "b", "c", "d"] },
+      },
+    ],
+  };
+  mocks.post.mockResolvedValueOnce({
+    draft: completed,
+    script: { id: "script", scenes: [], chapterDraft: completed },
+  });
+  await act(async () => {
+    button("Generate this chapter").click();
+    await new Promise((resolve) => setTimeout(resolve, 30));
+  });
+  expect(mocks.post).toHaveBeenCalledTimes(2);
+  expect(container.textContent).toContain("1/1 chapters generated");
+  expect(container.textContent).toContain("Generated — edit or rewrite");
+  expect(
+    container.querySelector<HTMLInputElement>("#chapter-draft-title-0")!
+      .disabled,
+  ).toBe(true);
+  expect(button("Generate this chapter")).toBeUndefined();
+});

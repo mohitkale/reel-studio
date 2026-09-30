@@ -13,6 +13,13 @@ export const chapterDraftSchema = z
             title: z.string().trim().min(1).max(120),
             brief: z.string().trim().min(3).max(2000),
             sceneCount: z.number().int().min(1).max(20),
+            generated: z
+              .object({
+                chapterId: z.string().min(1).max(160),
+                sceneIds: z.array(z.string().min(1).max(160)).min(1).max(20),
+              })
+              .strict()
+              .optional(),
           })
           .strict(),
       )
@@ -22,10 +29,24 @@ export const chapterDraftSchema = z
   .strict()
   .refine(
     (draft) =>
+      draft.chapters.every(
+        (chapter, index) =>
+          !chapter.generated ||
+          (chapter.generated.sceneIds.length === chapter.sceneCount &&
+            draft.chapters.slice(0, index).every((prior) => prior.generated)),
+      ) &&
+      new Set(
+        draft.chapters.flatMap((chapter) => chapter.generated?.sceneIds ?? []),
+      ).size ===
+        draft.chapters.reduce(
+          (sum, chapter) => sum + (chapter.generated?.sceneIds.length ?? 0),
+          0,
+        ) &&
       new Set(draft.chapters.map((chapter) => chapter.id)).size ===
-      draft.chapters.length,
+        draft.chapters.length,
     {
-      message: "Draft chapter IDs must be unique.",
+      message:
+        "Draft IDs and generated scenes must be unique; generated chapters must follow draft order and match the planned count.",
     },
   );
 export type ChapterDraft = z.infer<typeof chapterDraftSchema>;
@@ -63,4 +84,28 @@ export function chapterDraftCapacityIssue(
     240
   )
     return "Keep the saved and planned scenes within 240 scenes.";
+}
+
+/** Completed chapters already consume storyboard capacity; count only pending work. */
+export function pendingChapterDraftIssue(
+  script: { scenes: readonly { id: string }[]; chapterPlan?: ChapterPlan },
+  draft: ChapterDraft,
+): string | undefined {
+  const ids = new Set(script.scenes.map((scene) => scene.id));
+  for (const chapter of draft.chapters) {
+    if (!chapter.generated) continue;
+    const saved = script.chapterPlan?.chapters.find(
+      (item) => item.id === chapter.generated!.chapterId,
+    );
+    if (
+      !saved ||
+      saved.firstSceneId !== chapter.generated.sceneIds[0] ||
+      chapter.generated.sceneIds.some((id) => !ids.has(id))
+    )
+      return "A generated chapter changed or lost scenes. Review the storyboard and outline before continuing.";
+  }
+  const counts = draft.chapters
+    .filter((chapter) => !chapter.generated)
+    .map((chapter) => chapter.sceneCount);
+  return counts.length ? chapterDraftCapacityIssue(script, counts) : undefined;
 }
