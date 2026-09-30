@@ -20,7 +20,12 @@ import path from "node:path";
 import { promises as fs } from "node:fs";
 import { spawn } from "node:child_process";
 
-import type { ReelProps, ReelScene } from "@/compositions/types";
+import {
+  coverFrames,
+  type ReelProps,
+  type ReelScene,
+} from "@/compositions/types";
+import { extendHyperframesMusic } from "@/library/hyperframes-music-loop";
 import { type Orientation, dimsFor } from "@/lib/orientation";
 import { getAssetStore } from "@/library/storage";
 import { sanitizeKey } from "@/library/storage/local-disk";
@@ -163,14 +168,17 @@ async function materializeUrl(
   return url;
 }
 
-function runWorker(args: {
+async function runWorker(args: {
   projectDir: string;
   outputPath: string;
   fps: number;
   quality: RenderQuality;
+  sections?: { width: number; height: number };
   onProgress: (pct: number) => void;
 }): Promise<void> {
   assertProductionActive();
+  const scratch = `${args.projectDir}-sections`;
+  if (args.sections) await fs.mkdir(scratch, { recursive: true });
   return new Promise((resolve, reject) => {
     const worker = path.join(
       process.cwd(),
@@ -179,16 +187,26 @@ function runWorker(args: {
     const child = spawn(
       process.execPath,
       [
+        ...(args.sections ? ["--import", "tsx"] : []),
         worker,
         args.projectDir,
         args.outputPath,
         String(args.fps),
         args.quality,
+        ...(args.sections
+          ? [
+              "sections",
+              String(args.sections.width),
+              String(args.sections.height),
+            ]
+          : []),
       ],
       {
         detached: process.platform !== "win32",
         cwd: process.cwd(),
-        env: process.env,
+        env: args.sections
+          ? { ...process.env, TMPDIR: scratch, TMP: scratch, TEMP: scratch }
+          : process.env,
         stdio: ["ignore", "pipe", "pipe"],
       },
     );
@@ -209,7 +227,7 @@ function runWorker(args: {
     });
     child.stderr.on("data", (buf: Buffer) => {
       const text = buf.toString("utf8");
-      stderr += text;
+      stderr = (stderr + text).slice(-65_536);
       for (const line of text.split(/\r?\n/)) {
         const trimmed = line.trim();
         if (!trimmed) continue;
@@ -312,10 +330,26 @@ async function writeHyperframesProject(
     }
   }
 
-  const html = buildHyperframesCompositionHtml(inputProps, {
-    producerMode: true,
-    runtimeUrl: GSAP_RENDER_URL,
-  });
+  const fps = inputProps.fps || 30;
+  const durationFrames =
+    (Math.max(
+      0,
+      ...inputProps.timeline.map(
+        (beat) => beat.startFrame + beat.durationFrames,
+      ),
+    ) || fps) + coverFrames(fps, Boolean(inputProps.coverUrl));
+  const musicUrl = await extendHyperframesMusic(
+    projectDir,
+    inputProps.musicUrl,
+    durationFrames / fps,
+  );
+  const html = buildHyperframesCompositionHtml(
+    { ...inputProps, musicUrl },
+    {
+      producerMode: true,
+      runtimeUrl: GSAP_RENDER_URL,
+    },
+  );
   await fs.writeFile(path.join(projectDir, "index.html"), html, "utf8");
 }
 
@@ -571,9 +605,16 @@ export async function runHyperframesRender(
       outputPath,
       fps: script.fps,
       quality,
+      sections:
+        script.chapterPlan && [24, 30, 60].includes(script.fps)
+          ? nativeDims
+          : undefined,
       onProgress: (pct) => {
         // Keep a little headroom so "100%" only lands after completeRender.
-        const capped = Math.min(0.99, Math.max(0.02, pct));
+        const capped = Math.min(
+          script.audioMastering === "balanced" ? 0.96 : 0.99,
+          Math.max(0.02, pct),
+        );
         progress(capped, "rendering");
         if (Math.round(capped * 100) % 5 === 0) {
           console.log(
@@ -615,5 +656,9 @@ export async function runHyperframesRender(
       recursive: true,
       force: true,
     });
+    await fs.rm(
+      path.join(process.cwd(), "media", "hf-work", `${renderId}-sections`),
+      { recursive: true, force: true },
+    );
   }
 }

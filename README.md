@@ -358,8 +358,17 @@ Each call changes at most 20 unlocked scenes, uses neighboring copy for continui
 and rejects storyboard edits made during generation. Scene IDs, motion choices,
 and copy/asset locks survive. REST/MCP `ai_generate_scenes` accepts `chapterId`
 and `sceneIds`; larger storyboards must use bounded selections.
-This is the chapter-planning foundation; video production remains limited to
-180 seconds until section rendering, retry and audio continuity pass their gates.
+Saved chapter projects now export in bounded sections, preserving global frame
+timing. Remotion uses chapter boundaries with a 30-second cap; HyperFrames uses
+native 30-second chunks at 24/30/60 fps. Checksum-verified sections in
+`media/render-cache` survive retry of unchanged inputs. Remotion requires frozen
+local media for this path; other jobs keep the existing whole-video renderer.
+Audio is mixed continuously and muxed once, then optionally mastered. Short local
+music tracks are expanded for HyperFrames export to preserve looping. Recent
+retry caches are retained; inactive caches are trimmed toward 1 GiB and expire
+after seven days. Changes currently invalidate the whole composition cache.
+Video production remains limited to 180 seconds pending longer sample and
+resource gates; whole-video chapter generation remains separate work.
 Refresh keeps manual, legacy, muted, and locked cues; existing scenes retain their template
 cue behavior. Music → Adjust sound cues lets creators choose the clip, set its
 level (including mute), shift its timing, or restore automatic direction.

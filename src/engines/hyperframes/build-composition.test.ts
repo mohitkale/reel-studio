@@ -299,6 +299,11 @@ describe("buildHyperframesCompositionHtml", () => {
 
     expect(html).toContain('data-role="voice"');
     expect(html).toContain('data-role="music"');
+    const music = new DOMParser()
+      .parseFromString(html, "text/html")
+      .querySelector("audio#music");
+    expect(music?.hasAttribute("loop")).toBe(true);
+    expect(music?.getAttribute("data-loop")).toBe("true");
     expect(html).toContain('data-role="sfx"');
     expect(html).toContain('data-fade-in="11"');
     expect(html).toContain('"duckRatio":0.35');

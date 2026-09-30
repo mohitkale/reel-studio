@@ -245,8 +245,22 @@ continuity, optional narrower scene selection, preserved locks/IDs/motion, and
 an atomic stale-draft check. Larger unscoped rewrites are rejected before provider
 work; the editor initially selects at most 20 unlocked scenes. REST/MCP share
 `chapterId` and `sceneIds` through the existing AI endpoint/tool.
-Whole-video chapter generation, section rendering, retry and audio continuity remain pending;
-the 180-second production limit is unchanged.
+Section export and retry now ship for saved chapter projects: bounded global
+frame ranges, checksum-verified local cache records, exact frame coverage,
+single continuous audio mix and final mastering. Remotion honors chapter
+boundaries with a 30-second cap for frozen local inputs. HyperFrames uses its
+native 30-second chunks at 24/30/60 fps; other jobs retain their existing path.
+Native worker scratch is isolated from persistent sections and removed on
+cancel. Short local music tracks are expanded before HyperFrames' native mix,
+because the pinned producer recognizes loop metadata but does not repeat the
+source during audio export. Remote music retains the existing producer behavior;
+freeze it locally for dependable looping. Cache identities include the complete
+composition, so editing one chapter still invalidates every section. Verified
+32-second exports preserve every frame and looping music across joins, with
+identical video packets on retry. The full test suite covers corruption, canceled
+work, retention and concat paths containing spaces/apostrophes.
+Whole-video chapter generation, reuse across chapter edits and the longer
+resource/voice/visual gates remain pending; the 180-second limit is unchanged.
 
 Plan long work in **chapters**, each with its own small arc and visual motif,
 while retaining a shared brand language. Use quiet beats and footage or

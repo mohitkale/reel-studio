@@ -449,37 +449,70 @@ async function runRemotionRender({
     );
 
     assertProductionActive();
-    await cancelableRemotion((cancelSignal) =>
-      renderMedia({
-        cancelSignal,
-        composition: { ...composition, durationInFrames: fullDuration },
+    const { renderRemotionSections, canCacheRemotionSections } =
+      await import("@/library/remotion-section-render");
+    if (
+      script.chapterPlan &&
+      prepared &&
+      canCacheRemotionSections(inputProps, serverBaseUrl)
+    ) {
+      await renderRemotionSections({
         serveUrl,
-        codec: "h264",
-        outputLocation: outputPath,
+        composition: { ...composition, durationInFrames: fullDuration },
         inputProps,
-        scale: outputScale,
-        imageFormat: "jpeg",
-        pixelFormat: "yuv420p",
-        concurrency,
-        x264Preset: qualityPreset.x264Preset,
-        crf: qualityPreset.crf,
-        offthreadVideoThreads,
-        offthreadVideoCacheSizeInBytes: 512 * 1024 * 1024,
-        mediaCacheSizeInBytes: 512 * 1024 * 1024,
-        hardwareAcceleration: "if-possible",
-        timeoutInMilliseconds: 300_000,
-        logLevel: "error",
-        onProgress: ({ progress: p }) => {
-          const pct =
-            Math.round(p * (script.audioMastering === "balanced" ? 96 : 100)) /
-            100;
-          progress(pct, "rendering");
-          if (Math.round(pct * 100) % 5 === 0) {
-            console.log(`[render] Job ${renderId}: ${Math.round(pct * 100)}%`);
-          }
+        outputPath,
+        serverBaseUrl,
+        settings: {
+          scale: outputScale,
+          x264Preset: qualityPreset.x264Preset,
+          crf: qualityPreset.crf,
+          concurrency,
+          offthreadVideoThreads,
         },
-      }),
-    );
+        chapterStarts: script.chapterPlan.chapters.flatMap((chapter) => {
+          const beat = inputProps.timeline.find(
+            (beat) => beat.sceneId === chapter.firstSceneId,
+          );
+          return beat ? [beat.startFrame + cover] : [];
+        }),
+        onProgress: (p) => progress(Math.min(0.96, p), "rendering"),
+      });
+    } else {
+      await cancelableRemotion((cancelSignal) =>
+        renderMedia({
+          cancelSignal,
+          composition: { ...composition, durationInFrames: fullDuration },
+          serveUrl,
+          codec: "h264",
+          outputLocation: outputPath,
+          inputProps,
+          scale: outputScale,
+          imageFormat: "jpeg",
+          pixelFormat: "yuv420p",
+          concurrency,
+          x264Preset: qualityPreset.x264Preset,
+          crf: qualityPreset.crf,
+          offthreadVideoThreads,
+          offthreadVideoCacheSizeInBytes: 512 * 1024 * 1024,
+          mediaCacheSizeInBytes: 512 * 1024 * 1024,
+          hardwareAcceleration: "if-possible",
+          timeoutInMilliseconds: 300_000,
+          logLevel: "error",
+          onProgress: ({ progress: p }) => {
+            const pct =
+              Math.round(
+                p * (script.audioMastering === "balanced" ? 96 : 100),
+              ) / 100;
+            progress(pct, "rendering");
+            if (Math.round(pct * 100) % 5 === 0) {
+              console.log(
+                `[render] Job ${renderId}: ${Math.round(pct * 100)}%`,
+              );
+            }
+          },
+        }),
+      );
+    }
 
     await masterVideoAudio(outputPath, script.audioMastering);
     assertProductionActive();

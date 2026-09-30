@@ -694,8 +694,10 @@ function buildSeekScript(
         if (!audio.paused) audio.pause();
         return;
       }
-      if (Math.abs((audio.currentTime || 0) - local) > 0.12) {
-        try { audio.currentTime = Math.max(0, local); } catch (_) { /* ignore seek races */ }
+      const seekTime = audio.dataset.role === 'music' && Number.isFinite(audio.duration) && audio.duration > 0
+        ? Math.max(0, local) % audio.duration : Math.max(0, local);
+      if (Math.abs((audio.currentTime || 0) - seekTime) > 0.12) {
+        try { audio.currentTime = seekTime; } catch (_) { /* ignore seek races */ }
       }
       if (playing) {
         if (audio.paused) audio.play().catch(function () { /* autoplay blocked until gesture */ });
@@ -1124,7 +1126,7 @@ export function buildHyperframesCompositionHtml(
   if (props.musicUrl) {
     const vol = Math.max(0, Math.min(1, (props.musicVolume ?? 20) / 100));
     audioTags.push(
-      `<audio id="music" preload="auto" data-role="music" data-start="0" data-duration="${totalSeconds.toFixed(3)}" data-track-index="11" data-volume="${vol}" data-fade-in="${audioMix.fadeFrames}" data-fade-out="${audioMix.fadeFrames}" src="${escapeHtml(props.musicUrl)}"></audio>`,
+      `<audio id="music" preload="auto" loop data-loop="true" data-role="music" data-start="0" data-duration="${totalSeconds.toFixed(3)}" data-track-index="11" data-volume="${vol}" data-fade-in="${audioMix.fadeFrames}" data-fade-out="${audioMix.fadeFrames}" src="${escapeHtml(props.musicUrl)}"></audio>`,
     );
   }
   const fpsSafe = Math.max(1, fps);
