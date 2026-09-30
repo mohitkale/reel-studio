@@ -323,6 +323,11 @@ also lists treatment compatibility warnings across the video; select a warning
 to jump to its scene and fix the supplied inputs or choose another treatment.
 Variety suggestions highlight runs of three or more consecutive scenes using
 the same active treatment, with a shortcut to review each run.
+Visual review generates a scene sheet (up to eight scenes at a time), four
+moments of a selected scene, and a 320 px phone-size view. Both engines use
+their native still capture with the selected take's matching timing and enabled
+captions. Revision-keyed PNGs are cached locally; changed videos require a new
+review. Stills review layout; playback remains necessary for motion and sound.
 Refresh keeps manual, legacy, muted, and locked cues; existing scenes retain their template
 cue behavior. Music → Adjust sound cues lets creators choose the clip, set its
 level (including mute), shift its timing, or restore automatic direction.

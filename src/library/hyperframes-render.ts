@@ -240,6 +240,131 @@ function runWorker(args: {
   });
 }
 
+/** Write the same runtime, fonts, catalog and HTML used by export. */
+async function writeHyperframesProject(
+  projectDir: string,
+  inputProps: ReelProps,
+) {
+  const scenes = inputProps.scenes;
+  const runtimeDir = path.join(projectDir, "_runtime");
+  await fs.mkdir(runtimeDir, { recursive: true });
+  await fs.copyFile(
+    path.join(process.cwd(), "node_modules", "gsap", "dist", "gsap.min.js"),
+    path.join(runtimeDir, "gsap.min.js"),
+  );
+  await Promise.all([
+    fs.copyFile(
+      path.join(
+        process.cwd(),
+        "node_modules",
+        "@fontsource-variable",
+        "geist",
+        "files",
+        HYPERFRAMES_RENDER_FONT_FILES.sans,
+      ),
+      path.join(runtimeDir, HYPERFRAMES_RENDER_FONT_FILES.sans),
+    ),
+    fs.copyFile(
+      path.join(
+        process.cwd(),
+        "node_modules",
+        "@fontsource-variable",
+        "geist-mono",
+        "files",
+        HYPERFRAMES_RENDER_FONT_FILES.mono,
+      ),
+      path.join(runtimeDir, HYPERFRAMES_RENDER_FONT_FILES.mono),
+    ),
+  ]);
+
+  // Materialize curated catalog blocks as compositions/*.html so the producer
+  // can resolve data-composition-src on the host index.html.
+  const tokens = inputProps.tokens ?? defaultBrandTokens;
+  const catalogScenes = scenes.filter((s) =>
+    getCatalogBlockByTemplateId(s.templateId, inputProps.catalogRevision),
+  );
+  if (catalogScenes.length) {
+    const compositionsDir = path.join(projectDir, "compositions");
+    await fs.mkdir(compositionsDir, { recursive: true });
+    for (const scene of catalogScenes) {
+      const meta = getCatalogBlockByTemplateId(
+        scene.templateId,
+        inputProps.catalogRevision,
+      );
+      if (!meta) continue;
+      if (meta.requiresCarouselImages) continue;
+      const personalized = personalizeCatalogBlock(meta, {
+        scene,
+        tokens,
+      });
+      await fs.writeFile(
+        path.join(
+          compositionsDir,
+          catalogCompositionFileName(meta.id, scene.id),
+        ),
+        localizeHyperframesRenderFonts(localizeGsapRuntime(personalized)),
+        "utf8",
+      );
+    }
+  }
+
+  const html = buildHyperframesCompositionHtml(inputProps, {
+    producerMode: true,
+    runtimeUrl: GSAP_RENDER_URL,
+  });
+  await fs.writeFile(path.join(projectDir, "index.html"), html, "utf8");
+}
+
+/** Review uses silent export props, with project-owned media localized identically. */
+export async function writeHyperframesReviewProject(
+  projectDir: string,
+  props: ReelProps,
+  serverBaseUrl: string,
+) {
+  await fs.mkdir(projectDir, { recursive: true });
+  const scenes = await Promise.all(
+    props.scenes.map(async (scene, index) => ({
+      ...scene,
+      background: scene.background
+        ? {
+            ...scene.background,
+            url: (await materializeUrl(
+              scene.background.url,
+              projectDir,
+              `bg-${index}`,
+              serverBaseUrl,
+            ))!,
+          }
+        : undefined,
+      carouselImages: await Promise.all(
+        (scene.carouselImages ?? []).map(
+          async (url, imageIndex) =>
+            (await materializeUrl(
+              url,
+              projectDir,
+              `carousel-${index}-${imageIndex}`,
+              serverBaseUrl,
+            ))!,
+        ),
+      ),
+    })),
+  );
+  const coverUrl = await materializeUrl(
+    props.coverUrl,
+    projectDir,
+    "cover",
+    serverBaseUrl,
+  );
+  await writeHyperframesProject(projectDir, {
+    ...props,
+    scenes,
+    coverUrl,
+    audioUrl: undefined,
+    musicUrl: undefined,
+    sfxCues: [],
+  });
+}
+
 export async function runHyperframesRender(
   opts: HyperframesRenderOptions,
 ): Promise<void> {
@@ -419,76 +544,7 @@ export async function runHyperframesRender(
       ? { ...prepared.props, scenes, audioUrl, musicUrl, sfxCues, coverUrl }
       : legacyInputProps;
 
-    const runtimeDir = path.join(projectDir, "_runtime");
-    await fs.mkdir(runtimeDir, { recursive: true });
-    await fs.copyFile(
-      path.join(process.cwd(), "node_modules", "gsap", "dist", "gsap.min.js"),
-      path.join(runtimeDir, "gsap.min.js"),
-    );
-    await Promise.all([
-      fs.copyFile(
-        path.join(
-          process.cwd(),
-          "node_modules",
-          "@fontsource-variable",
-          "geist",
-          "files",
-          HYPERFRAMES_RENDER_FONT_FILES.sans,
-        ),
-        path.join(runtimeDir, HYPERFRAMES_RENDER_FONT_FILES.sans),
-      ),
-      fs.copyFile(
-        path.join(
-          process.cwd(),
-          "node_modules",
-          "@fontsource-variable",
-          "geist-mono",
-          "files",
-          HYPERFRAMES_RENDER_FONT_FILES.mono,
-        ),
-        path.join(runtimeDir, HYPERFRAMES_RENDER_FONT_FILES.mono),
-      ),
-    ]);
-
-    // Materialize curated catalog blocks as compositions/*.html so the producer
-    // can resolve data-composition-src on the host index.html.
-    const tokens = script.brandTokens ?? defaultBrandTokens;
-    const catalogScenes = scenes.filter((s) =>
-      getCatalogBlockByTemplateId(
-        s.templateId,
-        prepared?.props.catalogRevision,
-      ),
-    );
-    if (catalogScenes.length) {
-      const compositionsDir = path.join(projectDir, "compositions");
-      await fs.mkdir(compositionsDir, { recursive: true });
-      for (const scene of catalogScenes) {
-        const meta = getCatalogBlockByTemplateId(
-          scene.templateId,
-          prepared?.props.catalogRevision,
-        );
-        if (!meta) continue;
-        if (meta.requiresCarouselImages) continue;
-        const personalized = personalizeCatalogBlock(meta, {
-          scene,
-          tokens,
-        });
-        await fs.writeFile(
-          path.join(
-            compositionsDir,
-            catalogCompositionFileName(meta.id, scene.id),
-          ),
-          localizeHyperframesRenderFonts(localizeGsapRuntime(personalized)),
-          "utf8",
-        );
-      }
-    }
-
-    const html = buildHyperframesCompositionHtml(inputProps, {
-      producerMode: true,
-      runtimeUrl: GSAP_RENDER_URL,
-    });
-    await fs.writeFile(path.join(projectDir, "index.html"), html, "utf8");
+    await writeHyperframesProject(projectDir, inputProps);
 
     const store = getAssetStore();
     const fileName = `render-${renderId}.mp4`;

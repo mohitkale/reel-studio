@@ -45,9 +45,16 @@ scene. Hidden-text scenes intentionally bypass these checks. This uses the
 same input contract as both renderers. Variety suggestions now flag runs of
 three or more consecutive scenes using the same active treatment and jump to
 the start of each run. Preset, hidden and fallback scenes break the run; these
-suggestions preserve intentional continuity and never block export. Rendered
-stills, phone-size legibility, timing and broader visual repetition review
-remain planned work.
+suggestions preserve intentional continuity and never block export.
+
+Visual review now generates scene sheets in pages of eight stills, four
+moments of a selected scene, and a 320 px phone-size view. Both native engine
+paths include frozen visual media, cover offsets, enabled captions and matching
+take timing (otherwise clearly labeled estimates). Stills use revision-keyed
+local PNG caches; the editor hides results after saved edits. Capture sessions
+are serialized and bounded, with cleanup on cancellation and failure. Dense
+transition strips, pixel-based legibility/safe-area checks and broader visual
+repetition review remain future review work.
 
 ## Product decision
 

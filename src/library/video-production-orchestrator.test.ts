@@ -524,6 +524,7 @@ describe("video production orchestration", () => {
     try {
       const input = structuredClone(snapshot);
       input.script.musicUrl = `/media/${name}`;
+      input.script.scenes[0].carouselImages = [`/media/${name}`];
       input.script.coverUrl =
         "https://images.unsplash.com/photo-fixture?ixid=retained";
       const resolved = await resolveVideoStageMedia(
@@ -534,6 +535,9 @@ describe("video production orchestration", () => {
         "media",
         resolved.snapshot.script.musicUrl!.slice(7),
       );
+      expect(resolved.snapshot.script.scenes[0].carouselImages).toEqual([
+        resolved.snapshot.script.musicUrl,
+      ]);
       await fs.writeFile(copied, "truncated cache");
       await resolveVideoStageMedia(input, "http://localhost:3000");
       expect(await fs.readFile(copied)).toEqual(content);

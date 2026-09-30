@@ -70,6 +70,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SceneList } from "@/components/editor/scene-list";
 import { SceneInspector } from "@/components/editor/scene-inspector";
 import { MotionDirectionMenu } from "@/components/editor/motion-direction-menu";
+import { VisualReviewDialog } from "@/components/editor/visual-review-dialog";
 import {
   EnginePlayer,
   type EnginePlayerHandle,
@@ -545,6 +546,14 @@ export function EditorClient({
               onSelectScene={selectScene}
             />
           ) : null}
+          <VisualReviewDialog
+            scriptId={scriptId}
+            scenes={scenes}
+            selectedSceneId={effectiveSceneId}
+            voiceTakeId={effectiveTakeId ?? undefined}
+            sourceKey={JSON.stringify([script, effectiveTakeId])}
+            onSelectScene={selectScene}
+          />
           {undoSnapshot && (
             <HintTooltip
               label="Restore scenes to how they were before the last AI change"
