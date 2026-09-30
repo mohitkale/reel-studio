@@ -1,3 +1,8 @@
+import {
+  LAYOUT_LOG_PREFIX,
+  layoutEvidenceSchema,
+  type LayoutEvidence,
+} from "@/production/visual-review-layout";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { tmpdir } from "node:os";
@@ -100,14 +105,16 @@ export async function renderVisualReviewFrames(
   outputDir: string,
   serverBaseUrl: string,
   signal?: AbortSignal,
+  onLayout?: (evidence: LayoutEvidence) => void,
 ): Promise<string[]> {
   await fs.mkdir(outputDir, { recursive: true });
   if (engine === "remotion") {
+    const renderProps = onLayout ? { ...props, reviewLayout: true } : props;
     const serveUrl = await getRemotionServeUrl();
     const composition = await selectComposition({
       serveUrl,
       id: "Reel",
-      inputProps: props,
+      inputProps: renderProps,
     });
     const paths: string[] = [];
     for (const frame of frames) {
@@ -118,8 +125,21 @@ export async function renderVisualReviewFrames(
             cancelSignal,
             serveUrl,
             composition: { ...composition, durationInFrames: totalFrames },
-            inputProps: props,
+            inputProps: renderProps,
             frame,
+            onBrowserLog: onLayout
+              ? (log) => {
+                  if (!log.text.startsWith(LAYOUT_LOG_PREFIX)) return;
+                  try {
+                    const evidence = layoutEvidenceSchema.parse(
+                      JSON.parse(log.text.slice(LAYOUT_LOG_PREFIX.length)),
+                    );
+                    if (evidence.frame === frame) onLayout(evidence);
+                  } catch {
+                    /* Invalid browser evidence is rejected before publishing. */
+                  }
+                }
+              : undefined,
             imageFormat: "png",
             output: outputLocation,
             logLevel: "error",
@@ -246,16 +266,52 @@ export async function createVisualReview(
       sfxCues: [],
     };
     const revision = videoStageHash({
-      contract: 1,
+      contract: 2,
       engine: captured.script.videoEngine,
       props,
       totalFrames: prepared.totalFrames,
     });
     const store = getAssetStore();
     const key = (frame: number) => `review-stills/${revision}/${frame}.png`;
+    const evidenceKey = (frame: number) =>
+      `review-stills/${revision}/${frame}.layout.json`;
+    // Only stable reading holds: entrances/exits and cut sheets retain manual review.
+    const audited = new Set(
+      points
+        .filter((point) => {
+          const beat = timing.timeline.find(
+            (item) => item.sceneId === point.sceneId,
+          )!;
+          const localFrame = point.frame - cover - beat.startFrame;
+          return (
+            captured.script.videoEngine === "remotion" &&
+            input.mode !== "transition" &&
+            point.label === "Reading" &&
+            localFrame >= props.fps &&
+            beat.durationFrames - localFrame >= props.fps * 0.4
+          );
+        })
+        .map((point) => point.frame),
+    );
+    const evidence = new Map<number, LayoutEvidence>();
     const missing = [];
-    for (const point of points)
-      if (!(await store.exists(key(point.frame)))) missing.push(point);
+    for (const point of points) {
+      if (audited.has(point.frame)) {
+        try {
+          const value = layoutEvidenceSchema.parse(
+            JSON.parse((await store.get(evidenceKey(point.frame))).toString()),
+          );
+          if (value.frame === point.frame) evidence.set(point.frame, value);
+        } catch {
+          /* Missing or corrupt evidence is recaptured with its native still. */
+        }
+      }
+      if (
+        !(await store.exists(key(point.frame))) ||
+        (audited.has(point.frame) && !evidence.has(point.frame))
+      )
+        missing.push(point);
+    }
     if (missing.length) {
       const outputDir = await fs.mkdtemp(
         path.join(tmpdir(), "reel-review-frames-"),
@@ -269,7 +325,23 @@ export async function createVisualReview(
           outputDir,
           serverBaseUrl,
           signal,
+          audited.size
+            ? (value) => {
+                if (audited.has(value.frame)) evidence.set(value.frame, value);
+              }
+            : undefined,
         );
+        for (const point of missing) {
+          if (audited.has(point.frame) && !evidence.has(point.frame))
+            throw new Error(
+              "Native layout measurement did not complete. Try again.",
+            );
+        }
+        for (const value of evidence.values())
+          await store.put(
+            evidenceKey(value.frame),
+            Buffer.from(JSON.stringify(value)),
+          );
         for (const [index, file] of paths.entries())
           await store.put(key(missing[index].frame), await fs.readFile(file));
       } finally {
@@ -277,22 +349,41 @@ export async function createVisualReview(
       }
     }
     return {
+      layoutReview: {
+        status: evidence.size ? "sampled" : "unavailable",
+        frames: [...evidence.keys()].sort((a, b) => a - b),
+      },
       revision,
       videoEngine: captured.script.videoEngine,
       width: props.width,
       height: props.height,
       fps: props.fps,
       takeUsable: timing.takeUsable,
-      findings: reviewVisualInputs(
-        props.scenes,
-        timing.timeline,
-        points.map((point) => point.sceneId),
-        props.fps,
-        cover,
-      ),
+      findings: [
+        ...reviewVisualInputs(
+          props.scenes,
+          timing.timeline,
+          points.map((point) => point.sceneId),
+          props.fps,
+          cover,
+        ),
+        ...points.flatMap((point) =>
+          (evidence.get(point.frame)?.issues ?? []).map((issue) => ({
+            sceneId: point.sceneId,
+            sceneNumber: point.sceneNumber,
+            frame: point.frame,
+            kind: issue.kind,
+            message:
+              issue.kind === "text-clipping"
+                ? `Text may be clipped in this sampled frame: “${issue.text}”. Shorten the copy or adjust its layout.`
+                : `Text extends beyond the content safe area in this sampled frame: “${issue.text}”. Check placement at phone size.`,
+          })),
+        ),
+      ].sort((a, b) => a.frame - b.frame),
       stills: points.map((point) => ({
         ...point,
         url: store.url(key(point.frame)),
+        layout: evidence.get(point.frame),
       })),
     };
   });

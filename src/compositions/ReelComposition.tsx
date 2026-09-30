@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { ReviewLayoutProbe } from "./components/review-layout-probe";
 import { AbsoluteFill, Audio, Img, Sequence, useVideoConfig } from "remotion";
 
 import { type ReelProps, coverFrames } from "./types";
@@ -62,6 +63,7 @@ function CoverFrame({ url, tokens }: { url: string; tokens: BrandTokens }) {
  * must already include the cover hold.
  */
 export const ReelComposition = React.memo(function ReelComposition({
+  reviewLayout,
   scenes,
   timeline,
   audioUrl,
@@ -107,11 +109,13 @@ export const ReelComposition = React.memo(function ReelComposition({
         layout={resolvedLayout}
       >
         <AbsoluteFill
+          data-review-root={reviewLayout ? "" : undefined}
           style={{
             backgroundColor: tokens.background,
             fontFamily: tokens.fontFamily,
           }}
         >
+          {reviewLayout ? <ReviewLayoutProbe layout={resolvedLayout} /> : null}
           {coverUrl ? (
             <Sequence durationInFrames={cover} name="Cover">
               <CoverFrame url={coverUrl} tokens={tokens} />

@@ -193,13 +193,15 @@ export function VisualReviewDialog({
               >
                 <p className="text-sm font-medium">Review suggestions</p>
                 <p className="text-muted-foreground mt-1 text-xs">
-                  Saved input and copy-length checks. Reading time is an
-                  estimate; review playback and phone-size stills for
-                  legibility.
+                  Reading time is estimated. Layout warnings apply only to
+                  measured reading frames; check playback and phone-size stills
+                  for legibility.
                 </p>
                 <ul className="mt-2 space-y-2">
-                  {current.findings.map((finding) => (
-                    <li key={`${finding.sceneId}-${finding.kind}`}>
+                  {current.findings.map((finding, index) => (
+                    <li
+                      key={`${finding.sceneId}-${finding.frame}-${finding.kind}-${index}`}
+                    >
                       <button
                         type="button"
                         className="hover:text-primary focus-visible:outline-primary w-full text-left text-xs focus-visible:outline-2 focus-visible:outline-offset-2"
@@ -220,6 +222,11 @@ export function VisualReviewDialog({
                 </ul>
               </section>
             )}
+            <p className="text-muted-foreground text-xs">
+              {current.layoutReview?.status === "sampled"
+                ? "Content text checked in sampled reading frames. Decorative chrome, captions, contrast and animated entrances need manual review."
+                : "Native layout measurements are unavailable for these frames. Check clipping and safe areas visually."}
+            </p>
             {phoneSize && (
               <p className="text-muted-foreground text-xs">
                 320 px wide, scaled down further only if your window is

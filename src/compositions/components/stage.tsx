@@ -376,6 +376,7 @@ export const Stage = React.memo(function Stage({
         }}
       />
       <AbsoluteFill
+        data-review-content=""
         style={{
           padding: `${layout.safeArea.top}px ${layout.safeArea.right}px ${layout.safeArea.bottom}px ${layout.safeArea.left}px`,
           ...contentStyle,
