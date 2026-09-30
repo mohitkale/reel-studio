@@ -43,8 +43,14 @@ const producerUrl = pathToFileURL(
   ),
 ).href;
 
-const { createRenderJob, executeRenderJob, planV2, renderChunkV2, assembleV2 } =
-  await import(producerUrl);
+const {
+  createRenderJob,
+  executeRenderJob,
+  planV2,
+  renderChunkV2,
+  assembleV2,
+  readPlanV2Manifest,
+} = await import(producerUrl);
 
 /** Normalize HyperFrames 0–100 progress to a 0–1 fraction for the parent. */
 function toFraction(raw) {
@@ -83,7 +89,7 @@ try {
         height: Number(heightRaw),
         signal: cancellation.signal,
       },
-      { planV2, renderChunkV2, assembleV2 },
+      { planV2, renderChunkV2, assembleV2, readPlanV2Manifest },
     );
   } else
     await executeRenderJob(

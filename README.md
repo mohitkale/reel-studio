@@ -368,6 +368,8 @@ Audio is mixed continuously and muxed once, then optionally mastered. Short loca
 music tracks are expanded for HyperFrames export to preserve looping. Recent
 retry caches are retained; inactive caches are trimmed toward 1 GiB and expire
 after seven days. Changes currently invalidate the whole composition cache.
+HyperFrames validates the native plan manifest and keys silent sections from
+their frozen inputs, excluding the freshly encoded assembler-only audio mix.
 Video production remains limited to 180 seconds pending longer sample and
 resource gates; whole-video chapter generation remains separate work.
 Refresh keeps manual, legacy, muted, and locked cues; existing scenes retain their template

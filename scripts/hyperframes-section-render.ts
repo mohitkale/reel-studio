@@ -3,10 +3,8 @@ import path from "node:path";
 import os from "node:os";
 import { z } from "zod";
 import { planRenderSections } from "../src/production/render-sections";
-import {
-  renderCachedSection,
-  renderCacheKey,
-} from "../src/library/render-section-cache";
+import { renderCachedSection } from "../src/library/render-section-cache";
+import { hyperframesSectionCacheKey } from "../src/library/hyperframes-section-cache-key";
 import { withProductionSignal } from "../src/library/production-cancellation";
 
 /** Native closed-GOP chunks preserve global frame seeks and mix audio once. */
@@ -22,10 +20,10 @@ export async function renderHyperframesSections(
   },
   producer: Pick<
     typeof import("@hyperframes/producer"),
-    "planV2" | "renderChunkV2" | "assembleV2"
+    "planV2" | "renderChunkV2" | "assembleV2" | "readPlanV2Manifest"
   >,
 ) {
-  const { planV2, renderChunkV2, assembleV2 } = producer;
+  const { planV2, renderChunkV2, assembleV2, readPlanV2Manifest } = producer;
   const config = z
     .object({
       fps: z.union([z.literal(24), z.literal(30), z.literal(60)]),
@@ -61,11 +59,7 @@ export async function renderHyperframesSections(
         throw new Error(
           "HyperFrames section coverage differs from the frozen plan.",
         );
-      const key = renderCacheKey({
-        version: 1,
-        engine: "hyperframes",
-        planHash: plan.planHash,
-      });
+      const key = hyperframesSectionCacheKey(readPlanV2Manifest(planDir));
       console.log("HF_PROGRESS 0.10");
       const chunks: string[] = [];
       for (const section of sections) {

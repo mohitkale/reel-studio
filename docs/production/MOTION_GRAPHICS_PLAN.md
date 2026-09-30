@@ -258,9 +258,14 @@ Native worker scratch is isolated from persistent sections and removed on
 cancel. Short local music tracks are expanded before HyperFrames' native mix,
 because the pinned producer recognizes loop metadata but does not repeat the
 source during audio export. Remote music retains the existing producer behavior;
-freeze it locally for dependable looping. Cache identities include the complete
-composition, so editing one chapter still invalidates every section. Verified
-32-second exports preserve every frame and looping music across joins, with
+freeze it locally for dependable looping.
+HyperFrames verifies the native manifest before computing its silent-section
+cache identity. The aggregate plan hash includes freshly encoded assembly
+audio, so assembler-only audio and its aggregate plan.json are excluded from
+the visual key; all frozen chunk inputs and encoder metadata remain included.
+Cache identities include the complete composition, so editing one chapter still
+invalidates every section. Verified 32-second exports preserve every frame and
+looping music across joins, with
 identical video packets on retry. The full test suite covers corruption, canceled
 work, retention and concat paths containing spaces/apostrophes.
 Whole-video chapter generation, reuse across chapter edits and the longer
