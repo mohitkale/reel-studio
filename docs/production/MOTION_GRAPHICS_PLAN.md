@@ -36,8 +36,14 @@ manual, legacy, muted and locked cues. The music panel now includes sound
 choice, level/mute, timing shift, and an explicit return to automatic direction.
 Saved edits are protected from refresh; stale saves get an actionable conflict.
 REST and MCP share the same edit contract. Transactional updates are verified
-against SQLite, including competing edits and refreshes. Music beat maps,
-word-aware suppression, and final loudness targets remain later sound work.
+against SQLite, including competing edits and refreshes. Local music beat maps
+now propose tempo and phase from energy onsets, with a rhythm-confidence label.
+Creators can set BPM and first-beat offset, disable beats and mark a drop. Maps
+are cached by audio fingerprint, use transactional stale-save checks, repeat
+with each track loop, and persist in production snapshots. REST and MCP share
+the edit contract. These are directing references; narration-aware cut snapping
+is a separate gate. Remote tracks must be imported locally first. Word-aware
+suppression and final loudness targets remain later sound work.
 
 The editor now checks treatment input compatibility across the video in the
 direction menu. Warnings explain each preset fallback and jump to the affected

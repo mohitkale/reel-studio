@@ -328,6 +328,12 @@ moments of a selected scene, and a 320 px phone-size view. Both engines use
 their native still capture with the selected take's matching timing and enabled
 captions. Revision-keyed PNGs are cached locally; changed videos require a new
 review. Stills review layout; playback remains necessary for motion and sound.
+Music → Review music beats analyzes a local track once and saves a reviewable
+tempo/phase proposal. Creators can change BPM, shift the first beat, disable
+beats and mark a drop; audio fingerprints and optimistic checks protect edits.
+Beat maps repeat with the track's loop, are frozen in production snapshots,
+and can be edited through `PATCH /api/scripts/:id/music-map` or `edit_music_map`.
+They provide directing references; scene and narration timing stays as edited.
 Refresh keeps manual, legacy, muted, and locked cues; existing scenes retain their template
 cue behavior. Music → Adjust sound cues lets creators choose the clip, set its
 level (including mute), shift its timing, or restore automatic direction.

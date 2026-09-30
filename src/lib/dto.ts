@@ -8,6 +8,7 @@ import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
 import type { MotionDirection } from "@/production/motion";
 import type { MotionPlanSettings } from "@/production/motion-plan";
+import type { MusicMap } from "@/production/music-map";
 import type { CaptionTimingSource, CaptionWord } from "@/lib/captions";
 import type { CaptionStyleSnapshot } from "@/lib/caption-style";
 import type { MediaPreference } from "@/lib/media-preference";
@@ -133,6 +134,7 @@ export interface ScriptDTO {
   /** Versioned preset snapshot; absent for legacy and manually empty projects. */
   productionPreset?: { id: ProductionPresetId; version: string };
   motionPlan?: MotionPlanSettings;
+  musicMap?: MusicMap;
   captionTracks?: CaptionTrackDTO[];
 }
 

@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SfxCueEditor } from "@/components/editor/sfx-cue-editor";
+import { MusicBeatMap } from "@/components/editor/music-beat-map";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -58,15 +59,21 @@ function RemoteTrackRow({
     <div
       className={cn(
         "flex items-center gap-2 rounded-lg border px-3 py-2",
-        active ? "border-primary ring-1 ring-primary" : "border-border",
+        active ? "border-primary ring-primary ring-1" : "border-border",
       )}
     >
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium">{track.name}</div>
-        <div className="truncate text-xs text-muted-foreground">{track.attribution}</div>
+        <div className="text-muted-foreground truncate text-xs">
+          {track.attribution}
+        </div>
       </div>
       <audio controls preload="none" src={track.url} className="h-8 w-32" />
-      <Button size="sm" variant={active ? "default" : "outline"} onClick={onUse}>
+      <Button
+        size="sm"
+        variant={active ? "default" : "outline"}
+        onClick={onUse}
+      >
         Use
       </Button>
     </div>
@@ -130,8 +137,14 @@ export function MusicControl({
   );
 
   const suggestionQuery = open && !musicUrl ? dominantMusicMood : undefined;
-  const suggestionSearch = useSearchMusic(suggestionQuery ?? "", Boolean(suggestionQuery));
-  const manualSearch = useSearchMusic(searchQuery, open && searchQuery.length > 1);
+  const suggestionSearch = useSearchMusic(
+    suggestionQuery ?? "",
+    Boolean(suggestionQuery),
+  );
+  const manualSearch = useSearchMusic(
+    searchQuery,
+    open && searchQuery.length > 1,
+  );
 
   // Make the preview reflect the chosen level so you can hear the impact before
   // committing. (In the actual video the music is ducked further under narration.)
@@ -167,9 +180,12 @@ export function MusicControl({
       {
         onSuccess: (data) => {
           if (data.result.attached) {
-            toast.success(force ? "Soundtrack regenerated" : "Soundtrack attached", {
-              description: "Bundled track matched to this reel's mood.",
-            });
+            toast.success(
+              force ? "Soundtrack regenerated" : "Soundtrack attached",
+              {
+                description: "Bundled track matched to this reel's mood.",
+              },
+            );
           } else if (data.result.reason === "already_set") {
             toast.message("Music already set", {
               description: "Use Regenerate to replace it, or Remove first.",
@@ -177,7 +193,9 @@ export function MusicControl({
           }
         },
         onError: (e) =>
-          toast.error(e instanceof Error ? e.message : "Auto soundtrack failed"),
+          toast.error(
+            e instanceof Error ? e.message : "Auto soundtrack failed",
+          ),
       },
     );
   }
@@ -188,13 +206,16 @@ export function MusicControl({
         label="Add background music — ducked under the voiceover while scenes are spoken"
         side="bottom"
       >
-      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
-        <Music className="size-3.5" />
-        Music
-        {musicUrl && (
-          <span className="ml-1 size-1.5 rounded-full bg-primary" aria-hidden />
-        )}
-      </Button>
+        <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+          <Music className="size-3.5" />
+          Music
+          {musicUrl && (
+            <span
+              className="bg-primary ml-1 size-1.5 rounded-full"
+              aria-hidden
+            />
+          )}
+        </Button>
       </HintTooltip>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -202,9 +223,9 @@ export function MusicControl({
           <DialogHeader>
             <DialogTitle>Background music</DialogTitle>
             <DialogDescription>
-              Mixed under the voiceover and automatically ducked while a scene is
-              spoken, so narration stays clear. Upload audio you have the rights
-              to use.
+              Mixed under the voiceover and automatically ducked while a scene
+              is spoken, so narration stays clear. Upload audio you have the
+              rights to use.
             </DialogDescription>
           </DialogHeader>
 
@@ -242,7 +263,7 @@ export function MusicControl({
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="justify-start text-muted-foreground hover:text-destructive"
+                  className="text-muted-foreground hover:text-destructive justify-start"
                   disabled={busy}
                   onClick={() => setMusic.mutate({ musicUrl: null })}
                 >
@@ -273,19 +294,24 @@ export function MusicControl({
             )}
 
             {!musicUrl && (suggestedTrack || dominantMusicMood) && (
-              <div className="grid gap-1.5 rounded-lg border border-dashed border-primary/40 bg-primary/5 p-2.5">
-                <Label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="border-primary/40 bg-primary/5 grid gap-1.5 rounded-lg border border-dashed p-2.5">
+                <Label className="text-muted-foreground flex items-center gap-1.5 text-xs">
                   <Wand2 className="size-3.5" />
-                  Suggested for this video{dominantMusicMood ? ` — "${dominantMusicMood}"` : ""}
+                  Suggested for this video
+                  {dominantMusicMood ? ` — "${dominantMusicMood}"` : ""}
                 </Label>
                 {suggestedTrack && (
                   <button
                     type="button"
-                    onClick={() => setMusic.mutate({ musicUrl: suggestedTrack.url })}
-                    className="rounded-lg border border-border bg-background px-3 py-2 text-left transition-colors hover:bg-accent"
+                    onClick={() =>
+                      setMusic.mutate({ musicUrl: suggestedTrack.url })
+                    }
+                    className="border-border bg-background hover:bg-accent rounded-lg border px-3 py-2 text-left transition-colors"
                   >
-                    <div className="text-sm font-medium">{suggestedTrack.name}</div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-sm font-medium">
+                      {suggestedTrack.name}
+                    </div>
+                    <div className="text-muted-foreground text-xs">
                       {suggestedTrack.description}
                     </div>
                   </button>
@@ -295,7 +321,9 @@ export function MusicControl({
                     track={suggestionSearch.data.tracks[0]}
                     active={musicUrl === suggestionSearch.data.tracks[0].url}
                     onUse={() =>
-                      setMusic.mutate({ musicUrl: suggestionSearch.data!.tracks[0].url })
+                      setMusic.mutate({
+                        musicUrl: suggestionSearch.data!.tracks[0].url,
+                      })
                     }
                   />
                 )}
@@ -303,7 +331,7 @@ export function MusicControl({
             )}
 
             <div className="grid gap-1.5">
-              <Label className="text-xs text-muted-foreground">
+              <Label className="text-muted-foreground text-xs">
                 Starter tracks (free, CC0)
               </Label>
               <div className="grid gap-1">
@@ -315,12 +343,12 @@ export function MusicControl({
                     className={cn(
                       "rounded-lg border px-3 py-2 text-left transition-colors",
                       musicUrl === track.url
-                        ? "border-primary ring-1 ring-primary"
+                        ? "border-primary ring-primary ring-1"
                         : "border-border hover:bg-accent",
                     )}
                   >
                     <div className="text-sm font-medium">{track.name}</div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-muted-foreground text-xs">
                       {track.description}
                     </div>
                   </button>
@@ -329,14 +357,16 @@ export function MusicControl({
             </div>
 
             <div className="grid gap-1.5">
-              <Label className="text-xs text-muted-foreground">
+              <Label className="text-muted-foreground text-xs">
                 Search a bigger library (Jamendo)
               </Label>
               <div className="flex gap-2">
                 <Input
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && setSearchQuery(searchInput)}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && setSearchQuery(searchInput)
+                  }
                   placeholder="e.g. upbeat lo-fi, tense cinematic..."
                   className="h-8 text-sm"
                 />
@@ -351,35 +381,39 @@ export function MusicControl({
                 </Button>
               </div>
               {manualSearch.isFetching && (
-                <p className="text-xs text-muted-foreground">Searching...</p>
+                <p className="text-muted-foreground text-xs">Searching...</p>
               )}
               {manualSearch.data?.configured === false && searchQuery && (
-                <p className="text-xs text-muted-foreground">
-                  Add a free Jamendo Client ID in Settings to search online tracks.
+                <p className="text-muted-foreground text-xs">
+                  Add a free Jamendo Client ID in Settings to search online
+                  tracks.
                 </p>
               )}
-              {manualSearch.data?.tracks && manualSearch.data.tracks.length > 0 && (
-                <div className="flex max-h-56 flex-col gap-1.5 overflow-y-auto">
-                  {manualSearch.data.tracks.map((track) => (
-                    <RemoteTrackRow
-                      key={track.id}
-                      track={track}
-                      active={musicUrl === track.url}
-                      onUse={() => setMusic.mutate({ musicUrl: track.url })}
-                    />
-                  ))}
-                </div>
-              )}
+              {manualSearch.data?.tracks &&
+                manualSearch.data.tracks.length > 0 && (
+                  <div className="flex max-h-56 flex-col gap-1.5 overflow-y-auto">
+                    {manualSearch.data.tracks.map((track) => (
+                      <RemoteTrackRow
+                        key={track.id}
+                        track={track}
+                        active={musicUrl === track.url}
+                        onUse={() => setMusic.mutate({ musicUrl: track.url })}
+                      />
+                    ))}
+                  </div>
+                )}
               {manualSearch.data?.configured &&
                 manualSearch.data.tracks.length === 0 &&
                 !manualSearch.isFetching &&
                 searchQuery && (
-                  <p className="text-xs text-muted-foreground">No tracks found. Try different words.</p>
+                  <p className="text-muted-foreground text-xs">
+                    No tracks found. Try different words.
+                  </p>
                 )}
             </div>
 
             <div className="grid gap-1.5">
-              <Label className="flex items-center justify-between text-xs text-muted-foreground">
+              <Label className="text-muted-foreground flex items-center justify-between text-xs">
                 <span>Music volume</span>
                 <span>{musicVolume}%</span>
               </Label>
@@ -394,7 +428,7 @@ export function MusicControl({
                   setMusic.mutate({ musicVolume: Number(e.target.value) })
                 }
               />
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-muted-foreground text-[11px]">
                 The preview above plays at this level. In the video the music is
                 automatically ducked lower while a scene is being spoken.
               </p>
@@ -402,7 +436,7 @@ export function MusicControl({
 
             {audioAssets && audioAssets.length > 0 && (
               <div className="grid gap-1.5">
-                <Label className="text-xs text-muted-foreground">
+                <Label className="text-muted-foreground text-xs">
                   Pick from uploads
                 </Label>
                 <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-lg border p-1">
@@ -427,11 +461,11 @@ export function MusicControl({
             )}
           </div>
 
-          <div className="grid gap-2 rounded-lg border border-border p-2.5">
-            <Label className="text-xs text-muted-foreground">
+          <div className="border-border grid gap-2 rounded-lg border p-2.5">
+            <Label className="text-muted-foreground text-xs">
               Sound effects (bundled CC0)
             </Label>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {sfxEnabled
                 ? `${sfxCueCount} audible cue${sfxCueCount === 1 ? "" : "s"} with current timing.`
                 : "SFX are off for this reel."}
@@ -486,6 +520,17 @@ export function MusicControl({
           </div>
 
           <SfxCueEditor scriptId={scriptId} disabled={busy} />
+          <MusicBeatMap
+            scriptId={scriptId}
+            disabled={busy}
+            onListen={(seconds) => {
+              if (!audioRef.current) return;
+              audioRef.current.currentTime = seconds;
+              void audioRef.current
+                .play()
+                .catch(() => toast.error("Music preview could not play."));
+            }}
+          />
 
           <DialogFooter>
             <Button size="sm" onClick={() => setOpen(false)}>

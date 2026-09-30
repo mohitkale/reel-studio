@@ -8,6 +8,7 @@ import { mediaPreferenceSchema } from "@/lib/media-preference";
 import { productionPresetIdSchema } from "@/production/presets";
 import { visualAmbitionSchema } from "@/production/motion-plan";
 import { sfxCueEditRequestSchema } from "@/lib/sfx-cue-edit";
+import { musicMapEditSchema } from "@/production/music-map";
 import { productionBatchRowSchema } from "@/production/batch";
 import { quickProduceOptionsSchema } from "@/production/quick-produce";
 
@@ -549,11 +550,31 @@ export function registerTools(server: McpServer): void {
   );
 
   server.registerTool(
+    "edit_music_map",
+    {
+      description:
+        "Edit a saved music beat map's BPM, first beat offset, disabled beat indices or drop marker. Analyze the local track in the editor first, then get the script and supply its exact current musicMap as expected. Stale changes are rejected. This changes review anchors, not narration or scene timings.",
+      inputSchema: { scriptId: z.string().min(1), ...musicMapEditSchema.shape },
+    },
+    guard(async ({ scriptId, ...body }) =>
+      ok(
+        await apiPatch(
+          `/api/scripts/${encode(scriptId)}/music-map`,
+          musicMapEditSchema.parse(body),
+        ),
+      ),
+    ),
+  );
+
+  server.registerTool(
     "edit_sfx_cue",
     {
       description:
         "Edit one sound cue or restore its automatic direction. Get the script first; supply the zero-based cue index and exact expected cue from parsed sfxJson to detect stale edits. Edits are preserved on automatic refresh. volume 0 mutes; motion timing shifts allow +/-2 seconds. Restoring automatic can remove a cue for quieter scenes.",
-      inputSchema: { scriptId: z.string().min(1), ...sfxCueEditRequestSchema.shape },
+      inputSchema: {
+        scriptId: z.string().min(1),
+        ...sfxCueEditRequestSchema.shape,
+      },
     },
     guard(async ({ scriptId, ...body }) =>
       ok(

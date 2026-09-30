@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { motionPlanSettingsSchema } from "@/production/motion-plan";
+import { musicMapSchema } from "@/production/music-map";
 
 import { assertSafeMediaUrl } from "@/lib/media-url-safety";
 import { productionChartDataSchema } from "@/production/spec";
@@ -74,6 +75,7 @@ export const brandOverridesSchema = z
       .optional(),
     energy: z.enum(["calm", "normal", "high"]).optional(),
     motionPlan: motionPlanSettingsSchema.optional(),
+    musicMap: musicMapSchema.optional(),
     productionPreset: z
       .object({
         id: productionPresetIdSchema,

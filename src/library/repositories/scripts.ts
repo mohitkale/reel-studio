@@ -99,6 +99,10 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
     energy: normalizeEnergyId(overrides.energy),
     productionPreset: overrides.productionPreset,
     motionPlan: overrides.motionPlan,
+    musicMap:
+      overrides.musicMap?.sourceUrl === script.musicUrl
+        ? overrides.musicMap
+        : undefined,
     captionTracks,
   };
 }
