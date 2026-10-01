@@ -661,3 +661,35 @@ describe("personalizeCatalogHtml", () => {
     ).toThrow("explicit numeric visual");
   });
 });
+
+it("emits valid CSS font strings without allowing style-element breakout and registers native timelines before seeking", () => {
+  const html = buildHyperframesCompositionHtml(
+    {
+      scenes: [
+        {
+          id: "a",
+          templateId: "hf-statement",
+          text: "A readable headline",
+          emphasis: [],
+        },
+      ],
+      timeline: [{ sceneId: "a", startFrame: 0, durationFrames: 90 }],
+      fps: 30,
+      tokens: {
+        ...defaultBrandTokens,
+        fontFamily: "</style><script>bad()</script>",
+      },
+      captions: {
+        enabled: true,
+        timingSource: "imported",
+        style: CAPTION_STYLE_PRESETS.editorial,
+        cues: [{ id: "c", startFrame: 0, endFrame: 90, text: "Caption" }],
+      },
+    },
+    { producerMode: true },
+  );
+  expect(html).not.toContain("</style><script>bad()");
+  expect(html).not.toContain("font-family:&#39;");
+  expect(html).not.toContain("window.addEventListener('load', boot)");
+  expect(html).toContain("defaults: { force3D: false }");
+});

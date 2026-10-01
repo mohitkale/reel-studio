@@ -443,10 +443,12 @@ The broader choreography item is complete with two authored treatments per
 family in both engines, in addition to chapter Sweep/Rise. Narration-aware cut review now ships as advisory frames in the music panel, REST
 and MCP. Explicit saved-map review, verified local music and matching measured
 word timing protect speech, reading holds and locks without changing creator
-timing. Two original follow-up items remain:
+timing. Selective HyperFrames reuse now freezes actual silent native section projects,
+scopes scene/media/caption inputs while retaining global timing, and hashes each
+compiled native manifest. Imported catalog blocks retain conservative whole-plan
+reuse. Continuous audio is freshly assembled; cold exports add bounded native
+planning work. One original follow-up item remains:
 
-1. Selective HyperFrames visual reuse when compiled native inputs can be safely
-   scoped; its current retries reuse unchanged whole-composition sections.
-2. Broader five-minute footage/quality/resolution benchmarks, followed by an
+1. Broader five-minute footage/quality/resolution benchmarks, followed by an
    opt-in finishing experiment for heavier effects or motion blur with measured
    cost. No default multi-sample blur is enabled.

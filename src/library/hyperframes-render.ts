@@ -1,3 +1,4 @@
+import { writeHyperframesVisualSections } from "@/library/hyperframes-visual-sections";
 import type { VideoSnapshot } from "@/production/video-snapshot";
 import {
   masterVideoAudio,
@@ -590,6 +591,8 @@ export async function runHyperframesRender(
       : legacyInputProps;
 
     await writeHyperframesProject(projectDir, inputProps);
+    if (script.chapterPlan && [24, 30, 60].includes(script.fps))
+      await writeHyperframesVisualSections(projectDir, inputProps);
 
     const store = getAssetStore();
     const fileName = `render-${renderId}.mp4`;

@@ -59,17 +59,85 @@ export async function renderHyperframesSections(
         throw new Error(
           "HyperFrames section coverage differs from the frozen plan.",
         );
-      const key = hyperframesSectionCacheKey(readPlanV2Manifest(planDir));
+      const wholeManifest = readPlanV2Manifest(planDir);
+      const visualRoot = path.join(`${input.projectDir}-sections`, "visuals");
+      let scoped = false;
+      try {
+        const record = z
+          .object({
+            version: z.literal(1),
+            totalFrames: z.literal(plan.totalFrames),
+            fps: z.literal(config.fps),
+            count: z.literal(sections.length),
+          })
+          .strict()
+          .parse(
+            JSON.parse(
+              await fs.readFile(path.join(visualRoot, "manifest.json"), "utf8"),
+            ),
+          );
+        scoped = record.count === sections.length;
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      }
       console.log("HF_PROGRESS 0.10");
       const chunks: string[] = [];
       for (const section of sections) {
         input.signal.throwIfAborted();
+        let renderPlanDir = planDir;
+        let manifest = wholeManifest;
+        if (scoped) {
+          renderPlanDir = path.join(directory, `visual-plan-${section.index}`);
+          const visualPlan = await planV2(
+            path.join(visualRoot, String(section.index)),
+            {
+              ...config,
+              format: "mp4",
+              codec: "h264",
+              chunkSize: config.fps * 30,
+              maxParallelChunks: 20,
+              hdrMode: "force-sdr",
+              rejectOnSystemFonts: true,
+              failClosedFontFetch: true,
+              strictness: "best-effort",
+              abortSignal: input.signal,
+            },
+            renderPlanDir,
+          );
+          if (
+            visualPlan.totalFrames !== plan.totalFrames ||
+            visualPlan.chunkCount !== plan.chunkCount ||
+            visualPlan.width !== plan.width ||
+            visualPlan.height !== plan.height ||
+            visualPlan.fps !== plan.fps
+          )
+            throw new Error(
+              "Scoped HyperFrames inputs changed global coverage or dimensions.",
+            );
+          manifest = readPlanV2Manifest(renderPlanDir);
+          const encoder = (value: typeof manifest) =>
+            value.artifacts.find(
+              (artifact) => artifact.path === "meta/encoder.json",
+            )?.sha256;
+          if (
+            !encoder(manifest) ||
+            encoder(manifest) !== encoder(wholeManifest)
+          )
+            throw new Error(
+              "Scoped HyperFrames encoder differs from the complete plan.",
+            );
+        }
+        const key = hyperframesSectionCacheKey(manifest, section.index);
         const result = await renderCachedSection({
           key,
           section,
           temporaryDirectory: directory,
           render: async (filename) => {
-            const chunk = await renderChunkV2(planDir, section.index, filename);
+            const chunk = await renderChunkV2(
+              renderPlanDir,
+              section.index,
+              filename,
+            );
             if (
               chunk.framesEncoded !==
               section.endFrame - section.startFrame + 1
@@ -79,7 +147,7 @@ export async function renderHyperframesSections(
         });
         chunks.push(result.filename);
         console.log(
-          `HF_SECTION ${JSON.stringify({ index: section.index, frames: section.endFrame - section.startFrame + 1, reused: result.reused })}`,
+          `HF_SECTION ${JSON.stringify({ index: section.index, frames: section.endFrame - section.startFrame + 1, reused: result.reused, scoped })}`,
         );
         console.log(
           `HF_PROGRESS ${(0.1 + (0.8 * (section.index + 1)) / sections.length).toFixed(4)}`,

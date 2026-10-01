@@ -1093,7 +1093,7 @@ export function buildGsapMotionBootScript(
       var recipe = stage.getAttribute('data-recipe') || '';
       var typeEntrance = (recipe === 'type-impact' || recipe === 'type-editorial') ? stage.getAttribute('data-type-entrance') : null;
       var motif = typeMotifOffsets[typeEntrance];
-      var tl = gsap.timeline({ paused: true });
+      var tl = gsap.timeline({ paused: true, defaults: { force3D: false } });
       (storyTracks[recipe] || []).forEach(function(track) {
         var element = stage.querySelector(".sm-" + track.part);
         if (element) tl.fromTo(element, { opacity:0, x:track.x, y:track.y, scaleX:track.scaleX === undefined ? 1 : track.scaleX, scaleY:track.scaleY === undefined ? 1 : track.scaleY }, { opacity:1, x:0, y:0, scaleX:1, scaleY:1, force3D:false, duration:track.duration, ease:"power2.out" }, track.at);
@@ -1310,8 +1310,9 @@ export function buildGsapMotionBootScript(
       window.__timelines[compositionId] = rootTimeline;
     }
   }
-  if (document.readyState === 'complete') boot();
-  else window.addEventListener('load', boot);
+  // The script is emitted after the complete scene DOM. Register timelines
+  // synchronously so a native seek cannot race a later window-load handler.
+  boot();
   setTimeout(function () { if (!window.gsap) revealFallback(); }, 2500);
 })();
 </script>`;
