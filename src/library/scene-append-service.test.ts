@@ -17,6 +17,8 @@ afterEach(async () => {
   else process.env.DATABASE_URL = previousUrl;
   vi.resetModules();
 });
+// Real SQLite migrations, lazy service imports and transaction races need a
+// bounded integration budget on shared CI runners, separate from unit defaults.
 it("atomically appends chapters and stock, preserves prior work, and rejects races, failed metadata and canceled writes", async () => {
   const directory = mkdtempSync(path.join(tmpdir(), "reel-chapter-append-"));
   const filename = path.join(directory, "append.db");
@@ -305,4 +307,4 @@ it("atomically appends chapters and stock, preserves prior work, and rejects rac
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-});
+}, 20_000);

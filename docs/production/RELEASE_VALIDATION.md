@@ -352,3 +352,56 @@ caption/composition checks passed. Static native validation found a pre-existing
 caption CSS font-stack escape error; CSS-string quoting now preserves font names
 without allowing style-element injection, and the named fallback is localized.
 A follow-up native caption parity capture verifies the corrected typography.
+
+## Five-minute footage matrix and optional finishing experiment
+
+`npm run benchmark:long-videos -- --finishing` runs six sequential local fixtures:
+Remotion and HyperFrames at draft/standard 720p native coordinates and high 1080p
+native coordinates. Each has exactly 300 seconds / 7,200 frames at 24 fps, ten
+chapters, both supplied-media treatments, local eight-second footage that holds
+its final frame, reading beats, captions, calibration narration, music and SFX.
+Each run uses an isolated database and cleans its exclusively created fixture
+media; evidence, fixture databases and MP4s remain under
+`.artifacts/long-video-benchmark-*`. No providers, dependency
+installs or new duration allowances are involved. Every row checks exact coverage,
+encoded resolution, audio around each section boundary, measured mastering,
+identical video retry hashes, decoded audio drift below the existing 2% limit
+(with encoded audio hashes retained), and native scene/transition stills. Reports
+include wall time per video minute, warm retry time and sampled peak process-tree
+RSS; missing memory samples remain explicitly unavailable. Native canvas and
+encoded pixels are both retained because engine quality tiers scale differently.
+
+The landscape device treatment uses adjacent media/copy columns so its frame,
+headline and captions fit both source canvases. Native stills cover source
+playback and a cut into footage; encoded review sheets sample each chapter at
++15 seconds, including held short-source frames. The pinned HyperFrames snapshot
+CLI cannot clamp mid-scene seeks beyond a video's source duration, so those
+later holds are reviewed from the delivery rather than stale CLI snapshots.
+The matrix also caught a video-only warm-retry miss: pinned native metadata
+includes a discarded execution workspace path. Version 4 section keys
+canonicalize that one field only after verifying the frozen blob and its declared
+compiled source; timing, decoder metadata, source bytes and extracted frame
+hashes remain dependencies. Unknown producers/layouts retain raw metadata hashes.
+Regression coverage includes independent temporary paths, changed visual inputs
+and tampered metadata.
+
+The explicit high-only finishing experiment blends three decoded frames with
+weights 1:2:1, processing bounded silent sections before copying the complete
+encoded audio. Temporal history resets at cuts. Existing outputs cannot be
+overwritten; failed/canceled work leaves no deliverable or private scratch.
+Source hashes, exact frame count/rate/dimensions/duration and encoded audio packet
+hashes gate publication. This is causal temporal smoothing, not higher-sample
+subframe motion blur. Moving copy can soften and lag by a frame; visual review
+must decide whether that tradeoff helps. No default production path invokes it.
+A native FFmpeg regression verifies exact coverage/audio, clean red-to-green cut
+history, artifact protection and cleanup during cancellation.
+
+All six five-minute rows and both high finishing outputs passed the native gate.
+See [LONG_VIDEO_BENCHMARKS.md](./LONG_VIDEO_BENCHMARKS.md) for measured time/memory,
+actual encoded dimensions, audio drift observations and the finishing decision.
+Final Remotion stills also verify responsive brand-footer spacing below captions.
+
+The post-merge PR 27 Quality run failed only because two real SQLite integration
+tests exceeded Vitest's five-second default on the shared runner. Their deadlines
+are now 20 seconds, scoped to those two tests with every assertion retained.
+Three consecutive focused runs passed, and failed run 36824884272 passed attempt 2.

@@ -428,10 +428,13 @@ retry caches are retained; inactive caches are trimmed toward 1 GiB and expire
 after seven days. Remotion renders each silent section with only its visible
 scenes and captions, so unrelated visual edits reuse unchanged sections.
 Shared timing, brand, cover, and renderer changes invalidate dependent sections;
-audio is always assembled from the complete graph. HyperFrames visual edits
-currently invalidate the whole composition cache.
+audio is always assembled from the complete graph. Authored HyperFrames recipes
+use scoped native plans; imported catalog visuals retain whole-composition reuse.
 HyperFrames validates the native plan manifest and keys silent sections from
 their frozen inputs, excluding the freshly encoded assembler-only audio mix.
+For the pinned producer, verified video metadata uses its compiled asset path
+instead of a discarded temporary workspace path. Source bytes, extracted frames,
+timing and decoder settings still invalidate reuse.
 
 Run `npm run test:video-sections` for an isolated, credential-free 32-second
 native export/retry/review gate in both engines. Add `-- --long --speech --cancel`
@@ -610,3 +613,20 @@ edits. Scoped projects preserve global timing and freeze only active scenes,
 media and captions; native compiled hashes and encoder checks protect reuse.
 Catalog imports retain whole-composition invalidation. Final audio is mixed
 continuously each run. Cold renders add bounded planning per section.
+
+Run `npm run benchmark:long-videos` for the offline five-minute footage matrix:
+both engines, draft/standard at a 1280×720 native canvas and high at 1920×1080,
+24 fps, ten chapters, generated 640×360 footage with short-source holds, captions,
+calibration narration, music and SFX. Every row
+checks frame coverage, encoded dimensions, continuous mastered audio and an
+unchanged retry. Evidence, MP4s and time/memory reports remain in
+`.artifacts/long-video-benchmark-*`. Engine quality tiers scale output differently;
+compare the measured encoded dimensions. Scope with `-- --engine=hyperframes`
+and/or `--profile=standard-720`. Measured results and fixture scope are in
+[LONG_VIDEO_BENCHMARKS.md](docs/production/LONG_VIDEO_BENCHMARKS.md).
+
+Add `-- --finishing` to explicitly evaluate three-frame temporal blending on the
+high rows. The experiment resets at cuts, writes a separate output, verifies
+unchanged audio packets and frame coverage, and reports extra time and memory.
+It can soften moving text and add a one-frame visual lag; it is causal smoothing,
+not subframe motion blur. Production exports keep their existing defaults.

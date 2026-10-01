@@ -78,4 +78,11 @@ export function buildMediaMotionScene(args: {
 
 export const MEDIA_MOTION_STYLES = `
   .media-device .pl-media img, .media-device .pl-media video { object-fit: contain; background: #080c14; }
+  @media (min-aspect-ratio: 5/4) {
+    .media-cinematic .cb-content.role-hero { padding-bottom: max(var(--safe-bottom, 10%), 19%); }
+    .media-device .pl-content { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-content: center; text-align: left; }
+    .media-device .pl-role-label { grid-column: 1 / -1; justify-self: start; }
+    .media-device .pl-device { width: 100%; min-width: 0; }
+    .media-device .pl-support { min-width: 0; margin: 0; }
+  }
 `;

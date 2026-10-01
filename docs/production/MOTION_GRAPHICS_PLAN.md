@@ -433,11 +433,11 @@ frame. Build a small set of excellent authored recipes and a planner that uses
 them with judgment. Expand the library only after real renders show where its
 creative range is lacking.
 
-## Remaining implementation and evaluation
+## Implementation and evaluation status
 
 The first recipe pack, deterministic direction, synchronized accents, music
 maps, measured audio mastering, native review, chapter authoring and bounded
-chapter production are implemented. Follow-ups should remain distinct tasks:
+chapter production are implemented. The three original follow-ups are complete:
 
 The broader choreography item is complete with two authored treatments per
 family in both engines, in addition to chapter Sweep/Rise. Narration-aware cut review now ships as advisory frames in the music panel, REST
@@ -447,8 +447,14 @@ timing. Selective HyperFrames reuse now freezes actual silent native section pro
 scopes scene/media/caption inputs while retaining global timing, and hashes each
 compiled native manifest. Imported catalog blocks retain conservative whole-plan
 reuse. Continuous audio is freshly assembled; cold exports add bounded native
-planning work. One original follow-up item remains:
+planning work.
 
-1. Broader five-minute footage/quality/resolution benchmarks, followed by an
-   opt-in finishing experiment for heavier effects or motion blur with measured
-   cost. No default multi-sample blur is enabled.
+The five-minute footage matrix passed six native exports and unchanged retries:
+three quality profiles in each engine, with measured encoded resolution,
+continuous mastered audio, exact video coverage and bounded native/encoded review.
+The explicit high-only finishing experiment preserves coverage and encoded audio
+and reports additional time/memory cost. Reviewed temporal smoothing softens
+moving copy and adds visual lag, so it remains outside default production; it is
+not subframe motion blur. The duration policy remains bounded at 300 seconds.
+Measured results, fixture scope and the final responsive media fixes are recorded
+in [LONG_VIDEO_BENCHMARKS.md](./LONG_VIDEO_BENCHMARKS.md).
