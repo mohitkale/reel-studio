@@ -360,8 +360,9 @@ Remotion and HyperFrames at draft/standard 720p native coordinates and high 1080
 native coordinates. Each has exactly 300 seconds / 7,200 frames at 24 fps, ten
 chapters, both supplied-media treatments, local eight-second footage that holds
 its final frame, reading beats, captions, calibration narration, music and SFX.
-The isolated database and exclusively created fixture media are cleaned; evidence
-and MP4s remain under `.artifacts/long-video-benchmark-*`. No providers, dependency
+Each run uses an isolated database and cleans its exclusively created fixture
+media; evidence, fixture databases and MP4s remain under
+`.artifacts/long-video-benchmark-*`. No providers, dependency
 installs or new duration allowances are involved. Every row checks exact coverage,
 encoded resolution, audio around each section boundary, measured mastering,
 unchanged audio/video retry hashes and native scene/transition stills. Reports
@@ -375,6 +376,13 @@ playback and a cut into footage; encoded review sheets sample each chapter at
 +15 seconds, including held short-source frames. The pinned HyperFrames snapshot
 CLI cannot clamp mid-scene seeks beyond a video's source duration, so those
 later holds are reviewed from the delivery rather than stale CLI snapshots.
+The matrix also caught a video-only warm-retry miss: pinned native metadata
+includes a discarded execution workspace path. Version 4 section keys
+canonicalize that one field only after verifying the frozen blob and its declared
+compiled source; timing, decoder metadata, source bytes and extracted frame
+hashes remain dependencies. Unknown producers/layouts retain raw metadata hashes.
+Regression coverage includes independent temporary paths, changed visual inputs
+and tampered metadata.
 
 The explicit high-only finishing experiment blends three decoded frames with
 weights 1:2:1, processing bounded silent sections before copying the complete

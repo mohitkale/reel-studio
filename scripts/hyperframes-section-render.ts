@@ -4,7 +4,10 @@ import os from "node:os";
 import { z } from "zod";
 import { planRenderSections } from "../src/production/render-sections";
 import { renderCachedSection } from "../src/library/render-section-cache";
-import { hyperframesSectionCacheKey } from "../src/library/hyperframes-section-cache-key";
+import {
+  hyperframesSectionCacheKey,
+  stableHyperframesVideoMetadata,
+} from "../src/library/hyperframes-section-cache-key";
 import { withProductionSignal } from "../src/library/production-cancellation";
 
 /** Native closed-GOP chunks preserve global frame seeks and mix audio once. */
@@ -127,7 +130,11 @@ export async function renderHyperframesSections(
               "Scoped HyperFrames encoder differs from the complete plan.",
             );
         }
-        const key = hyperframesSectionCacheKey(manifest, section.index);
+        const key = hyperframesSectionCacheKey(
+          manifest,
+          section.index,
+          await stableHyperframesVideoMetadata(renderPlanDir, manifest),
+        );
         const result = await renderCachedSection({
           key,
           section,

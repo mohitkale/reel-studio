@@ -428,10 +428,13 @@ retry caches are retained; inactive caches are trimmed toward 1 GiB and expire
 after seven days. Remotion renders each silent section with only its visible
 scenes and captions, so unrelated visual edits reuse unchanged sections.
 Shared timing, brand, cover, and renderer changes invalidate dependent sections;
-audio is always assembled from the complete graph. HyperFrames visual edits
-currently invalidate the whole composition cache.
+audio is always assembled from the complete graph. Authored HyperFrames recipes
+use scoped native plans; imported catalog visuals retain whole-composition reuse.
 HyperFrames validates the native plan manifest and keys silent sections from
 their frozen inputs, excluding the freshly encoded assembler-only audio mix.
+For the pinned producer, verified video metadata uses its compiled asset path
+instead of a discarded temporary workspace path. Source bytes, extracted frames,
+timing and decoder settings still invalidate reuse.
 
 Run `npm run test:video-sections` for an isolated, credential-free 32-second
 native export/retry/review gate in both engines. Add `-- --long --speech --cancel`
@@ -613,7 +616,8 @@ continuously each run. Cold renders add bounded planning per section.
 
 Run `npm run benchmark:long-videos` for the offline five-minute footage matrix:
 both engines, draft/standard at a 1280×720 native canvas and high at 1920×1080,
-24 fps, ten chapters, captions, calibration narration, music and SFX. Every row
+24 fps, ten chapters, generated 640×360 footage with short-source holds, captions,
+calibration narration, music and SFX. Every row
 checks frame coverage, encoded dimensions, continuous mastered audio and an
 unchanged retry. Evidence, MP4s and time/memory reports remain in
 `.artifacts/long-video-benchmark-*`. Engine quality tiers scale output differently;
