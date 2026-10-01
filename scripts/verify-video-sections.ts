@@ -366,6 +366,9 @@ async function main() {
       path.join(media, "footage.mp4"),
     ]);
   await fs.copyFile("public/sfx/pop.wav", path.join(media, "pop.wav"));
+  const frozenFootageUrl = benchmark
+    ? `/media/production-assets/${await hashRenderFile(path.join(media, "footage.mp4"))}.mp4`
+    : null;
   const server = createServer(async (req, res) => {
     try {
       const pathname = new URL(req.url ?? "/", "http://localhost").pathname;
@@ -376,7 +379,9 @@ async function main() {
             ? path.join(media, "voice.wav")
             : pathname === `/media/${mediaKey}/pop.wav`
               ? path.join(media, "pop.wav")
-              : benchmark && pathname === `/media/${mediaKey}/footage.mp4`
+              : benchmark &&
+                  (pathname === `/media/${mediaKey}/footage.mp4` ||
+                    pathname === frozenFootageUrl)
                 ? path.join(media, "footage.mp4")
                 : null;
       if (!filename) {
@@ -400,6 +405,14 @@ async function main() {
   const address = server.address();
   assert.ok(address && typeof address !== "string");
   const base = `http://127.0.0.1:${address.port}`;
+  if (frozenFootageUrl) {
+    const response = await fetch(`${base}${frozenFootageUrl}`);
+    assert.equal(response.status, 200, "Frozen fixture media must be served");
+    assert.equal(
+      (await response.arrayBuffer()).byteLength,
+      (await fs.stat(path.join(media, "footage.mp4"))).size,
+    );
+  }
   const sceneIds = Array.from(
     { length: count },
     (_, index) => `section-scene-${path.basename(mediaKey)}-${index}`,
