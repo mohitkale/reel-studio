@@ -369,6 +369,13 @@ include wall time per video minute, warm retry time and sampled peak process-tre
 RSS; missing memory samples remain explicitly unavailable. Native canvas and
 encoded pixels are both retained because engine quality tiers scale differently.
 
+The landscape device treatment uses adjacent media/copy columns so its frame,
+headline and captions fit both source canvases. Native stills cover source
+playback and a cut into footage; encoded review sheets sample each chapter at
++15 seconds, including held short-source frames. The pinned HyperFrames snapshot
+CLI cannot clamp mid-scene seeks beyond a video's source duration, so those
+later holds are reviewed from the delivery rather than stale CLI snapshots.
+
 The explicit high-only finishing experiment blends three decoded frames with
 weights 1:2:1, processing bounded silent sections before copying the complete
 encoded audio. Temporal history resets at cuts. Existing outputs cannot be

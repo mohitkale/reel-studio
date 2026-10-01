@@ -802,12 +802,18 @@ async function main() {
         await fs.mkdir(reviewDir, { recursive: true });
         let reviewedScenes = 0;
         const sceneFrames: number[] = [];
+        // The pinned snapshot CLI does not clamp mid-scene seeks beyond a
+        // short video's source duration. Sample footage during playback here;
+        // inspect its later final-frame hold in the actual encoded delivery.
+        const reviewSceneIds = benchmark
+          ? sceneIds.filter((_, index) => index % 2 === 1)
+          : sceneIds;
         // Preserve the production review limit for longer benchmark fixtures.
-        for (let offset = 0; offset < sceneIds.length; offset += 8) {
+        for (let offset = 0; offset < reviewSceneIds.length; offset += 8) {
           const review = await createVisualReview(
             "section-proof-script",
             {
-              sceneIds: sceneIds.slice(offset, offset + 8),
+              sceneIds: reviewSceneIds.slice(offset, offset + 8),
               samples: 1,
               voiceTakeId: "section-proof-take",
             },
@@ -822,11 +828,35 @@ async function main() {
               path.join(reviewDir, `scene-${still.sceneNumber}.png`),
             );
         }
+        if (benchmark) {
+          const { renderVisualReviewFrames } =
+            await import("../src/library/visual-review");
+          const mediaPoints = timeline
+            .map((beat, index) => ({ index, frame: beat.startFrame + fps * 3 }))
+            .filter((point) => point.index % 2 === 0);
+          const mediaStills = await renderVisualReviewFrames(
+            engine,
+            { ...prepared.props, fps },
+            frames,
+            mediaPoints.map((point) => point.frame),
+            path.join(directory, `${engine}-media-review`),
+            base,
+          );
+          assert.equal(mediaStills.length, mediaPoints.length);
+          for (const [index, filename] of mediaStills.entries())
+            await fs.copyFile(
+              filename,
+              path.join(reviewDir, `scene-${mediaPoints[index].index + 1}.png`),
+            );
+          reviewedScenes += mediaStills.length;
+          sceneFrames.push(...mediaPoints.map((point) => point.frame));
+          sceneFrames.sort((a, b) => a - b);
+        }
         assert.equal(reviewedScenes, count);
         const cut = await createVisualReview(
           "section-proof-script",
           {
-            sceneIds: [sceneIds[1]],
+            sceneIds: [sceneIds[benchmark ? 2 : 1]],
             samples: 1,
             mode: "transition",
             voiceTakeId: "section-proof-take",
@@ -856,7 +886,7 @@ async function main() {
               "error",
               "-nostdin",
               "-ss",
-              String(beat.startFrame / fps + 3),
+              String(beat.startFrame / fps + 15),
               "-i",
               delivery,
               "-frames:v",
@@ -921,6 +951,12 @@ async function main() {
           review: {
             sceneFrames,
             cutFrames: cut.stills.map((still) => still.frame),
+            ...(benchmark
+              ? {
+                  mediaReadingReview:
+                    "Native source-playback stills; final-frame holds reviewed in encoded delivery at +15s. Pinned snapshot CLI cannot clamp mid-scene source-end seeks.",
+                }
+              : {}),
           },
           seconds,
           fps,

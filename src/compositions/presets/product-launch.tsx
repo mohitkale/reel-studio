@@ -95,6 +95,8 @@ export const ProductLaunchScene = React.memo(function ProductLaunchScene({
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
   const portrait = height > width * 1.15;
+  const landscapeDevice =
+    scene.motion?.recipeId === "media-device" && width > height * 1.25;
   const enter = spring({
     frame,
     fps,
@@ -126,16 +128,24 @@ export const ProductLaunchScene = React.memo(function ProductLaunchScene({
         data-scene-role={role}
         style={{
           width: "100%",
-          maxWidth: 1120,
-          display: "flex",
+          maxWidth: landscapeDevice ? width * 0.875 : 1120,
+          display: landscapeDevice ? "grid" : "flex",
+          gridTemplateColumns: landscapeDevice
+            ? "minmax(0, 1.3fr) minmax(0, 1fr)"
+            : undefined,
           flexDirection: "column",
-          alignItems: role === "hook" || role === "cta" ? "center" : "stretch",
+          alignItems:
+            landscapeDevice || role === "hook" || role === "cta"
+              ? "center"
+              : "stretch",
           gap: portrait ? 44 : 30,
           opacity: exit,
         }}
       >
         <div
           style={{
+            gridColumn: landscapeDevice ? "1 / -1" : undefined,
+            justifySelf: landscapeDevice ? "start" : undefined,
             alignSelf:
               role === "hook" || role === "cta" ? "center" : "flex-start",
             padding: "10px 16px",
@@ -160,7 +170,9 @@ export const ProductLaunchScene = React.memo(function ProductLaunchScene({
               text={scene.text}
               emphasis={scene.emphasis}
               tokens={tokens}
-              fontSize={portrait ? 54 : 44}
+              fontSize={
+                landscapeDevice ? (44 * width) / 1280 : portrait ? 54 : 44
+              }
               fontWeight={750}
               startDelay={8}
               maxWidth={portrait ? 900 : 1060}
