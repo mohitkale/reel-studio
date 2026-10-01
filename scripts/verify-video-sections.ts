@@ -801,6 +801,7 @@ async function main() {
         const reviewDir = path.join(directory, `${engine}-review`);
         await fs.mkdir(reviewDir, { recursive: true });
         let reviewedScenes = 0;
+        const sceneFrames: number[] = [];
         // Preserve the production review limit for longer benchmark fixtures.
         for (let offset = 0; offset < sceneIds.length; offset += 8) {
           const review = await createVisualReview(
@@ -814,6 +815,7 @@ async function main() {
           );
           assert.ok(review.takeUsable);
           reviewedScenes += review.stills.length;
+          sceneFrames.push(...review.stills.map((still) => still.frame));
           for (const still of review.stills)
             await fs.copyFile(
               path.resolve("media", still.url.slice(7)),
@@ -917,7 +919,7 @@ async function main() {
           edited,
           scopedParity,
           review: {
-            sceneFrames: review.stills.map((still) => still.frame),
+            sceneFrames,
             cutFrames: cut.stills.map((still) => still.frame),
           },
           seconds,
