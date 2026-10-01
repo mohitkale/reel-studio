@@ -92,3 +92,54 @@ it("reuses silent frames across freshly encoded audio while invalidating every f
     hyperframesSectionCacheKey({ ...plan, producerVersion: "next" }),
   ).not.toBe(key);
 });
+
+it("selects only a native chunk's declared frozen frame dependencies", () => {
+  const plan = {
+    protocol: { schemaVersion: 2 },
+    producerVersion: "0.8.40",
+    ffmpegVersion: "test",
+    width: 1080,
+    height: 1920,
+    fps: 30,
+    totalFrames: 1800,
+    format: "mp4",
+    limitations: { videoDependencyMode: "exact-rendered-frames" },
+    artifacts: [
+      {
+        path: "compiled/index.html",
+        sha256: "html",
+        sizeBytes: 10,
+        chunks: "all",
+      },
+      {
+        path: "video-frames/a/001.png",
+        sha256: "a",
+        sizeBytes: 10,
+        chunks: [0],
+      },
+      {
+        path: "video-frames/b/001.png",
+        sha256: "b",
+        sizeBytes: 10,
+        chunks: [1],
+      },
+    ],
+  } as unknown as PlanV2Manifest;
+  const changed = {
+    ...plan,
+    artifacts: plan.artifacts.map((artifact) =>
+      artifact.path.includes("/b/")
+        ? { ...artifact, sha256: "changed" }
+        : artifact,
+    ),
+  };
+  expect(hyperframesSectionCacheKey(changed, 0)).toBe(
+    hyperframesSectionCacheKey(plan, 0),
+  );
+  expect(hyperframesSectionCacheKey(changed, 1)).not.toBe(
+    hyperframesSectionCacheKey(plan, 1),
+  );
+  expect(hyperframesSectionCacheKey(changed)).not.toBe(
+    hyperframesSectionCacheKey(plan),
+  );
+});

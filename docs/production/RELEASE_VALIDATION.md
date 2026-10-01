@@ -321,3 +321,34 @@ The milestone gate passed 584 unit checks and the native three-second render
 smoke check (585 total). The sandbox-only smoke attempt could not open a local
 port; its rerun with local Chromium permissions passed. Typecheck, lint, secret
 scan and production build passed.
+
+## Selective HyperFrames visual reuse
+
+Chapter exports now freeze a silent native visual project per 30-second section,
+retaining the full endpoint, absolute scene/footage/caption timestamps and shared
+chrome. Only active scenes and their local images/footage are copied. Each
+section is planned by the pinned native producer; reuse hashes its actual
+compiled artifacts, encoder/runtime versions and declared chunk dependencies.
+Global coverage, dimensions and encoder identity must match the complete plan.
+Assembly uses the original complete plan and freshly prepared continuous audio.
+Checksum/packet-count verification and cancellation cleanup remain mandatory.
+
+Catalog imports keep conservative whole-composition reuse because their scripts
+and styles have not been proven independent of surrounding scenes. This change
+adds bounded native planning per section, so a cold export can cost more even
+when an edited retry saves capture/encoding work. It does not approximate frames,
+retime media, alter default quality or add provider calls.
+
+`node --import tsx scripts/verify-video-sections.ts --engine=hyperframes --edit --cancel`
+uses a 62-second fixture with both unchanged and affected sections. It verifies
+cold cancellation/retry, unchanged packet hashes and audio, selective edit
+invalidation, full/scoped native still parity and continuous final mastering.
+
+The 62-second native gate passed cancellation/retry, exact unchanged video/audio
+hashes, two full/scoped still comparisons, selective invalidation of the two
+sections touched by the final scene, and encoded loudness verification. All 587
+unit checks passed; the additional native-plan worker check and 34 focused
+caption/composition checks passed. Static native validation found a pre-existing
+caption CSS font-stack escape error; CSS-string quoting now preserves font names
+without allowing style-element injection, and the named fallback is localized.
+A follow-up native caption parity capture verifies the corrected typography.

@@ -604,3 +604,9 @@ for Chromium archive extraction. Its default command starts the supervisor direc
 so container stop signals reach both children. It uses the existing CPU Kokoro provider and
 skips optional ONNX CUDA binary downloads during dependency installation. It does not install GPU
 drivers or change host configuration.
+
+Chapter HyperFrames exports reuse unchanged native visual sections across visual
+edits. Scoped projects preserve global timing and freeze only active scenes,
+media and captions; native compiled hashes and encoder checks protect reuse.
+Catalog imports retain whole-composition invalidation. Final audio is mixed
+continuously each run. Cold renders add bounded planning per section.

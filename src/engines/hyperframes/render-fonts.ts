@@ -1,5 +1,6 @@
 const SANS_FAMILIES = [
   "DM Sans",
+  "Segoe UI",
   "Inter",
   "Poppins",
   "Libre Franklin",

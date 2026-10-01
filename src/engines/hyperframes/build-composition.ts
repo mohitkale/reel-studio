@@ -72,6 +72,29 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
+/** Style element content needs CSS string escaping, not HTML entities. */
+function cssFontStack(value: string): string {
+  const generic = new Set([
+    "serif",
+    "sans-serif",
+    "monospace",
+    "cursive",
+    "fantasy",
+    "system-ui",
+    "ui-serif",
+    "ui-sans-serif",
+    "ui-monospace",
+  ]);
+  return value
+    .split(",")
+    .map((part) => {
+      const family = part.trim().replace(/^(['"])(.*)\1$/, "$2");
+      if (generic.has(family)) return family;
+      return JSON.stringify(family).replace(/</g, "\\3c ");
+    })
+    .join(", ");
+}
+
 function emphasize(text: string, emphasis: string[]): string {
   let html = escapeHtml(text);
   for (const phrase of emphasis) {
@@ -952,6 +975,8 @@ export function buildHyperframesCompositionHtml(
     inlineCatalog?: boolean;
     producerMode?: boolean;
     runtimeUrl?: string;
+    /** Preserve the complete endpoint for silent globally timed section projects. */
+    totalFrames?: number;
   } = {},
 ): string {
   const inlineCatalog = opts.inlineCatalog === true;
@@ -1108,10 +1133,19 @@ export function buildHyperframesCompositionHtml(
       </section>`);
   }
 
+  // A silent section can omit later scenes while retaining their global timing.
   const contentDuration =
-    beats.reduce((max, b) => Math.max(max, b.start + b.duration), 0) || 1;
-  const totalSeconds = contentDuration + coverSeconds;
-  const totalFrames = Math.max(1, Math.round(totalSeconds * fps));
+    timeline.reduce(
+      (max, beat) =>
+        Math.max(max, (beat.startFrame + beat.durationFrames) / fps),
+      0,
+    ) || 1;
+  const totalFrames =
+    opts.totalFrames ??
+    Math.max(1, Math.round((contentDuration + coverSeconds) * fps));
+  if (!Number.isInteger(totalFrames) || totalFrames < 1)
+    throw new Error("Invalid composition frame endpoint.");
+  const totalSeconds = totalFrames / fps;
   const audioMix = buildAudioMixPlan({
     fps,
     totalFrames,
@@ -1193,7 +1227,7 @@ export function buildHyperframesCompositionHtml(
   <title>Reel Studio · HyperFrames</title>
   <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}${TYPE_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_MOTION_STYLES}${STORY_MOTION_STYLES}
     .rs-subtitle{position:absolute;z-index:50;inset:0;box-sizing:border-box;display:flex;flex-direction:column;justify-content:${captionResolved.outer.justifyContent};align-items:${captionResolved.outer.alignItems};padding:${captionResolved.outer.paddingTop}px ${captionResolved.outer.paddingRight}px ${captionResolved.outer.paddingBottom}px ${captionResolved.outer.paddingLeft}px;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
-    .rs-subtitle>span{display:block;max-width:${captionInner.maxWidth}px;padding:${captionInner.padding};border-radius:${captionInner.borderRadius}px;background:${captionInner.background};color:${captionInner.color};font-family:${escapeHtml(captionInner.fontFamily)};font-weight:${captionInner.fontWeight};line-height:${captionInner.lineHeight};letter-spacing:${captionInner.letterSpacing};text-align:${captionInner.textAlign};text-shadow:${captionInner.textShadow};${captionInner.WebkitTextStroke ? `-webkit-text-stroke:${captionInner.WebkitTextStroke};` : ""}overflow-wrap:anywhere}
+    .rs-subtitle>span{display:block;max-width:${captionInner.maxWidth}px;padding:${captionInner.padding};border-radius:${captionInner.borderRadius}px;background:${captionInner.background};color:${captionInner.color};font-family:${cssFontStack(captionInner.fontFamily)};font-weight:${captionInner.fontWeight};line-height:${captionInner.lineHeight};letter-spacing:${captionInner.letterSpacing};text-align:${captionInner.textAlign};text-shadow:${captionInner.textShadow};${captionInner.WebkitTextStroke ? `-webkit-text-stroke:${captionInner.WebkitTextStroke};` : ""}overflow-wrap:anywhere}
     .rs-caption-line{display:block}.rs-caption-word{display:inline-block;position:relative}.rs-caption-active{position:absolute;inset:0;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
   </style>
 </head>

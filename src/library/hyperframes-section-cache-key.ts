@@ -5,9 +5,13 @@ import { renderCacheKey } from "@/library/render-section-cache";
  * The aggregate plan.json hashes audio too. Native manifest validation remains
  * mandatory before rendering; assembly always uses the fresh complete mix.
  */
-export function hyperframesSectionCacheKey(plan: PlanV2Manifest) {
+export function hyperframesSectionCacheKey(
+  plan: PlanV2Manifest,
+  chunkIndex?: number,
+) {
   return renderCacheKey({
-    version: 2,
+    version: 3,
+    chunkIndex,
     engine: "hyperframes",
     protocol: plan.protocol,
     producer: plan.producerVersion,
@@ -19,7 +23,10 @@ export function hyperframesSectionCacheKey(plan: PlanV2Manifest) {
       .filter(
         (artifact) =>
           artifact.path !== "plan.json" &&
-          (artifact.chunks === "all" || artifact.chunks.length > 0),
+          (artifact.chunks === "all" ||
+            (chunkIndex === undefined
+              ? artifact.chunks.length > 0
+              : artifact.chunks.includes(chunkIndex))),
       )
       .map((artifact) => ({
         path: artifact.path,

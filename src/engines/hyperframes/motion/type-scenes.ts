@@ -72,7 +72,8 @@ export function buildTypeMotionScene(args: {
 
 export const TYPE_MOTION_STYLES = `
   .tm-stage { container-type: inline-size; }
-  .tm-stage[data-type-entrance] .fx-line-inner { transform: none; will-change: auto; }
+  .tm-stage .fx-line-inner { will-change: auto; }
+  .tm-stage[data-type-entrance] .fx-line-inner { transform: none; }
   .tm-stage[data-type-entrance] .tm-impact-shape { transform: rotate(-11deg); }
   .tm-stage[data-type-entrance="rise"] .tm-impact-shape { transform-origin: center bottom; }
   .tm-impact-stage { color: #fffdf7; background: #0b0c12; }

@@ -33,9 +33,9 @@ const engineFlag = process.argv
 const engines = engineFlag
   ? [z.enum(["remotion", "hyperframes"]).parse(engineFlag)]
   : (["remotion", "hyperframes"] as const);
-const seconds = long ? 210 : 32;
+const seconds = long ? 210 : edit ? 62 : 32;
 const fps = long ? 24 : 30;
-const count = long ? 6 : 2;
+const count = long ? 6 : edit ? 3 : 2;
 const frames = seconds * fps;
 const narration = Array.from({ length: count }, (_, index) => {
   const words =
@@ -623,7 +623,7 @@ async function main() {
         );
         let edited;
         const scopedParity: Array<{ frame: number; sha256: string }> = [];
-        if (edit && engine === "remotion") {
+        if (edit) {
           const originalProps = prepared.props;
           const { renderVisualReviewFrames } =
             await import("../src/library/visual-review");
@@ -636,7 +636,7 @@ async function main() {
               (section.startFrame + section.endFrame) / 2,
             );
             const full = await renderVisualReviewFrames(
-              "remotion",
+              engine,
               { ...originalProps, fps },
               frames,
               [frame],
@@ -644,7 +644,7 @@ async function main() {
               base,
             );
             const scoped = await renderVisualReviewFrames(
-              "remotion",
+              engine,
               { ...sectionVisualProps(originalProps, section, fps), fps },
               frames,
               [frame],
@@ -662,15 +662,26 @@ async function main() {
           prepared.props = structuredClone(originalProps);
           prepared.props.scenes.at(-1)!.text = "A revised final chapter visual";
           edited = await run();
+          const changedSceneId = originalProps.scenes.at(-1)!.id;
+          const affected = new Set(
+            expectedSections
+              .filter((section) =>
+                sectionVisualProps(originalProps, section, fps).scenes.some(
+                  (scene) => scene.id === changedSceneId,
+                ),
+              )
+              .map((section) => section.index),
+          );
           assert.ok(
-            edited.events.slice(0, -1).every((event) => event.reused),
-            "Unchanged chapters should reuse their video sections",
+            affected.size < expectedSections.length,
+            "Fixture must include an unchanged visual section",
           );
-          assert.equal(
-            edited.events.at(-1)?.reused,
-            false,
-            "The edited visual must be rendered again",
-          );
+          for (const event of edited.events)
+            assert.equal(
+              event.reused,
+              !affected.has(event.index),
+              `Section ${event.index} must invalidate exactly when its visual changes`,
+            );
           const lastStart = timeline.at(-1)!.startFrame;
           const imageHash = async (file: string, at: number) =>
             (
