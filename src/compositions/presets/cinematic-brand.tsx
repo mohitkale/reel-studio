@@ -198,7 +198,15 @@ export const CinematicBrandScene = React.memo(function CinematicBrandScene({
         ) : (
           <div
             style={{
-              paddingBottom: role === "hero" ? (portrait ? 42 : 18) : 0,
+              paddingBottom:
+                role === "hero"
+                  ? scene.motion?.recipeId === "media-cinematic" &&
+                    width > height * 1.25
+                    ? Math.ceil(height * 0.06)
+                    : portrait
+                      ? 42
+                      : 18
+                  : 0,
             }}
           >
             <AnimatedText
