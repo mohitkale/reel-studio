@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { useScript } from "@/hooks/script";
 import { apiPost } from "@/lib/api-client";
 import type { ScriptDTO } from "@/lib/dto";
+import type { CutSuggestion } from "@/production/cut-suggestions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,6 +66,14 @@ export function MusicBeatMap({
             map={script.musicMap}
             scriptId={scriptId}
             disabled={disabled || analyze.isPending}
+            onListen={onListen}
+          />
+        )}
+        {script.musicMap && (
+          <NarrationCutSuggestions
+            key={JSON.stringify(script)}
+            script={script}
+            disabled={disabled}
             onListen={onListen}
           />
         )}
@@ -260,6 +269,102 @@ function MusicBeatForm({
           </Button>
         )}
       </div>
+    </div>
+  );
+}
+
+function NarrationCutSuggestions({
+  script,
+  disabled,
+  onListen,
+}: {
+  script: ScriptDTO;
+  disabled?: boolean;
+  onListen: (seconds: number) => void;
+}) {
+  const [takeId, setTakeId] = React.useState("");
+  const [reviewed, setReviewed] = React.useState(false);
+  const cuts = useMutation({
+    mutationFn: () =>
+      apiPost<{
+        fps: number;
+        suggestions: CutSuggestion[];
+        reason: string | null;
+      }>(`/api/scripts/${script.id}/cut-suggestions`, {
+        takeId,
+        reviewed,
+        expectedMusicMap: script.musicMap,
+      }),
+  });
+  return (
+    <div className="grid gap-2 border-t pt-3">
+      <Label className="grid gap-1 text-xs">
+        Voice take for cut review
+        <select
+          aria-label="Voice take for cut review"
+          className="rounded border p-2"
+          value={takeId}
+          disabled={disabled || cuts.isPending}
+          onChange={(event) => {
+            setTakeId(event.target.value);
+            cuts.reset();
+          }}
+        >
+          <option value="">Choose recorded narration</option>
+          {script.takes
+            .filter((take) => !take.isPlaceholder)
+            .map((take, index) => (
+              <option key={take.id} value={take.id}>
+                {take.label ?? `Take ${index + 1}`}
+              </option>
+            ))}
+        </select>
+      </Label>
+      <Label className="flex items-center gap-2 text-xs">
+        <input
+          type="checkbox"
+          checked={reviewed}
+          onChange={(event) => {
+            setReviewed(event.target.checked);
+            cuts.reset();
+          }}
+          disabled={disabled || cuts.isPending}
+        />
+        I have listened to and reviewed the saved beat map
+      </Label>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={disabled || cuts.isPending || !takeId || !reviewed}
+        onClick={() => cuts.mutate()}
+      >
+        Suggest narration-aware cuts
+      </Button>
+      <p className="text-muted-foreground text-xs">
+        Suggestions protect measured speech and reading holds. Scene timing
+        stays as edited; listen before making a manual cut.
+      </p>
+      {cuts.isError && (
+        <p role="alert" className="text-destructive text-xs">
+          {cuts.error.message}
+        </p>
+      )}
+      {cuts.data?.reason && (
+        <p className="text-muted-foreground text-xs">{cuts.data.reason}</p>
+      )}
+      {cuts.data?.suggestions.map((cut) => (
+        <Button
+          key={cut.sceneId}
+          size="sm"
+          variant="ghost"
+          onClick={() => onListen(cut.toFrame / cuts.data!.fps)}
+        >
+          Scene{" "}
+          {script.scenes.findIndex((scene) => scene.id === cut.sceneId) + 1}:{" "}
+          {(cut.fromFrame / cuts.data!.fps).toFixed(2)}s →{" "}
+          {(cut.toFrame / cuts.data!.fps).toFixed(2)}s ({cut.anchor})
+        </Button>
+      ))}
     </div>
   );
 }

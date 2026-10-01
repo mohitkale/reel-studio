@@ -335,6 +335,12 @@ and available through the editor's authorization flow.
 Music → Review music beats analyzes a local track once and saves a reviewable
 tempo/phase proposal. Creators can change BPM, shift the first beat, disable
 beats and mark a drop; audio fingerprints and optimistic checks protect edits.
+After listening to the saved map, choose a recorded take and acknowledge review
+to request narration-aware cut suggestions. Matching measured word timing is
+required; suggestions preserve speech, reading holds and scene locks. They show
+advisory frame positions only and do not change creator timing. REST and
+`suggest_narration_cuts` MCP use the same validated request.
+
 Beat maps repeat with the track's loop, are frozen in production snapshots,
 and can be edited through `PATCH /api/scripts/:id/music-map` or `edit_music_map`.
 They provide directing references; scene and narration timing stays as edited.
