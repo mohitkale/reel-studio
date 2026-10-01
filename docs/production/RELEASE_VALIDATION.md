@@ -298,3 +298,26 @@ assertions and timeouts are unchanged. All 576 unit checks passed with this
 exact command. Typecheck, lint, secret scan, fast
 release contract and production build passed. No provider calls, dependencies or
 long-render matrix were required.
+
+## Narration-aware music cut review
+
+The music panel and `suggest_narration_cuts` MCP tool share a read-only REST
+proposal. Creators explicitly acknowledge the saved beat map and select a
+recorded take. The service verifies the local audio checksum and rejects stale
+maps or foreign takes. Suggestions stay within 350 ms of an existing cut, avoid
+measured spoken words with 80 ms clearance, retain conservative copy-reading
+holds and skip scene locks. Enabled beats and explicit drop markers repeat with
+the music bed; cover offsets are included in displayed frames. Untimed,
+placeholder, mismatched and appended narration cannot masquerade as silence.
+Caption visibility does not affect speech protection. Suggestions never change
+scene lengths, trims, narration, snapshots or exports; listen and direct any
+manual timing changes separately.
+
+Focused tests cover provenance, coverage, stale inputs, unchanged timing,
+reading holds, locks, disabled anchors, drops, cover offsets, loops and MCP
+parity. No AI/provider calls or dependency changes are involved.
+
+The milestone gate passed 584 unit checks and the native three-second render
+smoke check (585 total). The sandbox-only smoke attempt could not open a local
+port; its rerun with local Chromium permissions passed. Typecheck, lint, secret
+scan and production build passed.

@@ -1,3 +1,4 @@
+import { cutSuggestionRequestSchema } from "@/production/cut-suggestions";
 import { randomUUID } from "node:crypto";
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -595,6 +596,26 @@ export function registerTools(server: McpServer): void {
         await apiPatch(
           `/api/scripts/${encode(scriptId)}/chapters`,
           chapterEditSchema.parse(body),
+        ),
+      ),
+    ),
+  );
+
+  server.registerTool(
+    "suggest_narration_cuts",
+    {
+      description:
+        "Suggest nearby music cuts after explicitly reviewing the saved music map. Requires a matching recorded take and measured word timing. Protects speech, reading holds and locked scenes; returns advisory frames without changing creator timing. Get the script first and pass its exact musicMap.",
+      inputSchema: {
+        scriptId: z.string().min(1),
+        ...cutSuggestionRequestSchema.shape,
+      },
+    },
+    guard(async ({ scriptId, ...body }) =>
+      ok(
+        await apiPost(
+          `/api/scripts/${encode(scriptId)}/cut-suggestions`,
+          cutSuggestionRequestSchema.parse(body),
         ),
       ),
     ),

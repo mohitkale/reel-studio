@@ -156,6 +156,15 @@ export async function analyzeMusicMap(
   }
 }
 
+export async function verifyMusicMapSource(map: MusicMap, baseUrl: string) {
+  const source = await sourceAudio(map.sourceUrl, baseUrl);
+  if (source.hash !== map.sourceHash)
+    throw new ProviderError(
+      "The audio file changed. Analyze the current track again.",
+      409,
+    );
+}
+
 export async function editMusicMap(
   scriptId: string,
   input: MusicMapEdit,

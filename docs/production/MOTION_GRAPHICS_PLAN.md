@@ -440,13 +440,13 @@ maps, measured audio mastering, native review, chapter authoring and bounded
 chapter production are implemented. Follow-ups should remain distinct tasks:
 
 The broader choreography item is complete with two authored treatments per
-family in both engines, in addition to chapter Sweep/Rise. Three original
-follow-up items remain:
+family in both engines, in addition to chapter Sweep/Rise. Narration-aware cut review now ships as advisory frames in the music panel, REST
+and MCP. Explicit saved-map review, verified local music and matching measured
+word timing protect speech, reading holds and locks without changing creator
+timing. Two original follow-up items remain:
 
-1. Narration-aware cut suggestions from reviewed music anchors, preserving
-   speaking windows and creator timing.
-2. Selective HyperFrames visual reuse when compiled native inputs can be safely
+1. Selective HyperFrames visual reuse when compiled native inputs can be safely
    scoped; its current retries reuse unchanged whole-composition sections.
-3. Broader five-minute footage/quality/resolution benchmarks, followed by an
+2. Broader five-minute footage/quality/resolution benchmarks, followed by an
    opt-in finishing experiment for heavier effects or motion blur with measured
    cost. No default multi-sample blur is enabled.
