@@ -32,6 +32,8 @@ afterEach(async () => {
   vi.resetModules();
   vi.resetAllMocks();
 });
+// Real SQLite migrations, lazy service imports and transaction races need a
+// bounded integration budget on shared CI runners, separate from unit defaults.
 it("generates one reviewed chapter, resumes/retries pending work and atomically preserves earlier scenes and progress", async () => {
   const directory = mkdtempSync(
     path.join(tmpdir(), "reel-chapter-generation-"),
@@ -404,4 +406,4 @@ it("generates one reviewed chapter, resumes/retries pending work and atomically 
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-});
+}, 20_000);
