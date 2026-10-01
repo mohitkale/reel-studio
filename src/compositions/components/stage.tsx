@@ -278,29 +278,37 @@ const BrandBug = React.memo(function BrandBug({
 }: {
   tokens: BrandTokens;
 }) {
-  const { layout } = React.useContext(StageOptionsContext);
+  const { layout: configuredLayout } = React.useContext(StageOptionsContext);
+  const { width, height } = useVideoConfig();
+  const layout = configuredLayout ?? resolveProductionLayout({ width, height });
+  const size = Math.round(30 * layout.typeScale);
   return (
     <div
       style={{
         position: "absolute",
-        bottom: layout?.brandInsetBottom ?? 64,
+        // Keep the responsive brand footer below the default caption region.
+        bottom: Math.min(
+          layout.brandInsetBottom,
+          Math.max(0, layout.captionBottom - size - 8),
+        ),
         left: 0,
         right: 0,
         display: "flex",
         justifyContent: "center",
-        gap: 14,
+        gap: Math.round(14 * layout.typeScale),
         alignItems: "center",
         color: tokens.muted,
-        fontSize: 30,
+        fontSize: size,
+        lineHeight: 1,
         fontWeight: 600,
         letterSpacing: "0.02em",
       }}
     >
       <span
         style={{
-          width: 30,
-          height: 30,
-          borderRadius: 9,
+          width: size,
+          height: size,
+          borderRadius: Math.round(9 * layout.typeScale),
           background: `linear-gradient(135deg, ${tokens.accent}, ${tokens.accentSecondary})`,
         }}
       />

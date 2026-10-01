@@ -622,7 +622,8 @@ checks frame coverage, encoded dimensions, continuous mastered audio and an
 unchanged retry. Evidence, MP4s and time/memory reports remain in
 `.artifacts/long-video-benchmark-*`. Engine quality tiers scale output differently;
 compare the measured encoded dimensions. Scope with `-- --engine=hyperframes`
-and/or `--profile=standard-720`.
+and/or `--profile=standard-720`. Measured results and fixture scope are in
+[LONG_VIDEO_BENCHMARKS.md](docs/production/LONG_VIDEO_BENCHMARKS.md).
 
 Add `-- --finishing` to explicitly evaluate three-frame temporal blending on the
 high rows. The experiment resets at cuts, writes a separate output, verifies

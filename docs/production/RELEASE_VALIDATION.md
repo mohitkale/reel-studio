@@ -365,7 +365,8 @@ media; evidence, fixture databases and MP4s remain under
 `.artifacts/long-video-benchmark-*`. No providers, dependency
 installs or new duration allowances are involved. Every row checks exact coverage,
 encoded resolution, audio around each section boundary, measured mastering,
-unchanged audio/video retry hashes and native scene/transition stills. Reports
+identical video retry hashes, decoded audio drift below the existing 2% limit
+(with encoded audio hashes retained), and native scene/transition stills. Reports
 include wall time per video minute, warm retry time and sampled peak process-tree
 RSS; missing memory samples remain explicitly unavailable. Native canvas and
 encoded pixels are both retained because engine quality tiers scale differently.
@@ -394,3 +395,13 @@ subframe motion blur. Moving copy can soften and lag by a frame; visual review
 must decide whether that tradeoff helps. No default production path invokes it.
 A native FFmpeg regression verifies exact coverage/audio, clean red-to-green cut
 history, artifact protection and cleanup during cancellation.
+
+All six five-minute rows and both high finishing outputs passed the native gate.
+See [LONG_VIDEO_BENCHMARKS.md](./LONG_VIDEO_BENCHMARKS.md) for measured time/memory,
+actual encoded dimensions, audio drift observations and the finishing decision.
+Final Remotion stills also verify responsive brand-footer spacing below captions.
+
+The post-merge PR 27 Quality run failed only because two real SQLite integration
+tests exceeded Vitest's five-second default on the shared runner. Their deadlines
+are now 20 seconds, scoped to those two tests with every assertion retained.
+Three consecutive focused runs passed, and failed run 36824884272 passed attempt 2.
