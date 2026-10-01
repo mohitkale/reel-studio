@@ -352,3 +352,30 @@ caption/composition checks passed. Static native validation found a pre-existing
 caption CSS font-stack escape error; CSS-string quoting now preserves font names
 without allowing style-element injection, and the named fallback is localized.
 A follow-up native caption parity capture verifies the corrected typography.
+
+## Five-minute footage matrix and optional finishing experiment
+
+`npm run benchmark:long-videos -- --finishing` runs six sequential local fixtures:
+Remotion and HyperFrames at draft/standard 720p native coordinates and high 1080p
+native coordinates. Each has exactly 300 seconds / 7,200 frames at 24 fps, ten
+chapters, both supplied-media treatments, local eight-second footage that holds
+its final frame, reading beats, captions, calibration narration, music and SFX.
+The isolated database and exclusively created fixture media are cleaned; evidence
+and MP4s remain under `.artifacts/long-video-benchmark-*`. No providers, dependency
+installs or new duration allowances are involved. Every row checks exact coverage,
+encoded resolution, audio around each section boundary, measured mastering,
+unchanged audio/video retry hashes and native scene/transition stills. Reports
+include wall time per video minute, warm retry time and sampled peak process-tree
+RSS; missing memory samples remain explicitly unavailable. Native canvas and
+encoded pixels are both retained because engine quality tiers scale differently.
+
+The explicit high-only finishing experiment blends three decoded frames with
+weights 1:2:1, processing bounded silent sections before copying the complete
+encoded audio. Temporal history resets at cuts. Existing outputs cannot be
+overwritten; failed/canceled work leaves no deliverable or private scratch.
+Source hashes, exact frame count/rate/dimensions/duration and encoded audio packet
+hashes gate publication. This is causal temporal smoothing, not higher-sample
+subframe motion blur. Moving copy can soften and lag by a frame; visual review
+must decide whether that tradeoff helps. No default production path invokes it.
+A native FFmpeg regression verifies exact coverage/audio, clean red-to-green cut
+history, artifact protection and cleanup during cancellation.

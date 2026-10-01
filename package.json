@@ -52,7 +52,8 @@
     "test:podcast-audiogram": "tsx scripts/render-podcast-audiogram.ts",
     "db:migrate": "node scripts/migrate-database.mjs",
     "test:production-worker": "node --import tsx scripts/verify-production-worker.ts",
-    "test:video-sections": "node --import tsx scripts/verify-video-sections.ts"
+    "test:video-sections": "node --import tsx scripts/verify-video-sections.ts",
+    "benchmark:long-videos": "node --import tsx scripts/benchmark-long-videos.ts"
   },
   "dependencies": {
     "@fontsource-variable/geist": "5.3.0",

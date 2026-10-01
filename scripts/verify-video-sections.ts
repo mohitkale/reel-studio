@@ -18,6 +18,28 @@ import { planRenderSections } from "../src/production/render-sections";
 import { sectionVisualProps } from "../src/production/section-visuals";
 import { hashRenderFile } from "../src/library/render-section-cache";
 
+import {
+  VIDEO_BENCHMARK_PROFILES,
+  videoBenchmarkProfileSchema,
+} from "../src/production/video-benchmark";
+const benchmarkFlag = process.argv
+  .find((value) => value.startsWith("--benchmark="))
+  ?.slice(12);
+const benchmarkId = benchmarkFlag
+  ? videoBenchmarkProfileSchema.parse(benchmarkFlag)
+  : null;
+const benchmark = benchmarkId ? VIDEO_BENCHMARK_PROFILES[benchmarkId] : null;
+const evidenceFlag = process.argv
+  .find((value) => value.startsWith("--evidence="))
+  ?.slice(11);
+const finishing = process.argv.includes("--finishing");
+if (finishing && benchmark?.quality !== "high")
+  throw new Error(
+    "Finishing is an explicit high-quality benchmark experiment.",
+  );
+const fixtureCancellation = new AbortController();
+process.once("SIGINT", () => fixtureCancellation.abort());
+process.once("SIGTERM", () => fixtureCancellation.abort());
 const execute = promisify(execFile);
 const long = process.argv.includes("--long");
 const cancel = process.argv.includes("--cancel");
@@ -33,9 +55,10 @@ const engineFlag = process.argv
 const engines = engineFlag
   ? [z.enum(["remotion", "hyperframes"]).parse(engineFlag)]
   : (["remotion", "hyperframes"] as const);
-const seconds = long ? 210 : edit ? 62 : 32;
-const fps = long ? 24 : 30;
-const count = long ? 6 : edit ? 3 : 2;
+const seconds = benchmark?.seconds ?? (long ? 210 : edit ? 62 : 32);
+const fps = benchmark?.fps ?? (long ? 24 : 30);
+const count = benchmark ? 10 : long ? 6 : edit ? 3 : 2;
+const quality = benchmark?.quality ?? "draft";
 const frames = seconds * fps;
 const narration = Array.from({ length: count }, (_, index) => {
   const words =
@@ -208,10 +231,17 @@ function sampleRenderMemory() {
   };
 }
 async function main() {
-  const directory = path.resolve(".artifacts", `video-sections-${Date.now()}`);
+  const directory = evidenceFlag
+    ? path.resolve(evidenceFlag)
+    : path.resolve(".artifacts", `video-sections-${Date.now()}`);
+  if (evidenceFlag) {
+    const artifacts = path.resolve(".artifacts");
+    if (!directory.startsWith(artifacts + path.sep))
+      throw new Error("Benchmark evidence must stay under .artifacts.");
+  }
   const mediaKey = `regression/video-sections-${fixtureSeed}`;
   const media = path.resolve("media", mediaKey);
-  await fs.mkdir(directory, { recursive: true });
+  await fs.mkdir(directory, { recursive: !evidenceFlag });
   await fs.mkdir(path.dirname(media), { recursive: true });
   // A stable seed supports repeatable diagnostics without overwriting a
   // concurrent fixture. Only this run's exclusively created media is cleaned.
@@ -319,6 +349,22 @@ async function main() {
       "pcm_s16le",
       path.join(media, "voice.wav"),
     ]);
+  if (benchmark)
+    await execute("ffmpeg", [
+      "-v",
+      "error",
+      "-nostdin",
+      "-f",
+      "lavfi",
+      "-i",
+      "testsrc2=size=640x360:rate=24:duration=8",
+      "-c:v",
+      "libx264",
+      "-pix_fmt",
+      "yuv420p",
+      "-an",
+      path.join(media, "footage.mp4"),
+    ]);
   await fs.copyFile("public/sfx/pop.wav", path.join(media, "pop.wav"));
   const server = createServer(async (req, res) => {
     try {
@@ -330,7 +376,9 @@ async function main() {
             ? path.join(media, "voice.wav")
             : pathname === `/media/${mediaKey}/pop.wav`
               ? path.join(media, "pop.wav")
-              : null;
+              : benchmark && pathname === `/media/${mediaKey}/footage.mp4`
+                ? path.join(media, "footage.mp4")
+                : null;
       if (!filename) {
         res.writeHead(404);
         res.end();
@@ -338,7 +386,7 @@ async function main() {
       }
       const bytes = await fs.readFile(filename);
       res.writeHead(200, {
-        "Content-Type": "audio/wav",
+        "Content-Type": filename.endsWith(".mp4") ? "video/mp4" : "audio/wav",
         "Content-Length": bytes.length,
       });
       res.end(bytes);
@@ -375,8 +423,8 @@ async function main() {
             id: "section-proof-script",
             name: "Section continuity",
             fps,
-            width: long ? 1280 : 1080,
-            height: long ? 720 : 1920,
+            width: benchmark?.width ?? (long ? 1280 : 1080),
+            height: benchmark?.height ?? (long ? 720 : 1920),
             musicUrl: "/music/tech-minimal.wav",
             musicVolume: 30,
             brandOverrides: JSON.stringify({
@@ -400,8 +448,24 @@ async function main() {
                 templateId: "hf-statement",
                 layoutJson: JSON.stringify({
                   role: index === 0 ? "hook" : "takeaway",
+                  ...(benchmark && index % 2 === 0
+                    ? {
+                        background: {
+                          type: "video",
+                          url: `/media/${mediaKey}/footage.mp4`,
+                          muted: true,
+                        },
+                      }
+                    : {}),
                   motion: {
-                    recipeId: index % 2 ? "type-editorial" : "type-impact",
+                    recipeId:
+                      benchmark && index % 2 === 0
+                        ? index % 4 === 0
+                          ? "media-device"
+                          : "media-cinematic"
+                        : index % 2
+                          ? "type-editorial"
+                          : "type-impact",
                     version: "1.0.0",
                   },
                 }),
@@ -479,7 +543,7 @@ async function main() {
       const run = async (interrupt = false) => {
         const render = await createRender({
           scriptId: "section-proof-script",
-          quality: "draft",
+          quality,
         });
         const output = path.resolve("media/renders", `render-${render.id}.mp4`);
         files.push(output, `${output}.audio.json`);
@@ -505,15 +569,17 @@ async function main() {
             }
           }, 100);
         try {
-          await withProductionSignal(controller.signal, () =>
-            runRenderNow({
-              renderId: render.id,
-              scriptId: "section-proof-script",
-              snapshot,
-              prepared,
-              serverBaseUrl: base,
-              quality: "draft",
-            }),
+          await withProductionSignal(
+            AbortSignal.any([controller.signal, fixtureCancellation.signal]),
+            () =>
+              runRenderNow({
+                renderId: render.id,
+                scriptId: "section-proof-script",
+                snapshot,
+                prepared,
+                serverBaseUrl: base,
+                quality,
+              }),
           );
         } catch (error) {
           if (!interrupt || !controller.signal.aborted) throw error;
@@ -576,6 +642,18 @@ async function main() {
           Number(JSON.parse(stdout).streams[0].nb_read_packets),
           frames,
         );
+        if (benchmark) {
+          const scale =
+            engine === "remotion"
+              ? quality === "draft"
+                ? 0.5
+                : quality === "high"
+                  ? 4 / 3
+                  : 1
+              : 1;
+          assert.equal(metadata.width, Math.round(benchmark.width * scale));
+          assert.equal(metadata.height, Math.round(benchmark.height * scale));
+        }
         assert.equal(events.length, expectedSections.length);
         const probes = [];
         for (const at of [
@@ -720,25 +798,29 @@ async function main() {
         }
         const { createVisualReview } =
           await import("../src/library/visual-review");
-        const review = await createVisualReview(
-          "section-proof-script",
-          {
-            sceneIds,
-            samples: 1,
-            voiceTakeId: "section-proof-take",
-          },
-          base,
-        );
-        assert.ok(review.takeUsable);
-        assert.equal(review.stills.length, count);
         const reviewDir = path.join(directory, `${engine}-review`);
         await fs.mkdir(reviewDir, { recursive: true });
-        for (const still of review.stills) {
-          await fs.copyFile(
-            path.resolve("media", still.url.slice(7)),
-            path.join(reviewDir, `scene-${still.sceneNumber}.png`),
+        let reviewedScenes = 0;
+        // Preserve the production review limit for longer benchmark fixtures.
+        for (let offset = 0; offset < sceneIds.length; offset += 8) {
+          const review = await createVisualReview(
+            "section-proof-script",
+            {
+              sceneIds: sceneIds.slice(offset, offset + 8),
+              samples: 1,
+              voiceTakeId: "section-proof-take",
+            },
+            base,
           );
+          assert.ok(review.takeUsable);
+          reviewedScenes += review.stills.length;
+          for (const still of review.stills)
+            await fs.copyFile(
+              path.resolve("media", still.url.slice(7)),
+              path.join(reviewDir, `scene-${still.sceneNumber}.png`),
+            );
         }
+        assert.equal(reviewedScenes, count);
         const cut = await createVisualReview(
           "section-proof-script",
           {
@@ -760,8 +842,77 @@ async function main() {
           `${first.output}.audio.json`,
           path.join(directory, `${engine}.audio.json`),
         );
+        let finishingReport;
+        if (benchmark) {
+          const delivery = path.join(directory, `${engine}-${benchmarkId}.mp4`);
+          await fs.copyFile(first.output, delivery);
+          const encodedReview = path.join(directory, "encoded-review");
+          await fs.mkdir(encodedReview);
+          for (const [index, beat] of timeline.entries())
+            await execute("ffmpeg", [
+              "-v",
+              "error",
+              "-nostdin",
+              "-ss",
+              String(beat.startFrame / fps + 3),
+              "-i",
+              delivery,
+              "-frames:v",
+              "1",
+              "-vf",
+              "scale=320:-1",
+              path.join(
+                encodedReview,
+                `scene-${String(index).padStart(2, "0")}.png`,
+              ),
+            ]);
+          await execute("ffmpeg", [
+            "-v",
+            "error",
+            "-nostdin",
+            "-framerate",
+            "1",
+            "-i",
+            path.join(encodedReview, "scene-%02d.png"),
+            "-vf",
+            "tile=5x2:padding=8:margin=8:color=0x151515",
+            "-frames:v",
+            "1",
+            path.join(encodedReview, "sheet.jpg"),
+          ]);
+          if (finishing) {
+            const { finishVideoExperiment } =
+              await import("../src/library/video-finishing-experiment");
+            const finishMemory = sampleRenderMemory();
+            try {
+              finishingReport = await finishVideoExperiment(
+                delivery,
+                path.join(directory, `${engine}-${benchmarkId}-finished.mp4`),
+                {
+                  mode: "temporal-blend-3",
+                  quality: "high",
+                  fps,
+                  totalFrames: frames,
+                  cutFrames: timeline.slice(1).map((beat) => beat.startFrame),
+                },
+                fixtureCancellation.signal,
+              );
+            } finally {
+              const memory = await finishMemory();
+              if (finishingReport)
+                finishingReport = { ...finishingReport, ...memory };
+            }
+          }
+        }
         evidence.push({
           engine,
+          benchmarkId,
+          quality,
+          nativeCanvas: benchmark ? [benchmark.width, benchmark.height] : null,
+          secondsPerVideoMinute: first.milliseconds / 1000 / (seconds / 60),
+          secondsPerVideoMinuteOnRetry:
+            retry.milliseconds / 1000 / (seconds / 60),
+          finishingReport,
           audioConsistency,
           edited,
           scopedParity,

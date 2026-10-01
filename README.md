@@ -610,3 +610,18 @@ edits. Scoped projects preserve global timing and freeze only active scenes,
 media and captions; native compiled hashes and encoder checks protect reuse.
 Catalog imports retain whole-composition invalidation. Final audio is mixed
 continuously each run. Cold renders add bounded planning per section.
+
+Run `npm run benchmark:long-videos` for the offline five-minute footage matrix:
+both engines, draft/standard at a 1280×720 native canvas and high at 1920×1080,
+24 fps, ten chapters, captions, calibration narration, music and SFX. Every row
+checks frame coverage, encoded dimensions, continuous mastered audio and an
+unchanged retry. Evidence, MP4s and time/memory reports remain in
+`.artifacts/long-video-benchmark-*`. Engine quality tiers scale output differently;
+compare the measured encoded dimensions. Scope with `-- --engine=hyperframes`
+and/or `--profile=standard-720`.
+
+Add `-- --finishing` to explicitly evaluate three-frame temporal blending on the
+high rows. The experiment resets at cuts, writes a separate output, verifies
+unchanged audio packets and frame coverage, and reports extra time and memory.
+It can soften moving text and add a one-frame visual lag; it is causal smoothing,
+not subframe motion blur. Production exports keep their existing defaults.
