@@ -40,3 +40,40 @@ export async function currentVideoRevisionHash(
 ) {
   return videoRevisionHash(await captureVideoSnapshot(scriptId, voiceTakeId));
 }
+
+export async function currentVideoRevisionHashes(
+  inputs: Array<{ scriptId: string; voiceTakeId?: string }>,
+) {
+  if (!inputs.length) return new Map<string, string | null>();
+  const { getScripts } = await import("@/library/repositories/scripts");
+  const { listScriptsStockMediaSelections } =
+    await import("@/library/repositories/stock-media-selections");
+  const ids = [...new Set(inputs.map((input) => input.scriptId))];
+  const scripts = await getScripts(ids);
+  const selections = await listScriptsStockMediaSelections(ids);
+  const hashes = new Map<string, string | null>();
+  for (const input of inputs) {
+    const key = JSON.stringify([input.scriptId, input.voiceTakeId ?? null]);
+    if (hashes.has(key)) continue;
+    const script = scripts.get(input.scriptId);
+    const take = input.voiceTakeId
+      ? script?.takes.find((t) => t.id === input.voiceTakeId)
+      : null;
+    if (!script || (input.voiceTakeId && !take)) {
+      hashes.set(key, null);
+      continue;
+    }
+    hashes.set(
+      key,
+      videoRevisionHash(
+        videoSnapshotSchema.parse({
+          version: 1,
+          script,
+          take: take ?? null,
+          stockMedia: selections.get(input.scriptId) ?? [],
+        }),
+      ),
+    );
+  }
+  return hashes;
+}

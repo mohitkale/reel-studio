@@ -3,8 +3,6 @@ import { hostname } from "node:os";
 import { runProductionWorkerOnce } from "../src/library/production-worker";
 import { executeProductionJob } from "../src/library/production-job-executor";
 
-import { reconcileRenderJobs } from "../src/library/editor-render-jobs";
-
 const workerId = `${hostname()}:${process.pid}`;
 let stopping = false;
 const shutdown = new AbortController();
@@ -30,7 +28,6 @@ async function main() {
       }
     }
   }
-  await reconcileRenderJobs();
   console.log(`[production-worker] ${workerId} ready`);
   while (!stopping) {
     const result = await runProductionWorkerOnce({

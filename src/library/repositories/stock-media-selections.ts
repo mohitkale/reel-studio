@@ -172,3 +172,28 @@ export async function listScriptStockMediaSelections(scriptId: string) {
       ),
     }));
 }
+
+/** Fresh batched stock snapshots for revision polling. */
+export async function listScriptsStockMediaSelections(scriptIds: string[]) {
+  const selections = await prisma.stockMediaSelection.findMany({
+    where: { scene: { scriptId: { in: scriptIds } } },
+    include: { scene: { select: { order: true, scriptId: true } } },
+  });
+  const result = new Map<
+    string,
+    Array<{ sceneId: string; snapshot: ResolvedStockAsset }>
+  >();
+  for (const selection of selections.sort(
+    (a, b) => a.scene.order - b.scene.order,
+  )) {
+    const list = result.get(selection.scene.scriptId) ?? [];
+    list.push({
+      sceneId: selection.sceneId,
+      snapshot: resolvedStockAssetSchema.parse(
+        JSON.parse(selection.snapshotJson),
+      ),
+    });
+    result.set(selection.scene.scriptId, list);
+  }
+  return result;
+}

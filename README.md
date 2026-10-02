@@ -584,6 +584,17 @@ locally before frame rendering.
 
 Stop the app before running `npm run db:migrate`. Existing recognized v0.3.0 databases are backed up beside the SQLite file and baselined before versioned migrations run. Unknown schemas are rejected. Relative `file:./dev.db` URLs continue to resolve under `prisma/`. To roll back, stop the app, restore the matching backup and application version together, and keep the media directory. Setup and Docker use this migration path.
 
+### SQLite and progress writes
+
+Web and worker connections verify WAL mode and a five-second busy timeout on
+startup. Run `npm run db:migrate` after this update; the render-job lookup index
+keeps reconciliation from scanning immutable snapshots. Progress writes coalesce
+at 250 ms and flush before completion. Job lists batch fresh revision reads,
+including scenes, captions, takes, assets, brands and stock selections; edits are
+visible on the next request. Brief heartbeat contention is tolerated only within
+the last confirmed lease, while cancellation and lost ownership still stop work.
+SQLite WAL/SHM files are local database state and must stay beside the database.
+
 ### Supervised production worker
 
 Editor video exports, full takes, scene clips, and podcast narration use the same

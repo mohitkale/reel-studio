@@ -1,3 +1,4 @@
+import { createProgressWriter } from "@/library/progress-writer";
 import { writeHyperframesVisualSections } from "@/library/hyperframes-visual-sections";
 import type { VideoSnapshot } from "@/production/video-snapshot";
 import {
@@ -423,13 +424,19 @@ export async function runHyperframesRender(
     onProgress,
   } = opts;
 
+  const writer = createProgressWriter<{
+    progress: number;
+    status: Parameters<typeof updateRenderProgress>[2];
+  }>((value) => updateRenderProgress(renderId, value.progress, value.status));
+  let previousStatus: string | undefined;
   const progress = (
     p: number,
     status: "queued" | "bundling" | "rendering" | "done" | "error",
   ) => {
     upsertJob({ id: renderId, progress: p, status });
     onProgress?.(p, status);
-    void updateRenderProgress(renderId, p, status).catch(() => {});
+    writer.push({ progress: p, status }, previousStatus !== status);
+    previousStatus = status;
   };
 
   try {
@@ -633,6 +640,8 @@ export async function runHyperframesRender(
 
     await masterVideoAudio(outputPath, script.audioMastering);
     assertProductionActive();
+    await writer.flush();
+    await writer.stop();
     await completeRender(renderId, outputKey);
     upsertJob({
       id: renderId,
@@ -644,6 +653,7 @@ export async function runHyperframesRender(
 
     await fs.rm(projectDir, { recursive: true, force: true }).catch(() => {});
   } catch (err) {
+    await writer.stop();
     await fs.rm(
       audioMasteringReportPath(
         path.join(process.cwd(), "media", "renders", `render-${renderId}.mp4`),
@@ -659,6 +669,7 @@ export async function runHyperframesRender(
     await failRender(renderId, msg).catch(() => {});
     upsertJob({ id: renderId, progress: 0, status: "error", error: msg });
   } finally {
+    await writer.stop();
     await fs.rm(path.join(process.cwd(), "media", "hf-work", renderId), {
       recursive: true,
       force: true,

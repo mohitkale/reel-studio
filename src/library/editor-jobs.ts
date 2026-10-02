@@ -1,3 +1,4 @@
+import { createProgressWriter } from "@/library/progress-writer";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/library/db";
@@ -135,21 +136,22 @@ export async function executeEditorVoiceJob(
     scene: 0,
     sceneCount: 0,
   };
-  let writes = Promise.resolve();
-  const persist = () => {
-    const snapshot = { ...progress };
-    writes = writes.then(async () => {
-      context.signal.throwIfAborted();
-      await upsertProductionJobStep(job.id, "synthesize_audio", {
+  const writer = createProgressWriter<z.infer<typeof progressSchema>>(
+    (snapshot) =>
+      upsertProductionJobStep(job.id, "synthesize_audio", {
         state: "running",
         progress: snapshot.sceneCount
           ? snapshot.scene / snapshot.sceneCount
           : 0,
         detail: snapshot,
         leaseOwner: job.leaseOwner,
-      });
-    });
-    void writes.catch(() => {});
+      }),
+  );
+  let previousStatus: string | undefined;
+  const persist = () => {
+    context.signal.throwIfAborted();
+    writer.push({ ...progress }, progress.status !== previousStatus);
+    previousStatus = progress.status;
   };
   const onProgress = (p: {
     phase: "synthesizing" | "stitching";
@@ -223,7 +225,8 @@ export async function executeEditorVoiceJob(
         takeId: take.id,
       };
     }
-    await writes;
+    await writer.flush();
+    await writer.stop();
     context.signal.throwIfAborted();
     await upsertProductionJobStep(job.id, "synthesize_audio", {
       state: "succeeded",
@@ -232,6 +235,6 @@ export async function executeEditorVoiceJob(
       leaseOwner: job.leaseOwner,
     });
   } finally {
-    await writes;
+    await writer.stop();
   }
 }

@@ -31,7 +31,10 @@ function toDTO(r: {
   };
 }
 
-export async function renameRender(id: string, name: string): Promise<RenderDTO> {
+export async function renameRender(
+  id: string,
+  name: string,
+): Promise<RenderDTO> {
   const row = await prisma.render.update({
     where: { id },
     data: { name: name.trim() || null },
@@ -56,7 +59,8 @@ export async function createRender(input: {
       status: input.status ?? "queued",
       progress: 0,
       name: input.name ?? null,
-      quality: input.quality && input.quality !== "standard" ? input.quality : null,
+      quality:
+        input.quality && input.quality !== "standard" ? input.quality : null,
     },
   });
   return toDTO(row);
@@ -108,7 +112,7 @@ export async function completeRender(
 ): Promise<RenderDTO> {
   const row = await prisma.render.update({
     where: { id },
-    data: { status: "done", progress: 1, outputPath },
+    data: { status: "done", progress: 1, outputPath, error: null },
   });
   return toDTO(row);
 }

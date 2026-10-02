@@ -10,7 +10,10 @@ import {
   readRequestJson,
 } from "@/server/api-helpers";
 import { submitProduction } from "@/library/production-service";
-import { productionJobViewWithRevision } from "@/library/production-job-view";
+import {
+  productionJobViewWithRevision,
+  productionJobViewsWithRevisions,
+} from "@/library/production-job-view";
 import { listProductionJobs } from "@/library/repositories/production-jobs";
 import { runProductionWorkerOnce } from "@/library/production-worker";
 import { executeProductionJob } from "@/library/production-job-executor";
@@ -24,7 +27,7 @@ export async function GET(req: Request) {
     const limit = Number(new URL(req.url).searchParams.get("limit") ?? 50);
     const jobs = await listProductionJobs(Number.isFinite(limit) ? limit : 50);
     return NextResponse.json({
-      jobs: await Promise.all(jobs.map(productionJobViewWithRevision)),
+      jobs: await productionJobViewsWithRevisions(jobs),
     });
   } catch (error) {
     return errorResponse(error);
