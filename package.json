@@ -21,6 +21,7 @@
     "mcp": "tsx mcp/src/index.ts",
     "production:worker": "tsx scripts/production-worker.ts",
     "security:scan": "node scripts/scan-secrets.mjs",
+    "security:inventory": "node scripts/dependency-inventory.mjs",
     "prepare:hooks": "git config core.hooksPath .githooks",
     "postinstall": "prisma generate",
     "setup": "node scripts/setup.mjs",

@@ -1,5 +1,7 @@
 // @vitest-environment node
-import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -43,11 +45,20 @@ const output = process.argv[process.argv.indexOf("-of") + 1];
 writeFileSync(output + ".srt", "1\\n00:00:00,250 --> 00:00:01,500\\nLocal words\\n");
 `,
       );
-      chmodSync(binary, 0o755);
-      process.env.WHISPER_CPP_BIN = binary;
+      process.env.WHISPER_CPP_BIN = process.execPath;
       process.env.WHISPER_CPP_MODEL = model;
       await expect(
-        transcribeWithWhisperCpp({ audio: Buffer.from("RIFF"), fps: 20 }),
+        transcribeWithWhisperCpp(
+          { audio: Buffer.from("RIFF"), fps: 20 },
+          {
+            run: async (executable, args) => {
+              expect(executable).toBe(process.execPath);
+              await promisify(execFile)(executable, [binary, ...args], {
+                shell: false,
+              });
+            },
+          },
+        ),
       ).resolves.toEqual([
         { startFrame: 5, endFrame: 30, text: "Local words" },
       ]);
@@ -72,15 +83,23 @@ writeFileSync(output + ".srt", "1\\n00:00:00,250 --> 00:00:01,500\\nLocal words\
 writeFileSync(output + ".json", JSON.stringify({transcription:[{text:" Local words",offsets:{from:250,to:1500},tokens:[{text:" Local",offsets:{from:250,to:600}},{text:" words",offsets:{from:1000,to:1400}}]}]}));
 `,
       );
-      chmodSync(binary, 0o755);
-      process.env.WHISPER_CPP_BIN = binary;
+      process.env.WHISPER_CPP_BIN = process.execPath;
       process.env.WHISPER_CPP_MODEL = model;
       expect(
         (
-          await transcribeWithWhisperCpp({
-            audio: Buffer.from("RIFF"),
-            fps: 20,
-          })
+          await transcribeWithWhisperCpp(
+            {
+              audio: Buffer.from("RIFF"),
+              fps: 20,
+            },
+            {
+              run: async (executable, args) => {
+                await promisify(execFile)(executable, [binary, ...args], {
+                  shell: false,
+                });
+              },
+            },
+          )
         )[0].words,
       ).toEqual([
         { text: "Local", startFrame: 5, endFrame: 12 },

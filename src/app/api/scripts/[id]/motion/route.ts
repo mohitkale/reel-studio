@@ -5,7 +5,7 @@ import { replanMotionDirection } from "@/library/motion-direction-service";
 import { getScript } from "@/library/repositories/scripts";
 import { visualAmbitionSchema } from "@/production/motion-plan";
 import { authorize } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import { errorResponse, readRequestJson } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +23,7 @@ export async function POST(
 ) {
   try {
     authorize(req);
-    const body = bodySchema.safeParse(await req.json().catch(() => null));
+    const body = bodySchema.safeParse(await readRequestJson(req));
     if (!body.success)
       return NextResponse.json(
         {

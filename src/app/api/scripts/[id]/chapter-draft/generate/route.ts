@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { authorize, authorizeProviderRequest } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import { errorResponse, readRequestJson } from "@/server/api-helpers";
 import { chapterGenerationRequestSchema } from "@/library/chapter-draft-input";
 import { generateDraftChapter } from "@/library/chapter-generation-service";
 export const runtime = "nodejs";
@@ -13,7 +13,7 @@ export async function POST(
   try {
     authorize(req);
     const parsed = chapterGenerationRequestSchema.safeParse(
-      await req.json().catch(() => null),
+      await readRequestJson(req),
     );
     if (!parsed.success)
       return NextResponse.json(

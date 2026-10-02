@@ -8,6 +8,8 @@ import {
   writeFile,
   rename,
 } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -47,6 +49,13 @@ describe("bounded disk reads", () => {
   it("reads a tiny tail of an 8 GiB asset without allocating the asset", async () => {
     const { root, store } = await fixture();
     const file = await open(path.join(root, "large.mp4"), "w");
+    // NTFS needs an explicit sparse flag before extending this fixture.
+    if (process.platform === "win32")
+      await promisify(execFile)("fsutil.exe", [
+        "sparse",
+        "setflag",
+        path.join(root, "large.mp4"),
+      ]);
     const size = 8 * 1024 ** 3;
     await file.truncate(size);
     await file.write(Buffer.from("tail"), 0, 4, size - 4);

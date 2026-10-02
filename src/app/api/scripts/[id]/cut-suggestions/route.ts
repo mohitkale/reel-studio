@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { authorize } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import { errorResponse, readRequestJson } from "@/server/api-helpers";
 import { cutSuggestionRequestSchema } from "@/production/cut-suggestions";
 import { proposeNarrationCuts } from "@/library/cut-suggestion-service";
 export const runtime = "nodejs";
@@ -12,7 +12,7 @@ export async function POST(
   try {
     authorize(req);
     const body = cutSuggestionRequestSchema.safeParse(
-      await req.json().catch(() => null),
+      await readRequestJson(req),
     );
     if (!body.success)
       return NextResponse.json(

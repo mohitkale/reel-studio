@@ -1,3 +1,6 @@
+import { downloadPublicMediaToFile } from "@/server/public-media-download";
+import { productionSignal } from "@/library/production-cancellation";
+import { randomUUID } from "node:crypto";
 import { createProgressWriter } from "@/library/progress-writer";
 import { writeHyperframesVisualSections } from "@/library/hyperframes-visual-sections";
 import type { VideoSnapshot } from "@/production/video-snapshot";
@@ -14,8 +17,8 @@ import {
  * @hyperframes/producer in an isolated child process so Puppeteer / producer
  * deps cannot contaminate the Next.js server process.
  *
- * Local media is copied into the project dir as relative files — HyperFrames
- * refuses plain `http://` URLs (HTTPS-only for remote downloads).
+ * Local and eligible remote media are copied into the project as relative files.
+ * Public network downloads happen through the server DNS/byte/deadline guards.
  */
 
 import path from "node:path";
@@ -76,9 +79,12 @@ export interface HyperframesRenderOptions {
 
 /**
  * Map a media URL to a path on disk under this app (media/ or public/).
- * Returns null for true remote URLs that HyperFrames should fetch itself.
+ * Returns null for remote URLs that require the DNS-pinned downloader.
  */
-function localFsPathForUrl(url: string, serverBaseUrl: string): string | null {
+export function localFsPathForUrl(
+  url: string,
+  serverBaseUrl: string,
+): string | null {
   const stripLeadingSlash = (p: string) => p.replace(/^\/+/, "");
 
   const fromPathname = (pathname: string): string | null => {
@@ -104,17 +110,22 @@ function localFsPathForUrl(url: string, serverBaseUrl: string): string | null {
   };
 
   if (url.startsWith("/") && !url.startsWith("//")) {
-    return fromPathname(url);
+    try {
+      return fromPathname(decodeURIComponent(url));
+    } catch {
+      return null;
+    }
   }
 
   try {
     const parsed = new URL(url);
     const base = new URL(serverBaseUrl);
     const localHost =
-      parsed.hostname === base.hostname ||
-      parsed.hostname === "localhost" ||
-      parsed.hostname === "127.0.0.1";
-    if (localHost) return fromPathname(parsed.pathname);
+      ["http:", "https:"].includes(parsed.protocol) &&
+      !parsed.username &&
+      !parsed.password &&
+      parsed.origin === base.origin;
+    if (localHost) return fromPathname(decodeURIComponent(parsed.pathname));
   } catch {
     /* ignore */
   }
@@ -123,9 +134,9 @@ function localFsPathForUrl(url: string, serverBaseUrl: string): string | null {
 
 /**
  * Copy local assets into the HyperFrames project and rewrite URLs to relative
- * paths. Leave https:// remotes untouched.
+ * paths. Remote assets use bounded DNS-pinned downloads before Chromium starts.
  */
-async function materializeUrl(
+export async function materializeUrl(
   url: string | undefined | null,
   projectDir: string,
   assetName: string,
@@ -140,32 +151,39 @@ async function materializeUrl(
     } catch {
       throw new Error(`Local media missing for HyperFrames render: ${fsPath}`);
     }
-    const ext = path.extname(fsPath) || "";
+    const parsed = new URL(url, serverBaseUrl);
+    const root = path.join(
+      process.cwd(),
+      parsed.pathname.startsWith("/media/") ? "media" : "public/music",
+    );
+    const real = assertPathInsideRoot(
+      await fs.realpath(root),
+      await fs.realpath(fsPath),
+    );
+    const ext = path.extname(real) || "";
     const destName = `${assetName}${ext}`;
     const assetsDir = path.join(projectDir, "_assets");
     await fs.mkdir(assetsDir, { recursive: true });
     const dest = path.join(assetsDir, destName);
-    await fs.copyFile(fsPath, dest);
+    assertProductionActive();
+    await fs.copyFile(real, dest);
     return `_assets/${destName}`;
   }
 
-  if (
-    url.startsWith("https://") ||
-    url.startsWith("data:") ||
-    url.startsWith("blob:")
-  ) {
-    return url;
+  const assetsDir = path.join(projectDir, "_assets");
+  await fs.mkdir(assetsDir, { recursive: true });
+  const temporary = path.join(assetsDir, `${randomUUID()}.tmp`);
+  try {
+    const media = await downloadPublicMediaToFile(url, temporary, {
+      signal: productionSignal(),
+    });
+    const destName = `${assetName}.${media.extension}`;
+    assertProductionActive();
+    await fs.rename(temporary, path.join(assetsDir, destName));
+    return `_assets/${destName}`;
+  } finally {
+    await fs.rm(temporary, { force: true });
   }
-
-  // HyperFrames blocks http:// remote downloads — fail clearly rather than
-  // spending a minute in the pipeline then erroring on audio mix.
-  if (url.startsWith("http://")) {
-    throw new Error(
-      `HyperFrames cannot fetch http:// media (HTTPS only): ${url}. Use a local /media or /music path, or an https URL.`,
-    );
-  }
-
-  return url;
 }
 
 async function runWorker(args: {

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createVisualReview } from "@/library/visual-review";
 import { visualReviewRequestSchema } from "@/production/visual-review";
 import { authorize } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import { errorResponse, readRequestJson } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,7 +18,7 @@ export async function POST(
         { status: 403 },
       );
     const body = visualReviewRequestSchema.safeParse(
-      await req.json().catch(() => null),
+      await readRequestJson(req),
     );
     if (!body.success)
       return NextResponse.json(

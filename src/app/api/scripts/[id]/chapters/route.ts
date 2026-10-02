@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authorize } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import { errorResponse, readRequestJson } from "@/server/api-helpers";
 import {
   proposeScriptChapters,
   saveChapterPlan,
@@ -17,7 +17,7 @@ export async function POST(req: Request, ctx: Context) {
     const body = z
       .object({ takeId: z.string().min(1).optional() })
       .strict()
-      .safeParse(await req.json().catch(() => null));
+      .safeParse(await readRequestJson(req));
     if (!body.success)
       return NextResponse.json(
         { error: "Invalid chapter proposal request" },
@@ -32,9 +32,7 @@ export async function POST(req: Request, ctx: Context) {
 export async function PATCH(req: Request, ctx: Context) {
   try {
     authorize(req);
-    const body = chapterEditSchema.safeParse(
-      await req.json().catch(() => null),
-    );
+    const body = chapterEditSchema.safeParse(await readRequestJson(req));
     if (!body.success)
       return NextResponse.json(
         { error: "Invalid chapter edit", issues: body.error.issues },

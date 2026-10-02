@@ -35,12 +35,14 @@ Hardening already in this repo:
 - Raw Host is checked against loopback names plus `REEL_ALLOWED_HOSTS` before any browser signal or token; Proxy repeats the Host check for pages and static routes
 - Strict mode requires a valid bearer token even with `Sec-Fetch-Site: same-origin`
 - `/media/*` is not world-readable on non-loopback hosts
-- HyperFrames local path resolution is contained under `media/` / `public/music/`
-- Scene background URLs reject private/link-local hosts (SSRF guard)
+- HyperFrames local path resolution checks real paths under `media/` / `public/music/`, including external symlinks
+- Export media requests revalidate DNS at socket lookup and every redirect; private, mixed-public/private, mapped-IP and special-address targets are rejected
+- Chromium receives local media files; remote HTML, SVG and playlists disguised as media are rejected before native probing
+- Targeted CSP `frame-ancestors` and SAMEORIGIN framing headers restrict embedding; same-origin previews remain supported
 - VoiceForge proxies require `authorize()`
 - MCP token is returned **once** on generate/rotate; GET only reports configured status
 - Docker Compose publishes `127.0.0.1:3000` only
-- Asset uploads reject SVG and enforce a size cap
+- Asset uploads reject SVG, check media signatures, and count streamed bytes before multipart parsing
 - Lottie previews use the expression-free light player; uploaded expressions are not executed
 - Provider key writes reject line breaks and dotenv metacharacters before touching disk
 
@@ -81,8 +83,12 @@ Enable once per clone:
 npm run prepare:hooks
 ```
 
-Then each commit will run `npm run security:scan` and block commits that appear to contain secrets.
+Then each commit scans the index with `node scripts/scan-secrets.mjs --staged` and blocks staged secrets, even if the working copy has already been cleaned. Findings redact values.
 
 ## Scope
 
-The scanner checks tracked files for common secret signatures (API key patterns and private key headers). It is a guardrail, not a guarantee.
+The scanner checks tracked files (or staged content in the hook) for key signatures, opaque assigned provider tokens, and private key headers. It is a guardrail, not a guarantee. Runtime secret files use POSIX owner-only modes where supported; Windows protection depends on the account/directory ACL.
+
+HyperFrames Chromium runs without its OS sandbox. Media signature checks are not full decoder validation, and the CSP does not restrict inline preview scripts. Do not treat uploaded media or local code as safely isolated from your account. The development Docker source mount is writable by the container; named volumes and a non-root user do not make it a hostile-code sandbox.
+
+See [portability and hardening](docs/PORTABILITY_HARDENING.md) for byte limits, tests and remaining advisory reachability. Browser previews may still request public media directly; export DNS pinning does not claim to protect arbitrary browser DNS resolution.

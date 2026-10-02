@@ -24,7 +24,7 @@ import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
 import { getAIProvider, isAIProviderId } from "@/providers/ai/registry";
 import { AIError, type AIScene } from "@/providers/ai/types";
-import { errorResponse } from "@/server/api-helpers";
+import { errorResponse, readRequestJson } from "@/server/api-helpers";
 import { authorizeProviderRequest } from "@/server/auth";
 
 export const runtime = "nodejs";
@@ -54,9 +54,7 @@ export async function POST(
 ) {
   try {
     const { id: scriptId } = await ctx.params;
-    const parsed = aiEnhanceRequestSchema.safeParse(
-      await req.json().catch(() => null),
-    );
+    const parsed = aiEnhanceRequestSchema.safeParse(await readRequestJson(req));
     if (!parsed.success)
       return NextResponse.json(
         { error: "Invalid AI request", issues: parsed.error.issues },

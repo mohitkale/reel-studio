@@ -110,11 +110,14 @@ function runWhisper(binary: string, args: string[]): Promise<void> {
 }
 
 /** Transcribe a WAV buffer into editable frame-based cues using a local model. */
-export async function transcribeWithWhisperCpp(input: {
-  audio: Buffer;
-  fps: number;
-  language?: string;
-}): Promise<CaptionCue[]> {
+export async function transcribeWithWhisperCpp(
+  input: {
+    audio: Buffer;
+    fps: number;
+    language?: string;
+  },
+  dependencies: { run?: typeof runWhisper } = {},
+): Promise<CaptionCue[]> {
   const status = await getLocalTranscriptionStatus();
   if (!status.available || !status.binary || !status.model) {
     throw new ProviderError(
@@ -138,7 +141,7 @@ export async function transcribeWithWhisperCpp(input: {
       outputBase,
     ];
     if (input.language?.trim()) args.push("-l", input.language.trim());
-    await runWhisper(status.binary, args);
+    await (dependencies.run ?? runWhisper)(status.binary, args);
     const source = await readFile(`${outputBase}.srt`, "utf8");
     const cues = parseCaptions(source, input.fps, "srt");
     if (!cues.length) {

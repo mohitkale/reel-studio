@@ -3,10 +3,10 @@
 # ----------------------------------------------------------------------------
 # Reel Studio — development image.
 #
-# Runs the Next.js dev server plus video rendering fully isolated from the
-# host: HyperFrames (headless Chromium + system FFmpeg)
-# (@hyperframes/producer worker, also Chromium/FFmpeg). CPU-heavy renders
-# never touch the laptop directly.
+# Runs Next.js and the HyperFrames Chromium/FFmpeg worker as a non-root user.
+# Named volumes contain dependencies and render data, but development Compose
+# mounts host source writable and rendering consumes host CPU/memory. See
+# SECURITY.md for the deployment and Chromium sandbox boundaries.
 #
 # Node 24 matches the host toolchain and is required for HyperFrames.
 # Debian (bookworm) is used rather than Alpine because headless Chromium needs
