@@ -586,6 +586,15 @@ Stop the app before running `npm run db:migrate`. Existing recognized v0.3.0 dat
 
 ### Supervised production worker
 
+Editor video exports, full takes, scene clips, and podcast narration use the same
+SQLite production queue as production requests. Progress endpoints read durable
+state, so browser reconnects and web-process restarts retain progress and results.
+Interrupted voice work requires an explicit retry after inspecting saved takes;
+local video work can recover its lease. MCP editor exports retain their human
+approval gate, including the submitted format and quality. The supervisor resets
+its crash budget after a minute of stable worker uptime.
+
+
 `npm run dev` and `npm run start` launch Next.js and the durable production worker
 under one supervisor. Build first with `npm run build` for production. Docker
 uses the same launcher. Both processes inherit the same Next.js environment

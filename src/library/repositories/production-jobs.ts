@@ -119,7 +119,7 @@ export async function claimProductionJob(
   await db.productionJob.updateMany({
     where: {
       state: "running",
-      kind: { in: ["audio", "podcast"] },
+      kind: { in: ["audio", "podcast", "editor_voice"] },
       leaseExpiresAt: { lt: now },
     },
     data: {

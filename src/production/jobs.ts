@@ -27,7 +27,14 @@ export const productionStepKeySchema = z.enum(PRODUCTION_STEP_KEYS);
 export type ProductionStepKey = z.infer<typeof productionStepKeySchema>;
 
 export const enqueueProductionJobSchema = z.object({
-  kind: z.enum(["video", "audio", "podcast", "audiogram", "batch"]),
+  kind: z.enum([
+    "video",
+    "audio",
+    "podcast",
+    "audiogram",
+    "batch",
+    "editor_voice",
+  ]),
   idempotencyKey: z.string().min(8).max(240),
   inputSnapshot: z.unknown(),
   priority: z.number().int().min(-100).max(100).default(0),
@@ -100,3 +107,14 @@ export interface ClaimedProductionJob {
   leaseOwner: string;
   leaseExpiresAt: Date;
 }
+
+/** Editor operations share the durable worker, retaining their existing API shape. */
+export const editorVoiceInputSchema = audioProductionJobInputSchema
+  .omit({ scriptId: true })
+  .extend({
+    operation: z.enum(["take", "scene", "scene_all", "podcast"]),
+    resourceId: z.string().min(1),
+    scriptId: z.string().min(1).optional(),
+    regenerateTurnIds: z.array(z.string().min(1)).max(120).optional(),
+    podcastVoiceSignature: z.string().optional(),
+  });

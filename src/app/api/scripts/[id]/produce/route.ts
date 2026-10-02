@@ -1,12 +1,9 @@
-import { randomUUID } from "node:crypto";
-
-import { after, NextResponse } from "next/server";
+import { submitEditorVoice } from "@/library/editor-jobs";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { produceReelAudio } from "@/library/produce-reel-service";
 import { getScript } from "@/library/repositories/scripts";
-import { generateTake } from "@/library/take-service";
-import { getVoiceJob, upsertVoiceJob } from "@/lib/voice-queue";
 import { PROVIDER_IDS } from "@/providers/voice/types";
 import { authorizeProviderRequest } from "@/server/auth";
 import {
@@ -46,56 +43,13 @@ export async function POST(
     let voiceJobId: string | null = null;
 
     if (audio.needsVoice && body.startVoice !== false) {
-      voiceJobId = randomUUID();
-      upsertVoiceJob({
-        id: voiceJobId,
-        status: "queued",
-        scene: 0,
-        sceneCount: 0,
+      voiceJobId = await submitEditorVoice({
+        operation: "take",
+        resourceId: id,
+        providerId: body.providerId ?? "kokoro-server",
+        voiceId: body.voiceId ?? "af_heart",
+        label: "Produce reel",
       });
-      const jobId = voiceJobId;
-      const providerId = body.providerId ?? "kokoro-server";
-      const voiceId = body.voiceId ?? "af_heart";
-
-      after(() =>
-        generateTake({
-          scriptId: id,
-          providerId,
-          voiceId,
-          label: "Produce reel",
-          onProgress: (progress) => {
-            upsertVoiceJob({
-              id: jobId,
-              status: progress.phase,
-              scene: progress.scene,
-              sceneCount: progress.sceneCount,
-              workingOn:
-                progress.phase === "synthesizing"
-                  ? progress.workingOn
-                  : undefined,
-            });
-          },
-        })
-          .then((take) => {
-            const last = getVoiceJob(jobId);
-            upsertVoiceJob({
-              id: jobId,
-              status: "done",
-              scene: take.timeline.length,
-              sceneCount: last?.sceneCount ?? take.timeline.length,
-              take,
-            });
-          })
-          .catch((err) => {
-            upsertVoiceJob({
-              id: jobId,
-              status: "error",
-              scene: 0,
-              sceneCount: 0,
-              error: err instanceof Error ? err.message : String(err),
-            });
-          }),
-      );
     }
 
     const script = await getScript(id);

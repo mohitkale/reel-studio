@@ -13,8 +13,9 @@ import { POST as approve } from "@/app/api/renders/[id]/approve/route";
 import { GET as media } from "@/app/media/[...path]/route";
 import { proxy } from "@/proxy";
 import { ensureSampleSeed } from "@/library/repositories/projects";
-import { getRender, approveRender } from "@/library/repositories/renders";
-import { getVoiceJob } from "@/lib/voice-queue";
+import { getRender } from "@/library/repositories/renders";
+import { getEditorVoiceJob } from "@/library/editor-jobs";
+import { approveEditorRender } from "@/library/editor-render-jobs";
 import { getAssetStore } from "@/library/storage";
 
 vi.mock("@/library/repositories/projects", () => ({
@@ -24,12 +25,14 @@ vi.mock("@/library/repositories/projects", () => ({
 }));
 vi.mock("@/library/repositories/renders", () => ({
   getRender: vi.fn(),
-  approveRender: vi.fn(),
+  approveEditorRender: vi.fn(),
 }));
-vi.mock("@/library/render-service", () => ({ startRender: vi.fn() }));
+vi.mock("@/library/editor-render-jobs", () => ({
+  approveEditorRender: vi.fn(),
+}));
 vi.mock("@/lib/render-queue", () => ({ subscribeToJob: vi.fn() }));
-vi.mock("@/lib/voice-queue", () => ({
-  getVoiceJob: vi.fn(),
+vi.mock("@/library/editor-jobs", () => ({
+  getEditorVoiceJob: vi.fn(),
   subscribeToVoiceJob: vi.fn(),
 }));
 vi.mock("@/library/storage", () => ({ getAssetStore: vi.fn() }));
@@ -78,8 +81,8 @@ describe("route authorization before IO", () => {
       expect((await call(request)).status).toBe(403);
       expect(ensureSampleSeed).not.toHaveBeenCalled();
       expect(getRender).not.toHaveBeenCalled();
-      expect(approveRender).not.toHaveBeenCalled();
-      expect(getVoiceJob).not.toHaveBeenCalled();
+      expect(approveEditorRender).not.toHaveBeenCalled();
+      expect(getEditorVoiceJob).not.toHaveBeenCalled();
       expect(getAssetStore).not.toHaveBeenCalled();
     },
   );
@@ -118,7 +121,7 @@ describe("route authorization before IO", () => {
       { params: Promise.resolve({ id: "test" }) },
     );
     expect(response.status).toBe(403);
-    expect(approveRender).not.toHaveBeenCalled();
+    expect(approveEditorRender).not.toHaveBeenCalled();
   });
 
   it("Proxy blocks DNS rebinding on pages too", () => {

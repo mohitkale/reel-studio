@@ -1,8 +1,9 @@
 "use client";
+import { waitForJob, useJobLifetime } from "@/hooks/job-progress";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { apiGet, apiPost } from "@/lib/api-client";
+import { apiPost } from "@/lib/api-client";
 import type { SceneVoiceClipDTO, ScriptDTO, VoiceTakeDTO } from "@/lib/dto";
 import type { ProviderId } from "@/providers/voice/types";
 import type { VoiceGenerationProgress } from "@/hooks/script";
@@ -45,117 +46,24 @@ function applyJobPayload(
   return "pending";
 }
 
-async function pollSceneClipJob(
-  scriptId: string,
-  jobId: string,
-  onProgress?: (progress: VoiceGenerationProgress) => void,
-): Promise<SceneClipJobResult> {
-  const started = Date.now();
-  const maxMs = 20 * 60 * 1000;
-
-  while (Date.now() - started < maxMs) {
-    await new Promise((r) => setTimeout(r, 2000));
-    try {
-      const { job } = await apiGet<{
-        job: {
-          status: VoiceGenerationProgress["status"];
-          scene: number;
-          sceneCount: number;
-          workingOn?: number | null;
-          error: string | null;
-          take: VoiceTakeDTO | null;
-          clip: SceneVoiceClipDTO | null;
-          clips: SceneVoiceClipDTO[] | null;
-        };
-      }>(`/api/scripts/${scriptId}/scene-clips/${jobId}`);
-
-      const outcome = applyJobPayload(
-        {
-          status: job.status,
-          scene: job.scene,
-          sceneCount: job.sceneCount,
-          workingOn: job.workingOn ?? null,
-          error: job.error,
-          take: job.take,
-          clip: job.clip,
-          clips: job.clips,
-        },
-        onProgress,
-      );
-      if (outcome === "done") {
-        return { take: job.take, clip: job.clip, clips: job.clips };
-      }
-      if (outcome === "error") {
-        throw new Error(job.error || "Scene voice generation failed");
-      }
-    } catch (e) {
-      if (
-        e instanceof Error &&
-        e.message !== "Job not found" &&
-        !e.message.includes("Scene voice generation failed")
-      ) {
-        continue;
-      }
-      throw e;
-    }
-  }
-
-  throw new Error(
-    "Scene voice generation is still running after 20 minutes. Refresh and check clips.",
-  );
-}
-
 function waitForSceneClipJob(
   scriptId: string,
   jobId: string,
   onProgress?: (progress: VoiceGenerationProgress) => void,
+  signal?: AbortSignal,
 ): Promise<SceneClipJobResult> {
-  return new Promise<SceneClipJobResult>((resolve, reject) => {
-    let settled = false;
-    let polling = false;
-    const es = new EventSource(
-      `/api/scripts/${scriptId}/scene-clips/${jobId}/progress`,
-    );
-
-    const finish = (fn: () => void) => {
-      if (settled) return;
-      settled = true;
-      es.close();
-      fn();
-    };
-
-    es.onmessage = (e) => {
-      try {
-        const data = JSON.parse(e.data as string) as SceneClipJobPayload;
-        const outcome = applyJobPayload(data, onProgress);
-        if (outcome === "done") {
-          finish(() =>
-            resolve({
-              take: data.take,
-              clip: data.clip,
-              clips: data.clips,
-            }),
-          );
-        } else if (outcome === "error") {
-          finish(() =>
-            reject(new Error(data.error || "Scene voice generation failed")),
-          );
-        }
-      } catch {
-        // ignore malformed/heartbeat
-      }
-    };
-
-    es.onerror = () => {
-      if (settled || polling) return;
-      polling = true;
-      es.close();
-      void pollSceneClipJob(scriptId, jobId, onProgress).then(
-        (result) => finish(() => resolve(result)),
-        (err) => finish(() => reject(err)),
-      );
-    };
-  });
+  return waitForJob<SceneClipJobPayload, SceneClipJobResult>(
+    `/api/scripts/${scriptId}/scene-clips/${jobId}`,
+    (data) => {
+      const outcome = applyJobPayload(data, onProgress);
+      if (outcome === "error")
+        throw new Error(data.error || "Scene voice generation failed");
+      return outcome === "done"
+        ? { take: data.take, clip: data.clip, clips: data.clips }
+        : undefined;
+    },
+    signal,
+  );
 }
 
 function useScriptInvalidator(scriptId: string) {
@@ -165,6 +73,7 @@ function useScriptInvalidator(scriptId: string) {
 
 /** Generate clips for all scenes in parallel, then assemble. */
 export function useGenerateAllSceneClips(scriptId: string) {
+  const lifetime = useJobLifetime();
   const invalidate = useScriptInvalidator(scriptId);
   return useMutation({
     mutationFn: ({
@@ -181,13 +90,16 @@ export function useGenerateAllSceneClips(scriptId: string) {
       apiPost<{ jobId: string }>(
         `/api/scripts/${scriptId}/scene-clips`,
         body,
-      ).then(({ jobId }) => waitForSceneClipJob(scriptId, jobId, onProgress)),
+      ).then(({ jobId }) =>
+        waitForSceneClipJob(scriptId, jobId, onProgress, lifetime()),
+      ),
     onSuccess: invalidate,
   });
 }
 
 /** Generate one scene clip (job polled via script-level scene-clips progress). */
 export function useGenerateSceneClip(scriptId: string) {
+  const lifetime = useJobLifetime();
   const invalidate = useScriptInvalidator(scriptId);
   return useMutation({
     mutationFn: ({
@@ -204,7 +116,8 @@ export function useGenerateSceneClip(scriptId: string) {
       onProgress?: (progress: VoiceGenerationProgress) => void;
     }) =>
       apiPost<{ jobId: string }>(`/api/scenes/${sceneId}/clips`, body).then(
-        ({ jobId }) => waitForSceneClipJob(scriptId, jobId, onProgress),
+        ({ jobId }) =>
+          waitForSceneClipJob(scriptId, jobId, onProgress, lifetime()),
       ),
     onSuccess: invalidate,
   });
@@ -235,11 +148,12 @@ export function useSelectSceneClip(scriptId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars: { sceneId: string; clipId: string }) =>
-      apiSend<{ scene: ScriptDTO["scenes"][number]; take?: VoiceTakeDTO | null }>(
-        `/api/scenes/${vars.sceneId}`,
-        "PATCH",
-        { selectedVoiceClipId: vars.clipId },
-      ),
+      apiSend<{
+        scene: ScriptDTO["scenes"][number];
+        take?: VoiceTakeDTO | null;
+      }>(`/api/scenes/${vars.sceneId}`, "PATCH", {
+        selectedVoiceClipId: vars.clipId,
+      }),
     onSuccess: (data) => {
       const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
       if (!prev) return;

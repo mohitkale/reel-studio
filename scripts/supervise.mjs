@@ -22,6 +22,7 @@ export function supervise({
   restartMs = 1000,
   graceMs = 10000,
   maxRestarts = 5,
+  stableMs = 60_000,
 }) {
   const children = new Set();
   let stopping = false;
@@ -58,6 +59,7 @@ export function supervise({
   };
   const launch = (name, command) => {
     if (stopping) return;
+    const startedAt = Date.now();
     const child = spawn(command[0], command.slice(1), {
       env,
       stdio: "inherit",
@@ -72,6 +74,7 @@ export function supervise({
       children.delete(child);
       console.log(`[supervisor] ${name} exited code=${code} signal=${signal}`);
       if (stopping) return finish();
+      if (name === "worker" && Date.now() - startedAt >= stableMs) restarts = 0;
       if (name === "web" || restarts >= maxRestarts) return stop(code || 1);
       restarts += 1;
       console.error(

@@ -1,3 +1,4 @@
+import { reconcileRenderJobs } from "@/library/editor-render-jobs";
 import { withProductionSignal } from "@/library/production-cancellation";
 import {
   claimProductionJob,
@@ -29,6 +30,7 @@ export async function runProductionWorkerOnce(args: {
   if (args.signal?.aborted) return "idle";
   const leaseMs = args.leaseMs ?? 30_000;
   const job = await claimProductionJob({ workerId: args.workerId, leaseMs });
+  await reconcileRenderJobs();
   if (!job) return "idle";
   const controller = new AbortController();
   const shutdown = () => controller.abort(new Error("Worker shutting down"));
@@ -48,6 +50,7 @@ export async function runProductionWorkerOnce(args: {
     await withProductionSignal(controller.signal, () =>
       args.execute(job, { signal: controller.signal, heartbeat }),
     );
+    if (!controller.signal.aborted) await heartbeat();
     const state = controller.signal.aborted ? "canceled" : "succeeded";
     if (args.signal?.aborted) await releaseProductionJob(job.id, args.workerId);
     else await finishProductionJob(job.id, args.workerId, state);
@@ -60,7 +63,11 @@ export async function runProductionWorkerOnce(args: {
     return state;
   } finally {
     clearInterval(timer);
-    args.signal?.removeEventListener("abort", shutdown);
+    try {
+      await reconcileRenderJobs();
+    } finally {
+      args.signal?.removeEventListener("abort", shutdown);
+    }
   }
 }
 
