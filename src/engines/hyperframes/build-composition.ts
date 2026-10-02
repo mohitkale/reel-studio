@@ -1,4 +1,6 @@
 import { buildTextFitScript } from "./text-fit";
+import { validateMotionForReel } from "@/video/motion-spec";
+import { compileMotionShot } from "./motion/compile-shot";
 import { LOCALIZABLE_GSAP_URLS, GSAP_PREVIEW_URL } from "./runtime";
 /**
  * Build a HyperFrames HTML composition from ReelProps.
@@ -941,6 +943,7 @@ export function buildHyperframesCompositionHtml(
   } = {},
 ): string {
   const inlineCatalog = opts.inlineCatalog === true;
+  const motionSpec = validateMotionForReel(props);
   const fps = props.fps || 30;
   const width = props.width || 1080;
   const height = props.height || 1920;
@@ -992,6 +995,21 @@ export function buildHyperframesCompositionHtml(
       framesToSeconds(transitionFrames, fps) / Math.max(0.05, duration),
     );
 
+    const shot = motionSpec?.shots[i];
+    const graphScene =
+      shot &&
+      compileMotionShot(
+        shot,
+        tokens,
+        fps,
+        absoluteStart,
+        duration,
+        transitionClass,
+      );
+    if (graphScene) {
+      sceneBlocks.push(graphScene);
+      continue;
+    }
     const motionArgs = {
       width,
       height,

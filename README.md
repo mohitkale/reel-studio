@@ -709,3 +709,7 @@ staged content, including modern provider keys, with values redacted. Run
 `npm run security:inventory` for an offline lockfile inventory. Current advisory
 reachability, media limits and remaining isolation boundaries are documented in
 [PORTABILITY_HARDENING.md](docs/PORTABILITY_HARDENING.md).
+
+The optional [versioned motion spec](docs/MOTION_SPEC.md) extends the existing
+HyperFrames compiler with validated shots, layers and frame-based elements.
+Verify its offline seek/export fixtures with `npm run test:motion-spec`.
