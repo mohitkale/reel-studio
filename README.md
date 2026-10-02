@@ -587,7 +587,9 @@ Stop the app before running `npm run db:migrate`. Existing recognized v0.3.0 dat
 ### Supervised production worker
 
 Editor video exports, full takes, scene clips, and podcast narration use the same
-SQLite production queue as production requests. Progress endpoints read durable
+SQLite production queue as production requests, with one active job in the normal
+worker. The old `REEL_MAX_CONCURRENT_RENDERS` web-queue setting is retired.
+Progress endpoints read durable
 state, so browser reconnects and web-process restarts retain progress and results.
 Interrupted voice work requires an explicit retry after inspecting saved takes;
 local video work can recover its lease. MCP editor exports retain their human
