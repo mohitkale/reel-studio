@@ -9,6 +9,8 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    // Exact third-party runtime bytes are verified against the asset manifest.
+    "public/reel-runtime/gsap.min.js",
     ".artifacts/**",
     "media/**",
     "out/**",

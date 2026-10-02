@@ -19,7 +19,7 @@ export function sectionVisualProps(
           beat.startFrame + beat.durationFrames;
         return (
           cover + beat.startFrame <= section.endFrame &&
-          cover + end > section.startFrame
+          cover + end + Math.ceil(0.65 * fps) > section.startFrame
         );
       })
       .map((beat) => beat.sceneId),

@@ -1,3 +1,5 @@
+import { buildTextFitScript } from "./text-fit";
+import { LOCALIZABLE_GSAP_URLS, GSAP_PREVIEW_URL } from "./runtime";
 /**
  * Build a HyperFrames HTML composition from ReelProps.
  * Deterministic, seekable CSS + GSAP motion — framework-independent data.
@@ -35,7 +37,10 @@ import {
   HYPERFRAMES_PRESET_STYLES,
 } from "@/engines/hyperframes/presets/registry";
 import { buildAudioMixPlan, type AudioMixPlan } from "@/lib/audio-mix";
-import { localizeHyperframesRenderFonts } from "@/engines/hyperframes/render-fonts";
+import {
+  hyperframesBrandFont,
+  localizeHyperframesRenderFonts,
+} from "@/engines/hyperframes/render-fonts";
 import {
   buildTypeMotionScene,
   TYPE_MOTION_STYLES,
@@ -374,7 +379,7 @@ const STYLES = `
    */
   .scene {
     position: absolute; inset: 0; display: flex; align-items: stretch;
-    justify-content: stretch; opacity: 1;
+    justify-content: stretch; opacity: 1; isolation: isolate;
   }
   .bg-mood, .bg-photo, .bg-video, .bg-scrim {
     position: absolute; inset: 0;
@@ -512,19 +517,20 @@ const STYLES = `
   }
   ${NATIVE_CATALOG_STYLES}
   /* Style + Energy driven via CSS variables on #root */
+  .scene-handoff { position:absolute;inset:0;overflow:hidden;opacity:var(--handoff,1);background:var(--brand-background); }
   .scene {
     --enter-ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
   .scene.style-crossfade .content {
-    opacity: calc(0.25 + var(--p, 0) * 0.75);
+    opacity: 1;
   }
   .scene.style-blur-slide .content {
-    opacity: calc(0.25 + var(--p, 0) * 0.75);
+    opacity: 1;
     transform: translateY(calc((1 - var(--p, 0)) * 28px + var(--exit, 0) * -20px));
     filter: blur(calc((1 - var(--p, 0)) * 6px + var(--exit, 0) * 4px));
   }
   .scene.style-accent-flash .content {
-    opacity: calc(0.3 + var(--p, 0) * 0.7);
+    opacity: 1;
     transform: scale(calc(0.97 + var(--p, 0) * 0.03));
   }
   .scene.style-accent-flash::after {
@@ -584,7 +590,7 @@ function buildSeekScript(
   const subtitles = Array.from(document.querySelectorAll('.rs-subtitle'));
   const cover = document.querySelector('.cover');
   const progress = document.querySelector('.progress');
-  const byId = Object.fromEntries(scenes.map((el) => [el.dataset.sceneId, el]));
+  const nativeTimeline = window.__timelines && window.__timelines.reel;
   let playing = false;
 
   function syncBgPhoto(photo, localT) {
@@ -618,53 +624,15 @@ function buildSeekScript(
     });
   }
 
-  function activate(sceneId, localT, duration) {
+  function activate(time) {
     for (const el of scenes) {
-      const on = el.dataset.sceneId === sceneId;
+      const start = Number(el.dataset.start || 0);
+      const duration = Number(el.dataset.duration || 0);
+      const on = time >= start && time < start + duration;
       el.classList.toggle('is-active', on);
       el.style.visibility = on ? 'visible' : 'hidden';
-      if (on) {
-        const p = Math.min(1, Math.max(0, localT / Math.max(0.001, duration)));
-        el.style.setProperty('--p', String(p));
-        const exitWindow = Math.min(0.35, Number(el.dataset.exitWindow || 0.12));
-        const exit = p > 1 - exitWindow
-          ? Math.min(1, Math.max(0, (p - (1 - exitWindow)) / Math.max(0.001, exitWindow)))
-          : 0;
-        el.style.setProperty('--exit', String(exit));
-        el.querySelectorAll('.list-item').forEach((item, i) => {
-          const threshold = (i + 1) / (el.querySelectorAll('.list-item').length + 1);
-          const show = p >= threshold * 0.85;
-          item.style.opacity = show ? '1' : '0';
-          item.style.transform = show ? 'translateY(0)' : 'translateY(24px)';
-        });
-        const bar = el.querySelector('.accent-bar, .underline');
-        if (bar) bar.style.transform = 'scaleX(' + Math.min(1, p * 2.2) + ')';
-        const stat = el.querySelector('.stat-num');
-        if (stat) {
-          const show = p > 0.08;
-          stat.style.opacity = show ? '1' : '0';
-          stat.style.transform = show ? 'scale(1)' : 'scale(0.7)';
-        }
-        const pill = el.querySelector('.cta-pill');
-        if (pill) {
-          const show = p > 0.25;
-          pill.style.opacity = show ? '1' : '0';
-          pill.style.transform = show ? 'translateY(0)' : 'translateY(16px)';
-        }
-        const opener = el.querySelector('.opener-text, .statement-text, .quote-text, .cta-text, .stat-text, .prod-kinetic-line, .prod-outro-tag, .prod-social-line, .prod-app-title, .prod-money-line, .prod-chart-line, .prod-yt-sub');
-        if (opener) {
-          // Become readable immediately — p=0 used to leave the first frame blank.
-          const enter = Math.min(1, Math.max(0.35, p * 4));
-          opener.style.opacity = String(enter);
-          opener.style.transform = 'translateY(' + (1 - Math.min(1, p * 3)) * 14 + 'px)';
-        }
-        const prod = el.querySelector('.prod');
-        if (prod) {
-          const enter = Math.min(1, Math.max(0.45, p * 3.5));
-          prod.style.opacity = String(enter);
-        }
-      }
     }
+    if (nativeTimeline) nativeTimeline.seek(time, true);
   }
 
   // Standalone editor preview has no producer runtime. Its adapter drives the
@@ -753,15 +721,7 @@ function buildSeekScript(
         return;
       }
     }
-    const contentT = t - (CFG.coverSeconds || 0);
-    let active = CFG.beats[0];
-    for (const beat of CFG.beats) {
-      if (contentT >= beat.start) active = beat;
-    }
-    if (active) {
-      const local = contentT - active.start;
-      activate(active.id, local, active.duration);
-    }
+    activate(t);
     if (progress && !CFG.hideProgressBar) {
       progress.style.width = (Math.min(1, t / CFG.totalSeconds) * 100) + '%';
     }
@@ -777,6 +737,7 @@ function buildSeekScript(
       const start = Number(host.closest('.scene')?.getAttribute('data-start') || host.getAttribute('data-start') || 0);
       const dur = Number(host.closest('.scene')?.getAttribute('data-duration') || host.getAttribute('data-duration') || 0);
       const motionId = host.getAttribute('data-motion-scene');
+      if (motionId && nativeTimeline) return;
       const blockId = host.getAttribute('data-catalog-block') || '';
       const sceneId = host.closest('.scene')?.getAttribute('data-scene-id') || '';
       const compHost = host.querySelector ? host.querySelector('[data-composition-id]') : null;
@@ -1015,7 +976,15 @@ export function buildHyperframesCompositionHtml(
       : beat.startFrame + beat.durationFrames;
     const holdFrames = Math.max(1, endFrame - beat.startFrame);
     const start = framesToSeconds(beat.startFrame, fps);
-    const duration = framesToSeconds(holdFrames, fps);
+    // Retain the outgoing image while the incoming scene animates in. Beat and
+    // audio timings stay unchanged; only the visual clip tail overlaps.
+    const handoff = next
+      ? Math.min(
+          0.65,
+          framesToSeconds(timeline[i + 1].durationFrames, fps) * 0.35,
+        )
+      : 0;
+    const duration = framesToSeconds(holdFrames, fps) + handoff;
     beats.push({ id: scene.id, start, duration });
     const absoluteStart = start + coverSeconds;
     const exitWindow = Math.min(
@@ -1248,20 +1217,29 @@ export function buildHyperframesCompositionHtml(
          data-hide-progress="${hideProgress ? "1" : "0"}"
          data-grain="${grainAttr}"
          data-orientation="${layout.orientation}"
-         style="width:${width}px;height:${height}px;--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}">
+         style="width:${width}px;height:${height}px;--brand-background:${tokens.background};--brand-font:${escapeHtml(cssFontStack(hyperframesBrandFont(tokens.fontFamily)))};font-family:var(--brand-font);--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}">
       ${coverBlock}
       ${progress}
       ${videoBlocks.join("\n")}
-      ${sceneBlocks.join("\n")}
+      ${sceneBlocks.map((block, index) => block.replace(/(<section\b[^>]*>)([\s\S]*)(<\/section>\s*)$/, (_, open: string, body: string, close: string) => `${open}<div class="scene-handoff" style="--handoff:${index === 0 ? "1" : "0"}" data-first-scene="${index === 0 ? "1" : "0"}">${body}</div>${close}`)).join("\n")}
       ${captionBlocks}
       ${audioTags.join("\n")}
     </div>
   </div>
   ${buildGsapMotionBootScript(opts.runtimeUrl)}
+  ${buildTextFitScript()}
   ${opts.producerMode ? "" : buildSeekScript(beats, coverSeconds, totalSeconds, fps, hideProgress, audioMix)}
 </body>
 </html>`;
-  return opts.producerMode ? localizeHyperframesRenderFonts(html) : html;
+  const runtimeUrl = opts.runtimeUrl ?? GSAP_PREVIEW_URL;
+  const localized = LOCALIZABLE_GSAP_URLS.reduce(
+    (value, original) => value.replaceAll(original, runtimeUrl),
+    html,
+  );
+  return localizeHyperframesRenderFonts(
+    localized,
+    opts.producerMode ? "/_runtime" : "/reel-runtime",
+  );
 }
 
 export function compositionTotalFrames(props: ReelProps): number {

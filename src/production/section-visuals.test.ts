@@ -58,7 +58,7 @@ it("includes outgoing holds, crossing boundaries and cover offsets without retim
       { index: 1, startFrame: 165, endFrame: 180 },
       30,
     ).scenes.map((scene) => scene.id),
-  ).toEqual(["b"]);
+  ).toEqual(["a", "b"]);
 });
 it("keeps unrelated visual edits out of a section while invalidating affected scenes, captions and shared direction", () => {
   const section = { index: 0, startFrame: 0, endFrame: 119 };
@@ -73,4 +73,14 @@ it("keeps unrelated visual edits out of a section while invalidating affected sc
   expect(sectionVisualProps(changed, section, 30)).not.toEqual(
     sectionVisualProps(props, section, 30),
   );
+});
+
+it("drops the outgoing scene only after its transition tail", () => {
+  expect(
+    sectionVisualProps(
+      props,
+      { index: 1, startFrame: 140, endFrame: 150 },
+      30,
+    ).scenes.map((scene) => scene.id),
+  ).toEqual(["b"]);
 });

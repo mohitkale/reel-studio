@@ -37,6 +37,12 @@ a custom no-charge license with restrictions, rather than an OSI license.
 Therefore this runtime is not wholly Apache-2.0 or wholly OSI open source.
 Reel Studio's own MIT license does not relicense dependencies or model weights.
 
+The frozen browser/render runtime in `public/reel-runtime/` also bundles Geist,
+Geist Mono, Inter, EB Garamond, Archivo Black and JetBrains Mono under OFL-1.1.
+Their complete notices accompany the assets; the manifest records installed
+source versions and checksums. Font aliases are rendered by genuine bundled
+faces, rather than relabeling a sans font as a serif. See [export fidelity](EXPORT_FIDELITY.md).
+
 ## Local / permissive runtime dependencies (selected)
 
 These are commonly used with Reel Studio and are generally permissive. Confirm

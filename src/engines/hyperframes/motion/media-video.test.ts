@@ -58,7 +58,9 @@ describe("motion footage", () => {
         expect(video.getAttribute("data-start")).toBe(
           index === 0 ? "1.000" : "4.000",
         );
-        expect(video.getAttribute("data-duration")).toBe("3.000");
+        expect(video.getAttribute("data-duration")).toBe(
+          index === 0 ? "3.650" : "3.000",
+        );
         expect(video.getAttribute("data-media-start")).toBe("0");
         expect(video.hasAttribute("muted")).toBe(true);
         expect(video.hasAttribute("autoplay")).toBe(false);
@@ -121,9 +123,12 @@ describe("motion footage", () => {
     scope.__reelSetPlaying!(true);
     expect(players[0].play).toHaveBeenCalledTimes(1);
     scope.__reelSeek!(4.5);
+    // Both source windows remain active during the visual crossfade.
+    expect(videos[0].style.visibility).toBe("visible");
+    scope.__reelSeek!(4.7);
     expect(videos[0].style.visibility).toBe("hidden");
     expect(videos[1].style.visibility).toBe("visible");
-    expect(videos[1].currentTime).toBe(0.5);
+    expect(videos[1].currentTime).toBeCloseTo(0.7);
     scope.__reelSeek!(7);
     expect(videos[0].style.visibility).toBe("hidden");
     expect(videos[1].style.visibility).toBe("visible");
