@@ -5,7 +5,11 @@ import { getAIProvider, isAIProviderId } from "@/providers/ai/registry";
 import { AIError, CLOUD_AI_PROVIDER_IDS } from "@/providers/ai/types";
 import { aiKeyStatus, setAIKey } from "@/server/secrets";
 import { requireWeb, authorizeRead } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,7 +32,10 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     requireWeb(req);
-    const { providerId, apiKey } = bodySchema.parse(await req.json());
+    const { providerId, apiKey } = parseClientInput(
+      bodySchema,
+      await readRequestJson(req),
+    );
     if (!isAIProviderId(providerId)) {
       throw new AIError(`Unknown AI provider "${providerId}"`, 404);
     }

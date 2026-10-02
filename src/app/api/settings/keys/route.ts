@@ -5,7 +5,11 @@ import { getProvider, isProviderId } from "@/providers/voice/registry";
 import { ProviderError, PROVIDER_IDS } from "@/providers/voice/types";
 import { keyStatus, setKey } from "@/server/secrets";
 import { requireWeb, authorizeRead } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,7 +37,10 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     requireWeb(req);
-    const { providerId, apiKey } = bodySchema.parse(await req.json());
+    const { providerId, apiKey } = parseClientInput(
+      bodySchema,
+      await readRequestJson(req),
+    );
     if (!isProviderId(providerId)) {
       throw new ProviderError(`Unknown provider "${providerId}"`, 404);
     }

@@ -11,7 +11,11 @@ import {
 import { podcastLengthSchema } from "@/library/podcast-schemas";
 import { podcastPresetIdSchema } from "@/library/podcast-presets";
 import { authorizeProviderRequest } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,7 +38,7 @@ export async function POST(
 ) {
   try {
     const { id } = await ctx.params;
-    const body = bodySchema.parse(await req.json());
+    const body = parseClientInput(bodySchema, await readRequestJson(req));
     await authorizeProviderRequest(req, [body.providerId]);
     if (!isAIProviderId(body.providerId)) {
       throw new AIError(`Unknown AI provider "${body.providerId}"`, 404);

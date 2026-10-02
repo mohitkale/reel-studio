@@ -439,6 +439,11 @@ Saved chapter projects now export in bounded sections, preserving global frame
 timing. HyperFrames uses native 30-second chunks at 24/30/60 fps. Checksum-verified sections in
 `media/render-cache` survive retry of unchanged inputs; other jobs keep the
 whole-video renderer.
+Media downloads and seek ranges read in bounded 64 KiB chunks; disconnects
+close their file handles. Export/cache checksums stream instead of buffering
+complete files. Worker cancellation and supervisor shutdown terminate owned
+process trees on POSIX and Windows before scratch cleanup. See
+[bounded IO and recovery](docs/IO_RECOVERY.md) for behavior and verification.
 Audio is mixed continuously and muxed once, then optionally mastered. Short local
 music tracks are expanded for HyperFrames export to preserve looping. Recent
 retry caches are retained; inactive caches are trimmed toward 1 GiB and expire

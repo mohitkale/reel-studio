@@ -8,7 +8,11 @@ import { generateSceneClip } from "@/library/scene-voice-service";
 import { PROVIDER_IDS } from "@/providers/voice/types";
 import { upsertVoiceJob } from "@/lib/voice-queue";
 import { authorizeProviderRequest, authorizeRead } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,7 +47,10 @@ export async function POST(
 ) {
   try {
     const { id } = await ctx.params;
-    const body = generateSchema.parse(await req.json().catch(() => ({})));
+    const body = parseClientInput(
+      generateSchema,
+      await readRequestJson(req, { allowEmpty: true }),
+    );
     await authorizeProviderRequest(
       req,
       body.placeholder || !body.providerId ? [] : [body.providerId],

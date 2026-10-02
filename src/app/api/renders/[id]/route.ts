@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getRender, deleteRender, renameRender } from "@/library/repositories/renders";
+import {
+  getRender,
+  deleteRender,
+  renameRender,
+} from "@/library/repositories/renders";
 import { authorize, authorizeRead } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,7 +43,7 @@ export async function PATCH(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const { name } = patchSchema.parse(await req.json());
+    const { name } = parseClientInput(patchSchema, await readRequestJson(req));
     const render = await renameRender(id, name);
     return NextResponse.json({ render });
   } catch (e) {

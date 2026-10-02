@@ -21,7 +21,7 @@ import {
   productionSignal,
   withProductionSignal,
 } from "@/library/production-cancellation";
-import { createHash } from "node:crypto";
+import { hashRenderFile } from "@/library/render-section-cache";
 import { execFile } from "node:child_process";
 import { promises as fs } from "node:fs";
 import path from "node:path";
@@ -107,9 +107,7 @@ export async function verifyProductionMp4(
     throw new Error("Rendered MP4 is not decodable");
   if (expectsAudio && !audio)
     throw new Error("Rendered MP4 is missing expected audio");
-  const checksum = createHash("sha256")
-    .update(await fs.readFile(filePath))
-    .digest("hex");
+  const checksum = await hashRenderFile(filePath);
   return {
     bytes: stats.size,
     width: video.width,
@@ -191,9 +189,7 @@ export async function executeVideoProductionJob(
     const takeChecksum = async (audioUrl: string) => {
       const filePath = takePath(audioUrl);
       if (!filePath) return null;
-      return createHash("sha256")
-        .update(await fs.readFile(filePath))
-        .digest("hex");
+      return hashRenderFile(filePath);
     };
     const active = async () => {
       if (context.signal.aborted || !(await context.heartbeat()))
@@ -284,14 +280,10 @@ export async function executeVideoProductionJob(
         for (const asset of saved.assets)
           if (asset.checksum) {
             try {
-              const data = await fs.readFile(
+              const checksum = await hashRenderFile(
                 path.join(process.cwd(), "media", asset.resolvedUrl.slice(7)),
               );
-              if (
-                createHash("sha256").update(data).digest("hex") !==
-                asset.checksum
-              )
-                return false;
+              if (checksum !== asset.checksum) return false;
             } catch {
               return false;
             }

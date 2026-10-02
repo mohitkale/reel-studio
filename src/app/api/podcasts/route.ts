@@ -5,7 +5,11 @@ import { createPodcast, listPodcasts } from "@/library/repositories/podcasts";
 import { podcastLengthSchema } from "@/library/podcast-schemas";
 import { podcastPresetIdSchema } from "@/library/podcast-presets";
 import { authorize, authorizeRead } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +33,10 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     authorize(req);
-    const body = createSchema.parse(await req.json().catch(() => ({})));
+    const body = parseClientInput(
+      createSchema,
+      await readRequestJson(req, { allowEmpty: true }),
+    );
     const podcast = await createPodcast(body);
     return NextResponse.json(podcast, { status: 201 });
   } catch (e) {

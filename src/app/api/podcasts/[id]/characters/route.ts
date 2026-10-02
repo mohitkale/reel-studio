@@ -7,7 +7,11 @@ import {
 } from "@/library/repositories/podcasts";
 import { podcastGenderSchema } from "@/library/podcast-schemas";
 import { authorize } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,7 +55,7 @@ export async function PUT(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const body = putSchema.parse(await req.json());
+    const body = parseClientInput(putSchema, await readRequestJson(req));
     const podcast = await replaceCharacters(id, body.characters);
     return NextResponse.json({ podcast });
   } catch (e) {
@@ -67,7 +71,7 @@ export async function PATCH(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const body = patchSchema.parse(await req.json());
+    const body = parseClientInput(patchSchema, await readRequestJson(req));
     const podcast = await updateCharacterVoices(id, body.updates);
     return NextResponse.json({ podcast });
   } catch (e) {

@@ -9,7 +9,11 @@ import { generateTake } from "@/library/take-service";
 import { getVoiceJob, upsertVoiceJob } from "@/lib/voice-queue";
 import { PROVIDER_IDS } from "@/providers/voice/types";
 import { authorizeProviderRequest } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +33,10 @@ export async function POST(
 ) {
   try {
     const { id } = await ctx.params;
-    const body = bodySchema.parse(await req.json().catch(() => ({})));
+    const body = parseClientInput(
+      bodySchema,
+      await readRequestJson(req, { allowEmpty: true }),
+    );
     await authorizeProviderRequest(
       req,
       body.startVoice === false ? [] : [body.providerId ?? "kokoro-server"],

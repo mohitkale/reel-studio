@@ -8,7 +8,11 @@ import { enqueueProductionJob } from "@/library/repositories/production-jobs";
 import { runProductionWorkerOnce } from "@/library/production-worker";
 import { executeProductionJob } from "@/library/production-job-executor";
 import { requireWeb } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,7 +32,7 @@ export async function POST(
   try {
     requireWeb(req);
     const { id: takeId } = await ctx.params;
-    const body = bodySchema.parse(await req.json());
+    const body = parseClientInput(bodySchema, await readRequestJson(req));
     const job = await enqueueProductionJob({
       kind: "audiogram",
       idempotencyKey: body.idempotencyKey ?? `audiogram:${randomUUID()}`,

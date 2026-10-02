@@ -54,6 +54,10 @@ class MemoryStore implements AssetStore {
     if (!data) throw new Error("missing");
     return Buffer.from(data);
   }
+  async open(): Promise<never> {
+    throw new Error("Streaming is not used by this materialization fixture");
+  }
+
   url(key: string) {
     return `/media/${key}`;
   }

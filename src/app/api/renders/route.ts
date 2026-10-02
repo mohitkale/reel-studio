@@ -5,7 +5,11 @@ import { createRender, listRenders } from "@/library/repositories/renders";
 import { startRender } from "@/library/render-service";
 import { ORIENTATION_LABELS, orientationSchema } from "@/lib/orientation";
 import { authorize, authorizeRead } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 const qualitySchema = z.enum(["draft", "standard", "high"]);
 
@@ -35,7 +39,7 @@ const createSchema = z.object({
 export async function POST(req: Request) {
   try {
     const origin = authorize(req);
-    const body = createSchema.parse(await req.json());
+    const body = parseClientInput(createSchema, await readRequestJson(req));
 
     // Label repurposed/non-standard-quality renders so the list is readable.
     const labelParts = [

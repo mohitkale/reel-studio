@@ -17,7 +17,11 @@ import {
 import { getScript } from "@/library/repositories/scripts";
 import { getAssetStore } from "@/library/storage";
 import { transcribeWithWhisperCpp } from "@/library/local-transcription";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 import { authorize, authorizeRead } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
 
@@ -108,7 +112,7 @@ export async function GET(
     authorizeRead(req);
     const { id } = await ctx.params;
     const { searchParams } = new URL(req.url);
-    const { format, takeId, trackId } = querySchema.parse({
+    const { format, takeId, trackId } = parseClientInput(querySchema, {
       format: searchParams.get("format") ?? undefined,
       takeId: searchParams.get("takeId") ?? undefined,
       trackId: searchParams.get("trackId") ?? undefined,
@@ -148,7 +152,7 @@ export async function POST(
   try {
     authorize(req);
     const { id: scriptId } = await ctx.params;
-    const body = postSchema.parse(await req.json());
+    const body = parseClientInput(postSchema, await readRequestJson(req));
     const script = await getScript(scriptId);
     if (!script)
       return Response.json({ error: "Script not found" }, { status: 404 });

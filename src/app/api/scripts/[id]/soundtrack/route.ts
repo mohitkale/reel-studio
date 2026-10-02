@@ -4,7 +4,11 @@ import { z } from "zod";
 import { autoAttachBundledMusic } from "@/library/soundtrack-service";
 import { getScript } from "@/library/repositories/scripts";
 import { authorize } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,7 +26,10 @@ export async function POST(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const body = bodySchema.parse(await req.json().catch(() => ({})));
+    const body = parseClientInput(
+      bodySchema,
+      await readRequestJson(req, { allowEmpty: true }),
+    );
     const result = await autoAttachBundledMusic(id, { force: body.force });
     if (!result.attached && result.reason === "not_found") {
       return NextResponse.json({ error: "Script not found" }, { status: 404 });

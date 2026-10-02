@@ -5,6 +5,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { assertSafeMediaUrl } from "@/lib/media-url-safety";
 import { sanitizeKey } from "@/library/storage/local-disk";
+import { hashRenderFile } from "@/library/render-section-cache";
 import { assertProductionActive } from "@/library/production-cancellation";
 import type { VideoSnapshot } from "@/production/video-snapshot";
 
@@ -52,26 +53,29 @@ export async function resolveVideoStageMedia(
     const root = path.resolve(process.cwd(), media ? "media" : "public");
     const source = path.join(root, key);
     const real = await fs.realpath(source);
-    if (!real.startsWith(root + path.sep))
+    const realRoot = await fs.realpath(root);
+    if (!real.startsWith(realRoot + path.sep))
       throw new Error("Media resolves outside its store");
-    const data = await fs.readFile(real);
-    const checksum = createHash("sha256").update(data).digest("hex");
-    const target = `production-assets/${checksum}${path.extname(key)}`;
-    await fs.mkdir(path.join(process.cwd(), "media", "production-assets"), {
-      recursive: true,
-    });
-    const destination = path.join(process.cwd(), "media", target);
-    const temporary = `${destination}.${randomUUID()}.tmp`;
+    const directory = path.join(process.cwd(), "media", "production-assets");
+    await fs.mkdir(directory, { recursive: true });
+    const temporary = path.join(directory, `${randomUUID()}.tmp`);
+    let target: string;
+    let checksum: string;
     try {
-      // Atomic replacement also repairs a cache file truncated by a hard crash.
-      const cached = await fs.readFile(destination).catch(() => null);
-      if (
-        !cached ||
-        createHash("sha256").update(cached).digest("hex") !== checksum
-      ) {
-        await fs.writeFile(temporary, data, { flag: "wx" });
-        await fs.rename(temporary, destination);
-      }
+      // Hash the copied snapshot, not a source that can change between hash/copy.
+      await fs.copyFile(real, temporary, fs.constants.COPYFILE_EXCL);
+      assertProductionActive();
+      checksum = await hashRenderFile(temporary);
+      target = `production-assets/${checksum}${path.extname(key)}`;
+      const destination = path.join(process.cwd(), "media", target);
+      const cached = await hashRenderFile(destination).catch(
+        (error: unknown) => {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+          throw error;
+        },
+      );
+      assertProductionActive();
+      if (cached !== checksum) await fs.rename(temporary, destination);
     } finally {
       await fs.rm(temporary, { force: true });
     }

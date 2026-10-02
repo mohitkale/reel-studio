@@ -13,7 +13,11 @@ import {
 import { podcastPresetIdSchema } from "@/library/podcast-presets";
 import { authorize, authorizeRead } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -52,7 +56,7 @@ export async function PATCH(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const body = patchSchema.parse(await req.json());
+    const body = parseClientInput(patchSchema, await readRequestJson(req));
     const podcast = await updatePodcastMeta(id, body);
     return NextResponse.json({ podcast });
   } catch (e) {

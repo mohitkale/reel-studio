@@ -13,7 +13,11 @@ import { productionChartDataSchema } from "@/production/spec";
 import { productionSceneRoleSchema } from "@/production/roles";
 import { motionDirectionSchema } from "@/production/motion";
 import { authorize } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,7 +68,7 @@ export async function POST(
   try {
     authorize(req);
     const { id: scriptId } = await ctx.params;
-    const body = snapshotSchema.parse(await req.json());
+    const body = parseClientInput(snapshotSchema, await readRequestJson(req));
     const script = await getScript(scriptId);
     if (!script) {
       return NextResponse.json({ error: "Script not found" }, { status: 404 });

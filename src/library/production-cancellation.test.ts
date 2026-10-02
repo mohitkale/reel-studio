@@ -33,13 +33,14 @@ describe("active production cancellation", () => {
       { detached: process.platform !== "win32", stdio: "ignore" },
     );
     const closed = once(child, "close");
-    cancelChild(child, controller.signal, 100);
+    const waitForCleanup = cancelChild(child, controller.signal, 100);
     try {
       await expect
         .poll(async () => (await readFile(file)).length)
         .toBeGreaterThan(0);
       controller.abort();
       await closed;
+      await waitForCleanup();
       expect(() => process.kill(child.pid!, 0)).toThrow();
     } finally {
       controller.abort();
@@ -62,16 +63,19 @@ describe("active production cancellation", () => {
       },
     );
     const closed = once(child, "close");
-    cancelChild(child, controller.signal, 100);
+    const waitForCleanup = cancelChild(child, controller.signal, 100);
     await once(child.stdout!, "data");
     controller.abort();
     const [, signal] = await closed;
-    expect(signal).toBe("SIGKILL");
+    await waitForCleanup();
+    if (process.platform !== "win32") expect(signal).toBe("SIGKILL");
     expect(() => process.kill(child.pid!, 0)).toThrow();
   });
   it("prevents new work after abort", () => {
     const controller = new AbortController();
     controller.abort();
-    expect(() => withProductionSignal(controller.signal, () => assertProductionActive())).toThrow();
+    expect(() =>
+      withProductionSignal(controller.signal, () => assertProductionActive()),
+    ).toThrow();
   });
 });

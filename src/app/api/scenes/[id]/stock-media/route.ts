@@ -6,7 +6,11 @@ import {
   selectSceneStockMediaSchema,
 } from "@/library/stock-media-workflow";
 import { getStockMediaSelection } from "@/library/repositories/stock-media-selections";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 import { authorize, requireWeb } from "@/server/auth";
 
 export const runtime = "nodejs";
@@ -32,7 +36,10 @@ export async function POST(
   try {
     requireWeb(req);
     const { id } = await ctx.params;
-    const input = selectSceneStockMediaSchema.parse(await req.json());
+    const input = parseClientInput(
+      selectSceneStockMediaSchema,
+      await readRequestJson(req),
+    );
     return NextResponse.json(await selectSceneStockMedia(id, input));
   } catch (error) {
     return errorResponse(error);

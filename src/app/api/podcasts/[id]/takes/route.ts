@@ -6,7 +6,11 @@ import { getPodcast, listPodcastTakes } from "@/library/repositories/podcasts";
 import { generatePodcastTake } from "@/library/podcast-take-service";
 import { getVoiceJob, upsertVoiceJob } from "@/lib/voice-queue";
 import { authorizeProviderRequest, authorizeRead } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -39,8 +43,9 @@ export async function POST(
 ) {
   try {
     const { id } = await ctx.params;
-    const body = generatePodcastTakeSchema.parse(
-      await req.json().catch(() => ({})),
+    const body = parseClientInput(
+      generatePodcastTakeSchema,
+      await readRequestJson(req, { allowEmpty: true }),
     );
     const podcast = await getPodcast(id);
     await authorizeProviderRequest(

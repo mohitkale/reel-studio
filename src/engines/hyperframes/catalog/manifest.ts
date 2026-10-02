@@ -4,6 +4,8 @@
  * we vendor a focused ad/premium subset.
  */
 
+import { catalogRevisionIncludes } from "./revisions";
+
 export const HF_CATALOG_SOURCE =
   "https://github.com/heygen-com/hyperframes/tree/main/registry";
 
@@ -249,7 +251,7 @@ export function getCatalogBlockByTemplateId(
   if (
     block?.availableSinceRevision &&
     catalogRevision &&
-    block.availableSinceRevision !== catalogRevision
+    !catalogRevisionIncludes(catalogRevision, block.availableSinceRevision)
   ) {
     return undefined;
   }

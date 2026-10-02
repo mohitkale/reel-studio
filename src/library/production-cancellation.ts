@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { execFileSync, type ChildProcess } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
+import { stopProcessTree } from "../../scripts/process-tree.mjs";
 
 const execution = new AsyncLocalStorage<AbortSignal>();
 export const withProductionSignal = <T>(signal: AbortSignal, run: () => T): T =>
@@ -15,62 +16,17 @@ export function cancelChild(
   signal = productionSignal(),
   graceMs = 5000,
 ) {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const descendants = new Set<number>();
-  const kill = (kind: NodeJS.Signals) => {
-    if (kind === "SIGKILL")
-      for (const pid of descendants) {
-        try {
-          process.kill(pid, kind);
-        } catch (error) {
-          if ((error as NodeJS.ErrnoException).code !== "ESRCH")
-            console.error("[production] Child cleanup failed", error);
-        }
-      }
-    if (!child.pid) return;
-    try {
-      if (process.platform === "win32") child.kill(kind);
-      else process.kill(-child.pid, kind);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ESRCH")
-        console.error("[production] Child cleanup failed", error);
-    }
-  };
+  let cleanup: Promise<void> | undefined;
   const abort = () => {
-    if (process.platform !== "win32" && child.pid) {
-      // Puppeteer can detach Chromium into a different process group. Capture
-      // only this child's descendants before the leader has a chance to exit.
-      try {
-        const rows = execFileSync("ps", ["-axo", "pid=,ppid="], {
-          encoding: "utf8",
-          timeout: 1000,
-        })
-          .trim()
-          .split("\n")
-          .map((row) => row.trim().split(/\s+/).map(Number));
-        descendants.add(child.pid);
-        let changed = true;
-        while (changed) {
-          changed = false;
-          for (const [pid, parent] of rows)
-            if (descendants.has(parent) && !descendants.has(pid)) {
-              descendants.add(pid);
-              changed = true;
-            }
-        }
-      } catch (error) {
-        console.error("[production] Cannot inspect child process tree", error);
-      }
-    }
-    kill("SIGTERM");
-    timer = setTimeout(() => kill("SIGKILL"), graceMs);
+    if (cleanup) return;
+    cleanup = stopProcessTree(child, graceMs);
+    // Observe errors immediately; callers also await cleanup before removing files.
+    void cleanup.catch((error: unknown) =>
+      console.error("[production] Child cleanup failed", error),
+    );
   };
   signal?.addEventListener("abort", abort, { once: true });
-  child.once("close", () => {
-    clearTimeout(timer);
-    signal?.removeEventListener("abort", abort);
-    // The leader may exit before an encoder/browser; reap its remaining group.
-    if (signal?.aborted) kill("SIGKILL");
-  });
+  child.once("close", () => signal?.removeEventListener("abort", abort));
   if (signal?.aborted) abort();
+  return () => cleanup ?? Promise.resolve();
 }

@@ -8,7 +8,11 @@ import {
   deleteBrandKit,
 } from "@/library/repositories/brandkits";
 import { requireWeb, authorizeRead } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -45,7 +49,7 @@ export async function PATCH(
   try {
     requireWeb(req);
     const { id } = await ctx.params;
-    const body = patchSchema.parse(await req.json());
+    const body = parseClientInput(patchSchema, await readRequestJson(req));
     const { isDefault, ...kitPatch } = body;
 
     if (isDefault !== undefined) {

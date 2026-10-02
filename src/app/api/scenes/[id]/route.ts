@@ -5,7 +5,11 @@ import { deleteScene, updateScene } from "@/library/repositories/scenes";
 import { assembleVoiceTake } from "@/library/scene-voice-service";
 import { authorize } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 import { productionChartDataSchema } from "@/production/spec";
 import { mediaPreferenceSchema } from "@/lib/media-preference";
 import { motionDirectionSchema } from "@/production/motion";
@@ -68,7 +72,7 @@ export async function PATCH(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const body = patchSchema.parse(await req.json());
+    const body = parseClientInput(patchSchema, await readRequestJson(req));
     const scene = await updateScene(id, body);
 
     let take = null;
