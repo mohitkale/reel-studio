@@ -22,6 +22,7 @@ export const MOTION_EVENT_TIMINGS: Record<
   Record<MotionRecipeId, Anchors>
 > = {
   hyperframes: {
+    "type-stack": { reveal: 0.22 },
     "type-impact": { reveal: 0.22, impact: 0.58 },
     "type-editorial": { reveal: 0.22 },
     "data-spotlight": { reveal: 0.1 },

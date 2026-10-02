@@ -158,5 +158,6 @@ source/build provenance and corresponding source/notices for the embedded
 GPL-3.0 eSpeak phonemizer binary identified in M8. The stack must not be described
 as wholly Apache-2.0. Supported font subsets and upstream audit reachability
 limitations are recorded in the export-fidelity and portability/license docs.
-M10 is in progress on `feature/review-m10-motion-spec`; release publication has
-not started.
+M10 merged after successful latest-head Linux/Windows checks: [PR #39](https://github.com/mohitkale/reel-studio/pull/39), merge `6edeec9`. Local `main` was refreshed and verified before M11. Its versioned motion compiler and acceptance evidence are in [MOTION_SPEC.md](MOTION_SPEC.md).
+
+M11 is in progress on `feature/review-m11-motion-library`; release publication has not started.

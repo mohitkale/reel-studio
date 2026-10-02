@@ -5,6 +5,13 @@ import type { ProductionSceneRole } from "@/production/roles";
 export const MOTION_RECIPE_VERSION = "1.0.0" as const;
 export const TYPE_MOTION_RECIPES = [
   {
+    id: "type-stack",
+    name: "Word stack",
+    description:
+      "A short supplied phrase builds word by word with a reading hold.",
+    maxCharacters: 80,
+  },
+  {
     id: "type-impact",
     name: "Impact",
     description: "Bold type with a decisive graphic hit.",
@@ -112,6 +119,7 @@ export const MOTION_RECIPES = [
 ] as const;
 
 export const motionRecipeIdSchema = z.enum([
+  "type-stack",
   "type-impact",
   "type-editorial",
   "data-spotlight",
@@ -210,6 +218,11 @@ export function motionFallbackReason(
     return "This motion treatment version is unavailable.";
   if (Array.from(text).length > recipe.maxCharacters)
     return `This treatment supports up to ${recipe.maxCharacters} characters of copy.`;
+  if (
+    direction.recipeId === "type-stack" &&
+    (!text.trim() || text.trim().split(/\s+/).length > 8)
+  )
+    return "Word stack supports one to eight supplied words.";
   if (hasOtherVisualContent)
     return "This scene already has a visual or list that this treatment would hide.";
   if (isStoryMotionRecipe(direction.recipeId)) {
