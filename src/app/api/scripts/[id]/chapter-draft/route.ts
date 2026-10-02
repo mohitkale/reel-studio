@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { authorize, authorizeProviderRequest } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import { errorResponse, readRequestJson } from "@/server/api-helpers";
 import { chapterDraftRequestSchema } from "@/library/chapter-draft-input";
 import { chapterDraftEditSchema } from "@/production/chapter-draft";
 import {
@@ -16,7 +16,7 @@ export async function POST(req: Request, ctx: Context) {
   try {
     authorize(req);
     const body = chapterDraftRequestSchema.safeParse(
-      await req.json().catch(() => null),
+      await readRequestJson(req),
     );
     if (!body.success)
       return NextResponse.json(
@@ -38,9 +38,7 @@ export async function POST(req: Request, ctx: Context) {
 export async function PATCH(req: Request, ctx: Context) {
   try {
     authorize(req);
-    const body = chapterDraftEditSchema.safeParse(
-      await req.json().catch(() => null),
-    );
+    const body = chapterDraftEditSchema.safeParse(await readRequestJson(req));
     if (!body.success)
       return NextResponse.json(
         { error: "Invalid chapter draft edit", issues: body.error.issues },

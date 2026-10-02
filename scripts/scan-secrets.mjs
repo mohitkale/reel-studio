@@ -1,3 +1,4 @@
+import { scanSecretText } from "./secret-patterns.mjs";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -22,40 +23,15 @@ const BINARY_EXTENSIONS = new Set([
   ".otf",
 ]);
 
-const rules = [
-  {
-    name: "Private key material",
-    pattern: /-----BEGIN (?:RSA |OPENSSH |EC |DSA )?PRIVATE KEY-----/g,
-  },
-  {
-    name: "GitHub token",
-    pattern: /\bgh[pousr]_[A-Za-z0-9]{20,}\b/g,
-  },
-  {
-    name: "Google API key",
-    pattern: /\bAIza[0-9A-Za-z_-]{35}\b/g,
-  },
-  {
-    name: "OpenAI-style key",
-    pattern: /\bsk-[A-Za-z0-9]{20,}\b/g,
-  },
-  {
-    name: "Cartesia-style key",
-    pattern: /\bsk_car_[A-Za-z0-9]{20,}\b/g,
-  },
-  {
-    name: "Slack token",
-    pattern: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/g,
-  },
-  {
-    name: "Assigned provider key value",
-    pattern:
-      /(?:CARTESIA_API_KEY|ELEVENLABS_API_KEY|GEMINI_API_KEY|OPENAI_API_KEY)\s*=\s*["']?[A-Za-z0-9._:-]{12,}/g,
-  },
-];
-
-const tracked = execFileSync("git", ["ls-files"], { encoding: "utf8" })
-  .split(/\r?\n/)
+const staged = process.argv.includes("--staged");
+const tracked = execFileSync(
+  "git",
+  staged
+    ? ["diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z"]
+    : ["ls-files", "-z"],
+  { encoding: "utf8" },
+)
+  .split("\0")
   .filter(Boolean);
 
 const findings = [];
@@ -66,35 +42,32 @@ for (const file of tracked) {
 
   let content;
   try {
-    content = readFileSync(file, "utf8");
-  } catch {
-    continue;
+    content = staged
+      ? execFileSync("git", ["show", `:${file}`], {
+          encoding: "utf8",
+          maxBuffer: 32 * 1024 * 1024,
+        })
+      : readFileSync(file, "utf8");
+  } catch (error) {
+    if (!staged && error.code === "ENOENT") continue;
+    console.error(`Secret scan could not read ${file}; scan failed.`);
+    process.exit(1);
   }
 
-  for (const rule of rules) {
-    rule.pattern.lastIndex = 0;
-    let match;
-    while ((match = rule.pattern.exec(content)) !== null) {
-      const before = content.slice(0, match.index);
-      const line = before.split(/\r?\n/).length;
-      findings.push({
-        file,
-        line,
-        rule: rule.name,
-        snippet: match[0].slice(0, 80),
-      });
-    }
-  }
+  for (const finding of scanSecretText(content))
+    findings.push({ file, ...finding });
 }
 
 if (findings.length > 0) {
-  console.error("Secret scan failed. Potential secrets found in tracked files:\n");
+  console.error(
+    `Secret scan failed. Potential secrets found in ${staged ? "staged" : "tracked"} files:\n`,
+  );
   for (const finding of findings) {
     console.error(
-      `- ${finding.file}:${finding.line} | ${finding.rule} | ${finding.snippet}`,
+      `- ${finding.file}:${finding.line} | ${finding.rule} | [redacted]`,
     );
   }
   process.exit(1);
 }
 
-console.log("Secret scan passed. No obvious secrets found in tracked files.");
+console.log("Secret scan passed. No obvious secrets found.");

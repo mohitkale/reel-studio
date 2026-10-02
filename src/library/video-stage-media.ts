@@ -1,3 +1,6 @@
+import { assertRenderStagingAllowed } from "@/lib/render-media-policy";
+import { downloadPublicMediaToFile } from "@/server/public-media-download";
+import { productionSignal } from "@/library/production-cancellation";
 import { parseSfxState } from "@/lib/sfx-cues";
 import { getSfxClip, SFX_LIBRARY } from "@/lib/sfx-library";
 import { createHash, randomUUID } from "node:crypto";
@@ -25,10 +28,11 @@ export const videoStageHash = (value: unknown) =>
     .update(JSON.stringify(canonical(value)))
     .digest("hex");
 
-/** Freeze selected local assets, retaining compliant remote URLs without downloading. */
+/** Freeze local and DNS-checked remote assets into immutable checksum-addressed files. */
 export async function resolveVideoStageMedia(
   snapshot: VideoSnapshot,
   baseUrl: string,
+  dependencies: { download?: typeof downloadPublicMediaToFile } = {},
 ) {
   const result = structuredClone(snapshot);
   const assets: Array<{
@@ -44,8 +48,29 @@ export async function resolveVideoStageMedia(
     const local =
       !url.startsWith("http") || parsed.origin === new URL(baseUrl).origin;
     if (!local) {
-      assets.push({ url, resolvedUrl: url, checksum: null });
-      return url;
+      assertRenderStagingAllowed(url);
+      const directory = path.join(process.cwd(), "media", "production-assets");
+      await fs.mkdir(directory, { recursive: true });
+      const temporary = path.join(directory, `${randomUUID()}.tmp`);
+      try {
+        const media = await (
+          dependencies.download ?? downloadPublicMediaToFile
+        )(url, temporary, { signal: productionSignal() });
+        const checksum = await hashRenderFile(temporary);
+        const target = `production-assets/${checksum}.${media.extension}`;
+        const destination = path.join(process.cwd(), "media", target);
+        assertProductionActive();
+        const cached = await hashRenderFile(destination).catch((error) => {
+          if (error.code === "ENOENT") return null;
+          throw error;
+        });
+        if (cached !== checksum) await fs.rename(temporary, destination);
+        const resolvedUrl = `/media/${target}`;
+        assets.push({ url, resolvedUrl, checksum });
+        return resolvedUrl;
+      } finally {
+        await fs.rm(temporary, { force: true });
+      }
     }
     const pathname = decodeURIComponent(parsed.pathname);
     const media = pathname.startsWith("/media/");

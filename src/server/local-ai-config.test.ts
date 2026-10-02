@@ -27,7 +27,10 @@ describe("local AI config store", () => {
     });
     expect(view).not.toHaveProperty("token");
     expect(await readFile(file, "utf8")).toContain("local-secret");
-    expect((await stat(file)).mode & 0o777).toBe(0o600);
+    // POSIX mode bits do not represent NTFS ACLs. Windows protection is inherited
+    // from the user-owned directory; do not claim chmod enforces its ACL.
+    if (process.platform !== "win32")
+      expect((await stat(file)).mode & 0o777).toBe(0o600);
   });
 
   it("rejects settings outside the supported model bounds", async () => {

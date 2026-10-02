@@ -1,3 +1,4 @@
+import { AUDIO_UPLOAD_BYTES } from "@/server/request-body";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -45,7 +46,10 @@ export async function POST(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const body = parseClientInput(uploadSchema, await readRequestJson(req));
+    const body = parseClientInput(
+      uploadSchema,
+      await readRequestJson(req, { maxBytes: AUDIO_UPLOAD_BYTES }),
+    );
 
     // Only client-runtime providers may upload audio (a server provider's audio
     // must come from its own synth, not an untrusted client).

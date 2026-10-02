@@ -1,3 +1,4 @@
+import { isPublicIpAddress } from "@/lib/public-address";
 import { lookup } from "node:dns/promises";
 import { isIP, type LookupFunction } from "node:net";
 import http from "node:http";
@@ -17,41 +18,10 @@ export interface IngestedArticle {
   text: string;
 }
 
-function ipv4Parts(address: string): number[] | null {
-  if (isIP(address) !== 4) return null;
-  const parts = address.split(".").map(Number);
-  return parts.length === 4 ? parts : null;
-}
+/** Retained export for article callers; literal policy is shared with media. */
+export const isPublicAddress = isPublicIpAddress;
 
-/** Reject loopback, link-local, private, documentation and multicast ranges. */
-export function isPublicAddress(address: string): boolean {
-  const mapped = address.toLowerCase().match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-  if (mapped?.[1]) return isPublicAddress(mapped[1]);
-
-  const v4 = ipv4Parts(address);
-  if (v4) {
-    const [a, b] = v4;
-    if (a === 0 || a === 10 || a === 127 || a >= 224) return false;
-    if (a === 100 && b >= 64 && b <= 127) return false;
-    if (a === 169 && b === 254) return false;
-    if (a === 172 && b >= 16 && b <= 31) return false;
-    if (a === 192 && (b === 0 || b === 168)) return false;
-    if (a === 198 && (b === 18 || b === 19 || b === 51)) return false;
-    if (a === 203 && b === 0) return false;
-    return true;
-  }
-
-  if (isIP(address) !== 6) return false;
-  const normalized = address.toLowerCase();
-  if (normalized === "::" || normalized === "::1") return false;
-  if (normalized.startsWith("fc") || normalized.startsWith("fd")) return false;
-  if (/^fe[89ab]/.test(normalized)) return false;
-  if (normalized.startsWith("ff")) return false;
-  if (normalized.startsWith("2001:db8")) return false;
-  return true;
-}
-
-async function defaultResolveHost(hostname: string): Promise<Address[]> {
+export async function defaultResolveHost(hostname: string): Promise<Address[]> {
   const result = await lookup(hostname, { all: true, verbatim: true });
   return result.map(({ address, family }) => ({ address, family }));
 }
@@ -89,9 +59,7 @@ export function createPublicLookup(resolveHost: ResolveHost): LookupFunction {
           : addresses;
         if (!eligible.length) {
           callback(
-            new Error(
-              "Article hostname has no address in the requested family",
-            ),
+            new Error("Public hostname has no address in the requested family"),
             options.all ? [] : "",
             0,
           );
@@ -184,7 +152,10 @@ export async function assertPublicArticleUrl(
   if (url.port && url.port !== "80" && url.port !== "443") {
     throw new Error("Article URLs must use a standard web port");
   }
-  const hostname = url.hostname.toLowerCase().replace(/\.$/, "");
+  const hostname = url.hostname
+    .toLowerCase()
+    .replace(/^\[|\]$/g, "")
+    .replace(/\.$/, "");
   if (
     !hostname ||
     hostname === "localhost" ||

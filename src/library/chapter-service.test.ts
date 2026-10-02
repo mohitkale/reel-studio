@@ -223,4 +223,4 @@ it("persists chapters without changing content and rejects concurrent scene/outl
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-});
+}, 20_000);

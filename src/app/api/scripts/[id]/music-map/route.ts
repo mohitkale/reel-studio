@@ -3,7 +3,7 @@ import { analyzeMusicMap, editMusicMap } from "@/library/music-map-service";
 import { getScript } from "@/library/repositories/scripts";
 import { musicMapEditSchema } from "@/production/music-map";
 import { authorize } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import { errorResponse, readRequestJson } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,9 +25,7 @@ export async function POST(req: Request, ctx: Context) {
 export async function PATCH(req: Request, ctx: Context) {
   try {
     authorize(req);
-    const body = musicMapEditSchema.safeParse(
-      await req.json().catch(() => null),
-    );
+    const body = musicMapEditSchema.safeParse(await readRequestJson(req));
     if (!body.success)
       return NextResponse.json(
         { error: "Invalid music timing edit", issues: body.error.issues },

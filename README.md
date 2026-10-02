@@ -282,8 +282,11 @@ docker compose up --build
 ```
 
 Compose publishes **`127.0.0.1:3000` only** (not your LAN).
-For continuous queue processing in the current development compose setup, run
-`docker compose exec app npm run production:worker` in another terminal.
+The default command supervises both the web server and the production worker.
+Source is mounted writable for hot reload: container code can change host source.
+Named volumes hold Linux dependencies, database, build cache and media. Rendering
+still consumes host resources; this development setup is not a security boundary
+against untrusted code.
 
 To use a model server running on the Docker host, set its local AI endpoint in
 Settings to `http://host.docker.internal:11434` for Ollama or
@@ -564,7 +567,9 @@ providers: `DATABASE_URL` (created by setup).
 | Reel Studio app, templates, MCP code                                 | **MIT**                            |
 | Bundled music (`public/music/`)                                      | **CC0**                            |
 | **HyperFrames**                                                      | **Apache-2.0**                     |
-| Kokoro TTS                                                           | Apache-2.0                         |
+| Kokoro model / kokoro-js                                              | Apache-2.0                         |
+| Phonemizer / embedded eSpeak NG                                       | Apache-2.0 wrapper / GPL-3.0 component |
+| GSAP                                                                 | Custom Standard License            |
 | Optional cloud providers                                             | Each vendor's terms                |
 | VoiceForge engines ([repo](https://github.com/mohitkale/voiceforge)) | Per-engine (may be non-commercial) |
 
@@ -638,8 +643,11 @@ is launched directly without the supervisor.
 
 Video production jobs capture an immutable script/engine/brand/caption/take
 snapshot at submission. Selected local assets are preserved under
-`media/production-assets/` with content hashes; remote stock URLs remain network
-sources. Each stage saves a validated output and invalidation key in the existing
+`media/production-assets/` with content hashes; eligible remote media is fetched
+through bounded, DNS-pinned requests and frozen with the same checksum policy.
+Each export localizes remote media before Chromium starts. Unsplash hotlink media
+remains preview-only until its API terms permit render staging; it is never copied
+into the generic store. Each stage saves a validated output and invalidation key in the existing
 SQLite job-step records. Retries reuse valid stages and verified renders, and
 never synthesize a new paid voice implicitly. Existing queued video inputs are
 snapshotted on their first execution; older projects and REST/MCP requests retain
@@ -685,3 +693,16 @@ high rows. The experiment resets at cuts, writes a separate output, verifies
 unchanged audio packets and frame coverage, and reports extra time and memory.
 It can soften moving text and add a one-frame visual lag; it is causal smoothing,
 not subframe motion blur. Production exports keep their existing defaults.
+
+### Portability and security verification
+
+Quality CI runs typecheck, lint, unit tests, secret scanning, release checks and
+builds on Linux and Windows, with a separate process-tree cancellation gate.
+Vendored text uses LF on both platforms. POSIX file mode tests do not claim to
+verify Windows ACLs; protect `.env.local` and `.data/` with the owning account's ACL.
+
+`npm run security:scan` checks tracked files; the optional pre-commit hook checks
+staged content, including modern provider keys, with values redacted. Run
+`npm run security:inventory` for an offline lockfile inventory. Current advisory
+reachability, media limits and remaining isolation boundaries are documented in
+[PORTABILITY_HARDENING.md](docs/PORTABILITY_HARDENING.md).

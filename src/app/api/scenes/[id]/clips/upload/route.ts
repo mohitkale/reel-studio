@@ -1,3 +1,4 @@
+import { AUDIO_UPLOAD_BYTES } from "@/server/request-body";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -34,7 +35,10 @@ export async function POST(
   try {
     authorize(req);
     const { id: sceneId } = await ctx.params;
-    const body = parseClientInput(uploadSchema, await readRequestJson(req));
+    const body = parseClientInput(
+      uploadSchema,
+      await readRequestJson(req, { maxBytes: AUDIO_UPLOAD_BYTES }),
+    );
 
     if (!isProviderId(body.providerId)) {
       throw new ProviderError(`Unknown provider "${body.providerId}"`, 404);

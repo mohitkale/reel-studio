@@ -67,9 +67,7 @@ export async function PATCH(
 ) {
   try {
     authorize(req);
-    const body = sfxCueEditRequestSchema.safeParse(
-      await req.json().catch(() => null),
-    );
+    const body = sfxCueEditRequestSchema.safeParse(await readRequestJson(req));
     if (!body.success)
       return NextResponse.json(
         { error: "Invalid cue edit", issues: body.error.issues },

@@ -4,7 +4,7 @@ import { audioMasteringSchema } from "@/production/audio-mastering";
 
 import { getScript, updateScript } from "@/library/repositories/scripts";
 import { authorize, authorizeRead } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import { errorResponse, readRequestJson } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,7 +50,7 @@ export async function PATCH(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const body = patchSchema.safeParse(await req.json().catch(() => null));
+    const body = patchSchema.safeParse(await readRequestJson(req));
     if (!body.success)
       return NextResponse.json(
         { error: "Invalid script edit", issues: body.error.issues },

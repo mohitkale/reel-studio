@@ -1,3 +1,5 @@
+import { mediaSignatureMatches } from "@/lib/media-signature";
+import { readBoundedFormData } from "@/server/request-body";
 import { NextResponse } from "next/server";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
@@ -54,18 +56,16 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     requireWeb(req);
-    const contentLength = Number(req.headers.get("content-length") ?? "0");
-    if (contentLength > MAX_UPLOAD_BYTES) {
-      return NextResponse.json(
-        { error: `File too large (max ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB)` },
-        { status: 413 },
-      );
-    }
-
-    const formData = await req.formData();
+    const formData = await readBoundedFormData(
+      req,
+      MAX_UPLOAD_BYTES + 512 * 1024,
+    );
     const file = formData.get("file");
     if (!file || typeof file === "string") {
-      return NextResponse.json({ error: "file field required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "file field required" },
+        { status: 400 },
+      );
     }
 
     const mime = file.type;
@@ -77,14 +77,24 @@ export async function POST(req: Request) {
       );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    if (buffer.length > MAX_UPLOAD_BYTES) {
+    if (file.size > MAX_UPLOAD_BYTES) {
       return NextResponse.json(
-        { error: `File too large (max ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB)` },
+        {
+          error: `File too large (max ${MAX_UPLOAD_BYTES / (1024 * 1024)} MB)`,
+        },
         { status: 413 },
       );
     }
 
+    const buffer = Buffer.from(await file.arrayBuffer());
+    if (
+      info.type !== "lottie" &&
+      !mediaSignatureMatches(buffer.subarray(0, 32), mime)
+    )
+      return NextResponse.json(
+        { error: "File content does not match its media type" },
+        { status: 400 },
+      );
     const id = randomUUID();
     const folder = TYPE_FOLDER[info.type] ?? "images";
     const storeKey = path.posix.join("assets", folder, `${id}.${info.ext}`);

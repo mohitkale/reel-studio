@@ -6,8 +6,9 @@
 #   docker compose down -v   # stop AND delete volumes (db, media, node_modules)
 #
 # Source is bind-mounted for hot reload; everything platform-specific (deps,
-# build cache, database, media) lives in named volumes so the host is never
-# touched by the container's Linux binaries or render output.
+# build cache, database, media) lives in named volumes. The source mount is
+# writable: the container can modify host source. This is a development setup,
+# not a boundary against untrusted code.
 
 services:
   app:
@@ -20,8 +21,8 @@ services:
     init: true # proper PID 1 so Chromium/ffmpeg child processes are reaped
     ports:
       # Bind to loopback only — do not expose the unauthenticated local-first
-      # API on LAN/WAN. For remote access, put a reverse proxy + auth in front
-      # and set REEL_STRICT_AUTH=1 (see SECURITY.md).
+      # API on LAN/WAN. Remote browser use requires a session/auth integration;
+      # strict bearer mode alone cannot support the UI (see SECURITY.md).
       - "127.0.0.1:3000:3000"
 
     # API keys etc. Optional so the stack still boots before you create the
@@ -37,9 +38,6 @@ services:
       # avoids the file-locking/perf issues of writing SQLite over a Windows
       # bind mount from inside Linux.
       DATABASE_URL: "file:/data/dev.db"
-      # Conservative render concurrency keeps the laptop responsive during
-      # CPU-heavy renders. Raise toward your core count for faster renders.
-      REMOTION_RENDER_CONCURRENCY: "2"
       # Bind-mounted file change events don't always propagate into the
       # container; polling makes hot reload reliable (esp. on Windows/macOS).
       WATCHPACK_POLLING: "true"
@@ -52,8 +50,7 @@ services:
       - reel_media:/app/media # uploaded assets + render output (.mp4)
       - reel_db:/data # SQLite database
 
-    # Small shared-memory bump as a safety margin for Chromium (Remotion also
-    # passes --disable-dev-shm-usage, so this is belt-and-suspenders).
+    # Shared-memory allowance for the HyperFrames Chromium worker.
     shm_size: "512m"
 
     # --- Conservative resource caps (protects the host during renders) -------

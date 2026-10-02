@@ -1,3 +1,8 @@
+import {
+  readBoundedBody,
+  RequestBodyError,
+  DEFAULT_JSON_BYTES,
+} from "@/server/request-body";
 import { NextResponse } from "next/server";
 import { ZodError, type ZodType } from "zod";
 
@@ -21,10 +26,10 @@ export function parseClientInput<T>(schema: ZodType<T>, input: unknown): T {
 
 export async function readRequestJson(
   req: Request,
-  { allowEmpty = false } = {},
+  { allowEmpty = false, maxBytes = DEFAULT_JSON_BYTES } = {},
 ): Promise<unknown> {
   try {
-    const raw = await req.text();
+    const raw = new TextDecoder().decode(await readBoundedBody(req, maxBytes));
     if (allowEmpty && raw.length === 0) return {};
     return JSON.parse(raw) as unknown;
   } catch (error) {
@@ -35,6 +40,8 @@ export async function readRequestJson(
 
 /** Map thrown errors to JSON responses with sensible status codes and messages. */
 export function errorResponse(e: unknown): NextResponse {
+  if (e instanceof RequestBodyError)
+    return NextResponse.json({ error: e.message }, { status: e.status });
   if (e instanceof ClientInputError) {
     return NextResponse.json(
       { error: e.message, issues: e.issues },

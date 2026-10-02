@@ -1,3 +1,4 @@
+import { readBoundedFormData } from "@/server/request-body";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
   try {
     authorize(req);
     assertConfigured();
-    const incoming = await req.formData();
+    const incoming = await readBoundedFormData(req, 64 * 1024 * 1024);
     const outgoing = new FormData();
 
     for (const key of [

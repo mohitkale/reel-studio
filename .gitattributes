@@ -5,3 +5,20 @@
 docker/**      text eol=lf
 Dockerfile     text eol=lf
 docker-compose.yml text eol=lf
+
+# Catalog manifests hash bytes. Keep all checked-in text deterministic across
+# Windows/macOS/Linux, while Git's binary detection leaves media unchanged.
+* text=auto eol=lf
+*.png -text
+*.jpg -text
+*.jpeg -text
+*.webp -text
+*.gif -text
+*.mp4 -text
+*.mov -text
+*.wav -text
+*.mp3 -text
+*.woff -text
+*.woff2 -text
+*.ttf -text
+*.otf -text

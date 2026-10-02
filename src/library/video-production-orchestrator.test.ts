@@ -573,22 +573,31 @@ describe("video production orchestration", () => {
     expect(completed).not.toContain(target);
     expect(output).not.toHaveBeenCalled();
   });
-  it("freezes selected local media and keeps remote sources network-dependent", async () => {
+  it("freezes local and remote media with checksums before rendering", async () => {
     const name = `pr1-${randomUUID()}.wav`;
     const source = path.resolve("media", name);
     await fs.mkdir(path.dirname(source), { recursive: true });
     const content = Buffer.from(randomUUID());
     await fs.writeFile(source, content);
     let copied: string | undefined;
+    let remote: string | undefined;
+    const download = async (url: string, destination: string) => {
+      await fs.writeFile(destination, "public image fixture");
+      return { bytes: 20, extension: "jpg", mime: "image/jpeg", finalUrl: url };
+    };
     try {
       const input = structuredClone(snapshot);
       input.script.musicUrl = `/media/${name}`;
       input.script.scenes[0].carouselImages = [`/media/${name}`];
-      input.script.coverUrl =
-        "https://images.unsplash.com/photo-fixture?ixid=retained";
+      input.script.coverUrl = "https://media.example.com/photo-fixture";
       const resolved = await resolveVideoStageMedia(
         input,
         "http://localhost:3000",
+        { download },
+      );
+      remote = path.resolve(
+        "media",
+        resolved.snapshot.script.coverUrl!.slice(7),
       );
       copied = path.resolve(
         "media",
@@ -598,16 +607,21 @@ describe("video production orchestration", () => {
         resolved.snapshot.script.musicUrl,
       ]);
       await fs.writeFile(copied, "truncated cache");
-      await resolveVideoStageMedia(input, "http://localhost:3000");
+      await resolveVideoStageMedia(input, "http://localhost:3000", {
+        download,
+      });
       expect(await fs.readFile(copied)).toEqual(content);
       await fs.writeFile(source, "edited later");
       expect(await fs.readFile(copied)).toEqual(content);
-      expect(resolved.snapshot.script.coverUrl).toBe(input.script.coverUrl);
+      expect(resolved.snapshot.script.coverUrl).toMatch(
+        /^\/media\/production-assets\/.+\.jpg$/,
+      );
       expect(
         resolved.assets.find((asset) => asset.url === input.script.coverUrl)
           ?.checksum,
-      ).toBeNull();
+      ).toMatch(/^[a-f0-9]{64}$/);
     } finally {
+      if (remote) await fs.rm(remote, { force: true });
       await fs.rm(source, { force: true });
       if (copied) await fs.rm(copied, { force: true });
     }

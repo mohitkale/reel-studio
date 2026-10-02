@@ -5,6 +5,14 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { supervise, nextServerFlags } from "../../scripts/supervise.mjs";
 
+function assertChildrenStopped(events: string) {
+  const pids = [...events.matchAll(/(?:web|worker):(\d+):start/g)].map(
+    (match) => Number(match[1]),
+  );
+  expect(pids.length).toBeGreaterThanOrEqual(2);
+  for (const pid of pids) expect(() => process.kill(pid, 0)).toThrow();
+}
+
 describe("server listener", () => {
   it("defaults to loopback and preserves port flags", () => {
     expect(nextServerFlags(["--port", "3123"], { NODE_ENV: "test" })).toEqual([
@@ -52,7 +60,11 @@ describe("process supervision", () => {
           .toBe(3);
         runner.stop();
         expect(await runner.done).toBe(0);
-        expect((await readFile(file, "utf8")).match(/:stop/g)).toHaveLength(2);
+        const events = await readFile(file, "utf8");
+        assertChildrenStopped(events);
+        // Windows taskkill /T /F cannot deliver a POSIX SIGTERM callback.
+        if (process.platform !== "win32")
+          expect(events.match(/:stop/g)).toHaveLength(2);
       } finally {
         runner.stop();
         await runner.done;
@@ -80,7 +92,8 @@ describe("process supervision", () => {
       expect(await runner.done).toBe(7);
       const events = await readFile(file, "utf8");
       expect(events.match(/worker:.*:start/g)).toHaveLength(3);
-      expect(events).toMatch(/web:.*:stop/);
+      assertChildrenStopped(events);
+      if (process.platform !== "win32") expect(events).toMatch(/web:.*:stop/);
     } finally {
       runner.stop();
       await runner.done;
