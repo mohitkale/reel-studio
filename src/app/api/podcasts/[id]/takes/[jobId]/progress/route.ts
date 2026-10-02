@@ -1,3 +1,5 @@
+import { errorResponse } from "@/server/api-helpers";
+import { authorizeRead } from "@/server/auth";
 import {
   getVoiceJob,
   subscribeToVoiceJob,
@@ -11,6 +13,12 @@ export async function GET(
   req: Request,
   ctx: { params: Promise<{ id: string; jobId: string }> },
 ) {
+  try {
+    authorizeRead(req);
+  } catch (error) {
+    return errorResponse(error);
+  }
+
   const { jobId } = await ctx.params;
 
   const existing = getVoiceJob(jobId);

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { getProvider, isProviderId } from "@/providers/voice/registry";
 import { ProviderError, PROVIDER_IDS } from "@/providers/voice/types";
 import { keyStatus, setKey } from "@/server/secrets";
-import { requireWeb } from "@/server/auth";
+import { requireWeb, authorizeRead } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -16,8 +16,9 @@ const bodySchema = z.object({
 });
 
 /** GET /api/settings/keys - which providers currently have a key. */
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    authorizeRead(req);
     return NextResponse.json({ status: keyStatus() });
   } catch (e) {
     return errorResponse(e);

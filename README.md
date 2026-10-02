@@ -300,6 +300,16 @@ Video and podcast tools: [mcp/README.md](mcp/README.md).
 Built for trusted localhost use. Do not expose it on the public internet without
 your own auth layer. See [SECURITY.md](SECURITY.md).
 
+`npm run dev` and `npm start` listen on `127.0.0.1` by default. Docker listens
+inside the container and publishes only on host loopback. API/media handlers
+check authorization, and raw Host names are checked before browser signals or
+tokens; `REEL_ALLOWED_HOSTS` adds explicit hostnames for your own authenticated
+proxy. `REEL_STRICT_AUTH=1` requires bearer auth for all API/media requests,
+including same-origin browser requests; it does not provide a browser login.
+
+The [critical review plan](docs/CRITICAL_REVIEW_PLAN.md) tracks the security,
+dependency, HyperFrames-only migration, reliability, and product milestones.
+
 ## Roadmap
 
 The current production release includes six cross-engine presets, editable

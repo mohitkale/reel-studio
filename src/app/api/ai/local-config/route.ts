@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { requireWeb } from "@/server/auth";
+import { requireWeb, authorizeRead } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 import { localAIConfigStore } from "@/server/local-ai-config";
 import {
@@ -21,8 +21,9 @@ const bodySchema = z
   })
   .strict();
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    authorizeRead(req);
     return NextResponse.json({ providers: await localAIConfigStore.list() });
   } catch (error) {
     return errorResponse(error);

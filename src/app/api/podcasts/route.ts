@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createPodcast, listPodcasts } from "@/library/repositories/podcasts";
 import { podcastLengthSchema } from "@/library/podcast-schemas";
 import { podcastPresetIdSchema } from "@/library/podcast-presets";
-import { authorize } from "@/server/auth";
+import { authorize, authorizeRead } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -17,8 +17,9 @@ const createSchema = z.object({
   presetId: podcastPresetIdSchema.optional(),
 });
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    authorizeRead(req);
     return NextResponse.json({ podcasts: await listPodcasts() });
   } catch (e) {
     return errorResponse(e);

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getRender, deleteRender, renameRender } from "@/library/repositories/renders";
-import { authorize } from "@/server/auth";
+import { authorize, authorizeRead } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
 
@@ -10,10 +10,11 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorizeRead(req);
     const { id } = await ctx.params;
     const render = await getRender(id);
     if (!render) {

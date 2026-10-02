@@ -2,7 +2,11 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-import { type ProviderId, PROVIDER_IDS } from "@/providers/voice/types";
+import {
+  type ProviderId,
+  PROVIDER_IDS,
+  ProviderError,
+} from "@/providers/voice/types";
 import {
   type CloudAIProviderId,
   CLOUD_AI_PROVIDER_IDS,
@@ -69,6 +73,9 @@ async function readEnvFile(): Promise<string[]> {
 
 /** Upsert (or, with an empty value, remove) an env var in .env.local + process.env. */
 async function writeEnvKey(envName: string, value: string): Promise<void> {
+  // Validate before trimming or touching disk, including newline-only input.
+  if (/[\r\n\0]/.test(value))
+    throw new ProviderError("Secret values must be a single line", 400);
   const trimmed = value.trim();
   const lines = await readEnvFile();
 
@@ -84,6 +91,17 @@ async function writeEnvKey(envName: string, value: string): Promise<void> {
 
   if (trimmed) process.env[envName] = trimmed;
   else delete process.env[envName];
+}
+
+function validateApiKey(value: string): string {
+  // Provider keys are opaque. Reject dotenv syntax without guessing prefixes
+  // that providers may change; never echo a rejected credential in an error.
+  if (/[\r\n\0=]/.test(value) || /[\s#"'`$\\\x00-\x1f\x7f]/.test(value.trim()))
+    throw new ProviderError(
+      "API keys must contain only safe, single-line characters",
+      400,
+    );
+  return value;
 }
 
 /* Voice providers */
@@ -102,7 +120,7 @@ export function keyStatus(): Record<ProviderId, boolean> {
 export function setKey(id: ProviderId, value: string): Promise<void> {
   const env = VOICE_ENV_KEY[id];
   // Client providers have no key to set — no-op.
-  return env ? writeEnvKey(env, value) : Promise.resolve();
+  return env ? writeEnvKey(env, validateApiKey(value)) : Promise.resolve();
 }
 
 /* AI providers */
@@ -118,7 +136,7 @@ export function aiKeyStatus(): Record<CloudAIProviderId, boolean> {
 }
 
 export function setAIKey(id: CloudAIProviderId, value: string): Promise<void> {
-  return writeEnvKey(AI_ENV_KEY[id], value);
+  return writeEnvKey(AI_ENV_KEY[id], validateApiKey(value));
 }
 
 /* Stock-media providers */
@@ -134,7 +152,7 @@ export function stockKeyStatus(): Record<StockProviderId, boolean> {
 }
 
 export function setStockKey(id: StockProviderId, value: string): Promise<void> {
-  return writeEnvKey(STOCK_ENV_KEY[id], value);
+  return writeEnvKey(STOCK_ENV_KEY[id], validateApiKey(value));
 }
 
 /* Music providers */
@@ -150,7 +168,7 @@ export function musicKeyStatus(): Record<MusicProviderId, boolean> {
 }
 
 export function setMusicKey(id: MusicProviderId, value: string): Promise<void> {
-  return writeEnvKey(MUSIC_ENV_KEY[id], value);
+  return writeEnvKey(MUSIC_ENV_KEY[id], validateApiKey(value));
 }
 
 /* MCP server token */

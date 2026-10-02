@@ -5,7 +5,7 @@ import { after, NextResponse } from "next/server";
 import { getPodcast, listPodcastTakes } from "@/library/repositories/podcasts";
 import { generatePodcastTake } from "@/library/podcast-take-service";
 import { getVoiceJob, upsertVoiceJob } from "@/lib/voice-queue";
-import { authorizeProviderRequest } from "@/server/auth";
+import { authorizeProviderRequest, authorizeRead } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 import { z } from "zod";
 
@@ -17,10 +17,11 @@ const generatePodcastTakeSchema = z.object({
 });
 
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorizeRead(req);
     const { id } = await ctx.params;
     return NextResponse.json({ takes: await listPodcastTakes(id) });
   } catch (e) {

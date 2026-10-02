@@ -1,3 +1,4 @@
+import { authorizeRead } from "@/server/auth";
 import { NextResponse } from "next/server";
 
 import { getProvider, isProviderId } from "@/providers/voice/registry";
@@ -9,10 +10,11 @@ export const dynamic = "force-dynamic";
 
 /** GET /api/providers/:id/models - TTS models for the provider. */
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorizeRead(req);
     const { id } = await ctx.params;
     if (!isProviderId(id)) throw new ProviderError(`Unknown provider "${id}"`, 404);
 

@@ -31,6 +31,8 @@ services:
         required: false
 
     environment:
+      # Listen inside the container; published host port remains loopback-only.
+      REEL_BIND_HOST: "0.0.0.0"
       # SQLite lives on a named volume (the `reel_db` mount below). A real path
       # avoids the file-locking/perf issues of writing SQLite over a Windows
       # bind mount from inside Linux.

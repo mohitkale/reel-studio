@@ -8,7 +8,7 @@ import {
 } from "@/library/repositories/projects";
 import { orientationSchema } from "@/lib/orientation";
 import { VIDEO_ENGINE_IDS } from "@/engines/types";
-import { authorize } from "@/server/auth";
+import { authorize, authorizeRead } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -20,8 +20,9 @@ const createSchema = z.object({
   videoEngine: z.enum(VIDEO_ENGINE_IDS).optional(),
 });
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    authorizeRead(req);
     await ensureSampleSeed();
     return NextResponse.json({ projects: await listProjects() });
   } catch (e) {

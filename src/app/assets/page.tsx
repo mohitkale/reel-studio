@@ -29,7 +29,7 @@ function LottiePreview({ url }: { url: string }) {
       try {
         const [json, lottie] = await Promise.all([
           fetch(url).then((r) => r.json()),
-          import("lottie-web").then((m) => m.default),
+          import("lottie-web/build/player/lottie_light").then((m) => m.default),
         ]);
         if (destroyed || !containerRef.current) return;
         anim = lottie.loadAnimation({

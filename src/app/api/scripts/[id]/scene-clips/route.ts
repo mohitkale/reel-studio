@@ -7,17 +7,18 @@ import { listSceneClips } from "@/library/repositories/scene-clips";
 import { generateAllSceneClips } from "@/library/scene-voice-service";
 import { PROVIDER_IDS } from "@/providers/voice/types";
 import { getVoiceJob, upsertVoiceJob } from "@/lib/voice-queue";
-import { authorizeProviderRequest } from "@/server/auth";
+import { authorizeProviderRequest, authorizeRead } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorizeRead(req);
     const { id } = await ctx.params;
     return NextResponse.json({ clips: await listSceneClips(id) });
   } catch (e) {

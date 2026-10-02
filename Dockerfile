@@ -77,4 +77,4 @@ EXPOSE 3000
 # executable bit (common on Windows hosts).
 ENTRYPOINT ["sh", "/app/docker/entrypoint.sh"]
 # Run the supervisor directly so Docker SIGTERM reaches its shutdown handler.
-CMD ["node", "scripts/supervise.mjs", "dev"]
+CMD ["node", "scripts/supervise.mjs", "dev", "--hostname", "0.0.0.0"]

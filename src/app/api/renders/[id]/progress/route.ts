@@ -1,3 +1,5 @@
+import { errorResponse } from "@/server/api-helpers";
+import { authorizeRead } from "@/server/auth";
 import { getRender } from "@/library/repositories/renders";
 import { subscribeToJob } from "@/lib/render-queue";
 import type { RenderDTO } from "@/lib/dto";
@@ -10,9 +12,15 @@ export const dynamic = "force-dynamic";
  * client disconnects. Falls back to a single DB read for already-done jobs.
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
+  try {
+    authorizeRead(req);
+  } catch (error) {
+    return errorResponse(error);
+  }
+
   const { id } = await ctx.params;
 
   // If the job is already done/errored in the DB, return it immediately.
@@ -51,7 +59,7 @@ export async function GET(
       }, 5000);
 
       // Cleanup when client disconnects.
-      _req.signal?.addEventListener("abort", () => {
+      req.signal?.addEventListener("abort", () => {
         unsub();
         clearInterval(heartbeat);
         try { controller.close(); } catch { /* ok */ }

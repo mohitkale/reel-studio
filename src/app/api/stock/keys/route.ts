@@ -4,7 +4,7 @@ import { z } from "zod";
 import { STOCK_PROVIDER_IDS, StockError } from "@/providers/stock/types";
 import { getStockMediaProviderRegistry } from "@/providers/stock/registry";
 import { stockKeyStatus, setStockKey } from "@/server/secrets";
-import { requireWeb } from "@/server/auth";
+import { requireWeb, authorizeRead } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -16,8 +16,9 @@ const bodySchema = z.object({
 });
 
 /** GET /api/stock/keys - which stock providers currently have a key. */
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    authorizeRead(req);
     return NextResponse.json({ status: stockKeyStatus() });
   } catch (e) {
     return errorResponse(e);

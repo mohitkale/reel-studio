@@ -2,6 +2,17 @@ import { spawn } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 
+/** CLI overrides remain explicit; bare dev/start never listen on the LAN. */
+export function nextServerFlags(flags, env = process.env) {
+  const hasHostname = flags.some(
+    (flag) =>
+      flag === "-H" || flag === "--hostname" || flag.startsWith("--hostname="),
+  );
+  return hasHostname
+    ? flags
+    : ["--hostname", env.REEL_BIND_HOST || "127.0.0.1", ...flags];
+}
+
 /** A failed web process stops the pair; worker crashes restart with bounded backoff. */
 export function supervise({
   web,
@@ -112,7 +123,7 @@ if (
       process.execPath,
       require.resolve("next/dist/bin/next"),
       mode,
-      ...process.argv.slice(3),
+      ...nextServerFlags(flags),
     ],
     worker: [
       process.execPath,
