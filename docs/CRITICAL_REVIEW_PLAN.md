@@ -58,6 +58,9 @@ owning branch and respect required reviews and branch protection. Do not leave
 an unmerged PR and advance or implicitly stack milestones. M2 upgrades packages
 in its own PR; M3 retires Remotion and updates README with the user's approval.
 Future rows remain separate milestones, not changes bundled into M1.
+The user requested a new GitHub release on 2026-10-02 after final verification.
+M15 is the last milestone and depends on M1–M14 being merged and verified;
+release publication is part of that milestone, after its PR/checks/merge/main-pull cycle.
 
 Every code PR runs typecheck, relevant lint, behavior tests, and secret scan.
 Rendering changes additionally require preview/export keyframes and actual
@@ -79,9 +82,55 @@ fixture renders. Never accept a passing string/snapshot test as visual evidence.
 | **M12: director pipeline** `feature/review-m12-director` | Content-aware no-key beat/shot planning first; constrained local/frontier AI over the same schema; script/voice/word timing integration; bounded visual critique/fix loop. Gate: numbers/lists/quotes/comparisons, stable seeds, no fabricated data, explicit paid-call budgets. |
 | **M13: creation and editing UX** `feature/review-m13-creation-ux` | Prompt-first home, visual presets, one Generate action and downloadable result; sane defaults; results/remix; advanced technical controls; timeline customization; responsive toolbar; refresh docs/version/screenshots. Gate: browser walkthrough on small/large viewports and complete no-key prompt-to-download path. |
 | **M14: extension and simplification** `feature/review-m14-extensions` | Typed provider/block registration demonstrated with real extensions; keep only used catalog artifacts; extract duplicate escaping/queue/SSE helpers; archive obsolete ledgers and remove genuinely unused compatibility layers. Gate: extensions added without core enum edits; existing projects/providers still work. |
+| **M15: final verification and release** `feature/review-m15-release` | Depends on completed M1–M14. Verify the integrated release from a clean install and populated v0.3.0 upgrade; run the full checks, platform CI, browser workflows and actual render matrix. Prepare consistent version metadata, changelog, upgrade/license notes and release evidence in one PR. After successful latest-head CI, merge, refresh local `main`, verify its exact commit, tag it and publish a stable GitHub release. Gate: all release checks pass, upgrade data/media are preserved, release assets are verified, and the published tag/commit/notes are confirmed. |
+
+## Final release gate (M15)
+
+Verified on 2026-10-02: the latest published stable release is
+[v0.3.0, published 2026-08-05](https://github.com/mohitkale/reel-studio/releases/tag/v0.3.0).
+The repository currently declares `0.4.0`, so `v0.4.0` is the tentative release
+target. Recheck published releases, drafts and remote tags when M15 starts;
+choose the version for the final scope and never overwrite an existing tag.
+
+1. Confirm every earlier milestone is merged into updated `main`, with its
+   acceptance evidence recorded. Reproduce remaining critical-review findings
+   and confirm their fixes; documented limitations and deferred work must be
+   explicit. Fix failed gates before publishing.
+2. Verify a clean locked dependency install, typecheck, lint, unit/integration
+   tests, secret scan, release checks and production build. Require the Linux
+   and Windows CI added in M8, including cancellation and recovery checks.
+   Review the current dependency/security and license inventory; document
+   upstream limitations and block publication on unresolved exploitable
+   security defects or core workflow regressions.
+3. Exercise fresh setup and a populated upgrade from the published v0.3.0
+   schema in isolated fixtures, including backup/restore. Preserve project
+   copy, media, audio takes, captions and historical exports; verify the
+   HyperFrames migration and explain changed future render appearance.
+4. Complete browser creation, editing, voice generation, preview, export and
+   download, plus podcast/audiogram and scoped MCP approval workflows. Render
+   the six presets and representative media/caption/motion cases in portrait,
+   landscape and square; inspect exported keyframes and audio. Include a long
+   video, retry, interruption and cancellation. Reuse approved local models
+   and credential-free fixtures; paid calls and new model downloads retain
+   their existing permission requirements.
+5. In the dedicated release PR, synchronize package/lockfile version, visible
+   app version, release-check expectations and current release metadata.
+   Write the dated changelog, v0.3.0 upgrade instructions, current screenshots
+   and concise release notes. Generate current evidence without relabeling
+   historical matrices as new verification. Check any attached samples or
+   archives for secrets/private media, licenses and checksums. Keep application
+   MIT, HyperFrames Apache-2.0 and GSAP/model/media terms distinct.
+6. Wait for required checks on the final release PR head, merge it, switch to
+   local `main` and pull with `--ff-only`. Confirm the merged commit matches
+   the validated release content; repeat affected checks if it has changed.
+   Create the version tag at that exact commit and publish the stable GitHub
+   release with the reviewed notes and verified assets. Confirm its public
+   URL, tag, target commit and downloads. Do not publish early or leave the
+   milestone complete with only a draft release.
 
 ## Execution status
 
 - M1 merged after successful latest-head checks: [PR #29](https://github.com/mohitkale/reel-studio/pull/29), merge `3664568`. Local `main` was pulled before M2.
 - M2 merged after successful latest-head checks: [PR #30](https://github.com/mohitkale/reel-studio/pull/30), merge `906dac0`. Local `main` was pulled before M3. Current package decisions and verification are recorded in [dependency upgrades](DEPENDENCY_UPGRADES.md).
-- M3 [PR #31](https://github.com/mohitkale/reel-studio/pull/31), implementation and validation on `feature/review-m3-hyperframes-only`: one HyperFrames preview/export path, safe project/template migration, neutral shared contracts, local audiogram renderer, and updated setup/runtime/license documentation. Migration preserves historical MP4s, original takes and immutable provenance. Native opener/statistic/list/quote/statement mappings avoid requiring new assets. Browser export reproduced clipped catalog text; native templates are the migration/new-scene default, while broad catalog fidelity remains M9. Complete the PR/checks/merge/main-pull cycle before starting M4.
+- M3 merged after successful latest-head checks: [PR #31](https://github.com/mohitkale/reel-studio/pull/31), merge `c973cc1`. Local `main` was pulled after merging. One HyperFrames preview/export path, safe project/template migration, neutral shared contracts, local audiogram renderer, and updated setup/runtime/license documentation. Migration preserves historical MP4s, original takes and immutable provenance. Native opener/statistic/list/quote/statement mappings avoid requiring new assets. Browser export reproduced clipped catalog text; native templates are the migration/new-scene default, while broad catalog fidelity remains M9.
+- M15 is planned after M1–M14; release preparation and publication have not started.
