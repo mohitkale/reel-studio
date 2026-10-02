@@ -1,3 +1,9 @@
+import { readSpeechWords, writeSpeechWords } from "@/library/speech-word-store";
+import type { SpeechWord } from "@/lib/speech-words";
+import {
+  productionSignal,
+  assertProductionActive,
+} from "@/library/production-cancellation";
 import { randomUUID } from "node:crypto";
 
 import type { SceneVoiceClipDTO, VoiceTakeDTO } from "@/lib/dto";
@@ -14,7 +20,7 @@ import { getProvider } from "@/providers/voice/registry";
 import { ProviderError, type ProviderId } from "@/providers/voice/types";
 import { prisma } from "@/library/db";
 import {
-  getCachedBeatWav,
+  getCachedBeatAudio,
   hashSpokenText,
   setCachedBeatWav,
 } from "@/library/scene-audio-cache";
@@ -82,6 +88,7 @@ async function persistClipFromWav(opts: {
   sceneId: string;
   text: string;
   wav: Buffer;
+  words?: SpeechWord[];
   fps: number;
   providerId: string;
   voiceId: string;
@@ -91,7 +98,10 @@ async function persistClipFromWav(opts: {
   select?: boolean;
 }): Promise<SceneVoiceClipDTO> {
   const key = `scene-clips/${opts.sceneId}-${randomUUID()}.wav`;
+  assertProductionActive();
   await getAssetStore().put(key, opts.wav);
+  await writeSpeechWords(key, opts.words);
+  assertProductionActive();
   const clip = await createSceneClip({
     scriptId: opts.scriptId,
     sceneId: opts.sceneId,
@@ -107,6 +117,7 @@ async function persistClipFromWav(opts: {
     isPlaceholder: opts.isPlaceholder,
   });
   if (opts.select !== false) {
+    assertProductionActive();
     await selectSceneClip(opts.sceneId, clip.id);
   }
   return clip;
@@ -125,6 +136,7 @@ export async function generateSceneClip(
   if (!scene) throw new ProviderError("Scene not found", 404);
 
   const fps = scene.script.fps;
+  let words: SpeechWord[] | undefined;
   let wav: Buffer;
   let providerId: string;
   let voiceId: string;
@@ -173,20 +185,25 @@ export async function generateSceneClip(
       modelId: input.modelId,
       text: spoken,
     };
-    let cached = await getCachedBeatWav(cacheParts);
+    let cached = await getCachedBeatAudio(cacheParts);
     if (!cached) {
+      assertProductionActive();
       const result = await provider.synth({
+        signal: productionSignal(),
         voiceId: input.voiceId,
         modelId: input.modelId,
         text: spoken,
       });
-      cached = result.wav;
-      void setCachedBeatWav(
+      assertProductionActive();
+      cached = result;
+      await setCachedBeatWav(
         { ...cacheParts, scriptId: scene.scriptId },
-        cached,
+        cached.wav,
+        cached.words,
       );
     }
-    wav = cached;
+    wav = cached.wav;
+    words = cached.words;
     providerId = input.providerId;
     voiceId = input.voiceId;
     label =
@@ -198,6 +215,7 @@ export async function generateSceneClip(
     sceneId: scene.id,
     text: spoken,
     wav,
+    words,
     fps,
     providerId,
     voiceId,
@@ -276,6 +294,7 @@ export async function generateAllSceneClips(
     scene: { id: string; text: string; spokenText: string | null },
     index: number,
   ): Promise<SceneVoiceClipDTO> {
+    let words: SpeechWord[] | undefined;
     let wav: Buffer;
     let providerId: string;
     let voiceId: string;
@@ -301,7 +320,7 @@ export async function generateAllSceneClips(
         modelId: input.modelId,
         text: spoken,
       };
-      let cached = await getCachedBeatWav(cacheParts);
+      let cached = await getCachedBeatAudio(cacheParts);
       if (!cached) {
         input.onProgress?.({
           phase: "synthesizing",
@@ -310,18 +329,23 @@ export async function generateAllSceneClips(
           workingOn: index + 1,
         });
         const provider = getProvider(input.providerId!);
+        assertProductionActive();
         const result = await provider.synth!({
+          signal: productionSignal(),
           voiceId: input.voiceId!,
           modelId: input.modelId,
           text: spoken,
         });
-        cached = result.wav;
-        void setCachedBeatWav(
+        assertProductionActive();
+        cached = result;
+        await setCachedBeatWav(
           { ...cacheParts, scriptId: input.scriptId },
-          cached,
+          cached.wav,
+          cached.words,
         );
       }
-      wav = cached;
+      wav = cached.wav;
+      words = cached.words;
       providerId = input.providerId!;
       voiceId = input.voiceId!;
       clipLabel =
@@ -334,6 +358,7 @@ export async function generateAllSceneClips(
       sceneId: scene.id,
       text: spoken,
       wav,
+      words,
       fps: script!.fps,
       providerId,
       voiceId,
@@ -429,7 +454,12 @@ export async function assembleVoiceTake(
       continue;
     }
     const wav = await getAssetStore().get(clip.audioPath);
-    beats.push({ sceneId: scene.id, text: spoken, wav });
+    beats.push({
+      sceneId: scene.id,
+      text: spoken,
+      wav,
+      words: await readSpeechWords(clip.audioPath),
+    });
     gapScenes.push({
       visual: scene.visual,
       text: scene.text,
@@ -467,8 +497,10 @@ export async function assembleVoiceTake(
     ? stitched.wav
     : finalizeSpeechWav(stitched.wav).wav;
   const key = `takes/${randomUUID()}.wav`;
+  assertProductionActive();
   await getAssetStore().put(key, wav);
 
+  assertProductionActive();
   return createTake({
     scriptId,
     label: "Assembled from scenes",
@@ -558,7 +590,7 @@ export async function createSceneClipFromUpload(input: {
   });
 
   // Also warm the oneshot TTS cache so regenerating a full take can skip this scene.
-  void setCachedBeatWav(
+  await setCachedBeatWav(
     {
       scriptId: input.scriptId,
       sceneId: input.sceneId,
@@ -645,7 +677,7 @@ export async function createAllSceneClipsFromUpload(input: {
       select: true,
     });
     if (!isPlaceholder) {
-      void setCachedBeatWav(
+      await setCachedBeatWav(
         {
           scriptId: input.scriptId,
           sceneId: scene.id,

@@ -1,3 +1,4 @@
+import { frameWordsSchema } from "@/lib/speech-words";
 import { z } from "zod";
 
 /** Zod schemas for podcast domain (DB columns + API + AI/JSON import). */
@@ -66,6 +67,7 @@ export const podcastFinishingSnapshotSchema = z.object({
 });
 
 export const podcastBeatTimingSchema = z.object({
+  words: frameWordsSchema.optional(),
   turnId: z.string(),
   startFrame: z.number().int().nonnegative(),
   durationFrames: z.number().int().nonnegative(),

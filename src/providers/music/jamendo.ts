@@ -1,18 +1,12 @@
-import { type MusicProvider, type RemoteMusicTrack, MusicProviderError } from "./types";
+import { fetchWithDeadline } from "@/lib/deadline-fetch";
+import { z } from "zod";
+import {
+  type MusicProvider,
+  type RemoteMusicTrack,
+  MusicProviderError,
+} from "./types";
 
 const API_BASE = "https://api.jamendo.com/v3.0";
-
-interface JamendoTrack {
-  id?: string;
-  name?: string;
-  artist_name?: string;
-  duration?: number;
-  audio?: string;
-  audiodownload?: string;
-  audiodownload_allowed?: boolean;
-  license_ccurl?: string;
-  shareurl?: string;
-}
 
 /** Turn a Jamendo Creative Commons license URL into a short, readable label. */
 function licenseLabel(url: string | undefined): string {
@@ -37,7 +31,11 @@ export function createJamendoProvider(): MusicProvider {
 
     async search(query: string, count = 8): Promise<RemoteMusicTrack[]> {
       if (!clientId()) {
-        throw new MusicProviderError("Jamendo has no Client ID.", 400, "jamendo");
+        throw new MusicProviderError(
+          "Jamendo has no Client ID.",
+          400,
+          "jamendo",
+        );
       }
       const params = new URLSearchParams({
         client_id: clientId(),
@@ -49,7 +47,20 @@ export function createJamendoProvider(): MusicProvider {
         boost: "popularity_total",
       });
 
-      const res = await fetch(`${API_BASE}/tracks/?${params}`);
+      const res = await fetchWithDeadline(
+        `${API_BASE}/tracks/?${params}`,
+        {},
+        30_000,
+        (error) => {
+          const timedOut =
+            error instanceof Error && error.name === "TimeoutError";
+          return new MusicProviderError(
+            timedOut ? "Jamendo search timed out" : "Could not reach Jamendo",
+            timedOut ? 504 : 502,
+            "jamendo",
+          );
+        },
+      );
       if (!res.ok) {
         throw new MusicProviderError(
           `Jamendo search failed (HTTP ${res.status}).`,
@@ -58,7 +69,24 @@ export function createJamendoProvider(): MusicProvider {
         );
       }
 
-      const json = (await res.json()) as { results?: JamendoTrack[] };
+      const json = z
+        .object({
+          results: z
+            .array(
+              z.object({
+                id: z.string().optional(),
+                name: z.string().optional(),
+                artist_name: z.string().optional(),
+                duration: z.number().optional(),
+                audio: z.string().optional(),
+                audiodownload: z.string().optional(),
+                license_ccurl: z.string().optional(),
+                shareurl: z.string().optional(),
+              }),
+            )
+            .default([]),
+        })
+        .parse(await res.json());
       return (json.results ?? [])
         .map((t): RemoteMusicTrack | null => {
           const url = t.audio ?? t.audiodownload;

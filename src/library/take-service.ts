@@ -1,3 +1,7 @@
+import {
+  productionSignal,
+  assertProductionActive,
+} from "@/library/production-cancellation";
 import { randomUUID } from "node:crypto";
 
 import type { VoiceTakeDTO } from "@/lib/dto";
@@ -19,7 +23,7 @@ import { prisma } from "@/library/db";
 import { getAssetStore } from "@/library/storage";
 import { createTake } from "@/library/repositories/takes";
 import {
-  getCachedBeatWav,
+  getCachedBeatAudio,
   setCachedBeatWav,
   type SceneAudioCacheKey,
 } from "@/library/scene-audio-cache";
@@ -91,19 +95,31 @@ async function synthesizeScenesConcurrently(
         modelId: ctx.modelId,
         text: `${scene.text}${speedTag}`,
       };
-      let wav = await getCachedBeatWav(cacheParts);
-      if (!wav) {
+      let audio = await getCachedBeatAudio(cacheParts);
+      if (!audio) {
         onProgress?.(completed, total, i + 1);
+        assertProductionActive();
         const result = await synth({
+          signal: productionSignal(),
           voiceId: ctx.voiceId,
           modelId: ctx.modelId,
           text: scene.text,
           ...(ctx.speed !== undefined ? { speed: ctx.speed } : {}),
         });
-        wav = result.wav;
-        void setCachedBeatWav({ ...cacheParts, scriptId: ctx.scriptId }, wav);
+        assertProductionActive();
+        audio = result;
+        await setCachedBeatWav(
+          { ...cacheParts, scriptId: ctx.scriptId },
+          result.wav,
+          result.words,
+        );
       }
-      results[i] = { sceneId: scene.id, text: scene.text, wav };
+      results[i] = {
+        sceneId: scene.id,
+        text: scene.text,
+        wav: audio.wav,
+        words: audio.words,
+      };
       completed += 1;
       onProgress?.(completed, total);
     }
@@ -216,8 +232,10 @@ async function generateTakeForScenes(
     : finalizeSpeechWav(stitched.wav).wav;
 
   const key = `takes/${randomUUID()}.wav`;
+  assertProductionActive();
   await getAssetStore().put(key, wav);
 
+  assertProductionActive();
   return createTake({
     scriptId: input.scriptId,
     label,
@@ -315,8 +333,10 @@ export async function createTakeFromBeats(
 
   const stitched = stitchBeats(beats, script.fps);
   const key = `takes/${randomUUID()}.wav`;
+  assertProductionActive();
   await getAssetStore().put(key, finalizeSpeechWav(stitched.wav).wav);
 
+  assertProductionActive();
   return createTake({
     scriptId: input.scriptId,
     label: input.label ?? input.providerId,

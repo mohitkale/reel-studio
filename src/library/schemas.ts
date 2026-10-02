@@ -1,3 +1,4 @@
+import { frameWordsSchema } from "@/lib/speech-words";
 import { z } from "zod";
 import { audioMasteringSchema } from "@/production/audio-mastering";
 import { chapterPlanSchema } from "@/production/chapters";
@@ -19,6 +20,7 @@ export const beatTimingSchema = z.object({
   startFrame: z.number().int().nonnegative(),
   durationFrames: z.number().int().nonnegative(),
   text: z.string(),
+  words: frameWordsSchema.optional(),
 });
 
 export const timelineSchema = z.array(beatTimingSchema);
@@ -38,7 +40,7 @@ export const captionWordSchema = z
   .refine((word) => word.endFrame > word.startFrame, {
     message: "Caption word must end after it starts",
   });
-export const captionWordsSchema = z.array(captionWordSchema).max(500);
+export const captionWordsSchema = z.array(captionWordSchema).max(10_000);
 
 export const voiceModeSchema = z.enum(["oneshot", "per_scene"]);
 export const voiceTakeSourceSchema = z.enum(["oneshot", "assembled"]);

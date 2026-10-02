@@ -95,4 +95,5 @@ export async function deleteSceneClip(id: string): Promise<void> {
   if (!clip) return;
   await prisma.sceneVoiceClip.delete({ where: { id } });
   await getAssetStore().delete(clip.audioPath);
+  await getAssetStore().delete(`${clip.audioPath}.words.json`);
 }

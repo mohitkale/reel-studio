@@ -4,6 +4,7 @@ import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
 import { authorize } from "@/server/auth";
 import {
+  voiceforgeFetch,
   isVoiceforgeConfigured,
   voiceforgeAuthHeaders,
   voiceforgeBaseUrl,
@@ -28,11 +29,12 @@ export async function GET(
     }
 
     const { id } = await ctx.params;
-    const res = await fetch(
+    const res = await voiceforgeFetch(
       `${voiceforgeBaseUrl()}/v1/voices/${encodeURIComponent(id)}/preview`,
       {
         headers: voiceforgeAuthHeaders(),
         cache: "no-store",
+        signal: req.signal,
       },
     );
 

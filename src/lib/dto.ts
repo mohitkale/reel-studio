@@ -21,6 +21,7 @@ export interface BeatTimingDTO {
   startFrame: number;
   durationFrames: number;
   text: string;
+  words?: import("@/lib/captions").CaptionWord[];
 }
 
 export type VoiceMode = "oneshot" | "per_scene";

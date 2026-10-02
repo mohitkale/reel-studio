@@ -1,3 +1,4 @@
+import { fetchWithDeadline } from "@/lib/deadline-fetch";
 import { ProviderError, type ProviderId } from "./types";
 
 export type ProviderFetchOptions = {
@@ -16,40 +17,22 @@ export async function providerFetch(
   providerId: ProviderId,
   options?: ProviderFetchOptions,
 ): Promise<Response> {
-  let res: Response;
-  const timeoutMs = options?.timeoutMs;
-  const timeoutController =
-    timeoutMs && timeoutMs > 0 && !init.signal ? new AbortController() : null;
-  const timer = timeoutController
-    ? setTimeout(() => timeoutController.abort(), timeoutMs)
-    : null;
-
-  try {
-    res = await fetch(url, {
-      ...init,
-      signal: init.signal ?? timeoutController?.signal,
-    });
-  } catch (e) {
-    const aborted =
-      (e instanceof Error && e.name === "AbortError") ||
-      (typeof DOMException !== "undefined" &&
-        e instanceof DOMException &&
-        e.name === "AbortError");
-    if (aborted && timeoutMs) {
-      throw new ProviderError(
+  const timeoutMs = options?.timeoutMs ?? 30_000;
+  const mapError = (error: unknown) => {
+    if (init.signal?.aborted) return init.signal.reason ?? error;
+    if (error instanceof Error && error.name === "TimeoutError")
+      return new ProviderError(
         `${providerId} timed out after ${Math.round(timeoutMs / 1000)}s. Check that the service is running and not overloaded.`,
         504,
         providerId,
       );
-    }
-    throw new ProviderError(
-      `Could not reach ${providerId}. Check your connection. (${(e as Error).message})`,
+    return new ProviderError(
+      `Could not reach ${providerId}. Check your connection. (${error instanceof Error ? error.message : String(error)})`,
       502,
       providerId,
     );
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
+  };
+  const res = await fetchWithDeadline(url, init, timeoutMs, mapError);
 
   if (!res.ok) {
     const body = await res.text().catch(() => "");

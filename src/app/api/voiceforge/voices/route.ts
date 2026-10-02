@@ -5,6 +5,7 @@ import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
 import { authorize } from "@/server/auth";
 import {
+  voiceforgeFetch,
   isVoiceforgeConfigured,
   voiceforgeAuthHeaders,
   voiceforgeBaseUrl,
@@ -45,23 +46,34 @@ export async function POST(req: Request) {
     const incoming = await req.formData();
     const outgoing = new FormData();
 
-    for (const key of ["name", "engine_id", "tier", "consent", "language"] as const) {
+    for (const key of [
+      "name",
+      "engine_id",
+      "tier",
+      "consent",
+      "language",
+    ] as const) {
       const value = incoming.get(key);
       if (value != null) outgoing.append(key, String(value));
     }
 
     const files = incoming.getAll("files");
     if (files.length === 0) {
-      throw new ProviderError("At least one audio file is required.", 400, "voiceforge");
+      throw new ProviderError(
+        "At least one audio file is required.",
+        400,
+        "voiceforge",
+      );
     }
     for (const file of files) {
       if (file instanceof File) outgoing.append("files", file, file.name);
     }
 
-    const res = await fetch(`${voiceforgeBaseUrl()}/v1/voices`, {
+    const res = await voiceforgeFetch(`${voiceforgeBaseUrl()}/v1/voices`, {
       method: "POST",
       headers: voiceforgeAuthHeaders(),
       body: outgoing,
+      signal: req.signal,
     });
 
     if (!res.ok) {

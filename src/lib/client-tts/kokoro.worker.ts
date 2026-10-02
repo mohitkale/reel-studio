@@ -1,3 +1,8 @@
+import {
+  guardKokoroTokenizer,
+  synthesizeSpeechChunks,
+  createInferenceGate,
+} from "@/lib/kokoro-chunks";
 /**
  * Kokoro TTS Web Worker.
  *
@@ -46,6 +51,8 @@ globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
   return realFetch(input as RequestInfo, init);
 }) as typeof fetch;
 
+const inference = createInferenceGate();
+
 let ttsPromise: Promise<KokoroTTS> | null = null;
 
 function load(): Promise<KokoroTTS> {
@@ -58,6 +65,7 @@ function load(): Promise<KokoroTTS> {
     } as Parameters<typeof KokoroTTS.from_pretrained>[1])
       .then((tts) => {
         enableExtendedKokoroVoices(tts);
+        guardKokoroTokenizer(tts);
         return tts;
       })
       .catch((e) => {
@@ -89,16 +97,21 @@ ctx.onmessage = async (e: MessageEvent) => {
         typeof msg.speed === "number" && Number.isFinite(msg.speed)
           ? Math.min(1.35, Math.max(0.7, msg.speed))
           : 1;
-      const audio = await tts.generate(text, {
-        voice: msg.voice,
-        speed,
-      } as Parameters<typeof tts.generate>[1]);
+      const audio = await inference(() =>
+        synthesizeSpeechChunks(text, (chunk) =>
+          tts.generate(chunk, { voice: msg.voice, speed } as Parameters<
+            typeof tts.generate
+          >[1]),
+        ),
+      );
       const resampled = resampleLinear(
         audio.audio,
         audio.sampling_rate,
         TARGET_SAMPLE_RATE,
       );
-      wavBase64 = arrayBufferToBase64(encodeWavPcm16(resampled, TARGET_SAMPLE_RATE));
+      wavBase64 = arrayBufferToBase64(
+        encodeWavPcm16(resampled, TARGET_SAMPLE_RATE),
+      );
     }
     ctx.postMessage({ type: "result", id: msg.id, wavBase64 });
   } catch (err) {

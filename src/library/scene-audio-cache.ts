@@ -1,3 +1,5 @@
+import { readSpeechWords, writeSpeechWords } from "@/library/speech-word-store";
+import type { SpeechWord } from "@/lib/speech-words";
 import { createHash, randomUUID } from "node:crypto";
 
 import { prisma } from "@/library/db";
@@ -16,9 +18,9 @@ export interface SceneAudioCacheKey {
 }
 
 /** Best-effort scene-audio cache lookup (see SceneAudioBeat in schema.prisma). */
-export async function getCachedBeatWav(
+export async function getCachedBeatAudio(
   parts: SceneAudioCacheKey,
-): Promise<Buffer | null> {
+): Promise<{ wav: Buffer; words?: SpeechWord[] } | null> {
   try {
     const row = await prisma.sceneAudioBeat.findUnique({
       where: {
@@ -32,7 +34,10 @@ export async function getCachedBeatWav(
       },
     });
     if (!row) return null;
-    return await getAssetStore().get(row.audioPath);
+    return {
+      wav: await getAssetStore().get(row.audioPath),
+      words: await readSpeechWords(row.audioPath),
+    };
   } catch {
     return null;
   }
@@ -42,10 +47,12 @@ export async function getCachedBeatWav(
 export async function setCachedBeatWav(
   parts: SceneAudioCacheKey & { scriptId: string },
   wav: Buffer,
+  words?: SpeechWord[],
 ): Promise<void> {
   try {
     const key = `scene-audio-cache/${parts.sceneId}-${randomUUID()}.wav`;
     await getAssetStore().put(key, wav);
+    await writeSpeechWords(key, words);
     await prisma.sceneAudioBeat.upsert({
       where: {
         sceneId_providerId_voiceId_modelId_textHash: {
@@ -70,4 +77,10 @@ export async function setCachedBeatWav(
   } catch {
     // Non-fatal
   }
+}
+
+export async function getCachedBeatWav(
+  parts: SceneAudioCacheKey,
+): Promise<Buffer | null> {
+  return (await getCachedBeatAudio(parts))?.wav ?? null;
 }
