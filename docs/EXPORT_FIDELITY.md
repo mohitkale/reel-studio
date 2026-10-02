@@ -46,3 +46,9 @@ settled-copy frames were inspected. These are native composition fixtures;
 the broader catalog, media and release matrix remains the final release gate.
 The 803-test local suite, typecheck, lint, secret scan, release checks, production
 build and isolated real export/active cancellation gate passed.
+
+The first Windows run exposed seven fixture timeouts (six 5-second limits and
+one 20-second SQLite integration limit), without failed behavior assertions.
+Those specific native migration/module/filesystem fixtures now use bounded
+Windows budgets of 15 or 30 seconds. Other platforms, unit deadlines and every
+behavior assertion remain unchanged. Latest-head platform CI remains required.

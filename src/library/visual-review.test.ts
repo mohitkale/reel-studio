@@ -182,7 +182,7 @@ describe("cached visual review", () => {
     mocks.files.clear();
     await createVisualReview("script", input, "http://localhost:3000");
     expect(mocks.spawn).toHaveBeenCalledTimes(2);
-  });
+  }, process.platform === "win32" ? 15_000 : 5_000);
   it("invalidates stills after visual edits and rejects removed scenes before capture", async () => {
     const first = await createVisualReview(
       "script",

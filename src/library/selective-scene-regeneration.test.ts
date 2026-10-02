@@ -194,7 +194,7 @@ describe("selective scene regeneration", () => {
       else process.env.DATABASE_URL = previous;
       rmSync(directory, { recursive: true, force: true });
     }
-  });
+  }, process.platform === "win32" ? 30_000 : 5_000);
 });
 
 describe("chapter regeneration scopes", () => {
