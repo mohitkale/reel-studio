@@ -39,6 +39,7 @@
     "gen:music": "node scripts/generate-music.mjs",
     "sync:hf-catalog": "tsx scripts/sync-hf-catalog.ts",
     "sync:hf-runtime": "node scripts/sync-render-runtime.mjs",
+    "test:motion-library": "node --import tsx scripts/verify-motion-library.mjs",
     "test:motion-spec": "node --import tsx scripts/verify-motion-spec.mjs",
     "test:export-fidelity": "node --import tsx scripts/verify-export-fidelity.mjs",
     "gen:sfx": "node scripts/generate-sfx.mjs",

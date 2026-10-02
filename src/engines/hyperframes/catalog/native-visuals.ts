@@ -1,3 +1,4 @@
+import { MOTION_LIBRARY_TIMING } from "@/video/motion-library";
 import { STORY_MOTION_TRACKS } from "@/production/story-motion";
 import { GRAPH_TIMELINE_BOOT } from "../motion/compile-shot";
 import { GSAP_PREVIEW_URL } from "@/engines/hyperframes/runtime";
@@ -1105,6 +1106,7 @@ export function buildGsapMotionBootScript(
     var compositionRoot = document.querySelector('[data-composition-id]');
     var compositionId = compositionRoot && compositionRoot.getAttribute('data-composition-id');
     var compositionTimelines = [];
+    var libraryTiming = ${JSON.stringify(MOTION_LIBRARY_TIMING)};
     var storyTracks = ${JSON.stringify(STORY_MOTION_TRACKS)};
     var motionEvents = ${JSON.stringify(MOTION_EVENT_TIMINGS.hyperframes)};
     var typeMotifOffsets = ${JSON.stringify(TYPE_MOTIF_OFFSETS)};
@@ -1127,6 +1129,8 @@ export function buildGsapMotionBootScript(
         var element = stage.querySelector(".sm-" + track.part);
         if (element) tl.fromTo(element, { opacity:0, x:track.x, y:track.y, scaleX:track.scaleX === undefined ? 1 : track.scaleX, scaleY:track.scaleY === undefined ? 1 : track.scaleY }, { opacity:1, x:0, y:0, scaleX:1, scaleY:1, force3D:false, duration:track.duration, ease:"power2.out" }, track.at);
       });
+      var ambient = stage.querySelector('.ml-ambient');
+      if (ambient) tl.fromTo(ambient, { xPercent:-4, opacity:libraryTiming.ambientLow }, { xPercent:4, opacity:libraryTiming.ambientHigh, duration:loopDuration(libraryTiming.ambientPeriod, 0), repeat:repeatThroughScene(libraryTiming.ambientPeriod, 0), yoyo:true, ease:'sine.inOut' }, 0);
       var events = motionEvents[recipe];
       if (events) {
         tl.addLabel("reveal", events.reveal);
@@ -1256,7 +1260,7 @@ export function buildGsapMotionBootScript(
       // Line reveals — clipped, never overlapping
       lines.forEach(function (inner, i) {
         if (motif) tl.fromTo(inner, { x: motif.x, y: motif.y, opacity: 0 }, { x: 0, y: 0, opacity: 1, force3D: false, duration: 0.42, ease: 'power3.out' }, events.reveal + i * 0.1);
-        else tl.to(inner, { y: '0%', duration: 0.42, ease: 'power3.out' }, (recipe === 'type-impact' || recipe === 'type-editorial' ? events.reveal : 0.22) + i * 0.1);
+        else tl.to(inner, { y: '0%', duration: 0.42, ease: 'power3.out' }, (recipe.startsWith('type-') ? events.reveal : 0.22) + i * 0.1);
       });
 
       if (rule) tl.fromTo(rule, { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: 'power3.out' }, Math.max(0.55, 0.22 + lines.length * 0.1));

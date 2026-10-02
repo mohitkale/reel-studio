@@ -1,3 +1,4 @@
+import { MOTION_LIBRARY_STYLES } from "./motion/library-styles";
 import { buildTextFitScript } from "./text-fit";
 import { validateMotionForReel } from "@/video/motion-spec";
 import { compileMotionShot } from "./motion/compile-shot";
@@ -1020,12 +1021,16 @@ export function buildHyperframesCompositionHtml(
       exitWindow,
       transitionClass,
     };
-    const motionScene =
+    const authoredMotionScene =
       buildStoryMotionScene(motionArgs) ??
       buildMediaMotionScene(motionArgs) ??
       buildDiagramMotionScene(motionArgs) ??
       buildDataMotionScene(motionArgs) ??
       buildTypeMotionScene(motionArgs);
+    const motionScene = authoredMotionScene?.replace(
+      /(<div\b[^>]*class="fx-stage[^>]*>)/,
+      '$1<div class="ml-ambient" aria-hidden="true"></div>',
+    );
     // Media recipes stage their own timed source. Keep a single decoder;
     // all other treatments continue using the shared background video layer.
     if (
@@ -1212,7 +1217,7 @@ export function buildHyperframesCompositionHtml(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reel Studio · HyperFrames</title>
-  <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}${TYPE_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_MOTION_STYLES}${STORY_MOTION_STYLES}
+  <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}${TYPE_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_MOTION_STYLES}${STORY_MOTION_STYLES}${MOTION_LIBRARY_STYLES}
     .rs-subtitle{position:absolute;z-index:50;inset:0;box-sizing:border-box;display:flex;flex-direction:column;justify-content:${captionResolved.outer.justifyContent};align-items:${captionResolved.outer.alignItems};padding:${captionResolved.outer.paddingTop}px ${captionResolved.outer.paddingRight}px ${captionResolved.outer.paddingBottom}px ${captionResolved.outer.paddingLeft}px;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
     .rs-subtitle>span{display:block;max-width:${captionInner.maxWidth}px;padding:${captionInner.padding};border-radius:${captionInner.borderRadius}px;background:${captionInner.background};color:${captionInner.color};font-family:${cssFontStack(captionInner.fontFamily)};font-weight:${captionInner.fontWeight};line-height:${captionInner.lineHeight};letter-spacing:${captionInner.letterSpacing};text-align:${captionInner.textAlign};text-shadow:${captionInner.textShadow};${captionInner.WebkitTextStroke ? `-webkit-text-stroke:${captionInner.WebkitTextStroke};` : ""}overflow-wrap:anywhere}
     .rs-caption-line{display:block}.rs-caption-word{display:inline-block;position:relative}.rs-caption-active{position:absolute;inset:0;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
@@ -1235,11 +1240,11 @@ export function buildHyperframesCompositionHtml(
          data-hide-progress="${hideProgress ? "1" : "0"}"
          data-grain="${grainAttr}"
          data-orientation="${layout.orientation}"
-         style="width:${width}px;height:${height}px;--brand-background:${tokens.background};--brand-font:${escapeHtml(cssFontStack(hyperframesBrandFont(tokens.fontFamily)))};font-family:var(--brand-font);--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}">
+         style="width:${width}px;height:${height}px;--brand-background:${tokens.background};--brand-foreground:${tokens.foreground};--brand-muted:${tokens.muted};--brand-accent-foreground:${tokens.accentForeground};--motion-radius:${tokens.radius}px;--motion-gap:${Math.min(width * 0.032, height * 0.045, 48)}px;--brand-font:${escapeHtml(cssFontStack(hyperframesBrandFont(tokens.fontFamily)))};font-family:var(--brand-font);--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}">
       ${coverBlock}
       ${progress}
       ${videoBlocks.join("\n")}
-      ${sceneBlocks.map((block, index) => block.replace(/(<section\b[^>]*>)([\s\S]*)(<\/section>\s*)$/, (_, open: string, body: string, close: string) => `${open}<div class="scene-handoff" style="--handoff:${index === 0 ? "1" : "0"}" data-first-scene="${index === 0 ? "1" : "0"}">${body}</div>${close}`)).join("\n")}
+      ${sceneBlocks.map((block, index) => block.replace(/(<section\b[^>]*>)([\s\S]*)(<\/section>\s*)$/, (_, open: string, body: string, close: string) => `${open}${open.includes("data-motion-recipe=") ? '<div class="ml-backplate" aria-hidden="true"></div>' : ""}<div class="scene-handoff" style="--handoff:${index === 0 ? "1" : "0"}" data-first-scene="${index === 0 ? "1" : "0"}">${body}</div>${close}`)).join("\n")}
       ${captionBlocks}
       ${audioTags.join("\n")}
     </div>

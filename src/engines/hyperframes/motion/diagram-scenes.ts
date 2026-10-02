@@ -65,13 +65,13 @@ export function buildDiagramMotionScene(args: {
               const controlY = ((point.y + 500) / 2 - 45).toFixed(2);
               return `<g class="gm-satellite" data-index="${index}">
                 <path class="gm-connector" d="M 500 500 Q ${controlX} ${controlY} ${x} ${y}" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round" stroke-dasharray="700" stroke-dashoffset="700"/>
-                <circle cx="${x}" cy="${y}" r="112" fill="#1d2940" stroke="var(--accent-2)" stroke-width="3"/>
-                <text x="${x}" y="${y}" fill="#f7f3ec" text-anchor="middle" font-size="39" font-weight="750">${labelTspans(items[index + 1], point.x, 39)}</text>
+                <circle cx="${x}" cy="${y}" r="112" fill="var(--brand-background)" stroke="var(--accent-2)" stroke-width="3"/>
+                <text x="${x}" y="${y}" fill="var(--brand-foreground)" text-anchor="middle" font-size="39" font-weight="750">${labelTspans(items[index + 1], point.x, 39)}</text>
               </g>`;
             })
             .join("")}
-          <g class="gm-core"><circle cx="500" cy="500" r="150" fill="#101a2c" stroke="var(--accent)" stroke-width="8"/>
-            <text x="500" y="500" fill="#fff" text-anchor="middle" font-size="47" font-weight="850">${labelTspans(items[0], 500, 47)}</text></g>
+          <g class="gm-core"><circle cx="500" cy="500" r="150" fill="var(--brand-background)" stroke="var(--accent)" stroke-width="8"/>
+            <text x="500" y="500" fill="var(--brand-foreground)" text-anchor="middle" font-size="47" font-weight="850">${labelTspans(items[0], 500, 47)}</text></g>
         </svg>`
       : `<div class="gm-path"><svg class="gm-spine" aria-hidden="true"><line x1="2" y1="0" x2="2" y2="100%" stroke="var(--accent)" stroke-width="4" opacity=".75"/></svg>
           ${items

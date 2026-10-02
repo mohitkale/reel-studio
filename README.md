@@ -713,3 +713,7 @@ reachability, media limits and remaining isolation boundaries are documented in
 The optional [versioned motion spec](docs/MOTION_SPEC.md) extends the existing
 HyperFrames compiler with validated shots, layers and frame-based elements.
 Verify its offline seek/export fixtures with `npm run test:motion-spec`.
+
+The [authored motion library](docs/MOTION_LIBRARY.md) provides fifteen treatments
+using saved brand tokens and supplied chart/media inputs. Its contact-sheet and
+actual portrait/landscape export gate is `npm run test:motion-library`.

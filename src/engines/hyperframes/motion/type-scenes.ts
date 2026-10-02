@@ -38,16 +38,26 @@ export function buildTypeMotionScene(args: {
   )
     return null;
   const impact = motion.recipeId === "type-impact";
+  const stacked = motion.recipeId === "type-stack";
   const role = escapeHtml(scene.role ?? "statement");
   const copy = escapeHtml(scene.text);
-  const content = impact
-    ? `<div class="tm-impact-shape"></div>
+  const content = stacked
+    ? `<div class="tm-stack-content fx-stack">${scene.text
+        .trim()
+        .split(/\s+/)
+        .map(
+          (word) =>
+            `<div class="fx-line"><span class="fx-line-inner">${escapeHtml(word)}</span></div>`,
+        )
+        .join("")}</div>`
+    : impact
+      ? `<div class="tm-impact-shape"></div>
        <div class="tm-impact-content">
          <div class="tm-kicker fx-kicker"><span class="tm-index">${String((scene.order ?? 0) + 1).padStart(2, "0")}</span>${role}</div>
          <h2 class="tm-impact-copy fx-line"><span class="fx-line-inner">${copy}</span></h2>
          <div class="tm-impact-rule"></div>
        </div>`
-    : `<div class="tm-paper"></div><div class="tm-editorial-rail"></div>
+      : `<div class="tm-paper"></div><div class="tm-editorial-rail"></div>
        <div class="tm-editorial-content">
          <div class="tm-editorial-kicker fx-kicker"><span>${String((scene.order ?? 0) + 1).padStart(2, "0")}</span>${role}</div>
          <h2 class="tm-editorial-copy fx-line"><span class="fx-line-inner">${copy}</span></h2>
@@ -64,13 +74,16 @@ export function buildTypeMotionScene(args: {
     data-track-index="1"
     data-exit-window="${args.exitWindow.toFixed(3)}"
     style="--accent:${escapeHtml(tokens.accent)};--accent-2:${escapeHtml(tokens.accentSecondary)}">
-      <div class="fx-stage tm-stage ${impact ? "tm-impact-stage" : "tm-editorial-stage"}"
+      <div class="fx-stage tm-stage ${stacked ? "tm-stack-stage" : impact ? "tm-impact-stage" : "tm-editorial-stage"}"
         data-motion-scene="${escapeHtml(scene.id)}" data-recipe="${motion.recipeId}"
         ${motion.typeEntrance ? `data-type-entrance="${motion.typeEntrance}"` : ""}>${content}</div>
     </section>`;
 }
 
 export const TYPE_MOTION_STYLES = `
+  .tm-stack-content { position:absolute; left:var(--safe-left); right:var(--safe-right); width:auto; max-width:none; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:8px; }
+  .tm-stack-content .fx-line { width:100%; font-size:clamp(34px,7cqw,80px); line-height:1.05; }
+  .tm-stack-content .fx-line-inner { font-size:inherit; font-weight:850; line-height:1.05; text-transform:uppercase; white-space:normal; }
   .tm-stage { container-type: inline-size; }
   .tm-stage .fx-line-inner { will-change: auto; }
   .tm-stage[data-type-entrance] .fx-line-inner { transform: none; }
