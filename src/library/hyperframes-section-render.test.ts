@@ -77,7 +77,7 @@ it("renders the scoped native plan for each cache key but assembles once with th
     expect(renderCalls[1][0]).toContain("visual-plan-1");
     expect(producer.assembleV2.mock.calls).toHaveLength(1);
     expect(producer.assembleV2).toHaveBeenCalledWith(
-      expect.stringMatching(/\/plan$/),
+      expect.stringMatching(/[\\/]plan$/),
       ["section-0.mp4", "section-1.mp4"],
       input.outputPath,
       expect.any(Object),

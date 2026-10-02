@@ -37,12 +37,25 @@ describe("bounded disk reads", () => {
     await writeFile(path.join(root, "clip.mp4"), "original");
     const asset = await store.open("clip.mp4");
     await writeFile(path.join(root, "replacement.mp4"), "new");
-    await rename(
-      path.join(root, "replacement.mp4"),
-      path.join(root, "clip.mp4"),
-    );
+    // NTFS refuses replacement of an open destination; the opened-file read
+    // remains valid and replacement can proceed once that handle is closed.
+    if (process.platform === "win32") {
+      await expect(
+        rename(path.join(root, "replacement.mp4"), path.join(root, "clip.mp4")),
+      ).rejects.toMatchObject({ code: "EPERM" });
+    } else {
+      await rename(
+        path.join(root, "replacement.mp4"),
+        path.join(root, "clip.mp4"),
+      );
+    }
     expect(asset.size).toBe(8);
     expect(await new Response(asset.stream()).text()).toBe("original");
+    if (process.platform === "win32")
+      await rename(
+        path.join(root, "replacement.mp4"),
+        path.join(root, "clip.mp4"),
+      );
     expect((await store.get("clip.mp4")).toString()).toBe("new");
   });
 

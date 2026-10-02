@@ -111,3 +111,17 @@ Inventory evidence: lockfile SHA-256
 workspace packages (upstream Apache-2.0 repository license) and seq-queue 0.0.5
 (installed LICENSE is MIT). Embedded-component review remains necessary even
 when metadata declares a permissive license.
+
+Local acceptance: 798 tests in 154 files, typecheck, lint, release checks and
+production build passed. An isolated real HyperFrames export and active
+cancellation passed (`.artifacts/production-worker-1790956301518`). Chrome 153
+initialized and sought the actual HyperFrames srcDoc composition under production
+headers and verified cross-origin framing was blocked (`.artifacts/m8-hardening`).
+
+The first Windows run passed 790 tests and exposed eight failures. Fixes retain
+assertions rather than disabling them: platform-native paths, NTFS replacement
+being blocked while a read handle is open, and supervisor child PIDs being gone
+rather than expecting Windows force-kill to execute POSIX signal handlers. The
+24-scene SQLite restoration test has a scoped 20-second integration timeout.
+Its 49 focused tests pass locally; replacement latest-head platform CI remains
+the merge gate. CI skips optional CUDA libraries for the CPU-only Kokoro path.

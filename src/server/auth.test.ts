@@ -1,3 +1,4 @@
+import path from "node:path";
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 
 import {
@@ -284,7 +285,7 @@ describe("path containment", () => {
       assertPathInsideRoot("/app/media", "/app/media/../.env.local"),
     ).toThrow();
     expect(assertPathInsideRoot("/app/media", "/app/media/takes/a.wav")).toBe(
-      "/app/media/takes/a.wav",
+      path.resolve("/app/media/takes/a.wav"),
     );
   });
 });
