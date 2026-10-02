@@ -14,15 +14,15 @@ Also supports Instagram, YouTube Shorts, TikTok, Facebook, X (Twitter), and
 other social formats in **9:16**, **16:9**, and **1:1**.
 
 > **Project status: local-first production release.** The credential-free path,
-> optional Quick Produce workflow, both render engines, SQLite-backed jobs, and
-> the advertised 36-render example matrix are release-tested. Provider
+> optional Quick Produce workflow, HyperFrames rendering, SQLite-backed jobs, and
+> the historical example matrix are release-tested. Provider
 > integrations remain optional and may evolve.
 
 **MIT-licensed app. Local-first.** Projects and renders stay on your machine
 unless you explicitly enable a cloud provider.
 
-> App code is **MIT**. Projects may use **HyperFrames** (Apache-2.0) or
-> **Remotion** (separate commercial terms, not OSI). See
+> App code is **MIT**. Preview and export use **HyperFrames** (Apache-2.0).
+> GSAP has a separate standard license; optional models/media retain their terms. See
 > [Licensing](#licensing-summary) and [docs/LICENSING.md](docs/LICENSING.md).
 
 <p align="center">
@@ -44,14 +44,14 @@ template or voice provider you want next.
 
 The 0.4 roadmap contained 28 numbered tasks. The implemented release includes:
 
-- synchronized Node, Next.js, Prisma, HyperFrames, Remotion, UI, and test
+- synchronized Node, Next.js, Prisma, HyperFrames, UI, and test
   dependency upgrades with fresh and populated-database migration checks
 - versioned production specifications, a pinned 23-item HyperFrames catalog,
-  shared engine inputs, and six presets rendered by both engines in three ratios
+  shared video inputs, and six presets rendered by HyperFrames in three ratios
 - deterministic and optional AI planning, safe public-page import, uploaded
   media, scene locks, hook alternatives, and selective regeneration
 - editable caption tracks with timing provenance, SRT/VTT import/export, and
-  versioned appearance presets shared by both render engines
+  versioned appearance presets shared by HyperFrames rendering
 - reusable audio generation, podcast turn caching, intro/outro bumpers, explicit
   pauses, pronunciation rules, WAV/MP3 output, chapters, transcripts, and
   timestamp-grounded audiogram selection
@@ -81,13 +81,13 @@ The follow-on local-first expansion and its task ledgers are documented in
   `auto/image/video/none`; automatic selection uses stable candidate choice and
   provider fallback while preserving explicit uploads, URLs, and selections.
   Stock videos render muted with deterministic scene timing and cover crops in
-  both engines, and output records retain their source attribution snapshots.
+  HyperFrames, and output records retain their source attribution snapshots.
 - AI planning supports Gemini, OpenAI, Ollama, and LM Studio. Ollama and LM
   Studio use local endpoints configured in Settings; an absent local server is
   reported as an optional provider status. The deterministic no-key planner
   remains available.
 - Caption text, timing, typography, placement, colors, box, outline, shadow,
-  wrapping, and highlighting are editable. Remotion and HyperFrames consume the
+  wrapping, and highlighting are editable. HyperFrames consumes the
   same versioned caption-style snapshot.
 - The catalog is pinned for reproducible saved projects. It does not
   automatically track the full upstream HyperFrames registry.
@@ -149,8 +149,8 @@ a new production from the current project.
   and Cinematic Brand presets
 - Versioned Impact and Editorial text treatments plus Spotlight and Comparison
   bars for supplied data; eligible treatments are chosen in new preset projects
-  and adjustable per scene, with the same saved choice rendered in both engines
-- Native portrait, landscape, and square layouts in both engines
+  and adjustable per scene, with the same saved choice rendered in HyperFrames
+- Native portrait, landscape, and square layouts in HyperFrames
 - Uploaded media, bounded public-page text import, or optional Pexels, Pixabay,
   and Unsplash image/video backgrounds
 
@@ -168,7 +168,7 @@ a new production from the current project.
 
 ### Design
 
-- Motion templates for Remotion and HyperFrames
+- HTML motion templates for HyperFrames
 - Brand kits, editable SRT/VTT captions, background music (bundled CC0)
 - Style and Energy looks (for example clean story, bold hook)
 
@@ -180,26 +180,30 @@ a new production from the current project.
 - Docker isolation bound to `127.0.0.1`
 - **MCP server** for AI-assisted video and podcast workflows ([mcp/README.md](mcp/README.md))
 
-## Video engines
+## Video rendering
 
-|           | HyperFrames                            | Remotion                      |
-| --------- | -------------------------------------- | ----------------------------- |
-| Licence   | **Apache-2.0**                         | Remotion License (not OSI)    |
-| Templates | HTML motion (`hf-*`)                   | React compositions            |
-| Best for  | Apache-2.0 workflows, demos, and forks | Rich React template ecosystem |
+HyperFrames is the only engine for live previews, MP4 exports and podcast
+audiograms. Engine selection is removed. Existing projects keep their content,
+narration and media; legacy template ids map to matching HTML treatments.
+Run `npm run setup` (or stop the worker and run `npm run db:migrate`) to back up
+and persist the migration. Existing Remotion projects migrate to HyperFrames.
+Existing MP4s remain downloadable; new exports can look different. Create a fresh production draft before regenerating an old
+immutable revision.
 
-See [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md).
+HyperFrames itself is Apache-2.0. This does not make the entire stack Apache-2.0:
+app code is MIT, GSAP has its own standard license, and optional models/assets
+retain their terms. See [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md).
 
 ## Local vs optional cloud
 
-| Feature          | Local option                              | Optional cloud            |
-| ---------------- | ----------------------------------------- | ------------------------- |
-| Voice preview    | Web Speech                                | n/a                       |
-| Voice generation | Kokoro / VoiceForge                       | ElevenLabs, Cartesia      |
-| Video render     | HyperFrames or Remotion (on your machine) | n/a                       |
-| AI planning      | Manual, Ollama, or LM Studio              | Gemini, OpenAI            |
-| Backgrounds      | Upload / gradients                        | Pexels, Pixabay, Unsplash |
-| Music            | Bundled CC0 / upload                      | Jamendo                   |
+| Feature          | Local option                  | Optional cloud            |
+| ---------------- | ----------------------------- | ------------------------- |
+| Voice preview    | Web Speech                    | n/a                       |
+| Voice generation | Kokoro / VoiceForge           | ElevenLabs, Cartesia      |
+| Video render     | HyperFrames (on your machine) | n/a                       |
+| AI planning      | Manual, Ollama, or LM Studio  | Gemini, OpenAI            |
+| Backgrounds      | Upload / gradients            | Pexels, Pixabay, Unsplash |
+| Music            | Bundled CC0 / upload          | Jamendo                   |
 
 Caption timing can come from an imported SRT/VTT file, provider timing, or the
 scene timeline. For optional offline speech alignment, install
@@ -316,14 +320,14 @@ dependency, HyperFrames-only migration, reliability, and product milestones.
 
 ## Roadmap
 
-The current production release includes six cross-engine presets, editable
+The current production release includes six authored presets, editable
 caption timing and text, persistent jobs, podcast and audiogram workflows,
 local AI, optional stock media, styled captions, Quick Produce, scoped MCP
 automation, and format-aware batches. The implementation plan and evidence are
 in [docs/LOCAL_FIRST_EXPANSION.md](docs/LOCAL_FIRST_EXPANSION.md) and the task
 ledgers under [docs/production](docs/production/). The motion graphics expansion
 now includes editable type, supplied-data, diagram, and supplied-media treatments
-in both video engines. Product frame and Cinematic cover accept images or
+in HyperFrames. Product frame and Cinematic cover accept images or
 video clips; curated footage plays silently beneath narration and holds its
 last frame if the scene lasts longer than the clip. Manual and AI creation offer Clean, Expressive, and
 Showcase visual ambition; a deterministic sequence planner balances type
@@ -338,8 +342,8 @@ to jump to its scene and fix the supplied inputs or choose another treatment.
 Variety suggestions highlight runs of three or more consecutive scenes using
 the same active treatment, with a shortcut to review each run.
 Visual review generates a scene sheet (up to eight scenes at a time), four
-moments of a selected scene, and a 320 px phone-size view. Both engines use
-their native still capture with the selected take's matching timing and enabled
+moments of a selected scene, and a 320 px phone-size view. HyperFrames uses
+its native still capture with the selected take's matching timing and enabled
 captions. Revision-keyed PNGs are cached locally; changed videos require a new
 review. Stills review layout; playback remains necessary for motion and sound.
 Select any scene after the first and choose Cut into selected scene for up to
@@ -364,7 +368,7 @@ timing when available; old, imported, estimated, edited or mismatched tracks do
 not guess word timing. Manual and locked cues retain creator priority. Existing
 databases need `npm run db:migrate` for caption take/frame-rate provenance.
 Music → Balance export loudness optionally finishes the complete mix toward
-−16 LUFS with a −1 dBTP true peak ceiling. Both engines use two-pass FFmpeg
+−16 LUFS with a −1 dBTP true peak ceiling. HyperFrames uses two-pass FFmpeg
 processing and measure the encoded delivery before marking it complete. Video
 packets are copied; authored quiet/loud passages retain their range when linear
 gain can meet the loudness/peak target. Finite mixes outside the encoded target
@@ -432,15 +436,13 @@ Submission uses only the explicitly selected, matching take, otherwise the
 same estimated timeline as preview/export.
 
 Saved chapter projects now export in bounded sections, preserving global frame
-timing. Remotion uses chapter boundaries with a 30-second cap; HyperFrames uses
-native 30-second chunks at 24/30/60 fps. Checksum-verified sections in
-`media/render-cache` survive retry of unchanged inputs. Remotion requires frozen
-local media for this path; other jobs keep the existing whole-video renderer.
+timing. HyperFrames uses native 30-second chunks at 24/30/60 fps. Checksum-verified sections in
+`media/render-cache` survive retry of unchanged inputs; other jobs keep the
+whole-video renderer.
 Audio is mixed continuously and muxed once, then optionally mastered. Short local
 music tracks are expanded for HyperFrames export to preserve looping. Recent
 retry caches are retained; inactive caches are trimmed toward 1 GiB and expire
-after seven days. Remotion renders each silent section with only its visible
-scenes and captions, so unrelated visual edits reuse unchanged sections.
+after seven days. Scoped silent sections reuse unchanged visual inputs.
 Shared timing, brand, cover, and renderer changes invalidate dependent sections;
 audio is always assembled from the complete graph. Authored HyperFrames recipes
 use scoped native plans; imported catalog visuals retain whole-composition reuse.
@@ -451,10 +453,10 @@ instead of a discarded temporary workspace path. Source bytes, extracted frames,
 timing and decoder settings still invalidate reuse.
 
 Run `npm run test:video-sections` for an isolated, credential-free 32-second
-native export/retry/review gate in both engines. Add `-- --long --speech --cancel`
+native export/retry/review gate in HyperFrames. Add `-- --long --speech --cancel`
 for a 210-second, six-chapter sample using the already-installed macOS voice;
 omit `--speech` on other hosts to use the labeled calibration signal.
-`--engine=remotion --edit` checks full/scoped frame parity and reuse after a
+`--engine=hyperframes --edit` checks native frame parity and cache reuse after a
 last-scene visual edit. Existing Node/FFmpeg/Chromium render dependencies are
 required; the gate does not install software or call a paid provider. Reports,
 MP4s and review PNGs are saved in `.artifacts/video-sections-<timestamp>/`.
@@ -492,16 +494,15 @@ Follow longer-term work in
 
 ![Render flow](docs/render-flow.svg)
 
-Stack: Next.js App Router, TypeScript, Prisma + SQLite, Remotion and/or
-HyperFrames, TanStack Query, Zod.
+Stack: Next.js App Router, TypeScript, Prisma + SQLite, HyperFrames, TanStack Query, Zod.
 
 ### Key modules
 
 1. `src/app`: pages and API routes (including `/podcasts`)
 2. `src/library`: repositories, render and take services, storage
-3. `src/engines`: Remotion / HyperFrames adapters
+3. `src/engines`: HyperFrames templates, catalog and HTML builders
 4. `src/providers`: AI and voice providers
-5. `src/compositions`: Remotion templates
+5. `src/video`: shared scene, timing and design contracts
 6. `scripts/`: setup, seeds, HyperFrames worker
 
 ## Available scripts
@@ -529,7 +530,6 @@ HyperFrames, TanStack Query, Zod.
 | `npm run seed:assets`                         | Sample SVG/Lottie assets                    |
 | `npm run sync:hf-catalog`                     | Sync the reviewed pinned HF catalog         |
 | `npm run mcp`                                 | MCP server                                  |
-| `npm run studio`                              | Remotion Studio                             |
 
 ## Environment variables
 
@@ -538,15 +538,14 @@ providers: `DATABASE_URL` (created by setup).
 
 ## Licensing summary
 
-| Component                                                            | Terms                                                              |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Reel Studio app, templates, MCP code                                 | **MIT**                                                            |
-| Bundled music (`public/music/`)                                      | **CC0**                                                            |
-| **Remotion**                                                         | **Remotion License** ([details](https://www.remotion.dev/license)) |
-| **HyperFrames**                                                      | **Apache-2.0**                                                     |
-| Kokoro TTS                                                           | Apache-2.0                                                         |
-| Optional cloud providers                                             | Each vendor's terms                                                |
-| VoiceForge engines ([repo](https://github.com/mohitkale/voiceforge)) | Per-engine (may be non-commercial)                                 |
+| Component                                                            | Terms                              |
+| -------------------------------------------------------------------- | ---------------------------------- |
+| Reel Studio app, templates, MCP code                                 | **MIT**                            |
+| Bundled music (`public/music/`)                                      | **CC0**                            |
+| **HyperFrames**                                                      | **Apache-2.0**                     |
+| Kokoro TTS                                                           | Apache-2.0                         |
+| Optional cloud providers                                             | Each vendor's terms                |
+| VoiceForge engines ([repo](https://github.com/mohitkale/voiceforge)) | Per-engine (may be non-commercial) |
 
 Full matrix: **[docs/LICENSING.md](docs/LICENSING.md)**.
 
@@ -566,11 +565,11 @@ Full matrix: **[docs/LICENSING.md](docs/LICENSING.md)**.
 ### Production regression checks
 
 `npm run test:unit` runs credential-free unit tests. `npm run test:render`
-renders a legacy fixture through both engines. `npm run test:stock-video-render`
+renders a legacy fixture through HyperFrames. `npm run test:stock-video-render`
 generates a credential-free local video with an audio track, renders it muted
-through both engines in portrait, landscape, and square, and verifies codec,
+through HyperFrames in portrait, landscape, and square, and verifies codec,
 dimensions, duration, visible content, and absence of leaked stock audio.
-`npm run release:matrix` renders all six presets through both engines in all
+`npm run release:matrix` renders all six presets through HyperFrames in all
 three layouts. Artifacts stay under `.artifacts/`; the manual Quality workflow
 retains them for inspection. Rendering requires Chromium and may download it
 during initial setup. Composition fonts and motion runtime files are bundled
@@ -611,7 +610,7 @@ new submission from edited content creates a new revision instead of mutating a
 completed artifact.
 
 Run `npm run test:production-worker` for isolated real exports and active
-cancellation through both engines. It creates a fresh test database and evidence
+cancellation through HyperFrames. It creates a fresh test database and evidence
 under `.artifacts/`, checks every persisted stage, and verifies renderer children
 and partial output files are gone after cancellation. It uses installed local
 rendering tools and does not modify existing project rows.
@@ -629,12 +628,12 @@ Catalog imports retain whole-composition invalidation. Final audio is mixed
 continuously each run. Cold renders add bounded planning per section.
 
 Run `npm run benchmark:long-videos` for the offline five-minute footage matrix:
-both engines, draft/standard at a 1280×720 native canvas and high at 1920×1080,
+HyperFrames, draft/standard at a 1280×720 native canvas and high at 1920×1080,
 24 fps, ten chapters, generated 640×360 footage with short-source holds, captions,
 calibration narration, music and SFX. Every row
 checks frame coverage, encoded dimensions, continuous mastered audio and an
 unchanged retry. Evidence, MP4s and time/memory reports remain in
-`.artifacts/long-video-benchmark-*`. Engine quality tiers scale output differently;
+`.artifacts/long-video-benchmark-*`. HyperFrames quality tiers retain the native canvas dimensions;
 compare the measured encoded dimensions. Scope with `-- --engine=hyperframes`
 and/or `--profile=standard-720`. Measured results and fixture scope are in
 [LONG_VIDEO_BENCHMARKS.md](docs/production/LONG_VIDEO_BENCHMARKS.md).

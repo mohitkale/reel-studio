@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { ENERGY_IDS, STYLE_IDS } from "@/compositions/visual-style";
+import { ENERGY_IDS, STYLE_IDS } from "@/video/visual-style";
 import { VIDEO_ENGINE_IDS } from "@/engines/types";
 import { productionSceneRoleSchema } from "@/production/roles";
 
@@ -69,7 +69,7 @@ export type ProductionPresetDefinition = z.infer<
   typeof productionPresetDefinitionSchema
 >;
 
-const BOTH_ENGINES = ["hyperframes", "remotion"] as const;
+const SUPPORTED_ENGINES = ["hyperframes"] as const;
 
 export const PRODUCTION_PRESETS: readonly ProductionPresetDefinition[] = z
   .array(productionPresetDefinitionSchema)
@@ -80,7 +80,7 @@ export const PRODUCTION_PRESETS: readonly ProductionPresetDefinition[] = z
       name: "Product Launch",
       description:
         "A polished hook-to-demo product story with a focused call to action.",
-      engines: BOTH_ENGINES,
+      engines: SUPPORTED_ENGINES,
       sceneRoles: ["hook", "screenshot-demo", "feature", "comparison", "cta"],
       defaults: {
         styleId: "clean-story",
@@ -102,7 +102,7 @@ export const PRODUCTION_PRESETS: readonly ProductionPresetDefinition[] = z
       name: "Editorial Explainer",
       description:
         "Readable editorial pacing for ideas, diagrams, quotes, and summaries.",
-      engines: BOTH_ENGINES,
+      engines: SUPPORTED_ENGINES,
       sceneRoles: ["headline", "explanation", "diagram", "quote", "summary"],
       defaults: {
         styleId: "teach-me",
@@ -124,7 +124,7 @@ export const PRODUCTION_PRESETS: readonly ProductionPresetDefinition[] = z
       name: "Creator Punch",
       description:
         "Fast social storytelling with energetic captions and selective beat accents.",
-      engines: BOTH_ENGINES,
+      engines: SUPPORTED_ENGINES,
       sceneRoles: ["hook", "tip", "emphasis", "payoff", "cta"],
       defaults: {
         styleId: "bold-hook",
@@ -146,7 +146,7 @@ export const PRODUCTION_PRESETS: readonly ProductionPresetDefinition[] = z
       name: "Data Story",
       description:
         "Accurate metrics, labeled charts, comparisons, and controlled reveals.",
-      engines: BOTH_ENGINES,
+      engines: SUPPORTED_ENGINES,
       sceneRoles: ["metric", "chart", "comparison", "takeaway"],
       defaults: {
         styleId: "teach-me",
@@ -168,7 +168,7 @@ export const PRODUCTION_PRESETS: readonly ProductionPresetDefinition[] = z
       name: "Developer Demo",
       description:
         "Code, diffs, terminal output, and browser proof in a technical narrative.",
-      engines: BOTH_ENGINES,
+      engines: SUPPORTED_ENGINES,
       sceneRoles: ["code", "diff", "terminal", "browser", "cta"],
       defaults: {
         styleId: "clean-story",
@@ -190,7 +190,7 @@ export const PRODUCTION_PRESETS: readonly ProductionPresetDefinition[] = z
       name: "Cinematic Brand",
       description:
         "Measured photo and video storytelling with testimonials and a refined logo close.",
-      engines: BOTH_ENGINES,
+      engines: SUPPORTED_ENGINES,
       sceneRoles: ["hero", "feature", "testimonial", "logo"],
       defaults: {
         styleId: "soft-brand",

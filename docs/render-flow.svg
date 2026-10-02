@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680" role="img" aria-labelledby="title desc">
   <title id="title">Render Flow</title>
-  <desc id="desc">Flow diagram from an editable script through immutable revision and durable cached stages to a verified MP4, branching on Remotion vs HyperFrames.</desc>
+  <desc id="desc">Flow diagram from an editable script through immutable revision and durable cached stages to a verified MP4, using the isolated HyperFrames worker.</desc>
   <defs>
     <style>
       .bg { fill: #0d1323; }
@@ -38,14 +38,8 @@
   <text class="small" x="942" y="178">SQLite job + step records</text>
   <text class="small" x="942" y="198">Persisted progress reconnect</text>
 
-  <rect class="step" x="80" y="320" width="480" height="150" />
-  <text class="label" x="102" y="360">5a. Remotion path</text>
-  <text class="small" x="102" y="388">Bundle cached per process</text>
-  <text class="small" x="102" y="408">selectComposition + renderMedia</text>
-  <text class="small" x="102" y="428">h264, adaptive concurrency</text>
-
   <rect class="step" x="620" y="320" width="500" height="150" />
-  <text class="label" x="642" y="360">5b. HyperFrames path</text>
+  <text class="label" x="642" y="360">5. HyperFrames render</text>
   <text class="small" x="642" y="388">Build HTML composition (Node 24 LTS)</text>
   <text class="small" x="642" y="408">Copy local media into _assets/</text>
   <text class="small" x="642" y="428">Spawn hyperframes-render-worker</text>
@@ -59,7 +53,5 @@
   <path class="arrow" d="M 560 165 L 620 165" />
   <path class="arrow" d="M 860 165 L 920 165" />
   <path class="arrow" d="M 1000 220 L 1000 280 L 870 280 L 870 320" />
-  <path class="arrow" d="M 1035 220 L 1035 280 L 320 280 L 320 320" />
-  <path class="arrow" d="M 320 470 L 320 500 L 600 500 L 600 520" />
-  <path class="arrow" d="M 870 470 L 870 500 L 600 500" />
+  <path class="arrow" d="M 870 470 L 870 500 L 600 500 L 600 520" />
 </svg>

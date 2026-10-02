@@ -2,8 +2,8 @@ import { STORY_MOTION_TRACKS } from "@/production/story-motion";
 import { GSAP_CDN_URL } from "@/engines/hyperframes/runtime";
 import { TYPE_MOTIF_OFFSETS } from "@/production/motion";
 import { MOTION_EVENT_TIMINGS } from "@/production/motion-events";
-import type { BrandTokens } from "@/compositions/tokens";
-import type { ReelScene, SceneMood } from "@/compositions/types";
+import type { BrandTokens } from "@/video/tokens";
+import type { ReelScene, SceneMood } from "@/video/types";
 import type { HfCatalogBlockMeta } from "@/engines/hyperframes/catalog/manifest";
 
 function escapeHtml(value: string): string {

@@ -72,9 +72,9 @@ describe("enrichScenePlan", () => {
           text: "Only one long thought that should never be a checklist row at all",
         }),
       ],
-      "remotion",
+      "hyperframes",
     );
-    expect(out[0].templateId).toBe("kinetic");
+    expect(out[0].templateId).toBe("hf-statement");
   });
 
   it("turns B-roll beats into concrete video-first stock intent", () => {

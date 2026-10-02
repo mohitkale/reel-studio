@@ -63,7 +63,7 @@ export function allowedPresetTemplateIds(
       }),
     ),
   ];
-  if (engineId === "hyperframes" && ids.includes("hf-broll")) {
+  if (ids.includes("hf-broll")) {
     ids.push("hf-statement");
   }
   return ids;

@@ -1,26 +1,23 @@
 /**
  * Video engine contract. Mirrors the voice provider factory: product code talks
- * to this interface; Remotion and HyperFrames are interchangeable adapters.
+ * to the HyperFrames adapter through this interface.
  */
 
-import type { TemplateMeta } from "@/compositions/templates";
+import type { TemplateMeta } from "@/video/templates";
 import type { Orientation } from "@/lib/orientation";
 import type { ProductionSceneRole } from "@/production/roles";
 
-export const VIDEO_ENGINE_IDS = ["remotion", "hyperframes"] as const;
+export const VIDEO_ENGINE_IDS = ["hyperframes"] as const;
 export type VideoEngineId = (typeof VIDEO_ENGINE_IDS)[number];
 
 /** HyperFrames-first: Apache-2.0 director path is the default for new projects. */
 export const DEFAULT_VIDEO_ENGINE: VideoEngineId = "hyperframes";
 
 export const VIDEO_ENGINE_LABELS: Record<VideoEngineId, string> = {
-  remotion: "Remotion",
   hyperframes: "HyperFrames",
 };
 
 export const VIDEO_ENGINE_DESCRIPTIONS: Record<VideoEngineId, string> = {
-  remotion:
-    "React-based compositions. Mature preview and export (Remotion License).",
   hyperframes:
     "HTML-native compositions. Apache 2.0 — commercially open at any scale.",
 };

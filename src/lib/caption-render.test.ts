@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { defaultBrandTokens } from "@/compositions/tokens";
+import { defaultBrandTokens } from "@/video/tokens";
 import { CAPTION_STYLE_PRESETS } from "@/lib/caption-style";
 import {
   resolveCaptionRenderStyle,

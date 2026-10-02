@@ -1,4 +1,4 @@
-import { coverFrames, type ReelProps } from "@/compositions/types";
+import { coverFrames, type ReelProps } from "@/video/types";
 import type { RenderSection } from "@/production/render-sections";
 
 /** Scope the actual silent render, retaining the global timeline and scene order.

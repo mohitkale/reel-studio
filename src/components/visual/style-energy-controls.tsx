@@ -8,7 +8,7 @@ import {
   STYLE_META,
   type EnergyId,
   type StyleId,
-} from "@/compositions/visual-style";
+} from "@/video/visual-style";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

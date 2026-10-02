@@ -53,8 +53,8 @@ const engineFlag = process.argv
   .find((value) => value.startsWith("--engine="))
   ?.slice(9);
 const engines = engineFlag
-  ? [z.enum(["remotion", "hyperframes"]).parse(engineFlag)]
-  : (["remotion", "hyperframes"] as const);
+  ? [z.enum(["hyperframes"]).parse(engineFlag)]
+  : (["hyperframes"] as const);
 const seconds = benchmark?.seconds ?? (long ? 210 : edit ? 62 : 32);
 const fps = benchmark?.fps ?? (long ? 24 : 30);
 const count = benchmark ? 10 : long ? 6 : edit ? 3 : 2;
@@ -550,7 +550,7 @@ async function main() {
       const expectedSections = planRenderSections(
         frames,
         fps,
-        engine === "remotion" ? timeline.map((beat) => beat.startFrame) : [],
+        [],
       );
       const files: string[] = [];
       const run = async (interrupt = false) => {
@@ -656,14 +656,7 @@ async function main() {
           frames,
         );
         if (benchmark) {
-          const scale =
-            engine === "remotion"
-              ? quality === "draft"
-                ? 0.5
-                : quality === "high"
-                  ? 4 / 3
-                  : 1
-              : 1;
+          const scale = 1;
           assert.equal(metadata.width, Math.round(benchmark.width * scale));
           assert.equal(metadata.height, Math.round(benchmark.height * scale));
         }

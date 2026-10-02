@@ -75,7 +75,7 @@ describe("LM Studio provider", () => {
           scenes: [
             {
               text: "Local output",
-              capabilityId: "remotion.template.kinetic",
+              capabilityId: "hf.template.opener",
               emphasis: [],
             },
           ],
@@ -193,7 +193,7 @@ describe("LM Studio provider", () => {
       scenes: [
         {
           text: "Bad",
-          capabilityId: "remotion.template.made-up",
+          capabilityId: "hf.template.made-up",
           emphasis: [],
         },
       ],

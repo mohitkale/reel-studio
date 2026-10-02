@@ -10,8 +10,6 @@ import { HintTooltip } from "@/components/ui/hint-tooltip";
 import { cn } from "@/lib/utils";
 
 const ENGINE_HINT: Record<VideoEngineId, string> = {
-  remotion:
-    "Remotion engine — React templates and mature preview. Remotion License (company license may apply).",
   hyperframes:
     "HyperFrames engine — HTML-native templates, Apache 2.0. Best for commercially open rendering.",
 };
@@ -34,7 +32,7 @@ export function EngineBadge({
   return (
     <HintTooltip label={ENGINE_HINT[engine] ?? description} side="bottom">
       <Badge
-        variant={engine === "hyperframes" ? "success" : "default"}
+        variant="success"
         className={cn(
           "cursor-default font-semibold tracking-wide",
           size === "lg" && "px-3 py-1 text-sm",

@@ -48,9 +48,9 @@ for (const presetId of PRODUCTION_PRESET_IDS) {
     const orientation = ORIENTATIONS[briefIndex];
     const combinationStarted = Date.now();
     console.log(
-      `\n→ ${presetId} · brief ${briefIndex + 1} · ${orientation} · both engines`,
+      `\n→ ${presetId} · brief ${briefIndex + 1} · ${orientation} · HyperFrames`,
     );
-    const filenames = (["hyperframes", "remotion"] as const).map((engine) =>
+    const filenames = (["hyperframes"] as const).map((engine) =>
       path.join(
         root,
         ".artifacts",
@@ -77,7 +77,7 @@ for (const presetId of PRODUCTION_PRESET_IDS) {
       );
     }
     const expected = dimsFor(orientation);
-    for (const [engineIndex, engine] of ["hyperframes", "remotion"].entries()) {
+    for (const [engineIndex, engine] of ["hyperframes"].entries()) {
       const filename = filenames[engineIndex];
       const metadata = probe(filename);
       const video = metadata.streams.find(

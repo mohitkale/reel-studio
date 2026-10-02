@@ -124,7 +124,7 @@ describe("project motion persistence", () => {
       undefined,
       motionDirection("type-impact"),
     ];
-    await createProjectFromPlan(plan, "portrait", [], "remotion", undefined, {
+    await createProjectFromPlan(plan, "portrait", [], "hyperframes", undefined, {
       preset: { id: "creator-punch", version: "1.0.0" },
       roles: [...roles],
       motionPlan: settings,

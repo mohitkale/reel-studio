@@ -74,7 +74,7 @@ describe("Ollama provider", () => {
           scenes: [
             {
               text: "A local plan",
-              capabilityId: "remotion.template.kinetic",
+              capabilityId: "hf.template.opener",
               emphasis: [],
             },
           ],
@@ -207,7 +207,7 @@ describe("Ollama provider", () => {
       scenes: [
         {
           text: "Bad",
-          capabilityId: "remotion.template.invented-template",
+          capabilityId: "hf.template.invented-template",
           emphasis: [],
         },
       ],
@@ -238,7 +238,7 @@ describe("Ollama provider", () => {
       scenes: [
         {
           text: "Valid",
-          capabilityId: "remotion.template.kinetic",
+          capabilityId: "hf.template.opener",
           emphasis: [],
         },
       ],

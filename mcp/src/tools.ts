@@ -227,17 +227,17 @@ export function registerTools(server: McpServer): void {
   /* ---- Create / edit tools ---- */
 
   const videoEngine = z
-    .enum(["remotion", "hyperframes"])
+    .enum(["hyperframes"])
     .optional()
     .describe(
-      "Video composition engine. Defaults to 'hyperframes' (Apache-2.0). Pass 'remotion' for Remotion License compositions. Fixed at project creation.",
+      "Video composition engine. HyperFrames is the sole supported engine.",
     );
 
   server.registerTool(
     "create_project",
     {
       description:
-        "Create a new empty project and its first script. Defaults to HyperFrames; pass videoEngine='remotion' for Remotion.",
+        "Create a new empty HyperFrames project and its first script.",
       inputSchema: {
         name: z.string().trim().min(1).max(120),
         orientation: orientation.optional(),
@@ -301,7 +301,7 @@ export function registerTools(server: McpServer): void {
     "list_video_engines",
     {
       description:
-        "List supported video engines (remotion, hyperframes) and their template catalogs. Use before create_project when choosing an engine.",
+        "List the supported HyperFrames engine and its template catalog.",
       inputSchema: {},
     },
     guard(async () => {

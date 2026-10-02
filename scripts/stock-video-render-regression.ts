@@ -1,4 +1,4 @@
-/** Runs the local stock-video regression through both engines and all ratios. */
+/** Runs the local stock-video regression through HyperFrames and all ratios. */
 import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -41,7 +41,7 @@ async function main() {
     path.join(reportDirectory, "report.json"),
     `${JSON.stringify(
       {
-        engines: ["hyperframes", "remotion"],
+        engines: ["hyperframes"],
         orientations: ORIENTATIONS,
         fixture: "generated-local-video-with-audio",
         assertions: [

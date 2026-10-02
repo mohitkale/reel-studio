@@ -1,4 +1,4 @@
-/** Bounded native still review: three unrelated briefs, all ratios, both engines. No providers. */
+/** Bounded native still review: three unrelated briefs, all ratios, HyperFrames. No providers. */
 import assert from "node:assert/strict";
 import { promises as fs } from "node:fs";
 import path from "node:path";
@@ -6,8 +6,8 @@ import { createHash } from "node:crypto";
 import sharp from "sharp";
 import type { LayoutEvidence } from "../src/production/visual-review-layout";
 import { renderVisualReviewFrames } from "../src/library/visual-review";
-import { defaultBrandTokens } from "../src/compositions/tokens";
-import type { ReelProps, ReelScene } from "../src/compositions/types";
+import { defaultBrandTokens } from "../src/video/tokens";
+import type { ReelProps, ReelScene } from "../src/video/types";
 import { motionDirection, type MotionRecipeId } from "../src/production/motion";
 
 async function main() {
@@ -62,9 +62,7 @@ async function main() {
   ] as const;
   await fs.mkdir(output, { recursive: true });
   const report: unknown[] = [];
-  for (const engine of ["remotion", "hyperframes"] as const) {
-    if (process.argv.includes("--engine=remotion") && engine !== "remotion")
-      continue;
+  for (const engine of ["hyperframes"] as const) {
     for (const fixture of fixtures) {
       const directory = path.join(output, `${engine}-${fixture.name}`);
       const scenes: ReelScene[] = (
@@ -83,7 +81,7 @@ async function main() {
               ? ["W".repeat(60), "W".repeat(60)]
               : fixture.items
             : undefined,
-        templateId: engine === "hyperframes" ? "hf-statement" : "kinetic",
+        templateId: "hf-statement",
         ...(!baseline
           ? { motion: motionDirection(recipes[choice] as MotionRecipeId) }
           : {}),

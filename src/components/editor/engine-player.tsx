@@ -1,20 +1,18 @@
 "use client";
 
 import * as React from "react";
-import type { PlayerRef } from "@remotion/player";
 
-import { ReelPlayer } from "@/components/editor/reel-player";
 import {
   HyperFramesPlayer,
   type HyperFramesPlayerHandle,
 } from "@/components/editor/hyperframes-player";
-import type { ReelBeat, ReelProps, ReelScene } from "@/compositions/types";
-import type { BrandTokens } from "@/compositions/tokens";
-import type { EnergyId, StyleId } from "@/compositions/visual-style";
+import type { ReelBeat, ReelProps, ReelScene } from "@/video/types";
+import type { BrandTokens } from "@/video/tokens";
+import type { EnergyId, StyleId } from "@/video/visual-style";
 import type { VideoEngineId } from "@/engines/types";
 import type { ProductionPresetId } from "@/production/presets";
 
-export type EnginePlayerHandle = PlayerRef | HyperFramesPlayerHandle;
+export type EnginePlayerHandle = HyperFramesPlayerHandle;
 
 interface EnginePlayerProps {
   videoEngine: VideoEngineId;
@@ -41,18 +39,10 @@ interface EnginePlayerProps {
   catalogRevision?: string;
 }
 
-/** Engine-selected preview player (Remotion or HyperFrames). */
+/** HyperFrames preview with shared editor transport controls. */
 export const EnginePlayer = React.forwardRef<
   EnginePlayerHandle,
   EnginePlayerProps
->(function EnginePlayer({ videoEngine, ...props }, ref) {
-  if (videoEngine === "hyperframes") {
-    return (
-      <HyperFramesPlayer
-        ref={ref as React.Ref<HyperFramesPlayerHandle>}
-        {...props}
-      />
-    );
-  }
-  return <ReelPlayer ref={ref as React.Ref<PlayerRef>} {...props} />;
+>(function EnginePlayer(props, ref) {
+  return <HyperFramesPlayer ref={ref} {...props} />;
 });

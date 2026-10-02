@@ -1,5 +1,8 @@
 # Motion graphics in Reel Studio — scope and implementation plan
 
+> Historical plan: engine references describe the earlier dual-engine implementation.
+> New previews and exports use HyperFrames only. See [current engine notes](../VIDEO_ENGINES.md) and [the current review milestones](../CRITICAL_REVIEW_PLAN.md).
+
 Status: implementation started, 2026-09-29. Branch: `feature/motion-graphics`.
 
 The first usable pack ships two treatments each for type (Impact and

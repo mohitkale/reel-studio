@@ -12,8 +12,8 @@ const engineFlag = process.argv
   .find((value) => value.startsWith("--engine="))
   ?.slice(9);
 const engines = engineFlag
-  ? [z.enum(["remotion", "hyperframes"]).parse(engineFlag)]
-  : ["remotion", "hyperframes"];
+  ? [z.enum(["hyperframes"]).parse(engineFlag)]
+  : ["hyperframes"];
 const profileFlag = process.argv
   .find((value) => value.startsWith("--profile="))
   ?.slice(10);
@@ -31,7 +31,7 @@ if (
     "Choose a high-quality profile for the finishing experiment.",
   );
 const rowSchema = z.object({
-  engine: z.enum(["remotion", "hyperframes"]),
+  engine: z.enum(["hyperframes"]),
   benchmarkId: videoBenchmarkProfileSchema,
   quality: z.enum(["draft", "standard", "high"]),
   seconds: z.literal(300),

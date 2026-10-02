@@ -18,12 +18,7 @@ import { toast } from "sonner";
 import { useBrandKits } from "@/hooks/brandkits";
 import { useUploadAsset } from "@/hooks/assets";
 import { useCreateManualProduction } from "@/hooks/script";
-import {
-  DEFAULT_VIDEO_ENGINE,
-  VIDEO_ENGINE_IDS,
-  VIDEO_ENGINE_LABELS,
-  type VideoEngineId,
-} from "@/engines/types";
+import { DEFAULT_VIDEO_ENGINE } from "@/engines/types";
 import {
   DEFAULT_ORIENTATION,
   ORIENTATIONS,
@@ -112,8 +107,7 @@ export function CreationWizard({
     React.useState<ProductionPresetId>(initialPresetId);
   const [orientation, setOrientation] =
     React.useState<Orientation>(DEFAULT_ORIENTATION);
-  const [videoEngine, setVideoEngine] =
-    React.useState<VideoEngineId>(DEFAULT_VIDEO_ENGINE);
+  const videoEngine = DEFAULT_VIDEO_ENGINE;
   const [brandKitId, setBrandKitId] = React.useState("");
   const [voiceMode, setVoiceMode] = React.useState<"oneshot" | "per_scene">(
     "oneshot",
@@ -142,7 +136,7 @@ export function CreationWizard({
     setFiles([]);
     setPresetId(initialPresetId);
     setOrientation(DEFAULT_ORIENTATION);
-    setVideoEngine(DEFAULT_VIDEO_ENGINE);
+
     setBrandKitId("");
     setVoiceMode("oneshot");
     setMediaPreference("auto");
@@ -415,22 +409,6 @@ export function CreationWizard({
               ) : null}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
-                  <Label htmlFor="production-engine">Video engine</Label>
-                  <NativeSelect
-                    id="production-engine"
-                    value={videoEngine}
-                    onChange={(event) =>
-                      setVideoEngine(event.target.value as VideoEngineId)
-                    }
-                  >
-                    {VIDEO_ENGINE_IDS.map((engine) => (
-                      <option key={engine} value={engine}>
-                        {VIDEO_ENGINE_LABELS[engine]}
-                      </option>
-                    ))}
-                  </NativeSelect>
-                </div>
-                <div className="grid gap-2">
                   <Label htmlFor="production-orientation">Format</Label>
                   <NativeSelect
                     id="production-orientation"
@@ -521,8 +499,7 @@ export function CreationWizard({
                     PRODUCTION_PRESETS.find((preset) => preset.id === presetId)
                       ?.name
                   }{" "}
-                  · {VIDEO_ENGINE_LABELS[videoEngine]} ·{" "}
-                  {ORIENTATION_LABELS[orientation]}
+                  · HyperFrames · {ORIENTATION_LABELS[orientation]}
                 </p>
                 <p className="text-muted-foreground mt-2 text-xs">
                   {structure === "chapters"

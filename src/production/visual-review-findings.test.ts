@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import type { ReelScene } from "@/compositions/types";
+import type { ReelScene } from "@/video/types";
 import { motionDirection } from "./motion";
 import { reviewVisualInputs } from "./visual-review-findings";
 

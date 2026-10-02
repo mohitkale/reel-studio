@@ -1,8 +1,8 @@
 /** Plain data shapes returned by the API and consumed by the client (no Prisma types). */
 
-import type { BrandTokens } from "@/compositions/tokens";
-import type { SceneBackground, SceneChartData } from "@/compositions/types";
-import type { EnergyId, StyleId } from "@/compositions/visual-style";
+import type { BrandTokens } from "@/video/tokens";
+import type { SceneBackground, SceneChartData } from "@/video/types";
+import type { EnergyId, StyleId } from "@/video/visual-style";
 import type { VideoEngineId } from "@/engines/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";

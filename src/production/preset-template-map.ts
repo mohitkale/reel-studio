@@ -23,13 +23,6 @@ export const PRESET_TEMPLATE_MAP: PresetTemplateMap = {
       comparison: "hf-quote",
       cta: "hf-logo-outro",
     },
-    remotion: {
-      hook: "kinetic",
-      "screenshot-demo": "lottie",
-      feature: "icon-grid",
-      comparison: "icon-grid",
-      cta: "emoji-punch",
-    },
   },
   "editorial-explainer": {
     hyperframes: {
@@ -38,13 +31,6 @@ export const PRESET_TEMPLATE_MAP: PresetTemplateMap = {
       diagram: "hf-list",
       quote: "hf-quote",
       summary: "hf-list",
-    },
-    remotion: {
-      headline: "kinetic",
-      explanation: "kinetic",
-      diagram: "lottie",
-      quote: "quote-card",
-      summary: "icon-grid",
     },
   },
   "creator-punch": {
@@ -55,13 +41,6 @@ export const PRESET_TEMPLATE_MAP: PresetTemplateMap = {
       payoff: "hf-statement",
       cta: "hf-logo-outro",
     },
-    remotion: {
-      hook: "emoji-punch",
-      tip: "icon-grid",
-      emphasis: "emoji-punch",
-      payoff: "kinetic",
-      cta: "emoji-punch",
-    },
   },
   "data-story": {
     hyperframes: {
@@ -69,12 +48,6 @@ export const PRESET_TEMPLATE_MAP: PresetTemplateMap = {
       chart: "hf-data-chart",
       comparison: "hf-data-chart",
       takeaway: "hf-stat",
-    },
-    remotion: {
-      metric: "stat-reveal",
-      chart: "stat-reveal",
-      comparison: "stat-reveal",
-      takeaway: "stat-reveal",
     },
   },
   "developer-demo": {
@@ -85,13 +58,6 @@ export const PRESET_TEMPLATE_MAP: PresetTemplateMap = {
       browser: "hf-app-showcase",
       cta: "hf-logo-outro",
     },
-    remotion: {
-      code: "kinetic",
-      diff: "kinetic",
-      terminal: "kinetic",
-      browser: "lottie",
-      cta: "kinetic",
-    },
   },
   "cinematic-brand": {
     hyperframes: {
@@ -99,12 +65,6 @@ export const PRESET_TEMPLATE_MAP: PresetTemplateMap = {
       feature: "hf-broll",
       testimonial: "hf-quote",
       logo: "hf-logo-outro",
-    },
-    remotion: {
-      hero: "three",
-      feature: "icon-grid",
-      testimonial: "quote-card",
-      logo: "three",
     },
   },
 };

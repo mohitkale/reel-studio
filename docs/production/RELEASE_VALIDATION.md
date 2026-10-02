@@ -1,5 +1,10 @@
 # 0.4 release validation
 
+> Current renderer: HyperFrames only. Historical dual-engine results below are
+> retained as evidence; new commands accept `--engine=hyperframes`. Run
+> `npm run release:check`, `npm run test:render`, and `npm run test:podcast-audiogram`
+> for the current release. The release check rejects retired engine dependencies.
+
 This document records the launch gate for the complete local content-production
 release. It separates fast contract coverage from real media rendering so normal
 pull requests remain practical.
@@ -48,7 +53,7 @@ npm run build
 npm run release:matrix
 ```
 
-`release:check` verifies exact dependency pins, synchronized Remotion packages,
+`release:check` verifies exact dependency pins, absence of retired engine packages,
 the migration chain, release documentation, all preset/engine/role capability
 mappings, three materially different deterministic briefs per preset, 18
 offline HyperFrames composition variants, and decodable bundled gallery media.
@@ -133,7 +138,7 @@ Reproduce the native section gates with the installed render dependencies:
 ```bash
 npm run test:video-sections -- --cancel
 npm run test:video-sections -- --long --speech --cancel
-npm run test:video-sections -- --engine=remotion --edit
+npm run test:video-sections -- --engine=hyperframes --edit
 ```
 
 The default fixture uses 32 seconds, portrait, 30 fps and two chapters. `--long`

@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-composition";
 import { motionDirection } from "@/production/motion";
-import { defaultBrandTokens } from "@/compositions/tokens";
-import type { ReelProps } from "@/compositions/types";
+import { defaultBrandTokens } from "@/video/tokens";
+import type { ReelProps } from "@/video/types";
 import { dimsFor, ORIENTATIONS } from "@/lib/orientation";
 
 function fixture(): ReelProps & { tokens: typeof defaultBrandTokens } {

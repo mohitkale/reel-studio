@@ -20,7 +20,7 @@ import { createProductionRevision } from "@/library/production-revision";
 import { PRODUCTION_LIMITS, videoDurationLimit } from "@/production/limits";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveSpokenText } from "@/lib/spoken-text";
-import { coverFrames } from "@/compositions/types";
+import { coverFrames } from "@/video/types";
 import { videoSnapshotSchema } from "@/production/video-snapshot";
 
 interface ResolvedRequest {

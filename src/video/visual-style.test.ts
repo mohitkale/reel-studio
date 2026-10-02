@@ -10,8 +10,6 @@ import {
   normalizeStyleId,
 } from "./visual-style";
 import { resolvePlanVisualStyle } from "@/library/enrich-scene-plan";
-import { treatmentTokens } from "./components/background-treatments";
-import { defaultBrandTokens } from "./tokens";
 
 describe("visual-style", () => {
   it("defaults unknown ids to bold-hook / normal", () => {
@@ -55,11 +53,3 @@ describe("resolvePlanVisualStyle", () => {
   });
 });
 
-describe("treatmentTokens", () => {
-  it("tints brand colors instead of fully replacing them", () => {
-    const tinted = treatmentTokens(defaultBrandTokens, "tech", 0);
-    expect(tinted.accent.toLowerCase()).not.toBe(defaultBrandTokens.accent.toLowerCase());
-    expect(tinted.accent.toLowerCase()).not.toBe("#22d3ee");
-    expect(tinted.handle).toBe(defaultBrandTokens.handle);
-  });
-});

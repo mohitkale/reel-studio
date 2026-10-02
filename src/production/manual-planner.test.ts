@@ -146,7 +146,7 @@ describe("deterministic production planning", () => {
       name: "Plain-language finding",
       text: "The supplied research explains a pattern without providing a labeled dataset for a chart.",
       presetId: "data-story",
-      videoEngine: "remotion",
+      videoEngine: "hyperframes",
       hasVisualAsset: false,
     });
 

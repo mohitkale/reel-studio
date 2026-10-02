@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { coverFrames } from "@/compositions/types";
+import { coverFrames } from "@/video/types";
 import { buildCaptions, parseCaptions, type CaptionCue } from "@/lib/captions";
 import {
   captionStyleForProductionPreset,

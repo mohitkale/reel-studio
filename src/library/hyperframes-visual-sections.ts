@@ -1,6 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import type { ReelProps } from "@/compositions/types";
+import type { ReelProps } from "@/video/types";
 import {
   buildHyperframesCompositionHtml,
   compositionTotalFrames,

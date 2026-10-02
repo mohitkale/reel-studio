@@ -1,13 +1,14 @@
 # Build Brief: "Reel Studio" - a professional AI short-form video studio
 
+> Historical plan: engine references describe the earlier dual-engine implementation.
+> New previews and exports use HyperFrames only. See [current engine notes](VIDEO_ENGINES.md) and [the current review milestones](CRITICAL_REVIEW_PLAN.md).
+
 Paste this whole file into Claude Code as the opening prompt. Build it from
 scratch in a new folder. Treat this as a product spec, not a one-shot script:
 plan, propose the stack, confirm key choices with me, then build in milestones.
 
-> **Licensing note (current repo):** Reel Studio application code is MIT.
-> Remotion is the **default** engine and is **not** OSI open-source. Projects can
-> instead use **HyperFrames** (Apache-2.0). See [`docs/LICENSING.md`](./LICENSING.md).
-> Do not document Remotion as MIT.
+> **Current licensing:** application code is MIT; HyperFrames is Apache-2.0;
+> GSAP and optional media/models retain their own terms. See [licensing](LICENSING.md).
 
 ---
 

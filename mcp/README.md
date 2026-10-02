@@ -73,9 +73,8 @@ touches the database directly. By design it can do everything an editor can
 - **Audio:** `create_podcast_take`, `get_podcast_take_job`, `download_podcast_take`
 
 `create_project` / `ai_create_project` accept optional `videoEngine`
-(`remotion` | `hyperframes`, default `hyperframes`). Engine is fixed at creation.
-Call `list_video_engines` first to see each engine’s template catalog
-(Remotion vs `hf-*` HyperFrames templates).
+(`hyperframes`, the sole supported engine). Call `list_video_engines` to see
+the `hf-*` template catalog.
 
 `ai_create_project` also accepts an optional `quickProduce` object. When present,
 it creates the editable project, records an immutable production revision, and
@@ -97,8 +96,7 @@ TTS always uses each scene’s `spokenText ?? text`.
 - `reel://authoring/podcast` — podcast cast / script / take workflow
 - `reel://schema/scene` — field types and enums the API enforces
 - `reel://schema/podcast` — podcast cast, turns, length
-- `reel://catalog/templates` — Remotion scene templates (use `list_video_engines`
-  for HyperFrames `hf-*` templates)
+- `reel://catalog/templates` — HyperFrames scene templates
 - `reel://catalog/voices` — live voice-provider status
 
 ## Typical flows
@@ -220,7 +218,7 @@ failure preserves completed siblings and their downloadable artifacts.
   "scriptStyle": "detailed",
   "styleId": "bold-hook",
   "energy": "normal",
-  "videoEngine": "remotion"
+  "videoEngine": "hyperframes"
 }
 ```
 
@@ -320,8 +318,7 @@ Then `create_podcast_take` with `{ "podcastId": "<id>" }` and poll
 ## Licensing
 
 The MCP server code in this folder is part of Reel Studio and is MIT-licensed
-with the rest of the app. Rendering goes through **Remotion** or **HyperFrames**
-depending on the project’s `videoEngine`. See [`docs/LICENSING.md`](../docs/LICENSING.md).
+with the rest of the app. Rendering uses **HyperFrames**; GSAP and media retain their own terms. See [`docs/LICENSING.md`](../docs/LICENSING.md).
 
 `replan_motion_direction` accepts `chapterMotifs:true` to apply alternating
 Sweep/Rise type choreography from a valid saved outline and seed. Turning it off

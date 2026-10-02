@@ -9,7 +9,7 @@
 - [ ] `npm run test`
 - [ ] `npm run security:scan`
 - [ ] No secrets, API keys, or private media committed
-- [ ] Licence notes remain accurate (Remotion ≠ MIT / OSI)
+- [ ] Licence notes remain accurate (HyperFrames is Apache-2.0; GSAP has separate terms)
 - [ ] Docs updated if commands, env, or setup changed
 
 ## Screenshots / demos

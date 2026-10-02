@@ -1,14 +1,8 @@
-/** Real, credential-free renders for both engines. Outputs stay in .artifacts. */
+/** Real, credential-free renders for HyperFrames. Outputs stay in .artifacts. */
 import { copyFile, mkdir, readFile, writeFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { bundle } from "@remotion/bundler";
-import {
-  renderMedia,
-  renderStill,
-  selectComposition,
-} from "@remotion/renderer";
 import fixture from "../tests/fixtures/legacy-reel.json";
 import productLaunchFixture from "../tests/fixtures/product-launch-reel.json";
 import editorialExplainerFixture from "../tests/fixtures/editorial-explainer-reel.json";
@@ -16,10 +10,8 @@ import creatorPunchFixture from "../tests/fixtures/creator-punch-reel.json";
 import dataStoryFixture from "../tests/fixtures/data-story-reel.json";
 import developerDemoFixture from "../tests/fixtures/developer-demo-reel.json";
 import cinematicBrandFixture from "../tests/fixtures/cinematic-brand-reel.json";
-import type { ReelProps } from "../src/compositions/types";
-import { TEMPLATES } from "../src/compositions/templates";
+import type { ReelProps } from "../src/video/types";
 import { buildHyperframesCompositionHtml } from "../src/engines/hyperframes/build-composition";
-import { remotionWebpackOverride } from "../src/remotion/webpack-override";
 import { HYPERFRAMES_RENDER_FONT_FILES } from "../src/engines/hyperframes/render-fonts";
 import releaseBriefs from "../tests/fixtures/release-briefs.json";
 import { applyReleaseBriefToFixture } from "./release-brief-fixture";
@@ -94,7 +86,6 @@ async function main() {
   if (briefIndex !== undefined && !presetId) {
     throw new Error("Release brief renders require --preset");
   }
-  const renderPreset = Boolean(presetId || motionRecipeId);
   const renderProductLaunch = presetId === "product-launch";
   const renderDeveloperDemo = presetId === "developer-demo";
   const renderCinematicBrand = presetId === "cinematic-brand";
@@ -174,11 +165,9 @@ async function main() {
     }
   }
   const engines = args.filter((arg) => !arg.startsWith("--"));
-  const selected = engines.length ? engines : ["hyperframes", "remotion"];
-  if (
-    selected.some((engine) => !["hyperframes", "remotion"].includes(engine))
-  ) {
-    throw new Error("Expected hyperframes and/or remotion");
+  const selected = engines.length ? engines : ["hyperframes"];
+  if (selected.some((engine) => !["hyperframes"].includes(engine))) {
+    throw new Error("Expected hyperframes");
   }
   const productAssetDataUrl = renderProductLaunch
     ? `data:image/svg+xml;base64,${(
@@ -612,7 +601,7 @@ async function main() {
   for (const engine of selected as VideoEngineId[]) {
     const mp4 = path.join(output, `${engine}.mp4`);
     const stockVideoUrl =
-      engine === "hyperframes" ? "stock-video.mp4" : "/public/stock-video.mp4";
+      "stock-video.mp4";
     let engineProps: ReelProps = renderStockVideo
       ? {
           ...props,
@@ -649,7 +638,7 @@ async function main() {
         sfxCues: resolved.map((cue) => ({
           ...cue,
           url:
-            engine === "hyperframes" ? cue.url.slice(1) : `/public${cue.url}`,
+            cue.url.slice(1),
         })),
       };
       await writeFile(
@@ -657,135 +646,55 @@ async function main() {
         JSON.stringify(resolved, null, 2),
       );
     }
-    if (engine === "hyperframes") {
-      const project = path.join(output, "hyperframes");
-      await mkdir(project, { recursive: true });
-      if (renderStockVideo) {
-        await copyFile(stockVideoSource, path.join(project, "stock-video.mp4"));
-      }
-      if (renderMotionSound) {
-        for (const cue of engineProps.sfxCues ?? []) {
-          const target = path.join(project, cue.url);
-          await mkdir(path.dirname(target), { recursive: true });
-          await copyFile(path.resolve("public", cue.url), target);
-        }
-      }
-      const runtime = path.join(project, "_runtime");
-      await mkdir(runtime, { recursive: true });
-      await copyFile(
-        path.resolve("node_modules/gsap/dist/gsap.min.js"),
-        path.join(runtime, "gsap.min.js"),
-      );
-      await Promise.all([
-        copyFile(
-          path.resolve(
-            "node_modules/@fontsource-variable/geist/files",
-            HYPERFRAMES_RENDER_FONT_FILES.sans,
-          ),
-          path.join(runtime, HYPERFRAMES_RENDER_FONT_FILES.sans),
-        ),
-        copyFile(
-          path.resolve(
-            "node_modules/@fontsource-variable/geist-mono/files",
-            HYPERFRAMES_RENDER_FONT_FILES.mono,
-          ),
-          path.join(runtime, HYPERFRAMES_RENDER_FONT_FILES.mono),
-        ),
-      ]);
-      await writeFile(
-        path.join(project, "index.html"),
-        buildHyperframesCompositionHtml(engineProps, {
-          producerMode: true,
-          runtimeUrl: "/_runtime/gsap.min.js",
-        }),
-      );
-      const result = await run(
-        process.execPath,
-        ["scripts/hyperframes-render-worker.mjs", project, mp4, "30", "draft"],
-        { timeout: 300_000, maxBuffer: 4 * 1024 * 1024 },
-      );
-      process.stdout.write(result.stdout);
-    } else {
-      const inputProps: ReelProps =
-        renderPreset || renderStockVideo
-          ? engineProps
-          : {
-              ...engineProps,
-              scenes: engineProps.scenes.map((scene, index) => ({
-                ...scene,
-                templateId: index === 0 ? "three" : "lottie",
-              })),
-            };
-      const remotionPublic = path.join(output, "remotion-public");
-      if (renderStockVideo) {
-        await mkdir(remotionPublic, { recursive: true });
-        await copyFile(
-          stockVideoSource,
-          path.join(remotionPublic, "stock-video.mp4"),
-        );
-      }
-      const serveUrl = await bundle({
-        entryPoint: path.resolve("src/remotion/index.ts"),
-        webpackOverride: remotionWebpackOverride,
-        ...(renderStockVideo ? { publicDir: remotionPublic } : {}),
-      });
-      const composition = await selectComposition({
-        serveUrl,
-        id: "Reel",
-        inputProps,
-      });
-      await renderMedia({
-        serveUrl,
-        composition,
-        inputProps,
-        outputLocation: mp4,
-        codec: "h264",
-        concurrency: 2,
-        logLevel: "error",
-      });
-      const stillFrames = renderStockVideo
-        ? [Math.floor(props.timeline[0]!.durationFrames / 2)]
-        : renderPreset
-          ? props.timeline.flatMap((beat) => [
-              beat.startFrame,
-              beat.startFrame + Math.floor(beat.durationFrames / 2),
-            ])
-          : [0, 22, 44, 45, 67, 89];
-      for (const frame of stillFrames) {
-        await renderStill({
-          serveUrl,
-          composition,
-          inputProps,
-          frame,
-          output: path.join(output, `remotion-${frame}.png`),
-          logLevel: "error",
-        });
-      }
-      for (const template of renderPreset || renderStockVideo
-        ? []
-        : TEMPLATES) {
-        const templateProps: ReelProps = {
-          ...props,
-          scenes: props.scenes.map((scene) => ({
-            ...scene,
-            templateId: template.id,
-          })),
-        };
-        const templateComposition = await selectComposition({
-          serveUrl,
-          id: "Reel",
-          inputProps: templateProps,
-        });
-        await renderStill({
-          serveUrl,
-          composition: templateComposition,
-          inputProps: templateProps,
-          frame: 30,
-          output: path.join(output, `remotion-template-${template.id}.png`),
-          logLevel: "error",
-        });
+
+    const project = path.join(output, "hyperframes");
+    await mkdir(project, { recursive: true });
+    if (renderStockVideo) {
+      await copyFile(stockVideoSource, path.join(project, "stock-video.mp4"));
+    }
+    if (renderMotionSound) {
+      for (const cue of engineProps.sfxCues ?? []) {
+        const target = path.join(project, cue.url);
+        await mkdir(path.dirname(target), { recursive: true });
+        await copyFile(path.resolve("public", cue.url), target);
       }
     }
+    const runtime = path.join(project, "_runtime");
+    await mkdir(runtime, { recursive: true });
+    await copyFile(
+      path.resolve("node_modules/gsap/dist/gsap.min.js"),
+      path.join(runtime, "gsap.min.js"),
+    );
+    await Promise.all([
+      copyFile(
+        path.resolve(
+          "node_modules/@fontsource-variable/geist/files",
+          HYPERFRAMES_RENDER_FONT_FILES.sans,
+        ),
+        path.join(runtime, HYPERFRAMES_RENDER_FONT_FILES.sans),
+      ),
+      copyFile(
+        path.resolve(
+          "node_modules/@fontsource-variable/geist-mono/files",
+          HYPERFRAMES_RENDER_FONT_FILES.mono,
+        ),
+        path.join(runtime, HYPERFRAMES_RENDER_FONT_FILES.mono),
+      ),
+    ]);
+    await writeFile(
+      path.join(project, "index.html"),
+      buildHyperframesCompositionHtml(engineProps, {
+        producerMode: true,
+        runtimeUrl: "/_runtime/gsap.min.js",
+      }),
+    );
+    const result = await run(
+      process.execPath,
+      ["scripts/hyperframes-render-worker.mjs", project, mp4, "30", "draft"],
+      { timeout: 300_000, maxBuffer: 4 * 1024 * 1024 },
+    );
+    process.stdout.write(result.stdout);
+
     if ((await stat(mp4)).size < 10_000)
       throw new Error(`${engine}: empty render`);
     await verifyForeground(mp4, engine);

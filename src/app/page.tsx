@@ -28,13 +28,7 @@ import {
   ORIENTATION_LABELS,
   DEFAULT_ORIENTATION,
 } from "@/lib/orientation";
-import {
-  DEFAULT_VIDEO_ENGINE,
-  VIDEO_ENGINE_DESCRIPTIONS,
-  VIDEO_ENGINE_IDS,
-  VIDEO_ENGINE_LABELS,
-  type VideoEngineId,
-} from "@/engines/types";
+import { DEFAULT_VIDEO_ENGINE } from "@/engines/types";
 import { EngineBadge } from "@/components/engines/engine-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -60,8 +54,7 @@ function NewProjectDialog() {
   const [name, setName] = React.useState("");
   const [orientation, setOrientation] =
     React.useState<Orientation>(DEFAULT_ORIENTATION);
-  const [videoEngine, setVideoEngine] =
-    React.useState<VideoEngineId>(DEFAULT_VIDEO_ENGINE);
+  const videoEngine = DEFAULT_VIDEO_ENGINE;
   const [open, setOpen] = React.useState(false);
 
   function submit() {
@@ -73,7 +66,7 @@ function NewProjectDialog() {
         onSuccess: ({ scriptId }) => {
           setOpen(false);
           setName("");
-          setVideoEngine(DEFAULT_VIDEO_ENGINE);
+
           toast.success("Project created");
           router.push(`/editor/${scriptId}`);
         },
@@ -97,36 +90,10 @@ function NewProjectDialog() {
         <DialogHeader>
           <DialogTitle>New project</DialogTitle>
           <DialogDescription>
-            Choose a video engine, then name your project. Engine cannot be
-            changed later.
+            Name your project and choose its format.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
-          <div className="grid gap-2">
-            <Label>Video engine</Label>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {VIDEO_ENGINE_IDS.map((id) => {
-                const selected = videoEngine === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setVideoEngine(id)}
-                    className={
-                      selected
-                        ? "border-primary bg-primary/5 rounded-lg border p-3 text-left"
-                        : "hover:bg-muted/40 rounded-lg border p-3 text-left"
-                    }
-                  >
-                    <div className="font-medium">{VIDEO_ENGINE_LABELS[id]}</div>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      {VIDEO_ENGINE_DESCRIPTIONS[id]}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
           <div className="grid gap-2">
             <Label htmlFor="project-name">Name</Label>
             <Input

@@ -1,4 +1,4 @@
-import type { ReelBeat } from "@/compositions/types";
+import type { ReelBeat } from "@/video/types";
 import { estimateTimeline } from "./preview-timeline";
 
 interface SceneText {

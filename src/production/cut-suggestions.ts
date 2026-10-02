@@ -3,7 +3,7 @@ import type { ScriptDTO, VoiceTakeDTO } from "@/lib/dto";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveSpokenText } from "@/lib/spoken-text";
 import { resolveSpokenWordWindows } from "@/lib/spoken-word-windows";
-import { coverFrames } from "@/compositions/types";
+import { coverFrames } from "@/video/types";
 import { musicBeatAnchors, musicMapSchema } from "@/production/music-map";
 
 export const cutSuggestionRequestSchema = z

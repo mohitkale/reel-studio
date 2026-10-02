@@ -6,6 +6,14 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+- Use HyperFrames for every live preview, MP4 export and podcast audiogram.
+- Remove Remotion/Three.js dependencies, compositions, player and Studio entry point.
+- Migrate existing engine/template values while preserving content, original audio,
+  historical exports and immutable revision provenance. Run `npm run db:migrate`
+  with the app stopped; the migration backs up recognized installations.
+- Update setup, authoring and licensing docs: application MIT, HyperFrames Apache-2.0,
+  GSAP and optional assets/models under their own terms.
+
 ## 0.4.0 - 2026-09-13
 
 ### Added

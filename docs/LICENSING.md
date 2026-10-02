@@ -13,7 +13,7 @@ upstream terms before commercial or enterprise use — they can change.
 | Bundled ambient music under `public/music/`             | **CC0 / public domain** — see [`public/music/README.md`](../public/music/README.md) |
 | Contributions                                           | Accepted under the MIT License (see [`CONTRIBUTING.md`](../CONTRIBUTING.md))        |
 
-The MIT License covers **our** code only. It does **not** relicense Remotion,
+The MIT License covers **our** code only. It does **not** relicense dependencies,
 cloud APIs, stock/music providers, or VoiceForge model weights.
 
 Quick Produce changes orchestration, not licensing. Its immutable revision keeps
@@ -25,87 +25,32 @@ responsible for the selected local model's terms.
 
 ---
 
-## Critical dependency: Remotion (not open-source)
+## Video runtime
 
-**Remotion is the default video engine.** For Remotion projects, preview and MP4
-export use Remotion (`remotion`, `@remotion/player`, `@remotion/renderer`,
-`@remotion/bundler`, `@remotion/lottie`, `@remotion/three`,
-`@remotion/transitions`, `@remotion/google-fonts`, `@remotion/cli`). New projects
-can choose **HyperFrames** instead (see below); Remotion packages may still be
-installed even if you only create HyperFrames projects.
+HyperFrames is the sole preview/export engine, licensed
+[Apache-2.0](https://github.com/heygen-com/hyperframes/blob/main/LICENSE).
+Remotion dependencies and runtime support have been removed. Existing MP4 files
+and immutable production provenance are retained; new exports use HyperFrames.
 
-| Fact             | Detail                                                                                                                                                                     |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| License name     | **Remotion License** (proprietary / source-available)                                                                                                                      |
-| OSI open-source? | **No** — [Remotion FAQ](https://www.remotion.dev/docs/license-pricing-compliance/faq)                                                                                      |
-| Upstream terms   | [remotion.dev/license](https://www.remotion.dev/license) · [remotion.pro/terms](https://www.remotion.pro/terms) · [remotion.pro/license](https://www.remotion.pro/license) |
-
-### Who can use Remotion for free?
-
-Per Remotion’s published terms (verify current wording upstream), the **Free
-License** typically covers:
-
-- Individuals
-- For-profit organizations with **up to 3 employees**
-- Non-profit / not-for-profit organizations (as defined by Remotion)
-- Evaluation before commercial adoption
-
-For-profit organizations with **4 or more employees** generally need a paid
-**Company License** (Creators and/or Automators options).
-
-### What this means for Reel Studio users
-
-1. **Cloning and running this repo** makes you a Remotion user. Your
-   eligibility for Remotion’s Free vs Company License is **your**
-   responsibility, independent of Reel Studio’s MIT license.
-2. Reel Studio calls `renderMedia()` for exports — that is an **automation**
-   under Remotion’s definitions. Larger companies typically need the
-   **Remotion for Automators** option when they fall under the Company License.
-3. Building a video editor on Remotion (drag-and-drop UI, no “upload arbitrary
-   Remotion projects for cloud render”) is an **allowed** use case per
-   Remotion’s FAQ/terms.
-4. The Remotion Player in the editor uses `acknowledgeRemotionLicense` as
-   required by Remotion’s Player API.
-
-We do **not** sell, relicense, or sublicense Remotion. Do not imply that
-shipping or using Reel Studio under MIT removes Remotion’s company-size or
-usage obligations.
-
----
-
-## Optional video engine: HyperFrames (Apache 2.0)
-
-Projects can choose **HyperFrames** instead of Remotion at creation time
-(`videoEngine: "hyperframes"`). Preview and MP4 export then use HeyGen’s
-open-source HTML→video stack (`@hyperframes/producer` and related packages).
-
-| Fact           | Detail                                                                                                                                                                            |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| License        | **Apache License 2.0** (OSI-approved)                                                                                                                                             |
-| Upstream       | [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) · [hyperframes.heygen.com](https://hyperframes.heygen.com/)                                                   |
-| Commercial use | Allowed at any scale on the self-hosted OSS stack — no Remotion company/automator seat fees                                                                                       |
-| Runtime        | Node.js **≥ 22**, Chrome/Chromium, FFmpeg (bundled/auto-downloaded by the producer)                                                                                               |
-| Hosted MCP     | HeyGen’s cloud MCP (`mcp.heygen.com`) is **optional / external** and uses HeyGen credits — Reel Studio does **not** require it; local render goes through `@hyperframes/producer` |
-
-HyperFrames does **not** replace Remotion for existing Remotion projects. Engine
-choice is per-project and fixed at creation.
-
----
+GSAP uses the [Standard License](https://gsap.com/community/standard-license/),
+a custom no-charge license with restrictions, rather than an OSI license.
+Therefore this runtime is not wholly Apache-2.0 or wholly OSI open source.
+Reel Studio's own MIT license does not relicense dependencies or model weights.
 
 ## Local / permissive runtime dependencies (selected)
 
 These are commonly used with Reel Studio and are generally permissive. Confirm
 each package’s `LICENSE` file in `node_modules` for the exact text.
 
-| Dependency                                | Typical license                | Role                        |
-| ----------------------------------------- | ------------------------------ | --------------------------- |
-| Next.js, React, React DOM                 | MIT                            | App framework               |
-| Prisma / `@prisma/client`                 | Apache-2.0                     | Database                    |
-| Tailwind / Radix UI / lucide-react        | MIT                            | UI                          |
-| TanStack Query, Zod, Three.js             | MIT                            | Data / 3D                   |
-| `kokoro-js` / Kokoro model                | Apache-2.0                     | Local TTS                   |
-| `@modelcontextprotocol/sdk`               | MIT / Apache-2.0 (see package) | MCP server                  |
-| `@hyperframes/producer` (optional engine) | Apache-2.0                     | HyperFrames HTML→MP4 export |
+| Dependency                         | Typical license                | Role                        |
+| ---------------------------------- | ------------------------------ | --------------------------- |
+| Next.js, React, React DOM          | MIT                            | App framework               |
+| Prisma / `@prisma/client`          | Apache-2.0                     | Database                    |
+| Tailwind / Radix UI / lucide-react | MIT                            | UI                          |
+| TanStack Query, Zod                | MIT                            | Data validation             |
+| `kokoro-js` / Kokoro model         | Apache-2.0                     | Local TTS                   |
+| `@modelcontextprotocol/sdk`        | MIT / Apache-2.0 (see package) | MCP server                  |
+| `@hyperframes/producer`            | Apache-2.0                     | HyperFrames HTML→MP4 export |
 
 ---
 
@@ -164,22 +109,6 @@ automatically cleared for every commercial scenario — check each track’s
 license.
 
 ---
-
-## Summary checklist
-
-| Question                                                                            | Answer                                                                                                                        |
-| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Can I open-source / fork Reel Studio under MIT?                                     | **Yes** — for this repo’s code.                                                                                               |
-| Is Remotion MIT / OSI open-source?                                                  | **No.**                                                                                                                       |
-| Can I avoid Remotion License obligations by choosing HyperFrames?                   | **Yes for those projects** — preview/export use Apache-2.0 HyperFrames. Remotion deps may still be present in `node_modules`. |
-| Can an individual use Remotion via Reel Studio for free?                            | **Usually yes** under Remotion’s Free License (verify upstream).                                                              |
-| Can a 10-person company use Remotion via Reel Studio for free?                      | **Usually no** — they need a Remotion Company License (or use HyperFrames projects).                                          |
-| Does MIT on this repo waive Remotion fees for downstream users?                     | **No.**                                                                                                                       |
-| Are Unsplash / Pexels / Pixabay / Jamendo / cloud services “free forever, any use”? | **No** — follow each provider’s terms. Coverr remains disabled pending API-specific license clarification.                    |
-| Is VoiceForge XTTS-v2 OK for commercial products?                                   | **No** (CPML non-commercial); prefer F5-TTS / OpenVoice / RVC as documented there.                                            |
-
-When in doubt, read the upstream license pages linked above or ask Remotion /
-the relevant vendor for written clarification for your entity size and use case.
 
 ## Local-first expansion policy snapshot
 

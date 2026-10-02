@@ -1,5 +1,5 @@
 name: Template request
-description: Request a new Remotion or HyperFrames motion template
+description: Request a new HyperFrames motion template
 title: "[template] "
 labels: ["enhancement"]
 body:
@@ -31,7 +31,6 @@ body:
       label: Preferred engine
       options:
         - HyperFrames (Apache-2.0)
-        - Remotion
         - Either
     validations:
       required: true

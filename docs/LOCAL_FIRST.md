@@ -10,7 +10,7 @@ configure a provider key and use that feature.
 | ------------------------------------------- | ------------------------------------------------- |
 | Projects & scripts                          | SQLite database under `prisma/`                   |
 | Uploaded assets & renders                   | Files under `media/` (git-ignored)                |
-| HyperFrames / Remotion preview & MP4 export | Runs on your machine (or in Docker on localhost)  |
+| HyperFrames preview & MP4 export | Runs on your machine (or in Docker on localhost)  |
 | Kokoro TTS                                  | In-browser or `kokoro-server` — no vendor API key |
 | Web Speech preview                          | Browser-only                                      |
 | Bundled music                               | CC0 files in `public/music/`                      |
@@ -22,7 +22,7 @@ configure a provider key and use that feature.
 | --------------------------- | ------------------------------------ | ------------------------- |
 | Voice preview               | Web Speech                           | —                         |
 | Voice generation            | Kokoro / VoiceForge                  | ElevenLabs, Cartesia      |
-| Video engine                | HyperFrames (Apache-2.0) or Remotion | — (both render locally)   |
+| Video engine                | HyperFrames (Apache-2.0) | — (renders locally)   |
 | AI scene / podcast planning | Manual, Ollama, or LM Studio         | Gemini, OpenAI            |
 | Backgrounds                 | Local upload / mood gradients        | Pexels, Pixabay, Unsplash |
 | Music                       | Bundled CC0 / user upload            | Jamendo                   |
@@ -41,7 +41,7 @@ Only when you explicitly configure and use a provider:
 Nothing is sent for analytics or telemetry. See [SECURITY.md](../SECURITY.md).
 
 Caption timing and appearance remain local project data. Each styled track keeps
-a versioned snapshot used by both Remotion and HyperFrames; older tracks with no
+a versioned snapshot used by HyperFrames; older tracks with no
 snapshot retain the 0.4 caption appearance.
 
 Quick Produce is off by default and does not introduce a cloud service. An

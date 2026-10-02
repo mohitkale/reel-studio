@@ -1,4 +1,4 @@
-import type { ReelBeat, ReelScene } from "@/compositions/types";
+import type { ReelBeat, ReelScene } from "@/video/types";
 import {
   reviewMotionRepetition,
   reviewMotionTreatments,
@@ -82,7 +82,7 @@ export function reviewVisualInputs(
     const index = beats.get(scene.id);
     if (index === undefined) continue;
     const beat = timeline[index];
-    // A beat holds until the next start in both engines, including silent gaps.
+    // A beat holds until the next start in HyperFrames, including silent gaps.
     const end =
       timeline[index + 1]?.startFrame ?? beat.startFrame + beat.durationFrames;
     const seconds = (end - beat.startFrame) / fps;

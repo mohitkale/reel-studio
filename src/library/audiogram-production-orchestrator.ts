@@ -1,8 +1,7 @@
-import { cancelableRemotion } from "@/library/production-cancellation";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 
-import { renderMedia, selectComposition } from "@remotion/renderer";
+import { renderHyperframesAudiogram } from "@/library/hyperframes-audiogram";
 
 import type {
   ClaimedProductionJob,
@@ -12,7 +11,6 @@ import { audiogramProductionJobInputSchema } from "@/production/jobs";
 import { buildPodcastAudiogramPlan } from "@/library/podcast-audiogram";
 import { getPodcastTakeSource } from "@/library/repositories/podcasts";
 import { getAssetStore } from "@/library/storage";
-import { getRemotionServeUrl } from "@/library/render-service";
 import { verifyProductionMp4 } from "@/library/video-production-orchestrator";
 import {
   addProductionJobOutput,
@@ -74,47 +72,16 @@ export async function executeAudiogramProductionJob(
     state: "running",
     progress: 0,
   });
-  const serveUrl = await getRemotionServeUrl();
-  const composition = await selectComposition({
-    serveUrl,
-    id: "PodcastAudiogram",
-    inputProps: plan.props,
-  });
   const outputKey = `audiograms/audiogram-${job.id}.mp4`;
   const outputPath = path.join(process.cwd(), "media", outputKey);
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
-  const quality = {
-    draft: { scale: 0.5, x264Preset: "ultrafast" as const, crf: 30 },
-    standard: { scale: 1, x264Preset: "veryfast" as const, crf: undefined },
-    high: { scale: 4 / 3, x264Preset: "medium" as const, crf: 16 },
-  }[input.quality];
   await assertActive(context);
-  await cancelableRemotion(
-    (cancelSignal) =>
-      renderMedia({
-        cancelSignal,
-        composition: {
-          ...composition,
-          durationInFrames: plan.props.durationInFrames,
-        },
-        serveUrl,
-        codec: "h264",
-        outputLocation: outputPath,
-        inputProps: plan.props,
-        scale: quality.scale,
-        x264Preset: quality.x264Preset,
-        crf: quality.crf,
-        imageFormat: "jpeg",
-        pixelFormat: "yuv420p",
-        hardwareAcceleration: "if-possible",
-        timeoutInMilliseconds: 300_000,
-        logLevel: "error",
-      }),
+  await renderHyperframesAudiogram(
+    plan,
+    outputPath,
+    input.quality,
     context.signal,
-  ).catch(async (error: unknown) => {
-    await fs.rm(outputPath, { force: true });
-    throw error;
-  });
+  );
   await upsertProductionJobStep(job.id, "render_export", {
     state: "succeeded",
     progress: 1,

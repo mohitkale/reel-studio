@@ -15,21 +15,6 @@ function pickCreativeAngle(): string {
   return CREATIVE_ANGLES[Math.floor(Math.random() * CREATIVE_ANGLES.length)];
 }
 
-function remotionTemplateRules(): string[] {
-  return [
-    "- For each scene pick capabilityId from: remotion.template.kinetic, remotion.template.lottie, remotion.template.three, remotion.template.stat-reveal, remotion.template.icon-grid, remotion.template.quote-card, remotion.template.emoji-punch.",
-    "  TEMPLATE RULES — follow precisely (wrong layout = unwatchable):",
-    "  • 'remotion.template.stat-reveal': scene centered on ONE number/metric. visual = that number (e.g. '73%', '10x'). Keep supporting text short.",
-    "  • 'remotion.template.icon-grid': ONLY when you have 3 to 5 SHORT tip/step lines (max ~8 words each). REQUIRED: put those lines in the 'items' array; put a short header (2–5 words) in 'text'; set visual to '✓' or '→'. NEVER use it for a single point, a long paragraph, or 1–2 long sentences. If you only have one idea, use 'remotion.template.kinetic' instead.",
-    "  • 'remotion.template.emoji-punch': short emotional punch / turn; visual = one emoji. Keep text under ~12 words.",
-    "  • 'remotion.template.quote-card': short attributed line; visual = speaker (optional).",
-    "  • 'remotion.template.lottie': one clear process/how-it-works beat — not a wall of text.",
-    "  • 'remotion.template.three': an optional hero moment when spatial depth helps the idea.",
-    "  • 'remotion.template.kinetic': default for one clear spoken idea / hook / insight. Prefer this over a fake checklist.",
-    "  Choose layouts by content fit. Repeating a clear layout is better than forced variety.",
-  ];
-}
-
 function hyperframesTemplateRules(): string[] {
   return [
     "- For each scene pick capabilityId from the supplied HyperFrames capability enum. Pick by scene role and required inputs; the app maps it to a version-compatible template.",
@@ -53,17 +38,14 @@ function hyperframesTemplateRules(): string[] {
 /**
  * Shared director prompt. Retention-first, personal "you" voice, and layout
  * rules that keep the video easy on the eyes (no clunky one-item checklists).
- * Template rules switch with videoEngine (Remotion vs HyperFrames-native).
+ * Template rules target the HyperFrames catalog.
  */
 export function buildPrompt(input: GeneratePlanInput): {
   system: string;
   user: string;
 } {
   if (input.mode === "chapter_outline") {
-    const capability =
-      input.videoEngine === "hyperframes"
-        ? "hf.template.statement"
-        : "remotion.template.kinetic";
+    const capability = "hf.template.statement";
     return {
       system: `Plan a coherent chapter outline for a creator. Return the existing JSON plan schema, with exactly ${input.sceneCount} entries in scenes. Each entry is a proposed chapter, not a finished scene: text is a distinct chapter title (1–120 characters), spokenText is a writing brief (3–2000 characters) with purpose, supplied facts and a takeaway. Use plain conversational English. Preserve supplied facts; never invent statistics, sources, product claims or URLs. Do not repeat previous chapters or write full narration. Set capabilityId to ${capability}, emphasis to [], styleId to clean-story and energy to calm. Omit media, charts and visual fields. Include short projectName and scriptName values. Return only JSON that matches the provided schema.`,
       user: `Topic and supplied source:\n${input.brief}\n\nPrior context (do not rewrite):\n${input.existingContext ?? "None"}`,
@@ -74,7 +56,6 @@ export function buildPrompt(input: GeneratePlanInput): {
   const isHookVariants = input.mode === "hook_variants";
   const style = input.scriptStyle ?? "short";
   const isDetailed = style === "detailed";
-  const isHyperframes = input.videoEngine === "hyperframes";
 
   const count = input.sceneCount
     ? `${input.sceneCount}`
@@ -125,9 +106,8 @@ export function buildPrompt(input: GeneratePlanInput): {
       ? `- energy MUST be exactly "${input.energy}".`
       : `- energy: calm, normal, or high. Prefer normal or calm — the video should feel professional and soothing, not frantic. Use high only for explicit hype briefs.`;
 
-  const photoOmit = isHyperframes
-    ? "OMIT for hf-stat, hf-list, hf-quote, hf-cta, hf-kinetic-slam, hf-money-count, hf-data-chart, and social/logo outros — those need clean type, not busy photos."
-    : "OMIT for stat-reveal, icon-grid, quote-card, emoji-punch — those need clean type, not busy photos.";
+  const photoOmit =
+    "OMIT for hf-stat, hf-list, hf-quote, hf-cta, hf-kinetic-slam, hf-money-count, hf-data-chart, and social/logo outros — those need clean type, not busy photos.";
   const mediaIntentRule =
     input.mediaPreference === "none"
       ? "  • Omit backgroundQuery and mediaKind. The user disabled stock media."
@@ -143,14 +123,12 @@ export function buildPrompt(input: GeneratePlanInput): {
   const presetRule = preset
     ? `- Production preset is ${preset.name}. Use only these capability IDs: ${allowedPresetCapabilityIds(
         preset.id,
-        input.videoEngine ?? "remotion",
+        input.videoEngine ?? "hyperframes",
       ).join(", ")}. Choose by content fit.`
     : undefined;
 
   const system = [
-    `You are a short-form video director for ${aspect}${
-      isHyperframes ? " using the HyperFrames HTML template catalog" : ""
-    }.`,
+    `You are a short-form video director for ${aspect} using the HyperFrames HTML template catalog.`,
     "Viewer reality: they are scrolling. You have ~3 seconds. Sound may be off. Text must be readable. The feel should be personal (talk to 'you') and professional — calm confidence, not shouting ads.",
     `Creative direction for this take: write in the voice of ${pickCreativeAngle()}. Specific beats beat generic advice.`,
     "Rules:",
@@ -162,7 +140,7 @@ export function buildPrompt(input: GeneratePlanInput): {
     "- Open with the clearest useful idea for the brief. A bold claim, supplied number, direct question, or current pain can work when supported by the source.",
     structureRule,
     "- When the brief calls for an action, end with a clear, low-pressure CTA (try this, save this, follow for more).",
-    ...(isHyperframes ? hyperframesTemplateRules() : remotionTemplateRules()),
+    ...hyperframesTemplateRules(),
     "- emphasis: 1–2 short phrases that appear VERBATIM in that scene's text (highlights for the eye).",
     "- visual: only as required above; otherwise omit. Keep it SHORT (a number, one emoji, or a CTA label under ~20 characters).",
     "- Never invent statistics, chart values, testimonials, URLs, customers, or product results. Use only facts in the brief or supplied source; choose a non-data layout when facts are missing.",

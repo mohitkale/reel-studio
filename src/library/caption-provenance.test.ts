@@ -115,7 +115,7 @@ it("migrates old tracks safely, freezes measured provenance, and keeps preview/e
     });
     await setCaptionTrackEnabled("script", track.id, false);
     await updateCaptionTrackStyle("script", track.id, track.style);
-    for (const videoEngine of ["remotion", "hyperframes"] as const) {
+    for (const videoEngine of ["hyperframes"] as const) {
       await prisma.project.update({
         where: { id: "project" },
         data: { videoEngine },

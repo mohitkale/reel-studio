@@ -1,5 +1,8 @@
 # Local-first expansion plan
 
+> Historical plan: engine references describe the earlier dual-engine implementation.
+> New previews and exports use HyperFrames only. See [current engine notes](VIDEO_ENGINES.md) and [the current review milestones](CRITICAL_REVIEW_PLAN.md).
+
 - Status: reviewed plan only; implementation has not started
 - Prepared: 2026-09-13
 - Delivery: eight sequential PRs, each implemented in a separate agent session

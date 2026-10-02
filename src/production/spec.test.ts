@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ScriptDTO } from "@/lib/dto";
-import { defaultBrandTokens } from "@/compositions/tokens";
+import { defaultBrandTokens } from "@/video/tokens";
 import { getVideoEngine, listVideoEngines } from "@/engines/registry";
 import { PRODUCTION_PRESETS } from "@/production/presets";
 import { productionSpecFromLegacyScript } from "@/production/legacy-script";
@@ -15,7 +15,7 @@ function legacyScript(): ScriptDTO {
     fps: 30,
     width: 1080,
     height: 1920,
-    videoEngine: "remotion",
+    videoEngine: "hyperframes",
     scenes: [
       {
         id: "scene-1",
@@ -104,12 +104,12 @@ function legacyScript(): ScriptDTO {
 }
 
 describe("production presets", () => {
-  it("publishes six versioned presets for both engines", () => {
+  it("publishes six versioned presets for HyperFrames", () => {
     expect(PRODUCTION_PRESETS).toHaveLength(6);
     expect(new Set(PRODUCTION_PRESETS.map((preset) => preset.id)).size).toBe(6);
     for (const preset of PRODUCTION_PRESETS) {
       expect(preset.version).toBe("1.0.0");
-      expect(preset.engines).toEqual(["hyperframes", "remotion"]);
+      expect(preset.engines).toEqual(["hyperframes"]);
       expect(preset.sceneRoles.length).toBeGreaterThan(0);
       expect(preset.defaults.maxSceneFrames).toBeGreaterThanOrEqual(
         preset.defaults.minSceneFrames,
@@ -191,12 +191,12 @@ describe("legacy production specification", () => {
     });
 
     expect(productionSpecSchema.safeParse(spec).success).toBe(true);
-    expect(spec.engine.id).toBe("remotion");
+    expect(spec.engine.id).toBe("hyperframes");
     expect(spec.preset).toEqual({ id: "legacy", version: "0.3.0" });
     expect(spec.brand.tokens.handle).toBe("@legacy");
     expect(spec.scenes[0].template).toEqual({
       sourceId: "placeholder",
-      resolvedId: getVideoEngine("remotion").defaultTemplateId,
+      resolvedId: getVideoEngine("hyperframes").defaultTemplateId,
       version: "0.3.0",
     });
     expect(spec.scenes[1].role).toBe("metric");

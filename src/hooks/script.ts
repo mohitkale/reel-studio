@@ -20,7 +20,7 @@ import type { Orientation } from "@/lib/orientation";
 import type { MediaPreference } from "@/lib/media-preference";
 import type { VideoEngineId } from "@/engines/types";
 import type { AIScene } from "@/providers/ai/types";
-import type { EnergyId, StyleId } from "@/compositions/visual-style";
+import type { EnergyId, StyleId } from "@/video/visual-style";
 import type { ManualCreationInput } from "@/production/manual-planner";
 import type { SfxCueEditRequest } from "@/lib/sfx-cue-edit";
 import type { MotionDirection } from "@/production/motion";

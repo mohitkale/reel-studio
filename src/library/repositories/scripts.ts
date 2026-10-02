@@ -1,3 +1,4 @@
+import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
 import type { ScriptDTO, VoiceMode } from "@/lib/dto";
 import { serverDefaultTokens } from "@/lib/brand-defaults";
 import {
@@ -7,7 +8,7 @@ import {
   normalizeStyleId,
   type EnergyId,
   type StyleId,
-} from "@/compositions/visual-style";
+} from "@/video/visual-style";
 import {
   DEFAULT_VIDEO_ENGINE,
   isVideoEngineId,
@@ -78,6 +79,7 @@ export async function getScript(id: string): Promise<ScriptDTO | null> {
       });
       return {
         ...scene,
+        templateId: normalizeHfTemplateId(scene.templateId),
         carouselImages: carouselImages.length ? carouselImages : undefined,
       };
     }),

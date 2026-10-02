@@ -97,14 +97,14 @@ for each template. Entries include their version, compatible scene roles, requir
 inputs and effects. Planning code must select templates through this metadata and
 must validate required inputs before preview or export.
 
-HyperFrames HTML remains inside the HyperFrames adapter and Remotion React
-compositions remain under `src/compositions`. Effects can differ between engines,
-but both receive the same resolved content, timing, brand and asset snapshot.
+HyperFrames HTML remains inside the HyperFrames adapter. Shared scene, token
+and timing contracts live in `src/video`; the renderer receives resolved content,
+timing, brand and asset snapshots.
 
 ## Existing projects
 
-`productionSpecFromLegacyScript` maps v0.3 projects without changing their stored
-engine or template IDs. It keeps both the source template ID and the engine's
+The HyperFrames-only database migration updates retired engine and template IDs.
+`productionSpecFromLegacyScript` maps the remaining legacy scene contract. It keeps both the source template ID and the engine's
 resolved fallback ID so old projects remain addressable. It also snapshots legacy
 media, sound cues, voice provider data and timing. Missing, placeholder and stale
 narration are recorded explicitly and cannot be mistaken for ready audio.
@@ -144,29 +144,26 @@ and logo cards display a domain only when one was supplied explicitly.
 ## Product Launch 1.0.0
 
 Product Launch carries hook, screenshot demo, feature, comparison and CTA roles
-into both renderer inputs. HyperFrames uses a seekable HTML treatment and
-Remotion uses a responsive React treatment, while the copy, media, timing and
-brand snapshot stay shared. Screenshot demos require a supplied image or video.
+into the renderer input. HyperFrames uses a seekable HTML treatment with
+resolved copy, media, timing and brand snapshots. Screenshot demos require a supplied image or video.
 Feature and comparison cards display only supplied item copy, and CTA buttons
 appear only when an explicit action label is present.
 
 The credential-free acceptance fixture uses the bundled dashboard screenshot at
 `public/samples/product-launch-dashboard.svg`. Run
 `npm run test:render:product-launch` to render and inspect all five roles through
-both engines.
+HyperFrames.
 
 ## Editorial Explainer 1.0.0
 
 Editorial Explainer carries headline, explanation, diagram, quote and summary
-roles into the shared composition input. Both engines render a responsive
+roles into the shared composition input. HyperFrames renders a responsive
 paper-inspired system with readable typography, restrained emphasis, labeled
-diagram steps and optional quote attribution. Remotion calculates composition
-duration from the supplied scene timeline, so longer editorial sequences are not
-clipped by a fixed root duration.
+diagram steps and optional quote attribution. The composition duration follows the supplied scene timeline.
 
 The credential-free acceptance fixture contains five editorial scenes and no
 remote assets. Run `npm run test:render:editorial` to render the complete
-12-second sequence through both engines.
+12-second sequence through HyperFrames.
 
 ## Creator Punch 1.0.0
 
@@ -178,7 +175,7 @@ item copy is supplied.
 
 Run `npm run test:render:creator-punch` for the credential-free 10-second
 portrait fixture. The render gate inspects role boundaries and verifies the
-complete H.264 output from both engines.
+complete H.264 output from HyperFrames.
 
 ## Data Story 1.0.0
 

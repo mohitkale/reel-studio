@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import dataStoryFixture from "../../tests/fixtures/data-story-reel.json";
 import productLaunchFixture from "../../tests/fixtures/product-launch-reel.json";
 import releaseBriefs from "../../tests/fixtures/release-briefs.json";
-import type { ReelProps } from "@/compositions/types";
+import type { ReelProps } from "@/video/types";
 import { applyReleaseBriefToFixture } from "../../scripts/release-brief-fixture";
 
 describe("release brief render fixtures", () => {

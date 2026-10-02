@@ -717,7 +717,7 @@ export function SceneInspector({
   onUpdate,
   onDelete,
   saving,
-  videoEngine = "remotion",
+  videoEngine = "hyperframes",
   orientation = "portrait",
   hideTextDefault = false,
 }: {

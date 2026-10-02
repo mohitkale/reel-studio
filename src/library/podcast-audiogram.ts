@@ -3,7 +3,7 @@ import type { PodcastDTO, PodcastTakeDTO } from "@/lib/dto";
 import type { Orientation } from "@/lib/orientation";
 import { dimsFor } from "@/lib/orientation";
 import { resolvePodcastPreset } from "@/library/podcast-presets";
-import type { PodcastAudiogramProps } from "@/compositions/PodcastAudiogramComposition";
+import type { PodcastAudiogramProps } from "@/video/podcast-audiogram";
 
 export interface PodcastAudiogramSelection {
   startTurnId: string;

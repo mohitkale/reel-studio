@@ -12,7 +12,7 @@ import {
   useSetDefaultBrandKit,
 } from "@/hooks/brandkits";
 import type { BrandKitDTO } from "@/lib/dto";
-import type { BrandTokens } from "@/compositions/tokens";
+import type { BrandTokens } from "@/video/tokens";
 import { cn } from "@/lib/utils";
 import { PageHeader } from "@/components/shell/page-header";
 import { EmptyState } from "@/components/ui/empty-state";

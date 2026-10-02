@@ -1,6 +1,6 @@
 import type { LayoutEvidence } from "@/production/visual-review-layout";
 import { z } from "zod";
-import type { ReelBeat } from "@/compositions/types";
+import type { ReelBeat } from "@/video/types";
 import type { VisualReviewFinding } from "@/production/visual-review-findings";
 
 export const visualReviewRequestSchema = z
@@ -81,7 +81,7 @@ export interface VisualReviewResult {
     contrastCheckedTextNodes?: number;
   };
   revision: string;
-  videoEngine: "remotion" | "hyperframes";
+  videoEngine: "hyperframes";
   width: number;
   height: number;
   fps: number;

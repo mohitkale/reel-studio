@@ -9,9 +9,9 @@ import {
   type ReelBeat,
   type ReelProps,
   type ReelScene,
-} from "@/compositions/types";
-import { defaultBrandTokens, type BrandTokens } from "@/compositions/tokens";
-import type { EnergyId, StyleId } from "@/compositions/visual-style";
+} from "@/video/types";
+import { defaultBrandTokens, type BrandTokens } from "@/video/tokens";
+import type { EnergyId, StyleId } from "@/video/visual-style";
 import type { ProductionPresetId } from "@/production/presets";
 import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-composition";
 import { cn } from "@/lib/utils";
@@ -82,7 +82,7 @@ function toAbsoluteUrl(url?: string | null): string | undefined {
 }
 
 /**
- * In-editor HyperFrames preview with Remotion-like transport controls.
+ * In-editor HyperFrames preview with transport controls.
  * The composition HTML letterboxes itself inside the iframe so portrait
  * canvases stay fully visible and centered in both inline and fullscreen modes.
  */

@@ -89,13 +89,30 @@ export const HF_TEMPLATES: EngineTemplateMeta[] = [
   ...CATALOG_HF_TEMPLATES,
 ];
 
-export const HF_DEFAULT_TEMPLATE_ID = "hf-kinetic-slam";
+export const HF_DEFAULT_TEMPLATE_ID = "hf-opener";
 
 export const HF_TEMPLATE_IDS = HF_TEMPLATES.map((t) => t.id) as [
   string,
   ...string[],
 ];
 
+/** Legacy project ids retain their content while selecting an HTML treatment. */
+export const LEGACY_TEMPLATE_MAP: Readonly<Record<string, string>> = {
+  kinetic: "hf-opener",
+  lottie: "hf-statement",
+  three: "hf-statement",
+  "stat-reveal": "hf-stat",
+  "icon-grid": "hf-list",
+  "quote-card": "hf-quote",
+  "emoji-punch": "hf-opener",
+  placeholder: "hf-opener",
+};
+export function migrateLegacyTemplateId(id: string): string {
+  return LEGACY_TEMPLATE_MAP[id] ?? id;
+}
 export function normalizeHfTemplateId(id: string): string {
-  return HF_TEMPLATES.some((t) => t.id === id) ? id : HF_DEFAULT_TEMPLATE_ID;
+  const migrated = migrateLegacyTemplateId(id);
+  return HF_TEMPLATES.some((t) => t.id === migrated)
+    ? migrated
+    : HF_DEFAULT_TEMPLATE_ID;
 }

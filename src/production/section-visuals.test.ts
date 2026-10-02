@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { sectionVisualProps } from "./section-visuals";
-import type { ReelProps } from "@/compositions/types";
+import type { ReelProps } from "@/video/types";
 import { serverDefaultTokens } from "@/lib/brand-defaults";
 
 const props: ReelProps = {

@@ -247,19 +247,17 @@ For feature requests:
 By contributing to Reel Studio, you agree that your contributions will be
 licensed under the MIT License.
 
-**Third-party terms still apply.** Reel Studio depends on Remotion (Remotion
-License, source-available, not OSI open-source) and optional providers
-(Unsplash, Jamendo, cloud TTS/AI, VoiceForge). Running or redistributing the
-app does not relicense those components. Read
-[docs/LICENSING.md](docs/LICENSING.md) before commercial use, and do not claim
-in docs or marketing that Remotion itself is MIT or open-source.
+**Third-party terms still apply.** Reel Studio is MIT-licensed and renders with
+HyperFrames (Apache-2.0). GSAP uses its own Standard License, and optional models,
+voices and media retain their own terms. See [docs/LICENSING.md](docs/LICENSING.md)
+for the current inventory. Do not describe the entire stack as Apache-2.0.
 
 ## Maintainer checklist (repo settings)
 
 After merging launch docs, set in GitHub → Settings:
 
 - **Description:** Local-first AI video + podcast studio with MCP server for Instagram Reels, YouTube Shorts, TikTok, Facebook, X, LinkedIn; voiceovers, templates, and local MP4 export.
-- **Topics:** `ai-video` `video-editor` `short-form-video` `instagram-reels` `youtube-shorts` `tiktok` `facebook` `twitter` `linkedin` `reels` `remotion` `hyperframes` `text-to-video` `ai-voice` `podcast` `mcp` `model-context-protocol` `local-first` `nextjs` `typescript` `open-source`
+- **Topics:** `ai-video` `video-editor` `short-form-video` `instagram-reels` `youtube-shorts` `tiktok` `facebook` `twitter` `linkedin` `reels` `hyperframes` `text-to-video` `ai-voice` `podcast` `mcp` `model-context-protocol` `local-first` `nextjs` `typescript` `open-source`
 - **Social preview:** `docs/assets/reel-studio-editor.png` or a still from the demo GIF
 
 ## Getting Help

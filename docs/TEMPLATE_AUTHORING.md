@@ -1,7 +1,7 @@
 # Template authoring
 
-Reel Studio supports two template systems. Prefer **HyperFrames** for
-Apache-2.0 contributions; use **Remotion** when you need React compositions.
+Reel Studio uses **HyperFrames** HTML compositions. HyperFrames is Apache-2.0;
+GSAP and added assets retain their own terms (see [licensing](LICENSING.md)).
 
 ## HyperFrames (`hf-*`)
 
@@ -41,15 +41,6 @@ render requirements; records SHA-256 checksums; emits typed capabilities and an
 unsupported-item report; and refuses to change an existing version directory.
 Run it twice before review: the second run must report only unchanged files.
 Retain every earlier directory for projects that reference its revision.
-
-## Remotion
-
-1. Add metadata in `src/compositions/templates.ts`
-2. Add the React component and register it in `src/compositions/registry.tsx`
-3. Follow existing brand-token and caption patterns
-4. Remotion is **not** OSI open-source — note licence impact in PR descriptions
-
-Existing ids: `kinetic`, `lottie`, `three`, `stat-reveal`, `icon-grid`, `quote-card`, `emoji-punch`
 
 ## Checklist for PRs
 

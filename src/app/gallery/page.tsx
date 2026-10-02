@@ -119,7 +119,7 @@ export default function GalleryPage() {
           </h3>
           <p className="text-muted-foreground text-sm">
             Each preset defines scene roles, pacing, typography, captions,
-            transitions, music mood, and sound intensity for both engines.
+            transitions, music mood, and sound intensity for HyperFrames.
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

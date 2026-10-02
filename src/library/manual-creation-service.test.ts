@@ -148,7 +148,7 @@ describe("manual creation service", () => {
       source: { kind: "url", url: "https://example.com/start" },
       presetId: "editorial-explainer",
       orientation: "square",
-      videoEngine: "remotion",
+      videoEngine: "hyperframes",
     });
 
     expect(ingestPublicArticle).toHaveBeenCalledWith(

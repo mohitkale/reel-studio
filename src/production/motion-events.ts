@@ -13,7 +13,7 @@ export const motionEventSchema = motionDirectionSchema.extend({
 export type MotionEvent = z.infer<typeof motionEventSchema>;
 type Anchors = { reveal: number; impact?: number };
 
-/** Authored timeline landmarks. HF uses seconds; Remotion uses local frames.
+/** Authored timeline landmarks. HyperFrames uses seconds.
  * Reveal is the start of the primary copy/bar/idea. Impact is the type accent.
  * Keeping the delays here also makes renderer and audio timing share a source.
  */
@@ -37,22 +37,6 @@ export const MOTION_EVENT_TIMINGS: Record<
     "brand-lockup": { reveal: 0.42 },
     "brand-frame": { reveal: 0.2 },
   },
-  remotion: {
-    "type-impact": { reveal: 4, impact: 17 },
-    "type-editorial": { reveal: 8 },
-    "data-spotlight": { reveal: 4 },
-    "data-bars": { reveal: 10 },
-    "diagram-path": { reveal: 8 },
-    "diagram-orbit": { reveal: 11 },
-    "media-device": { reveal: 0 },
-    "media-cinematic": { reveal: 0 },
-    "comparison-split": { reveal: 6 },
-    "comparison-stack": { reveal: 6 },
-    "quiet-divider": { reveal: 6 },
-    "quiet-center": { reveal: 6 },
-    "brand-lockup": { reveal: 13 },
-    "brand-frame": { reveal: 6 },
-  },
 };
 
 export function motionEventOffsetSeconds(
@@ -68,9 +52,5 @@ export function motionEventOffsetSeconds(
   )
     return undefined;
   const offset = MOTION_EVENT_TIMINGS[engine][direction.recipeId][anchor];
-  return offset === undefined
-    ? undefined
-    : engine === "remotion"
-      ? offset / fps
-      : offset;
+  return offset;
 }

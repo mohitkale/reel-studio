@@ -15,9 +15,9 @@ Keep changes minimal, high-quality, and consistent with existing architecture.
 
 - `src/app`: pages + API route handlers
 - `src/library`: repositories, render orchestration, storage
-- `src/engines`: video-engine registry/adapters (`remotion` | `hyperframes`); do not put HyperFrames HTML/producer logic in `compositions/`
+- `src/engines`: HyperFrames catalog and HTML builders
 - `src/providers`: provider integrations (voice + AI)
-- `src/compositions`: Remotion composition and templates only
+- `src/video`: shared scene, timing and design contracts; no framework-specific imports
 - HyperFrames MP4 export: `src/library/hyperframes-render.ts` + `scripts/hyperframes-render-worker.mjs`
 
 2. Keep strict typing and avoid unsafe shortcuts:
@@ -54,7 +54,7 @@ Run relevant checks when code changes are made:
 
 - Rendering is CPU-heavy; prefer backend tuning over random UI workarounds.
 - Keep render queue/progress behavior stable.
-- Branch renders on `Project.videoEngine` (Remotion `renderMedia` vs HyperFrames worker).
+- Render only with the isolated HyperFrames worker. Preserve legacy project content through template migration.
 - HyperFrames needs Node ≥ 22; local http(s) media must be copied into the render project as relative assets (producer blocks remote downloads of localhost URLs).
 - Do not degrade output correctness for speed without explicit user approval.
 - ElevenLabs free/Starter rejects `wav_44100`; fallback + resample lives in `src/providers/voice/elevenlabs.ts` and `normalizeWavToTarget` in `src/lib/wav.ts`.
