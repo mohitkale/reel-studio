@@ -50,12 +50,14 @@ Use current primary advisories in M8 rather than the pasted report's frozen tabl
 
 ## Execution policy
 
-Each milestone has one focused PR and a `feature/` branch. No automatic merges.
-M1 security and M2 dependency upgrades are independent PRs based on `main`,
-as requested by the user. Subsequent dependent milestones start from updated
-`main` after their prerequisites merge; do not stack them implicitly. This turn
-implements M1 and starts M2. M3 retires Remotion with the user's approval; future
-rows are scoped milestones, not changes bundled into the security PR.
+Each milestone has one focused PR and a `feature/` branch. The user authorized
+the full sequential cycle: implement, validate, open the PR, wait for required
+CI/build checks on the latest head, merge, switch locally to `main`, and pull the
+latest changes before starting the next milestone. Fix failed checks on the
+owning branch and respect required reviews and branch protection. Do not leave
+an unmerged PR and advance or implicitly stack milestones. M2 upgrades packages
+in its own PR; M3 retires Remotion and updates README with the user's approval.
+Future rows remain separate milestones, not changes bundled into M1.
 
 Every code PR runs typecheck, relevant lint, behavior tests, and secret scan.
 Rendering changes additionally require preview/export keyframes and actual

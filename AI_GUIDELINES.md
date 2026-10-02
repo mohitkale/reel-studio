@@ -71,6 +71,22 @@ Run relevant checks when code changes are made:
 - Explain tradeoffs clearly when making non-trivial choices.
 - If blocked by missing information, ask the smallest possible clarification.
 
+## Milestone PR Workflow
+
+For user-requested milestone implementation, complete each milestone before
+starting the next: create a `feature/` branch from updated `main`, implement and
+validate, commit and push, open one focused PR, wait for required CI/build checks
+on its latest head, merge, switch locally to `main`, and pull with `--ff-only`.
+Verify the merge is present before creating the next branch. Opening a PR alone
+does not complete a milestone. Fix failed checks on that same branch; respect
+required reviews and branch protection. Do not advance with an unmerged PR or
+implicitly stack milestones.
+
+The user has requested this complete cycle; do not repeatedly ask for merge
+permission within the authorized task. Explicit draft-only, do-not-merge, pause,
+or alternative workflow requests take precedence. Preserve unrelated work, and
+report concrete blockers when the cycle cannot continue.
+
 ## Environment changes
 
 - Ask for explicit permission before installing software, changing computer-level
