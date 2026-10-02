@@ -212,9 +212,7 @@ export function productionSpecFromLegacyScript(
       id: script.videoEngine,
       adapterVersion: "1.0.0",
       catalogRevision:
-        script.videoEngine === "hyperframes"
-          ? CURRENT_HF_CATALOG_REVISION
-          : "builtin-remotion-current",
+        CURRENT_HF_CATALOG_REVISION,
     },
     preset: {
       id: preset.id,

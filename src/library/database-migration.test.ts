@@ -523,4 +523,63 @@ describe("SQLite migration preparation", () => {
       rmSync(directory, { recursive: true, force: true });
     }
   });
+  it("migrates retired projects and templates without changing content or historical artifacts", () => {
+    const db = new DatabaseSync(":memory:");
+    const migration = "20261002000100_hyperframes_only";
+    try {
+      for (const name of readdirSync("prisma/migrations")
+        .filter((name) => !name.endsWith(".toml") && name !== migration)
+        .sort())
+        db.exec(
+          readFileSync(`prisma/migrations/${name}/migration.sql`, "utf8"),
+        );
+      db.exec(`
+        INSERT INTO Project (id,name,videoEngine,updatedAt) VALUES ('legacy','Saved project','remotion',CURRENT_TIMESTAMP);
+        INSERT INTO Script (id,projectId,name,updatedAt) VALUES ('script','legacy','Saved script',CURRENT_TIMESTAMP);
+        INSERT INTO Scene (id,scriptId,"order",templateId,text,spokenText,visual,assetRefs,layoutJson,updatedAt)
+          VALUES ('scene','script',0,'kinetic','Saved display','Original narration','asset','["saved"]','{"motion":{"locked":true}}',CURRENT_TIMESTAMP);
+        INSERT INTO Scene (id,scriptId,"order",templateId,text,updatedAt)
+          VALUES ('native','script',1,'hf-quote','Native scene',CURRENT_TIMESTAMP);
+        INSERT INTO VoiceTake (id,scriptId,providerId,voiceId,totalFrames,timingJson,audioPath)
+          VALUES ('take','script','kokoro','host',90,'[]','takes/original.wav');
+        INSERT INTO Render (id,scriptId,status,outputPath,updatedAt)
+          VALUES ('render','script','done','renders/original.mp4',CURRENT_TIMESTAMP);
+        INSERT INTO ProductionRevision (id,projectId,scriptId,revisionHash,snapshotJson)
+          VALUES ('revision','legacy','script','original-hash','{"videoEngine":"remotion"}');
+      `);
+      const original = db.prepare("SELECT * FROM Scene WHERE id='scene'").get();
+      const retained = ["VoiceTake", "Render", "ProductionRevision"].map(
+        (table) => db.prepare(`SELECT * FROM ${table}`).all(),
+      );
+      const sql = readFileSync(
+        `prisma/migrations/${migration}/migration.sql`,
+        "utf8",
+      );
+      db.exec(sql);
+      expect(
+        db.prepare("SELECT videoEngine FROM Project WHERE id='legacy'").get()
+          ?.videoEngine,
+      ).toBe("hyperframes");
+      expect(db.prepare("SELECT * FROM Scene WHERE id='scene'").get()).toEqual({
+        ...original,
+        templateId: "hf-opener",
+      });
+      expect(
+        db.prepare("SELECT templateId FROM Scene WHERE id='native'").get()
+          ?.templateId,
+      ).toBe("hf-quote");
+      expect(
+        ["VoiceTake", "Render", "ProductionRevision"].map((table) =>
+          db.prepare(`SELECT * FROM ${table}`).all(),
+        ),
+      ).toEqual(retained);
+      db.exec(sql);
+      expect(db.prepare("SELECT * FROM Scene WHERE id='scene'").get()).toEqual({
+        ...original,
+        templateId: "hf-opener",
+      });
+    } finally {
+      db.close();
+    }
+  });
 });

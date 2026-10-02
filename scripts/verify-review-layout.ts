@@ -5,7 +5,7 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import sharp from "sharp";
 import { renderVisualReviewFrames } from "../src/library/visual-review";
-import { defaultBrandTokens } from "../src/compositions/tokens";
+import { defaultBrandTokens } from "../src/video/tokens";
 import { motionDirection } from "../src/production/motion";
 import { resolveProductionLayout } from "../src/production/layout";
 import type { LayoutEvidence } from "../src/production/visual-review-layout";
@@ -13,7 +13,7 @@ import type { LayoutEvidence } from "../src/production/visual-review-layout";
 async function main() {
   const output = path.resolve(".artifacts", `review-layout-${Date.now()}`);
   const report: unknown[] = [];
-  for (const engine of ["remotion", "hyperframes"] as const) {
+  for (const engine of ["hyperframes"] as const) {
     for (const [name, width, height] of [
       ["portrait", 1080, 1920],
       ["landscape", 1920, 1080],
@@ -96,7 +96,7 @@ async function main() {
           {
             id: "contrast",
             order: 0,
-            templateId: engine === "hyperframes" ? "hf-statement" : "kinetic",
+            templateId: "hf-statement",
             text: "Keep the message clear",
             emphasis: [],
             motion: motionDirection("type-editorial"),

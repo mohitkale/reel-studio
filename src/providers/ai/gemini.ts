@@ -30,7 +30,7 @@ export const GEMINI_DEFAULT_MODEL = "gemini-2.5-flash-lite";
 
 // Gemini responseSchema (OpenAPI subset). Template enum switches with engine.
 function buildResponseSchema(input: GeneratePlanInput) {
-  const engineId = input.videoEngine ?? "remotion";
+  const engineId = input.videoEngine ?? "hyperframes";
   const capabilityIds = input.productionPresetId
     ? allowedPresetCapabilityIds(input.productionPresetId, engineId)
     : capabilityIdsForEngine(engineId);

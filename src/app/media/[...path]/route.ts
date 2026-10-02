@@ -21,7 +21,7 @@ const CONTENT_TYPES: Record<string, string> = {
 
 /**
  * GET /media/<key> - stream a stored asset. Supports HTTP Range requests so the
- * Remotion Player (and native <audio>) can seek; without this, playback audio
+ * Preview players (and native <audio>) can seek; without this, playback audio
  * sync fails with "media cannot be seeked".
  *
  * Access is same-origin / loopback / MCP-token gated — never world-readable on

@@ -18,7 +18,7 @@ export function capabilityIdForTemplateId(
 export function templateIdForCapabilityId(
   capabilityId: string,
 ): string | undefined {
-  for (const engineId of ["hyperframes", "remotion"] as const) {
+  for (const engineId of ["hyperframes"] as const) {
     const match = Object.values(
       getVideoEngine(engineId).capabilities.templates,
     ).find((capability) => capability.capabilityId === capabilityId);

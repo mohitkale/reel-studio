@@ -54,7 +54,7 @@ async function main() {
   const baselineProfiles = new Set(await browserProfiles());
   const evidence: unknown[] = [];
   try {
-    for (const engine of ["remotion", "hyperframes"] as const) {
+    for (const engine of ["hyperframes"] as const) {
       for (const cancel of [false, true]) {
         const project = await prisma.project.create({
           data: {
@@ -74,7 +74,7 @@ async function main() {
               create: [
                 {
                   order: 0,
-                  templateId: engine === "hyperframes" ? "hf-opener" : "hook",
+                  templateId: "hf-opener",
                   text: cancel
                     ? "This longer rendering verifies active cancellation. ".repeat(
                         30,
@@ -117,7 +117,7 @@ async function main() {
                 .then(async (row) => {
                   if (
                     row.status === "rendering" &&
-                    row.progress > (engine === "hyperframes" ? 0.4 : 0.03)
+                    row.progress > 0.4
                   ) {
                     requested = true;
                     await requestProductionJobCancellation(job.id);

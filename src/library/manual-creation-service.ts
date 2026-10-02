@@ -1,4 +1,4 @@
-import type { SceneBackground } from "@/compositions/types";
+import type { SceneBackground } from "@/video/types";
 import { getAssets } from "@/library/repositories/assets";
 import { createProjectFromPlan } from "@/library/repositories/projects";
 import { getScript } from "@/library/repositories/scripts";

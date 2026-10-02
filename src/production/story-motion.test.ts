@@ -10,9 +10,9 @@ import { planMotionSequence } from "./motion-plan";
 import { STORY_MOTION_TRACKS, storyBrandName } from "./story-motion";
 import { buildStoryMotionScene } from "@/engines/hyperframes/motion/story-scenes";
 import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-composition";
-import { defaultBrandTokens } from "@/compositions/tokens";
+import { defaultBrandTokens } from "@/video/tokens";
 import { buildAutomaticSfxCues } from "@/lib/sfx-planner";
-import type { ReelProps } from "@/compositions/types";
+import type { ReelProps } from "@/video/types";
 import type { SceneDTO } from "@/lib/dto";
 import { motionEventOffsetSeconds } from "./motion-events";
 
@@ -174,10 +174,10 @@ describe("authored comparison, quiet and brand families", () => {
           motionEventOffsetSeconds(
             motionDirection(recipe.id),
             "reveal",
-            "remotion",
+            "hyperframes",
             fps,
           ),
-        ).toBe(Math.round(primary.at * 30) / fps);
+        ).toBe(primary.at);
       expect(
         Math.max(...tracks.map((track) => track.at + track.duration)),
       ).toBeLessThanOrEqual(2.4);

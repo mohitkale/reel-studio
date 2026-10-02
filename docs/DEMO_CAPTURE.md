@@ -81,7 +81,7 @@ docs/assets/examples/square-demo.mp4
 5. Export a poster frame (first or mid frame) as matching `.jpg` files.
 
 Keep clips short. Prefer HyperFrames for Apache-2.0-only demos when that matters;
-Remotion demos are fine if licensing for redistributed samples is understood.
+Use HyperFrames for new demos; document asset and GSAP terms for redistributed samples.
 
 Audio for video demos lives inside the MP4. Also commit a short podcast sample:
 

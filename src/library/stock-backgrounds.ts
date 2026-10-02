@@ -1,5 +1,5 @@
 import { dimsFor, type Orientation } from "@/lib/orientation";
-import type { SceneBackground } from "@/compositions/types";
+import type { SceneBackground } from "@/video/types";
 import { getStockProvider } from "@/providers/stock/registry";
 
 interface BackgroundRequest {

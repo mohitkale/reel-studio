@@ -1,4 +1,3 @@
-import { interFontFamily } from "./fonts";
 import { CORAL_HARBOR_PALETTE } from "@/lib/brand-defaults";
 
 /**
@@ -23,6 +22,6 @@ export interface BrandTokens {
 export const defaultBrandTokens: BrandTokens = {
   ...CORAL_HARBOR_PALETTE,
   handle: "@yourbrand",
-  fontFamily: `${interFontFamily}, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`,
+  fontFamily: `"Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`,
   radius: 20,
 };

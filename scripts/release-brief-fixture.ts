@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import type { ReelProps } from "../src/compositions/types";
+import type { ReelProps } from "../src/video/types";
 import type { ProductionPresetId } from "../src/production/presets";
 
 function balancedBriefLines(brief: string, count: number): string[] {

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ReelBeat } from "@/compositions/types";
+import type { ReelBeat } from "@/video/types";
 import type { SceneDTO } from "@/lib/dto";
 import type { VideoEngineId } from "@/engines/types";
 import type { SpokenWordWindow } from "@/lib/spoken-word-windows";

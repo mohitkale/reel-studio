@@ -1,4 +1,4 @@
-import type { SceneMood } from "@/compositions/types";
+import type { SceneMood } from "@/video/types";
 import {
   MUSIC_LIBRARY,
   suggestBundledTrack,

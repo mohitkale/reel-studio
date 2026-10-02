@@ -50,7 +50,10 @@ export const videoScriptSnapshotSchema = z.object({
   fps: z.number().positive(),
   width: z.number().int().positive(),
   height: z.number().int().positive(),
-  videoEngine: z.enum(["remotion", "hyperframes"]),
+  videoEngine: z.preprocess(
+    (value) => (value === "remotion" ? "hyperframes" : value),
+    z.literal("hyperframes"),
+  ),
   scenes: z.array(scene).min(1),
   brandTokens: z.object({
     background: z.string(),

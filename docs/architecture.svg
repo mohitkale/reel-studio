@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
   <title id="title">Reel Studio Architecture</title>
-  <desc id="desc">High-level local-first architecture showing the Next.js app, shared UI REST and MCP contracts, immutable revisions, durable jobs, optional providers, local render engines, storage, and outputs.</desc>
+  <desc id="desc">High-level local-first architecture showing the Next.js app, shared UI REST and MCP contracts, immutable revisions, durable jobs, optional providers, local HyperFrames rendering, storage, and outputs.</desc>
   <defs>
     <style>
       .bg { fill: #0b1220; }
@@ -40,9 +40,9 @@
   <text class="small" x="865" y="241">Explicit configuration only</text>
 
   <rect class="box" x="430" y="370" width="340" height="170" />
-  <text class="label" x="455" y="415">Render Service (by videoEngine)</text>
-  <text class="small" x="455" y="445">Remotion: bundle + renderMedia</text>
-  <text class="small" x="455" y="468">HyperFrames: HTML + producer worker</text>
+  <text class="label" x="455" y="415">HyperFrames Render Service</text>
+  <text class="small" x="455" y="445">HTML composition + local assets</text>
+  <text class="small" x="455" y="468">Isolated producer worker + FFmpeg</text>
   <text class="small" x="455" y="491">Queue, SSE progress, media/ output</text>
 
   <rect class="box" x="80" y="590" width="340" height="90" />

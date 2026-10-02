@@ -5,9 +5,10 @@ import { EventEmitter } from "node:events";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   capture: vi.fn(),
-  render: vi.fn(),
+  layoutIssue: "" as string,
   spawn: vi.fn(),
   wrongFrame: false,
+  missingEvidence: false,
   files: new Map<string, Buffer>(),
 }));
 vi.mock("node:child_process", async (original) => ({
@@ -17,21 +18,7 @@ vi.mock("node:child_process", async (original) => ({
 vi.mock("@/library/video-snapshot", () => ({
   captureVideoSnapshot: mocks.capture,
 }));
-vi.mock("@remotion/bundler", () => ({
-  bundle: vi.fn(async () => "fixture-bundle"),
-}));
-vi.mock("@remotion/renderer", async (original) => ({
-  ...(await original<typeof import("@remotion/renderer")>()),
-  renderMedia: vi.fn(),
-  selectComposition: vi.fn(async () => ({
-    id: "Reel",
-    width: 1080,
-    height: 1920,
-    fps: 30,
-    durationInFrames: 90,
-  })),
-  renderStill: mocks.render,
-}));
+
 vi.mock("@/library/storage", () => ({
   getAssetStore: () => ({
     exists: async (key: string) => mocks.files.has(key),
@@ -70,7 +57,7 @@ const snapshot = videoSnapshotSchema.parse({
     fps: 30,
     width: 1080,
     height: 1920,
-    videoEngine: "remotion",
+    videoEngine: "hyperframes",
     scenes: [
       {
         id: "scene",
@@ -103,69 +90,66 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.files.clear();
   mocks.wrongFrame = false;
+  mocks.missingEvidence = false;
+  mocks.layoutIssue = "";
   mocks.spawn.mockImplementation((_binary, args, options) => {
     const child = Object.assign(new EventEmitter(), {
       stdout: new EventEmitter(),
       stderr: new EventEmitter(),
     });
     queueMicrotask(async () => {
-      const config = JSON.parse(
-        await fs.readFile(options.env.REEL_REVIEW_CAPTURE_CONFIG, "utf8"),
-      );
+      const config = options.env.REEL_REVIEW_CAPTURE_CONFIG
+        ? JSON.parse(
+            await fs.readFile(options.env.REEL_REVIEW_CAPTURE_CONFIG, "utf8"),
+          )
+        : null;
       const output = args[args.indexOf("--output") + 1];
       await fs.writeFile(
         path.join(output, "frame-00-at-1.000s.png"),
         "native HyperFrames still",
       );
-      await fs.writeFile(
-        config.output,
-        JSON.stringify(
-          config.frames.map((frame: number) => ({
-            frame: frame + (mocks.wrongFrame ? 1 : 0),
-            checkedTextNodes: 1,
-            truncated: false,
-            contrastCheckedTextNodes: 1,
-            issues: [
-              {
-                kind: "contrast",
-                text: "A clear idea",
-                contrastRatio: 1.2,
-                bounds: { left: 100, top: 200, right: 700, bottom: 300 },
-              },
-            ],
-          })),
-        ),
-      );
+      if (config)
+        await fs.writeFile(
+          config.output,
+          JSON.stringify(
+            config.frames.map((frame: number) => ({
+              frame:
+                frame + (mocks.wrongFrame || mocks.missingEvidence ? 1 : 0),
+              checkedTextNodes: 1,
+              truncated: false,
+              contrastCheckedTextNodes: 1,
+              issues: mocks.layoutIssue
+                ? [
+                    {
+                      kind: mocks.layoutIssue,
+                      text: "A clear idea",
+                      contrastRatio: 1.2,
+                      bounds: { left: 100, top: 200, right: 700, bottom: 300 },
+                    },
+                  ]
+                : [],
+            })),
+          ),
+        );
       child.emit("close", 0);
     });
     return child;
   });
   mocks.capture.mockImplementation(async () => structuredClone(snapshot));
-  mocks.render.mockImplementation(
-    async ({
-      output,
-      frame,
-      onBrowserLog,
-    }: {
-      output: string;
-      frame: number;
-      onBrowserLog?: (log: { text: string }) => void;
-    }) => {
-      onBrowserLog?.({
-        text:
-          "REEL_REVIEW_LAYOUT " +
-          JSON.stringify({
-            frame,
-            checkedTextNodes: 1,
-            truncated: false,
-            issues: [],
-          }),
-      });
-      await fs.writeFile(output, Buffer.from("captured frame"));
-    },
-  );
 });
 describe("cached visual review", () => {
+  it("reads a retired revision without rewriting its immutable provenance", () => {
+    const legacy = {
+      ...structuredClone(snapshot),
+      script: { ...structuredClone(snapshot.script), videoEngine: "remotion" },
+    };
+    const original = JSON.stringify(legacy);
+    const parsed = videoSnapshotSchema.parse(legacy);
+    expect(parsed.script.videoEngine).toBe("hyperframes");
+    expect(parsed.script.scenes).toEqual(snapshot.script.scenes);
+    expect(JSON.stringify(legacy)).toBe(original);
+  });
+
   it("cancels queued requests without reading or rendering a video", async () => {
     const controller = new AbortController();
     controller.abort();
@@ -178,9 +162,9 @@ describe("cached visual review", () => {
       ),
     ).rejects.toThrow();
     expect(mocks.capture).not.toHaveBeenCalled();
-    expect(mocks.render).not.toHaveBeenCalled();
+    expect(mocks.spawn).not.toHaveBeenCalled();
     await createVisualReview("script", input, "http://localhost:3000");
-    expect(mocks.render).toHaveBeenCalledOnce();
+    expect(mocks.spawn).toHaveBeenCalledOnce();
   });
   it("caches exact frames, preserves direction and repairs a removed cache file", async () => {
     const first = await createVisualReview(
@@ -190,24 +174,14 @@ describe("cached visual review", () => {
     );
     expect(first.stills).toHaveLength(1);
     expect(first.takeUsable).toBe(false);
-    expect(mocks.render).toHaveBeenCalledWith(
-      expect.objectContaining({
-        inputProps: expect.objectContaining({
-          scenes: [
-            expect.objectContaining({
-              motion: snapshot.script.scenes[0].motion,
-            }),
-          ],
-        }),
-      }),
-    );
+    expect(mocks.spawn).toHaveBeenCalledOnce();
     expect(
       await createVisualReview("script", input, "http://localhost:3000"),
     ).toEqual(first);
-    expect(mocks.render).toHaveBeenCalledOnce();
+    expect(mocks.spawn).toHaveBeenCalledOnce();
     mocks.files.clear();
     await createVisualReview("script", input, "http://localhost:3000");
-    expect(mocks.render).toHaveBeenCalledTimes(2);
+    expect(mocks.spawn).toHaveBeenCalledTimes(2);
   });
   it("invalidates stills after visual edits and rejects removed scenes before capture", async () => {
     const first = await createVisualReview(
@@ -232,7 +206,7 @@ describe("cached visual review", () => {
         "http://localhost:3000",
       ),
     ).rejects.toThrow("no longer exists");
-    expect(mocks.render).toHaveBeenCalledTimes(2);
+    expect(mocks.spawn).toHaveBeenCalledTimes(2);
   });
   it("returns advisory findings from the same saved scene and estimated timing as its stills", async () => {
     const edited = structuredClone(snapshot);
@@ -265,25 +239,7 @@ describe("cached visual review", () => {
     edited.script.scenes[0].spokenText =
       "This narration gives the text a clear and sufficiently long reading hold";
     mocks.capture.mockResolvedValue(edited);
-    mocks.render.mockImplementation(async ({ output, frame, onBrowserLog }) => {
-      onBrowserLog?.({
-        text:
-          "REEL_REVIEW_LAYOUT " +
-          JSON.stringify({
-            frame,
-            checkedTextNodes: 1,
-            truncated: false,
-            issues: [
-              {
-                kind: "text-clipping",
-                text: "A clear idea",
-                bounds: { left: -20, top: 200, right: 700, bottom: 300 },
-              },
-            ],
-          }),
-      });
-      await fs.writeFile(output, "captured frame");
-    });
+    mocks.layoutIssue = "text-clipping";
     const first = await createVisualReview(
       "script",
       input,
@@ -300,15 +256,16 @@ describe("cached visual review", () => {
     expect(
       await createVisualReview("script", input, "http://localhost:3000"),
     ).toEqual(first);
-    expect(mocks.render).toHaveBeenCalledOnce();
+    expect(mocks.spawn).toHaveBeenCalledOnce();
     const key = [...mocks.files.keys()].find((key) =>
       key.endsWith(".layout.json"),
     )!;
     mocks.files.set(key, Buffer.from("broken evidence"));
     await createVisualReview("script", input, "http://localhost:3000");
-    expect(mocks.render).toHaveBeenCalledTimes(2);
+    expect(mocks.spawn).toHaveBeenCalledTimes(2);
   });
   it("captures and caches HyperFrames evidence at the same native screenshot point", async () => {
+    mocks.layoutIssue = "contrast";
     const edited = structuredClone(snapshot);
     edited.script.videoEngine = "hyperframes";
     edited.script.scenes[0].spokenText =
@@ -357,21 +314,21 @@ describe("cached visual review", () => {
     ).rejects.toThrow("did not match captured frames");
     expect(mocks.files.size).toBe(0);
   });
-  it("rejects missing native measurements before publishing a reading still", async () => {
+  it("rejects unmatched native measurements before publishing a reading still", async () => {
     const edited = structuredClone(snapshot);
     edited.script.scenes[0].spokenText =
       "This narration gives the text a clear and sufficiently long reading hold";
     mocks.capture.mockResolvedValue(edited);
-    mocks.render.mockImplementation(async ({ output }) => {
-      await fs.writeFile(output, "captured frame");
-    });
+    mocks.missingEvidence = true;
     await expect(
       createVisualReview("script", input, "http://localhost:3000"),
-    ).rejects.toThrow("measurement did not complete");
+    ).rejects.toThrow("measurement did not match captured frames");
     expect(mocks.files.size).toBe(0);
   });
   it("does not publish a failed capture and retries successfully", async () => {
-    mocks.render.mockRejectedValueOnce(new Error("Media unavailable"));
+    mocks.spawn.mockImplementationOnce(() => {
+      throw new Error("Media unavailable");
+    });
     await expect(
       createVisualReview("script", input, "http://localhost:3000"),
     ).rejects.toThrow("Media unavailable");

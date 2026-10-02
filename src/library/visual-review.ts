@@ -1,5 +1,4 @@
 import {
-  LAYOUT_LOG_PREFIX,
   layoutEvidenceSchema,
   type LayoutEvidence,
 } from "@/production/visual-review-layout";
@@ -10,12 +9,8 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { spawn } from "node:child_process";
-import { renderStill, selectComposition } from "@remotion/renderer";
 import { captureVideoSnapshot } from "@/library/video-snapshot";
-import {
-  getRemotionServeUrl,
-  prepareVideoComposition,
-} from "@/library/render-service";
+import { prepareVideoComposition } from "@/library/render-service";
 import {
   resolveVideoStageMedia,
   videoStageHash,
@@ -24,7 +19,7 @@ import { writeHyperframesReviewProject } from "@/library/hyperframes-render";
 import { getAssetStore } from "@/library/storage";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveSpokenText } from "@/lib/spoken-text";
-import { coverFrames, type ReelProps } from "@/compositions/types";
+import { coverFrames, type ReelProps } from "@/video/types";
 import { ProviderError } from "@/providers/voice/types";
 import {
   planVisualReview,
@@ -36,10 +31,7 @@ import {
 import type { VideoEngineId } from "@/engines/types";
 import { videoDurationLimit } from "@/production/limits";
 import { reviewVisualInputs } from "@/production/visual-review-findings";
-import {
-  cancelChild,
-  cancelableRemotion,
-} from "@/library/production-cancellation";
+import { cancelChild } from "@/library/production-cancellation";
 
 function runSnapshot(
   args: string[],
@@ -109,7 +101,7 @@ async function serialized<T>(action: () => Promise<T>): Promise<T> {
 
 /** Engine-native stills; HyperFrames snapshot includes FFmpeg footage injection. */
 export async function renderVisualReviewFrames(
-  engine: VideoEngineId,
+  _engine: VideoEngineId,
   props: ReelProps & { fps: number },
   totalFrames: number,
   frames: readonly number[],
@@ -119,57 +111,6 @@ export async function renderVisualReviewFrames(
   onLayout?: (evidence: LayoutEvidence) => void,
 ): Promise<string[]> {
   await fs.mkdir(outputDir, { recursive: true });
-  if (engine === "remotion") {
-    const renderProps = onLayout ? { ...props, reviewLayout: true } : props;
-    const serveUrl = await getRemotionServeUrl();
-    const composition = await selectComposition({
-      serveUrl,
-      id: "Reel",
-      inputProps: renderProps,
-    });
-    const paths: string[] = [];
-    for (const frame of frames) {
-      const outputLocation = path.join(outputDir, `frame-${frame}.png`);
-      let nativeEvidence: LayoutEvidence | undefined;
-      await cancelableRemotion(
-        (cancelSignal) =>
-          renderStill({
-            cancelSignal,
-            serveUrl,
-            composition: { ...composition, durationInFrames: totalFrames },
-            inputProps: renderProps,
-            frame,
-            onBrowserLog: onLayout
-              ? (log) => {
-                  if (!log.text.startsWith(LAYOUT_LOG_PREFIX)) return;
-                  try {
-                    const evidence = layoutEvidenceSchema.parse(
-                      JSON.parse(log.text.slice(LAYOUT_LOG_PREFIX.length)),
-                    );
-                    if (evidence.frame === frame) nativeEvidence = evidence;
-                  } catch {
-                    /* Invalid browser evidence is rejected before publishing. */
-                  }
-                }
-              : undefined,
-            imageFormat: "png",
-            output: outputLocation,
-            logLevel: "error",
-            timeoutInMilliseconds: 60_000,
-          }),
-        signal,
-      );
-      if (onLayout) {
-        if (!nativeEvidence)
-          throw new Error(
-            "Native layout measurement did not complete. Try again.",
-          );
-        onLayout(await reviewPixelContrast(outputLocation, nativeEvidence));
-      }
-      paths.push(outputLocation);
-    }
-    return paths;
-  }
   const projectDir = await fs.mkdtemp(path.join(tmpdir(), "reel-review-hf-"));
   try {
     await writeHyperframesReviewProject(projectDir, props, serverBaseUrl);

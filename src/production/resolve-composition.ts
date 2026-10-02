@@ -1,4 +1,4 @@
-import type { ReelProps, ReelScene } from "@/compositions/types";
+import type { ReelProps, ReelScene } from "@/video/types";
 import { getVideoEngine } from "@/engines/registry";
 import {
   productionSpecSchema,

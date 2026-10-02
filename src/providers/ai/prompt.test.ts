@@ -29,7 +29,7 @@ describe("AI production prompts", () => {
       brief: "A local video production studio",
       existingContext: "Scene 1: Produce a polished reel locally.",
       productionPresetId: "creator-punch",
-      videoEngine: "remotion",
+      videoEngine: "hyperframes",
     });
 
     expect(prompt.system).toContain("exactly 3 alternative opening scenes");
@@ -68,8 +68,8 @@ it("asks for a bounded named chapter arc with earlier work preserved", () => {
   expect(prompt.user).toContain("Prior takeaway");
 });
 
-it("plans source-grounded chapter briefs through the existing structured scene carrier for both engines", () => {
-  for (const videoEngine of ["hyperframes", "remotion"] as const) {
+it("plans source-grounded chapter briefs through the existing structured scene carrier for HyperFrames", () => {
+  for (const videoEngine of ["hyperframes"] as const) {
     const prompt = buildPrompt({
       mode: "chapter_outline",
       brief: "Supplied source",

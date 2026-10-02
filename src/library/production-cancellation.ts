@@ -1,6 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { execFileSync, type ChildProcess } from "node:child_process";
-import { makeCancelSignal } from "@remotion/renderer";
 
 const execution = new AsyncLocalStorage<AbortSignal>();
 export const withProductionSignal = <T>(signal: AbortSignal, run: () => T): T =>
@@ -74,22 +73,4 @@ export function cancelChild(
     if (signal?.aborted) kill("SIGKILL");
   });
   if (signal?.aborted) abort();
-}
-
-export async function cancelableRemotion<T>(
-  run: (
-    cancelSignal: ReturnType<typeof makeCancelSignal>["cancelSignal"],
-  ) => Promise<T>,
-  signal = productionSignal(),
-): Promise<T> {
-  assertProductionActive(signal);
-  const { cancelSignal, cancel } = makeCancelSignal();
-  signal?.addEventListener("abort", cancel, { once: true });
-  try {
-    const result = await run(cancelSignal);
-    assertProductionActive(signal);
-    return result;
-  } finally {
-    signal?.removeEventListener("abort", cancel);
-  }
 }

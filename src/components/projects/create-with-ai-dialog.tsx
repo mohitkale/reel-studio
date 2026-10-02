@@ -14,13 +14,7 @@ import {
   ORIENTATION_LABELS,
   DEFAULT_ORIENTATION,
 } from "@/lib/orientation";
-import {
-  DEFAULT_VIDEO_ENGINE,
-  VIDEO_ENGINE_DESCRIPTIONS,
-  VIDEO_ENGINE_IDS,
-  VIDEO_ENGINE_LABELS,
-  type VideoEngineId,
-} from "@/engines/types";
+import { DEFAULT_VIDEO_ENGINE } from "@/engines/types";
 import {
   StyleEnergyControls,
   type EnergyPick,
@@ -77,8 +71,7 @@ export function CreateWithAIDialog() {
   const [orientation, setOrientation] =
     React.useState<Orientation>(DEFAULT_ORIENTATION);
   const [scriptStyle, setScriptStyle] = React.useState<ScriptStyle>("short");
-  const [videoEngine, setVideoEngine] =
-    React.useState<VideoEngineId>(DEFAULT_VIDEO_ENGINE);
+  const videoEngine = DEFAULT_VIDEO_ENGINE;
   const [styleId, setStyleId] = React.useState<StylePick>("auto");
   const [energy, setEnergy] = React.useState<EnergyPick>("auto");
   const [productionPresetId, setProductionPresetId] =
@@ -135,7 +128,7 @@ export function CreateWithAIDialog() {
         onSuccess: ({ scriptId, mediaDecisions, job }) => {
           setOpen(false);
           setBrief("");
-          setVideoEngine(DEFAULT_VIDEO_ENGINE);
+
           setStyleId("auto");
           setEnergy("auto");
           setProductionPresetId("product-launch");
@@ -373,35 +366,6 @@ export function CreateWithAIDialog() {
                 Auto Style and Energy use this preset&apos;s recommended
                 defaults.
               </p>
-            </div>
-
-            <div className="grid gap-2">
-              <Label>Video engine</Label>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {VIDEO_ENGINE_IDS.map((id) => {
-                  const selected = videoEngine === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setVideoEngine(id)}
-                      className={cn(
-                        "rounded-lg border p-3 text-left text-sm transition-colors",
-                        selected
-                          ? "border-primary bg-primary/10 text-foreground"
-                          : "text-muted-foreground hover:bg-accent",
-                      )}
-                    >
-                      <div className="font-medium">
-                        {VIDEO_ENGINE_LABELS[id]}
-                      </div>
-                      <p className="mt-1 text-xs opacity-80">
-                        {VIDEO_ENGINE_DESCRIPTIONS[id]}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
             </div>
 
             <div className="grid gap-2">

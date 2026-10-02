@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ReelBeat } from "@/compositions/types";
+import type { ReelBeat } from "@/video/types";
 
 export const chapterPlanSchema = z
   .object({

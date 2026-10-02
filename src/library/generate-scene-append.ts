@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { MotionDirection } from "@/production/motion";
 import { planMotionSequence } from "@/production/motion-plan";
 
-import type { SceneBackground, SceneChartData } from "@/compositions/types";
+import type { SceneBackground, SceneChartData } from "@/video/types";
 import { orientationFromDims } from "@/lib/orientation";
 import type { aiEnhanceRequestSchema } from "@/library/ai-enhance-input";
 import type { ScriptDTO } from "@/lib/dto";

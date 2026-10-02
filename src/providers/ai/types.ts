@@ -3,7 +3,7 @@ import { productionChartDataSchema } from "@/production/spec";
 
 import type { Orientation } from "@/lib/orientation";
 import type { VideoEngineId } from "@/engines/types";
-import type { EnergyId, StyleId } from "@/compositions/visual-style";
+import type { EnergyId, StyleId } from "@/video/visual-style";
 import type { ProductionPresetId } from "@/production/presets";
 import type { MediaPreference } from "@/lib/media-preference";
 import { stripMarkdown } from "@/lib/strip-markdown";
@@ -21,7 +21,7 @@ import { templateIdForCapabilityId } from "@/engines/capabilities";
  */
 
 // Pan/zoom motion the director can request for a scene's photo background.
-// Kept in sync with PanEffect (src/compositions/types.ts) / panEffectSchema.
+// Kept in sync with PanEffect (src/video/types.ts) / panEffectSchema.
 export const planEffectSchema = z.enum([
   "ken-burns",
   "pan-left",
@@ -55,8 +55,8 @@ export const sceneMoodSchema = z.enum([
 ]);
 export type SceneMood = z.infer<typeof sceneMoodSchema>;
 
-/** Remotion template ids the director may emit when videoEngine is remotion. */
-export const REMOTION_PLAN_TEMPLATE_IDS = [
+/** Accepted only when reading legacy generated plans. */
+export const LEGACY_PLAN_TEMPLATE_IDS = [
   "kinetic",
   "lottie",
   "three",
@@ -88,19 +88,18 @@ export const HF_PLAN_TEMPLATE_IDS = [
   "hf-carousel-vision-v1",
 ] as const;
 
-/** Union accepted by Zod after either engine-specific schema. */
+/** Legacy plan ids remain readable; new provider schemas expose HyperFrames ids. */
 export const PLAN_TEMPLATE_IDS = [
-  ...REMOTION_PLAN_TEMPLATE_IDS,
+  ...LEGACY_PLAN_TEMPLATE_IDS,
   ...HF_PLAN_TEMPLATE_IDS,
 ] as const;
 
 /** Template enum for provider structured-output schemas. */
 export function planTemplateIdsForEngine(
-  engine?: VideoEngineId,
+  _engine?: VideoEngineId,
 ): readonly string[] {
-  return engine === "hyperframes"
-    ? HF_PLAN_TEMPLATE_IDS
-    : REMOTION_PLAN_TEMPLATE_IDS;
+  void _engine;
+  return HF_PLAN_TEMPLATE_IDS;
 }
 
 const aiSceneTemplateSchema = z.object({

@@ -95,8 +95,8 @@ beforeEach(() => {
     })),
   });
 });
-it("uses chapter-local context and global replacement positions for both engines and web/MCP callers", async () => {
-  for (const engine of ["hyperframes", "remotion"])
+it("uses chapter-local context and global replacement positions for HyperFrames and web/MCP callers", async () => {
+  for (const engine of ["hyperframes"])
     for (const origin of ["web", "mcp"]) {
       mocks.auth.mockResolvedValue(origin);
       mocks.script.mockResolvedValue(script(engine));
@@ -148,8 +148,8 @@ it("rejects invalid scopes before provider work, wrong result counts and stale g
   expect(mocks.generate.mock.calls.length).toBe(calls);
 });
 
-it("appends a named chapter through one bounded call for both engines and web/MCP callers", async () => {
-  for (const engine of ["hyperframes", "remotion"])
+it("appends a named chapter through one bounded call for HyperFrames and web/MCP callers", async () => {
+  for (const engine of ["hyperframes"])
     for (const origin of ["web", "mcp"]) {
       mocks.auth.mockResolvedValue(origin);
       mocks.script.mockResolvedValue(script(engine));

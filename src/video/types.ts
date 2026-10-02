@@ -107,8 +107,7 @@ export interface TemplateProps {
 }
 
 /**
- * Input props for the root ReelComposition. A type alias (not interface) so it
- * is assignable to Remotion's `Record<string, unknown>` props constraint.
+ * Input props for the root ReelComposition. Shared by the HTML compiler and editor.
  */
 export type ReelProps = {
   /** Internal native still measurement; omitted from playback and exports. */
@@ -177,7 +176,7 @@ export function coverFrames(fps: number, hasCover: boolean): number {
   return hasCover ? Math.round(fps * COVER_DURATION_SECONDS) : 0;
 }
 
-/** Total composition length for dynamic Remotion metadata and engine exports. */
+/** Total composition length for HTML preview and exports. */
 export function reelDurationFrames(
   props: Pick<ReelProps, "timeline" | "coverUrl" | "fps">,
 ): number {

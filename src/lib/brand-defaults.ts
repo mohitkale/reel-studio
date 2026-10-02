@@ -1,10 +1,9 @@
 /**
  * Server-safe brand token defaults — plain hex values and generic font stack,
- * no @remotion imports. Used by repositories so API routes don't pull in the
- * Remotion/Google-fonts bundle.
+ * no browser-only font imports. Used by repositories and API routes.
  *
  * Client code (ReelPlayer, templates) should still import defaultBrandTokens
- * from @/compositions/tokens so it gets the loaded Inter font family.
+ * from @/video/tokens so it gets the loaded Inter font family.
  *
  * Coral Harbor — Airbnb-inspired palette tuned for vertical video readability.
  */

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { motionPlanSettingsSchema } from "@/production/motion-plan";
 
-import { ENERGY_IDS, STYLE_IDS } from "@/compositions/visual-style";
+import { ENERGY_IDS, STYLE_IDS } from "@/video/visual-style";
 import { VIDEO_ENGINE_IDS } from "@/engines/types";
 import { ORIENTATIONS } from "@/lib/orientation";
 import {

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { defaultBrandTokens } from "@/compositions/tokens";
+import { defaultBrandTokens } from "@/video/tokens";
 import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-composition";
+import { getVideoEngine } from "@/engines/registry";
+import { normalizeHfTemplateId } from "./templates";
 import { mapScenesToEngineTemplates } from "@/engines/hyperframes/map-templates";
 import { personalizeCatalogHtml } from "@/engines/hyperframes/catalog/personalize";
 import type { AIScene } from "@/providers/ai/types";
@@ -581,20 +583,37 @@ describe("buildHyperframesCompositionHtml", () => {
 });
 
 describe("mapScenesToEngineTemplates", () => {
-  it("leaves remotion scenes unchanged", () => {
+  it.each([
+    ["kinetic", "hf-opener"],
+    ["placeholder", "hf-opener"],
+    ["lottie", "hf-statement"],
+    ["three", "hf-statement"],
+    ["stat-reveal", "hf-stat"],
+    ["icon-grid", "hf-list"],
+    ["quote-card", "hf-quote"],
+    ["emoji-punch", "hf-opener"],
+  ])("migrates %s without requiring new media", (legacy, expected) => {
+    expect(normalizeHfTemplateId(legacy)).toBe(expected);
+    expect(
+      getVideoEngine("hyperframes").capabilities.templates[expected]
+        .requiredInputs,
+    ).not.toContain("asset");
+  });
+
+  it("keeps supported HyperFrames scene ids unchanged", () => {
     const scenes = [
       {
         text: "Hello",
-        templateId: "kinetic",
+        templateId: "hf-opener",
         emphasis: [],
       },
     ] as AIScene[];
-    expect(mapScenesToEngineTemplates(scenes, "remotion")[0].templateId).toBe(
-      "kinetic",
-    );
+    expect(
+      mapScenesToEngineTemplates(scenes, "hyperframes")[0].templateId,
+    ).toBe("hf-opener");
   });
 
-  it("maps remotion picks by capability without rewriting scene positions", () => {
+  it("migrates legacy picks without rewriting scene positions", () => {
     const scenes = [
       { text: "Hook", templateId: "kinetic", emphasis: [] },
       { text: "Stat", templateId: "stat-reveal", emphasis: [], visual: "10x" },
@@ -602,9 +621,9 @@ describe("mapScenesToEngineTemplates", () => {
     ] as AIScene[];
     const mapped = mapScenesToEngineTemplates(scenes, "hyperframes");
     expect(mapped.map((s) => s.templateId)).toEqual([
-      "hf-kinetic-slam",
-      "hf-money-count",
-      "hf-kinetic-slam",
+      "hf-opener",
+      "hf-stat",
+      "hf-opener",
     ]);
   });
 });

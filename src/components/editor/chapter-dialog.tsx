@@ -3,7 +3,7 @@ import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiPost } from "@/lib/api-client";
 import type { ScriptDTO } from "@/lib/dto";
-import type { ReelBeat } from "@/compositions/types";
+import type { ReelBeat } from "@/video/types";
 import {
   chapterPlanIssue,
   resolveChapters,

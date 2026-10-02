@@ -4,7 +4,7 @@ import { capabilityIdsForEngine } from "@/engines/capabilities";
 import type { GeneratePlanInput } from "./types";
 
 export function buildOpenAIVideoPlanJsonSchema(input: GeneratePlanInput) {
-  const engineId = input.videoEngine ?? "remotion";
+  const engineId = input.videoEngine ?? "hyperframes";
   const capabilityIds = input.productionPresetId
     ? allowedPresetCapabilityIds(input.productionPresetId, engineId)
     : capabilityIdsForEngine(engineId);

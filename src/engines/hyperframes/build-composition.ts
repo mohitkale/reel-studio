@@ -1,17 +1,17 @@
 /**
  * Build a HyperFrames HTML composition from ReelProps.
- * Deterministic, seekable CSS + GSAP motion — no Remotion imports.
+ * Deterministic, seekable CSS + GSAP motion — framework-independent data.
  */
 
-import type { BrandTokens } from "@/compositions/tokens";
+import type { BrandTokens } from "@/video/tokens";
 import type {
   ReelBeat,
   ReelCaptionCue,
   ReelProps,
   ReelScene,
   SceneMood,
-} from "@/compositions/types";
-import { coverFrames } from "@/compositions/types";
+} from "@/video/types";
+import { coverFrames } from "@/video/types";
 import {
   DEFAULT_ENERGY_ID,
   DEFAULT_STYLE_ID,
@@ -20,7 +20,7 @@ import {
   getTransitionFrames,
   normalizeEnergyId,
   normalizeStyleId,
-} from "@/compositions/visual-style";
+} from "@/video/visual-style";
 import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
 import { getCatalogBlockByTemplateId } from "@/engines/hyperframes/catalog/manifest";
 import { buildCatalogSceneBlock } from "@/engines/hyperframes/catalog/build-scene";
@@ -1003,7 +1003,7 @@ export function buildHyperframesCompositionHtml(
   const videoBlocks: string[] = [];
   const timeline = props.timeline as ReelBeat[];
 
-  // Match Remotion: hold each scene until the next beat starts so inter-beat
+  // Hold each scene until the next beat starts so inter-beat
   // voice gaps (silence between takes) never show a blank frame.
   for (let i = 0; i < timeline.length; i++) {
     const beat = timeline[i];

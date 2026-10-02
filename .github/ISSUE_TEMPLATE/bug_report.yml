@@ -50,7 +50,6 @@ body:
       label: Video engine (if relevant)
       options:
         - HyperFrames
-        - Remotion
         - Podcasts / audio only
         - Not sure / N/A
   - type: textarea

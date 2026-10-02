@@ -41,7 +41,7 @@ const snapshot = videoSnapshotSchema.parse({
     fps: 30,
     width: 1080,
     height: 1920,
-    videoEngine: "remotion",
+    videoEngine: "hyperframes",
     scenes: [
       {
         id: "scene-1",
@@ -133,7 +133,7 @@ describe("video production orchestration", () => {
     ).rejects.toThrow(/up to 2 seconds/);
     expect(render).not.toHaveBeenCalled();
   });
-  it.each(["remotion", "hyperframes"] as const)(
+  it.each(["hyperframes"] as const)(
     "retains motion decisions through prepared checkpoints for %s",
     async (videoEngine) => {
       const directed = structuredClone(snapshot);

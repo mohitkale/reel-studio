@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import type { ProjectDTO } from "@/lib/dto";
 import type { ScenePlan } from "@/providers/ai/types";
-import type { SceneBackground } from "@/compositions/types";
+import type { SceneBackground } from "@/video/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
 import {
@@ -18,7 +18,7 @@ import {
   DEFAULT_STYLE_ID,
   type EnergyId,
   type StyleId,
-} from "@/compositions/visual-style";
+} from "@/video/visual-style";
 import {
   type Orientation,
   DEFAULT_ORIENTATION,

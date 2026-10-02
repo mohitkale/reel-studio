@@ -10,7 +10,7 @@ import developerDemoFixture from "../tests/fixtures/developer-demo-reel.json";
 import editorialExplainerFixture from "../tests/fixtures/editorial-explainer-reel.json";
 import productLaunchFixture from "../tests/fixtures/product-launch-reel.json";
 import releaseBriefs from "../tests/fixtures/release-briefs.json";
-import type { ReelProps } from "../src/compositions/types";
+import type { ReelProps } from "../src/video/types";
 import { buildHyperframesCompositionHtml } from "../src/engines/hyperframes/build-composition";
 import { listVideoEngines } from "../src/engines/registry";
 import { VIDEO_ENGINE_IDS } from "../src/engines/types";
@@ -86,20 +86,26 @@ function checkReleaseMetadata() {
       `${name} must use an exact version, found ${version}`,
     );
   }
-  const remotionVersions = Object.entries(dependencies)
-    .filter(([name]) => name === "remotion" || name.startsWith("@remotion/"))
-    .map(([, version]) => version);
   assert(
-    new Set(remotionVersions).size === 1,
-    "Remotion package versions are not synchronized",
+    !Object.keys(dependencies).some(
+      (name) => name === "remotion" || name.startsWith("@remotion/"),
+    ),
+    "Retired engine dependencies must not return",
+  );
+
+  assert(
+    !Object.keys(lockPackages).some((name) =>
+      /(?:^|\/)node_modules\/(?:@remotion\/|remotion$)/.test(name),
+    ),
+    "Retired engine packages must not remain in the lockfile",
   );
 
   const migrationCount = readdirSync(path.join(root, "prisma", "migrations"), {
     withFileTypes: true,
   }).filter((entry) => entry.isDirectory()).length;
   assert(
-    migrationCount === 12,
-    `expected 12 database migrations, found ${migrationCount}`,
+    migrationCount === 13,
+    `expected 13 database migrations, found ${migrationCount}`,
   );
 
   for (const filename of [
@@ -152,7 +158,7 @@ function checkReleaseMetadata() {
         briefHash?: string;
         width?: number;
         height?: number;
-        engines?: { hyperframes?: number; remotion?: number };
+        engines?: { hyperframes?: number };
       }>
     | undefined;
   assert(
@@ -192,9 +198,8 @@ function checkReleaseMetadata() {
         `${presetId} brief ${briefIndex + 1} dimensions drifted`,
       );
       assert(
-        Number(entry.engines?.hyperframes) > 10_000 &&
-          Number(entry.engines?.remotion) > 10_000,
-        `${presetId} brief ${briefIndex + 1} needs both engine outputs`,
+        Number(entry.engines?.hyperframes) > 10_000,
+        `${presetId} brief ${briefIndex + 1} needs a HyperFrames output`,
       );
     }
   }
@@ -203,7 +208,10 @@ function checkReleaseMetadata() {
 function checkPresetContracts() {
   assert(PRODUCTION_PRESETS.length === 6, "expected six production presets");
   const engines = listVideoEngines();
-  assert(engines.length === 2, "expected two video engines");
+  assert(
+    engines.length === 1 && engines[0].id === "hyperframes",
+    "expected HyperFrames as the sole video engine",
+  );
   let capabilityCombinations = 0;
   let plannedBriefs = 0;
 
@@ -211,7 +219,7 @@ function checkPresetContracts() {
     assert(
       preset.engines.length === VIDEO_ENGINE_IDS.length &&
         VIDEO_ENGINE_IDS.every((id) => preset.engines.includes(id)),
-      `${preset.name} must support both engines`,
+      `${preset.name} must support HyperFrames`,
     );
     const briefs = releaseBriefs[preset.id];
     assert(
@@ -266,8 +274,8 @@ function checkPresetContracts() {
       }
     }
   }
-  assert(capabilityCombinations === 36, "preset canvas matrix is incomplete");
-  assert(plannedBriefs === 36, "three-brief planning matrix is incomplete");
+  assert(capabilityCombinations === 18, "preset canvas matrix is incomplete");
+  assert(plannedBriefs === 18, "three-brief planning matrix is incomplete");
   return { capabilityCombinations, plannedBriefs };
 }
 

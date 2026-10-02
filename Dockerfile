@@ -4,7 +4,7 @@
 # Reel Studio — development image.
 #
 # Runs the Next.js dev server plus video rendering fully isolated from the
-# host: Remotion (headless Chromium + bundled FFmpeg) and HyperFrames
+# host: HyperFrames (headless Chromium + system FFmpeg)
 # (@hyperframes/producer worker, also Chromium/FFmpeg). CPU-heavy renders
 # never touch the laptop directly.
 #
@@ -19,7 +19,7 @@ FROM node:24-bookworm-slim AS dev
 ENV NODE_ENV=development \
     NEXT_TELEMETRY_DISABLED=1
 
-# System libraries required by Remotion's headless Chromium on Debian.
+# System libraries required by HyperFrames' headless Chromium on Debian.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
      ca-certificates \
@@ -46,7 +46,7 @@ RUN apt-get update \
 WORKDIR /app
 
 # Install dependencies first for better layer caching. Native binaries
-# (lightningcss, Prisma engines, Remotion's Linux compositor) are compiled/
+# (lightningcss, Prisma engines, native database/video dependencies) are compiled/
 # selected for Linux here — this is exactly why node_modules must never be
 # bind-mounted from the host (see docker-compose.yml volumes).
 #

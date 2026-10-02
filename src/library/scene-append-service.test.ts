@@ -224,7 +224,7 @@ it("atomically appends chapters and stock, preserves prior work, and rejects rac
       () =>
         prisma.project.update({
           where: { id: "project" },
-          data: { videoEngine: "remotion" },
+          data: { videoEngine: "retired-engine" },
         }),
     ]) {
       const expectedState = await captureSceneRewriteState("script");

@@ -1,6 +1,6 @@
 import type { BrandKit } from "@prisma/client";
 import type { BrandKitDTO } from "@/lib/dto";
-import type { BrandTokens } from "@/compositions/tokens";
+import type { BrandTokens } from "@/video/tokens";
 import {
   CORAL_HARBOR_NAME,
   CORAL_HARBOR_PALETTE,

@@ -52,13 +52,13 @@ import { useCreateRender, useRenderProgress } from "@/hooks/renders";
 import { useBrandKits, useAssignBrandKit } from "@/hooks/brandkits";
 import { useHotkey } from "@/hooks/use-hotkeys";
 import { normalizeTemplateIdForEngine } from "@/engines/registry";
-import { type ReelScene, coverFrames } from "@/compositions/types";
+import { type ReelScene, coverFrames } from "@/video/types";
 import {
   ENERGY_META,
   STYLE_META,
   type EnergyId,
   type StyleId,
-} from "@/compositions/visual-style";
+} from "@/video/visual-style";
 import { estimateTimeline } from "@/lib/preview-timeline";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveSpokenText } from "@/lib/spoken-text";
@@ -187,7 +187,7 @@ export function EditorClient({
   // Reel input: scene templates + timeline. Memoized (and computed before any
   // early return, per rules of hooks) so the Player only sees a new array
   // reference when a scene actually changes, not on every unrelated re-render.
-  const videoEngine = script?.videoEngine ?? "remotion";
+  const videoEngine = script?.videoEngine ?? "hyperframes";
   const reelScenes: ReelScene[] = React.useMemo(
     () =>
       scenes.map((s) => ({

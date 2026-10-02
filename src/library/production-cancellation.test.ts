@@ -9,7 +9,6 @@ import {
   cancelChild,
   withProductionSignal,
   assertProductionActive,
-  cancelableRemotion,
 } from "./production-cancellation";
 
 describe("active production cancellation", () => {
@@ -70,17 +69,9 @@ describe("active production cancellation", () => {
     expect(signal).toBe("SIGKILL");
     expect(() => process.kill(child.pid!, 0)).toThrow();
   });
-  it("prevents new work after abort and bridges the Remotion signal", async () => {
+  it("prevents new work after abort", () => {
     const controller = new AbortController();
-    const operation = withProductionSignal(controller.signal, () =>
-      cancelableRemotion(async (signal) => {
-        await new Promise<void>((resolve) => signal(() => resolve()));
-      }),
-    );
     controller.abort();
-    await expect(operation).rejects.toThrow();
-    expect(() =>
-      withProductionSignal(controller.signal, () => assertProductionActive()),
-    ).toThrow();
+    expect(() => withProductionSignal(controller.signal, () => assertProductionActive())).toThrow();
   });
 });

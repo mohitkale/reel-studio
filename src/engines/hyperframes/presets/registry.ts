@@ -1,5 +1,5 @@
-import type { BrandTokens } from "@/compositions/tokens";
-import type { ReelScene } from "@/compositions/types";
+import type { BrandTokens } from "@/video/tokens";
+import type { ReelScene } from "@/video/types";
 import {
   buildProductLaunchScene,
   PRODUCT_LAUNCH_STYLES,

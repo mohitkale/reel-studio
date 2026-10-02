@@ -315,7 +315,7 @@ export function ScenesJsonDialog({
   scenes,
   open,
   onOpenChange,
-  videoEngine = "remotion",
+  videoEngine = "hyperframes",
 }: {
   scriptId: string;
   scenes: SceneDTO[];

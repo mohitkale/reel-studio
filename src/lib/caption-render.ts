@@ -1,4 +1,4 @@
-import type { BrandTokens } from "@/compositions/tokens";
+import type { BrandTokens } from "@/video/tokens";
 import type { ProductionLayout } from "@/production/layout";
 import {
   LEGACY_CAPTION_STYLE,
@@ -32,7 +32,7 @@ export function resolveCaptionRenderStyle(input: {
   style?: CaptionStyleSnapshot;
   tokens: BrandTokens;
   layout: ProductionLayout;
-  engine?: "remotion" | "hyperframes";
+  engine?: "hyperframes";
 }) {
   const style = input.style ?? LEGACY_CAPTION_STYLE;
   const { layout, tokens } = input;
@@ -74,9 +74,7 @@ export function resolveCaptionRenderStyle(input: {
       padding: `${Math.round(style.paddingY * scale)}px ${Math.round(style.paddingX * scale)}px`,
       borderRadius:
         style.presetId === "legacy"
-          ? input.engine === "hyperframes"
-            ? 18
-            : Math.max(12, tokens.radius)
+          ? 18
           : Math.round(style.radius * scale),
       background: colorWithOpacity(
         style.backgroundColor,

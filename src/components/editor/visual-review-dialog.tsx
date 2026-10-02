@@ -181,9 +181,7 @@ export function VisualReviewDialog({
                 ? "Selected take timing"
                 : "Estimated timing — generate a matching take for final timing"}
               {" · "}
-              {current.videoEngine === "hyperframes"
-                ? "HyperFrames"
-                : "Remotion"}
+              HyperFrames
               {" · Select a still to edit its scene"}
             </p>
             {current.findings?.length > 0 && (

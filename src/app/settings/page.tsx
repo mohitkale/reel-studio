@@ -269,24 +269,10 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-base">Licensing</CardTitle>
           <CardDescription>
-            Reel Studio&apos;s own code is MIT. Preview and MP4 export use{" "}
-            <strong>Remotion</strong>, which is source-available under the
-            Remotion License (not OSI open-source). Individuals and small teams
-            are often covered by Remotion&apos;s Free License; larger for-profit
-            organizations may need a paid Company License. Optional providers
-            (Unsplash, Jamendo, cloud TTS/AI, VoiceForge) keep their own terms.
-            Full details are in{" "}
-            <code className="text-xs">docs/LICENSING.md</code> in the repo, and
-            at{" "}
-            <a
-              href="https://www.remotion.dev/license"
-              target="_blank"
-              rel="noreferrer"
-              className="underline underline-offset-2"
-            >
-              remotion.dev/license
-            </a>
-            .
+            Reel Studio&apos;s own code is MIT. Preview and MP4 export use
+            HyperFrames, licensed Apache-2.0. GSAP has its own standard license;
+            optional media, models, and providers retain their terms. See
+            <code className="text-xs"> docs/LICENSING.md</code> for details.
           </CardDescription>
         </CardHeader>
       </Card>

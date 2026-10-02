@@ -2,8 +2,8 @@
 
 import * as React from "react";
 
-import { TEMPLATES } from "@/compositions/templates";
-import { ReelPlayer } from "@/components/editor/reel-player";
+import { TEMPLATES } from "@/video/templates";
+import { HyperFramesPlayer } from "@/components/editor/hyperframes-player";
 import { PageHeader } from "@/components/shell/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -12,7 +12,11 @@ import { LISTING_GRID_6_CARDS } from "@/lib/listing-layout";
 const PREVIEW_DURATION = 90; // 3 seconds at 30fps
 const PREVIEW_FPS = 30;
 
-function TemplatePreviewCard({ template }: { template: typeof TEMPLATES[0] }) {
+function TemplatePreviewCard({
+  template,
+}: {
+  template: (typeof TEMPLATES)[0];
+}) {
   const scene = React.useMemo(
     () => ({
       id: `preview-${template.id}`,
@@ -25,11 +29,13 @@ function TemplatePreviewCard({ template }: { template: typeof TEMPLATES[0] }) {
   );
 
   const timeline = React.useMemo(
-    () => [{ sceneId: scene.id, startFrame: 0, durationFrames: PREVIEW_DURATION }],
+    () => [
+      { sceneId: scene.id, startFrame: 0, durationFrames: PREVIEW_DURATION },
+    ],
     [scene.id],
   );
 
-  // Mounting all 7 templates (including 3D + Lottie) as live, autoplaying
+  // Mounting all templates as live, autoplaying
   // Players at once is heavy on CPU/GPU. Only mount the actual Player once the
   // card scrolls into view, and unmount it again once it scrolls away.
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -54,7 +60,7 @@ function TemplatePreviewCard({ template }: { template: typeof TEMPLATES[0] }) {
         style={{ aspectRatio: "1080 / 1920" }}
       >
         {isVisible ? (
-          <ReelPlayer
+          <HyperFramesPlayer
             key={scene.id}
             scenes={[scene]}
             timeline={timeline}
@@ -63,7 +69,7 @@ function TemplatePreviewCard({ template }: { template: typeof TEMPLATES[0] }) {
             loop
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-muted/40 text-xs text-muted-foreground">
+          <div className="bg-muted/40 text-muted-foreground flex h-full w-full items-center justify-center text-xs">
             Scroll to preview
           </div>
         )}
@@ -77,9 +83,9 @@ function TemplatePreviewCard({ template }: { template: typeof TEMPLATES[0] }) {
             </Badge>
           ) : null}
         </div>
-        <p className="text-xs text-muted-foreground">{template.description}</p>
+        <p className="text-muted-foreground text-xs">{template.description}</p>
         {template.visualHint ? (
-          <p className="text-xs text-muted-foreground/70 italic">
+          <p className="text-muted-foreground/70 text-xs italic">
             {template.visualHint}
           </p>
         ) : null}
@@ -93,7 +99,7 @@ export default function TemplatesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Templates"
-        description="Seven premium animated scene templates with live previews. Pick any in the scene inspector."
+        description="HTML scene templates with live previews. Pick any in the scene inspector."
       />
       <div className={LISTING_GRID_6_CARDS}>
         {TEMPLATES.map((t) => (

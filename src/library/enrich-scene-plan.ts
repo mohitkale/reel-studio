@@ -7,7 +7,7 @@ import {
   normalizeStyleId,
   type EnergyId,
   type StyleId,
-} from "@/compositions/visual-style";
+} from "@/video/visual-style";
 import { mapScenesToEngineTemplates } from "@/engines/hyperframes/map-templates";
 
 const MOODS: SceneMood[] = [
@@ -303,11 +303,11 @@ export function repairDataScene(scene: AIScene): AIScene {
  * Fill gaps the model often leaves: every scene gets a mood, a stock-photo
  * query, and a pan effect so AI generation never lands on a plain empty gradient.
  * Safe to run on every plan before resolveSceneBackgrounds().
- * When `videoEngine` is hyperframes, Remotion template ids are remapped first.
+ * When `videoEngine` is hyperframes, legacy template ids are remapped first.
  */
 export function enrichScenePlan(
   scenes: AIScene[],
-  videoEngine: VideoEngineId = "remotion",
+  videoEngine: VideoEngineId = "hyperframes",
 ): AIScene[] {
   const mapped = mapScenesToEngineTemplates(scenes, videoEngine)
     .map(repairChecklistScene)

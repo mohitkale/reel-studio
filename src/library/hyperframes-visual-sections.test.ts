@@ -3,7 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { expect, it } from "vitest";
-import type { ReelProps } from "@/compositions/types";
+import type { ReelProps } from "@/video/types";
 import { serverDefaultTokens } from "@/lib/brand-defaults";
 import { hashRenderDirectory } from "@/library/render-section-cache";
 import { writeHyperframesVisualSections } from "./hyperframes-visual-sections";

@@ -1,4 +1,4 @@
-import type { ReelBeat } from "@/compositions/types";
+import type { ReelBeat } from "@/video/types";
 
 /**
  * Client-safe timeline estimate for previewing templates before a voice take

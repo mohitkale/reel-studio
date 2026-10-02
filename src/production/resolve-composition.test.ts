@@ -16,8 +16,8 @@ import creatorPunchFixture from "../../tests/fixtures/creator-punch-reel.json";
 import dataStoryFixture from "../../tests/fixtures/data-story-reel.json";
 import developerDemoFixture from "../../tests/fixtures/developer-demo-reel.json";
 import cinematicBrandFixture from "../../tests/fixtures/cinematic-brand-reel.json";
-import type { ReelProps } from "@/compositions/types";
-import { reelDurationFrames } from "@/compositions/types";
+import type { ReelProps } from "@/video/types";
+import { reelDurationFrames } from "@/video/types";
 import { CURRENT_HF_CATALOG_REVISION } from "@/engines/hyperframes/catalog/revisions";
 import { motionDirection } from "@/production/motion";
 
@@ -166,9 +166,9 @@ describe("resolved production composition", () => {
   });
 
   it.each(ORIENTATIONS)(
-    "uses one format-aware input for both engines in %s",
+    "uses one format-aware input for HyperFrames in %s",
     (orientation) => {
-      for (const engineId of ["hyperframes", "remotion"] as const) {
+      for (const engineId of ["hyperframes"] as const) {
         const spec = productionSpec(engineId, orientation);
         const resolved = resolveProductionComposition(
           spec,
@@ -219,7 +219,7 @@ describe("resolved production composition", () => {
   );
 
   it("does not expose placeholder narration as production audio", () => {
-    const spec = productionSpec("remotion", "portrait");
+    const spec = productionSpec("hyperframes", "portrait");
     spec.narration.readiness = "placeholder";
 
     expect(
@@ -350,7 +350,7 @@ describe("resolved production composition", () => {
   });
 
   it("rejects Data Story metric and chart roles without explicit data", () => {
-    const missingMetric = productionSpec("remotion", "portrait");
+    const missingMetric = productionSpec("hyperframes", "portrait");
     missingMetric.preset = { id: "data-story", version: "1.0.0" };
     missingMetric.scenes[0].role = "metric";
     delete missingMetric.scenes[0].visual;
@@ -414,7 +414,7 @@ describe("resolved production composition", () => {
   });
 
   it("rejects a Cinematic Brand hero without supplied media", () => {
-    const spec = productionSpec("remotion", "portrait");
+    const spec = productionSpec("hyperframes", "portrait");
     spec.preset = { id: "cinematic-brand", version: "1.0.0" };
     spec.scenes[0].role = "hero";
     spec.scenes[0].assetRefs = [];

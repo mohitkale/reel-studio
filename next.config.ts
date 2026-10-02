@@ -1,16 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Remotion renderer and bundler contain native binaries that must run in Node.js;
+  // Native database, video and voice packages must run in Node.js;
   // exclude them from the Next.js bundle so they are required at runtime instead.
   serverExternalPackages: [
     "@prisma/client",
     "@prisma/adapter-better-sqlite3",
     "better-sqlite3",
-    "@remotion/renderer",
-    "@remotion/bundler",
-    "remotion",
-    "@remotion/compositor-win32-x64-msvc",
     "@hyperframes/producer",
     "@hyperframes/engine",
     "@hyperframes/core",

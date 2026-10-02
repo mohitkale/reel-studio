@@ -25,7 +25,7 @@ import {
   coverFrames,
   type ReelProps,
   type ReelScene,
-} from "@/compositions/types";
+} from "@/video/types";
 import { extendHyperframesMusic } from "@/library/hyperframes-music-loop";
 import { type Orientation, dimsFor } from "@/lib/orientation";
 import { getAssetStore } from "@/library/storage";
@@ -37,7 +37,7 @@ import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-com
 import { getCatalogBlockByTemplateId } from "@/engines/hyperframes/catalog/manifest";
 import { catalogCompositionFileName } from "@/engines/hyperframes/catalog/build-scene";
 import { personalizeCatalogBlock } from "@/engines/hyperframes/catalog/personalize";
-import { defaultBrandTokens } from "@/compositions/tokens";
+import { defaultBrandTokens } from "@/video/tokens";
 import {
   updateRenderProgress,
   completeRender,

@@ -164,7 +164,7 @@ describe("stock-media scene persistence", () => {
             effect: "ken-burns",
           },
         ],
-        "remotion",
+        "hyperframes",
         undefined,
         {
           mediaPreferences: ["image"],

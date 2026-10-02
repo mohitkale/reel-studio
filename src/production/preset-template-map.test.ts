@@ -1,22 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import { getVideoEngine } from "@/engines/registry";
-import { ProductLaunchScene } from "@/compositions/presets/product-launch";
-import { EditorialExplainerScene } from "@/compositions/presets/editorial-explainer";
-import { CreatorPunchScene } from "@/compositions/presets/creator-punch";
-import { DataStoryScene } from "@/compositions/presets/data-story";
-import { DeveloperDemoScene } from "@/compositions/presets/developer-demo";
-import { CinematicBrandScene } from "@/compositions/presets/cinematic-brand";
-import { getPresetSceneComponent } from "@/compositions/presets/registry";
 import { getProductionPreset } from "@/production/presets";
 import { getPresetTemplateId } from "@/production/preset-template-map";
 
 describe("Product Launch renderer adapters", () => {
-  it("maps every role to a compatible template on both engines", () => {
+  it("maps every role to a compatible template on HyperFrames", () => {
     const preset = getProductionPreset("product-launch");
     expect(preset).toBeDefined();
 
-    for (const engineId of ["hyperframes", "remotion"] as const) {
+    for (const engineId of ["hyperframes"] as const) {
       const engine = getVideoEngine(engineId);
       for (const role of preset!.sceneRoles) {
         const templateId = getPresetTemplateId({
@@ -32,17 +25,14 @@ describe("Product Launch renderer adapters", () => {
     }
   });
 
-  it("registers the Remotion preset renderer", () => {
-    expect(getPresetSceneComponent("product-launch")).toBe(ProductLaunchScene);
-  });
 });
 
 describe("Editorial Explainer renderer adapters", () => {
-  it("maps every role to a compatible template on both engines", () => {
+  it("maps every role to a compatible template on HyperFrames", () => {
     const preset = getProductionPreset("editorial-explainer");
     expect(preset).toBeDefined();
 
-    for (const engineId of ["hyperframes", "remotion"] as const) {
+    for (const engineId of ["hyperframes"] as const) {
       const engine = getVideoEngine(engineId);
       for (const role of preset!.sceneRoles) {
         const templateId = getPresetTemplateId({
@@ -58,19 +48,14 @@ describe("Editorial Explainer renderer adapters", () => {
     }
   });
 
-  it("registers the Remotion preset renderer", () => {
-    expect(getPresetSceneComponent("editorial-explainer")).toBe(
-      EditorialExplainerScene,
-    );
-  });
 });
 
 describe("Creator Punch renderer adapters", () => {
-  it("maps every role to a compatible template on both engines", () => {
+  it("maps every role to a compatible template on HyperFrames", () => {
     const preset = getProductionPreset("creator-punch");
     expect(preset).toBeDefined();
 
-    for (const engineId of ["hyperframes", "remotion"] as const) {
+    for (const engineId of ["hyperframes"] as const) {
       const engine = getVideoEngine(engineId);
       for (const role of preset!.sceneRoles) {
         const templateId = getPresetTemplateId({
@@ -86,17 +71,14 @@ describe("Creator Punch renderer adapters", () => {
     }
   });
 
-  it("registers the Remotion preset renderer", () => {
-    expect(getPresetSceneComponent("creator-punch")).toBe(CreatorPunchScene);
-  });
 });
 
 describe("Data Story renderer adapters", () => {
-  it("maps every role to a compatible template on both engines", () => {
+  it("maps every role to a compatible template on HyperFrames", () => {
     const preset = getProductionPreset("data-story");
     expect(preset).toBeDefined();
 
-    for (const engineId of ["hyperframes", "remotion"] as const) {
+    for (const engineId of ["hyperframes"] as const) {
       const engine = getVideoEngine(engineId);
       for (const role of preset!.sceneRoles) {
         const templateId = getPresetTemplateId({
@@ -112,16 +94,13 @@ describe("Data Story renderer adapters", () => {
     }
   });
 
-  it("registers the Remotion preset renderer", () => {
-    expect(getPresetSceneComponent("data-story")).toBe(DataStoryScene);
-  });
 });
 
 describe("Developer Demo renderer adapters", () => {
-  it("maps every role to a compatible template on both engines", () => {
+  it("maps every role to a compatible template on HyperFrames", () => {
     const preset = getProductionPreset("developer-demo");
     expect(preset).toBeDefined();
-    for (const engineId of ["hyperframes", "remotion"] as const) {
+    for (const engineId of ["hyperframes"] as const) {
       const engine = getVideoEngine(engineId);
       for (const role of preset!.sceneRoles) {
         const templateId = getPresetTemplateId({
@@ -137,16 +116,13 @@ describe("Developer Demo renderer adapters", () => {
     }
   });
 
-  it("registers the Remotion preset renderer", () => {
-    expect(getPresetSceneComponent("developer-demo")).toBe(DeveloperDemoScene);
-  });
 });
 
 describe("Cinematic Brand renderer adapters", () => {
-  it("maps every role to a compatible template on both engines", () => {
+  it("maps every role to a compatible template on HyperFrames", () => {
     const preset = getProductionPreset("cinematic-brand");
     expect(preset).toBeDefined();
-    for (const engineId of ["hyperframes", "remotion"] as const) {
+    for (const engineId of ["hyperframes"] as const) {
       const engine = getVideoEngine(engineId);
       for (const role of preset!.sceneRoles) {
         const templateId = getPresetTemplateId({
@@ -162,9 +138,4 @@ describe("Cinematic Brand renderer adapters", () => {
     }
   });
 
-  it("registers the Remotion preset renderer", () => {
-    expect(getPresetSceneComponent("cinematic-brand")).toBe(
-      CinematicBrandScene,
-    );
-  });
 });
