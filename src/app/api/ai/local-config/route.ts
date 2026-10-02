@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireWeb, authorizeRead } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 import { localAIConfigStore } from "@/server/local-ai-config";
 import {
   LOCAL_AI_PROVIDER_IDS,
@@ -33,7 +37,7 @@ export async function GET(req: Request) {
 export async function POST(request: Request) {
   try {
     requireWeb(request);
-    const body = bodySchema.parse(await request.json());
+    const body = parseClientInput(bodySchema, await readRequestJson(request));
     const provider = await localAIConfigStore.save(
       body.providerId,
       body.config,
@@ -53,10 +57,10 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     requireWeb(request);
-    const { providerId } = z
-      .object({ providerId: z.enum(LOCAL_AI_PROVIDER_IDS) })
-      .strict()
-      .parse(await request.json());
+    const { providerId } = parseClientInput(
+      z.object({ providerId: z.enum(LOCAL_AI_PROVIDER_IDS) }).strict(),
+      await readRequestJson(request),
+    );
     const config = await localAIConfigStore.readProvider(providerId);
     const diagnostic = await diagnoseLocalAIProvider(providerId, config);
     await localAIConfigStore.recordDiagnostic(providerId, diagnostic);

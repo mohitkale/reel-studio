@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { stopProcessTree } from "./process-tree.mjs";
 import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 
@@ -24,6 +25,7 @@ export function supervise({
 }) {
   const children = new Set();
   let stopping = false;
+  let cleanupPending = 0;
   let restartTimer;
   let restarts = 0;
   let exitCode = 0;
@@ -32,7 +34,8 @@ export function supervise({
     resolveDone = resolve;
   });
   const finish = () => {
-    if (stopping && children.size === 0) resolveDone(exitCode);
+    if (stopping && children.size === 0 && cleanupPending === 0)
+      resolveDone(exitCode);
   };
   const stop = (code = 0) => {
     if (stopping) return;
@@ -40,33 +43,16 @@ export function supervise({
     exitCode = code;
     clearTimeout(restartTimer);
     for (const child of children) {
-      if (process.platform === "win32") child.kill("SIGTERM");
-      else {
-        try {
-          process.kill(-child.pid, "SIGTERM");
-        } catch (error) {
-          if (error.code !== "ESRCH") throw error;
-        }
-      }
-      const timer = setTimeout(() => {
-        try {
-          if (process.platform !== "win32") process.kill(-child.pid, "SIGKILL");
-          else child.kill("SIGKILL");
-        } catch (error) {
-          if (error.code !== "ESRCH")
-            console.error("[supervisor] cleanup failed", error);
-        }
-      }, graceMs);
-      child.once("close", () => {
-        clearTimeout(timer);
-        if (process.platform !== "win32") {
-          try {
-            process.kill(-child.pid, "SIGKILL");
-          } catch (error) {
-            if (error.code !== "ESRCH") console.error(error);
-          }
-        }
-      });
+      cleanupPending += 1;
+      void stopProcessTree(child, graceMs)
+        .catch((error) => {
+          exitCode ||= 1;
+          console.error("[supervisor] Cleanup failed", error);
+        })
+        .finally(() => {
+          cleanupPending -= 1;
+          finish();
+        });
     }
     finish();
   };

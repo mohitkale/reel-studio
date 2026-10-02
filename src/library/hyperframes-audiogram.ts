@@ -61,13 +61,19 @@ export async function renderHyperframesAudiogram(
           env: { ...process.env, HYPERFRAMES_NO_TELEMETRY: "1" },
         },
       );
-      cancelChild(child, signal);
+      const waitForCleanup = cancelChild(child, signal);
       let error = "";
       child.stderr.on("data", (chunk: Buffer) => {
         if (error.length < 65_536) error += chunk.toString();
       });
       child.once("error", reject);
-      child.once("close", (code) => {
+      child.once("close", async (code) => {
+        try {
+          await waitForCleanup();
+        } catch (error) {
+          reject(error);
+          return;
+        }
         if (signal.aborted) reject(new Error("Production canceled"));
         else if (code !== 0)
           reject(new Error(`Audiogram export failed: ${error.slice(-2048)}`));

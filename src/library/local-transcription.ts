@@ -86,14 +86,20 @@ function runWhisper(binary: string, args: string[]): Promise<void> {
       detached: process.platform !== "win32",
       stdio: ["ignore", "ignore", "pipe"],
     });
-    cancelChild(child);
+    const waitForCleanup = cancelChild(child);
     let stderr = "";
     child.stderr.setEncoding("utf8");
     child.stderr.on("data", (chunk: string) => {
       if (stderr.length < 8_000) stderr += chunk;
     });
     child.once("error", reject);
-    child.once("close", (code) => {
+    child.once("close", async (code) => {
+      try {
+        await waitForCleanup();
+      } catch (error) {
+        reject(error);
+        return;
+      }
       if (code === 0) resolve();
       else
         reject(

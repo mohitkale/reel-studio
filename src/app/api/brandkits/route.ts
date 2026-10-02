@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { listBrandKits, createBrandKit } from "@/library/repositories/brandkits";
+import {
+  listBrandKits,
+  createBrandKit,
+} from "@/library/repositories/brandkits";
 import { requireWeb, authorizeRead } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +30,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     requireWeb(req);
-    const body = createSchema.parse(await req.json());
+    const body = parseClientInput(createSchema, await readRequestJson(req));
     const kit = await createBrandKit(body.name);
     return NextResponse.json(kit, { status: 201 });
   } catch (e) {

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { productionEventQuerySchema } from "@/production/api";
 import { authorizeRequest } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import { errorResponse, parseClientInput } from "@/server/api-helpers";
 import { listProductionJobEvents } from "@/library/repositories/production-jobs";
 
 export const runtime = "nodejs";
@@ -15,7 +15,8 @@ export async function GET(
   try {
     authorizeRequest(req, "production:submit");
     const { id } = await context.params;
-    const query = productionEventQuerySchema.parse(
+    const query = parseClientInput(
+      productionEventQuerySchema,
       Object.fromEntries(new URL(req.url).searchParams),
     );
     const events = await listProductionJobEvents(id, query.after);

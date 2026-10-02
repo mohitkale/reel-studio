@@ -3,6 +3,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getAssetStore } from "@/library/storage";
 import { authorizeMedia } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
+import { parseByteRange } from "@/server/byte-range";
+import type { ReadableAsset } from "@/library/storage/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,9 +29,10 @@ const CONTENT_TYPES: Record<string, string> = {
  * Access is same-origin / loopback / MCP-token gated — never world-readable on
  * a LAN or public bind.
  */
-export async function GET(
+async function serve(
   req: NextRequest,
   ctx: { params: Promise<{ path: string[] }> },
+  head = false,
 ) {
   try {
     authorizeMedia(req);
@@ -40,9 +43,9 @@ export async function GET(
   const { path: segments } = await ctx.params;
   const key = segments.join("/");
 
-  let data: Buffer;
+  let asset: ReadableAsset;
   try {
-    data = await getAssetStore().get(key);
+    asset = await getAssetStore().open(key);
   } catch {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
@@ -53,44 +56,41 @@ export async function GET(
     ext === "svg"
       ? "application/octet-stream"
       : (CONTENT_TYPES[ext] ?? "application/octet-stream");
-  const total = data.length;
-  const range = req.headers.get("range");
-
-  if (range) {
-    const match = /bytes=(\d*)-(\d*)/.exec(range);
-    let start = match && match[1] ? parseInt(match[1], 10) : 0;
-    let end = match && match[2] ? parseInt(match[2], 10) : total - 1;
-    if (Number.isNaN(start)) start = 0;
-    if (Number.isNaN(end) || end >= total) end = total - 1;
-
-    if (start > end || start >= total) {
-      return new NextResponse(null, {
-        status: 416,
-        headers: { "Content-Range": `bytes */${total}` },
-      });
-    }
-
-    const chunk = data.subarray(start, end + 1);
-    return new NextResponse(new Uint8Array(chunk), {
-      status: 206,
-      headers: {
-        "Content-Type": contentType,
-        "Content-Range": `bytes ${start}-${end}/${total}`,
-        "Accept-Ranges": "bytes",
-        "Content-Length": String(chunk.length),
-        "Cache-Control": "private, no-store",
-        "X-Content-Type-Options": "nosniff",
-      },
+  const total = asset.size;
+  const headers: Record<string, string> = {
+    "Content-Type": contentType,
+    "Accept-Ranges": "bytes",
+    "Cache-Control": "private, no-store",
+    "X-Content-Type-Options": "nosniff",
+  };
+  // Range applies to GET only; HEAD describes the complete representation.
+  const range = head ? null : req.headers.get("range");
+  const bounds = range ? parseByteRange(range, total) : undefined;
+  if (bounds === null) {
+    await asset.close();
+    return new NextResponse(null, {
+      status: 416,
+      headers: { ...headers, "Content-Range": `bytes */${total}`, "Content-Length": "0" },
     });
   }
-
-  return new NextResponse(new Uint8Array(data), {
-    headers: {
-      "Content-Type": contentType,
-      "Content-Length": String(total),
-      "Accept-Ranges": "bytes",
-      "Cache-Control": "private, no-store",
-      "X-Content-Type-Options": "nosniff",
-    },
-  });
+  const start = bounds?.start ?? 0;
+  const end = bounds?.end ?? total - 1;
+  headers["Content-Length"] = String(bounds ? end - start + 1 : total);
+  if (bounds) headers["Content-Range"] = `bytes ${start}-${end}/${total}`;
+  if (head) {
+    await asset.close();
+    return new NextResponse(null, { headers });
+  }
+  try {
+    return new NextResponse(asset.stream({ start, end, signal: req.signal }), {
+      status: bounds ? 206 : 200,
+      headers,
+    });
+  } catch (error) {
+    await asset.close();
+    return errorResponse(error);
+  }
 }
+
+export const GET = (req: NextRequest, ctx: { params: Promise<{ path: string[] }> }) => serve(req, ctx);
+export const HEAD = (req: NextRequest, ctx: { params: Promise<{ path: string[] }> }) => serve(req, ctx, true);

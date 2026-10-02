@@ -3,7 +3,11 @@ import { randomUUID } from "node:crypto";
 import { after, NextResponse } from "next/server";
 
 import { authorizeRequest } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 import { productionBatchRequestSchema } from "@/production/batch";
 import { submitProductionBatch } from "@/library/production-batch-service";
 import { productionBatchView } from "@/library/production-batch-view";
@@ -30,7 +34,10 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const auth = authorizeRequest(req, "production:submit");
-    const request = productionBatchRequestSchema.parse(await req.json());
+    const request = parseClientInput(
+      productionBatchRequestSchema,
+      await readRequestJson(req),
+    );
     const batch = await submitProductionBatch({
       request,
       auth,

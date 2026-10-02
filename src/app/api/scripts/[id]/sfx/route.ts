@@ -6,7 +6,11 @@ import { editSfxCue } from "@/library/sfx-cue-edit-service";
 import { sfxCueEditRequestSchema } from "@/lib/sfx-cue-edit";
 import { getScript } from "@/library/repositories/scripts";
 import { authorize } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +28,10 @@ export async function POST(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const body = bodySchema.parse(await req.json().catch(() => ({})));
+    const body = parseClientInput(
+      bodySchema,
+      await readRequestJson(req, { allowEmpty: true }),
+    );
 
     if (body.enabled === false) {
       await setSfxEnabled(id, false);

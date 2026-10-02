@@ -23,9 +23,16 @@ const recordSchema = z
     size: z.number().int().positive(),
   })
   .strict();
-export async function hashRenderFile(filename: string) {
+export async function hashRenderFile(
+  filename: string,
+  signal = productionSignal(),
+) {
   const digest = createHash("sha256");
-  for await (const bytes of createReadStream(filename)) digest.update(bytes);
+  for await (const bytes of createReadStream(filename, {
+    signal,
+    highWaterMark: 64 * 1024,
+  }))
+    digest.update(bytes);
   return digest.digest("hex");
 }
 export async function hashRenderDirectory(directory: string) {

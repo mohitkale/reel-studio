@@ -4,7 +4,11 @@ import { z } from "zod";
 import { deleteTake, renameTake } from "@/library/repositories/takes";
 import { authorize } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,7 +22,7 @@ export async function PATCH(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const { label } = patchSchema.parse(await req.json());
+    const { label } = parseClientInput(patchSchema, await readRequestJson(req));
     await renameTake(id, label);
     return NextResponse.json({ ok: true });
   } catch (e) {

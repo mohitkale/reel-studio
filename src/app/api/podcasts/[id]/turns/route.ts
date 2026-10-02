@@ -13,7 +13,11 @@ import {
 } from "@/library/podcast-schemas";
 import { authorize } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,7 +55,7 @@ export async function POST(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const body: unknown = await req.json();
+    const body: unknown = await readRequestJson(req);
 
     // Prefer full-plan import when `plan` is present so validation errors are useful.
     if (
@@ -60,14 +64,14 @@ export async function POST(
       "plan" in body &&
       (body as { plan?: unknown }).plan != null
     ) {
-      const parsed = importSchema.parse(body);
+      const parsed = parseClientInput(importSchema, body);
       const podcast = await replaceTurnsFromPlan(id, parsed.plan, {
         updateMeta: parsed.updateMeta ?? false,
       });
       return NextResponse.json({ podcast });
     }
 
-    const parsed = insertTurnSchema.parse(body);
+    const parsed = parseClientInput(insertTurnSchema, body);
     const podcast = await insertTurn(id, parsed);
     return NextResponse.json({ podcast });
   } catch (e) {
@@ -83,7 +87,7 @@ export async function PATCH(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const body = patchTurnSchema.parse(await req.json());
+    const body = parseClientInput(patchTurnSchema, await readRequestJson(req));
     const podcast = await updatePodcastTurn(id, body.turnId, body);
     return NextResponse.json({ podcast });
   } catch (e) {
@@ -105,7 +109,7 @@ export async function DELETE(
       throw new ProviderError("Deletion is not available via MCP", 403);
     }
     await ctx.params;
-    const body = deleteSchema.parse(await req.json());
+    const body = parseClientInput(deleteSchema, await readRequestJson(req));
     const podcast = await deleteTurn(body.turnId);
     return NextResponse.json({ podcast });
   } catch (e) {

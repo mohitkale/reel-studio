@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 import { updateCaptionCue } from "@/library/repositories/captions";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 import { authorize } from "@/server/auth";
 
 export const runtime = "nodejs";
@@ -25,7 +29,7 @@ export async function PATCH(
     const track = await updateCaptionCue(
       scriptId,
       cueId,
-      patchSchema.parse(await req.json()),
+      parseClientInput(patchSchema, await readRequestJson(req)),
     );
     return Response.json({ track });
   } catch (error) {

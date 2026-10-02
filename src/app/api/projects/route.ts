@@ -9,7 +9,11 @@ import {
 import { orientationSchema } from "@/lib/orientation";
 import { VIDEO_ENGINE_IDS } from "@/engines/types";
 import { authorize, authorizeRead } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,8 +37,9 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     authorize(req);
-    const { name, orientation, videoEngine } = createSchema.parse(
-      await req.json(),
+    const { name, orientation, videoEngine } = parseClientInput(
+      createSchema,
+      await readRequestJson(req),
     );
     return NextResponse.json(
       await createProject(name, orientation, videoEngine),

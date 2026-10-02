@@ -7,7 +7,7 @@ import {
   podcastTranscriptText,
 } from "@/library/podcast-transcript";
 import { getPodcast, getPodcastTake } from "@/library/repositories/podcasts";
-import { errorResponse } from "@/server/api-helpers";
+import { errorResponse, parseClientInput } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +25,8 @@ export async function GET(
   try {
     authorizeRead(req);
     const { id } = await ctx.params;
-    const format = formatSchema.parse(
+    const format = parseClientInput(
+      formatSchema,
       new URL(req.url).searchParams.get("format") ?? "transcript",
     );
     const take = await getPodcastTake(id);

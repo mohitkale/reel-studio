@@ -9,7 +9,11 @@ import { getAIProvider } from "@/providers/ai/registry";
 import { AIError, AI_PROVIDER_IDS } from "@/providers/ai/types";
 import { getPodcast, getPodcastTake } from "@/library/repositories/podcasts";
 import { authorize, authorizeProviderRequest } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,7 +50,7 @@ export async function POST(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
-    const body = bodySchema.parse(await req.json());
+    const body = parseClientInput(bodySchema, await readRequestJson(req));
     await authorizeProviderRequest(req, [body.providerId]);
     const { id } = await ctx.params;
     const take = await getPodcastTake(id);

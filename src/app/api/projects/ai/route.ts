@@ -19,7 +19,11 @@ import { ensureSfxCues } from "@/library/sfx-service";
 import { orientationSchema, DEFAULT_ORIENTATION } from "@/lib/orientation";
 import { VIDEO_ENGINE_IDS, DEFAULT_VIDEO_ENGINE } from "@/engines/types";
 import { authorizeProviderRequest } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 import {
   getProductionPreset,
   productionPresetIdSchema,
@@ -63,7 +67,7 @@ const bodySchema = z.object({
 /** POST /api/projects/ai - generate a scene plan from a brief and create the project. */
 export async function POST(req: Request) {
   try {
-    const body = bodySchema.parse(await req.json());
+    const body = parseClientInput(bodySchema, await readRequestJson(req));
     if (body.quickProduce && body.idempotencyKey) {
       const duplicate = await getProductionJobByIdempotencyKey(
         body.idempotencyKey,

@@ -3,7 +3,11 @@ import { z } from "zod";
 
 import { preparePodcastTakeExport } from "@/library/podcast-export-service";
 import { authorize } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,7 +21,10 @@ export async function POST(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const { format } = exportSchema.parse(await req.json());
+    const { format } = parseClientInput(
+      exportSchema,
+      await readRequestJson(req),
+    );
     return NextResponse.json(await preparePodcastTakeExport(id, format));
   } catch (error) {
     return errorResponse(error);

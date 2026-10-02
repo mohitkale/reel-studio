@@ -10,7 +10,11 @@ import {
   setKokoroVisibleVoices,
 } from "@/server/app-config";
 import { requireWeb } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,7 +36,7 @@ const bodySchema = z.object({
 export async function POST(req: Request) {
   try {
     requireWeb(req);
-    const body = bodySchema.parse(await req.json());
+    const body = parseClientInput(bodySchema, await readRequestJson(req));
 
     if (body.defaultProviderId) {
       await setDefaultProvider(body.defaultProviderId);

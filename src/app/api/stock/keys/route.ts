@@ -5,7 +5,11 @@ import { STOCK_PROVIDER_IDS, StockError } from "@/providers/stock/types";
 import { getStockMediaProviderRegistry } from "@/providers/stock/registry";
 import { stockKeyStatus, setStockKey } from "@/server/secrets";
 import { requireWeb, authorizeRead } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +33,10 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     requireWeb(req);
-    const { providerId, apiKey } = bodySchema.parse(await req.json());
+    const { providerId, apiKey } = parseClientInput(
+      bodySchema,
+      await readRequestJson(req),
+    );
     await setStockKey(providerId, apiKey);
 
     if (!apiKey.trim()) {

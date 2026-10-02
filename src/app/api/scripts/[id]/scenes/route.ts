@@ -3,7 +3,11 @@ import { z } from "zod";
 
 import { addScene, reorderScenes } from "@/library/repositories/scenes";
 import { authorize } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,7 +24,10 @@ export async function POST(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const body = addSchema.parse(await req.json().catch(() => ({})));
+    const body = parseClientInput(
+      addSchema,
+      await readRequestJson(req, { allowEmpty: true }),
+    );
     return NextResponse.json(
       { scene: await addScene(id, body) },
       { status: 201 },
@@ -39,7 +46,10 @@ export async function PATCH(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const { orderedIds } = reorderSchema.parse(await req.json());
+    const { orderedIds } = parseClientInput(
+      reorderSchema,
+      await readRequestJson(req),
+    );
     await reorderScenes(id, orderedIds);
     return NextResponse.json({ ok: true });
   } catch (e) {

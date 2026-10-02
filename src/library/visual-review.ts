@@ -53,7 +53,7 @@ function runSnapshot(
         ...(configPath ? { REEL_REVIEW_CAPTURE_CONFIG: configPath } : {}),
       },
     });
-    cancelChild(child, captureSignal);
+    const waitForCleanup = cancelChild(child, captureSignal);
     let output = "";
     let overflow = false;
     const append = (data: Buffer) => {
@@ -63,7 +63,13 @@ function runSnapshot(
     child.stdout.on("data", append);
     child.stderr.on("data", append);
     child.once("error", reject);
-    child.once("close", (code) => {
+    child.once("close", async (code) => {
+      try {
+        await waitForCleanup();
+      } catch (error) {
+        reject(error);
+        return;
+      }
       if (captureSignal.aborted)
         reject(
           new Error("Visual review was canceled or timed out. Try again."),

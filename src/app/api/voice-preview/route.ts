@@ -7,7 +7,11 @@ import {
 } from "@/library/voice-preview";
 import { PROVIDER_IDS } from "@/providers/voice/types";
 import { authorizeProviderRequest } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,7 +26,7 @@ const bodySchema = z.object({
 /** POST /api/voice-preview — synth (or cache-hit) a short reusable voice sample. */
 export async function POST(req: Request) {
   try {
-    const body = bodySchema.parse(await req.json());
+    const body = parseClientInput(bodySchema, await readRequestJson(req));
     await authorizeProviderRequest(req, [body.providerId]);
     const result = await getOrCreateVoicePreview({
       providerId: body.providerId,

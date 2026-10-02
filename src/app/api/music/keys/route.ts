@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { MUSIC_PROVIDER_IDS, MusicProviderError } from "@/providers/music/types";
+import {
+  MUSIC_PROVIDER_IDS,
+  MusicProviderError,
+} from "@/providers/music/types";
 import { getMusicProvider } from "@/providers/music/registry";
 import { musicKeyStatus, setMusicKey } from "@/server/secrets";
 import { requireWeb, authorizeRead } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +36,10 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     requireWeb(req);
-    const { providerId, apiKey } = bodySchema.parse(await req.json());
+    const { providerId, apiKey } = parseClientInput(
+      bodySchema,
+      await readRequestJson(req),
+    );
     await setMusicKey(providerId, apiKey);
 
     if (!apiKey.trim()) {
@@ -48,7 +58,11 @@ export async function POST(req: Request) {
           : "Could not verify the key.";
     }
 
-    return NextResponse.json({ status: musicKeyStatus(), verified, verifyError });
+    return NextResponse.json({
+      status: musicKeyStatus(),
+      verified,
+      verifyError,
+    });
   } catch (e) {
     return errorResponse(e);
   }

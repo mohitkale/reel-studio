@@ -5,7 +5,11 @@ import { createAllSceneClipsFromUpload } from "@/library/scene-voice-service";
 import { getProvider, isProviderId } from "@/providers/voice/registry";
 import { ProviderError } from "@/providers/voice/types";
 import { authorize } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,7 +43,7 @@ export async function POST(
   try {
     authorize(req);
     const { id } = await ctx.params;
-    const body = uploadSchema.parse(await req.json());
+    const body = parseClientInput(uploadSchema, await readRequestJson(req));
 
     if (!isProviderId(body.providerId)) {
       throw new ProviderError(`Unknown provider "${body.providerId}"`, 404);

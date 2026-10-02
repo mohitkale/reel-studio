@@ -21,11 +21,7 @@ import path from "node:path";
 import { promises as fs } from "node:fs";
 import { spawn } from "node:child_process";
 
-import {
-  coverFrames,
-  type ReelProps,
-  type ReelScene,
-} from "@/video/types";
+import { coverFrames, type ReelProps, type ReelScene } from "@/video/types";
 import { extendHyperframesMusic } from "@/library/hyperframes-music-loop";
 import { type Orientation, dimsFor } from "@/lib/orientation";
 import { getAssetStore } from "@/library/storage";
@@ -214,7 +210,7 @@ async function runWorker(args: {
       },
     );
 
-    cancelChild(child);
+    const waitForCleanup = cancelChild(child);
     let stderr = "";
     let hfError = "";
     child.stdout.on("data", (buf: Buffer) => {
@@ -241,7 +237,13 @@ async function runWorker(args: {
       }
     });
     child.on("error", reject);
-    child.on("close", (code) => {
+    child.on("close", async (code) => {
+      try {
+        await waitForCleanup();
+      } catch (error) {
+        reject(error);
+        return;
+      }
       if (code === 0) resolve();
       else {
         const detail =

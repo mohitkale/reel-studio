@@ -4,7 +4,11 @@ import { after, NextResponse } from "next/server";
 
 import { produceContentRequestSchema } from "@/production/api";
 import { authorizeRequest } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 import { submitProduction } from "@/library/production-service";
 import { productionJobViewWithRevision } from "@/library/production-job-view";
 import { listProductionJobs } from "@/library/repositories/production-jobs";
@@ -30,7 +34,10 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const auth = authorizeRequest(req, "production:submit");
-    const request = produceContentRequestSchema.parse(await req.json());
+    const request = parseClientInput(
+      produceContentRequestSchema,
+      await readRequestJson(req),
+    );
     const job = await submitProduction({
       request,
       auth,

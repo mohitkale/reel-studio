@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 
 import { generateNamedMcpToken, listNamedMcpTokens } from "@/server/secrets";
 import { requireWeb } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 import { createMcpTokenSchema } from "@/production/mcp-access";
 
 export const runtime = "nodejs";
@@ -20,7 +24,10 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     requireWeb(req);
-    const input = createMcpTokenSchema.parse(await req.json());
+    const input = parseClientInput(
+      createMcpTokenSchema,
+      await readRequestJson(req),
+    );
     const created = await generateNamedMcpToken(input);
     return NextResponse.json(created, { status: 201 });
   } catch (error) {

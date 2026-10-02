@@ -6,7 +6,11 @@ import {
   stockMediaSearchRequestSchema,
   stockProviderIdSchema,
 } from "@/providers/stock/schemas";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 import { requireWeb } from "@/server/auth";
 
 export const runtime = "nodejs";
@@ -22,7 +26,7 @@ const searchSchema = z
 export async function POST(req: Request) {
   try {
     requireWeb(req);
-    const input = searchSchema.parse(await req.json());
+    const input = parseClientInput(searchSchema, await readRequestJson(req));
     const result = await getStockMediaProviderRegistry().search(
       input.providerId,
       input.request,
