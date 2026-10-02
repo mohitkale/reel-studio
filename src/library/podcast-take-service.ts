@@ -1,3 +1,7 @@
+import {
+  productionSignal,
+  assertProductionActive,
+} from "@/library/production-cancellation";
 import { randomUUID } from "node:crypto";
 
 import type { PodcastTakeDTO } from "@/lib/dto";
@@ -25,7 +29,7 @@ import {
   type PodcastFinishingSnapshot,
 } from "@/library/podcast-schemas";
 import {
-  getCachedPodcastTurnWav,
+  getCachedPodcastTurnAudio,
   setCachedPodcastTurnWav,
 } from "@/library/podcast-audio-cache";
 import {
@@ -145,27 +149,37 @@ async function synthesizeTurnsConcurrently(
         modelId: job.modelId,
         text: job.spokenText,
       };
-      let wav = forceTurnIds.has(job.turnId)
+      let audio = forceTurnIds.has(job.turnId)
         ? null
-        : await getCachedPodcastTurnWav(cacheKey);
-      if (wav) {
+        : await getCachedPodcastTurnAudio(cacheKey);
+      if (audio) {
         cached += 1;
       } else {
         onProgress?.(completed, total, i + 1, cached, generated);
         const synth = getSynth(job.providerId);
+        assertProductionActive();
         const result = await synth({
+          signal: productionSignal(),
           voiceId: job.voiceId,
           modelId: job.modelId,
           text: job.spokenText,
         });
-        wav = result.wav;
-        await setCachedPodcastTurnWav(cacheKey, wav).catch(() => undefined);
+        assertProductionActive();
+        audio = result;
+        await setCachedPodcastTurnWav(
+          cacheKey,
+          result.wav,
+          undefined,
+          undefined,
+          result.words,
+        ).catch(() => undefined);
         generated += 1;
       }
       results[i] = {
         sceneId: job.turnId,
         text: job.text,
-        wav,
+        wav: audio.wav,
+        words: audio.words,
       };
       keys[i] = job.characterKey;
       completed += 1;
@@ -353,6 +367,11 @@ export async function generatePodcastTake(
     durationFrames: beat.durationFrames,
     text: beat.text,
     characterKey: keys[i],
+    words: beat.words?.map((word) => ({
+      ...word,
+      startFrame: word.startFrame + master.introFrames,
+      endFrame: word.endFrame + master.introFrames,
+    })),
   }));
   const chapters = derivePodcastChapters(timeline, DEFAULT_FPS);
   const finishing: PodcastFinishingSnapshot = {
@@ -368,11 +387,13 @@ export async function generatePodcastTake(
   };
 
   const key = `podcast-takes/${randomUUID()}.wav`;
+  assertProductionActive();
   await getAssetStore().put(key, wav);
   let mp3Path: string | undefined;
   try {
     const mp3 = await transcodeWavToMp3(wav);
     mp3Path = `podcast-takes/${randomUUID()}.mp3`;
+    assertProductionActive();
     await getAssetStore().put(mp3Path, mp3);
   } catch (error) {
     console.warn(
@@ -409,6 +430,7 @@ export async function generatePodcastTake(
   }
   const voices = [...voiceByKey.values()];
 
+  assertProductionActive();
   return createPodcastTake({
     podcastId: input.podcastId,
     label,

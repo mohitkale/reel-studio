@@ -5,6 +5,7 @@ import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
 import { authorize } from "@/server/auth";
 import {
+  voiceforgeFetch,
   isVoiceforgeConfigured,
   voiceforgeAuthHeaders,
   voiceforgeBaseUrl,
@@ -46,9 +47,10 @@ export async function GET(req: Request) {
   try {
     authorize(req);
     assertConfigured();
-    const res = await fetch(`${voiceforgeBaseUrl()}/v1/engines`, {
+    const res = await voiceforgeFetch(`${voiceforgeBaseUrl()}/v1/engines`, {
       headers: { ...voiceforgeAuthHeaders(), Accept: "application/json" },
       cache: "no-store",
+      signal: req.signal,
     });
     if (!res.ok) {
       const body = await res.text().catch(() => "");

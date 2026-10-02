@@ -1,3 +1,4 @@
+import type { SpeechWord } from "@/lib/speech-words";
 import { z } from "zod";
 
 /**
@@ -61,12 +62,16 @@ export const synthOptionsSchema = z.object({
   similarity: z.number().min(0).max(1).optional(),
   language: z.string().optional(),
 });
-export type SynthOptions = z.infer<typeof synthOptionsSchema>;
+export type SynthOptions = z.infer<typeof synthOptionsSchema> & {
+  signal?: AbortSignal;
+};
 
 export interface SynthResult {
   /** 16-bit PCM WAV bytes, normalized to the target sample rate. */
   wav: Buffer;
   sampleRate: number;
+  /** Provider-measured seconds relative to this WAV; omitted for estimated timing. */
+  words?: SpeechWord[];
 }
 
 export interface VoiceProvider {

@@ -9,6 +9,7 @@ import { createPrismaClient } from "@/library/prisma-client";
 import { LocalDiskStore } from "@/library/storage/local-disk";
 import {
   getCachedPodcastTurnWav,
+  getCachedPodcastTurnAudio,
   setCachedPodcastTurnWav,
 } from "@/library/podcast-audio-cache";
 import { makeSilentWav } from "@/lib/wav";
@@ -73,7 +74,13 @@ describe("podcast turn audio cache", () => {
       text: "Hello",
     };
     const first = makeSilentWav(0.2);
-    await setCachedPodcastTurnWav(key, first, client, store);
+    const words = [{ text: "Hello", startSeconds: 0.01, endSeconds: 0.19 }];
+    await setCachedPodcastTurnWav(key, first, client, store, words);
+    await client.$disconnect(); // Reopen the connection/store: no in-memory timing cache.
+    store = new LocalDiskStore(path.join(directory, "media"));
+    expect(
+      (await getCachedPodcastTurnAudio(key, client, store))?.words,
+    ).toEqual(words);
     expect(
       (await getCachedPodcastTurnWav(key, client, store))?.equals(first),
     ).toBe(true);
@@ -87,5 +94,8 @@ describe("podcast turn audio cache", () => {
       (await getCachedPodcastTurnWav(key, client, store))?.equals(replacement),
     ).toBe(true);
     expect(await client.podcastTurnAudioBeat.count()).toBe(1);
+    expect(
+      (await getCachedPodcastTurnAudio(key, client, store))?.words,
+    ).toBeUndefined();
   });
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
-import { makeSilentWav } from "@/lib/wav";
+import { makeSilentWav, parseWav } from "@/lib/wav";
 import { getProvider, isProviderId } from "./registry";
 import { ProviderError } from "./types";
 
@@ -95,9 +95,7 @@ describe("cartesia", () => {
     fetchMock
       .mockResolvedValueOnce(
         jsonResponse({
-          data: [
-            { id: "v1", name: "mohit", is_owner: true, language: "en" },
-          ],
+          data: [{ id: "v1", name: "mohit", is_owner: true, language: "en" }],
         }),
       )
       .mockResolvedValueOnce(
@@ -117,7 +115,12 @@ describe("cartesia", () => {
 
   it("sends the correct synth body and returns a 44100 WAV", async () => {
     const wav = makeSilentWav(0.25);
-    fetchMock.mockResolvedValueOnce(bytesResponse(wav));
+    const info = parseWav(wav);
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        `data: ${JSON.stringify({ type: "chunk", data: wav.subarray(info.dataOffset, info.dataOffset + info.dataLength).toString("base64") })}\n\ndata: ${JSON.stringify({ type: "timestamps", word_timestamps: { words: ["hello"], start: [0.01], end: [0.2] } })}\n\ndata: {"type":"done"}\n\n`,
+      ),
+    );
 
     const result = await getProvider("cartesia").synth!({
       voiceId: "abc",
@@ -126,12 +129,16 @@ describe("cartesia", () => {
 
     expect(result.sampleRate).toBe(44100);
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://api.cartesia.ai/tts/bytes");
+    expect(url).toBe("https://api.cartesia.ai/tts/sse");
     const body = JSON.parse((init as RequestInit).body as string);
+    expect(result.words).toEqual([
+      { text: "hello", startSeconds: 0.01, endSeconds: 0.2 },
+    ]);
+    expect(body.add_timestamps).toBe(true);
     expect(body.model_id).toBe("sonic-3.5");
     expect(body.voice).toEqual({ mode: "id", id: "abc" });
     expect(body.output_format).toEqual({
-      container: "wav",
+      container: "raw",
       encoding: "pcm_s16le",
       sample_rate: 44100,
     });
@@ -170,7 +177,16 @@ describe("elevenlabs", () => {
 
   it("requests wav_44100 with the default model", async () => {
     const wav = makeSilentWav(0.25);
-    fetchMock.mockResolvedValueOnce(bytesResponse(wav));
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({
+        audio_base64: wav.toString("base64"),
+        alignment: {
+          characters: ["h", "i"],
+          character_start_times_seconds: [0.02, 0.1],
+          character_end_times_seconds: [0.1, 0.2],
+        },
+      }),
+    );
 
     const result = await getProvider("elevenlabs").synth!({
       voiceId: "xy z",
@@ -180,6 +196,10 @@ describe("elevenlabs", () => {
     expect(result.sampleRate).toBe(44100);
     const [url, init] = fetchMock.mock.calls[0];
     expect(String(url)).toContain("/v1/text-to-speech/xy%20z");
+    expect(String(url)).toContain("/with-timestamps?");
+    expect(result.words).toEqual([
+      { text: "hi", startSeconds: 0.02, endSeconds: 0.2 },
+    ]);
     expect(String(url)).toContain("output_format=wav_44100");
     const body = JSON.parse((init as RequestInit).body as string);
     expect(body.model_id).toBe("eleven_multilingual_v2");
@@ -201,7 +221,13 @@ describe("elevenlabs", () => {
           { status: 403, headers: { "Content-Type": "application/json" } },
         ),
       )
-      .mockResolvedValueOnce(bytesResponse(makeSilentWav(0.25, { sampleRate: 24000 })));
+      .mockResolvedValueOnce(
+        jsonResponse({
+          audio_base64: makeSilentWav(0.25, { sampleRate: 24000 }).toString(
+            "base64",
+          ),
+        }),
+      );
 
     const result = await getProvider("elevenlabs").synth!({
       voiceId: "voice1",
@@ -209,8 +235,12 @@ describe("elevenlabs", () => {
     });
 
     expect(result.sampleRate).toBe(44100);
-    expect(String(fetchMock.mock.calls[0][0])).toContain("output_format=wav_44100");
-    expect(String(fetchMock.mock.calls[1][0])).toContain("output_format=wav_24000");
+    expect(String(fetchMock.mock.calls[0][0])).toContain(
+      "output_format=wav_44100",
+    );
+    expect(String(fetchMock.mock.calls[1][0])).toContain(
+      "output_format=wav_24000",
+    );
   });
 });
 
@@ -276,7 +306,9 @@ describe("voiceforge", () => {
         label: "XTTS-v2 · non-commercial · GPU recommended",
       },
     ]);
-    expect(fetchMock.mock.calls[0][0]).toBe("http://voiceforge.test/v1/engines");
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "http://voiceforge.test/v1/engines",
+    );
   });
 
   it("synthesizes via POST /v1/synthesize and parses WAV", async () => {
@@ -314,5 +346,26 @@ describe("voiceforge", () => {
     expect((fetchMock.mock.calls[0][1] as RequestInit).headers).toMatchObject({
       Authorization: "Bearer vf_secret",
     });
+  });
+});
+
+describe("timestamp response failures", () => {
+  it("rejects a truncated Cartesia stream instead of publishing partial speech", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response('data: {"type":"chunk","data":"AAAA"}\n\n'),
+    );
+    await expect(
+      getProvider("cartesia").synth!({ voiceId: "fixture", text: "hello" }),
+    ).rejects.toMatchObject({ status: 502 });
+  });
+  it("rejects mismatched timestamp arrays", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        'data: {"type":"timestamps","word_timestamps":{"words":["hello"],"start":[],"end":[1]}}\n\n',
+      ),
+    );
+    await expect(
+      getProvider("cartesia").synth!({ voiceId: "fixture", text: "hello" }),
+    ).rejects.toMatchObject({ status: 502 });
   });
 });

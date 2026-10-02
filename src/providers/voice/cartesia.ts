@@ -1,6 +1,8 @@
+import { speechWordsSchema, type SpeechWord } from "@/lib/speech-words";
+import { ProviderError } from "./types";
 import { z } from "zod";
 
-import { parseWav, TARGET_SAMPLE_RATE } from "@/lib/wav";
+import { parseWav, pcmToWav, TARGET_SAMPLE_RATE } from "@/lib/wav";
 import { providerFetch } from "./http";
 import {
   type SynthOptions,
@@ -119,29 +121,109 @@ export function createCartesiaProvider(): VoiceProvider {
         transcript: opts.text,
         voice: { mode: "id", id: opts.voiceId },
         output_format: {
-          container: "wav",
+          container: "raw",
           encoding: "pcm_s16le",
           sample_rate: sampleRate,
         },
         language: opts.language ?? "en",
+        add_timestamps: true,
         ...(Object.keys(generationConfig).length
           ? { generation_config: generationConfig }
           : {}),
       };
 
       const res = await providerFetch(
-        `${API_BASE}/tts/bytes`,
+        `${API_BASE}/tts/sse`,
         {
           method: "POST",
           headers: { ...headers(), "Content-Type": "application/json" },
           body: JSON.stringify(body),
+          signal: opts.signal,
         },
         "cartesia",
+        { timeoutMs: 120_000 },
       );
 
-      const wav = Buffer.from(await res.arrayBuffer());
+      const chunks: Buffer[] = [];
+      const words: SpeechWord[] = [];
+      let done = false;
+      const eventSchema = z.object({
+        type: z.string(),
+        data: z.string().optional(),
+        done: z.boolean().optional(),
+        status_code: z.number().optional(),
+        error: z.string().optional(),
+        word_timestamps: z
+          .object({
+            words: z.array(z.string()),
+            start: z.array(z.number()),
+            end: z.array(z.number()),
+          })
+          .optional(),
+      });
+      for (const block of (await res.text()).split(/\r?\n\r?\n/)) {
+        const payload = block
+          .split(/\r?\n/)
+          .filter((line) => line.startsWith("data:"))
+          .map((line) => line.slice(5).trim())
+          .join("\n");
+        if (!payload) continue;
+        if (payload === "[DONE]") {
+          done = true;
+          continue;
+        }
+        const event = eventSchema.parse(JSON.parse(payload));
+        if (
+          event.type === "error" ||
+          event.error ||
+          (event.status_code ?? 0) >= 400
+        )
+          throw new ProviderError(
+            event.error ?? "Cartesia stream failed",
+            event.status_code ?? 502,
+            "cartesia",
+          );
+        if (event.data) chunks.push(Buffer.from(event.data, "base64"));
+        if (event.word_timestamps) {
+          const t = event.word_timestamps;
+          if (
+            t.words.length !== t.start.length ||
+            t.words.length !== t.end.length
+          )
+            throw new ProviderError(
+              "Cartesia timestamp lengths differ",
+              502,
+              "cartesia",
+            );
+          words.push(
+            ...speechWordsSchema.parse(
+              t.words.map((text, i) => ({
+                text,
+                startSeconds: t.start[i],
+                endSeconds: t.end[i],
+              })),
+            ),
+          );
+        }
+        if (event.done || event.type === "done") done = true;
+      }
+      if (!done || !chunks.length)
+        throw new ProviderError(
+          "Cartesia returned an incomplete audio stream",
+          502,
+          "cartesia",
+        );
+      const wav = pcmToWav(Buffer.concat(chunks), {
+        sampleRate,
+        channels: 1,
+        bitsPerSample: 16,
+      });
       const info = parseWav(wav); // validates it really is a PCM WAV
-      return { wav, sampleRate: info.sampleRate };
+      return {
+        wav,
+        sampleRate: info.sampleRate,
+        words: words.length ? speechWordsSchema.parse(words) : undefined,
+      };
     },
   };
 }

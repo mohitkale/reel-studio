@@ -3,8 +3,8 @@
  *
  * Produces SRT or WebVTT from per-cue frame ranges. Pure and dependency-free so
  * it can run on the server (download endpoint) and be unit-tested. Word-level
- * timing isn't available from the TTS providers, so each scene/beat becomes one
- * cue spanning its spoken duration.
+ * timing is retained when supplied by a provider or local transcription; each
+ * scene/beat remains one editable cue spanning its spoken duration.
  */
 
 export type CaptionFormat = "srt" | "vtt";

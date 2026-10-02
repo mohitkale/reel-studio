@@ -2,6 +2,7 @@ import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
 import { authorize } from "@/server/auth";
 import {
+  voiceforgeFetch,
   isVoiceforgeConfigured,
   voiceforgeAuthHeaders,
   voiceforgeBaseUrl,
@@ -26,7 +27,7 @@ export async function GET(
     }
 
     const { id } = await ctx.params;
-    const upstream = await fetch(
+    const upstream = await voiceforgeFetch(
       `${voiceforgeBaseUrl()}/v1/voices/${encodeURIComponent(id)}/events`,
       {
         headers: {
@@ -36,6 +37,7 @@ export async function GET(
         cache: "no-store",
         signal: req.signal,
       },
+      20 * 60_000,
     );
 
     if (!upstream.ok || !upstream.body) {

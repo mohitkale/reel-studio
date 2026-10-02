@@ -8,9 +8,7 @@ import {
   voiceforgePreviewProxyUrl,
 } from "@/server/voiceforge-client";
 import { providerFetch } from "./http";
-import {
-  voiceforgeEngineOptionLabel,
-} from "./voiceforge-engines";
+import { voiceforgeEngineOptionLabel } from "./voiceforge-engines";
 import {
   ProviderError,
   type SynthOptions,
@@ -139,6 +137,7 @@ export function createVoiceforgeProvider(): VoiceProvider {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(body),
+          signal: opts.signal,
         },
         "voiceforge",
         { timeoutMs: VOICEFORGE_SYNTH_TIMEOUT_MS },

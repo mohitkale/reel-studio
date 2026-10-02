@@ -1,10 +1,10 @@
+import {
+  characterAlignmentSchema,
+  characterAlignmentWords,
+} from "@/lib/speech-words";
 import { z } from "zod";
 
-import {
-  normalizeWavToTarget,
-  parseWav,
-  TARGET_SAMPLE_RATE,
-} from "@/lib/wav";
+import { normalizeWavToTarget, parseWav, TARGET_SAMPLE_RATE } from "@/lib/wav";
 import { providerFetch } from "./http";
 import {
   ProviderError,
@@ -95,7 +95,7 @@ export function createElevenLabsProvider(): VoiceProvider {
   async function requestSpeech(
     opts: SynthOptions,
     outputFormat: string,
-  ): Promise<Buffer> {
+  ): Promise<SynthResult> {
     const voiceSettings: Record<string, number> = {};
     if (opts.stability !== undefined) voiceSettings.stability = opts.stability;
     if (opts.similarity !== undefined)
@@ -110,16 +110,31 @@ export function createElevenLabsProvider(): VoiceProvider {
     };
 
     const res = await providerFetch(
-      `${API_BASE}/v1/text-to-speech/${encodeURIComponent(opts.voiceId)}?output_format=${outputFormat}`,
+      `${API_BASE}/v1/text-to-speech/${encodeURIComponent(opts.voiceId)}/with-timestamps?output_format=${outputFormat}`,
       {
         method: "POST",
         headers: { ...headers(), "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        signal: opts.signal,
       },
       "elevenlabs",
+      { timeoutMs: 120_000 },
     );
 
-    return Buffer.from(await res.arrayBuffer());
+    const result = z
+      .object({
+        audio_base64: z.string().min(1),
+        alignment: characterAlignmentSchema.nullish(),
+        normalized_alignment: characterAlignmentSchema.nullish(),
+      })
+      .parse(await res.json());
+    const alignment = result.normalized_alignment ?? result.alignment;
+    const wav = Buffer.from(result.audio_base64, "base64");
+    return {
+      wav,
+      sampleRate: parseWav(wav).sampleRate,
+      words: alignment ? characterAlignmentWords(alignment) : undefined,
+    };
   }
 
   return {
@@ -140,7 +155,10 @@ export function createElevenLabsProvider(): VoiceProvider {
       const models = z.array(elModelSchema).parse(await res.json());
       return models
         .filter((m) => m.can_do_text_to_speech !== false)
-        .map<VoiceModel>((m) => ({ id: m.model_id, label: m.name ?? m.model_id }));
+        .map<VoiceModel>((m) => ({
+          id: m.model_id,
+          label: m.name ?? m.model_id,
+        }));
     },
 
     async listVoices(query?: string) {
@@ -156,18 +174,22 @@ export function createElevenLabsProvider(): VoiceProvider {
     },
 
     async synth(opts: SynthOptions): Promise<SynthResult> {
-      let wav: Buffer;
+      let audio: SynthResult;
       try {
-        wav = await requestSpeech(opts, PREFERRED_OUTPUT_FORMAT);
+        audio = await requestSpeech(opts, PREFERRED_OUTPUT_FORMAT);
       } catch (err) {
         if (!isOutputFormatPlanError(err)) throw err;
-        wav = await requestSpeech(opts, FREE_TIER_OUTPUT_FORMAT);
+        audio = await requestSpeech(opts, FREE_TIER_OUTPUT_FORMAT);
       }
 
       const target = opts.sampleRate ?? TARGET_SAMPLE_RATE;
-      const normalized = normalizeWavToTarget(wav, target);
+      const normalized = normalizeWavToTarget(audio.wav, target);
       const info = parseWav(normalized);
-      return { wav: normalized, sampleRate: info.sampleRate };
+      return {
+        wav: normalized,
+        sampleRate: info.sampleRate,
+        words: audio.words,
+      };
     },
   };
 }

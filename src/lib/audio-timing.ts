@@ -1,3 +1,5 @@
+import type { SpeechWord } from "@/lib/speech-words";
+import type { CaptionWord } from "@/lib/captions";
 import { parseWav, pcmToWav } from "./wav";
 
 export const DEFAULT_GAP_SECONDS = 0.45;
@@ -7,12 +9,14 @@ export interface BeatTiming {
   startFrame: number;
   durationFrames: number;
   text: string;
+  words?: CaptionWord[];
 }
 
 export interface BeatInput {
   sceneId: string;
   text: string;
   wav: Buffer;
+  words?: SpeechWord[];
 }
 
 export interface StitchedTake {
@@ -65,7 +69,12 @@ export function stitchBeats(
   gapSeconds: number | number[] = DEFAULT_GAP_SECONDS,
 ): StitchedTake {
   if (beats.length === 0) {
-    return { wav: pcmToWav(Buffer.alloc(0)), fps, totalFrames: 0, timeline: [] };
+    return {
+      wav: pcmToWav(Buffer.alloc(0)),
+      fps,
+      totalFrames: 0,
+      timeline: [],
+    };
   }
 
   const first = parseWav(beats[0].wav);
@@ -93,6 +102,33 @@ export function stitchBeats(
       startFrame,
       durationFrames,
       text: beat.text,
+      ...(beat.words?.length
+        ? {
+            words: beat.words
+              .map((word) => ({
+                text: word.text,
+                startFrame: Math.max(
+                  startFrame,
+                  Math.round(
+                    (cursorAudioFrames / sampleRate + word.startSeconds) * fps,
+                  ),
+                ),
+                endFrame: Math.min(
+                  startFrame + Math.max(1, durationFrames),
+                  Math.max(
+                    Math.round(
+                      (cursorAudioFrames / sampleRate + word.startSeconds) *
+                        fps,
+                    ) + 1,
+                    Math.round(
+                      (cursorAudioFrames / sampleRate + word.endSeconds) * fps,
+                    ),
+                  ),
+                ),
+              }))
+              .filter((word) => word.endFrame > word.startFrame),
+          }
+        : {}),
     });
 
     pcmChunks.push(pcm);
@@ -141,7 +177,11 @@ export function dialogueSpeakerKey(
  * Longer breaths on speaker changes and after the dialogue act ends.
  */
 export function buildDialogueGaps(
-  scenes: Array<{ visual?: string | null; text: string; spokenText?: string | null }>,
+  scenes: Array<{
+    visual?: string | null;
+    text: string;
+    spokenText?: string | null;
+  }>,
 ): number[] {
   const gaps: number[] = [];
   for (let i = 0; i < scenes.length - 1; i++) {

@@ -258,10 +258,14 @@ export function CaptionsMenu({
                   {
                     onSuccess: (created) => {
                       setSelectedTrackId(created.id);
-                      toast.success("Estimated captions ready");
+                      toast.success(
+                        created.timingSource === "provider"
+                          ? "Measured captions ready"
+                          : "Estimated captions ready",
+                      );
                     },
                     onError: (error) =>
-                      toast.error("Could not estimate captions", {
+                      toast.error("Could not create captions", {
                         description: error.message,
                       }),
                   },
@@ -269,7 +273,7 @@ export function CaptionsMenu({
               }
             >
               <Wand2 className="size-3.5" />
-              {track ? "Re-estimate" : "Create captions"}
+              {track ? "Regenerate captions" : "Create captions"}
             </Button>
             <Button
               size="sm"
@@ -383,8 +387,7 @@ export function CaptionsMenu({
             </div>
           ) : (
             <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
-              Create estimated captions or import an SRT/VTT file to begin
-              editing.
+              Create captions or import an SRT/VTT file to begin editing.
             </p>
           )}
 

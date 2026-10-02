@@ -156,7 +156,7 @@ a new production from the current project.
 
 ### Voice
 
-- Browser Kokoro (Apache-2.0, no key) and Web Speech preview
+- Browser/server Kokoro (Apache-2.0, no key) and Web Speech preview
 - Cartesia and ElevenLabs (optional keys)
 - Optional self-hosted [VoiceForge](https://github.com/mohitkale/voiceforge)
 - Full-reel or per-scene takes, plus cached **solo, two-host, and interview podcasts**
@@ -206,10 +206,25 @@ retain their terms. See [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md).
 | Music            | Bundled CC0 / upload          | Jamendo                   |
 
 Caption timing can come from an imported SRT/VTT file, provider timing, or the
-scene timeline. For optional offline speech alignment, install
+scene timeline. Cartesia and ElevenLabs generation retain measured word timing,
+including through cached scene clips and podcast turns. **Create captions** uses
+those timings when they cover the current spoken script at the same frame rate;
+otherwise it labels the result estimated. Existing audio caches without timing
+remain usable. For optional offline transcription with token timing, install
 [whisper.cpp](https://github.com/ggml-org/whisper.cpp) and set
 `WHISPER_CPP_BIN` plus `WHISPER_CPP_MODEL` in `.env.local`. The caption editor
-and deterministic timing work without whisper.cpp.
+and deterministic timing work without whisper.cpp. Provider timestamps and
+transcription are distinct from acoustic forced alignment; see
+[voice resilience and timing](docs/VOICE_RESILIENCE.md).
+
+Kokoro splits long narration into sentence/size-bounded chunks, checks the actual
+phoneme-token budget, and serializes inference within each server session or
+browser worker. Server synthesis has a 120-second deadline including model load
+and queue wait. HTTP deadlines cover headers and body consumption: 30 seconds
+for provider metadata/music/proxy requests, 120 seconds for cloud speech, ten
+minutes for VoiceForge synthesis and twenty minutes for its progress stream.
+Canceling production aborts provider requests and prevents publication of late
+results. An active native Kokoro call retains its gate until it actually stops.
 
 Caption appearance supports legacy, minimal, editorial, karaoke, technical, and
 cinematic presets. Open the caption editor to adjust typography, placement,
@@ -606,7 +621,6 @@ Interrupted voice work requires an explicit retry after inspecting saved takes;
 local video work can recover its lease. MCP editor exports retain their human
 approval gate, including the submitted format and quality. The supervisor resets
 its crash budget after a minute of stable worker uptime.
-
 
 `npm run dev` and `npm run start` launch Next.js and the durable production worker
 under one supervisor. Build first with `npm run build` for production. Docker

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError, type ZodType } from "zod";
 
+import { MusicProviderError } from "@/providers/music/types";
 import { ProviderError } from "@/providers/voice/types";
 import { AIError } from "@/providers/ai/types";
 import { StockError } from "@/providers/stock/types";
@@ -42,6 +43,7 @@ export function errorResponse(e: unknown): NextResponse {
   }
   if (
     e instanceof ProviderError ||
+    e instanceof MusicProviderError ||
     e instanceof AIError ||
     e instanceof StockError
   ) {

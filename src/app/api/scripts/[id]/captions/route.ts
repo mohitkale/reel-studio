@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { speechWordsMatchText } from "@/lib/speech-words";
 
 import { coverFrames } from "@/video/types";
 import { buildCaptions, parseCaptions, type CaptionCue } from "@/lib/captions";
@@ -97,11 +98,22 @@ function estimatedCues(
   const textById = new Map(
     script.scenes.map((scene) => [scene.id, resolveSpokenText(scene)]),
   );
-  return resolved.timeline.map((beat) => ({
-    startFrame: beat.startFrame,
-    endFrame: beat.startFrame + beat.durationFrames,
-    text: textById.get(beat.sceneId) ?? "",
-  }));
+  return resolved.timeline.map((beat) => {
+    const text = textById.get(beat.sceneId) ?? "";
+    const words =
+      resolved.takeUsable && take?.fps === script.fps
+        ? take.timeline.find(
+            (recorded) => recorded.startFrame === beat.startFrame,
+          )?.words
+        : undefined;
+    return {
+      startFrame: beat.startFrame,
+      endFrame: beat.startFrame + beat.durationFrames,
+      text,
+      words:
+        words?.length && speechWordsMatchText(text, words) ? words : undefined,
+    };
+  });
 }
 
 export async function GET(
@@ -130,6 +142,11 @@ export async function GET(
       ...cue,
       startFrame: cue.startFrame + offset,
       endFrame: cue.endFrame + offset,
+      words: cue.words?.map((word) => ({
+        ...word,
+        startFrame: word.startFrame + offset,
+        endFrame: word.endFrame + offset,
+      })),
     }));
     const body = buildCaptions(cues, script.fps, format);
     return new Response(body, {
@@ -137,7 +154,11 @@ export async function GET(
         "content-type": CONTENT_TYPE[format],
         "content-disposition": `attachment; filename="${safeFilename(script.name)}.${format}"`,
         "cache-control": "no-store",
-        "x-caption-timing-source": track?.timingSource ?? "estimated",
+        "x-caption-timing-source":
+          track?.timingSource ??
+          (cues.length && cues.every((cue) => cue.words?.length)
+            ? "provider"
+            : "estimated"),
       },
     });
   } catch (error) {
@@ -217,12 +238,34 @@ export async function POST(
     } else {
       cues = estimatedCues(script, body.takeId);
     }
+    const measured =
+      body.action !== "import" &&
+      cues.length > 0 &&
+      cues.every((cue) => cue.words?.length);
+    if (!measured && body.action !== "import")
+      cues = cues.map((cue) => ({ ...cue, words: undefined }));
+    const sourceTake = measured
+      ? (body.takeId && script.takes.find((take) => take.id === body.takeId)) ||
+        script.takes[0]
+      : null;
     const track = await replaceCaptionTrack({
       scriptId,
       trackId: body.trackId,
-      label: body.action === "import" ? body.label : "Estimated subtitles",
+      sourceTakeId: sourceTake?.id,
+      sourceFps: sourceTake?.fps,
+      label:
+        body.action === "import"
+          ? body.label
+          : measured
+            ? "Provider subtitles"
+            : "Estimated subtitles",
       language: body.action === "import" ? body.language : undefined,
-      timingSource: body.action === "import" ? "imported" : "estimated",
+      timingSource:
+        body.action === "import"
+          ? "imported"
+          : measured
+            ? "provider"
+            : "estimated",
       enabled: true,
       style:
         script.captionTracks?.find((candidate) => candidate.id === body.trackId)
