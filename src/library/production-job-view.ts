@@ -1,7 +1,10 @@
 import path from "node:path";
 
 import { getAssetStore } from "@/library/storage";
-import { currentVideoRevisionHash } from "@/library/production-revision";
+import {
+  currentVideoRevisionHash,
+  currentVideoRevisionHashes,
+} from "@/library/production-revision";
 import { videoProductionJobInputSchema } from "@/production/jobs";
 
 function parse(value: string | null): unknown {
@@ -128,4 +131,26 @@ export async function productionJobViewWithRevision(
     ).catch(() => null);
   }
   return productionJobView(job, { currentRevisionHash });
+}
+
+export async function productionJobViewsWithRevisions(
+  jobs: Array<Parameters<typeof productionJobViewWithRevision>[0]>,
+) {
+  const inputs = jobs.map((job) =>
+    job.productionRevision
+      ? videoProductionJobInputSchema.safeParse(parse(job.inputSnapshot))
+      : null,
+  );
+  const hashes = await currentVideoRevisionHashes(
+    inputs.flatMap((input) => (input?.success ? [input.data] : [])),
+  );
+  return jobs.map((job, index) => {
+    const input = inputs[index];
+    const currentRevisionHash = input?.success
+      ? (hashes.get(
+          JSON.stringify([input.data.scriptId, input.data.voiceTakeId ?? null]),
+        ) ?? null)
+      : null;
+    return productionJobView(job, { currentRevisionHash });
+  });
 }

@@ -26,7 +26,7 @@ type CaptionTrackRow = Awaited<
   }>;
 };
 
-function toCaptionTrackDTO(
+export function toCaptionTrackDTO(
   track: NonNullable<CaptionTrackRow>,
 ): CaptionTrackDTO {
   const timingSource = captionTimingSourceSchema.parse(track.timingSource);

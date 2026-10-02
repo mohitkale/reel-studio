@@ -22,7 +22,7 @@ import {
 } from "@/library/schemas";
 import { resolveBrandTokens, getDefaultBrandKit } from "./brandkits";
 import { toSceneDTO, toTakeDTO, toVoiceClipDTO } from "./map";
-import { listCaptionTracks } from "./captions";
+import { toCaptionTrackDTO } from "./captions";
 import { getAssets } from "./assets";
 
 function resolveEngine(value: string | null | undefined): VideoEngineId {
@@ -34,82 +34,102 @@ function resolveVoiceMode(value: string | null | undefined): VoiceMode {
   return parsed.success ? parsed.data : "oneshot";
 }
 
-export async function getScript(id: string): Promise<ScriptDTO | null> {
-  const script = await prisma.script.findUnique({
-    where: { id },
+/** Batch all relations once per list request; no time cache can hide an edit. */
+export async function getScripts(
+  ids: string[],
+): Promise<Map<string, ScriptDTO>> {
+  if (!ids.length) return new Map();
+  const scripts = await prisma.script.findMany({
+    where: { id: { in: [...new Set(ids)] } },
     include: {
       scenes: { orderBy: { order: "asc" } },
       takes: { orderBy: { createdAt: "desc" } },
       voiceClips: { orderBy: { createdAt: "desc" } },
+      captionTracks: {
+        include: { cues: { orderBy: { order: "asc" } } },
+        orderBy: { updatedAt: "desc" },
+      },
       project: { include: { brandKit: true } },
     },
   });
-  if (!script) return null;
-
-  const brandKit = script.project.brandKit ?? (await getDefaultBrandKit());
-  const captionTracks = await listCaptionTracks(id);
-  const overrides = parseJsonColumn(
-    script.brandOverrides,
-    brandOverridesSchema,
-    {},
+  const defaultKit = scripts.some((s) => !s.project.brandKit)
+    ? await getDefaultBrandKit()
+    : null;
+  const sceneDTOs = new Map(
+    scripts.map((s) => [s.id, s.scenes.map(toSceneDTO)]),
   );
-  const scenes = script.scenes.map(toSceneDTO);
   const assetIds = [
-    ...new Set(scenes.flatMap((scene) => scene.assetRefs ?? [])),
+    ...new Set(
+      [...sceneDTOs.values()].flat().flatMap((scene) => scene.assetRefs ?? []),
+    ),
   ];
   const assets = await getAssets(assetIds);
   const imageUrls = new Map(
-    assets
-      .filter((asset) => asset.type === "image")
-      .map((asset) => [asset.id, asset.url] as const),
+    assets.filter((a) => a.type === "image").map((a) => [a.id, a.url] as const),
   );
-
-  return {
-    id: script.id,
-    projectId: script.projectId,
-    name: script.name,
-    fps: script.fps,
-    width: script.width,
-    height: script.height,
-    videoEngine: resolveEngine(script.project.videoEngine),
-    scenes: scenes.map((scene) => {
-      const carouselImages = (scene.assetRefs ?? []).flatMap((assetId) => {
-        const url = imageUrls.get(assetId);
-        return url ? [url] : [];
-      });
-      return {
-        ...scene,
-        templateId: normalizeHfTemplateId(scene.templateId),
-        carouselImages: carouselImages.length ? carouselImages : undefined,
+  return new Map(
+    scripts.map((script) => {
+      const brandKit = script.project.brandKit ?? defaultKit;
+      const captionTracks = script.captionTracks.map(toCaptionTrackDTO);
+      const overrides = parseJsonColumn(
+        script.brandOverrides,
+        brandOverridesSchema,
+        {},
+      );
+      const scenes = sceneDTOs.get(script.id)!;
+      const dto: ScriptDTO = {
+        id: script.id,
+        projectId: script.projectId,
+        name: script.name,
+        fps: script.fps,
+        width: script.width,
+        height: script.height,
+        videoEngine: resolveEngine(script.project.videoEngine),
+        scenes: scenes.map((scene) => {
+          const carouselImages = (scene.assetRefs ?? []).flatMap((assetId) => {
+            const url = imageUrls.get(assetId);
+            return url ? [url] : [];
+          });
+          return {
+            ...scene,
+            templateId: normalizeHfTemplateId(scene.templateId),
+            carouselImages: carouselImages.length ? carouselImages : undefined,
+          };
+        }),
+        takes: script.takes.map(toTakeDTO),
+        voiceClips: script.voiceClips.map(toVoiceClipDTO),
+        voiceMode: resolveVoiceMode(script.voiceMode),
+        brandKitId: script.project.brandKitId,
+        brandTokens: brandKit
+          ? resolveBrandTokens(brandKit)
+          : { ...serverDefaultTokens },
+        coverUrl: script.coverUrl,
+        musicUrl: script.musicUrl,
+        musicVolume: script.musicVolume,
+        sfxEnabled: script.sfxEnabled ?? true,
+        sfxJson: script.sfxJson ?? null,
+        hideText: script.hideText,
+        hideProgressBar: script.hideProgressBar ?? false,
+        styleId: normalizeStyleId(overrides.styleId),
+        energy: normalizeEnergyId(overrides.energy),
+        productionPreset: overrides.productionPreset,
+        motionPlan: overrides.motionPlan,
+        musicMap:
+          overrides.musicMap?.sourceUrl === script.musicUrl
+            ? overrides.musicMap
+            : undefined,
+        captionTracks,
+        audioMastering: overrides.audioMastering ?? "original",
+        chapterPlan: overrides.chapterPlan,
+        chapterDraft: overrides.chapterDraft,
       };
+      return [script.id, dto] as const;
     }),
-    takes: script.takes.map(toTakeDTO),
-    voiceClips: script.voiceClips.map(toVoiceClipDTO),
-    voiceMode: resolveVoiceMode(script.voiceMode),
-    brandKitId: script.project.brandKitId,
-    brandTokens: brandKit
-      ? resolveBrandTokens(brandKit)
-      : { ...serverDefaultTokens },
-    coverUrl: script.coverUrl,
-    musicUrl: script.musicUrl,
-    musicVolume: script.musicVolume,
-    sfxEnabled: script.sfxEnabled ?? true,
-    sfxJson: script.sfxJson ?? null,
-    hideText: script.hideText,
-    hideProgressBar: script.hideProgressBar ?? false,
-    styleId: normalizeStyleId(overrides.styleId),
-    energy: normalizeEnergyId(overrides.energy),
-    productionPreset: overrides.productionPreset,
-    motionPlan: overrides.motionPlan,
-    musicMap:
-      overrides.musicMap?.sourceUrl === script.musicUrl
-        ? overrides.musicMap
-        : undefined,
-    captionTracks,
-    audioMastering: overrides.audioMastering ?? "original",
-    chapterPlan: overrides.chapterPlan,
-    chapterDraft: overrides.chapterDraft,
-  };
+  );
+}
+
+export async function getScript(id: string): Promise<ScriptDTO | null> {
+  return (await getScripts([id])).get(id) ?? null;
 }
 
 export async function updateScript(

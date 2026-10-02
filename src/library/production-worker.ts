@@ -1,3 +1,4 @@
+import { isSqliteContention } from "@/library/sqlite-contention";
 import { reconcileRenderJobs } from "@/library/editor-render-jobs";
 import { withProductionSignal } from "@/library/production-cancellation";
 import {
@@ -29,17 +30,39 @@ export async function runProductionWorkerOnce(args: {
     return "idle";
   if (args.signal?.aborted) return "idle";
   const leaseMs = args.leaseMs ?? 30_000;
-  const job = await claimProductionJob({ workerId: args.workerId, leaseMs });
-  await reconcileRenderJobs();
+  let job;
+  try {
+    await reconcileRenderJobs();
+    job = await claimProductionJob({ workerId: args.workerId, leaseMs });
+  } catch (error) {
+    if (isSqliteContention(error)) return "idle";
+    throw error;
+  }
   if (!job) return "idle";
   const controller = new AbortController();
   const shutdown = () => controller.abort(new Error("Worker shutting down"));
   args.signal?.addEventListener("abort", shutdown, { once: true });
   if (args.signal?.aborted) shutdown();
+  let confirmedUntil = job.leaseExpiresAt.getTime();
   const heartbeat = async () => {
-    const alive = await heartbeatProductionJob(job.id, args.workerId, leaseMs);
-    if (!alive) controller.abort();
-    return alive;
+    const renewedAt = Date.now();
+    try {
+      const renewed = await heartbeatProductionJob(
+        job.id,
+        args.workerId,
+        leaseMs,
+        new Date(renewedAt),
+      );
+      const alive = renewed && Date.now() < renewedAt + leaseMs;
+      if (!alive) controller.abort();
+      else confirmedUntil = renewedAt + leaseMs;
+      return alive;
+    } catch (error) {
+      // A failed renewal is uncertainty, not proof of cancellation. Never work past the last confirmed lease.
+      if (isSqliteContention(error) && Date.now() < confirmedUntil) return true;
+      controller.abort(error);
+      throw error;
+    }
   };
   const timer = setInterval(
     () => void heartbeat().catch((error) => controller.abort(error)),
@@ -65,6 +88,9 @@ export async function runProductionWorkerOnce(args: {
     clearInterval(timer);
     try {
       await reconcileRenderJobs();
+    } catch (error) {
+      if (!isSqliteContention(error)) throw error;
+      // Reconciliation retries in the next worker cycle.
     } finally {
       args.signal?.removeEventListener("abort", shutdown);
     }

@@ -83,17 +83,29 @@ export async function approveEditorRender(id: string, serverBaseUrl: string) {
 
 /** Repair legacy orphan rows and project durable failures/cancellation onto editor cards. */
 export async function reconcileRenderJobs() {
-  await prisma.$executeRaw`
-    UPDATE Render SET status = 'error', error = 'Render interrupted; submit an explicit retry'
-    WHERE status IN ('queued', 'bundling', 'rendering')
-    AND julianday(createdAt) < julianday('now', '-30 seconds')
-    AND NOT EXISTS (SELECT 1 FROM ProductionJob j WHERE json_valid(j.inputSnapshot)
-      AND json_extract(j.inputSnapshot, '$.renderId') = Render.id)`;
-  await prisma.$executeRaw`
-    UPDATE Render SET status = 'error', error = COALESCE((SELECT COALESCE(j.error, 'Render canceled')
-      FROM ProductionJob j WHERE json_valid(j.inputSnapshot) AND json_extract(j.inputSnapshot, '$.renderId') = Render.id
-      AND j.state IN ('failed', 'canceled') LIMIT 1), 'Render interrupted')
-    WHERE status IN ('queued', 'bundling', 'rendering', 'pending_approval')
-    AND EXISTS (SELECT 1 FROM ProductionJob j WHERE json_valid(j.inputSnapshot)
-      AND json_extract(j.inputSnapshot, '$.renderId') = Render.id AND j.state IN ('failed', 'canceled'))`;
+  const rows = await prisma.$queryRaw<
+    Array<{ id: string; error: string | null }>
+  >`
+    SELECT r.id, COALESCE((SELECT COALESCE(j.error, 'Render canceled') FROM ProductionJob j
+      WHERE json_valid(j.inputSnapshot) AND json_extract(j.inputSnapshot, '$.renderId') = r.id
+      AND j.state IN ('failed', 'canceled') LIMIT 1), 'Render interrupted; submit an explicit retry') AS error
+    FROM Render r WHERE r.status IN ('queued', 'bundling', 'rendering', 'pending_approval')
+      AND (EXISTS (SELECT 1 FROM ProductionJob j WHERE json_valid(j.inputSnapshot)
+        AND json_extract(j.inputSnapshot, '$.renderId') = r.id AND j.state IN ('failed', 'canceled'))
+      OR (r.status <> 'pending_approval' AND julianday(r.createdAt) < julianday('now', '-30 seconds')
+        AND NOT EXISTS (SELECT 1 FROM ProductionJob j WHERE json_valid(j.inputSnapshot)
+          AND json_extract(j.inputSnapshot, '$.renderId') = r.id)))`;
+  const errors = new Map<string, string[]>();
+  for (const row of rows) {
+    const error = row.error ?? "Render interrupted";
+    errors.set(error, [...(errors.get(error) ?? []), row.id]);
+  }
+  for (const [error, ids] of errors)
+    await prisma.render.updateMany({
+      where: {
+        id: { in: ids },
+        status: { in: ["queued", "bundling", "rendering", "pending_approval"] },
+      },
+      data: { status: "error", error },
+    });
 }

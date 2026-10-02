@@ -1,3 +1,6 @@
+import { createProgressWriter } from "@/library/progress-writer";
+import type { TakeProgress } from "@/library/take-service";
+import type { PodcastTakeProgress } from "@/library/podcast-take-service";
 import { createHash } from "node:crypto";
 
 import type { ClaimedProductionJob } from "@/production/jobs";
@@ -59,54 +62,65 @@ export async function executeAudioProductionJob(
     state: "running",
     progress: 0,
   });
-  const take = await generateTake({
-    ...input,
-    onProgress: (progress) => {
-      const value =
-        progress.sceneCount > 0 ? progress.scene / progress.sceneCount : 0;
-      void upsertProductionJobStep(job.id, "synthesize_audio", {
-        state: "running",
-        progress: Math.min(0.95, value),
-        detail: progress,
-      });
-    },
+  const writer = createProgressWriter<TakeProgress>((progress) => {
+    context.signal.throwIfAborted();
+    return upsertProductionJobStep(job.id, "synthesize_audio", {
+      state: "running",
+      progress: Math.min(
+        0.95,
+        progress.sceneCount > 0 ? progress.scene / progress.sceneCount : 0,
+      ),
+      detail: progress,
+      leaseOwner: job.leaseOwner,
+    });
   });
-  await upsertProductionJobStep(job.id, "synthesize_audio", {
-    state: "succeeded",
-    progress: 1,
-    detail: { takeId: take.id },
-  });
-  for (const key of [
-    "time_content",
-    "prepare_composition",
-    "render_export",
-  ] as const) {
-    await upsertProductionJobStep(job.id, key, {
+  try {
+    const take = await generateTake({
+      ...input,
+      onProgress: (progress) =>
+        writer.push(progress, progress.phase === "stitching"),
+    });
+    await writer.flush();
+    await writer.stop();
+    await upsertProductionJobStep(job.id, "synthesize_audio", {
       state: "succeeded",
       progress: 1,
+      detail: { takeId: take.id },
     });
+    for (const key of [
+      "time_content",
+      "prepare_composition",
+      "render_export",
+    ] as const) {
+      await upsertProductionJobStep(job.id, key, {
+        state: "succeeded",
+        progress: 1,
+      });
+    }
+    await assertActive(context);
+    await upsertProductionJobStep(job.id, "verify_artifacts", {
+      state: "running",
+      progress: 0,
+    });
+    const row = await prisma.voiceTake.findUniqueOrThrow({
+      where: { id: take.id },
+    });
+    const metadata = await verifyWav(row.audioPath);
+    await addProductionJobOutput(job.id, {
+      kind: "audio",
+      format: "wav",
+      path: row.audioPath,
+      checksum: metadata.checksum,
+      metadata: { ...metadata, takeId: take.id },
+    });
+    await upsertProductionJobStep(job.id, "verify_artifacts", {
+      state: "succeeded",
+      progress: 1,
+      detail: metadata,
+    });
+  } finally {
+    await writer.stop();
   }
-  await assertActive(context);
-  await upsertProductionJobStep(job.id, "verify_artifacts", {
-    state: "running",
-    progress: 0,
-  });
-  const row = await prisma.voiceTake.findUniqueOrThrow({
-    where: { id: take.id },
-  });
-  const metadata = await verifyWav(row.audioPath);
-  await addProductionJobOutput(job.id, {
-    kind: "audio",
-    format: "wav",
-    path: row.audioPath,
-    checksum: metadata.checksum,
-    metadata: { ...metadata, takeId: take.id },
-  });
-  await upsertProductionJobStep(job.id, "verify_artifacts", {
-    state: "succeeded",
-    progress: 1,
-    detail: metadata,
-  });
 }
 
 export async function executePodcastProductionJob(
@@ -120,64 +134,75 @@ export async function executePodcastProductionJob(
     state: "running",
     progress: 0,
   });
-  const take = await generatePodcastTake({
-    ...input,
-    onProgress: (progress) => {
-      const value =
-        progress.sceneCount > 0 ? progress.scene / progress.sceneCount : 0;
-      void upsertProductionJobStep(job.id, "synthesize_audio", {
-        state: "running",
-        progress: Math.min(0.95, value),
-        detail: progress,
-      });
-    },
+  const writer = createProgressWriter<PodcastTakeProgress>((progress) => {
+    context.signal.throwIfAborted();
+    return upsertProductionJobStep(job.id, "synthesize_audio", {
+      state: "running",
+      progress: Math.min(
+        0.95,
+        progress.sceneCount > 0 ? progress.scene / progress.sceneCount : 0,
+      ),
+      detail: progress,
+      leaseOwner: job.leaseOwner,
+    });
   });
-  await upsertProductionJobStep(job.id, "synthesize_audio", {
-    state: "succeeded",
-    progress: 1,
-    detail: { takeId: take.id },
-  });
-  for (const key of [
-    "time_content",
-    "prepare_composition",
-    "render_export",
-  ] as const) {
-    await upsertProductionJobStep(job.id, key, {
+  try {
+    const take = await generatePodcastTake({
+      ...input,
+      onProgress: (progress) =>
+        writer.push(progress, progress.phase === "stitching"),
+    });
+    await writer.flush();
+    await writer.stop();
+    await upsertProductionJobStep(job.id, "synthesize_audio", {
       state: "succeeded",
       progress: 1,
+      detail: { takeId: take.id },
     });
-  }
-  await assertActive(context);
-  await upsertProductionJobStep(job.id, "verify_artifacts", {
-    state: "running",
-    progress: 0,
-  });
-  const row = await prisma.podcastTake.findUniqueOrThrow({
-    where: { id: take.id },
-  });
-  const metadata = await verifyWav(row.audioPath);
-  await addProductionJobOutput(job.id, {
-    kind: "podcast",
-    format: "wav",
-    path: row.audioPath,
-    checksum: metadata.checksum,
-    metadata: { ...metadata, takeId: take.id },
-  });
-  if (row.mp3Path) {
-    const mp3 = await getAssetStore().get(row.mp3Path);
-    if (mp3.length > 0) {
-      await addProductionJobOutput(job.id, {
-        kind: "podcast",
-        format: "mp3",
-        path: row.mp3Path,
-        checksum: `sha256:${createHash("sha256").update(mp3).digest("hex")}`,
-        metadata: { bytes: mp3.length, takeId: take.id },
+    for (const key of [
+      "time_content",
+      "prepare_composition",
+      "render_export",
+    ] as const) {
+      await upsertProductionJobStep(job.id, key, {
+        state: "succeeded",
+        progress: 1,
       });
     }
+    await assertActive(context);
+    await upsertProductionJobStep(job.id, "verify_artifacts", {
+      state: "running",
+      progress: 0,
+    });
+    const row = await prisma.podcastTake.findUniqueOrThrow({
+      where: { id: take.id },
+    });
+    const metadata = await verifyWav(row.audioPath);
+    await addProductionJobOutput(job.id, {
+      kind: "podcast",
+      format: "wav",
+      path: row.audioPath,
+      checksum: metadata.checksum,
+      metadata: { ...metadata, takeId: take.id },
+    });
+    if (row.mp3Path) {
+      const mp3 = await getAssetStore().get(row.mp3Path);
+      if (mp3.length > 0) {
+        await addProductionJobOutput(job.id, {
+          kind: "podcast",
+          format: "mp3",
+          path: row.mp3Path,
+          checksum: `sha256:${createHash("sha256").update(mp3).digest("hex")}`,
+          metadata: { bytes: mp3.length, takeId: take.id },
+        });
+      }
+    }
+    await upsertProductionJobStep(job.id, "verify_artifacts", {
+      state: "succeeded",
+      progress: 1,
+      detail: metadata,
+    });
+  } finally {
+    await writer.stop();
   }
-  await upsertProductionJobStep(job.id, "verify_artifacts", {
-    state: "succeeded",
-    progress: 1,
-    detail: metadata,
-  });
 }
