@@ -1,4 +1,5 @@
 "use client";
+import { waitForJob, useJobLifetime } from "@/hooks/job-progress";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -551,6 +552,7 @@ export interface VoiceGenerationProgress {
  * to polling the JSON job endpoint instead of failing immediately.
  */
 export function useGenerateTake(scriptId: string) {
+  const lifetime = useJobLifetime();
   const invalidate = useScriptInvalidator(scriptId);
   return useMutation({
     mutationFn: ({
@@ -565,7 +567,7 @@ export function useGenerateTake(scriptId: string) {
       onProgress?: (progress: VoiceGenerationProgress) => void;
     }) =>
       apiPost<{ jobId: string }>(`/api/scripts/${scriptId}/takes`, body).then(
-        ({ jobId }) => waitForVoiceJob(scriptId, jobId, onProgress),
+        ({ jobId }) => waitForVoiceJob(scriptId, jobId, onProgress, lifetime()),
       ),
     onSuccess: invalidate,
   });
@@ -586,111 +588,27 @@ function applyVoiceJobPayload(
   return "pending";
 }
 
-async function pollVoiceJob(
-  scriptId: string,
-  jobId: string,
-  onProgress?: (progress: VoiceGenerationProgress) => void,
-): Promise<VoiceTakeDTO> {
-  const started = Date.now();
-  const maxMs = 20 * 60 * 1000;
-
-  while (Date.now() - started < maxMs) {
-    await new Promise((r) => setTimeout(r, 2000));
-    try {
-      const { job } = await apiGet<{
-        job: {
-          status: VoiceGenerationProgress["status"];
-          scene: number;
-          sceneCount: number;
-          workingOn?: number | null;
-          error: string | null;
-          take: VoiceTakeDTO | null;
-        };
-      }>(`/api/scripts/${scriptId}/takes/${jobId}`);
-
-      const outcome = applyVoiceJobPayload(
-        {
-          status: job.status,
-          scene: job.scene,
-          sceneCount: job.sceneCount,
-          workingOn: job.workingOn ?? null,
-          error: job.error,
-          take: job.take,
-        },
-        onProgress,
-      );
-      if (outcome === "done" && job.take) return job.take;
-      if (outcome === "error") {
-        throw new Error(job.error || "Voice generation failed");
-      }
-    } catch (e) {
-      if (
-        e instanceof Error &&
-        e.message !== "Job not found" &&
-        !e.message.includes("Voice generation failed")
-      ) {
-        // Transient network blip while VoiceForge is still working — keep polling.
-        continue;
-      }
-      throw e;
-    }
-  }
-
-  throw new Error(
-    "Voice generation is still running after 20 minutes. Check VoiceForge logs/CPU, then refresh Takes.",
-  );
-}
-
 export function waitForVoiceJob(
   scriptId: string,
   jobId: string,
   onProgress?: (progress: VoiceGenerationProgress) => void,
+  signal?: AbortSignal,
 ): Promise<VoiceTakeDTO> {
-  return new Promise<VoiceTakeDTO>((resolve, reject) => {
-    let settled = false;
-    let polling = false;
-    const es = new EventSource(
-      `/api/scripts/${scriptId}/takes/${jobId}/progress`,
-    );
-
-    const finish = (fn: () => void) => {
-      if (settled) return;
-      settled = true;
-      es.close();
-      fn();
-    };
-
-    es.onmessage = (e) => {
-      try {
-        const data = JSON.parse(e.data as string) as VoiceJobPayload;
-        const outcome = applyVoiceJobPayload(data, onProgress);
-        if (outcome === "done" && data.take) {
-          finish(() => resolve(data.take!));
-        } else if (outcome === "error") {
-          finish(() =>
-            reject(new Error(data.error || "Voice generation failed")),
-          );
-        }
-      } catch {
-        // ignore malformed/heartbeat messages, keep listening
-      }
-    };
-
-    es.onerror = () => {
-      if (settled || polling) return;
-      polling = true;
-      es.close();
-      // Long VoiceForge jobs can drop SSE; poll instead of failing the take.
-      void pollVoiceJob(scriptId, jobId, onProgress).then(
-        (take) => finish(() => resolve(take)),
-        (err) => finish(() => reject(err)),
-      );
-    };
-  });
+  return waitForJob<VoiceJobPayload, VoiceTakeDTO>(
+    `/api/scripts/${scriptId}/takes/${jobId}`,
+    (data) => {
+      const outcome = applyVoiceJobPayload(data, onProgress);
+      if (outcome === "error")
+        throw new Error(data.error || "Voice generation failed");
+      return outcome === "done" ? data.take! : undefined;
+    },
+    signal,
+  );
 }
 
 /** One-click factory: auto BGM + SFX, then VO if the script has no take yet. */
 export function useProduceReel(scriptId: string) {
+  const lifetime = useJobLifetime();
   const invalidate = useScriptInvalidator(scriptId);
   return useMutation({
     mutationFn: async (vars?: {
@@ -725,6 +643,7 @@ export function useProduceReel(scriptId: string) {
           scriptId,
           res.result.voiceJobId,
           vars?.onProgress,
+          lifetime(),
         );
       }
       return res;

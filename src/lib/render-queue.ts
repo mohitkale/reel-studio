@@ -1,10 +1,3 @@
-/**
- * In-process render queue for local-first use. Module-level state persists
- * across requests in Next.js dev mode (not serverless). This is intentional
- * for this local app -- do not deploy this to edge or serverless without
- * replacing it with a proper queue (e.g. BullMQ + Redis).
- */
-
 export interface RenderJob {
   id: string;
   progress: number;
@@ -24,7 +17,9 @@ export function getJob(id: string): RenderJob | undefined {
 }
 
 export function upsertJob(job: RenderJob): void {
+  jobs.delete(job.id);
   jobs.set(job.id, job);
+  while (jobs.size > 256) jobs.delete(jobs.keys().next().value!);
   // Notify any SSE subscribers waiting on this job.
   subscribers.get(job.id)?.forEach((cb) => cb(job));
 }
@@ -40,6 +35,8 @@ export function subscribeToJob(
   const current = jobs.get(id);
   if (current) callback(current);
   return () => {
-    subscribers.get(id)?.delete(callback);
+    const set = subscribers.get(id);
+    set?.delete(callback);
+    if (!set?.size) subscribers.delete(id);
   };
 }

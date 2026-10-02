@@ -21,10 +21,9 @@ describe("server listener", () => {
     },
   );
   it("supports an explicit container listener", () => {
-    expect(nextServerFlags([], { NODE_ENV: "test", REEL_BIND_HOST: "0.0.0.0" })).toEqual([
-      "--hostname",
-      "0.0.0.0",
-    ]);
+    expect(
+      nextServerFlags([], { NODE_ENV: "test", REEL_BIND_HOST: "0.0.0.0" }),
+    ).toEqual(["--hostname", "0.0.0.0"]);
   });
 });
 
@@ -88,4 +87,33 @@ describe("process supervision", () => {
       await rm(dir, { recursive: true, force: true });
     }
   });
+});
+
+it("resets the worker crash budget after stable uptime", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "reel-supervisor-stable-"));
+  const file = path.join(dir, "events");
+  const command = (role: string) => [
+    process.execPath,
+    "scripts/fixtures/supervisor-child.mjs",
+    role,
+    file,
+  ];
+  const runner = supervise({
+    web: command("web"),
+    worker: [...command("worker"), "recover-crash"],
+    restartMs: 10,
+    graceMs: 1000,
+    maxRestarts: 1,
+    stableMs: 1000,
+  });
+  try {
+    expect(await runner.done).toBe(7);
+    expect(
+      (await readFile(file, "utf8")).match(/worker:.*:start/g),
+    ).toHaveLength(3);
+  } finally {
+    runner.stop();
+    await runner.done;
+    await rm(dir, { recursive: true, force: true });
+  }
 });

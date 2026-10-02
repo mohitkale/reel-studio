@@ -1,12 +1,9 @@
-import { randomUUID } from "node:crypto";
-
-import { after, NextResponse } from "next/server";
+import { submitEditorVoice } from "@/library/editor-jobs";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { listSceneClips } from "@/library/repositories/scene-clips";
-import { generateAllSceneClips } from "@/library/scene-voice-service";
 import { PROVIDER_IDS } from "@/providers/voice/types";
-import { getVoiceJob, upsertVoiceJob } from "@/lib/voice-queue";
 import { authorizeProviderRequest, authorizeRead } from "@/server/auth";
 import {
   errorResponse,
@@ -59,49 +56,11 @@ export async function POST(
       body.placeholder || !body.providerId ? [] : [body.providerId],
     );
 
-    const jobId = randomUUID();
-    upsertVoiceJob({ id: jobId, status: "queued", scene: 0, sceneCount: 0 });
-
-    after(() =>
-      generateAllSceneClips({
-        scriptId: id,
-        ...body,
-        onProgress: (progress) => {
-          upsertVoiceJob({
-            id: jobId,
-            status: progress.phase,
-            scene: progress.scene,
-            sceneCount: progress.sceneCount,
-            workingOn:
-              progress.phase === "synthesizing"
-                ? progress.workingOn
-                : undefined,
-          });
-        },
-      })
-        .then(({ take, clips }) => {
-          const last = getVoiceJob(jobId);
-          upsertVoiceJob({
-            id: jobId,
-            status: "done",
-            scene: clips.length,
-            sceneCount: last?.sceneCount ?? clips.length,
-            take: take ?? undefined,
-            clips,
-          });
-        })
-        .catch((err) => {
-          const message = err instanceof Error ? err.message : String(err);
-          console.error("[scene-clips] generateAllSceneClips failed:", message);
-          upsertVoiceJob({
-            id: jobId,
-            status: "error",
-            scene: 0,
-            sceneCount: 0,
-            error: message,
-          });
-        }),
-    );
+    const jobId = await submitEditorVoice({
+      operation: "scene_all",
+      resourceId: id,
+      ...body,
+    });
 
     return NextResponse.json({ jobId }, { status: 202 });
   } catch (e) {

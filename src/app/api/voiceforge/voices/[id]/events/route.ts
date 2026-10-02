@@ -34,6 +34,7 @@ export async function GET(
           Accept: "text/event-stream",
         },
         cache: "no-store",
+        signal: req.signal,
       },
     );
 
@@ -46,43 +47,7 @@ export async function GET(
       );
     }
 
-    const stream = new ReadableStream({
-      start(controller) {
-        const reader = upstream.body!.getReader();
-        const enc = new TextEncoder();
-
-        async function pump() {
-          try {
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              controller.enqueue(value);
-            }
-            controller.close();
-          } catch {
-            try {
-              controller.enqueue(enc.encode(": stream error\n\n"));
-            } catch {
-              /* closed */
-            }
-            controller.close();
-          }
-        }
-
-        void pump();
-
-        req.signal?.addEventListener("abort", () => {
-          void reader.cancel();
-          try {
-            controller.close();
-          } catch {
-            /* ok */
-          }
-        });
-      },
-    });
-
-    return new Response(stream, {
+    return new Response(upstream.body, {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { createRender, listRenders } from "@/library/repositories/renders";
-import { startRender } from "@/library/render-service";
+import { listRenders } from "@/library/repositories/renders";
+import { submitEditorRender } from "@/library/editor-render-jobs";
 import { ORIENTATION_LABELS, orientationSchema } from "@/lib/orientation";
 import { authorize, authorizeRead } from "@/server/auth";
 import {
@@ -52,22 +52,12 @@ export async function POST(req: Request) {
     ].filter(Boolean);
     const name = labelParts.length ? labelParts.join(" · ") : undefined;
 
-    // MCP-originated renders are compute-heavy and must be verified by a human:
-    // create them as pending_approval and do NOT start the job. A same-origin
-    // web click on the Renders page approves and starts it.
-    if (origin === "mcp") {
-      const render = await createRender({
-        scriptId: body.scriptId,
-        voiceTakeId: body.voiceTakeId,
-        status: "pending_approval",
-        quality: body.quality,
-      });
-      return NextResponse.json({ render }, { status: 201 });
-    }
-
-    const render = await createRender({ ...body, name });
-    const serverBaseUrl = new URL(req.url).origin;
-    startRender({ renderId: render.id, ...body, serverBaseUrl });
+    const render = await submitEditorRender({
+      ...body,
+      name,
+      approval: origin === "mcp",
+      serverBaseUrl: new URL(req.url).origin,
+    });
     return NextResponse.json({ render }, { status: 201 });
   } catch (e) {
     return errorResponse(e);

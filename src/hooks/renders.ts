@@ -27,7 +27,9 @@ export function useCreateRender() {
       orientation?: "portrait" | "landscape" | "square";
       quality?: "draft" | "standard" | "high";
     }) =>
-      apiPost<{ render: RenderDTO }>("/api/renders", vars).then((r) => r.render),
+      apiPost<{ render: RenderDTO }>("/api/renders", vars).then(
+        (r) => r.render,
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["renders"] }),
   });
 }
@@ -36,7 +38,9 @@ export function useRenameRender() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, name }: { id: string; name: string }) =>
-      apiPatch<{ render: RenderDTO }>(`/api/renders/${id}`, { name }).then((r) => r.render),
+      apiPatch<{ render: RenderDTO }>(`/api/renders/${id}`, { name }).then(
+        (r) => r.render,
+      ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["renders"] }),
   });
 }
@@ -56,7 +60,8 @@ export function useApproveRender() {
 export function useDeleteRender() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => apiDelete<{ ok: boolean }>(`/api/renders/${id}`),
+    mutationFn: (id: string) =>
+      apiDelete<{ ok: boolean }>(`/api/renders/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["renders"] }),
   });
 }
@@ -71,6 +76,7 @@ export function useRenderProgress(
     outputUrl: string | null;
   }) => void,
 ) {
+  const update = React.useEffectEvent(onUpdate);
   React.useEffect(() => {
     if (!renderId) return;
     const es = new EventSource(`/api/renders/${renderId}/progress`);
@@ -82,10 +88,12 @@ export function useRenderProgress(
           error: string | null;
           outputUrl: string | null;
         };
-        onUpdate(data);
+        update(data);
         if (data.status === "done" || data.status === "error") es.close();
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     };
     return () => es.close();
-  }, [renderId, onUpdate]);
+  }, [renderId]);
 }

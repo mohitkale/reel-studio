@@ -28,7 +28,8 @@ async function main() {
   const { prisma } = await import("../src/library/db");
   const { captureVideoSnapshot } =
     await import("../src/library/video-snapshot");
-  const { createRender } = await import("../src/library/repositories/renders");
+  const { submitEditorRender } =
+    await import("../src/library/editor-render-jobs");
   const { enqueueProductionJob, requestProductionJobCancellation } =
     await import("../src/library/repositories/production-jobs");
   const { runProductionWorkerOnce } =
@@ -86,13 +87,14 @@ async function main() {
           },
         });
         const snapshot = await captureVideoSnapshot(script.id);
-        const render = await createRender({
+        const render = await submitEditorRender({
           scriptId: script.id,
           quality: "draft",
+          snapshot,
         });
         const input = {
           kind: "video" as const,
-          idempotencyKey: `worker-${render.id}`,
+          idempotencyKey: `editor-render:${render.id}`,
           inputSnapshot: {
             renderId: render.id,
             scriptId: script.id,
@@ -115,10 +117,7 @@ async function main() {
               void prisma.render
                 .findUniqueOrThrow({ where: { id: render.id } })
                 .then(async (row) => {
-                  if (
-                    row.status === "rendering" &&
-                    row.progress > 0.4
-                  ) {
+                  if (row.status === "rendering" && row.progress > 0.4) {
                     requested = true;
                     await requestProductionJobCancellation(job.id);
                   }

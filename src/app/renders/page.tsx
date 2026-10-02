@@ -187,6 +187,12 @@ const QUALITY_LABEL: Record<string, string> = {
 
 function RenderCard({ render: initial }: { render: RenderDTO }) {
   const [render, setRender] = React.useState(initial);
+  const [previous, setPrevious] = React.useState(initial);
+  if (previous !== initial) {
+    setPrevious(initial);
+    setRender(initial);
+  }
+
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   const [renaming, setRenaming] = React.useState(false);
   const [nameInput, setNameInput] = React.useState(render.name ?? "");

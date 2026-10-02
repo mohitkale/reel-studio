@@ -7,7 +7,7 @@ import {
 } from "../src/library/demo-content";
 import { generateTake } from "../src/library/take-service";
 import { createRender } from "../src/library/repositories/renders";
-import { startRender } from "../src/library/render-service";
+import { runRenderNow } from "../src/library/render-service";
 
 async function waitForRender(id: string, timeoutMs = 10 * 60 * 1_000) {
   const started = Date.now();
@@ -53,7 +53,7 @@ async function main() {
     name: "Credential-free sample export",
   });
   console.log("→ Rendering the HyperFrames sample locally");
-  startRender({
+  await runRenderNow({
     renderId: render.id,
     scriptId: script.id,
     voiceTakeId: take.id,

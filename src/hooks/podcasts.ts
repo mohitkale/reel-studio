@@ -1,4 +1,5 @@
 "use client";
+import { waitForJob, useJobLifetime } from "@/hooks/job-progress";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -243,96 +244,26 @@ function applyPayload(
   return "pending";
 }
 
-async function pollPodcastJob(
-  podcastId: string,
-  jobId: string,
-  onProgress?: (p: PodcastGenerationProgress) => void,
-): Promise<PodcastTakeDTO> {
-  const started = Date.now();
-  const maxMs = 20 * 60 * 1000;
-  while (Date.now() - started < maxMs) {
-    await new Promise((r) => setTimeout(r, 2000));
-    const { job } = await apiGet<{
-      job: {
-        status: VoiceJobStatus;
-        scene: number;
-        sceneCount: number;
-        workingOn?: number | null;
-        cached?: number;
-        generated?: number;
-        error: string | null;
-        podcastTake: PodcastTakeDTO | null;
-      };
-    }>(`/api/podcasts/${podcastId}/takes/${jobId}`);
-    const outcome = applyPayload(
-      {
-        status: job.status,
-        scene: job.scene,
-        sceneCount: job.sceneCount,
-        workingOn: job.workingOn ?? null,
-        cached: job.cached ?? 0,
-        generated: job.generated ?? 0,
-        error: job.error,
-        podcastTake: job.podcastTake,
-      },
-      onProgress,
-    );
-    if (outcome === "done" && job.podcastTake) return job.podcastTake;
-    if (outcome === "error") {
-      throw new Error(job.error || "Podcast generation failed");
-    }
-  }
-  throw new Error("Podcast generation timed out after 20 minutes");
-}
-
 function waitForPodcastJob(
   podcastId: string,
   jobId: string,
-  onProgress?: (p: PodcastGenerationProgress) => void,
+  onProgress?: (progress: PodcastGenerationProgress) => void,
+  signal?: AbortSignal,
 ): Promise<PodcastTakeDTO> {
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    let polling = false;
-    const es = new EventSource(
-      `/api/podcasts/${podcastId}/takes/${jobId}/progress`,
-    );
-
-    const finish = (fn: () => void) => {
-      if (settled) return;
-      settled = true;
-      es.close();
-      fn();
-    };
-
-    es.onmessage = (e) => {
-      try {
-        const data = JSON.parse(e.data as string) as PodcastJobPayload;
-        const outcome = applyPayload(data, onProgress);
-        if (outcome === "done" && data.podcastTake) {
-          finish(() => resolve(data.podcastTake!));
-        } else if (outcome === "error") {
-          finish(() =>
-            reject(new Error(data.error || "Podcast generation failed")),
-          );
-        }
-      } catch {
-        /* ignore */
-      }
-    };
-
-    es.onerror = () => {
-      if (settled || polling) return;
-      polling = true;
-      es.close();
-      void pollPodcastJob(podcastId, jobId, onProgress).then(
-        (take) => finish(() => resolve(take)),
-        (err) => finish(() => reject(err)),
-      );
-    };
-  });
+  return waitForJob<PodcastJobPayload, PodcastTakeDTO>(
+    `/api/podcasts/${podcastId}/takes/${jobId}`,
+    (data) => {
+      const outcome = applyPayload(data, onProgress);
+      if (outcome === "error")
+        throw new Error(data.error || "Podcast generation failed");
+      return outcome === "done" ? data.podcastTake! : undefined;
+    },
+    signal,
+  );
 }
 
 export function useGeneratePodcastTake(podcastId: string) {
+  const lifetime = useJobLifetime();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (vars?: {
@@ -342,7 +273,7 @@ export function useGeneratePodcastTake(podcastId: string) {
       apiPost<{ jobId: string }>(`/api/podcasts/${podcastId}/takes`, {
         regenerateTurnIds: vars?.regenerateTurnIds,
       }).then(({ jobId }) =>
-        waitForPodcastJob(podcastId, jobId, vars?.onProgress),
+        waitForPodcastJob(podcastId, jobId, vars?.onProgress, lifetime()),
       ),
     onSuccess: () => invalidatePodcast(qc, podcastId),
   });

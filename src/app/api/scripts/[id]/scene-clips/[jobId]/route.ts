@@ -1,7 +1,7 @@
 import { authorizeRead } from "@/server/auth";
 import { NextResponse } from "next/server";
 
-import { getVoiceJob } from "@/lib/voice-queue";
+import { getEditorVoiceJob } from "@/library/editor-jobs";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -9,12 +9,12 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   req: Request,
-  ctx: { params: Promise<{ jobId: string }> },
+  ctx: { params: Promise<{ id: string; jobId: string }> },
 ) {
   try {
     authorizeRead(req);
-    const { jobId } = await ctx.params;
-    const job = getVoiceJob(jobId);
+    const { id, jobId } = await ctx.params;
+    const job = await getEditorVoiceJob(jobId, id, false);
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }

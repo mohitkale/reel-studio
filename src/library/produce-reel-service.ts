@@ -16,8 +16,8 @@ export interface ProduceReelAudioResult {
 }
 
 /**
- * Fill BGM + SFX if missing. Voice is started by the API route (same job queue
- * pattern as /takes) so `after()` can keep long synthesis alive.
+ * Fill BGM + SFX if missing. The API route submits voice work to the durable
+ * worker, sharing the same queue as /takes.
  */
 export async function produceReelAudio(
   scriptId: string,

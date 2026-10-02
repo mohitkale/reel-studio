@@ -1,10 +1,10 @@
-import { randomUUID } from "node:crypto";
-
-import { after, NextResponse } from "next/server";
+import {
+  submitEditorVoice,
+  podcastVoiceSignature,
+} from "@/library/editor-jobs";
+import { NextResponse } from "next/server";
 
 import { getPodcast, listPodcastTakes } from "@/library/repositories/podcasts";
-import { generatePodcastTake } from "@/library/podcast-take-service";
-import { getVoiceJob, upsertVoiceJob } from "@/lib/voice-queue";
 import { authorizeProviderRequest, authorizeRead } from "@/server/auth";
 import {
   errorResponse,
@@ -52,62 +52,14 @@ export async function POST(
       req,
       podcast?.characters.map((character) => character.providerId) ?? [],
     );
-    const jobId = randomUUID();
-    upsertVoiceJob({ id: jobId, status: "queued", scene: 0, sceneCount: 0 });
-
-    after(() =>
-      generatePodcastTake({
-        podcastId: id,
-        regenerateTurnIds: body.regenerateTurnIds,
-        onProgress: (progress) => {
-          const current = getVoiceJob(jobId);
-          upsertVoiceJob({
-            id: jobId,
-            status: progress.phase,
-            scene: progress.scene,
-            sceneCount: progress.sceneCount,
-            workingOn:
-              progress.phase === "synthesizing"
-                ? progress.workingOn
-                : undefined,
-            cached:
-              progress.phase === "synthesizing"
-                ? progress.cached
-                : current?.cached,
-            generated:
-              progress.phase === "synthesizing"
-                ? progress.generated
-                : current?.generated,
-          });
-        },
-      })
-        .then((podcastTake) => {
-          const last = getVoiceJob(jobId);
-          upsertVoiceJob({
-            id: jobId,
-            status: "done",
-            scene: podcastTake.timeline.length,
-            sceneCount: last?.sceneCount ?? podcastTake.timeline.length,
-            cached: last?.cached,
-            generated: last?.generated,
-            podcastTake,
-          });
-        })
-        .catch((err) => {
-          const message = err instanceof Error ? err.message : String(err);
-          const last = getVoiceJob(jobId);
-          console.error("[podcast-takes] generatePodcastTake failed:", message);
-          upsertVoiceJob({
-            id: jobId,
-            status: "error",
-            scene: 0,
-            sceneCount: 0,
-            cached: last?.cached,
-            generated: last?.generated,
-            error: message,
-          });
-        }),
-    );
+    const jobId = await submitEditorVoice({
+      operation: "podcast",
+      resourceId: id,
+      ...body,
+      podcastVoiceSignature: podcast
+        ? podcastVoiceSignature(podcast)
+        : undefined,
+    });
 
     return NextResponse.json({ jobId }, { status: 202 });
   } catch (e) {

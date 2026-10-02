@@ -21,7 +21,7 @@ import {
 import { prisma } from "../src/library/db";
 import { generateTake } from "../src/library/take-service";
 import { createRender } from "../src/library/repositories/renders";
-import { startRender } from "../src/library/render-service";
+import { runRenderNow } from "../src/library/render-service";
 import { generatePodcastTake } from "../src/library/podcast-take-service";
 
 const ROOT = process.cwd();
@@ -109,7 +109,7 @@ async function exportVideos() {
       quality: "draft",
       name: `Demo · ${format.out}`,
     });
-    startRender({
+    await runRenderNow({
       renderId: render.id,
       scriptId,
       voiceTakeId: take.id,
@@ -125,7 +125,18 @@ async function exportVideos() {
     const posterDest = path.join(OUT_DIR, format.poster);
     const ff = spawnSync(
       "ffmpeg",
-      ["-y", "-i", dest, "-ss", "0.5", "-vframes", "1", "-q:v", "3", posterDest],
+      [
+        "-y",
+        "-i",
+        dest,
+        "-ss",
+        "0.5",
+        "-vframes",
+        "1",
+        "-q:v",
+        "3",
+        posterDest,
+      ],
       { stdio: "inherit" },
     );
     if (ff.status === 0) {
@@ -186,7 +197,9 @@ async function main() {
       console.warn(err instanceof Error ? err.message : err);
     }
   } else {
-    console.log("\nSkipping podcast export (README samples use video MP4 audio).");
+    console.log(
+      "\nSkipping podcast export (README samples use video MP4 audio).",
+    );
   }
 
   console.log("\nDone. Assets under docs/assets/examples/");
