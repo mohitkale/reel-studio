@@ -1,4 +1,5 @@
 import { STORY_MOTION_TRACKS } from "@/production/story-motion";
+import { GSAP_CDN_URL } from "@/engines/hyperframes/runtime";
 import { TYPE_MOTIF_OFFSETS } from "@/production/motion";
 import { MOTION_EVENT_TIMINGS } from "@/production/motion-events";
 import type { BrandTokens } from "@/compositions/tokens";
@@ -1064,7 +1065,7 @@ export const NATIVE_CATALOG_STYLES = `
  * GSAP boot: line-reveal timelines (no mid-word translate collisions).
  */
 export function buildGsapMotionBootScript(
-  runtimeUrl = "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js",
+  runtimeUrl = GSAP_CDN_URL,
 ): string {
   return `
 <script src="${escapeHtml(runtimeUrl)}"></script>

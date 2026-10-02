@@ -100,7 +100,7 @@ it("reuses silent frames across freshly encoded audio while invalidating every f
   ).not.toBe(key);
 });
 
-it("canonicalizes only verified temporary video paths while preserving timing, source and decoder dependencies", async () => {
+it.each(["0.8.40", "0.8.111"])("canonicalizes only verified temporary video paths for producer %s while preserving timing, source and decoder dependencies", async (producerVersion) => {
   const directory = await fs.mkdtemp(
     path.join(tmpdir(), "native-video-cache-"),
   );
@@ -144,7 +144,7 @@ it("canonicalizes only verified temporary video paths while preserving timing, s
         schemaVersion: 2,
         artifactLayout: "content-addressed-plan-v2",
       },
-      producerVersion: "0.8.40",
+      producerVersion,
       ffmpegVersion: "pinned",
       width: 1280,
       height: 720,

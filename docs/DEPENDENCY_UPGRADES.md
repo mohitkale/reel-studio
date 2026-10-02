@@ -59,6 +59,13 @@ refresh compatible transitive dependencies rather than retaining Fiber 9.6.1,
 which excludes React 19.3. Vite 8 and React plugin 6 are upgraded as a pair;
 Vitest 5 explicitly accepts Vite 8. No forced peer installation is used.
 
+Preview GSAP URLs derive from the installed package version, keeping preview
+and export on the same runtime. Offline catalog localization still recognizes
+the old URL in frozen revisions. Native video cache canonicalization recognizes
+the verified producer 0.8.111 metadata layout while retaining conservative raw
+hashes for unknown versions. Real stock-video section retry reused the cached
+frames across fresh planning workspaces.
+
 Sources: [Next 16.3.8](https://github.com/vercel/next.js/releases/tag/v16.3.8),
 [Vite 8 migration](https://vite.dev/guide/migration.html),
 [ESLint 10 migration](https://eslint.org/docs/latest/use/migrate-to-10.0.0).
@@ -75,9 +82,10 @@ accurate; a fully OSI runtime also needs a decision about GSAP and optional mode
 
 ## Validation
 
-Clean `npm ci`, peer-tree integrity (`npm ls --all`), typecheck, lint, all 650 tests,
-secret scan, and release metadata/capability checks passed. The suite includes a
-real three-second Remotion MP4 export. A HyperFrames type-impact portrait fixture
+Clean `npm ci`, peer-tree integrity (`npm ls --all`), typecheck, lint, the full
+650-test suite and the updated 650-unit-test suite, secret scan, and release
+metadata/capability checks passed. The full suite includes a real three-second
+Remotion MP4 export. A HyperFrames type-impact portrait fixture
 also exported successfully with readable text and foreground checks; its V2
 section planning/chunk/assembly path produced H.264, 1080×1920, 30 fps, 3.000s.
 The upgraded CLI's browser `check` passed with no errors. It reported overlapping

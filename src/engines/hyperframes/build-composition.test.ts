@@ -346,7 +346,7 @@ describe("buildHyperframesCompositionHtml", () => {
     expect(html).toContain("Ship");
     expect(html).toContain('data-catalog-block="instagram-follow"');
     expect(html).toContain("fx-social-card");
-    expect(html).toContain("gsap@3.14.2");
+    expect(html).toContain("gsap@3.15.0");
     expect(html).toContain("reelstudio");
   });
 
