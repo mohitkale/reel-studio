@@ -34,7 +34,7 @@ export async function stableHyperframesVideoMetadata(
   );
   if (
     !artifact ||
-    plan.producerVersion !== "0.8.40" ||
+    !["0.8.40", "0.8.111"].includes(plan.producerVersion) ||
     plan.protocol.artifactLayout !== "content-addressed-plan-v2"
   )
     return undefined;

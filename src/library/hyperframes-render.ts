@@ -52,12 +52,14 @@ import {
 
 type RenderQuality = "draft" | "standard" | "high";
 
-const GSAP_CDN_URL =
-  "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js";
+import { LOCALIZABLE_GSAP_URLS } from "@/engines/hyperframes/runtime";
 const GSAP_RENDER_URL = "/_runtime/gsap.min.js";
 
 function localizeGsapRuntime(html: string): string {
-  return html.replaceAll(GSAP_CDN_URL, GSAP_RENDER_URL);
+  return LOCALIZABLE_GSAP_URLS.reduce(
+    (localized, url) => localized.replaceAll(url, GSAP_RENDER_URL),
+    html,
+  );
 }
 
 export interface HyperframesRenderOptions {

@@ -227,6 +227,10 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+Use Node 24 and the committed lockfile (`npm ci` for reproducible installs).
+The [dependency upgrade assessment](docs/DEPENDENCY_UPGRADES.md) records the
+current package updates, compatibility limits, licensing notes, and validation.
+
 The normal launcher supervises both the web app and production worker. Run
 `npm run demo` for setup + the supervised development server. No cloud keys are required for the
 seeded HyperFrames demo or Kokoro voices. Open **Gallery** for bundled examples,

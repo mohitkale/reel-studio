@@ -25,10 +25,9 @@ export interface CatalogSyncBundle {
 }
 
 const textDecoder = new TextDecoder();
-const GSAP_CDN_URL =
-  "https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js";
+import { LOCALIZABLE_GSAP_URLS } from "@/engines/hyperframes/runtime";
 const ALLOWED_OFFLINE_URLS = [
-  GSAP_CDN_URL,
+  ...LOCALIZABLE_GSAP_URLS,
   "https://fonts.googleapis.com",
   "https://fonts.gstatic.com",
   "http://www.w3.org/2000/svg",
@@ -95,7 +94,7 @@ function inspectOfflineHtml(
       rewrites.add("google-fonts");
       continue;
     }
-    if (url === GSAP_CDN_URL) {
+    if (LOCALIZABLE_GSAP_URLS.some((allowed) => url === allowed)) {
       rewrites.add("gsap");
       continue;
     }
