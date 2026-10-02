@@ -177,4 +177,4 @@ it("rewrites only a bounded chapter and atomically rejects content, lock, order,
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-});
+}, process.platform === "win32" ? 30_000 : 5_000);

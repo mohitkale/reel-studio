@@ -348,7 +348,7 @@ describe("buildHyperframesCompositionHtml", () => {
     expect(html).toContain("Ship");
     expect(html).toContain('data-catalog-block="instagram-follow"');
     expect(html).toContain("fx-social-card");
-    expect(html).toContain("gsap@3.15.0");
+    expect(html).toContain("/reel-runtime/gsap.min.js");
     expect(html).toContain("reelstudio");
   });
 
@@ -711,4 +711,36 @@ it("emits valid CSS font strings without allowing style-element breakout and reg
   expect(html).not.toContain("font-family:&#39;");
   expect(html).not.toContain("window.addEventListener('load', boot)");
   expect(html).toContain("defaults: { force3D: false }");
+});
+
+it("overlaps only visual tails, preserving beat and audio timing for native handoffs", () => {
+  const html = buildHyperframesCompositionHtml(
+    {
+      scenes: ["a", "b"].map((id) => ({
+        id,
+        templateId: "hf-statement",
+        text: id,
+        emphasis: [],
+      })),
+      timeline: [
+        { sceneId: "a", startFrame: 0, durationFrames: 90 },
+        { sceneId: "b", startFrame: 90, durationFrames: 90 },
+      ],
+      fps: 30,
+      tokens: defaultBrandTokens,
+    },
+    { producerMode: true },
+  );
+  const document = new DOMParser().parseFromString(html, "text/html");
+  const scenes = document.querySelectorAll(".scene");
+  expect(scenes[0].getAttribute("data-duration")).toBe("3.650");
+  expect(scenes[1].getAttribute("data-start")).toBe("3.000");
+  expect(
+    document
+      .querySelector("[data-composition-id]")
+      ?.getAttribute("data-duration"),
+  ).toBe("6.000");
+  expect(scenes[1].querySelector(".scene-handoff")?.getAttribute("style")).toBe(
+    "--handoff:0",
+  );
 });

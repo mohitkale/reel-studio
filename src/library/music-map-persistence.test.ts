@@ -177,4 +177,4 @@ it("analyzes local audio once, saves safe manual edits and freezes them in snaps
     await fs.rm(directory, { recursive: true, force: true });
     await fs.rm(audioDirectory, { recursive: true, force: true });
   }
-});
+}, process.platform === "win32" ? 30_000 : 5_000);

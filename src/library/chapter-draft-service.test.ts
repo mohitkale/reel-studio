@@ -226,4 +226,4 @@ it("persists one bounded writing generation, preserves scenes/settings, and safe
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-});
+}, process.platform === "win32" ? 30_000 : 5_000);

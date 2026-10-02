@@ -12,7 +12,7 @@ import developerDemoFixture from "../tests/fixtures/developer-demo-reel.json";
 import cinematicBrandFixture from "../tests/fixtures/cinematic-brand-reel.json";
 import type { ReelProps } from "../src/video/types";
 import { buildHyperframesCompositionHtml } from "../src/engines/hyperframes/build-composition";
-import { HYPERFRAMES_RENDER_FONT_FILES } from "../src/engines/hyperframes/render-fonts";
+import { copyHyperframesRuntime } from "../src/library/hyperframes-runtime";
 import releaseBriefs from "../tests/fixtures/release-briefs.json";
 import { applyReleaseBriefToFixture } from "./release-brief-fixture";
 import {
@@ -600,8 +600,7 @@ async function main() {
   }
   for (const engine of selected as VideoEngineId[]) {
     const mp4 = path.join(output, `${engine}.mp4`);
-    const stockVideoUrl =
-      "stock-video.mp4";
+    const stockVideoUrl = "stock-video.mp4";
     let engineProps: ReelProps = renderStockVideo
       ? {
           ...props,
@@ -637,8 +636,7 @@ async function main() {
         ...engineProps,
         sfxCues: resolved.map((cue) => ({
           ...cue,
-          url:
-            cue.url.slice(1),
+          url: cue.url.slice(1),
         })),
       };
       await writeFile(
@@ -661,26 +659,7 @@ async function main() {
     }
     const runtime = path.join(project, "_runtime");
     await mkdir(runtime, { recursive: true });
-    await copyFile(
-      path.resolve("node_modules/gsap/dist/gsap.min.js"),
-      path.join(runtime, "gsap.min.js"),
-    );
-    await Promise.all([
-      copyFile(
-        path.resolve(
-          "node_modules/@fontsource-variable/geist/files",
-          HYPERFRAMES_RENDER_FONT_FILES.sans,
-        ),
-        path.join(runtime, HYPERFRAMES_RENDER_FONT_FILES.sans),
-      ),
-      copyFile(
-        path.resolve(
-          "node_modules/@fontsource-variable/geist-mono/files",
-          HYPERFRAMES_RENDER_FONT_FILES.mono,
-        ),
-        path.join(runtime, HYPERFRAMES_RENDER_FONT_FILES.mono),
-      ),
-    ]);
+    await copyHyperframesRuntime(runtime);
     await writeFile(
       path.join(project, "index.html"),
       buildHyperframesCompositionHtml(engineProps, {

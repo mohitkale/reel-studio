@@ -1,5 +1,5 @@
 import { STORY_MOTION_TRACKS } from "@/production/story-motion";
-import { GSAP_CDN_URL } from "@/engines/hyperframes/runtime";
+import { GSAP_PREVIEW_URL } from "@/engines/hyperframes/runtime";
 import { TYPE_MOTIF_OFFSETS } from "@/production/motion";
 import { MOTION_EVENT_TIMINGS } from "@/production/motion-events";
 import type { BrandTokens } from "@/video/tokens";
@@ -51,7 +51,7 @@ function packLines(
     }
   }
   if (cur) lines.push(cur);
-  return lines.slice(0, 7);
+  return lines;
 }
 
 function lineStackHtml(
@@ -152,8 +152,17 @@ const MOOD_PALETTES: Record<SceneMood | "default", Palette> = {
   },
 };
 
-function paletteFor(mood?: SceneMood): Palette {
-  return (mood && MOOD_PALETTES[mood]) || MOOD_PALETTES.default;
+function paletteFor(mood: SceneMood | undefined, tokens: BrandTokens): Palette {
+  const moodPalette = (mood && MOOD_PALETTES[mood]) || MOOD_PALETTES.default;
+  return {
+    ...moodPalette,
+    a: tokens.background ?? moodPalette.a,
+    b: tokens.backgroundAccent ?? moodPalette.b,
+    c: tokens.accent ?? moodPalette.c,
+    glow: tokens.accentSecondary ?? moodPalette.glow,
+    ink: tokens.foreground ?? moodPalette.ink,
+    muted: tokens.muted ?? moodPalette.muted,
+  };
 }
 
 /** Parse a count-up target from visual/text (90%, 10x, $10k). */
@@ -368,7 +377,7 @@ export function buildNativeCatalogVisual(args: {
   tokens: BrandTokens;
 }): string | null {
   const { meta, scene, tokens } = args;
-  const pal = paletteFor(scene.mood);
+  const pal = paletteFor(scene.mood, tokens);
   const accent = tokens.accent ?? pal.c;
   const handle = tokens.handle?.replace(/^@/, "") || "yourbrand";
   const textHtml = emphasize(scene.text, scene.emphasis).replace(
@@ -525,7 +534,7 @@ export function buildCinematicClassicVisual(args: {
   innerHtml: string;
 }): string {
   const { scene, tokens } = args;
-  const pal = paletteFor(scene.mood);
+  const pal = paletteFor(scene.mood, tokens);
   const accent = tokens.accent ?? pal.c;
   const speaker = speakerLabel(scene.visual);
   const textHtml = emphasize(scene.text, scene.emphasis).replace(
@@ -667,44 +676,44 @@ export const NATIVE_CATALOG_STYLES = `
 
   /* —— recipe: editorial (quotes) —— */
   .recipe-editorial {
-    background: #f3efe6;
-    color: #16140f;
+    background: var(--fx-a);
+    color: var(--fx-ink);
   }
   .recipe-editorial .fx-paper {
     position: absolute; inset: 0;
     background:
       radial-gradient(80% 50% at 20% 0%, rgba(255,255,255,0.7), transparent 60%),
-      linear-gradient(180deg, #f7f3ea, #ebe4d6);
+      linear-gradient(180deg, var(--fx-a), var(--fx-b));
   }
   .recipe-editorial .fx-paper::after {
     content: "";
     position: absolute; inset: 6% 7%;
-    border: 1px solid rgba(22,20,15,0.12);
+    border: 1px solid color-mix(in oklab, var(--fx-ink) 12%, transparent);
     pointer-events: none;
   }
   .fx-paper-rule {
     position: absolute; left: 10%; right: 10%; top: 14%; height: 1px;
-    background: rgba(22,20,15,0.18); transform: scaleX(0); transform-origin: left;
+    background: color-mix(in oklab, var(--fx-ink) 18%, transparent); transform: scaleX(0); transform-origin: left;
   }
   .fx-paper-corner {
     position: absolute; right: 8%; bottom: 10%; width: 120px; height: 120px;
-    border-right: 2px solid rgba(22,20,15,0.2); border-bottom: 2px solid rgba(22,20,15,0.2);
+    border-right: 2px solid color-mix(in oklab, var(--fx-ink) 20%, transparent); border-bottom: 2px solid color-mix(in oklab, var(--fx-ink) 20%, transparent);
     opacity: 0; transform: translate(12px, 12px);
   }
   .recipe-editorial .fx-chip {
-    color: #16140f !important; border-color: rgba(22,20,15,0.35);
-    background: rgba(22,20,15,0.06);
+    color: var(--fx-ink) !important; border-color: color-mix(in oklab, var(--fx-ink) 35%, transparent);
+    background: color-mix(in oklab, var(--fx-ink) 6%, transparent);
   }
-  .recipe-editorial .fx-stack, .recipe-editorial .quote-stack { color: #16140f !important; }
-  .recipe-editorial .em { color: #9a3412; box-shadow: inset 0 -0.18em 0 0 rgba(154,52,18,0.25); }
-  .recipe-editorial .fx-qmark { color: #c2410c !important; opacity: 0.9; }
+  .recipe-editorial .fx-stack, .recipe-editorial .quote-stack { color: var(--fx-ink) !important; }
+  .recipe-editorial .em { color: var(--fx-c); box-shadow: inset 0 -0.18em 0 0 color-mix(in oklab, var(--fx-c) 25%, transparent); }
+  .recipe-editorial .fx-qmark { color: var(--fx-c) !important; opacity: 0.9; }
 
   /* —— recipe: lower-third (opener / host) —— */
   .recipe-lower-third .fx-studio {
     position: absolute; inset: 0;
     background:
       radial-gradient(70% 40% at 50% 0%, color-mix(in oklab, var(--fx-c) 22%, transparent), transparent 70%),
-      linear-gradient(180deg, #070b14 0%, #0c1524 45%, #05070d 100%);
+      linear-gradient(180deg, var(--fx-a), var(--fx-b), var(--fx-a));
   }
   .fx-studio-beam {
     position: absolute; left: 50%; top: -10%; width: 70%; height: 55%;
@@ -720,7 +729,7 @@ export const NATIVE_CATALOG_STYLES = `
   .fx-lt-plate {
     width: 100%; max-width: 920px; text-align: left;
     padding: 28px 32px; border-radius: 4px 28px 28px 4px;
-    background: linear-gradient(90deg, rgba(8,12,22,0.92), rgba(8,12,22,0.55));
+    background: linear-gradient(90deg, color-mix(in oklab, var(--fx-a) 92%, transparent), color-mix(in oklab, var(--fx-b) 70%, transparent));
     border-left: 6px solid var(--accent, var(--fx-c));
     backdrop-filter: blur(16px);
     opacity: 0; transform: translateX(-48px);
@@ -733,18 +742,19 @@ export const NATIVE_CATALOG_STYLES = `
   }
   .recipe-punch-block .fx-block-b {
     position: absolute; left: 0; top: 0; bottom: 0; width: 100%;
-    background: var(--fx-c);
+    background: var(--fx-b);
+    box-shadow: inset 8px 0 var(--fx-c);
     transform: scaleX(0); transform-origin: left;
   }
   .fx-block-flash {
     position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none;
   }
-  .recipe-punch-block .statement-stack { color: #fff !important; mix-blend-mode: normal; }
+  .recipe-punch-block .statement-stack { color: var(--fx-ink) !important; mix-blend-mode: normal; }
 
   /* —— recipe: terminal (tech questions) —— */
   .recipe-terminal .fx-term-bg {
     position: absolute; inset: 0;
-    background: linear-gradient(180deg, #031018, #02080f 60%, #000);
+    background: linear-gradient(180deg, var(--fx-a), var(--fx-b));
   }
   .fx-term-grid {
     position: absolute; inset: 0; opacity: 0;
@@ -848,6 +858,15 @@ export const NATIVE_CATALOG_STYLES = `
   .opener-stack { align-items: flex-start; max-width: 100%; gap: 0.2em; }
   .social-stack { max-width: 92%; }
   .statement-stack { gap: 0.2em; }
+  /* Let complete copy flow across the real viewport instead of retaining a
+     narrow two-word column in landscape. Keep the same nodes for GSAP seeks. */
+  .statement-stack, .opener-stack, .quote-stack {
+    flex-direction: row; flex-wrap: wrap; align-items: baseline;
+    justify-content: center; font-size: clamp(30px, 4.8cqw, 56px);
+    gap: 0.15em 0.25em;
+  }
+  .opener-stack, .quote-stack { justify-content: flex-start; }
+
 
   .fx-line {
     display: block; overflow: hidden; width: auto; max-width: 100%;
@@ -870,12 +889,12 @@ export const NATIVE_CATALOG_STYLES = `
   .fx-line.sans .fx-line-inner,
   .opener-stack .fx-line-inner,
   .statement-stack .fx-line-inner {
-    font-family: "DM Sans", system-ui, sans-serif; font-weight: 800;
+    font-family: var(--brand-font, "Inter"), sans-serif; font-weight: 800;
     font-size: clamp(30px, 4.8cqw, 56px); letter-spacing: -0.03em;
     text-transform: none;
   }
   .statement-stack .fx-line {
-    font-family: "DM Sans", system-ui, sans-serif; font-weight: 800;
+    font-family: var(--brand-font, "Inter"), sans-serif; font-weight: 800;
     font-size: clamp(32px, 5.2cqw, 60px); letter-spacing: -0.03em;
   }
   .recipe-punch-block .statement-stack .fx-line,
@@ -902,12 +921,12 @@ export const NATIVE_CATALOG_STYLES = `
     box-shadow: none;
   }
   .recipe-editorial .em {
-    color: #9a3412;
-    text-decoration-color: rgba(154,52,18,0.45);
+    color: var(--fx-c);
+    text-decoration-color: color-mix(in oklab, var(--fx-c) 45%, transparent);
   }
   .recipe-punch-block .em {
-    color: #fff;
-    text-decoration-color: rgba(255,255,255,0.85);
+    color: var(--fx-ink);
+    text-decoration-color: var(--fx-c);
   }
 
   .fx-rule {
@@ -1065,7 +1084,7 @@ export const NATIVE_CATALOG_STYLES = `
  * GSAP boot: line-reveal timelines (no mid-word translate collisions).
  */
 export function buildGsapMotionBootScript(
-  runtimeUrl = GSAP_CDN_URL,
+  runtimeUrl = GSAP_PREVIEW_URL,
 ): string {
   return `
 <script src="${escapeHtml(runtimeUrl)}"></script>
@@ -1094,6 +1113,14 @@ export function buildGsapMotionBootScript(
       var recipe = stage.getAttribute('data-recipe') || '';
       var typeEntrance = (recipe === 'type-impact' || recipe === 'type-editorial') ? stage.getAttribute('data-type-entrance') : null;
       var motif = typeMotifOffsets[typeEntrance];
+      var scene = stage.closest('.scene[data-start]');
+      var sceneDuration = Math.max(0.001, Number(scene && scene.getAttribute('data-duration') || 1.35));
+      var repeatThroughScene = function (period, start) {
+        return Math.max(0, Math.ceil((sceneDuration - start) / period) - 1);
+      };
+      var loopDuration = function (period, start) {
+        return Math.max(0.001, sceneDuration - start) / (repeatThroughScene(period, start) + 1);
+      };
       var tl = gsap.timeline({ paused: true, defaults: { force3D: false } });
       (storyTracks[recipe] || []).forEach(function(track) {
         var element = stage.querySelector(".sm-" + track.part);
@@ -1266,33 +1293,33 @@ export function buildGsapMotionBootScript(
       if (cta) tl.fromTo(cta, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.5);
       carouselCards.forEach(function (carouselCard, i) {
         tl.to(carouselCard, { opacity: 1, duration: 0.32, ease: 'power2.out' }, 0.12 + i * 0.045);
-        tl.to(carouselCard, { rotation: '+=4', scale: '+=0.025', duration: 1.8, yoyo: true, repeat: 2, ease: 'sine.inOut' }, 0.55 + i * 0.03);
+        tl.to(carouselCard, { rotation: '+=4', scale: '+=0.025', duration: loopDuration(1.8, 0.55 + i * 0.03), yoyo: true, repeat: repeatThroughScene(1.8, 0.55 + i * 0.03), ease: 'sine.inOut' }, 0.55 + i * 0.03);
       });
 
       // Ambient life after the entrance so long VO doesn't freeze into a poster.
       var holdEnd = Math.max(tl.duration(), 1.35);
       if (scan) {
-        tl.to(scan, { y: '160%', opacity: 0.55, duration: 2.4, ease: 'none', repeat: 2 }, holdEnd * 0.15);
+        tl.to(scan, { y: '160%', opacity: 0.55, duration: loopDuration(2.4, holdEnd * 0.15), ease: 'none', repeat: repeatThroughScene(2.4, holdEnd * 0.15) }, holdEnd * 0.15);
       }
       if (deepOrb) {
-        tl.to(deepOrb, { scale: 1.08, duration: 2.2, yoyo: true, repeat: 2, ease: 'sine.inOut' }, holdEnd * 0.2);
+        tl.to(deepOrb, { scale: 1.08, duration: loopDuration(2.2, holdEnd * 0.2), yoyo: true, repeat: repeatThroughScene(2.2, holdEnd * 0.2), ease: 'sine.inOut' }, holdEnd * 0.2);
       }
       slash.forEach(function (el, i) {
-        tl.to(el, { x: i ? 24 : -18, duration: 2.6, yoyo: true, repeat: 1, ease: 'sine.inOut' }, holdEnd * 0.25);
+        tl.to(el, { x: i ? 24 : -18, duration: loopDuration(2.6, holdEnd * 0.25), yoyo: true, repeat: repeatThroughScene(2.6, holdEnd * 0.25), ease: 'sine.inOut' }, holdEnd * 0.25);
       });
       if (beam) {
-        tl.to(beam, { opacity: 0.85, scale: 1.05, duration: 1.8, yoyo: true, repeat: 2, ease: 'sine.inOut' }, holdEnd * 0.2);
+        tl.to(beam, { opacity: 0.85, scale: 1.05, duration: loopDuration(1.8, holdEnd * 0.2), yoyo: true, repeat: repeatThroughScene(1.8, holdEnd * 0.2), ease: 'sine.inOut' }, holdEnd * 0.2);
       }
       if (shine) {
-        tl.to(shine, { x: '18%', duration: 2.4, yoyo: true, repeat: 1, ease: 'sine.inOut' }, 0.4);
+        tl.to(shine, { x: '18%', duration: loopDuration(2.4, 0.4), yoyo: true, repeat: repeatThroughScene(2.4, 0.4), ease: 'sine.inOut' }, 0.4);
       }
 
       if (tl.duration() < 1.35) tl.to({}, { duration: 1.35 }, 0);
       tl.seek(Math.min(tl.duration(), 1.1));
       window.__timelines[id] = tl;
-      var scene = stage.closest('[data-start]');
+
       var sceneStart = Number(scene && scene.getAttribute('data-start') || 0);
-      compositionTimelines.push({ timeline: tl, start: Math.max(0, sceneStart) });
+      compositionTimelines.push({ timeline: tl, start: Math.max(0, sceneStart), scene: scene, duration: sceneDuration });
     });
 
     // Producer 0.8 drives the timeline registered under the composition ID.
@@ -1302,6 +1329,22 @@ export function buildGsapMotionBootScript(
       var rootTimeline = gsap.timeline({ paused: true });
       compositionTimelines.forEach(function (entry) {
         rootTimeline.add(entry.timeline, entry.start);
+        entry.timeline.paused(false);
+        if (entry.scene) {
+          // CSS visual variables are tweened directly: native render seeks may
+          // suppress callbacks, so onUpdate cannot own transition state.
+          rootTimeline.fromTo(entry.scene, { '--enter': 0 }, { '--enter': 1, duration: Math.min(0.25, entry.duration * 0.2), ease: 'none', immediateRender: false }, entry.start);
+          rootTimeline.fromTo(entry.scene, { '--p': 0 }, { '--p': 1, duration: entry.duration, ease: 'none', immediateRender: false }, entry.start);
+
+        }
+      });
+      compositionRoot.querySelectorAll('.scene-handoff').forEach(function (handoff) {
+        var scene = handoff.closest('.scene');
+        var start = Number(scene.dataset.start || 0);
+        var duration = Number(scene.dataset.duration || 0);
+        if (handoff.dataset.firstScene !== '1') {
+          rootTimeline.fromTo(handoff, { '--handoff': 0 }, { '--handoff': 1, duration: Math.min(0.65, duration * 0.35), ease: 'none', immediateRender: false }, start);
+        }
       });
       var authoredDuration = Number(compositionRoot.getAttribute('data-duration') || 0);
       if (authoredDuration > rootTimeline.duration()) {

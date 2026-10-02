@@ -38,6 +38,8 @@
     "export:demo-assets": "tsx scripts/export-demo-assets.ts",
     "gen:music": "node scripts/generate-music.mjs",
     "sync:hf-catalog": "tsx scripts/sync-hf-catalog.ts",
+    "sync:hf-runtime": "node scripts/sync-render-runtime.mjs",
+    "test:export-fidelity": "node --import tsx scripts/verify-export-fidelity.mjs",
     "gen:sfx": "node scripts/generate-sfx.mjs",
     "test:unit": "vitest run --exclude src/lib/render-smoke.test.ts",
     "test:render": "tsx scripts/render-regression.ts",

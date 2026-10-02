@@ -1,3 +1,4 @@
+import { copyHyperframesRuntime } from "@/library/hyperframes-runtime";
 import { downloadPublicMediaToFile } from "@/server/public-media-download";
 import { productionSignal } from "@/library/production-cancellation";
 import { randomUUID } from "node:crypto";
@@ -45,10 +46,7 @@ import {
 } from "@/library/repositories/renders";
 import { upsertJob } from "@/lib/render-queue";
 import { assertPathInsideRoot } from "@/server/url-safety";
-import {
-  HYPERFRAMES_RENDER_FONT_FILES,
-  localizeHyperframesRenderFonts,
-} from "@/engines/hyperframes/render-fonts";
+import { localizeHyperframesRenderFonts } from "@/engines/hyperframes/render-fonts";
 
 type RenderQuality = "draft" | "standard" | "high";
 
@@ -294,34 +292,7 @@ async function writeHyperframesProject(
   const scenes = inputProps.scenes;
   const runtimeDir = path.join(projectDir, "_runtime");
   await fs.mkdir(runtimeDir, { recursive: true });
-  await fs.copyFile(
-    path.join(process.cwd(), "node_modules", "gsap", "dist", "gsap.min.js"),
-    path.join(runtimeDir, "gsap.min.js"),
-  );
-  await Promise.all([
-    fs.copyFile(
-      path.join(
-        process.cwd(),
-        "node_modules",
-        "@fontsource-variable",
-        "geist",
-        "files",
-        HYPERFRAMES_RENDER_FONT_FILES.sans,
-      ),
-      path.join(runtimeDir, HYPERFRAMES_RENDER_FONT_FILES.sans),
-    ),
-    fs.copyFile(
-      path.join(
-        process.cwd(),
-        "node_modules",
-        "@fontsource-variable",
-        "geist-mono",
-        "files",
-        HYPERFRAMES_RENDER_FONT_FILES.mono,
-      ),
-      path.join(runtimeDir, HYPERFRAMES_RENDER_FONT_FILES.mono),
-    ),
-  ]);
+  await copyHyperframesRuntime(runtimeDir);
 
   // Materialize curated catalog blocks as compositions/*.html so the producer
   // can resolve data-composition-src on the host index.html.

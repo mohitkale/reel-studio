@@ -169,6 +169,9 @@ a new production from the current project.
 ### Design
 
 - HTML motion templates for HyperFrames
+- Shared offline GSAP/fonts for preview and export, overlapping scene handoffs,
+  brand colors and complete measured text fitting. See [export fidelity](docs/EXPORT_FIDELITY.md)
+  for supported font families/scripts and the visual verification command.
 - Brand kits, editable SRT/VTT captions, background music (bundled CC0)
 - Style and Energy looks (for example clean story, bold hook)
 
