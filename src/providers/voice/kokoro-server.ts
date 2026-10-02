@@ -2,6 +2,7 @@ import {
   guardKokoroTokenizer,
   synthesizeSpeechChunks,
   createInferenceGate,
+  KokoroQueueFull,
 } from "@/lib/kokoro-chunks";
 import { abortable } from "@/lib/deadline-fetch";
 import type { KokoroTTS } from "kokoro-js";
@@ -173,6 +174,8 @@ export function createKokoroServerProvider(): VoiceProvider {
             "kokoro-server",
           );
         if (error instanceof ProviderError) throw error;
+        if (error instanceof KokoroQueueFull)
+          throw new ProviderError(error.message, 503, "kokoro-server");
         throw new ProviderError(
           error instanceof Error ? error.message : "Kokoro synthesis failed",
           502,

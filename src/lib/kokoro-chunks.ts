@@ -1,5 +1,4 @@
 import type { KokoroTTS } from "kokoro-js";
-import { abortable } from "@/lib/deadline-fetch";
 
 export class KokoroTokenLimit extends Error {}
 const guarded = new WeakSet<object>();
@@ -89,19 +88,56 @@ export async function synthesizeSpeechChunks(
   return { audio: combined, sampling_rate: rate };
 }
 
-/** One session at a time; a canceled active native call retains the gate until it settles. */
-export function createInferenceGate() {
-  let tail = Promise.resolve();
+export class KokoroQueueFull extends Error {}
+
+/** A canceled active native call retains ownership until it settles. Canceled
+ * queued calls release their captured inputs immediately, even if native code hangs. */
+export function createInferenceGate(maxPending = 64) {
+  let active = false;
+  const pending: Array<() => void> = [];
+  const pump = () => {
+    if (active) return;
+    const next = pending.shift();
+    if (next) {
+      active = true;
+      next();
+    }
+  };
   return <T>(run: () => Promise<T>, signal?: AbortSignal): Promise<T> => {
     signal?.throwIfAborted();
-    const task = tail.then(() => {
-      signal?.throwIfAborted();
-      return run();
+    if (active && pending.length >= maxPending)
+      return Promise.reject(
+        new KokoroQueueFull("Kokoro inference queue is full; retry later"),
+      );
+    return new Promise<T>((resolve, reject) => {
+      let started = false;
+      const cleanup = () => signal?.removeEventListener("abort", onAbort);
+      const start = () => {
+        started = true;
+        void Promise.resolve()
+          .then(() => {
+            signal?.throwIfAborted();
+            return run();
+          })
+          .then(resolve, reject)
+          .finally(() => {
+            cleanup();
+            active = false;
+            pump();
+          });
+      };
+      const onAbort = () => {
+        reject(signal?.reason ?? new DOMException("Aborted", "AbortError"));
+        cleanup();
+        if (!started) {
+          const index = pending.indexOf(start);
+          if (index >= 0) pending.splice(index, 1);
+          pump();
+        }
+      };
+      pending.push(start);
+      signal?.addEventListener("abort", onAbort, { once: true });
+      pump();
     });
-    tail = task.then(
-      () => {},
-      () => {},
-    );
-    return abortable(task, signal);
   };
 }

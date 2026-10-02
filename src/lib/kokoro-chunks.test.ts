@@ -116,3 +116,26 @@ describe("global inference gate", () => {
     expect(run).not.toHaveBeenCalled();
   });
 });
+
+it("bounds queued inference and frees canceled entries behind a stalled active call", async () => {
+  const gate = createInferenceGate(1);
+  let release!: () => void;
+  const active = gate(
+    () =>
+      new Promise<void>((resolve) => {
+        release = resolve;
+      }),
+  );
+  await Promise.resolve();
+  const caller = new AbortController();
+  const run = vi.fn(async () => "canceled");
+  const queued = gate(run, caller.signal);
+  await expect(gate(async () => "too many")).rejects.toThrow("queue is full");
+  caller.abort();
+  await expect(queued).rejects.toMatchObject({ name: "AbortError" });
+  const replacement = gate(async () => "replacement");
+  release();
+  await active;
+  expect(await replacement).toBe("replacement");
+  expect(run).not.toHaveBeenCalled();
+});

@@ -219,7 +219,8 @@ transcription are distinct from acoustic forced alignment; see
 
 Kokoro splits long narration into sentence/size-bounded chunks, checks the actual
 phoneme-token budget, and serializes inference within each server session or
-browser worker. Server synthesis has a 120-second deadline including model load
+browser worker, with at most 64 pending calls. Canceled queued calls release
+their inputs immediately; a full server queue returns a retryable 503. Server synthesis has a 120-second deadline including model load
 and queue wait. HTTP deadlines cover headers and body consumption: 30 seconds
 for provider metadata/music/proxy requests, 120 seconds for cloud speech, ten
 minutes for VoiceForge synthesis and twenty minutes for its progress stream.

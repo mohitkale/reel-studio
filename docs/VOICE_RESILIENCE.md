@@ -9,7 +9,9 @@ call. Inputs above 510 encoded tokens split again before inference; all successf
 chunk PCM is concatenated in order. A failed chunk fails the complete request.
 Sentence boundaries can change prosody compared with one short utterance.
 
-One gate owns each loaded server session/browser worker. Cancellation rejects
+One gate owns each loaded server session/browser worker, with at most 64 pending
+calls. Canceled queued calls immediately release their inputs; a full server
+queue reports a retryable 503. Cancellation rejects
 the caller promptly but cannot interrupt an already running native ONNX call;
 the gate stays occupied until that call settles. Subsequent chunks check the
 signal before and after inference. Server model load, queue wait and synthesis
@@ -66,8 +68,8 @@ PyTorch Kokoro weights are not the ONNX model used by this app; native Kokoro
 acoustic quality is therefore not claimed by the fixture tests. Real HyperFrames
 export/cancellation and the complete repository checks remain regression gates.
 
-Local acceptance passed: 721 tests in the full suite, followed by all 41 focused
-voice fixtures after four additional boundary tests; typecheck, lint, security,
+Local acceptance passed: 721 tests in the full suite, followed by all 42 focused
+voice fixtures after five additional boundary tests; typecheck, lint, security,
 release checks and production build. The isolated worker exported a real MP4,
 then canceled an active HyperFrames render and verified process cleanup. No
 application data was used. GitHub CI remains the required latest-head merge gate.
