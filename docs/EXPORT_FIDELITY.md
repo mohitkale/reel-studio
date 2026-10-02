@@ -52,3 +52,7 @@ one 20-second SQLite integration limit), without failed behavior assertions.
 Those specific native migration/module/filesystem fixtures now use bounded
 Windows budgets of 15 or 30 seconds. Other platforms, unit deadlines and every
 behavior assertion remain unchanged. Latest-head platform CI remains required.
+The replacement run passed those seven fixtures and exposed a separate
+10-second podcast-cache SQLite setup hook timeout. That Windows setup hook now
+has a 30-second budget; its cache behavior test and other-platform hook budget
+remain unchanged.

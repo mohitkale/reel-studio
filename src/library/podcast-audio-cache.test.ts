@@ -55,7 +55,7 @@ describe("podcast turn audio cache", () => {
       data: { podcastId, characterId: character.id, order: 0, text: "Hello" },
     });
     turnId = turn.id;
-  });
+  }, process.platform === "win32" ? 30_000 : 10_000);
 
   afterEach(async () => {
     await client.$disconnect();
