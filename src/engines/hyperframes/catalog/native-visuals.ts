@@ -1,4 +1,5 @@
 import { STORY_MOTION_TRACKS } from "@/production/story-motion";
+import { GRAPH_TIMELINE_BOOT } from "../motion/compile-shot";
 import { GSAP_PREVIEW_URL } from "@/engines/hyperframes/runtime";
 import { TYPE_MOTIF_OFFSETS } from "@/production/motion";
 import { MOTION_EVENT_TIMINGS } from "@/production/motion-events";
@@ -1322,6 +1323,7 @@ export function buildGsapMotionBootScript(
       compositionTimelines.push({ timeline: tl, start: Math.max(0, sceneStart), scene: scene, duration: sceneDuration });
     });
 
+    ${GRAPH_TIMELINE_BOOT}
     // Producer 0.8 drives the timeline registered under the composition ID.
     // Keep per-scene timelines available for the editor while composing them
     // into one seekable root timeline for deterministic frame capture.

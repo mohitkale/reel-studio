@@ -1,4 +1,5 @@
 import type { BrandTokens } from "./tokens";
+import type { MotionSpec } from "./motion-spec";
 import type { EnergyId, StyleId } from "./visual-style";
 import type { ProductionLayout } from "@/production/layout";
 import type { ProductionPresetId } from "@/production/presets";
@@ -110,6 +111,8 @@ export interface TemplateProps {
  * Input props for the root ReelComposition. Shared by the HTML compiler and editor.
  */
 export type ReelProps = {
+  /** Versioned engine-neutral graph prototype; absent preserves legacy visuals. */
+  motionSpec?: MotionSpec;
   /** Internal native still measurement; omitted from playback and exports. */
   reviewLayout?: boolean;
   scenes: ReelScene[];

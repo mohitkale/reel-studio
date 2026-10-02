@@ -144,20 +144,19 @@ choose the version for the final scope and never overwrite an existing tag.
 
 - M8 merged after successful latest-head full Linux/Windows gates: [PR #37](https://github.com/mohitkale/reel-studio/pull/37), merge `e79c2a3`. Local `main` was pulled before M9. Implementation: full Linux/Windows quality matrix, pinned Actions and read-only permissions; LF files and portable process/file fixtures; staged secret scanning; bounded request bodies; DNS-pinned remote media staging, signature and real-path guards; framing policy, dependency reachability and embedded-license notes. Local 798-test suite, real export/cancellation, production browser framing/preview and corrected latest-head platform gates passed.
 
-- M9 implemented on `feature/review-m9-export-fidelity` from refreshed `e79c2a3` main. Shared native seek timelines, overlapping visual tails, isolated scene stacking, genuine offline fonts/GSAP, brand ink/backgrounds, complete responsive measured text and duration-aware ambient loops are described in [export fidelity](EXPORT_FIDELITY.md). Offline same-origin srcDoc/native-seek fixtures and actual portrait/landscape exports passed, with exported boundary and settled-copy frames inspected. All 803 local tests, typecheck/lint/security/release/build checks and real export/active-cancellation verification passed. The owning PR must pass its latest-head Linux/Windows checks, merge, and refresh local main before M10.
+- M9 merged after successful latest-head Linux/Windows checks: [PR #38](https://github.com/mohitkale/reel-studio/pull/38), merge `b39ba2b`. Local `main` was refreshed before M10. Implemented on `feature/review-m9-export-fidelity` from refreshed `e79c2a3` main. Shared native seek timelines, overlapping visual tails, isolated scene stacking, genuine offline fonts/GSAP, brand ink/backgrounds, complete responsive measured text and duration-aware ambient loops are described in [export fidelity](EXPORT_FIDELITY.md). Offline same-origin srcDoc/native-seek fixtures and actual portrait/landscape exports passed, with exported boundary and settled-copy frames inspected. All 803 local tests, typecheck/lint/security/release/build checks and real export/active-cancellation verification passed. Its latest-head Linux/Windows checks passed and the merge is verified.
 
-## Next-chat handoff
+## Continuation status
 
-The user requested stopping after M9's PR passes, merges, and local `main` is
-pulled on 2026-10-03. M10–M15 remain authorized but must continue in a new chat.
-This chat's `resume-reel-studio-review-milestones` automation was deleted; do not
-recreate or resume it here. Start the next chat by verifying actual Git/PR state,
-then use the milestone-pr-workflow skill and the existing scopes above, one
-`feature/` branch/PR through CI, merge and refreshed main at a time.
+M9's PR #38 is merged at `b39ba2b`; clean local `main` and remote PR/check
+state were verified on 2026-10-03 before starting M10. The user authorized this
+chat to complete M10–M15 sequentially through CI, merge and refreshed `main`.
+No recurring automation is needed for this continuation.
 
-M15 remains the only release milestone. Its unresolved license gate includes
-exact source/build provenance and corresponding source/notices for the embedded
+M15 remains the only release milestone. Its license gate includes exact
+source/build provenance and corresponding source/notices for the embedded
 GPL-3.0 eSpeak phonemizer binary identified in M8. The stack must not be described
 as wholly Apache-2.0. Supported font subsets and upstream audit reachability
 limitations are recorded in the export-fidelity and portability/license docs.
-No M10 work or release publication has started.
+M10 is in progress on `feature/review-m10-motion-spec`; release publication has
+not started.
