@@ -7,7 +7,7 @@ import {
   setDefaultBrandKit,
   deleteBrandKit,
 } from "@/library/repositories/brandkits";
-import { requireWeb } from "@/server/auth";
+import { requireWeb, authorizeRead } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -24,10 +24,11 @@ const patchSchema = z.object({
 });
 
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorizeRead(req);
     const { id } = await ctx.params;
     const kit = await getBrandKit(id);
     if (!kit) return NextResponse.json({ error: "Not found" }, { status: 404 });

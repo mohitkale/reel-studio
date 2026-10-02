@@ -1,3 +1,4 @@
+import { authorizeRead } from "@/server/auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -22,6 +23,7 @@ export async function GET(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorizeRead(req);
     const { id } = await ctx.params;
     const format = formatSchema.parse(
       new URL(req.url).searchParams.get("format") ?? "transcript",

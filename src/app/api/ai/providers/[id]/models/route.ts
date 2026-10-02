@@ -1,3 +1,4 @@
+import { authorizeRead } from "@/server/auth";
 import { NextResponse } from "next/server";
 
 import { getAIProvider, isAIProviderId } from "@/providers/ai/registry";
@@ -9,10 +10,11 @@ export const dynamic = "force-dynamic";
 
 /** GET /api/ai/providers/:id/models - LLM models available for this provider. */
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorizeRead(req);
     const { id } = await ctx.params;
     if (!isAIProviderId(id)) throw new AIError(`Unknown AI provider "${id}"`, 404);
 

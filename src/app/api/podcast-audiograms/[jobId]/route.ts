@@ -1,3 +1,4 @@
+import { authorizeRead } from "@/server/auth";
 import { NextResponse } from "next/server";
 
 import type { PodcastAudiogramJobDTO } from "@/lib/dto";
@@ -9,10 +10,11 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ jobId: string }> },
 ) {
   try {
+    authorizeRead(req);
     const { jobId } = await ctx.params;
     const job = await getProductionJob(jobId);
     if (!job || job.kind !== "audiogram") {

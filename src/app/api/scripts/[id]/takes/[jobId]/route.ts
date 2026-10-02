@@ -1,3 +1,4 @@
+import { authorizeRead } from "@/server/auth";
 import { NextResponse } from "next/server";
 
 import { getVoiceJob } from "@/lib/voice-queue";
@@ -12,10 +13,11 @@ export const dynamic = "force-dynamic";
  * can't easily consume an EventSource.
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ jobId: string }> },
 ) {
   try {
+    authorizeRead(req);
     const { jobId } = await ctx.params;
     const job = getVoiceJob(jobId);
     if (!job) {

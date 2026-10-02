@@ -3,7 +3,30 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { supervise } from "../../scripts/supervise.mjs";
+import { supervise, nextServerFlags } from "../../scripts/supervise.mjs";
+
+describe("server listener", () => {
+  it("defaults to loopback and preserves port flags", () => {
+    expect(nextServerFlags(["--port", "3123"], { NODE_ENV: "test" })).toEqual([
+      "--hostname",
+      "127.0.0.1",
+      "--port",
+      "3123",
+    ]);
+  });
+  it.each([["-H", "0.0.0.0"], ["--hostname", "::1"], ["--hostname=0.0.0.0"]])(
+    "preserves explicit hostname %s",
+    (...flags) => {
+      expect(nextServerFlags(flags, { NODE_ENV: "test" })).toEqual(flags);
+    },
+  );
+  it("supports an explicit container listener", () => {
+    expect(nextServerFlags([], { NODE_ENV: "test", REEL_BIND_HOST: "0.0.0.0" })).toEqual([
+      "--hostname",
+      "0.0.0.0",
+    ]);
+  });
+});
 
 describe("process supervision", () => {
   it.each(["dev", "start", "docker"])(

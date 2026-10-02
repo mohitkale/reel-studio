@@ -10,7 +10,8 @@ export const dynamic = "force-dynamic";
 
 /**
  * POST /api/renders/[id]/approve — the single human gate for MCP-requested
- * renders. Same-origin only (an agent cannot approve its own render). Transitions
+ * renders. Web-only (bearer automation cannot approve its own render; default
+ * loopback requests still trust local processes). Transitions
  * the render from pending_approval to queued and starts the job.
  */
 export async function POST(
@@ -26,7 +27,10 @@ export async function POST(
       // Not pending (already approved/started, or unknown id): report current state.
       const current = await getRender(id);
       if (!current) {
-        return NextResponse.json({ error: "Render not found" }, { status: 404 });
+        return NextResponse.json(
+          { error: "Render not found" },
+          { status: 404 },
+        );
       }
       return NextResponse.json({ render: current });
     }

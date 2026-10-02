@@ -1,3 +1,4 @@
+import { authorizeRead } from "@/server/auth";
 import { createRequire } from "node:module";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -37,10 +38,11 @@ async function readVoiceFile(id: string): Promise<Buffer | null> {
 }
 
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorizeRead(req);
     const { id } = await ctx.params;
     if (!VOICE_ID_RE.test(id)) {
       return new Response("Invalid voice id", { status: 400 });

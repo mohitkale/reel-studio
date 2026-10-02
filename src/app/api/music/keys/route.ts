@@ -4,7 +4,7 @@ import { z } from "zod";
 import { MUSIC_PROVIDER_IDS, MusicProviderError } from "@/providers/music/types";
 import { getMusicProvider } from "@/providers/music/registry";
 import { musicKeyStatus, setMusicKey } from "@/server/secrets";
-import { requireWeb } from "@/server/auth";
+import { requireWeb, authorizeRead } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -16,8 +16,9 @@ const bodySchema = z.object({
 });
 
 /** GET /api/music/keys - which music providers currently have a key. */
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    authorizeRead(req);
     return NextResponse.json({ status: musicKeyStatus() });
   } catch (e) {
     return errorResponse(e);

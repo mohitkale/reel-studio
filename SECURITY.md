@@ -30,7 +30,10 @@ We aim to acknowledge reports within 7 days.
 
 Hardening already in this repo:
 
-- Mutating APIs require same-origin browser signals, loopback, or a valid MCP bearer token
+- Native dev/start bind to `127.0.0.1`; `REEL_BIND_HOST` or CLI `-H`/`--hostname` explicitly overrides this
+- All API/media handlers require authorization, including GET and progress streams
+- Raw Host is checked against loopback names plus `REEL_ALLOWED_HOSTS` before any browser signal or token; Proxy repeats the Host check for pages and static routes
+- Strict mode requires a valid bearer token even with `Sec-Fetch-Site: same-origin`
 - `/media/*` is not world-readable on non-loopback hosts
 - HyperFrames local path resolution is contained under `media/` / `public/music/`
 - Scene background URLs reject private/link-local hosts (SSRF guard)
@@ -38,13 +41,28 @@ Hardening already in this repo:
 - MCP token is returned **once** on generate/rotate; GET only reports configured status
 - Docker Compose publishes `127.0.0.1:3000` only
 - Asset uploads reject SVG and enforce a size cap
+- Lottie previews use the expression-free light player; uploaded expressions are not executed
+- Provider key writes reject line breaks and dotenv metacharacters before touching disk
+
+**Local process trust:** in default mode, local scripts and processes can call
+loopback APIs without a token and perform web actions, including approvals.
+MCP scopes and approval restrictions apply to requests presenting MCP credentials,
+not to every process on the host. Host and Fetch Metadata headers do not identify
+the client or prove human interaction. Do not share the host with untrusted code.
+
+`REEL_STRICT_AUTH=1` rejects uncredentialed API/media requests regardless of browser
+headers. This mode has no browser login/session: the ordinary browser UI cannot
+use APIs or media, and bearer automation cannot access web-only settings or
+approve jobs. A remotely usable browser deployment needs its own session/auth
+integration. Strict mode alone does not implement that integration.
 
 Still **your** responsibility when hosting:
 
 - TLS termination and a real login / SSO if users are untrusted
 - Network firewall; do not publish port 3000 to `0.0.0.0`
 - Rotate provider API keys and MCP tokens
-- Set `REEL_STRICT_AUTH=1` (and optionally `TRUST_PROXY=1` only behind a proxy you control)
+- Set `REEL_STRICT_AUTH=1`, and add the proxy hostname to `REEL_ALLOWED_HOSTS`
+- Preserve an allowed raw Host through the proxy; `X-Forwarded-Host` and `TRUST_PROXY` do not bypass the Host guard
 
 ## Secret Handling Rules
 

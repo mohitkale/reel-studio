@@ -1,3 +1,4 @@
+import { authorizeRead } from "@/server/auth";
 import { type NextRequest, NextResponse } from "next/server";
 
 import { getProvider, isProviderId } from "@/providers/voice/registry";
@@ -15,6 +16,7 @@ export async function GET(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorizeRead(req);
     const { id } = await ctx.params;
     if (!isProviderId(id)) throw new ProviderError(`Unknown provider "${id}"`, 404);
 

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { listBrandKits, createBrandKit } from "@/library/repositories/brandkits";
-import { requireWeb } from "@/server/auth";
+import { requireWeb, authorizeRead } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -10,8 +10,9 @@ export const dynamic = "force-dynamic";
 
 const createSchema = z.object({ name: z.string().min(1).max(80) });
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    authorizeRead(req);
     const kits = await listBrandKits();
     return NextResponse.json(kits);
   } catch (e) {

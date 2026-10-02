@@ -11,7 +11,7 @@ import {
   podcastPronunciationsSchema,
 } from "@/library/podcast-schemas";
 import { podcastPresetIdSchema } from "@/library/podcast-presets";
-import { authorize } from "@/server/auth";
+import { authorize, authorizeRead } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
 
@@ -29,10 +29,11 @@ const patchSchema = z.object({
 });
 
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorizeRead(req);
     const { id } = await ctx.params;
     const podcast = await getPodcast(id);
     if (!podcast) {

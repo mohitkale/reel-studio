@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createRender, listRenders } from "@/library/repositories/renders";
 import { startRender } from "@/library/render-service";
 import { ORIENTATION_LABELS, orientationSchema } from "@/lib/orientation";
-import { authorize } from "@/server/auth";
+import { authorize, authorizeRead } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 const qualitySchema = z.enum(["draft", "standard", "high"]);
@@ -14,6 +14,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   try {
+    authorizeRead(req);
     const { searchParams } = new URL(req.url);
     const scriptId = searchParams.get("scriptId") ?? undefined;
     return NextResponse.json({ renders: await listRenders(scriptId) });

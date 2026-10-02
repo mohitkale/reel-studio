@@ -26,9 +26,10 @@ import {
  * MCP-originated renders require human approval before they start).
  *
  * Local-first default: unidentified clients are only accepted when the request
- * Host is loopback (localhost / 127.0.0.1 / ::1). Binding to a LAN or public
- * interface without a bearer token rejects non-browser clients. Set
- * REEL_STRICT_AUTH=1 to require a token even on loopback.
+ * raw Host is loopback (localhost / 127.0.0.1 / ::1). The supervisor binds to
+ * 127.0.0.1 by default. Host is not a client address or an authentication
+ * credential: shared-network deployments need a separate auth layer. Set
+ * REEL_STRICT_AUTH=1 to require a bearer token for every API/media request.
  */
 export type RequestOrigin = "web" | "mcp";
 export type RequestAuthorization =
@@ -57,23 +58,33 @@ function bearerToken(req: Request): string | undefined {
   return token ? token : undefined;
 }
 
-/**
- * Hostname for auth decisions. Do not trust X-Forwarded-Host unless the
- * operator explicitly opts in (TRUST_PROXY=1) behind a known reverse proxy.
- */
-export function requestHostname(req: Request): string {
-  if (process.env.TRUST_PROXY === "1") {
-    const xf = req.headers.get("x-forwarded-host");
-    if (xf) {
-      return xf.split(",")[0]?.trim().split(":")[0]?.toLowerCase() ?? "";
-    }
-  }
+function parseHost(host: string): URL | null {
+  // Reject URL syntax that could normalize an attacker-controlled authority.
+  if (!/^(?:[a-z0-9.-]+|\[[a-f0-9:]+\])(?::\d{1,5})?$/i.test(host)) return null;
   try {
-    return new URL(req.url).hostname.toLowerCase();
+    return new URL(`http://${host}`);
   } catch {
-    const host = req.headers.get("host") ?? "";
-    return host.split(":")[0]?.toLowerCase() ?? "";
+    return null;
   }
+}
+
+/** Next may reconstruct req.url as localhost; only the raw Host is authoritative. */
+export function requestHostname(req: Request): string {
+  return parseHost(req.headers.get("host") ?? "")?.hostname ?? "";
+}
+
+/** Reject unknown authorities before browser signals or bearer credentials. */
+export function assertAllowedHost(req: Request): void {
+  const hostname = requestHostname(req);
+  const configured = (process.env.REEL_ALLOWED_HOSTS ?? "")
+    .split(",")
+    .map((host) => parseHost(host.trim())?.hostname)
+    .filter(Boolean);
+  if (
+    !hostname ||
+    (!isLoopbackHostname(hostname) && !configured.includes(hostname))
+  )
+    throw new ProviderError("Untrusted request host", 403);
 }
 
 export function isLoopbackHostname(hostname: string): boolean {
@@ -96,31 +107,25 @@ function strictAuthEnabled(): boolean {
 }
 
 function isSameOrigin(req: Request): boolean {
-  // Browsers stamp first-party fetches with Sec-Fetch-Site. `same-origin` is a
-  // page-initiated request (including media/audio subresources).
-  const fetchSite = req.headers.get("sec-fetch-site");
-  if (fetchSite === "same-origin") return true;
+  if (strictAuthEnabled()) return false;
 
-  // Direct navigation (`none`) is only trusted on loopback so LAN/public hosts
-  // cannot open /media or APIs by pasting a URL.
-  if (fetchSite === "none") {
-    return isLoopbackRequest(req) && !strictAuthEnabled();
-  }
-
-  // Fall back to comparing the Origin header against the request's own origin.
+  // Compare against raw Host, even when Next reconstructs a different req.url.
   const origin = req.headers.get("origin");
   if (origin) {
     try {
-      return new URL(origin).origin === new URL(req.url).origin;
+      const source = new URL(origin);
+      const protocol = new URL(req.url).protocol;
+      const target = new URL(`${protocol}//${req.headers.get("host")}`);
+      if (source.origin !== target.origin) return false;
     } catch {
       return false;
     }
   }
 
-  // No browser signals: allow only loopback (local scripts / curl to localhost).
-  // Never fail open on a LAN or public bind.
-  if (strictAuthEnabled()) return false;
-  return isLoopbackRequest(req);
+  const fetchSite = req.headers.get("sec-fetch-site");
+  if (fetchSite === "same-origin") return true;
+  if (fetchSite && fetchSite !== "none") return false;
+  return origin ? true : isLoopbackRequest(req);
 }
 
 /**
@@ -131,6 +136,7 @@ export function authorizeRequest(
   req: Request,
   requiredScope?: McpScope,
 ): RequestAuthorization {
+  assertAllowedHost(req);
   const token = bearerToken(req);
   if (token) {
     const expected = getMcpToken();
@@ -159,6 +165,11 @@ export function authorize(req: Request): RequestOrigin {
     bearerToken(req) ? "studio:write" : undefined,
   );
   return auth.origin;
+}
+
+/** Read-only studio endpoints must enforce named token read scopes too. */
+export function authorizeRead(req: Request): RequestOrigin {
+  return authorizeRequest(req, "studio:read").origin;
 }
 
 /**

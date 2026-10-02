@@ -4,7 +4,7 @@ import { z } from "zod";
 import { getAIProvider, isAIProviderId } from "@/providers/ai/registry";
 import { AIError, CLOUD_AI_PROVIDER_IDS } from "@/providers/ai/types";
 import { aiKeyStatus, setAIKey } from "@/server/secrets";
-import { requireWeb } from "@/server/auth";
+import { requireWeb, authorizeRead } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
 
 export const runtime = "nodejs";
@@ -15,8 +15,9 @@ const bodySchema = z.object({
   apiKey: z.string(),
 });
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    authorizeRead(req);
     return NextResponse.json({ status: aiKeyStatus() });
   } catch (e) {
     return errorResponse(e);

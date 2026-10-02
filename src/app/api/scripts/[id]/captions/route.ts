@@ -18,7 +18,7 @@ import { getScript } from "@/library/repositories/scripts";
 import { getAssetStore } from "@/library/storage";
 import { transcribeWithWhisperCpp } from "@/library/local-transcription";
 import { errorResponse } from "@/server/api-helpers";
-import { authorize } from "@/server/auth";
+import { authorize, authorizeRead } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
 
 export const runtime = "nodejs";
@@ -105,6 +105,7 @@ export async function GET(
   ctx: { params: Promise<{ id: string }> },
 ) {
   try {
+    authorizeRead(req);
     const { id } = await ctx.params;
     const { searchParams } = new URL(req.url);
     const { format, takeId, trackId } = querySchema.parse({
