@@ -1,7 +1,12 @@
+> **Historical archive.** This document records an earlier plan or measurement.
+> Its instructions, versions, pending work, and dual-engine references are not
+> current project guidance. See [current documentation](../../README.md)
+> and the [published v0.4.0 release](https://github.com/mohitkale/reel-studio/releases/tag/v0.4.0).
+
 # Motion graphics in Reel Studio — scope and implementation plan
 
 > Historical plan: engine references describe the earlier dual-engine implementation.
-> New previews and exports use HyperFrames only. See [current engine notes](../VIDEO_ENGINES.md) and [the current review milestones](../CRITICAL_REVIEW_PLAN.md).
+> New previews and exports use HyperFrames only. See [current engine notes](../../VIDEO_ENGINES.md) and [the current review milestones](../CRITICAL_REVIEW_PLAN.md).
 
 Status: implementation started, 2026-09-29. Branch: `feature/motion-graphics`.
 
@@ -460,4 +465,4 @@ and reports additional time/memory cost. Reviewed temporal smoothing softens
 moving copy and adds visual lag, so it remains outside default production; it is
 not subframe motion blur. The duration policy remains bounded at 300 seconds.
 Measured results, fixture scope and the final responsive media fixes are recorded
-in [LONG_VIDEO_BENCHMARKS.md](./LONG_VIDEO_BENCHMARKS.md).
+in [LONG_VIDEO_BENCHMARKS.md](LONG_VIDEO_BENCHMARKS.md).

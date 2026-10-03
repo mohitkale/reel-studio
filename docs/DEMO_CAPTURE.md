@@ -1,99 +1,45 @@
-# Demo capture guide
+# README demo and screenshots
 
-How to regenerate open-source launch visuals from the real app.
+The README's `assets/script-to-video.gif` shows **real v0.4.0 home/result
+screenshots and a verified local HyperFrames export**. It is a screen/output
+montage, not a recording of the full Generate interaction.
 
-## Prerequisites
+## Sources and provenance
 
-```bash
-nvm use   # Node 24 LTS
-npm install
-npm run setup
-npm run dev
-```
+- `assets/reel-studio-home.png` and `assets/reel-studio-result.png`: desktop UI
+  from the verified prompt-first walkthrough.
+- `reel-studio-0.4.0-editorial-explainer-landscape.mp4`: actual 12-second release
+  matrix output in the [v0.4.0 release](https://github.com/mohitkale/reel-studio/releases/tag/v0.4.0).
+- `assets/readme-demo.json`: source/output hashes, canvas, timing, and conversion parameters.
 
-Open `http://localhost:3000`. No cloud API keys are required for the HyperFrames
-demo project. Kokoro may download model weights on first podcast take.
+The GIF is silent and loops; target under 5 MiB. Link the full MP4 for playback
+and audio. Show supplied text → motion → a downloadable result within seconds.
 
-Run `npm run doctor` before capture. `npm run sample:export` provides a quick
-credential-free proof that the local HyperFrames export path is working.
+## Regenerate
 
-## Seeded demos
-
-| Asset                  | How to open                                   |
-| ---------------------- | --------------------------------------------- |
-| Video project          | Projects → **Content Creation in 30 Seconds** |
-| All formats            | `npm run seed:demo-project -- --all-formats`  |
-| Podcast                | Podcasts → **Content Creation Tips**          |
-| Bundled output gallery | Gallery in the sidebar                        |
-| Runtime checks         | Settings → **Run system check**               |
-
-## Screenshots
-
-1. Open the demo project in the editor (scenes + preview visible).
-2. Capture a full-window PNG at ~1440×900 or higher.
-3. Save as `docs/assets/reel-studio-editor.png`.
-4. Optional: Podcasts workspace → `docs/assets/reel-studio-podcast.png`.
-
-Prefer a populated timeline over an empty state.
-
-## Workflow GIF (recommended for README)
-
-GitHub READMEs **do not autoplay MP4**. A short GIF is the reliable inline demo.
-
-1. Record 8–12 seconds of the real app (macOS Screenshot toolbar → Record, or OBS).
-2. Prefer the editor: open demo project → scrub scenes → play preview → Render.
-3. Save the recording (`.mov` / `.mp4`) anywhere, then compress:
+Use installed FFmpeg and the verified local source MP4. From the repository root:
 
 ```bash
-# Example: 10s screen recording → README-friendly GIF (~3–5 MB target)
-ffmpeg -y -i ~/Desktop/reel-studio-demo.mov \
-  -vf "fps=12,scale=960:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" \
-  docs/assets/script-to-video.gif
+ffmpeg -y -loop 1 -t 2 -i docs/assets/reel-studio-home.png \
+  -i .artifacts/release-v0.4.0/reel-studio-0.4.0-editorial-explainer-landscape.mp4 \
+  -loop 1 -t 2 -i docs/assets/reel-studio-result.png \
+  -filter_complex_threads 1 \
+  -filter_complex "[0:v]fps=10,scale=960:600:force_original_aspect_ratio=decrease,pad=960:600:(ow-iw)/2:(oh-ih)/2:color=0x101012,setsar=1,setpts=PTS-STARTPTS[a];[1:v]trim=duration=8,fps=10,scale=960:600:force_original_aspect_ratio=decrease,pad=960:600:(ow-iw)/2:(oh-ih)/2:color=0x101012,setsar=1,setpts=PTS-STARTPTS[b];[2:v]fps=10,scale=960:600:force_original_aspect_ratio=decrease,pad=960:600:(ow-iw)/2:(oh-ih)/2:color=0x101012,setsar=1,setpts=PTS-STARTPTS[c];[a][b][c]concat=n=3:v=1:a=0,split[p][q];[p]palettegen=max_colors=128[pal];[q][pal]paletteuse=dither=bayer:bayer_scale=3[out]" \
+  -map "[out]" -an -loop 0 docs/assets/script-to-video.gif
 ```
 
-Or ask the maintainer / agent to run the same `ffmpeg` command after you drop the
-recording into the repo (e.g. `docs/assets/raw-demo.mov`).
+Probe duration/dimensions/size, inspect beginning/middle/end frames, and update
+the manifest when sources change. Do not advertise a current renderer with an
+old-engine clip.
 
-**Prefer a real app recording over Canva.** Canva is fine for ad creatives outside
-GitHub; for the README, authentic UI builds more trust and matches the product.
+## Future screen recording
 
-Then link it near the top of the README:
+For an interaction recording, use an isolated synthetic project:
 
-```markdown
-![Script to video](docs/assets/script-to-video.gif)
-```
+1. Run setup, doctor, and the supervised app with installed tools.
+2. Record prompt → preset → Generate → result → download. Label cuts/time compression.
+3. Capture current home, mobile home, result, and editor screenshots.
+4. Replace the montage after checking readability and secret-free content.
 
-## Sample MP4s
-
-From a running app (or via `npm run export:demo-assets`):
-
-1. Open each format of a polished demo project (9:16, 16:9, 1:1).
-2. Generate a real voice take (not silent placeholder).
-3. Render at **standard** quality (or draft for faster iteration).
-4. Copy / compress outputs into:
-
-```text
-docs/assets/examples/portrait-demo.mp4
-docs/assets/examples/landscape-demo.mp4
-docs/assets/examples/square-demo.mp4
-```
-
-5. Export a poster frame (first or mid frame) as matching `.jpg` files.
-
-Keep clips short. Prefer HyperFrames for Apache-2.0-only demos when that matters;
-Use HyperFrames for new demos; document asset and GSAP terms for redistributed samples.
-
-Audio for video demos lives inside the MP4. Also commit a short podcast sample:
-
-```text
-docs/assets/examples/podcast-demo.mp3
-```
-
-(`npm run export:demo-assets` can generate this; prefer MP3 for GitHub size.)
-
-## Rules
-
-- Synthetic script only (see `src/library/demo-content.ts`)
-- No API keys, personal names, or copyrighted media in committed assets
-- Use bundled CC0 music only (`public/music/`)
-- Do not fabricate screenshots the app cannot produce
+Do not include keys, tokens, real user data, private URLs, or unlicensed media.
+Keep screenshots authentic and regenerate them when the UI changes.

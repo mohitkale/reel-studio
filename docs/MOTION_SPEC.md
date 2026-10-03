@@ -1,4 +1,4 @@
-# Motion spec and compiler prototype — M10
+# Motion specification and compiler
 
 The version-1 contract in `src/video/motion-spec.ts` is independent of the
 render framework. A spec has an FPS and ordered, nonoverlapping shots, each with
@@ -25,8 +25,8 @@ including media, emphasis, items, chart data and existing direction. Missing or
 mismatched references fail. A legacy spec produces the same HTML as the existing
 scene path; authored graphs cannot be flattened into legacy scenes. Existing
 projects need no database migration. The prototype is a compiler input rather
-than a persisted editor/API format; authored recipes and director integration
-belong to the following milestones.
+than a persisted editor/API format; authored recipes and constrained director integration use this contract; see
+[the motion library](MOTION_LIBRARY.md) and [director pipeline](DIRECTOR_PIPELINE.md).
 
 Run `node --import tsx scripts/verify-motion-spec.mjs` with an installed browser
 (`REEL_VERIFY_CHROME` optionally selects it). It blocks external requests and
@@ -37,15 +37,4 @@ checks dimensions/duration, and extracts exported keyframes for inspection.
 Evidence is ignored under `.artifacts/m10-motion-spec/`; `--preview-only` skips
 MP4 export and must not be recorded as complete render evidence.
 
-Verified 2026-10-03: full local repository suite (808 tests, including audiogram
-export), typecheck/lint/secret scan/release checks and production build passed;
-the final five focused schema/compiler cases also passed. Offline preview and
-producer seeks agree on element poses, clip visibility and handoffs, including
-backward seeks. Actual mixed graph/legacy exports are five seconds at 30 FPS;
-portrait 540×960 and landscape 960×540 settled and handoff keyframes were inspected.
-The report records MP4 probes and SHA-256 values. Final fixture export hashes:
-
-- Portrait: `6be4f60770a622d7d536e643b4e742313e311587e367e23df077341fdb2aac68`
-- Landscape: `935bdfb300e08441339641389b56cc982feee44293846d378e7e3dc0a152347a`
-
-The owning PR still requires its latest-head Linux/Windows CI before merge.
+Published release evidence is in [release validation](production/RELEASE_VALIDATION.md).

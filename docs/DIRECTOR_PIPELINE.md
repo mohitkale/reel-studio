@@ -1,6 +1,6 @@
 # Director pipeline
 
-M12 adds content-aware direction to the existing no-key planner and the same
+Reel Studio uses content-aware direction to the existing no-key planner and the same
 validated local/OpenAI/Gemini scene contract. Direction is data, never generated
 HTML, JavaScript or an unrestricted animation graph.
 
@@ -34,7 +34,7 @@ repair use zero paid calls. Planning does not automatically replay paid work.
 Direction is saved with scene configuration and survives DTOs, snapshots,
 revision restoration, JSON import and undo. Explicit template/motion edits clear
 it so the chosen editor treatment takes effect. Preview and export compile the
-same scene direction into the M10 neutral motion graph using the current
+same scene direction into the neutral motion graph using the current
 canvas, FPS and scene timeline. Text remains complete and uses measured fitting.
 
 A layered title enters on the first available measured spoken word in its beat,
@@ -67,20 +67,6 @@ exports. Reuse installed Chrome with `PUPPETEER_EXECUTABLE_PATH` if necessary.
 `--preview-only` skips exports explicitly and is not the export acceptance gate.
 Artifacts and the machine-readable report are under `.artifacts/m12-director/`.
 
-On 2026-10-03, both 20-second, 30-FPS exports passed: portrait 540×960 and
-landscape 960×540. The five supplied structures retained their exact values,
-labels and copy; measured quote entrance and settled frames were inspected in
-both formats. Offline probes made no external requests or paid calls. SHA-256:
-
-- Portrait: `27d939c2afd750a66f368aef73f3285c761e4df65aaa9af0811252e9354480c4`
-- Landscape: `e345c00e3f7a622cd25cee1c6b00b8edfff939199790cb3d88fa15baa749a82c`
-
-Behavior tests cover source grounding, schema parity, stable planning, current
-word/FPS rebasing, locked/manual repairs, concurrency, persistence and zero paid
-budgets. Real provider calls/new model downloads were not used for verification.
-
-An isolated populated database also passed an actual initial review, one saved
-layout repair, and one native recapture. The resulting graph text was measured
-for layout and pixel contrast, retained complete copy, removed the unsupported
-treatment finding, and matched the saved source revision. The local report is
-`.artifacts/m12-review-live/report.json`.
+The verifier uses protocol fixtures, installed tools, zero paid calls, and no new
+model downloads. Live model quality is a separate assessment. Published evidence
+is in [release validation](production/RELEASE_VALIDATION.md).

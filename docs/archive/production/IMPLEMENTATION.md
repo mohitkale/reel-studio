@@ -1,3 +1,8 @@
+> **Historical archive.** This document records an earlier plan or measurement.
+> Its instructions, versions, pending work, and dual-engine references are not
+> current project guidance. See [current documentation](../../README.md)
+> and the [published v0.4.0 release](https://github.com/mohitkale/reel-studio/releases/tag/v0.4.0).
+
 # Premium production implementation
 
 Branch: `feat/premium-production` (renamed without rewriting commits). Base:
@@ -62,7 +67,7 @@ Do not mark the release complete until these checks have evidence.
 The numbered 0.4 plan above remains the historical release record. The later
 local-first expansion has its own task numbering and ledgers. PR 8 implements
 expansion Tasks 26–29 on `feat/quick-produce`; its detailed evidence is in
-[`LOCAL_FIRST_PR8_TASKS.md`](archive/LOCAL_FIRST_PR8_TASKS.md).
+[`LOCAL_FIRST_PR8_TASKS.md`](../../production/archive/LOCAL_FIRST_PR8_TASKS.md).
 
 - [x] Expansion 26. Off-by-default Quick Produce creates an editable project,
       immutable `ProductionRevision`, and reconnectable durable video job. Revision

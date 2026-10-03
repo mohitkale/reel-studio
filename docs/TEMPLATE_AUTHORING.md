@@ -3,6 +3,9 @@
 Reel Studio uses **HyperFrames** HTML compositions. HyperFrames is Apache-2.0;
 GSAP and added assets retain their own terms (see [licensing](LICENSING.md)).
 
+For authored motion blocks, prefer [typed extension registration](EXTENSIONS.md).
+For a new base template or reviewed catalog item:
+
 ## HyperFrames (`hf-*`)
 
 1. Add a template entry in `src/engines/hyperframes/templates.ts`
@@ -17,7 +20,7 @@ GSAP and added assets retain their own terms (see [licensing](LICENSING.md)).
 
 Classic ids: `hf-opener`, `hf-statement`, `hf-list`, `hf-stat`, `hf-quote`, `hf-cta`
 
-Curated upstream catalog ids (wired via `data-composition-src`):
+Curated catalog ids (native adapters or reviewed upstream compositions):
 `hf-kinetic-slam`, `hf-money-count`, `hf-data-chart`, `hf-app-showcase`,
 `hf-logo-outro`, `hf-ig-follow`, `hf-tt-follow`, `hf-yt-lower-third`
 
@@ -44,10 +47,10 @@ Retain every earlier directory for projects that reference its revision.
 
 ## Checklist for PRs
 
-- [ ] Works in portrait (and ideally landscape / square)
+- [ ] Works in portrait, landscape, and square with supplied copy/media
 - [ ] No personal or copyrighted media committed
 - [ ] Preview and draft render look readable
 - [ ] Asset licences documented if any files are added
-- [ ] Tests or a minimal smoke path when practical
+- [ ] Focused contract tests and actual preview/export frames for visual changes
 
 See also [docs/VIDEO_ENGINES.md](VIDEO_ENGINES.md) and [CONTRIBUTING.md](../CONTRIBUTING.md).

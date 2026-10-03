@@ -35,7 +35,7 @@ shows a conflict and lets you reopen the completed revision as a new project or
 produce the current revision separately.
 
 The credential-free choice is deterministic planning with stock media set to
-None and server-side Kokoro (or voice disabled). Ollama and LM Studio are local
+None and server-side Kokoro (or voice disabled). Ollama, LM Studio, and llama.cpp are local
 optional planners. Gemini, OpenAI, stock search, and paid voice providers are
 used only when explicitly selected and configured.
 
@@ -118,9 +118,10 @@ voice provider for material you intend to publish.
 6. Download verified artifacts and subtitles. Keep the source project so later
    revisions can reuse unchanged work.
 
-Short-form launch validation covers videos up to three minutes and podcasts up
-to ten minutes. Existing longer projects remain editable, but they are outside
-the initial release acceptance matrix.
+Ordinary video exports are limited to three minutes; valid chaptered videos
+support up to five minutes. Podcasts support up to ten minutes. The v0.4.0
+release includes a verified 210-second chapter cancellation/retry fixture. See
+[advanced editing](ADVANCED_EDITING.md) for chapter limits and finishing controls.
 
 See [the verified creation and editing walkthrough](CREATION_UX.md) for current
 desktop/mobile screenshots and the prompt-to-download acceptance evidence.

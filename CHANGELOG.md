@@ -4,6 +4,16 @@ All notable changes to Reel Studio are documented here.
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## Unreleased
+
+### Documentation
+
+- Shorter README with a current screen/export demo and contribution paths.
+- Indexed current setup, runtime, editing, and extension guides; completed plans
+  and audits are labeled historical.
+- Proportionate local verification, coherent release batches, and preserved agent
+  co-authorship are documented for contributors and coding agents.
+
 ## 0.4.0 — 2026-10-03
 
 ### Added
@@ -81,7 +91,7 @@ The dual-engine descriptions below record that earlier implementation.
 - Blocked public-page ingestion from loopback, local, and private network destinations after every redirect
 - Enforced production scopes and paid-provider limits across both current and compatibility API routes
 
-See [the upgrade notes](docs/production/UPGRADES.md) and [release validation](docs/production/RELEASE_VALIDATION.md).
+See [the upgrade notes](docs/archive/production/UPGRADES.md) and [release validation](docs/production/RELEASE_VALIDATION.md).
 
 ## 0.3.0 - 2026-08-06
 

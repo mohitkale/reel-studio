@@ -14,7 +14,7 @@ touches the database directly. By design it can do everything an editor can
 - ✅ named scoped tokens can opt into bounded unattended rendering, with provider,
   duration, batch, and finite paid-request limits
 - ✅ podcast audio generation **does** run when you call `create_podcast_take`
-  (same as the web Generate button; costs TTS credits)
+  (same as the web Generate button; cloud providers may use TTS credits)
 
 ## Setup
 
@@ -51,7 +51,7 @@ touches the database directly. By design it can do everything an editor can
 - **Read:** `list_projects`, `list_video_engines`, `list_production_presets`, `get_script`, `list_takes`,
   `list_scene_clips`, `get_captions`, `list_renders`, `get_render`,
   `list_voice_providers`, `list_voices`, `list_voice_models`, `list_ai_providers`
-  (Gemini, OpenAI, Ollama, and LM Studio when configured)
+  (Gemini, OpenAI, Ollama, LM Studio, and llama.cpp when configured)
 - **Create / edit:** `create_project`, `ai_create_project`, `assign_brand_kit`,
   `update_script`, `set_music`, `add_scene`, `update_scene`, `reorder_scenes`,
   `ai_generate_scenes`, `create_voice_take`, `get_voice_job`,
@@ -161,7 +161,7 @@ To freeze and produce that prepared script as a Quick Produce revision, add:
 
 For an existing script the planner fields are revision metadata; planning has
 already happened. Use the same object with `ai_create_project` to select the
-deterministic, Ollama, LM Studio, Gemini, or OpenAI planner for the original
+deterministic, Ollama, LM Studio, llama.cpp, Gemini, or OpenAI planner for the original
 brief. Job responses include the submitted revision hash and current-project
 hash so an agent can report conflicts without overwriting either version.
 

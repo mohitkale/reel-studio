@@ -1,4 +1,4 @@
-# Voice resilience and timing (M7)
+# Voice resilience and timing
 
 ## Complete local synthesis
 
@@ -50,7 +50,7 @@ Measured tracks keep take/FPS provenance for karaoke and speech-aware SFX.
 Configured whisper.cpp remains optional ASR with native token timing. ASR or a
 known-text prompt does not implement forced alignment of the supplied script.
 A separate acoustic aligner would require an additional model/runtime, language
-coverage and mismatch/confidence evaluation. M7 therefore preserves real timing
+coverage and mismatch/confidence evaluation. Reel Studio preserves real timing
 and honest estimates without adding an unverified aligner or model downloads.
 
 ## Verification
@@ -68,8 +68,4 @@ PyTorch Kokoro weights are not the ONNX model used by this app; native Kokoro
 acoustic quality is therefore not claimed by the fixture tests. Real HyperFrames
 export/cancellation and the complete repository checks remain regression gates.
 
-Local acceptance passed: 721 tests in the full suite, followed by all 42 focused
-voice fixtures after five additional boundary tests; typecheck, lint, security,
-release checks and production build. The isolated worker exported a real MP4,
-then canceled an active HyperFrames render and verified process cleanup. No
-application data was used. GitHub CI remains the required latest-head merge gate.
+Published integration evidence is in [release validation](production/RELEASE_VALIDATION.md).

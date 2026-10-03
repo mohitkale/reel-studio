@@ -1,3 +1,8 @@
+> **Historical archive.** This document records an earlier plan or measurement.
+> Its instructions, versions, pending work, and dual-engine references are not
+> current project guidance. See [current documentation](../../README.md)
+> and the [published v0.4.0 release](https://github.com/mohitkale/reel-studio/releases/tag/v0.4.0).
+
 # Dependency decisions
 
 The frozen registry inventory is in `dependencies.json`. Install targets exclude prereleases, even when a publisher uses the latest tag for one.

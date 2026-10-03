@@ -1,6 +1,6 @@
-# Portability and hardening — M8
+# Portability and hardening
 
-Reviewed 2026-10-02 against the M2-upgraded lockfile. This is a single-user,
+Current implementation; advisory snapshot dated 2026-10-03. This is a single-user,
 local-first application; these boundaries do not create a hostile-code sandbox.
 
 ## Platform and CI gates
@@ -72,11 +72,11 @@ an explicit session/auth integration as well as allowed Host, TLS and firewall.
 
 ## Dependency reachability snapshot
 
-`npm audit --json` and `npm audit --omit=dev --json` both report **7 high package
-findings**; parent-package propagation is included in that count. The underlying
-advisories remain present, not waived by tests. Offline
-`npm run security:inventory` records every lockfile location/version/declared
-license plus the lockfile SHA-256, including nested duplicates.
+The 2026-10-03 locked-install audit reported **12 high package findings** in the
+full tree and **7 high** with development packages omitted, with no critical
+findings. Counts include parent-package propagation. They are a dated snapshot,
+not a promise about future advisories. Run `npm run security:inventory` for the
+lockfile inventory; reassess advisories during dependency changes/releases.
 
 | Installed component                    | Advisory / verified application path                                                                                                                                                                                                                           | Decision                                                                                              |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -94,9 +94,9 @@ patch was identified for the remaining findings; the lockfile is unchanged.
 
 [LICENSING.md](LICENSING.md) records confirmed package terms and embedded eSpeak
 NG, GSAP and optional XTTS distinctions. Declared metadata is insufficient for
-embedded WASM/native libraries. This M8 observation required M15 to verify corresponding source/build
-provenance and distribution notices before publishing bundles/images. This work
-does not claim the whole stack is Apache-2.0 or wholly OSI open source.
+embedded WASM/native libraries. The published v0.4.0 speech engine has pinned source/build provenance,
+complete notices, and a matching corresponding-source release archive.
+Do not describe the whole stack as Apache-2.0 or wholly OSI open source.
 
 Tests cover stream byte accounting/deadlines/cancellation, real staged-index
 secret scanning and redaction, public-address and DNS socket/redirect policies,
@@ -105,28 +105,7 @@ and native export/cancellation checks are the merge gate. Acoustic Kokoro model
 quality, remote session authentication and a hostile-code Chromium sandbox are
 outside these tests.
 
-Inventory evidence: lockfile SHA-256
-`68c9b15c7ed969287a9b4c0cc9584b3295ba4d309e92aa2e29c1eec5de802c17`,
-1,058 package locations. Seven omit a lockfile license field: six HyperFrames
-workspace packages (upstream Apache-2.0 repository license) and seq-queue 0.0.5
-(installed LICENSE is MIT). Embedded-component review remains necessary even
-when metadata declares a permissive license.
-
-Local acceptance: 798 tests in 154 files, typecheck, lint, release checks and
-production build passed. An isolated real HyperFrames export and active
-cancellation passed (`.artifacts/production-worker-1790956301518`). Chrome 153
-initialized and sought the actual HyperFrames srcDoc composition under production
-headers and verified cross-origin framing was blocked (`.artifacts/m8-hardening`).
-
-The first Windows run passed 790 tests and exposed eight failures. Fixes retain
-assertions rather than disabling them: platform-native paths, NTFS replacement
-being blocked while a read handle is open, and supervisor child PIDs being gone
-rather than expecting Windows force-kill to execute POSIX signal handlers. The
-24-scene SQLite restoration test has a scoped 20-second integration timeout.
-Its 49 focused tests pass locally; replacement latest-head platform CI remains
-the merge gate. CI skips optional CUDA libraries for the CPU-only Kokoro path.
-
-## M15 advisory refresh (2026-10-03)
+## Dependency advisory snapshot (2026-10-03)
 
 A fresh locked install reports 12 high package findings in the full audit and
 7 high in `npm audit --omit=dev`; no critical findings are reported. Parent
@@ -140,7 +119,7 @@ content and uploaded project/media inputs are not passed to that lint path.
 Do not apply npm's proposed Next 14 or Prisma 6 downgrade to silence the audit.
 The findings remain documented and must be reassessed if these paths change.
 
-M15 replaces the opaque phonemizer engine with the source-built GPL-3.0-or-later
+The v0.4.0 release replaces the opaque phonemizer engine with the source-built GPL-3.0-or-later
 component in `vendor/phonemizer`; exact compiler/source/output hashes, complete
 notices and corresponding-source provision are documented in [LICENSING.md](LICENSING.md).
 The original wrapper metadata is historical and does not describe the installed

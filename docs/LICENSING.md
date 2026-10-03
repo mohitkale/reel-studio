@@ -20,7 +20,7 @@ Quick Produce changes orchestration, not licensing. Its immutable revision keeps
 the selected engine, model/provider identifiers, media attribution snapshots,
 and output metadata, but it does not grant new rights to any input or provider
 output. The deterministic planner adds no model license. Server-side Kokoro uses
-the same Apache-2.0 model listed below; Ollama and LM Studio users remain
+the same Apache-2.0 model listed below; Ollama, LM Studio, and llama.cpp users remain
 responsible for the selected local model's terms.
 
 ---
@@ -125,7 +125,7 @@ license.
 ## Local-first expansion policy snapshot
 
 The [PR 1 snapshot](production/archive/LOCAL_FIRST_TASKS.md#api-and-licensing-snapshot-2026-09-13)
-records the earlier stock API research and release gates. M8 restricts Unsplash
+records the earlier stock API research and release gates. The renderer restricts Unsplash
 to hotlinked previews because the reviewed API guidance does not authorize a
 video-render staging exception; its exports remain gated. Coverr remains disabled pending resolution of its API license gate.
 

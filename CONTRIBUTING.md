@@ -1,270 +1,105 @@
 # Contributing to Reel Studio
 
-Thanks for your interest in contributing to Reel Studio! This is an open-source project, and we welcome contributions from the community.
+Help build a useful local video and podcast studio. Bug fixes, readable docs,
+new motion treatments, provider integrations, performance improvements, and
+reproducible fixtures are welcome. Follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
-## Getting Started
+## Start developing
 
-### Fast path
+Fork the repository, then clone your fork. Use Node 24 LTS (minimum 24.15),
+FFmpeg/FFprobe, and an installed Chrome/Chromium browser:
 
 ```bash
-git clone https://github.com/mohitkale/reel-studio.git
+git clone https://github.com/YOUR-USERNAME/reel-studio.git
 cd reel-studio
-nvm use          # Node 22+
-npm install
-npm run setup    # creates .env.local if missing; does not overwrite existing files
+nvm use
+npm ci
+npm run setup
 npm run dev
 ```
 
-Or: `npm run demo` (setup + dev server).
+Open `http://localhost:3000`. Setup preserves existing configuration and uses
+versioned database migrations. See [setup](docs/SETUP.md) for Docker, runtime
+checks, and troubleshooting. Never use `db:push` to upgrade an existing database.
 
-### Development Setup (manual)
+## Make a focused PR
 
-1. **Fork and clone the repository**:
-   ```bash
-   git clone https://github.com/mohitkale/reel-studio.git
-   cd reel-studio
-   ```
+1. Create a branch: `git switch -c feature/your-change`.
+2. Follow [AI_GUIDELINES.md](AI_GUIDELINES.md) and existing architecture.
+3. Add or adjust meaningful checks for behavior that changed.
+4. Update the owning guide when setup, behavior, or APIs change.
+5. Run the relevant local checks below, inspect your diff, and scan for secrets.
+6. Push to your fork and open a PR with the problem, resulting behavior, and validation.
 
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+Maintainers merge after required checks pass on the latest PR commit. Agent-led
+milestones follow the complete branch → PR → CI → merge → refreshed-main cycle
+in [AI_GUIDELINES.md](AI_GUIDELINES.md#milestone-pr-workflow).
 
-3. **Copy environment template**:
-   ```bash
-   cp .env.example .env.local
-   ```
+## Verify in proportion to the change
 
-4. **Initialize database**:
-   ```bash
-   npm run db:push
-   ```
-
-5. **Optional sample data**:
-   ```bash
-   npm run seed:demo-brandkit
-   npm run seed:demo-project
-   npm run seed:demo-podcast
-   npm run seed:assets
-   ```
-
-6. **Run the development server**:
-   ```bash
-   npm run dev
-   ```
-
-   Open `http://localhost:3000` to see the application.
-
-Please follow our [Code of Conduct](CODE_OF_CONDUCT.md).
-
-## Contribution Guidelines
-
-### Types of Contributions
-
-We welcome the following types of contributions:
-
-- **Bug fixes**: Help us squash bugs and improve stability
-- **New features**: Add new capabilities following our architecture
-- **Documentation**: Improve docs, add examples, write guides
-- **Templates**: Create new scene templates for the video editor
-- **Voice providers**: Add support for new TTS/voice services
-- **AI providers**: Integrate new AI services for content generation
-- **Performance improvements**: Optimize rendering, database queries, or UI
-- **Testing**: Add tests to improve code coverage
-
-### Development Workflow
-
-1. **Create a branch** for your contribution:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-2. **Make your changes** following our code style and architecture patterns
-
-3. **Test your changes**:
-   ```bash
-   npm run lint
-   npm run typecheck
-   npm run test
-   npm run security:scan
-   ```
-
-4. **Commit your changes** with clear, descriptive messages:
-   ```bash
-   git commit -m "Add: new voice provider for XYZ service"
-   ```
-
-5. **Push to your fork**:
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-6. **Create a Pull Request** to the main repository
-
-### Code Quality Checklist
-
-Before opening a PR, ensure:
-
-- [ ] All tests pass: `npm run test`
-- [ ] No linting errors: `npm run lint`
-- [ ] No TypeScript errors: `npm run typecheck`
-- [ ] No security issues: `npm run security:scan`
-- [ ] Code follows existing patterns and style
-- [ ] Documentation is updated for any API changes
-- [ ] Tests are added for new functionality
-
-### Commit Message Guidelines
-
-Use clear, descriptive commit messages:
-
-- **Add**: New features (e.g., "Add: support for custom Lottie animations")
-- **Fix**: Bug fixes (e.g., "Fix: resolve timeline sync issue on scene reorder")
-- **Update**: Updates to existing code (e.g., "Update: improve render performance")
-- **Refactor**: Code refactoring (e.g., "Refactor: simplify voice provider registry")
-- **Docs**: Documentation changes (e.g., "Docs: add API usage examples")
-
-## Security Requirements
-
-**Critical**: Never expose secrets or API keys.
-
-- ❌ Never commit `.env.local` or any environment files with real keys
-- ❌ Never hardcode API keys in source files or documentation
-- ❌ Never include personal credentials in any code or comments
-- ✅ Keep `.env.example` values empty or use placeholder-only values
-- ✅ If a secret is accidentally exposed, rotate it immediately and report it
-- ✅ Read [SECURITY.md](SECURITY.md) — the app is local-first; do not advertise
-  public hosting without additional authentication
-
-### Local Git Hook (Recommended)
-
-Enable the provided pre-commit hook once per clone:
+| Change                                            | Local checks                                                                                                              |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Documentation only                                | Markdown formatting, links/anchors, commands and screenshots; secret scan                                                 |
+| Ordinary code change                              | Affected behavior tests, typecheck, relevant lint, secret scan                                                            |
+| Rendering, security, jobs, database, dependencies | Broader tests plus relevant real export, browser, migration, or cancellation checks                                       |
+| Release                                           | Full install/upgrade/platform/browser/render/license gates in [release validation](docs/production/RELEASE_VALIDATION.md) |
 
 ```bash
-npm run prepare:hooks
+# Focus a test run on the behavior you changed
+npm run test:unit -- tests/your-feature.test.ts --maxWorkers=2
+npm run typecheck
+npm run lint
+npm run security:scan
+
+# Broad local unit/integration gate when the change warrants it
+npm run test:unit -- --maxWorkers=2
 ```
 
-This runs `npm run security:scan` before each commit to catch accidental secret exposure.
+You do not need the entire suite after every edit. Keep external providers mocked
+unless live usage is explicitly authorized. Real exports are required for visual
+changes; string/snapshot tests alone cannot prove readability or motion.
 
-Agent-assisted commits in this repo include a `Co-authored-by: Cursor <cursoragent@cursor.com>` trailer so [Cursor Agent](https://github.com/cursoragent) appears in GitHub’s contributor graph. See [CONTRIBUTORS.md](CONTRIBUTORS.md).
+**Current CI:** every PR update and push to `main` runs full Linux/Windows
+Quality checks and Security scanning, including documentation-only PRs. Local
+scope does not bypass those configured gates. Full video matrices are manual;
+phonemizer source rebuilds are limited to relevant paths or manual requests.
+See [verification and release policy](AI_GUIDELINES.md#verification-policy).
 
-## Architecture Guidelines
+## Architecture and extensions
 
-### Project Structure
+- Pages and API handlers: `src/app/` and `src/server/`.
+- Repositories, media storage, render orchestration: `src/library/`.
+- Shared production schemas and workers: `src/production/`.
+- HyperFrames HTML, templates, and motion renderers: `src/engines/hyperframes/`.
+- Engine-neutral scene/timing/motion contracts: `src/video/`.
+- AI, voice, and stock providers: `src/providers/`.
 
-- **Voice providers**: Pluggable via `src/providers/voice/`
-- **AI providers**: Isolated under `src/providers/ai/`
-- **Stock providers**: Image/asset providers in `src/providers/stock/`
-- **Render orchestration**: Core logic in `src/library/render-service.ts`
-- **Templates**: Scene templates in `src/compositions/templates/`
-- **API routes**: All routes should validate inputs with Zod
+HyperFrames is the sole video engine. Read [architecture](docs/ARCHITECTURE.md),
+[template authoring](docs/TEMPLATE_AUTHORING.md), and
+[provider/block registration](docs/EXTENSIONS.md) before extending them.
+Do not reintroduce removed Remotion folders or accept executable AI compositions.
 
-### Adding New Voice Providers
+## Security and licenses
 
-1. Create a new file in `src/providers/voice/`
-2. Implement the `VoiceProvider` interface from `types.ts`
-3. Register your provider in `registry.ts`
-4. Add tests in `providers.test.ts`
-5. Update documentation
+- Keep keys and tokens out of code, Markdown, screenshots, recordings, and fixtures.
+- `.env.example` contains placeholders; `.env.local` and user data stay ignored.
+- Enable the staged secret-scan hook with `npm run prepare:hooks`.
+- Report vulnerabilities according to [SECURITY.md](SECURITY.md).
+- Document provenance, redistribution rights, and required notices for added assets/dependencies.
+- Contributions use the application's MIT license; third-party terms stay distinct.
+  See [licensing](docs/LICENSING.md).
 
-### Adding New Templates
+## Attribution and releases
 
-1. Create a new template file in `src/compositions/templates/`
-2. Follow the existing template structure
-3. Register in `templates.ts`
-4. Add a preview/thumbnail if possible
-5. Document usage and any special requirements
+Add yourself to [CONTRIBUTORS.md](CONTRIBUTORS.md) with your merged contribution.
+Credit only the people and agents involved. Preserve author/co-author metadata
+when merging; do not rewrite released history to add attribution.
 
-### Adding New AI Providers
+Maintainers assess a release after a coherent batch of changes, usually 3–5
+user-facing PRs, or sooner for a significant bug/security fix. Documentation-only
+maintenance joins the next release. Details and standing maintainer authorization
+are in [release policy](AI_GUIDELINES.md#release-policy).
 
-1. Create a new file in `src/providers/ai/`
-2. Implement the AI provider interface
-3. Register in `registry.ts`
-4. Add tests
-5. Update `.env.example` with any required API keys
-
-## Testing
-
-### Running Tests
-
-```bash
-# Run all tests
-npm run test
-
-# Run tests in watch mode
-npm run test:watch
-```
-
-### Writing Tests
-
-- Add tests for new functionality
-- Test edge cases and error conditions
-- Mock external API calls
-- Ensure tests are fast and reliable
-
-## Documentation
-
-### Updating Documentation
-
-- Keep README.md up to date with new features
-- Update API documentation for any route changes
-- Add examples for complex features
-- Document any breaking changes in the PR description
-
-### Code Comments
-
-- Add comments for complex logic
-- Document non-obvious decisions
-- Keep comments concise and helpful
-
-## Reporting Issues
-
-When reporting bugs, please include:
-
-- Clear description of the issue
-- Steps to reproduce
-- Expected vs actual behavior
-- Environment details (OS, Node version, browser)
-- Screenshots or recordings if applicable
-
-## Feature Requests
-
-For feature requests:
-
-- Describe the use case clearly
-- Explain why it would be valuable
-- Suggest a possible implementation approach
-- Consider if it fits the project's scope and goals
-
-## Code of Conduct
-
-- Be respectful and inclusive
-- Focus on constructive feedback
-- Help others learn and grow
-- Assume good intentions
-
-## License
-
-By contributing to Reel Studio, you agree that your contributions will be
-licensed under the MIT License.
-
-**Third-party terms still apply.** Reel Studio is MIT-licensed and renders with
-HyperFrames (Apache-2.0). GSAP uses its own Standard License, and optional models,
-voices and media retain their own terms. See [docs/LICENSING.md](docs/LICENSING.md)
-for the current inventory. Do not describe the entire stack as Apache-2.0.
-
-## Maintainer checklist (repo settings)
-
-After merging launch docs, set in GitHub → Settings:
-
-- **Description:** Local-first AI video + podcast studio with MCP server for Instagram Reels, YouTube Shorts, TikTok, Facebook, X, LinkedIn; voiceovers, templates, and local MP4 export.
-- **Topics:** `ai-video` `video-editor` `short-form-video` `instagram-reels` `youtube-shorts` `tiktok` `facebook` `twitter` `linkedin` `reels` `hyperframes` `text-to-video` `ai-voice` `podcast` `mcp` `model-context-protocol` `local-first` `nextjs` `typescript` `open-source`
-- **Social preview:** `docs/assets/reel-studio-editor.png` or a still from the demo GIF
-
-## Getting Help
-
-- Open an issue for bugs or questions
-- Check existing issues and discussions
-- Read the documentation in the `docs/` folder
-- Review the AI guidelines in `AI_GUIDELINES.md`
-
-Thank you for contributing to Reel Studio!
+For an issue, include reproduction steps, expected/actual behavior, OS, Node
+version, and redacted logs or screenshots. Feature requests should explain a
+creator use case and a concrete example input/output.

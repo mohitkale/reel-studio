@@ -7,7 +7,7 @@ server needs one registration with a label, protocol and defaults; there is no
 separate provider enum to edit. Ollama keeps its native protocol. Gemini and
 OpenAI retain their fixed-origin cloud transports and separate credentials.
 
-The new **llama.cpp** registration uses `/v1/models`, schema-constrained
+The **llama.cpp** registration uses `/v1/models`, schema-constrained
 `/v1/chat/completions`, optional local authentication, the existing endpoint
 policy, cancellation and one bounded structured-output repair. Video planning,
 podcast planning and clip suggestions use the shared compatible adapter.
@@ -26,7 +26,7 @@ require every declared extension to have a renderer. Supply the block's actual
 copy/media compatibility rules and frozen landmarks; never accept executable
 HTML, CSS or JavaScript from project data.
 
-The new **Margin quote** block renders supplied quotation text, an opening mark
+The **Margin quote** block renders supplied quotation text, an opening mark
 and a restrained rule. Quote-role selection is deterministic, and users can
 choose the recipe in the editor. It preserves brand typography/palette, supports
 up to 140 characters, reduces type size for longer copy, and falls back when a
@@ -78,17 +78,5 @@ runtime, verifies forward/backward native seeks and preview/producer parity,
 then exports four-second 30 FPS MP4s in all three ratios with the isolated
 worker. The complete supplied quotation, opening mark and rule were inspected
 in exported frames. No external requests, paid calls or model downloads were
-used. On 2026-10-03 the actual MP4 SHA-256 values were:
-
-| Format    | Dimensions | SHA-256                                                            |
-| --------- | ---------- | ------------------------------------------------------------------ |
-| Portrait  | 540×960    | `cee179da7456dc619f1f8f04e0c46429c714a4049acf038c97828a73ae09a165` |
-| Landscape | 960×540    | `b09d1e398468439cf2bed9484d15c1c73f8a4912a6c7e12c7bf973c3214d8a4e` |
-| Square    | 720×720    | `f67155ba4254e31af09820b00f305213ec7171120fcfc46d8e5421596f4d441b` |
-
-The authored-library preview check also covers all sixteen recipes in portrait
-and landscape. Reports and images stay under `.artifacts/m14-extensions/` and
-`.artifacts/m11-motion-library/`; the latter is a fresh preview-only compatibility
-check, not a new M11 MP4 matrix. The full local suite passed 840 tests across 170 files, with typecheck, lint,
-secret scan, release checks and a final production build. M15 remains the
-integrated release gate.
+used. Reports stay under `.artifacts/m14-extensions/`; current release evidence is in
+[release validation](production/RELEASE_VALIDATION.md).

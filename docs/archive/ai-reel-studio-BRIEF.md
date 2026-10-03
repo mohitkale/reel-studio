@@ -1,14 +1,19 @@
+> **Historical archive.** This document records an earlier plan or measurement.
+> Its instructions, versions, pending work, and dual-engine references are not
+> current project guidance. See [current documentation](../README.md)
+> and the [published v0.4.0 release](https://github.com/mohitkale/reel-studio/releases/tag/v0.4.0).
+
 # Build Brief: "Reel Studio" - a professional AI short-form video studio
 
 > Historical plan: engine references describe the earlier dual-engine implementation.
-> New previews and exports use HyperFrames only. See [current engine notes](VIDEO_ENGINES.md) and [the current review milestones](CRITICAL_REVIEW_PLAN.md).
+> New previews and exports use HyperFrames only. See [current engine notes](../VIDEO_ENGINES.md) and [the current review milestones](CRITICAL_REVIEW_PLAN.md).
 
 Paste this whole file into Claude Code as the opening prompt. Build it from
 scratch in a new folder. Treat this as a product spec, not a one-shot script:
 plan, propose the stack, confirm key choices with me, then build in milestones.
 
 > **Current licensing:** application code is MIT; HyperFrames is Apache-2.0;
-> GSAP and optional media/models retain their own terms. See [licensing](LICENSING.md).
+> GSAP and optional media/models retain their own terms. See [licensing](../LICENSING.md).
 
 ---
 
@@ -77,7 +82,7 @@ export interface VoiceSummary {
   name: string;
   category: "default" | "cloned" | "professional" | "shared";
   language?: string;
-  previewUrl?: string;     // to play a sample without spending credits
+  previewUrl?: string; // to play a sample without spending credits
   tags?: string[];
 }
 
@@ -85,17 +90,20 @@ export interface SynthOptions {
   voiceId: string;
   modelId?: string;
   text: string;
-  sampleRate?: number;     // normalize to 44100
+  sampleRate?: number; // normalize to 44100
   // optional expressive controls where supported:
-  speed?: number; emotion?: string; stability?: number; similarity?: number;
+  speed?: number;
+  emotion?: string;
+  stability?: number;
+  similarity?: number;
 }
 
 export interface VoiceProvider {
   id: ProviderId;
   label: string;
-  isConfigured(): boolean;                 // key present?
+  isConfigured(): boolean; // key present?
   listModels(): Promise<{ id: string; label: string }[]>;
-  listVoices(): Promise<VoiceSummary[]>;   // MUST include default + my cloned voices
+  listVoices(): Promise<VoiceSummary[]>; // MUST include default + my cloned voices
   synth(opts: SynthOptions): Promise<{ wav: Buffer; sampleRate: number }>; // return 16-bit PCM WAV
 }
 
@@ -115,6 +123,7 @@ Requirements:
 ### Provider facts to implement against (verify against live docs first)
 
 **Cartesia** (I already use this; I have a cloned voice named "mohit").
+
 - Auth: `Authorization: Bearer <key>` + header `Cartesia-Version: 2025-04-16`.
 - TTS: `POST https://api.cartesia.ai/tts/bytes` with body
   `{ model_id, transcript, voice:{mode:"id",id}, output_format:{container:"wav",encoding:"pcm_s16le",sample_rate:44100} }`.
@@ -126,6 +135,7 @@ Requirements:
   https://docs.cartesia.ai/api-reference/voices/list
 
 **ElevenLabs** (add as a second provider).
+
 - Auth: header `xi-api-key: <key>`.
 - TTS: `POST https://api.elevenlabs.io/v1/text-to-speech/{voice_id}` (optionally
   `/with-timestamps` for word timing). Default model `eleven_multilingual_v2`;

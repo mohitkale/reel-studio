@@ -1,3 +1,8 @@
+> **Historical archive.** This document records an earlier plan or measurement.
+> Its instructions, versions, pending work, and dual-engine references are not
+> current project guidance. See [current documentation](../../README.md)
+> and the [published v0.4.0 release](https://github.com/mohitkale/reel-studio/releases/tag/v0.4.0).
+
 # Five-minute footage and finishing measurements
 
 Measured on 2026-10-01 with Node 24.18.1, Remotion 4.0.523 and HyperFrames
@@ -12,14 +17,14 @@ narration, music, SFX and balanced measured mastering. This evaluates output
 scaling and mixed scene/media production; it does not characterize complex
 live-action source decoding or natural speech.
 
-| Engine | Profile | Encoded pixels | Cold seconds/video minute | Retry seconds/video minute | Cold peak MiB |
-| --- | --- | --- | --- | --- | --- |
-| remotion | draft-720 | 640×360 | 60.1 | 33.6 | 3270 |
-| remotion | standard-720 | 1280×720 | 104.3 | 36.1 | 3756 |
-| remotion | high-1080 | 2560×1440 | 261.0 | 36.6 | 4486 |
-| hyperframes | draft-720 | 1280×720 | 60.3 | 15.6 | 2130 |
-| hyperframes | standard-720 | 1280×720 | 62.6 | 15.3 | 2108 |
-| hyperframes | high-1080 | 1920×1080 | 105.4 | 15.4 | 2490 |
+| Engine      | Profile      | Encoded pixels | Cold seconds/video minute | Retry seconds/video minute | Cold peak MiB |
+| ----------- | ------------ | -------------- | ------------------------- | -------------------------- | ------------- |
+| remotion    | draft-720    | 640×360        | 60.1                      | 33.6                       | 3270          |
+| remotion    | standard-720 | 1280×720       | 104.3                     | 36.1                       | 3756          |
+| remotion    | high-1080    | 2560×1440      | 261.0                     | 36.6                       | 4486          |
+| hyperframes | draft-720    | 1280×720       | 60.3                      | 15.6                       | 2130          |
+| hyperframes | standard-720 | 1280×720       | 62.6                      | 15.3                       | 2108          |
+| hyperframes | high-1080    | 1920×1080      | 105.4                     | 15.4                       | 2490          |
 
 Cold measurements include production planning/rendering, continuous audio
 assembly, mastering and delivery probes; native review and finishing are separate.
@@ -38,9 +43,9 @@ compare encoded pixels rather than assuming quality labels are equivalent.
 ## Finishing decision
 
 | Engine (high) | Extra seconds/video minute | Peak MiB |
-| --- | --- | --- |
-| remotion | 20.6 | 1885 |
-| hyperframes | 9.8 | 1158 |
+| ------------- | -------------------------- | -------- |
+| remotion      | 20.6                       | 1885     |
+| hyperframes   | 9.8                        | 1158     |
 
 The explicit experiment blends three decoded frames with causal 1:2:1 weights,
 resets history at each cut, re-encodes silent sections and copies the complete

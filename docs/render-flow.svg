@@ -21,7 +21,7 @@
   <rect class="step" x="50" y="110" width="220" height="110" />
   <text class="label" x="72" y="150">1. Editable Project</text>
   <text class="small" x="72" y="178">Brief, script, scenes, assets</text>
-  <text class="small" x="72" y="198">Quick Produce stays optional</text>
+  <text class="small" x="72" y="198">Generate submits a frozen revision</text>
 
   <rect class="step" x="330" y="110" width="230" height="110" />
   <text class="label" x="352" y="150">2. Freeze Revision</text>
