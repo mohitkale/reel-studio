@@ -15,6 +15,7 @@ other social formats in **9:16**, **16:9**, and **1:1**.
 
 > **Version 0.4.0.** Prompt-first creation, durable production and verified
 > source-built phonemization. Upgrade instructions and release checks are in
+> [upgrade notes](docs/RELEASE_0.4.0.md) and
 > [release validation](docs/production/RELEASE_VALIDATION.md).
 
 **MIT-licensed app. Local-first.** Projects and renders stay on your machine

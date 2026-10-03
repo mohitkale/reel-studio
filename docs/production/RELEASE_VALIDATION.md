@@ -4,27 +4,32 @@ M15 validates the integrated M1–M14 implementation on 2026-10-03. The release
 PR must pass all latest-head Linux/Windows checks before merge; publication uses
 that exact merged commit after refreshing local `main`.
 
+[Machine-readable integrated evidence](RELEASE_ACCEPTANCE_0.4.0.json) preserves
+the fixture checks, output hashes and measured retry results.
+
 ## Current acceptance evidence
 
 | Gate                   | Result                                                                                                                                                                                         |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Fresh locked install   | `npm ci`, Node 24.18.1; verified local phonemizer override, no new local compiler                                                                                                              |
 | Published v0.3 upgrade | Actual published schema at `3bd4582`; 14 migrations, automatic backup/restore, saved copy/media/takes/exports and caption payloads preserved; isolated fresh setup passes                      |
-| Render matrix          | 18 **fresh** H.264 exports, six presets × portrait/landscape/square; 707.6 seconds, 39,349,995 bytes; dimensions, supplied brief hashes, output SHA-256 and actual exported keyframes verified |
+| Render matrix          | 18 **fresh** H.264 exports, six presets × portrait/landscape/square; 606.7 seconds, 39,349,995 bytes; dimensions, supplied brief hashes, output SHA-256 and actual exported keyframes verified |
 | Browser workflows      | Prompt → results/preview/download, editor reorder/voice/export, scoped MCP human approval, podcast WAV/MP3 and audiogram; desktop/mobile without overflow or console errors                    |
 | Long render/recovery   | 210 seconds, 5,040 frames at 24 fps, H.264/AAC; cancel after committed section, retry reuses it, next retry reuses all seven sections; identical MP4 checksum and decoded audio                |
 | Phonemizer             | Pinned source build on ephemeral Actions runner; committed provenance/notices and complete source archive; 26 phoneme cases/eight voices match in Node and offline browser                     |
-| Final quality          | Full test suite, typecheck, lint, secret scan, release contract and production build; Linux/Windows latest-head CI is the merge gate                                                           |
+| Final quality          | 841-test full local suite plus final affected regressions, typecheck, lint, secret scan, release contract and production build; Linux/Windows latest-head CI is the merge gate                 |
 
 [Current render matrix](RELEASE_MATRIX_0.4.0.json) was generated at
-2026-10-03T07:28:26Z without resuming old artifacts. Actual exported frames were
+2026-10-03T10:28:30Z without resuming old artifacts. Actual exported frames were
 inspected; this found and fixed clipped kinetic titles/outros before the final
 matrix. The long fixture found unsupported monospace aliases, now normalized to
 bundled Geist Mono. The final long run uses one stable frozen cache key across
 cancellation and both retries. An earlier attempt missed reuse; the unchanged
 cache assertions then passed in isolated short and long reruns. The compiler
 also inspected the unused Segoe UI fallback as remote Roboto; that fallback now
-uses bundled Inter, avoiding a compiler font-network dependency. Measurements
+uses bundled Inter, avoiding a compiler font-network dependency. A fresh final
+210-second cancellation/retry rerun also passed after that normalization, with
+no compiler font-fetch log entries. Measurements
 are for this 16 GiB Intel workstation, not performance promises.
 
 The final long MP4 SHA-256 is

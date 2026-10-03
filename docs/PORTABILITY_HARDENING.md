@@ -94,7 +94,7 @@ patch was identified for the remaining findings; the lockfile is unchanged.
 
 [LICENSING.md](LICENSING.md) records confirmed package terms and embedded eSpeak
 NG, GSAP and optional XTTS distinctions. Declared metadata is insufficient for
-embedded WASM/native libraries. M15 must verify corresponding source/build
+embedded WASM/native libraries. This M8 observation required M15 to verify corresponding source/build
 provenance and distribution notices before publishing bundles/images. This work
 does not claim the whole stack is Apache-2.0 or wholly OSI open source.
 

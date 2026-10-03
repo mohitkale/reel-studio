@@ -1,0 +1,390 @@
+{
+  "version": 1,
+  "release": "0.4.0",
+  "verifiedOn": "2026-10-03",
+  "unitSuite": {
+    "files": 170,
+    "tests": 841,
+    "passed": true,
+    "maxWorkers": 2,
+    "phase": "Full local suite before final fallback normalization"
+  },
+  "upgrade": {
+    "verifiedAt": "2026-10-03T10:20:12.553Z",
+    "publishedSource": {
+      "tag": "v0.3.0",
+      "commit": "3bd458296a0e5ad367f6c1122b064fddf6ff9c2f",
+      "schemaPath": "prisma/schema.prisma",
+      "sourceSchemaSha256": "67c8283791d65b581c4552a59f3390853671e253e32e8350dd819729048a57cb",
+      "sqlSha256": "5c1906cb5f6e3aa014670a0d96b718668fab83ee2bc657b2e1efe0556eccdf0b",
+      "conversion": "Installed Prisma 7.10.0 migrate diff --from-empty; removed only datasource url to adapt old syntax."
+    },
+    "migrations": 14,
+    "backupRestore": true,
+    "copy": true,
+    "media": {
+      "image.svg": "681c2e0344aaee59f8a3f0b7d82ee9a2497a21a693579664eb8179a2fd284d25",
+      "historical.mp4": "6e27a04fe9419e61129b85b0b468235dea4b546c9d5510c7a80a45fb349af267",
+      "take.wav": "76d884aeb068036704cf27022000c5e91b739ac17d6b1ce27ba61ddda870d706"
+    },
+    "voiceTakes": true,
+    "historicalExports": true,
+    "legacyCaptionPayload": true,
+    "captionTracksAfterUpgrade": true,
+    "freshSetup": true
+  },
+  "browser": {
+    "startedAt": "2026-10-03T07:12:21.910Z",
+    "paidCalls": 0,
+    "modelDownloads": 0,
+    "voiceEvidence": "Real loopback VoiceForge protocol fixture returning labeled calibration audio; no live-model acoustic-quality claim",
+    "cases": [
+      {
+        "kind": "prompt-first",
+        "jobId": "cmus2172n000g1b9key7you0h",
+        "download": {
+          "format": "mp4",
+          "bytes": 1341941,
+          "sha256": "90a79b081e49c11a00fb6e64aa23346f91fcae70d7065d7ecf7c8084a5da7aa3"
+        }
+      },
+      {
+        "kind": "browser-voice-generation",
+        "takeId": "cmus21wvw000m1c9knkb40gav",
+        "provider": "voiceforge",
+        "synthRequests": 3
+      },
+      {
+        "kind": "scoped-MCP-human-approval",
+        "jobId": "cmus22k97000l1b9kmkze52p0",
+        "selfApprovalDenied": true,
+        "automaticDenied": true,
+        "download": {
+          "format": "mp4",
+          "bytes": 947276,
+          "sha256": "b25c1106e4019d0e98768b61708a2b289abf1aee5f39b9cd8b7ffbb6eaa992dc"
+        }
+      },
+      {
+        "kind": "podcast-download",
+        "download": {
+          "format": "wav",
+          "bytes": 282284,
+          "sha256": "fd2cac53e466de07cdfb09a4dc38a95f3bcb5f93213c27aba8f494d91bf56ce0"
+        }
+      },
+      {
+        "kind": "podcast-download",
+        "download": {
+          "format": "mp3",
+          "bytes": 77784,
+          "sha256": "dc51356418f5ad45572b488764ece0853460c11f7499749d4858c39882c4b8be"
+        }
+      },
+      {
+        "kind": "podcast-audiogram",
+        "jobId": "cmus235ak000w1b9k6nuewd03",
+        "download": {
+          "format": "mp4",
+          "bytes": 197033,
+          "sha256": "0698d8573e135f0bc4315aaccd84f223cc1cd0a4e0008d903e71a1ae571224ed"
+        }
+      }
+    ],
+    "errors": [],
+    "synthRequests": [
+      {
+        "text": "A shared process keeps the team moving.",
+        "voiceId": "release-fixture"
+      },
+      {
+        "text": "A clear idea starts the story.",
+        "voiceId": "release-fixture"
+      },
+      {
+        "text": "Review the result and share it.",
+        "voiceId": "release-fixture"
+      },
+      {
+        "text": "Host explains the local release workflow.",
+        "voiceId": "release-fixture"
+      },
+      {
+        "text": "Guest explains the local release workflow.",
+        "voiceId": "release-fixture"
+      }
+    ],
+    "completedAt": "2026-10-03T07:14:10.088Z"
+  },
+  "phonemizerBrowser": {
+    "checkedAt": "2026-10-03T10:13:33.663Z",
+    "cases": 26,
+    "voices": 8,
+    "externalRequests": 0,
+    "modelDownloads": 0,
+    "passed": true
+  },
+  "phonemizer": {
+    "version": 1,
+    "source": {
+      "repository": "https://github.com/espeak-ng/espeak-ng",
+      "revision": "0dfd1d77dd7f96ef1ea6856c9fa5cfac01599582"
+    },
+    "compiler": {
+      "version": "3.1.30",
+      "emsdkRevision": "91f8563a9d1a4a0ec03bbb2be23485367d85a091",
+      "description": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.30 (cfe2bdfe2692457cb5f5770672f6e5ccb3ffc2f2)"
+    },
+    "files": {
+      "vendor/phonemizer/engine.js": "ebd8b37e0c2739a8dbe3a326e99e613e194a6963e8e6a1cff028e9a191a4f508",
+      "vendor/phonemizer/index.js": "4091264c860fceb60c85a3728abd80a15169a4d41b0b821e24b0781ee8bb3ba2",
+      "vendor/phonemizer/reel-phonemizer.c": "83ffe53bed96391130f72b107e09eb9c71bfa25dc133b5cface512138f734c3c",
+      "scripts/build-phonemizer.sh": "76dc2b65ada894925db5eba0b1b90d1d5348c9e686b3f821b921a98ad911f49f"
+    },
+    "data": "Built from the same pinned source; no model weights bundled"
+  },
+  "longRender": {
+    "engine": "hyperframes",
+    "benchmarkId": null,
+    "quality": "draft",
+    "nativeCanvas": null,
+    "secondsPerVideoMinute": 65.26547196799999,
+    "secondsPerVideoMinuteOnRetry": 19.09186176371428,
+    "audioConsistency": {
+      "relativeRmsError": 0,
+      "comparedSamples": 20160000,
+      "firstEncodedHash": "SHA256=87b63a1afd41e83a42fd713a37d2447abcda51868b0f85de27263ef7aea531c2",
+      "retryEncodedHash": "SHA256=87b63a1afd41e83a42fd713a37d2447abcda51868b0f85de27263ef7aea531c2"
+    },
+    "scopedParity": [],
+    "review": {
+      "sceneFrames": [546, 1386, 2226, 3066, 3906, 4746],
+      "cutFrames": [834, 838, 839, 840, 841, 842, 846, 850]
+    },
+    "seconds": 210,
+    "fps": 24,
+    "frames": 5040,
+    "calibrationNarration": true,
+    "canceled": {
+      "events": [
+        {
+          "index": 0,
+          "reused": false
+        }
+      ],
+      "milliseconds": 50977.86707,
+      "sampledPeakProcessTreeRssBytes": 1612623872,
+      "memorySamples": 50,
+      "samplingError": null
+    },
+    "first": {
+      "events": [
+        {
+          "index": 0,
+          "reused": true
+        },
+        {
+          "index": 1,
+          "reused": false
+        },
+        {
+          "index": 2,
+          "reused": false
+        },
+        {
+          "index": 3,
+          "reused": false
+        },
+        {
+          "index": 4,
+          "reused": false
+        },
+        {
+          "index": 5,
+          "reused": false
+        },
+        {
+          "index": 6,
+          "reused": false
+        }
+      ],
+      "milliseconds": 228429.15188799996,
+      "sampledPeakProcessTreeRssBytes": 1944010752,
+      "memorySamples": 225,
+      "samplingError": null,
+      "metadata": {
+        "bytes": 11656223,
+        "width": 1280,
+        "height": 720,
+        "duration": 210,
+        "hasAudio": true,
+        "checksum": "sha256:6d0bcade4fc9072dfc17ed5ab6c3a168667a470ea32e7cdbe19a804fbeaa89bf",
+        "audioMastering": {
+          "version": 1,
+          "mode": "balanced",
+          "status": "verified",
+          "target": {
+            "integratedLufs": -16,
+            "maxTruePeakDbtp": -1,
+            "loudnessRangeLu": 11
+          },
+          "before": {
+            "integratedLufs": -23.91,
+            "truePeakDbtp": -11.21,
+            "loudnessRangeLu": 8.1,
+            "thresholdLufs": -34.1
+          },
+          "after": {
+            "integratedLufs": -16.01,
+            "truePeakDbtp": -3.31,
+            "loudnessRangeLu": 8.1,
+            "thresholdLufs": -26.2
+          },
+          "outputSha256": "6d0bcade4fc9072dfc17ed5ab6c3a168667a470ea32e7cdbe19a804fbeaa89bf"
+        }
+      },
+      "probes": [
+        {
+          "seconds": 16.5,
+          "dbfs": -18.749575195074478
+        },
+        {
+          "seconds": 207,
+          "dbfs": -22.908257317779487
+        },
+        {
+          "seconds": 29.9,
+          "dbfs": -13.379806959181849
+        },
+        {
+          "seconds": 59.9,
+          "dbfs": -13.331854967210983
+        },
+        {
+          "seconds": 89.9,
+          "dbfs": -13.388579291230236
+        },
+        {
+          "seconds": 119.9,
+          "dbfs": -13.367226158302843
+        },
+        {
+          "seconds": 149.9,
+          "dbfs": -12.05618241615234
+        },
+        {
+          "seconds": 179.9,
+          "dbfs": -12.053068246731542
+        }
+      ]
+    },
+    "retry": {
+      "events": [
+        {
+          "index": 0,
+          "reused": true
+        },
+        {
+          "index": 1,
+          "reused": true
+        },
+        {
+          "index": 2,
+          "reused": true
+        },
+        {
+          "index": 3,
+          "reused": true
+        },
+        {
+          "index": 4,
+          "reused": true
+        },
+        {
+          "index": 5,
+          "reused": true
+        },
+        {
+          "index": 6,
+          "reused": true
+        }
+      ],
+      "milliseconds": 66821.51617299998,
+      "sampledPeakProcessTreeRssBytes": 904916992,
+      "memorySamples": 64,
+      "samplingError": null,
+      "metadata": {
+        "bytes": 11656223,
+        "width": 1280,
+        "height": 720,
+        "duration": 210,
+        "hasAudio": true,
+        "checksum": "sha256:6d0bcade4fc9072dfc17ed5ab6c3a168667a470ea32e7cdbe19a804fbeaa89bf",
+        "audioMastering": {
+          "version": 1,
+          "mode": "balanced",
+          "status": "verified",
+          "target": {
+            "integratedLufs": -16,
+            "maxTruePeakDbtp": -1,
+            "loudnessRangeLu": 11
+          },
+          "before": {
+            "integratedLufs": -23.91,
+            "truePeakDbtp": -11.21,
+            "loudnessRangeLu": 8.1,
+            "thresholdLufs": -34.1
+          },
+          "after": {
+            "integratedLufs": -16.01,
+            "truePeakDbtp": -3.31,
+            "loudnessRangeLu": 8.1,
+            "thresholdLufs": -26.2
+          },
+          "outputSha256": "6d0bcade4fc9072dfc17ed5ab6c3a168667a470ea32e7cdbe19a804fbeaa89bf"
+        }
+      },
+      "probes": [
+        {
+          "seconds": 16.5,
+          "dbfs": -18.749575195074478
+        },
+        {
+          "seconds": 207,
+          "dbfs": -22.908257317779487
+        },
+        {
+          "seconds": 29.9,
+          "dbfs": -13.379806959181849
+        },
+        {
+          "seconds": 59.9,
+          "dbfs": -13.331854967210983
+        },
+        {
+          "seconds": 89.9,
+          "dbfs": -13.388579291230236
+        },
+        {
+          "seconds": 119.9,
+          "dbfs": -13.367226158302843
+        },
+        {
+          "seconds": 149.9,
+          "dbfs": -12.05618241615234
+        },
+        {
+          "seconds": 179.9,
+          "dbfs": -12.053068246731542
+        }
+      ]
+    }
+  },
+  "longRenderNote": "Final bundled-font normalization; no compiler font-fetch log entries.",
+  "finalAffectedTests": {
+    "tests": 13,
+    "passed": true,
+    "suites": ["render-fonts", "hyperframes-visual-sections", "voice-timing"]
+  },
+  "inventoryLockSha256": "f2be9ef424ad1dc6f738b711382fa05bbbc1910c32c12e48d34b4fb7bbb1e7ff"
+}

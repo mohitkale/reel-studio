@@ -55,7 +55,7 @@ it("freezes only active native visuals/media and captions, preserving global end
     expect(html).not.toContain("Later caption");
     expect(html).not.toContain("vo.wav");
     expect(html).not.toContain("font-family:&#39;");
-    expect(html).toContain('font-family:"Inter", "Segoe UI"');
+    expect(html).toContain('font-family:"Inter", "Inter"');
     expect(await fs.readdir(path.join(scope(0), "_assets"))).toEqual(["a.png"]);
     const second = await hashRenderDirectory(scope(1));
     props.scenes[1].text = "Revised final visual";

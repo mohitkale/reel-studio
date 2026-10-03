@@ -58,6 +58,7 @@ export async function checkPhonemizerProvenance({ distribution = false } = {}) {
   const pkg = JSON.parse(
     await fs.readFile("vendor/phonemizer/package.json", "utf8"),
   );
+  assert.equal(pkg.version, "1.2.1-reel.1");
   assert.equal(pkg.license, "GPL-3.0-or-later");
   if (distribution) {
     const entries = execFileSync(
@@ -83,6 +84,49 @@ export async function checkPhonemizerProvenance({ distribution = false } = {}) {
         entries.some((entry) => entry.replace(/^\.\//, "") === required),
         `Missing corresponding source ${required}`,
       );
+    const archived = (name) => {
+      const entry = entries.find(
+        (value) => value.replace(/^\.\//, "") === name,
+      );
+      assert.ok(entry, `Missing archived input ${name}`);
+      return execFileSync(
+        "tar",
+        [
+          "-xOf",
+          ".artifacts/reel-phonemizer-corresponding-source.tar.gz",
+          entry,
+        ],
+        { maxBuffer: 8 * 1024 * 1024 },
+      );
+    };
+    assert.deepEqual(
+      JSON.parse(
+        archived("reel-studio/vendor/phonemizer/provenance.json").toString(
+          "utf8",
+        ),
+      ),
+      manifest,
+      "Source archive does not match the distributed engine",
+    );
+    for (const file of expected.filter(
+      (value) => !value.endsWith("engine.js"),
+    )) {
+      assert.equal(
+        createHash("sha256")
+          .update(archived(`reel-studio/${file}`))
+          .digest("hex"),
+        manifest.files[file],
+        `Archived build input drift: ${file}`,
+      );
+    }
+    assert.deepEqual(
+      archived("espeak-ng/COPYING"),
+      await fs.readFile("vendor/phonemizer/COPYING"),
+    );
+    assert.deepEqual(
+      archived("emscripten-runtime/LICENSE"),
+      await fs.readFile("vendor/phonemizer/COPYING.EMSCRIPTEN"),
+    );
   }
   return {
     engineSha256: manifest.files["vendor/phonemizer/engine.js"],

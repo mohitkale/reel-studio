@@ -49,6 +49,8 @@ function fixtureWav() {
   return pcmToWav(pcm);
 }
 let previous: string | undefined;
+// Cold native SQLite/Prisma initialization can exceed 10s on Windows CI.
+// Keep the allowance scoped to fixture setup, not production behavior.
 beforeEach(async () => {
   synth.mockReset();
   synth.mockImplementation(async ({ text }: { text: string }) => ({
@@ -86,7 +88,7 @@ beforeEach(async () => {
       templateId: "hf-typewriter",
     },
   });
-});
+}, 20_000);
 afterEach(async () => {
   await state.db!.$disconnect();
   if (previous === undefined) delete process.env.DATABASE_URL;

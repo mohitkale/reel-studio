@@ -1,8 +1,8 @@
 {
   "version": 3,
-  "startedAt": "2026-10-03T07:16:38.727Z",
-  "completedAt": "2026-10-03T07:28:26.305Z",
-  "elapsedSeconds": 707.6,
+  "startedAt": "2026-10-03T10:18:23.278Z",
+  "completedAt": "2026-10-03T10:28:30.011Z",
+  "elapsedSeconds": 606.7,
   "environment": {
     "resumedFromExistingArtifacts": false,
     "platform": "darwin",
@@ -28,9 +28,9 @@
       "sha256": "fb4e8d6ef2c1209661b0e0159cc979aec7e7280749b9b33d038244b03b28842c",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/product-launch/brief-1/portrait/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:17:19.759Z",
+      "artifactModifiedAt": "2026-10-03T10:18:55.622Z",
       "artifact": ".artifacts/render-regression/product-launch/brief-1/portrait/hyperframes.mp4",
-      "combinationElapsedSeconds": 44.5
+      "combinationElapsedSeconds": 34.7
     },
     {
       "presetId": "product-launch",
@@ -46,9 +46,9 @@
       "sha256": "8c51fbe547b4e40a0c8662fdd7b53bc8a40080f731a6723bff511a36e0e250e2",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/product-launch/brief-2/landscape/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:18:05.137Z",
+      "artifactModifiedAt": "2026-10-03T10:19:34.289Z",
       "artifact": ".artifacts/render-regression/product-launch/brief-2/landscape/hyperframes.mp4",
-      "combinationElapsedSeconds": 43.2
+      "combinationElapsedSeconds": 37.7
     },
     {
       "presetId": "product-launch",
@@ -64,9 +64,9 @@
       "sha256": "5d510cda9ce1c0adc015b4215bf89696ad22e65d2da49b7d7423e6f86be73459",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/product-launch/brief-3/square/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:18:36.031Z",
+      "artifactModifiedAt": "2026-10-03T10:19:56.569Z",
       "artifact": ".artifacts/render-regression/product-launch/brief-3/square/hyperframes.mp4",
-      "combinationElapsedSeconds": 32
+      "combinationElapsedSeconds": 22.1
     },
     {
       "presetId": "editorial-explainer",
@@ -82,9 +82,9 @@
       "sha256": "6a6058f9760d5ea07f1c04b3d9d06deeadf74c6e08999ccee627ee62b155ff2a",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/editorial-explainer/brief-1/portrait/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:19:34.095Z",
+      "artifactModifiedAt": "2026-10-03T10:20:40.127Z",
       "artifact": ".artifacts/render-regression/editorial-explainer/brief-1/portrait/hyperframes.mp4",
-      "combinationElapsedSeconds": 58.5
+      "combinationElapsedSeconds": 44
     },
     {
       "presetId": "editorial-explainer",
@@ -100,9 +100,9 @@
       "sha256": "78aab0851ed8447e2c0f6e850b66ec249ec5787a7a5c92085e6c040825cb9c8a",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/editorial-explainer/brief-2/landscape/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:20:38.855Z",
+      "artifactModifiedAt": "2026-10-03T10:21:18.187Z",
       "artifact": ".artifacts/render-regression/editorial-explainer/brief-2/landscape/hyperframes.mp4",
-      "combinationElapsedSeconds": 64.6
+      "combinationElapsedSeconds": 37.6
     },
     {
       "presetId": "editorial-explainer",
@@ -118,9 +118,9 @@
       "sha256": "0b60ae07a2b3999cdf96d5375a28d7609aeccf2f333a88623b0745e2c0cdbb29",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/editorial-explainer/brief-3/square/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:21:13.980Z",
+      "artifactModifiedAt": "2026-10-03T10:21:42.217Z",
       "artifact": ".artifacts/render-regression/editorial-explainer/brief-3/square/hyperframes.mp4",
-      "combinationElapsedSeconds": 35.2
+      "combinationElapsedSeconds": 23.9
     },
     {
       "presetId": "creator-punch",
@@ -136,9 +136,9 @@
       "sha256": "8653f0747d47ab9dd743ff1858ea03b8a1a763d916a821dd10cd175823eb8f2a",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/creator-punch/brief-1/portrait/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:22:14.616Z",
+      "artifactModifiedAt": "2026-10-03T10:22:20.739Z",
       "artifact": ".artifacts/render-regression/creator-punch/brief-1/portrait/hyperframes.mp4",
-      "combinationElapsedSeconds": 60.4
+      "combinationElapsedSeconds": 38.6
     },
     {
       "presetId": "creator-punch",
@@ -154,9 +154,9 @@
       "sha256": "ad70f224aa5b1c0428001afeae5b5b8f11360249120bc87d6eeffecb13723199",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/creator-punch/brief-2/landscape/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:23:01.333Z",
+      "artifactModifiedAt": "2026-10-03T10:22:58.493Z",
       "artifact": ".artifacts/render-regression/creator-punch/brief-2/landscape/hyperframes.mp4",
-      "combinationElapsedSeconds": 45.6
+      "combinationElapsedSeconds": 37.8
     },
     {
       "presetId": "creator-punch",
@@ -172,9 +172,9 @@
       "sha256": "2c5b22de50ce6d3e0e9c475159e6acb442b652494d3813ac2476d876c4987fbc",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/creator-punch/brief-3/square/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:23:29.358Z",
+      "artifactModifiedAt": "2026-10-03T10:23:23.097Z",
       "artifact": ".artifacts/render-regression/creator-punch/brief-3/square/hyperframes.mp4",
-      "combinationElapsedSeconds": 27.9
+      "combinationElapsedSeconds": 24.4
     },
     {
       "presetId": "data-story",
@@ -190,9 +190,9 @@
       "sha256": "e3d41806c12d364b02b40686ead8f6b54a41de40e851ff2eb3befe6ae79bd5b6",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/data-story/brief-1/portrait/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:24:01.177Z",
+      "artifactModifiedAt": "2026-10-03T10:23:53.390Z",
       "artifact": ".artifacts/render-regression/data-story/brief-1/portrait/hyperframes.mp4",
-      "combinationElapsedSeconds": 31.9
+      "combinationElapsedSeconds": 30.5
     },
     {
       "presetId": "data-story",
@@ -208,9 +208,9 @@
       "sha256": "9ef95f592e13ca4505cd4cf44b50c5dd6f292471c78038dfed3f1d16906ec0a9",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/data-story/brief-2/landscape/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:24:34.015Z",
+      "artifactModifiedAt": "2026-10-03T10:24:28.163Z",
       "artifact": ".artifacts/render-regression/data-story/brief-2/landscape/hyperframes.mp4",
-      "combinationElapsedSeconds": 33
+      "combinationElapsedSeconds": 35.4
     },
     {
       "presetId": "data-story",
@@ -226,9 +226,9 @@
       "sha256": "fc8a21dfa67b15302ec0285d87a516a470851ad5bdab7ddd014305f13defa97a",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/data-story/brief-3/square/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:24:54.853Z",
+      "artifactModifiedAt": "2026-10-03T10:24:52.837Z",
       "artifact": ".artifacts/render-regression/data-story/brief-3/square/hyperframes.mp4",
-      "combinationElapsedSeconds": 20.7
+      "combinationElapsedSeconds": 24.5
     },
     {
       "presetId": "developer-demo",
@@ -244,9 +244,9 @@
       "sha256": "c74226482d9a8f5a010e3f7c5bac13f84a30b1ed21ab18d44383a935ae19d7e6",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/developer-demo/brief-1/portrait/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:25:37.405Z",
+      "artifactModifiedAt": "2026-10-03T10:25:40.741Z",
       "artifact": ".artifacts/render-regression/developer-demo/brief-1/portrait/hyperframes.mp4",
-      "combinationElapsedSeconds": 42.7
+      "combinationElapsedSeconds": 47.8
     },
     {
       "presetId": "developer-demo",
@@ -262,9 +262,9 @@
       "sha256": "a4bdee49eff8e3a75a562b0a9a579be5ba568fa1e1745842e4a66ed97bcf6c92",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/developer-demo/brief-2/landscape/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:26:20.818Z",
+      "artifactModifiedAt": "2026-10-03T10:26:27.165Z",
       "artifact": ".artifacts/render-regression/developer-demo/brief-2/landscape/hyperframes.mp4",
-      "combinationElapsedSeconds": 43.4
+      "combinationElapsedSeconds": 46.2
     },
     {
       "presetId": "developer-demo",
@@ -280,9 +280,9 @@
       "sha256": "7d7fbb1982d1d713a83f6dbcb2185510b173a1553d4ca2e33f79e1fd6889e8dc",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/developer-demo/brief-3/square/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:26:48.744Z",
+      "artifactModifiedAt": "2026-10-03T10:26:54.951Z",
       "artifact": ".artifacts/render-regression/developer-demo/brief-3/square/hyperframes.mp4",
-      "combinationElapsedSeconds": 28
+      "combinationElapsedSeconds": 27.6
     },
     {
       "presetId": "cinematic-brand",
@@ -298,9 +298,9 @@
       "sha256": "2a16696171365990377a303343d5760b02f9fd902bdb030bb33d47f869df8de2",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/cinematic-brand/brief-1/portrait/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:27:25.515Z",
+      "artifactModifiedAt": "2026-10-03T10:27:30.621Z",
       "artifact": ".artifacts/render-regression/cinematic-brand/brief-1/portrait/hyperframes.mp4",
-      "combinationElapsedSeconds": 36.9
+      "combinationElapsedSeconds": 36
     },
     {
       "presetId": "cinematic-brand",
@@ -316,9 +316,9 @@
       "sha256": "bbff11799d1d32337a0bb926c35909391694e90e2e51fdb5ed12a4b998d09348",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/cinematic-brand/brief-2/landscape/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:28:00.736Z",
+      "artifactModifiedAt": "2026-10-03T10:28:05.638Z",
       "artifact": ".artifacts/render-regression/cinematic-brand/brief-2/landscape/hyperframes.mp4",
-      "combinationElapsedSeconds": 35.2
+      "combinationElapsedSeconds": 34.9
     },
     {
       "presetId": "cinematic-brand",
@@ -334,9 +334,9 @@
       "sha256": "a81a398f2a59ee213929a654fb655e7b376fed3ee6d6f432c309b633cdd08318",
       "audioCodecs": [],
       "exportedFrame": ".artifacts/render-regression/cinematic-brand/brief-3/square/hyperframes-release-frame.png",
-      "artifactModifiedAt": "2026-10-03T07:28:24.962Z",
+      "artifactModifiedAt": "2026-10-03T10:28:28.650Z",
       "artifact": ".artifacts/render-regression/cinematic-brand/brief-3/square/hyperframes.mp4",
-      "combinationElapsedSeconds": 24.1
+      "combinationElapsedSeconds": 23
     }
   ]
 }

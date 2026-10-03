@@ -168,7 +168,8 @@ M13 merged after successful latest-head Linux/Windows checks: [PR #42](https://g
 
 M14 merged after passing latest-head Linux/Windows checks: [PR #43](https://github.com/mohitkale/reel-studio/pull/43), merge `f19b2fe`. Local `main` was pulled and the merge verified before creating M15’s branch. Typed llama.cpp and quote-block registrations, shared helpers, archive/compatibility cleanup and current acceptance evidence are in [EXTENSIONS.md](EXTENSIONS.md).
 
-M15 implementation and local integrated verification are complete on
+M15 is delivered by [PR #44](https://github.com/mohitkale/reel-studio/pull/44).
+Its implementation and local integrated verification are complete on
 `feature/review-m15-release`: clean install, populated published v0.3 upgrade,
 backup/restore, browser workflows, fresh 18-output matrix and 210-second
 cancellation/retry evidence. The user approved the isolated source build on
