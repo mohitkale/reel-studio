@@ -12,12 +12,14 @@ cd "$build_dir/source"
 ./configure --prefix=/usr --with-gradle=disabled --without-pcaudiolib --without-async --without-mbrola --without-sonic --disable-shared --enable-static
 make -j2
 cp -R espeak-ng-data "$build_dir/compiled-data"
+# Match the upstream wrapper's English-only language contract.
+find "$build_dir/compiled-data" -type f -name '*_dict' ! -name en_dict -delete
 make distclean
 emconfigure ./configure --prefix=/usr --with-gradle=disabled --without-pcaudiolib --without-async --without-mbrola --without-sonic --disable-shared --enable-static
 emmake make -j2 src/libespeak-ng.la
 emcc "$root_dir/vendor/phonemizer/reel-phonemizer.c" src/.libs/libespeak-ng.a -Isrc/include -O2 \
   -sMODULARIZE=1 -sEXPORT_ES6=1 -sSINGLE_FILE=1 -sENVIRONMENT=web,worker \
-  -sWASM_ASYNC_COMPILATION=0 -sALLOW_MEMORY_GROWTH=1 -sDYNAMIC_EXECUTION=0 -sFILESYSTEM=1 \
+  -sWASM_ASYNC_COMPILATION=0 -sINITIAL_MEMORY=33554432 -sALLOW_MEMORY_GROWTH=1 -sDYNAMIC_EXECUTION=0 -sFILESYSTEM=1 \
   -sEXPORTED_FUNCTIONS='["_reel_phonemize","_reel_error","_reel_voices","_free"]' \
   -sEXPORTED_RUNTIME_METHODS='["ccall","UTF8ToString"]' \
   --embed-file "$build_dir/compiled-data@/usr/share/espeak-ng-data" \
