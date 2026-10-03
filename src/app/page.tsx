@@ -29,12 +29,12 @@ import {
   DEFAULT_ORIENTATION,
 } from "@/lib/orientation";
 import { DEFAULT_VIDEO_ENGINE } from "@/engines/types";
-import { EngineBadge } from "@/components/engines/engine-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/shell/page-header";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CreateWithAIDialog } from "@/components/projects/create-with-ai-dialog";
+import { PromptCreator } from "@/components/projects/prompt-creator";
 import { CreationWizard } from "@/components/projects/creation-wizard";
 import { ViewModeToggle } from "@/components/ui/view-mode-toggle";
 import {
@@ -142,18 +142,27 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-8">
+      <PromptCreator />
       <PageHeader
-        title="Projects"
+        title="Your projects"
         description="Create and manage your short-form video projects."
         actions={
           <>
             <ViewModeToggle value={view} onChange={setView} label="Projects" />
-            <NewProjectDialog />
-            <CreateWithAIDialog />
-            <CreationWizard />
           </>
         }
       />
+
+      <details className="rounded-lg border p-3">
+        <summary className="cursor-pointer text-sm font-medium">
+          More creation options
+        </summary>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <NewProjectDialog />
+          <CreateWithAIDialog />
+          <CreationWizard />
+        </div>
+      </details>
 
       {isLoading ? (
         view === "list" ? (
@@ -173,7 +182,7 @@ export default function ProjectsPage() {
         <EmptyState
           icon={Clapperboard}
           title="No projects yet"
-          description="Create your first project to start writing a script and generating voiceovers."
+          description="Paste your text above to generate a video, or open more creation options for uploads, imports and AI."
         />
       ) : view === "list" ? (
         <div className="space-y-2">
@@ -188,7 +197,6 @@ export default function ProjectsPage() {
                     <h3 className="truncate leading-tight font-medium">
                       {p.name}
                     </h3>
-                    <EngineBadge engine={p.videoEngine} />
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">{p.sceneCount} scenes</Badge>
@@ -228,9 +236,6 @@ export default function ProjectsPage() {
               <CardContent className="flex flex-1 flex-col gap-3 p-4">
                 <div className="from-primary/15 to-secondary text-primary relative flex aspect-video items-center justify-center rounded-lg bg-gradient-to-br">
                   <FileVideo className="size-7" />
-                  <div className="absolute top-2 left-2">
-                    <EngineBadge engine={p.videoEngine} />
-                  </div>
                 </div>
                 <div className="flex-1">
                   <h3 className="line-clamp-2 text-sm leading-tight font-medium">

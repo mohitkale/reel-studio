@@ -162,4 +162,6 @@ M10 merged after successful latest-head Linux/Windows checks: [PR #39](https://g
 
 M11 merged after successful latest-head Linux/Windows checks: [PR #40](https://github.com/mohitkale/reel-studio/pull/40), merge `617f43a`. Local `main` was refreshed and verified before M12. Its fifteen treatments and actual export evidence are in [MOTION_LIBRARY.md](MOTION_LIBRARY.md).
 
-M12 is in progress on `feature/review-m12-director`. Its source-grounded planner, constrained direction, bounded review repair and actual portrait/landscape evidence are in [DIRECTOR_PIPELINE.md](DIRECTOR_PIPELINE.md). Release publication has not started.
+M12 merged after passing latest-head Linux/Windows checks: [PR #41](https://github.com/mohitkale/reel-studio/pull/41), merge `f13308d`. All 833 final-head local tests, real exports and measured repair recapture passed. Local `main` was refreshed and verified before M13. Its source-grounded planner, constrained direction, bounded review repair and actual portrait/landscape evidence are in [DIRECTOR_PIPELINE.md](DIRECTOR_PIPELINE.md). Release publication has not started.
+
+M13 is in progress on `feature/review-m13-creation-ux`. Its prompt-first home, result/remix flow, responsive editor timeline, README formatting and actual three-format browser evidence are recorded in [CREATION_UX.md](CREATION_UX.md).

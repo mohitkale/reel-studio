@@ -68,6 +68,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { SceneTimeline } from "@/components/editor/scene-timeline";
 import { SceneList } from "@/components/editor/scene-list";
 import { SceneInspector } from "@/components/editor/scene-inspector";
 import { MotionDirectionMenu } from "@/components/editor/motion-direction-menu";
@@ -76,7 +77,6 @@ import {
   EnginePlayer,
   type EnginePlayerHandle,
 } from "@/components/editor/engine-player";
-import { EngineBadge } from "@/components/engines/engine-badge";
 import { VoiceoverPanel } from "@/components/editor/voiceover-panel";
 import { AIEnhanceDialog } from "@/components/editor/ai-enhance-dialog";
 import { ScenesJsonDialog } from "@/components/editor/scenes-json-dialog";
@@ -453,8 +453,8 @@ export function EditorClient({
 
   return (
     <div className="space-y-6">
-      <QuickProduceStatus jobId={productionJobId} scriptId={scriptId} />
-      <div className="flex items-center justify-between gap-3">
+      <QuickProduceStatus jobId={productionJobId} scriptId={scriptId} showPreview={false} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link
             href="/"
@@ -472,7 +472,7 @@ export function EditorClient({
               <h2 className="text-lg leading-tight font-semibold">
                 {script.name}
               </h2>
-              <EngineBadge engine={videoEngine} size="lg" />
+
             </div>
             <p className="text-muted-foreground text-xs">
               {scenes.length} scenes · {script.fps} fps
@@ -480,7 +480,10 @@ export function EditorClient({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <Button disabled={createRender.isPending || !scenes.length} onClick={() => queueRender()}><Video className="size-4" /> Export MP4</Button>
+        <details className="w-full rounded-lg border p-3">
+          <summary className="cursor-pointer text-sm font-medium">Customize video</summary>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <HintTooltip
             label="Brand kit: colors and @handle on every scene. Star a kit on Brand Kits to make it the default for new projects."
             side="bottom"
@@ -880,7 +883,9 @@ export function EditorClient({
             </DropdownMenu>
           </div>
         </div>
+        </details>
       </div>
+      <SceneTimeline scenes={scenes} timeline={timeline} fps={fps} selectedId={effectiveSceneId} onSelect={selectScene} onMove={handleMove} busy={sceneBusy} measured={takeUsable} />
 
       {/* The center column (player) defines the row height; the side panels are
           stretched to match it and scroll internally. Their content is absolutely

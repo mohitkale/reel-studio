@@ -25,15 +25,9 @@ unless you explicitly enable a cloud provider.
 > GSAP has a separate standard license; optional models/media retain their terms. See
 > [Licensing](#licensing-summary) and [docs/LICENSING.md](docs/LICENSING.md).
 
-<p align="center">
-  <img
-    src="docs/assets/reel-studio-editor.png"
-    alt="Reel Studio editor showing scenes, video preview, voice controls and render options"
-    width="1000"
-  />
-</p>
+![Prompt-first creation with six visual presets](docs/assets/reel-studio-home.png)
 
-![Reel Studio demo](docs/assets/script-to-video.gif)
+![Finished video with verified download and remix controls](docs/assets/reel-studio-result.png)
 
 If Reel Studio helps your workflow, star the repository and tell us which
 template or voice provider you want next.
@@ -57,7 +51,7 @@ The 0.4 roadmap contained 28 numbered tasks. The implemented release includes:
   timestamp-grounded audiogram selection
 - persistent production jobs, REST/MCP production interfaces, scoped tokens,
   format variants, partial-failure batches, diagnostics, and bundled examples
-- an off-by-default Quick Produce path that freezes an immutable submitted
+- a prompt-first Generate path that freezes an immutable submitted
   revision, runs the same durable stages, reconnects after refresh/restart, and
   leaves the editable project independent of its completed output
 
@@ -105,18 +99,31 @@ Reel Studio is designed for:
 - Teams experimenting with AI-assisted content production
 - AI-agent users who want to generate videos and podcasts through MCP
 
-## From idea to video
+## From text to a finished video
 
-1. Choose video, voiceover, podcast, or audiogram
-2. Paste a brief or script, import a public page, or upload local media
-3. Choose one of six production presets, a brand kit, voice, and canvas
-4. Review the deterministic or AI-assisted draft and lock approved material
-5. Produce locally and download verified media, captions, and transcripts
+1. Paste your script or a few clear ideas on the home page.
+2. Choose a visual preset and portrait, landscape, or square format.
+3. Select **Generate**. The default uses your supplied text, local rendering,
+   animated backgrounds and no paid planner calls; narration is off.
+4. Watch progress on the result page, play the completed video, and select
+   **Download MP4**. Refreshing the result URL reconnects to the saved job.
+5. Select **Edit video** to change scenes, brand, narration or captions. The
+   timeline selects preview positions and saves scene reordering. Open
+   **Customize video** for detailed controls and export options.
+6. Open **Remix this video** to reuse the text with another preset or format.
+
+**More creation options** contains the guided import/upload workflow, blank
+projects and optional AI planning. For configured local narration, expand
+**Narration options** before generation or add voice in the editor. Preset
+thumbnails are first-shot examples rendered by the same composition compiler;
+your copy and brand determine the resulting scenes. Regenerate the six preview
+images with `npm run preset:previews` using installed Chrome.
 
 ### Quick Produce
 
-Create with AI includes an explicit **Quick Produce** toggle. It is off by
-default. When enabled, Reel Studio saves the editable project, freezes an
+**More creation options → Create with AI** also includes an explicit
+**Quick Produce** toggle. That advanced dialog toggle is off by default.
+When enabled, Reel Studio saves the editable project, freezes an
 immutable production revision, and immediately queues the normal durable video
 pipeline. The no-key option uses the deterministic planner, stock-free fallback,
 and server-side Kokoro voice; Ollama, LM Studio, Gemini, OpenAI, and configured
@@ -260,7 +267,9 @@ seeded HyperFrames demo or Kokoro voices. Open **Gallery** for bundled examples,
 or run `npm run sample:export` for a credential-free local MP4. Run
 `npm run doctor` whenever you want to verify the production runtime.
 
-Quick Produce uses server-side Kokoro by default. Its Apache-2.0 model weights
+The advanced Create with AI Quick Produce toggle uses server-side Kokoro by
+default; the prompt-first home starts with narration off.
+Kokoro’s Apache-2.0 model weights
 are fetched and cached by `kokoro-js` on first synthesis if they are not already
 present; choose voice off or a configured server-capable provider when that
 first-use download is unsuitable.
@@ -541,7 +550,7 @@ Stack: Next.js App Router, TypeScript, Prisma + SQLite, HyperFrames, TanStack Qu
 | `npm run doctor`                              | Check the local production runtime          |
 | `npm run sample:export`                       | Render a credential-free sample MP4         |
 | `npm run release:check`                       | Run the fast 0.4 release contract checks    |
-| `npm run release:matrix`                      | Render all 36 preset/engine/format outputs  |
+| `npm run release:matrix`                      | Render the six presets in three formats     |
 | `npm run dev`                                 | Start supervised dev web + worker           |
 | `npm run build` / `start`                     | Build / run supervised production services  |
 | `npm run production:worker`                   | Continuously process the persistent queue   |
@@ -565,16 +574,18 @@ providers: `DATABASE_URL` (created by setup).
 
 ## Licensing summary
 
-| Component                                                            | Terms                              |
-| -------------------------------------------------------------------- | ---------------------------------- |
-| Reel Studio app, templates, MCP code                                 | **MIT**                            |
-| Bundled music (`public/music/`)                                      | **CC0**                            |
-| **HyperFrames**                                                      | **Apache-2.0**                     |
-| Kokoro model / kokoro-js                                              | Apache-2.0                         |
-| Phonemizer / embedded eSpeak NG                                       | Apache-2.0 wrapper / GPL-3.0 component |
-| GSAP                                                                 | Custom Standard License            |
-| Optional cloud providers                                             | Each vendor's terms                |
-| VoiceForge engines ([repo](https://github.com/mohitkale/voiceforge)) | Per-engine (may be non-commercial) |
+| Component                               | Terms                                    |
+| --------------------------------------- | ---------------------------------------- |
+| App code, templates and MCP             | MIT                                      |
+| Bundled music                           | CC0                                      |
+| HyperFrames                             | Apache-2.0                               |
+| Kokoro model and kokoro-js              | Apache-2.0                               |
+| Phonemizer wrapper / embedded eSpeak NG | Apache-2.0 / GPL-3.0 component           |
+| GSAP                                    | Custom Standard License                  |
+| Optional cloud providers                | Each vendor's terms                      |
+| VoiceForge engines                      | Per-engine; some restrict commercial use |
+
+[VoiceForge source](https://github.com/mohitkale/voiceforge).
 
 Full matrix: **[docs/LICENSING.md](docs/LICENSING.md)**.
 
