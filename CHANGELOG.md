@@ -4,17 +4,52 @@ All notable changes to Reel Studio are documented here.
 
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## Unreleased
+## 0.4.0 — 2026-10-03
 
-- Use HyperFrames for every live preview, MP4 export and podcast audiogram.
-- Remove Remotion/Three.js dependencies, compositions, player and Studio entry point.
-- Migrate existing engine/template values while preserving content, original audio,
-  historical exports and immutable revision provenance. Run `npm run db:migrate`
-  with the app stopped; the migration backs up recognized installations.
-- Update setup, authoring and licensing docs: application MIT, HyperFrames Apache-2.0,
-  GSAP and optional assets/models under their own terms.
+### Added
 
-## 0.4.0 - 2026-09-13
+- Prompt-first creation with six visual presets, downloadable results, remix,
+  mobile layouts and an editable scene timeline.
+- Versioned motion specifications, a deterministic compiler and sixteen authored
+  treatments with offline preview/export seeks, responsive copy and brand tokens.
+- Source-grounded deterministic direction and constrained AI direction over the
+  same schema, explicit paid-call budgets and bounded visual repair.
+- Typed llama.cpp server and motion-block registration alongside Ollama and LM
+  Studio; shared escaping, bounded queues and SSE helpers.
+
+### Changed
+
+- HyperFrames is the sole preview/export/audiogram engine. Existing projects
+  migrate safely; saved copy, media, original takes and historical exports remain.
+  New renders may look different from legacy Remotion outputs.
+- Exact compatible dependency upgrades, Node 24 LTS, Prisma 7 migration support,
+  Windows/Linux CI, local fonts/GSAP and current screenshots/documentation.
+- Editor voice/render operations use durable SQLite jobs with reconnect, explicit
+  retry, cancellation, lease recovery and current revision checks.
+- Measured provider word timing is retained; estimated captions remain labeled.
+  Kokoro narration is chunked against the tokenizer and globally serialized.
+
+### Security and reliability
+
+- Loopback binding, raw Host validation, authenticated reads/media/progress,
+  strict bearer enforcement, expression-free Lottie and safe key persistence.
+- Bounded request/media IO, streaming checksums, DNS-pinned export staging,
+  portable process-tree cancellation and framing protections.
+- Reduced polling queries, verified SQLite WAL/busy handling, bounded progress
+  writes and healthy-uptime supervisor recovery.
+- Replaced the opaque phonemizer binary with a pinned source-built engine;
+  corresponding source and component notices accompany the release.
+- Component licenses remain distinct: MIT application, Apache HyperFrames,
+  GPL eSpeak phonemizer, custom GSAP and optional model/media terms.
+
+See [upgrade/release notes](docs/RELEASE_0.4.0.md),
+[current evidence](docs/production/RELEASE_VALIDATION.md) and
+[component licenses](docs/LICENSING.md).
+
+## Historical 0.4 preparation — 2026-09-13
+
+This was internal pre-release work, not a published GitHub v0.4.0 release.
+The dual-engine descriptions below record that earlier implementation.
 
 ### Added
 

@@ -51,3 +51,22 @@ it("resolves legacy brand fonts and freezes unknown host-dependent faces", () =>
   expect(hyperframesBrandFont("Georgia, serif")).toBe("EB Garamond");
   expect(hyperframesBrandFont("Missing Custom Font, Arial")).toBe("Geist");
 });
+
+it("keeps monospace preset labels offline on hosts without macOS fonts", () => {
+  const html =
+    "<style>.label{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}</style><p>SFMono-Regular</p>";
+  const result = localizeHyperframesRenderFonts(html);
+  expect(result).toContain(
+    "font-family:ui-monospace,Geist Mono,Geist Mono,monospace",
+  );
+  expect(result).toContain("<p>SFMono-Regular</p>");
+});
+
+// The compiler inspects fallback families too; Segoe UI maps to remote Roboto upstream.
+it("localizes the OS fallback that otherwise triggers a compiler font fetch", () => {
+  const html = localizeHyperframesRenderFonts(
+    '<html><head><style>body{font-family:Geist,"Segoe UI",sans-serif}</style></head><body>Segoe UI copy</body></html>',
+  );
+  expect(html).toContain('font-family:Geist,"Inter",sans-serif');
+  expect(html).toContain("Segoe UI copy");
+});

@@ -5,3 +5,5 @@ out
 coverage
 *.lock
 package-lock.json
+
+vendor/phonemizer/engine.js

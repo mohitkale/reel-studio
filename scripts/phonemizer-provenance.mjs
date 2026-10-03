@@ -67,11 +67,25 @@ await fs.cp(
   path.join(output, "reel-studio/vendor/phonemizer"),
   { recursive: true, filter: (file) => !file.endsWith("engine.js") },
 );
-for (const file of ["build-phonemizer.sh", "phonemizer-provenance.mjs"])
+for (const file of [
+  "build-phonemizer.sh",
+  "phonemizer-provenance.mjs",
+  "verify-phonemizer.mjs",
+])
   await fs.copyFile(
     `scripts/${file}`,
     path.join(output, "reel-studio/scripts", file),
   );
+await fs.mkdir(path.join(output, "reel-studio/tests/fixtures/release-v030"), {
+  recursive: true,
+});
+await fs.copyFile(
+  "tests/fixtures/release-v030/phonemizer-1.2.1.json",
+  path.join(
+    output,
+    "reel-studio/tests/fixtures/release-v030/phonemizer-1.2.1.json",
+  ),
+);
 // Include the compiler runtime/library sources that are embedded in the engine.
 for (const directory of ["src", "system/lib", "system/include"]) {
   await fs.cp(

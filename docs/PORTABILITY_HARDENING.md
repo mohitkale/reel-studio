@@ -125,3 +125,23 @@ rather than expecting Windows force-kill to execute POSIX signal handlers. The
 24-scene SQLite restoration test has a scoped 20-second integration timeout.
 Its 49 focused tests pass locally; replacement latest-head platform CI remains
 the merge gate. CI skips optional CUDA libraries for the CPU-only Kokoro path.
+
+## M15 advisory refresh (2026-10-03)
+
+A fresh locked install reports 12 high package findings in the full audit and
+7 high in `npm audit --omit=dev`; no critical findings are reported. Parent
+propagation is included. The seven runtime findings and their reachability are
+unchanged from the table above. An additional five development findings propagate
+from braces 3.0.3 through micromatch → fast-glob → Next's ESLint plugin/config.
+The [current upstream advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
+reports stack exhaustion from deeply nested glob patterns and no patched version.
+The installed plugin reads maintained local ESLint root-directory globs; HTTP
+content and uploaded project/media inputs are not passed to that lint path.
+Do not apply npm's proposed Next 14 or Prisma 6 downgrade to silence the audit.
+The findings remain documented and must be reassessed if these paths change.
+
+M15 replaces the opaque phonemizer engine with the source-built GPL-3.0-or-later
+component in `vendor/phonemizer`; exact compiler/source/output hashes, complete
+notices and corresponding-source provision are documented in [LICENSING.md](LICENSING.md).
+The original wrapper metadata is historical and does not describe the installed
+replacement. This changes no model-weight license and installs no local compiler.

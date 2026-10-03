@@ -1,6 +1,17 @@
 import assert from "node:assert/strict";
 import { promises as fs } from "node:fs";
-import { phonemize, list_voices } from "../vendor/phonemizer/index.js";
+import { createRequire } from "node:module";
+import { pathToFileURL } from "node:url";
+const installed = process.argv.includes("--built-source")
+  ? "vendor/phonemizer/index.js"
+  : createRequire(createRequire(import.meta.url).resolve("kokoro-js")).resolve(
+      "phonemizer",
+    );
+assert.equal(
+  await fs.realpath(installed),
+  await fs.realpath("vendor/phonemizer/index.js"),
+);
+const { phonemize, list_voices } = await import(pathToFileURL(installed).href);
 const golden = JSON.parse(
   await fs.readFile(
     "tests/fixtures/release-v030/phonemizer-1.2.1.json",

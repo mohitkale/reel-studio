@@ -11,8 +11,7 @@ import dataStoryFixture from "../tests/fixtures/data-story-reel.json";
 import developerDemoFixture from "../tests/fixtures/developer-demo-reel.json";
 import cinematicBrandFixture from "../tests/fixtures/cinematic-brand-reel.json";
 import type { ReelProps } from "../src/video/types";
-import { buildHyperframesCompositionHtml } from "../src/engines/hyperframes/build-composition";
-import { copyHyperframesRuntime } from "../src/library/hyperframes-runtime";
+import { writeHyperframesProject } from "../src/library/hyperframes-render";
 import releaseBriefs from "../tests/fixtures/release-briefs.json";
 import { applyReleaseBriefToFixture } from "./release-brief-fixture";
 import {
@@ -657,16 +656,7 @@ async function main() {
         await copyFile(path.resolve("public", cue.url), target);
       }
     }
-    const runtime = path.join(project, "_runtime");
-    await mkdir(runtime, { recursive: true });
-    await copyHyperframesRuntime(runtime);
-    await writeFile(
-      path.join(project, "index.html"),
-      buildHyperframesCompositionHtml(engineProps, {
-        producerMode: true,
-        runtimeUrl: "/_runtime/gsap.min.js",
-      }),
-    );
+    await writeHyperframesProject(project, engineProps);
     const result = await run(
       process.execPath,
       ["scripts/hyperframes-render-worker.mjs", project, mp4, "30", "draft"],

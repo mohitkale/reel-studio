@@ -1,0 +1,8 @@
+{
+  "tag": "v0.3.0",
+  "commit": "3bd458296a0e5ad367f6c1122b064fddf6ff9c2f",
+  "schemaPath": "prisma/schema.prisma",
+  "sourceSchemaSha256": "67c8283791d65b581c4552a59f3390853671e253e32e8350dd819729048a57cb",
+  "sqlSha256": "5c1906cb5f6e3aa014670a0d96b718668fab83ee2bc657b2e1efe0556eccdf0b",
+  "conversion": "Installed Prisma 7.10.0 migrate diff --from-empty; removed only datasource url to adapt old syntax."
+}

@@ -38,15 +38,16 @@ it("stages the real native catalog adapter without unused upstream data composit
       },
       "http://127.0.0.1:3000",
     );
-    expect(await readdir(path.join(directory, "compositions"))).toEqual([
-      "caption-kinetic-slam--kinetic.html",
-    ]);
+    expect(await readdir(path.join(directory, "compositions"))).toEqual([]);
     expect(
       await readFile(path.join(directory, "index.html"), "utf8"),
     ).toContain("72%");
     expect(
       await readFile(path.join(directory, "index.html"), "utf8"),
     ).not.toContain('data-composition-src="compositions/apple-money-count');
+    expect(
+      await readFile(path.join(directory, "index.html"), "utf8"),
+    ).not.toContain('data-composition-src="compositions/caption-kinetic-slam');
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

@@ -56,9 +56,10 @@ export function localizeHyperframesRenderFonts(
             "EB Garamond",
           )
           .replace(
-            /DM Sans|Poppins|Libre Franklin|Roboto|Montserrat|Open Sans/g,
+            /DM Sans|Poppins|Libre Franklin|Roboto|Montserrat|Open Sans|Segoe UI/g,
             "Inter",
           )
+          .replace(/SFMono-Regular|Menlo|Monaco|Consolas/g, "Geist Mono")
           .replace(/Anton|Impact/g, "Archivo Black"),
     );
   const withoutRemoteFonts = html

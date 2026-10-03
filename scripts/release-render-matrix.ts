@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { createReadStream } from "node:fs";
 import { cpus, platform, arch, totalmem } from "node:os";
 import {
   existsSync,
@@ -28,7 +29,7 @@ function probe(filename: string) {
         "-v",
         "error",
         "-show_entries",
-        "stream=codec_name,width,height",
+        "stream=codec_name,codec_type,width,height",
         "-show_entries",
         "format=duration",
         "-of",
@@ -38,99 +39,136 @@ function probe(filename: string) {
       { encoding: "utf8" },
     ),
   ) as {
-    streams: Array<{ codec_name: string; width?: number; height?: number }>;
+    streams: Array<{
+      codec_name: string;
+      codec_type: string;
+      width?: number;
+      height?: number;
+    }>;
     format: { duration: string };
   };
 }
 
-for (const presetId of PRODUCTION_PRESET_IDS) {
-  for (const [briefIndex, brief] of releaseBriefs[presetId].entries()) {
-    const orientation = ORIENTATIONS[briefIndex];
-    const combinationStarted = Date.now();
-    console.log(
-      `\n→ ${presetId} · brief ${briefIndex + 1} · ${orientation} · HyperFrames`,
-    );
-    const filenames = (["hyperframes"] as const).map((engine) =>
-      path.join(
-        root,
-        ".artifacts",
-        "render-regression",
-        presetId,
-        `brief-${briefIndex + 1}`,
-        orientation,
-        `${engine}.mp4`,
-      ),
-    );
-    if (resume && filenames.every(existsSync)) {
-      console.log("  ↳ reusing completed local artifacts");
-    } else {
-      execFileSync(
-        process.execPath,
-        [
-          tsxCli,
-          "scripts/render-regression.ts",
-          `--preset=${presetId}`,
-          `--brief-index=${briefIndex}`,
-          `--orientation=${orientation}`,
-        ],
-        { cwd: root, stdio: "inherit", timeout: 12 * 60 * 1_000 },
+async function main() {
+  for (const presetId of PRODUCTION_PRESET_IDS) {
+    for (const [briefIndex, brief] of releaseBriefs[presetId].entries()) {
+      const orientation = ORIENTATIONS[briefIndex];
+      const combinationStarted = Date.now();
+      console.log(
+        `\n→ ${presetId} · brief ${briefIndex + 1} · ${orientation} · HyperFrames`,
       );
-    }
-    const expected = dimsFor(orientation);
-    for (const [engineIndex, engine] of ["hyperframes"].entries()) {
-      const filename = filenames[engineIndex];
-      const metadata = probe(filename);
-      const video = metadata.streams.find(
-        (stream) => stream.codec_name === "h264",
+      const filenames = (["hyperframes"] as const).map((engine) =>
+        path.join(
+          root,
+          ".artifacts",
+          "render-regression",
+          presetId,
+          `brief-${briefIndex + 1}`,
+          orientation,
+          `${engine}.mp4`,
+        ),
       );
-      if (video?.width !== expected.width || video.height !== expected.height) {
-        throw new Error(
-          `${presetId}/${orientation}/${engine}: dimensions drifted`,
+      if (resume && filenames.every(existsSync)) {
+        console.log("  ↳ reusing completed local artifacts");
+      } else {
+        execFileSync(
+          process.execPath,
+          [
+            tsxCli,
+            "scripts/render-regression.ts",
+            `--preset=${presetId}`,
+            `--brief-index=${briefIndex}`,
+            `--orientation=${orientation}`,
+          ],
+          { cwd: root, stdio: "inherit", timeout: 12 * 60 * 1_000 },
         );
       }
-      results.push({
-        presetId,
-        briefIndex: briefIndex + 1,
-        brief,
-        briefHash: createHash("sha256").update(brief).digest("hex"),
-        orientation,
-        engine,
-        width: video.width,
-        height: video.height,
-        durationSeconds: Number(metadata.format.duration),
-        bytes: statSync(filename).size,
-        artifactModifiedAt: statSync(filename).mtime.toISOString(),
-        artifact: path.relative(root, filename),
-        combinationElapsedSeconds: Number(
-          ((Date.now() - combinationStarted) / 1_000).toFixed(1),
-        ),
-      });
+      const expected = dimsFor(orientation);
+      for (const [engineIndex, engine] of ["hyperframes"].entries()) {
+        const filename = filenames[engineIndex];
+        const metadata = probe(filename);
+        const video = metadata.streams.find(
+          (stream) => stream.codec_name === "h264",
+        );
+        if (
+          video?.width !== expected.width ||
+          video.height !== expected.height
+        ) {
+          throw new Error(
+            `${presetId}/${orientation}/${engine}: dimensions drifted`,
+          );
+        }
+        const hash = createHash("sha256");
+        for await (const chunk of createReadStream(filename))
+          hash.update(chunk);
+        const frame = filename.replace(/\.mp4$/, "-release-frame.png");
+        execFileSync("ffmpeg", [
+          "-v",
+          "error",
+          "-ss",
+          "1",
+          "-i",
+          filename,
+          "-frames:v",
+          "1",
+          "-vf",
+          "scale=480:-2",
+          "-y",
+          frame,
+        ]);
+        results.push({
+          presetId,
+          briefIndex: briefIndex + 1,
+          brief,
+          briefHash: createHash("sha256").update(brief).digest("hex"),
+          orientation,
+          engine,
+          width: video.width,
+          height: video.height,
+          durationSeconds: Number(metadata.format.duration),
+          bytes: statSync(filename).size,
+          sha256: hash.digest("hex"),
+          audioCodecs: metadata.streams
+            .filter((stream) => stream.codec_type === "audio")
+            .map((stream) => stream.codec_name),
+          exportedFrame: path.relative(root, frame),
+          artifactModifiedAt: statSync(filename).mtime.toISOString(),
+          artifact: path.relative(root, filename),
+          combinationElapsedSeconds: Number(
+            ((Date.now() - combinationStarted) / 1_000).toFixed(1),
+          ),
+        });
+      }
     }
   }
-}
 
-const report = {
-  version: 2,
-  startedAt: startedAt.toISOString(),
-  completedAt: new Date().toISOString(),
-  elapsedSeconds: Number(
-    ((Date.now() - startedAt.getTime()) / 1_000).toFixed(1),
-  ),
-  environment: {
-    resumedFromExistingArtifacts: resume,
-    platform: platform(),
-    architecture: arch(),
-    cpu: cpus()[0]?.model ?? "unknown",
-    logicalCpus: cpus().length,
-    memoryGiB: Number((totalmem() / 1024 ** 3).toFixed(1)),
-    node: process.version,
-    packageVersion: JSON.parse(readFileSync("package.json", "utf8")).version,
-  },
-  outputs: results,
-};
-const reportDir = path.join(root, ".artifacts", "release-matrix");
-mkdirSync(reportDir, { recursive: true });
-const reportPath = path.join(reportDir, "report.json");
-writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`);
-console.log(`\n✓ ${results.length} release renders verified`);
-console.log(`✓ Performance report: ${reportPath}`);
+  const report = {
+    version: 3,
+    startedAt: startedAt.toISOString(),
+    completedAt: new Date().toISOString(),
+    elapsedSeconds: Number(
+      ((Date.now() - startedAt.getTime()) / 1_000).toFixed(1),
+    ),
+    environment: {
+      resumedFromExistingArtifacts: resume,
+      platform: platform(),
+      architecture: arch(),
+      cpu: cpus()[0]?.model ?? "unknown",
+      logicalCpus: cpus().length,
+      memoryGiB: Number((totalmem() / 1024 ** 3).toFixed(1)),
+      node: process.version,
+      packageVersion: JSON.parse(readFileSync("package.json", "utf8")).version,
+    },
+    outputs: results,
+  };
+  const reportDir = path.join(root, ".artifacts", "release-matrix");
+  mkdirSync(reportDir, { recursive: true });
+  const reportPath = path.join(reportDir, "report.json");
+  writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+  console.log(`\n✓ ${results.length} release renders verified`);
+  console.log(`✓ Performance report: ${reportPath}`);
+}
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
