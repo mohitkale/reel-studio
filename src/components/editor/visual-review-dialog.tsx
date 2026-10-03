@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import type { ScriptDTO } from "@/lib/dto";
 import type { VisualReviewResult } from "@/production/visual-review";
 
 export function VisualReviewDialog({
@@ -47,22 +48,25 @@ export function VisualReviewDialog({
       sourceKey: string;
       mode: "scene" | "transition";
       repairPasses: 0 | 1;
-    }) => ({
-      ...(await apiPost<{ review: VisualReviewResult }>(
-        `/api/scripts/${scriptId}/review`,
-        {
-          sceneIds: input.sceneIds,
-          samples: input.samples,
-          voiceTakeId,
-          mode: input.mode,
-          repairPasses: input.repairPasses,
-        },
-      )),
-      sourceKey: input.sourceKey,
-    }),
-    onSuccess: (data) => {
-      if (data.review.repair?.repairedSceneIds.length)
-        void queryClient.invalidateQueries({ queryKey: ["script", scriptId] });
+    }) => {
+      const result = await apiPost<{
+        review: VisualReviewResult;
+        script?: ScriptDTO;
+      }>(`/api/scripts/${scriptId}/review`, {
+        sceneIds: input.sceneIds,
+        samples: input.samples,
+        voiceTakeId,
+        mode: input.mode,
+        repairPasses: input.repairPasses,
+      });
+      if (result.script)
+        queryClient.setQueryData(["script", scriptId], result.script);
+      return {
+        review: result.review,
+        sourceKey: result.script
+          ? JSON.stringify([result.script, voiceTakeId ?? null])
+          : input.sourceKey,
+      };
     },
   });
   const current =
@@ -110,8 +114,14 @@ export function VisualReviewDialog({
             {review.isPending && <Loader2 className="size-3.5 animate-spin" />}
             Generate scene sheet
           </Button>
-          <Button size="sm" variant="outline" disabled={review.isPending || !selectedSceneId}
-            onClick={() => selectedSceneId && generate([selectedSceneId], 1, "scene", 1)}>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={review.isPending || !selectedSceneId}
+            onClick={() =>
+              selectedSceneId && generate([selectedSceneId], 1, "scene", 1)
+            }
+          >
             Review and fix selected layout
           </Button>
           <Button
@@ -145,9 +155,14 @@ export function VisualReviewDialog({
             <Smartphone className="size-3.5" /> Phone size
           </Button>
         </div>
-        {review.data?.review.repair && <p className="text-muted-foreground text-xs">
-          {review.data.review.repair.repairedSceneIds.length} layout(s) repaired in at most one pass; {review.data.review.repair.unresolved} findings remain. No paid calls. Copy, assets and voice timing are preserved. Review the refreshed preview.
-        </p>}
+        {review.data?.review.repair && (
+          <p className="text-muted-foreground text-xs">
+            {review.data.review.repair.repairedSceneIds.length} layout(s)
+            repaired in at most one pass; {review.data.review.repair.unresolved}{" "}
+            findings remain. No paid calls. Copy, assets and voice timing are
+            preserved. Review the refreshed preview.
+          </p>
+        )}
         {scenes.length > 8 && (
           <div className="flex items-center gap-2 text-xs">
             <Button
@@ -191,6 +206,13 @@ export function VisualReviewDialog({
         )}
         {current && (
           <>
+            {current.repair && (
+              <p role="status" className="text-muted-foreground text-sm">
+                {current.repair.repairedSceneIds.length} layout(s) repaired ·{" "}
+                {current.repair.passesUsed}/1 pass · 0 paid calls ·{" "}
+                {current.repair.unresolved} remaining finding(s)
+              </p>
+            )}
             <p className="text-muted-foreground text-xs">
               {current.takeUsable
                 ? "Selected take timing"
