@@ -82,7 +82,8 @@ function checkReleaseMetadata() {
   };
   for (const [name, version] of Object.entries(dependencies)) {
     assert(
-      /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version),
+      (name === "phonemizer" && version === "file:vendor/phonemizer") ||
+        /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version),
       `${name} must use an exact version, found ${version}`,
     );
   }
@@ -98,6 +99,20 @@ function checkReleaseMetadata() {
       /(?:^|\/)node_modules\/(?:@remotion\/|remotion$)/.test(name),
     ),
     "Retired engine packages must not remain in the lockfile",
+  );
+
+  assert(
+    (pkg.overrides as Record<string, string>)?.phonemizer === "$phonemizer",
+    "phonemizer override drift",
+  );
+  const phonemizerLock = lockPackages["node_modules/phonemizer"] as {
+    resolved?: string;
+    link?: boolean;
+  };
+  assert(
+    phonemizerLock?.resolved === "vendor/phonemizer" &&
+      phonemizerLock.link === true,
+    "opaque registry phonemizer must not return",
   );
 
   const migrationCount = readdirSync(path.join(root, "prisma", "migrations"), {
@@ -126,80 +141,68 @@ function checkReleaseMetadata() {
   }
 
   const matrix = readJson("docs/production/RELEASE_MATRIX_0.4.0.json");
-  const matrixEnvironment = matrix.environment as
-    { packageVersion?: string } | undefined;
-  const outputs = matrix.outputs as
-    | Array<{ presetId?: string; orientation?: string; engine?: string }>
-    | undefined;
+  const environment = matrix.environment as {
+    packageVersion?: string;
+    resumedFromExistingArtifacts?: boolean;
+  };
+  const outputs = matrix.outputs as Array<{
+    presetId: string;
+    orientation: string;
+    engine: string;
+    briefIndex: number;
+    briefHash: string;
+    width: number;
+    height: number;
+    bytes: number;
+    sha256: string;
+    exportedFrame: string;
+  }>;
+  assert(matrix.version === 3, "expected current checksummed release evidence");
   assert(
-    matrixEnvironment?.packageVersion === EXPECTED_VERSION,
-    "release matrix package version drift",
+    environment.packageVersion === EXPECTED_VERSION,
+    "matrix version drift",
   );
-  assert(outputs?.length === 36, "expected 36 published release renders");
+  assert(
+    environment.resumedFromExistingArtifacts === false,
+    "release matrix must contain fresh exports",
+  );
+  assert(outputs.length === 18, "expected 18 current HyperFrames outputs");
   assert(
     new Set(
       outputs.map(
         (output) => `${output.presetId}/${output.orientation}/${output.engine}`,
       ),
-    ).size === 36,
-    "published 0.4 matrix contains duplicate or missing combinations",
+    ).size === 18,
+    "duplicate release combinations",
   );
-
-  const briefMatrix = readJson(
-    "docs/production/LOCAL_FIRST_PR2_RENDER_MATRIX.json",
-  );
-  const briefEnvironment = briefMatrix.environment as
-    { packageVersion?: string } | undefined;
-  const entries = briefMatrix.entries as
-    | Array<{
-        presetId?: string;
-        orientation?: string;
-        briefIndex?: number;
-        briefHash?: string;
-        width?: number;
-        height?: number;
-        engines?: { hyperframes?: number };
-      }>
-    | undefined;
-  assert(
-    briefEnvironment?.packageVersion === EXPECTED_VERSION,
-    "three-brief matrix package version drift",
-  );
-  assert(entries?.length === 18, "expected 18 three-brief matrix entries");
   for (const presetId of PRODUCTION_PRESET_IDS) {
-    const presetEntries = entries.filter(
-      (entry) => entry.presetId === presetId,
-    );
-    assert(
-      presetEntries.length === 3,
-      `${presetId} needs three rendered briefs`,
-    );
-    assert(
-      new Set(presetEntries.map((entry) => entry.briefHash)).size === 3,
-      `${presetId} needs three distinct rendered briefs`,
-    );
-    assert(
-      new Set(presetEntries.map((entry) => entry.orientation)).size === 3,
-      `${presetId} needs all three orientations`,
-    );
-    for (const [briefIndex, brief] of releaseBriefs[presetId].entries()) {
-      const entry = presetEntries.find(
-        (candidate) => candidate.briefIndex === briefIndex + 1,
+    for (const [index, brief] of releaseBriefs[presetId].entries()) {
+      const orientation = ORIENTATIONS[index];
+      const output = outputs.find(
+        (value) =>
+          value.presetId === presetId && value.orientation === orientation,
       );
-      assert(entry, `${presetId} brief ${briefIndex + 1} is missing`);
-      const expectedDimensions = dimsFor(ORIENTATIONS[briefIndex]);
+      assert(output, `${presetId}/${orientation} missing`);
+      const dimensions = dimsFor(orientation);
       assert(
-        entry.briefHash === createHash("sha256").update(brief).digest("hex"),
-        `${presetId} brief ${briefIndex + 1} hash drifted`,
+        output.engine === "hyperframes",
+        "retired engine evidence cannot fulfill current release",
       );
       assert(
-        entry.width === expectedDimensions.width &&
-          entry.height === expectedDimensions.height,
-        `${presetId} brief ${briefIndex + 1} dimensions drifted`,
+        output.briefIndex === index + 1 &&
+          output.briefHash === createHash("sha256").update(brief).digest("hex"),
+        "rendered brief drift",
       );
       assert(
-        Number(entry.engines?.hyperframes) > 10_000,
-        `${presetId} brief ${briefIndex + 1} needs a HyperFrames output`,
+        output.width === dimensions.width &&
+          output.height === dimensions.height,
+        "render dimensions drift",
+      );
+      assert(
+        output.bytes > 10000 &&
+          /^[a-f0-9]{64}$/.test(output.sha256) &&
+          output.exportedFrame.endsWith(".png"),
+        "missing export checksum/frame evidence",
       );
     }
   }
@@ -353,6 +356,10 @@ function checkGalleryArtifacts() {
 }
 
 function main() {
+  execFileSync(process.execPath, ["scripts/check-phonemizer-provenance.mjs"], {
+    stdio: "inherit",
+  });
+  console.log("✓ Source-built phonemizer hashes and component licenses");
   checkReleaseMetadata();
   const preset = checkPresetContracts();
   const compositions = checkOfflineCompositionMatrix();

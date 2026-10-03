@@ -286,7 +286,7 @@ async function runWorker(args: {
 }
 
 /** Write the same runtime, fonts, catalog and HTML used by export. */
-async function writeHyperframesProject(
+export async function writeHyperframesProject(
   projectDir: string,
   inputProps: ReelProps,
 ) {

@@ -53,6 +53,7 @@ jobs:
       - run: npm run test:unit -- --maxWorkers=2
       - run: npm run security:scan
       - run: node scripts/dependency-inventory.mjs > dependency-inventory.json
+      - run: npm run test:phonemizer
       - run: npm run release:check
       - run: npm run build
         env:

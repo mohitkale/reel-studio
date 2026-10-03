@@ -60,7 +60,9 @@
     "test:video-sections": "node --import tsx scripts/verify-video-sections.ts",
     "benchmark:long-videos": "node --import tsx scripts/benchmark-long-videos.ts",
     "preset:previews": "node --import tsx scripts/generate-preset-previews.mjs",
-    "test:extensions": "node --import tsx scripts/verify-extensions.mjs"
+    "test:extensions": "node --import tsx scripts/verify-extensions.mjs",
+    "test:phonemizer": "node scripts/verify-phonemizer.mjs",
+    "test:release-upgrade": "node scripts/verify-release-upgrade.mjs"
   },
   "dependencies": {
     "@fontsource-variable/geist": "5.3.0",
@@ -90,7 +92,8 @@
     "sonner": "2.0.8",
     "tailwind-merge": "3.7.0",
     "zod": "4.6.5",
-    "lottie-web": "5.13.0"
+    "lottie-web": "5.13.0",
+    "phonemizer": "file:vendor/phonemizer"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "1.31.0",
@@ -111,5 +114,8 @@
     "typescript": "6.0.3",
     "vite": "8.3.2",
     "vitest": "5.0.3"
+  },
+  "overrides": {
+    "phonemizer": "$phonemizer"
   }
 }

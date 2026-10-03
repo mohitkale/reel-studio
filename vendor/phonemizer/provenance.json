@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "source": {
+    "repository": "https://github.com/espeak-ng/espeak-ng",
+    "revision": "0dfd1d77dd7f96ef1ea6856c9fa5cfac01599582"
+  },
+  "compiler": {
+    "version": "3.1.30",
+    "emsdkRevision": "91f8563a9d1a4a0ec03bbb2be23485367d85a091",
+    "description": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 3.1.30 (cfe2bdfe2692457cb5f5770672f6e5ccb3ffc2f2)"
+  },
+  "files": {
+    "vendor/phonemizer/engine.js": "ebd8b37e0c2739a8dbe3a326e99e613e194a6963e8e6a1cff028e9a191a4f508",
+    "vendor/phonemizer/index.js": "4091264c860fceb60c85a3728abd80a15169a4d41b0b821e24b0781ee8bb3ba2",
+    "vendor/phonemizer/reel-phonemizer.c": "83ffe53bed96391130f72b107e09eb9c71bfa25dc133b5cface512138f734c3c",
+    "scripts/build-phonemizer.sh": "76dc2b65ada894925db5eba0b1b90d1d5348c9e686b3f821b921a98ad911f49f"
+  },
+  "data": "Built from the same pinned source; no model weights bundled"
+}

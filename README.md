@@ -7,22 +7,23 @@
 **Turn a brief, script, screenshot, recording, or podcast into finished local content.**
 
 Create Reels, Shorts, explainers, voiceovers, podcasts, and audiograms with a
-guided production flow, six production presets, optional AI, and local media
+prompt-first Generate flow, six visual presets, optional AI, and local media
 rendering. Use the built-in **MCP server** for bounded unattended production.
 
 Also supports Instagram, YouTube Shorts, TikTok, Facebook, X (Twitter), and
 other social formats in **9:16**, **16:9**, and **1:1**.
 
-> **Project status: local-first production release.** The credential-free path,
-> optional Quick Produce workflow, HyperFrames rendering, SQLite-backed jobs, and
-> the historical example matrix are release-tested. Provider
-> integrations remain optional and may evolve.
+> **Version 0.4.0.** Prompt-first creation, durable production and verified
+> source-built phonemization. Upgrade instructions and release checks are in
+> [upgrade notes](docs/RELEASE_0.4.0.md) and
+> [release validation](docs/production/RELEASE_VALIDATION.md).
 
 **MIT-licensed app. Local-first.** Projects and renders stay on your machine
 unless you explicitly enable a cloud provider.
 
 > App code is **MIT**. Preview and export use **HyperFrames** (Apache-2.0).
-> GSAP has a separate standard license; optional models/media retain their terms. See
+> The phonemizer includes a GPL eSpeak component. GSAP, models and media retain
+> their separate terms. See
 > [Licensing](#licensing-summary) and [docs/LICENSING.md](docs/LICENSING.md).
 
 ![Prompt-first creation with six visual presets](docs/assets/reel-studio-home.png)
@@ -36,7 +37,7 @@ template or voice provider you want next.
 
 ## Local-first release coverage
 
-The 0.4 roadmap contained 28 numbered tasks. The implemented release includes:
+The current implementation includes:
 
 - synchronized Node, Next.js, Prisma, HyperFrames, UI, and test
   dependency upgrades with fresh and populated-database migration checks
@@ -547,29 +548,31 @@ Stack: Next.js App Router, TypeScript, Prisma + SQLite, HyperFrames, TanStack Qu
 
 ## Available scripts
 
-| Script                                        | Purpose                                     |
-| --------------------------------------------- | ------------------------------------------- |
-| `npm run setup`                               | First-run setup (safe to re-run)            |
-| `npm run demo`                                | Setup + start dev server                    |
-| `npm run doctor`                              | Check the local production runtime          |
-| `npm run sample:export`                       | Render a credential-free sample MP4         |
-| `npm run release:check`                       | Run the fast 0.4 release contract checks    |
-| `npm run release:matrix`                      | Render the six presets in three formats     |
-| `npm run dev`                                 | Start supervised dev web + worker           |
-| `npm run build` / `start`                     | Build / run supervised production services  |
-| `npm run production:worker`                   | Continuously process the persistent queue   |
-| `npm run lint` / `typecheck` / `test`         | Quality checks                              |
-| `npm run security:scan`                       | Secret pattern scan                         |
-| `npm run prepare:hooks`                       | Enable `.githooks`                          |
-| `npm run db:migrate`                          | Safely apply versioned database migrations  |
-| `npm run seed:gallery`                        | Install bundled examples into local media   |
-| `npm run seed:demo-project`                   | Seed HyperFrames demo reel                  |
-| `npm run seed:demo-podcast`                   | Seed short demo podcast                     |
-| `npm run test:podcast-audiogram -- <take-id>` | Render and verify a podcast-to-video sample |
-| `npm run seed:demo-brandkit`                  | Seed Coral Harbor brand kit                 |
-| `npm run seed:assets`                         | Sample SVG/Lottie assets                    |
-| `npm run sync:hf-catalog`                     | Sync the reviewed pinned HF catalog         |
-| `npm run mcp`                                 | MCP server                                  |
+| Script                                        | Purpose                                      |
+| --------------------------------------------- | -------------------------------------------- |
+| `npm run setup`                               | First-run setup (safe to re-run)             |
+| `npm run demo`                                | Setup + start dev server                     |
+| `npm run doctor`                              | Check the local production runtime           |
+| `npm run sample:export`                       | Render a credential-free sample MP4          |
+| `npm run release:check`                       | Run the fast 0.4 release contract checks     |
+| `npm run test:phonemizer`                     | Verify source-built engine compatibility     |
+| `npm run test:release-upgrade`                | Verify isolated v0.3 upgrade and fresh setup |
+| `npm run release:matrix`                      | Render the six presets in three formats      |
+| `npm run dev`                                 | Start supervised dev web + worker            |
+| `npm run build` / `start`                     | Build / run supervised production services   |
+| `npm run production:worker`                   | Continuously process the persistent queue    |
+| `npm run lint` / `typecheck` / `test`         | Quality checks                               |
+| `npm run security:scan`                       | Secret pattern scan                          |
+| `npm run prepare:hooks`                       | Enable `.githooks`                           |
+| `npm run db:migrate`                          | Safely apply versioned database migrations   |
+| `npm run seed:gallery`                        | Install bundled examples into local media    |
+| `npm run seed:demo-project`                   | Seed HyperFrames demo reel                   |
+| `npm run seed:demo-podcast`                   | Seed short demo podcast                      |
+| `npm run test:podcast-audiogram -- <take-id>` | Render and verify a podcast-to-video sample  |
+| `npm run seed:demo-brandkit`                  | Seed Coral Harbor brand kit                  |
+| `npm run seed:assets`                         | Sample SVG/Lottie assets                     |
+| `npm run sync:hf-catalog`                     | Sync the reviewed pinned HF catalog          |
+| `npm run mcp`                                 | MCP server                                   |
 
 ## Environment variables
 
@@ -578,20 +581,21 @@ providers: `DATABASE_URL` (created by setup).
 
 ## Licensing summary
 
-| Component                               | Terms                                    |
-| --------------------------------------- | ---------------------------------------- |
-| App code, templates and MCP             | MIT                                      |
-| Bundled music                           | CC0                                      |
-| HyperFrames                             | Apache-2.0                               |
-| Kokoro model and kokoro-js              | Apache-2.0                               |
-| Phonemizer wrapper / embedded eSpeak NG | Apache-2.0 / GPL-3.0 component           |
-| GSAP                                    | Custom Standard License                  |
-| Optional cloud providers                | Each vendor's terms                      |
-| VoiceForge engines                      | Per-engine; some restrict commercial use |
+| Component                   | Terms                                    |
+| --------------------------- | ---------------------------------------- |
+| App code, templates and MCP | MIT                                      |
+| Bundled music               | CC0                                      |
+| HyperFrames                 | Apache-2.0                               |
+| Kokoro model and kokoro-js  | Apache-2.0                               |
+| Source-built phonemizer     | MIT adapter / GPL-3.0-or-later engine    |
+| GSAP                        | Custom Standard License                  |
+| Optional cloud providers    | Each vendor's terms                      |
+| VoiceForge engines          | Per-engine; some restrict commercial use |
 
 [VoiceForge source](https://github.com/mohitkale/voiceforge).
 
-Full matrix: **[docs/LICENSING.md](docs/LICENSING.md)**.
+Full matrix: **[docs/LICENSING.md](docs/LICENSING.md)**. The release includes the
+phonemizer’s matching corresponding-source archive and component notices.
 
 ## More docs
 

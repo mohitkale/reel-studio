@@ -1,4 +1,76 @@
-# 0.4 release validation
+# 0.4.0 integrated release verification
+
+M15 validates the integrated M1–M14 implementation on 2026-10-03. The release
+PR must pass all latest-head Linux/Windows checks before merge; publication uses
+that exact merged commit after refreshing local `main`.
+
+[Machine-readable integrated evidence](RELEASE_ACCEPTANCE_0.4.0.json) preserves
+the fixture checks, output hashes and measured retry results.
+
+## Current acceptance evidence
+
+| Gate                   | Result                                                                                                                                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fresh locked install   | `npm ci`, Node 24.18.1; verified local phonemizer override, no new local compiler                                                                                                              |
+| Published v0.3 upgrade | Actual published schema at `3bd4582`; 14 migrations, automatic backup/restore, saved copy/media/takes/exports and caption payloads preserved; isolated fresh setup passes                      |
+| Render matrix          | 18 **fresh** H.264 exports, six presets × portrait/landscape/square; 606.7 seconds, 39,349,995 bytes; dimensions, supplied brief hashes, output SHA-256 and actual exported keyframes verified |
+| Browser workflows      | Prompt → results/preview/download, editor reorder/voice/export, scoped MCP human approval, podcast WAV/MP3 and audiogram; desktop/mobile without overflow or console errors                    |
+| Long render/recovery   | 210 seconds, 5,040 frames at 24 fps, H.264/AAC; cancel after committed section, retry reuses it, next retry reuses all seven sections; identical MP4 checksum and decoded audio                |
+| Phonemizer             | Pinned source build on ephemeral Actions runner; committed provenance/notices and complete source archive; 26 phoneme cases/eight voices match in Node and offline browser                     |
+| Final quality          | 841-test full local suite plus final affected regressions, typecheck, lint, secret scan, release contract and production build; Linux/Windows latest-head CI is the merge gate                 |
+
+[Current render matrix](RELEASE_MATRIX_0.4.0.json) was generated at
+2026-10-03T10:28:30Z without resuming old artifacts. Actual exported frames were
+inspected; this found and fixed clipped kinetic titles/outros before the final
+matrix. The long fixture found unsupported monospace aliases, now normalized to
+bundled Geist Mono. The final long run uses one stable frozen cache key across
+cancellation and both retries. An earlier attempt missed reuse; the unchanged
+cache assertions then passed in isolated short and long reruns. The compiler
+also inspected the unused Segoe UI fallback as remote Roboto; that fallback now
+uses bundled Inter, avoiding a compiler font-network dependency. A fresh final
+210-second cancellation/retry rerun also passed after that normalization, with
+no compiler font-fetch log entries. Measurements
+are for this 16 GiB Intel workstation, not performance promises.
+
+The final long MP4 SHA-256 is
+`6d0bcade4fc9072dfc17ed5ab6c3a168667a470ea32e7cdbe19a804fbeaa89bf`;
+decoded audio RMS difference across retries is zero. The prompt-first browser
+MP4 is `90a79b081e49c11a00fb6e64aa23346f91fcae70d7065d7ecf7c8084a5da7aa3`;
+the scoped MCP export is
+`b25c1106e4019d0e98768b61708a2b289abf1aee5f39b9cd8b7ffbb6eaa992dc`.
+
+Voice integration uses a real loopback HTTP protocol fixture that returns labeled
+calibration audio. It proves durable jobs, download and muxing, **not live-model
+acoustic quality**. No paid calls or model downloads were used. Optional provider,
+GSAP, fonts, FFmpeg and model terms remain distinct; see [licensing](../LICENSING.md)
+and [current audit reachability](../PORTABILITY_HARDENING.md#m15-advisory-refresh-2026-10-03).
+
+Reproduce on the documented workstation runtime:
+
+```bash
+npm ci
+npm run test:phonemizer
+npm run test:release-upgrade
+npm run typecheck
+npm run lint
+npm test
+npm run security:scan
+npm run release:check
+npm run build
+npm run release:matrix
+npm run test:video-sections -- --long --cancel
+```
+
+The source archive additionally passes
+`node scripts/check-phonemizer-provenance.mjs --distribution`. The release assets
+include corresponding source, this matrix, reviewed keyframes and checksums;
+private configuration/user media are excluded. The published GitHub release
+records the exact tag target, platform CI and downloadable asset hashes.
+
+## Historical validation (September 2026)
+
+All results below predate M1–M15. They remain historical evidence; references
+to two engines or 36 outputs do not describe the current release.
 
 > Current renderer: HyperFrames only. Historical dual-engine results below are
 > retained as evidence; new commands accept `--engine=hyperframes`. Run
@@ -64,7 +136,7 @@ square canvases. It checks dimensions and decodability, writes MP4s under
 `.artifacts/render-regression/`, and records the selected brief and its SHA-256
 hash with hardware, elapsed time, duration, and file size in
 `.artifacts/release-matrix/report.json`. The original 0.4 report remains in
-[`RELEASE_MATRIX_0.4.0.json`](RELEASE_MATRIX_0.4.0.json); the corrected
+[`September matrix`](archive/RELEASE_MATRIX_0.4.0_SEPTEMBER.json); the corrected
 three-brief evidence is preserved in
 [`LOCAL_FIRST_PR2_RENDER_MATRIX.json`](LOCAL_FIRST_PR2_RENDER_MATRIX.json).
 

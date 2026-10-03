@@ -8,6 +8,8 @@ import {
 import { buildNativeCatalogVisual } from "@/engines/hyperframes/catalog/native-visuals";
 
 export const NATIVE_ONLY_BLOCKS = new Set([
+  "caption-kinetic-slam",
+  "logo-outro",
   "apple-money-count",
   "data-chart",
   "app-showcase",

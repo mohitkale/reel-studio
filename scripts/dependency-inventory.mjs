@@ -10,13 +10,19 @@ console.log(
       lockSha256: createHash("sha256").update(bytes).digest("hex"),
       packages: Object.entries(lock.packages)
         .filter(([location]) => location)
-        .map(([location, pkg]) => ({
-          location,
-          version: pkg.version,
-          license: pkg.license ?? "UNDECLARED",
-          dev: Boolean(pkg.dev),
-          optional: Boolean(pkg.optional),
-        })),
+        .map(([location, pkg]) => {
+          const metadata = pkg.link
+            ? (lock.packages[pkg.resolved] ?? pkg)
+            : pkg;
+          return {
+            location,
+            ...(pkg.link ? { linkedSource: pkg.resolved } : {}),
+            version: metadata.version,
+            license: metadata.license ?? "UNDECLARED",
+            dev: Boolean(pkg.dev),
+            optional: Boolean(pkg.optional),
+          };
+        }),
     },
     null,
     2,

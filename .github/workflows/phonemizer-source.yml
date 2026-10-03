@@ -1,0 +1,46 @@
+name: Phonemizer source build
+on:
+  pull_request:
+    paths:
+      - vendor/phonemizer/**
+      - scripts/*phonemizer*
+      - tests/fixtures/release-v030/phonemizer-1.2.1.json
+      - .github/workflows/phonemizer-source.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - name: Install build prerequisites on ephemeral runner
+        run: sudo apt-get update && sudo apt-get install -y autoconf automake libtool pkg-config
+      - name: Install pinned compiler on ephemeral runner
+        run: |
+          mkdir -p .artifacts
+          git clone https://github.com/emscripten-core/emsdk.git .artifacts/emsdk
+          git -C .artifacts/emsdk checkout --detach 91f8563a9d1a4a0ec03bbb2be23485367d85a091
+          .artifacts/emsdk/emsdk install 3.1.30
+          .artifacts/emsdk/emsdk activate 3.1.30
+      - name: Build pinned engine and corresponding source
+        run: |
+          export PHONEMIZER_NODE="$(command -v node)"
+          source .artifacts/emsdk/emsdk_env.sh
+          bash scripts/build-phonemizer.sh
+      - name: Smoke test actual engine
+        run: node scripts/verify-phonemizer.mjs --built-source
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: source-built-phonemizer
+          path: |
+            vendor/phonemizer/engine.js
+            vendor/phonemizer/provenance.json
+            vendor/phonemizer/COPYING*
+            .artifacts/reel-phonemizer-corresponding-source.tar.gz
