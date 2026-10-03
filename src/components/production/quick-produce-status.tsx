@@ -41,9 +41,11 @@ function shortRevision(value: string | null | undefined) {
 export function QuickProduceStatus({
   jobId,
   scriptId,
+  showPreview = true,
 }: {
   jobId: string | null;
   scriptId: string;
+  showPreview?: boolean;
 }) {
   const router = useRouter();
   const query = useProductionJob(jobId);
@@ -84,13 +86,14 @@ export function QuickProduceStatus({
     return (
       <Card>
         <CardContent className="text-muted-foreground flex items-center gap-2 p-4 text-sm">
-          <Loader2 className="size-4 animate-spin" /> Reconnecting to Quick
-          Produce…
+          <Loader2 className="size-4 animate-spin" /> Reconnecting to your
+          video…
         </CardContent>
       </Card>
     );
   }
   const job = query.data;
+  if (query.isError) return <p role="alert">{query.error.message}</p>;
   if (!job) return null;
   const active = ["queued", "running", "awaiting_approval"].includes(job.state);
 
@@ -100,28 +103,21 @@ export function QuickProduceStatus({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold">Quick Produce</p>
+              <p className="text-sm font-semibold">
+                {job.state === "succeeded"
+                  ? "Ready to download"
+                  : job.state === "failed"
+                    ? "Production failed"
+                    : job.state === "canceled"
+                      ? "Production canceled"
+                      : "Producing your video"}
+              </p>
               <Badge
                 variant={job.state === "failed" ? "destructive" : "outline"}
               >
                 {job.state.replaceAll("_", " ")}
               </Badge>
             </div>
-            <p className="text-muted-foreground mt-1 text-xs">
-              Durable job {job.id.slice(-10)} · submitted revision{" "}
-              <span className="font-mono">
-                {shortRevision(job.revision?.submittedHash)}
-              </span>
-              {job.revision?.currentHash ? (
-                <>
-                  {" "}
-                  · current{" "}
-                  <span className="font-mono">
-                    {shortRevision(job.revision.currentHash)}
-                  </span>
-                </>
-              ) : null}
-            </p>
           </div>
           <span className="text-sm font-medium">
             {Math.round(job.progress * 100)}%
@@ -135,20 +131,55 @@ export function QuickProduceStatus({
           />
         </div>
 
-        <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {STAGES.map(([key, label]) => {
-            const persisted = job.steps.find((step) => step.key === key);
-            return (
-              <li key={key} className="rounded-md border px-2.5 py-2 text-xs">
-                <span className="block font-medium">{label}</span>
-                <span className="text-muted-foreground">
-                  {persisted?.state ?? "queued"} ·{" "}
-                  {Math.round((persisted?.progress ?? 0) * 100)}%
+        {showPreview &&
+          job.state === "succeeded" &&
+          job.outputs.find((output) => output.format === "mp4") && (
+            <video
+              aria-label="Finished video"
+              controls
+              playsInline
+              preload="metadata"
+              className="mx-auto block max-h-[32rem] max-w-full rounded-lg bg-black"
+              src={
+                job.outputs.find((output) => output.format === "mp4")!
+                  .downloadUrl
+              }
+            />
+          )}
+        <details className="text-sm">
+          <summary className="cursor-pointer font-medium">
+            Production details
+          </summary>
+          <p className="text-muted-foreground mt-1 text-xs">
+            Durable job {job.id.slice(-10)} · submitted revision{" "}
+            <span className="font-mono">
+              {shortRevision(job.revision?.submittedHash)}
+            </span>
+            {job.revision?.currentHash ? (
+              <>
+                {" "}
+                · current{" "}
+                <span className="font-mono">
+                  {shortRevision(job.revision.currentHash)}
                 </span>
-              </li>
-            );
-          })}
-        </ol>
+              </>
+            ) : null}
+          </p>{" "}
+          <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {STAGES.map(([key, label]) => {
+              const persisted = job.steps.find((step) => step.key === key);
+              return (
+                <li key={key} className="rounded-md border px-2.5 py-2 text-xs">
+                  <span className="block font-medium">{label}</span>
+                  <span className="text-muted-foreground">
+                    {persisted?.state ?? "queued"} ·{" "}
+                    {Math.round((persisted?.progress ?? 0) * 100)}%
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </details>
 
         {job.revision?.conflict ? (
           <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm">

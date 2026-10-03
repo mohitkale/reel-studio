@@ -4,32 +4,24 @@ These four workflows use shipped fixtures or local providers. Run `npm run setup
 and `npm run dev` first. Open **Diagnostics** and resolve every required check;
 whisper.cpp may remain an optional warning.
 
-## 1. Product launch without a cloud key
+## 1. Text to MP4 without a key or model
 
-This proves the normal guided path from a supplied brief and screenshot to a
-portrait video.
+1. On the home page, paste: “Start with one clear idea. Show how it works.
+   Share the finished result.”
+2. Choose **Editorial Explainer** and **Portrait**. Leave narration off.
+3. Select **Generate**. The result page follows the durable job automatically.
+4. When **Ready to download** appears, play the video and select **Download MP4**.
+5. Refresh the result URL to confirm recovery, then choose **Edit video**.
+6. Select the second scene in **Timeline** and move it earlier. Preview the
+   changed order; open **Customize video** for brand, voice and caption controls.
+7. Return to the result and open **Remix this video**. Choose another format
+   and generate a separate result. The original submitted export stays intact.
 
-1. Open **Projects**, choose **Create production**, and select polished video.
-2. Paste this source content:
+The shipped defaults require no AI key, stock provider or voice model. To import
+an asset instead, expand **More creation options** and use **Create production**.
+For a bundled command-line render, run `npm run sample:export`.
 
-   > Release work should not disappear into status meetings. Orbit turns the
-   > plan, owner, and current proof into one reviewable timeline. Import the
-   > work, compare the change, and share one clean launch update.
-
-3. Upload the shipped `docs/assets/reel-studio-editor.png` as the visual asset.
-4. Choose **Product Launch**, **HyperFrames**, **Portrait**, the default brand
-   kit, and **One full take**. Build the deterministic draft.
-5. Review the hook, screenshot demo, feature, comparison, and CTA. In Voice,
-   create a **Silent placeholder**; create estimated captions if you do not have
-   an SRT/VTT file.
-6. Choose **Produce reel**, follow the job on **Renders**, approve it if the
-   current flow asks, and download the verified MP4.
-
-The result should be 1080×1920 H.264 with a placeholder audio track. The
-uploaded editor screenshot remains the source for the proof scene. For a
-one-command render of the bundled equivalent, run `npm run sample:export`.
-
-## 2. Exact data story in both engines and three formats
+## 2. Exact data story in three formats
 
 This fixture proves that chart labels, values, units, and source attribution are
 preserved while the layout reflows.
@@ -41,7 +33,7 @@ npm run test:render:data-story -- --orientation=square
 ```
 
 The source is `tests/fixtures/data-story-reel.json`. Inspect its structured
-`chart` fields, then compare the two engine outputs under
+`chart` fields, then inspect the HyperFrames outputs under
 `.artifacts/render-regression/data-story/`. Each MP4 must retain the supplied
 values and attribution. No value is inferred to fill a layout.
 
@@ -77,10 +69,10 @@ from the command line with a local take ID.
 This proves the off-by-default control, unattended durable stages, immutable
 revision reporting, and editable result without a cloud or stock key.
 
-1. Open **Projects**, choose **Create with AI**, and confirm **Quick Produce** is
+1. On the home page, expand **More creation options**, choose **Create with AI**, and confirm **Quick Produce** is
    initially off.
 2. Enable it, choose the **Deterministic (no key)** planner, set stock media to
-   **None**, select **Editorial Explainer**, **HyperFrames**, and **Portrait**.
+   **None**, select **Editorial Explainer** and **Portrait**.
 3. Use this brief: “Explain why immutable inputs make a local video pipeline
    easier to retry, inspect, and trust.” Choose **Create and produce**.
 4. The editor opens immediately. Follow the persisted plan, media, audio,

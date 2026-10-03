@@ -3,12 +3,19 @@
 Reel Studio's default path is designed to finish a useful production without
 per-scene setup:
 
-1. Open **Projects** and choose **Create production**.
-2. Choose a polished video or a voiceover-first video.
-3. Paste a script, brief, or public article URL. You can attach screenshots,
-   images, video, or audio.
-4. Choose a preset, engine, canvas, brand kit, and narration workflow.
-5. Review the generated draft, produce the voice, then render and download it.
+1. Paste your script or a few clear ideas on the home page.
+2. Choose one of the six visual presets and a format.
+3. Select **Generate** and follow the saved result page.
+4. Play the finished video and download the verified MP4.
+5. Choose **Edit video** for scene, narration and caption changes, or open
+   **Remix this video** to generate another preset/format from the same copy.
+
+Narration is off by default; no model or AI key is needed for the first export.
+Enable configured local Kokoro under **Narration options**, or add voice later.
+**More creation options** exposes the guided upload/import workflow, blank
+projects and optional AI planners. The editor's **Customize video** section
+contains detailed controls. Its timeline selects preview positions and saves
+scene reordering; timing labels distinguish narration from estimates.
 
 The deterministic planner works without an AI key. It keeps the complete source
 as narration and derives short display copy for readable scenes. AI planning is
@@ -43,8 +50,9 @@ used only when explicitly selected and configured.
 | Developer Demo      | Code, diff, terminal output, browser proof              | Browser screenshots and exact code excerpts  |
 | Cinematic Brand     | Brand idea, product story, attributed quote, logo close | High-resolution photography or video         |
 
-Reel Studio never invents chart values, testimonials, URLs, or product results.
-Supply structured data for a chart and attribution for a quote. Automatic
+The director admits numerical displays from supplied source values. Supply
+labeled data for a chart and attribution for a quote. Review claims and
+attribution in optional AI-generated narration before publishing. Automatic
 planning chooses a non-data layout when no values are available.
 
 ## Voice, captions, and podcasts
@@ -113,3 +121,6 @@ voice provider for material you intend to publish.
 Short-form launch validation covers videos up to three minutes and podcasts up
 to ten minutes. Existing longer projects remain editable, but they are outside
 the initial release acceptance matrix.
+
+See [the verified creation and editing walkthrough](CREATION_UX.md) for current
+desktop/mobile screenshots and the prompt-to-download acceptance evidence.
