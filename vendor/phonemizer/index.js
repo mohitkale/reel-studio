@@ -10,20 +10,21 @@ function engine() {
 export async function phonemize(text, language = "en-us") {
   if (typeof text !== "string") throw new TypeError("Expected text");
   const voices = await list_voices();
-  if (
-    !voices.some(
-      (voice) =>
-        voice.identifier === language ||
-        voice.languages.some((value) => value.name === language),
-    )
-  )
-    throw new Error("Unsupported English voice");
+  const matches = voices.flatMap((voice) =>
+    voice.languages
+      .filter((value) => value.name === language)
+      .map((value) => ({ voice, priority: value.priority })),
+  );
+  const selected =
+    voices.find((voice) => voice.identifier === language) ??
+    matches.toSorted((a, b) => a.priority - b.priority)[0]?.voice;
+  if (!selected) throw new Error("Unsupported English voice");
   const module = await engine();
   const pointer = module.ccall(
     "reel_phonemize",
     "number",
     ["string", "string"],
-    [text, language],
+    [text, selected.identifier],
   );
   if (!pointer)
     throw new Error(

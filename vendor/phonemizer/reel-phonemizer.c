@@ -17,7 +17,7 @@ char *reel_phonemize(const char *text, const char *voice) {
   FILE *output=tmpfile();
   if (!output) { last_error=3; return NULL; }
   espeak_SetSynthCallback(NULL);
-  espeak_SetPhonemeTrace(espeakPHONEMES_IPA | (' ' << 8), output);
+  espeak_SetPhonemeTrace(espeakPHONEMES_IPA, output);
   espeak_ERROR result=espeak_Synth(text, strlen(text)+1, 0, POS_CHARACTER,
       0, espeakCHARS_UTF8, NULL, NULL);
   espeak_SetPhonemeTrace(0, NULL);
