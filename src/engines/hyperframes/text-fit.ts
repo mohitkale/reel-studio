@@ -7,6 +7,21 @@ export function buildTextFitScript(): string {
     var canvas = document.createElement('canvas');
     var context = canvas.getContext('2d');
     if (!context) return;
+    document.querySelectorAll('[data-graph-text]').forEach(function (element) {
+      var initial = Number(element.dataset.graphFontSize);
+      var span = element.firstElementChild;
+      if (!span || !initial) return;
+      element.style.fontSize = initial + 'px';
+      for (var i = 0; i < 60; i++) {
+        var range = document.createRange(); range.selectNodeContents(span);
+        var bounds = range.getBoundingClientRect();
+        var box = element.getBoundingClientRect();
+        if (bounds.width <= box.width * .98 && bounds.height <= box.height * .95) break;
+        element.style.fontSize = Math.max(8, initial * Math.pow(.95, i + 1)) + 'px';
+      }
+      if (parseFloat(element.style.fontSize) < 22)
+        element.dataset.textFitWarning = 'Split this copy into shorter scenes for readable text.';
+    });
     document.querySelectorAll('.fx-stack').forEach(function (stack) {
       var stage = stack.closest('.fx-stage');
       var lines = Array.from(stack.querySelectorAll('.fx-line-inner'));

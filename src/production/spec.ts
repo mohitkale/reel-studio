@@ -14,6 +14,7 @@ import {
 } from "@/production/presets";
 import { productionSceneRoleSchema } from "@/production/roles";
 import { motionDirectionSchema } from "@/production/motion";
+import { shotDirectionSchema } from "@/video/shot-direction";
 
 export const PRODUCTION_SPEC_VERSION = 1 as const;
 export const LEGACY_PRESET_ID = "legacy" as const;
@@ -69,6 +70,7 @@ export const productionSceneSchema = z.object({
   order: z.number().int().nonnegative(),
   role: productionSceneRoleSchema,
   motion: motionDirectionSchema.optional(),
+  direction: shotDirectionSchema.optional(),
   template: z.object({
     /** Stored source id remains available when a legacy id resolves to a fallback. */
     sourceId: z.string().min(1).max(160),
@@ -220,6 +222,8 @@ export const productionSpecSchema = z
     assets: z.array(productionAssetSchema),
     scenes: z.array(productionSceneSchema).min(1).max(240),
     narration: z.object({
+      measuredWords: z.array(z.object({ startFrame: frameSchema, endFrame: positiveFrameSchema })
+        .refine((word) => word.endFrame > word.startFrame, "Invalid measured word window")).max(24000).optional(),
       mode: z.enum(["none", "oneshot", "per_scene", "podcast_cast"]),
       readiness: z.enum(["missing", "ready", "placeholder", "stale"]),
       takeId: z.string().optional(),
@@ -404,8 +408,7 @@ export const productionSpecSchema = z
 
       if (
         spec.preset.id === "data-story" &&
-        (scene.role === "chart" || scene.role === "comparison") &&
-        !scene.chart
+        !scene.chart && (scene.role === "chart" || scene.role === "comparison" && scene.items?.length !== 2)
       ) {
         ctx.addIssue({
           code: "custom",

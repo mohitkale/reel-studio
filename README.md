@@ -717,3 +717,8 @@ Verify its offline seek/export fixtures with `npm run test:motion-spec`.
 The [authored motion library](docs/MOTION_LIBRARY.md) provides fifteen treatments
 using saved brand tokens and supplied chart/media inputs. Its contact-sheet and
 actual portrait/landscape export gate is `npm run test:motion-library`.
+
+The [director pipeline](docs/DIRECTOR_PIPELINE.md) recognizes supplied metrics,
+charts, lists, quotes and comparisons, saves bounded shot direction, and can
+repair one measured short-text layout per review. Verify its no-key planning,
+word-timed seeks and actual exports with `npm run test:director`.

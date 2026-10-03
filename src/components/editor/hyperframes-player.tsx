@@ -36,6 +36,7 @@ interface HyperFramesPlayerProps {
   musicVolume?: number;
   sfxCues?: Array<{ url: string; startFrame: number; volume: number }>;
   captions?: ReelProps["captions"];
+  spokenWords?: ReelProps["spokenWords"];
   autoPlay?: boolean;
   loop?: boolean;
   tokens?: BrandTokens;
@@ -102,6 +103,7 @@ export const HyperFramesPlayer = React.forwardRef<
     musicVolume,
     sfxCues,
     captions,
+    spokenWords,
     autoPlay,
     loop = true,
     tokens,
@@ -151,6 +153,7 @@ export const HyperFramesPlayer = React.forwardRef<
           url: toAbsoluteUrl(c.url) ?? c.url,
         })),
         captions,
+        spokenWords,
         tokens: resolvedTokens,
         coverUrl: toAbsoluteUrl(coverUrl),
         width,
@@ -171,6 +174,7 @@ export const HyperFramesPlayer = React.forwardRef<
     musicVolume,
     sfxCues,
     captions,
+    spokenWords,
     resolvedTokens,
     coverUrl,
     width,

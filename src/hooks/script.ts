@@ -692,6 +692,7 @@ export function useImportScenes(scriptId: string) {
         musicMood?: string;
         role?: SceneDTO["role"];
         motion?: MotionDirection;
+        direction?: SceneDTO["direction"];
         assetRefs?: string[];
         locks?: SceneDTO["locks"];
         hideText?: boolean | null;
@@ -723,6 +724,7 @@ export function useUndoScript(scriptId: string) {
         musicMood?: string;
         role?: SceneDTO["role"];
         motion?: MotionDirection;
+        direction?: SceneDTO["direction"];
         assetRefs?: string[];
         locks?: SceneDTO["locks"];
         hideText?: boolean | null;

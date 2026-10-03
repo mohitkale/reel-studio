@@ -142,6 +142,7 @@ export function buildPrompt(input: GeneratePlanInput): {
     "- When the brief calls for an action, end with a clear, low-pressure CTA (try this, save this, follow for more).",
     ...hyperframesTemplateRules(),
     "- emphasis: 1–2 short phrases that appear VERBATIM in that scene's text (highlights for the eye).",
+    '- Optional direction uses exactly {version:1, role, composition, motion?}. Roles: hook, headline, explanation, diagram, quote, comparison, metric, chart, summary, cta. composition is authored, or layered-title for a single text beat without media/items/chart. It is a bounded layer graph compiled by the app, never HTML, CSS or code. Optional motion is {recipeId,version:"1.0.0"}: type-stack, type-impact, type-editorial, data-spotlight, data-bars, diagram-path, diagram-orbit, media-device, media-cinematic, comparison-split, comparison-stack, quiet-divider, quiet-center, brand-lockup or brand-frame. Data needs source label:value rows; diagrams/comparisons need supplied items; media needs resolved media. Invalid input combinations fall back. Preserve all supplied numbers, list labels and quoted wording. Do not add data to fill a layout.',
     "- visual: only as required above; otherwise omit. Keep it SHORT (a number, one emoji, or a CTA label under ~20 characters).",
     "- Never invent statistics, chart values, testimonials, URLs, customers, or product results. Use only facts in the brief or supplied source; choose a non-data layout when facts are missing.",
     "  LOOK OF THE WHOLE VIDEO:",

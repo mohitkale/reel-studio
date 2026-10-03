@@ -41,6 +41,7 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
     chart: scene.chart,
     mood: scene.mood,
     musicMood: scene.musicMood,
+    direction: scene.direction,
   }));
   // Restore frozen content in bounded validation slices. External AI/manual
   // creation keeps its existing per-plan limits.

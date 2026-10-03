@@ -1,5 +1,6 @@
 import type { BrandTokens } from "./tokens";
 import type { MotionSpec } from "./motion-spec";
+import type { ShotDirection } from "./shot-direction";
 import type { EnergyId, StyleId } from "./visual-style";
 import type { ProductionLayout } from "@/production/layout";
 import type { ProductionPresetId } from "@/production/presets";
@@ -72,6 +73,7 @@ export interface ReelScene {
   role?: ProductionSceneRole;
   /** Explicit scene recipe; absent keeps the existing preset/template appearance. */
   motion?: MotionDirection;
+  direction?: ShotDirection;
   /** When true, suppress the on-screen text/visual and show just the background. */
   hideText?: boolean;
   /** Emotional/visual tone; picks the dynamic background treatment when there's no photo/video background. */
@@ -113,6 +115,8 @@ export interface TemplateProps {
 export type ReelProps = {
   /** Versioned engine-neutral graph prototype; absent preserves legacy visuals. */
   motionSpec?: MotionSpec;
+  /** Measured narration windows from the current audible take, in content frames. */
+  spokenWords?: Array<{ startFrame: number; endFrame: number }>;
   /** Internal native still measurement; omitted from playback and exports. */
   reviewLayout?: boolean;
   scenes: ReelScene[];

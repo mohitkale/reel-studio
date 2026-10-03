@@ -7,6 +7,7 @@ import type { VideoEngineId } from "@/engines/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
 import type { MotionDirection } from "@/production/motion";
+import type { ShotDirection } from "@/video/shot-direction";
 import type { MotionPlanSettings } from "@/production/motion-plan";
 import type { MusicMap } from "@/production/music-map";
 import type { CaptionTimingSource, CaptionWord } from "@/lib/captions";
@@ -58,6 +59,7 @@ export interface SceneDTO {
   /** Engine-independent role selected by a versioned production preset. */
   role?: ProductionSceneRole;
   motion?: MotionDirection;
+  direction?: ShotDirection;
   /** Uploaded assets retained by id for reproducible planning and regeneration. */
   assetRefs?: string[];
   /** Image asset URLs resolved server-side for carousel preview and export. */

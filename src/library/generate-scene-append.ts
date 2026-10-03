@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { MotionDirection } from "@/production/motion";
+import type { ShotDirection } from "@/video/shot-direction";
 import { planMotionSequence } from "@/production/motion-plan";
 
 import type { SceneBackground, SceneChartData } from "@/video/types";
@@ -25,6 +26,7 @@ function layoutJsonFor(
     musicMood?: string;
     items?: string[];
     chart?: SceneChartData;
+    direction?: ShotDirection;
     mediaPreference?: z.infer<typeof mediaPreferenceSchema>;
   },
   role?: ProductionSceneRole,
@@ -36,6 +38,7 @@ function layoutJsonFor(
   if (scene.musicMood) config.musicMood = scene.musicMood;
   if (scene.items?.length) config.items = scene.items;
   if (scene.chart) config.chart = scene.chart;
+  if (scene.direction) config.direction = scene.direction;
   if (scene.mediaPreference) config.mediaPreference = scene.mediaPreference;
   if (role) config.role = role;
   if (motion) config.motion = motion;
@@ -102,6 +105,7 @@ export async function generateSceneAppend(input: {
   const resolved = script.productionPreset
     ? applyPresetToAIPlan(enriched, script.productionPreset.id, videoEngine, {
         continuation: true,
+        source: `${body.brief}\n${context}`,
         hasVisualAsset: backgrounds.some(Boolean),
       })
     : { plan: enriched, roles: [] as ProductionSceneRole[] };
@@ -123,6 +127,8 @@ export async function generateSceneAppend(input: {
           items: scene.items,
           background: backgrounds[index],
           hasVisualContent: Boolean(scene.visual),
+          current: scene.direction?.motion,
+          locked: Boolean(scene.direction?.motion),
         })),
         script.motionPlan ?? {
           version: "1.0.0",

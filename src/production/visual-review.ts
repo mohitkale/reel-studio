@@ -9,6 +9,7 @@ export const visualReviewRequestSchema = z
     samples: z.union([z.literal(1), z.literal(4)]).default(1),
     voiceTakeId: z.string().min(1).optional(),
     mode: z.enum(["scene", "transition"]).default("scene"),
+    repairPasses: z.union([z.literal(0), z.literal(1)]).default(0),
   })
   .strict()
   .refine((value) => new Set(value.sceneIds).size === value.sceneIds.length, {
@@ -75,6 +76,7 @@ export function planVisualReview(
 }
 
 export interface VisualReviewResult {
+  repair?: { passesUsed: number; paidCallsUsed: 0; repairedSceneIds: string[]; unresolved: number };
   layoutReview?: {
     status: "sampled" | "unavailable";
     frames: number[];

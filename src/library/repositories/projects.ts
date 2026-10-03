@@ -30,6 +30,7 @@ import {
   isVideoEngineId,
 } from "@/engines/types";
 import { defaultTemplateIdForEngine } from "@/engines/registry";
+import { sourcePlanSeed } from "@/production/director";
 import { prisma } from "@/library/db";
 import type { SceneLocks } from "@/library/schemas";
 import {
@@ -156,7 +157,7 @@ export async function createProjectFromPlan(
     (production?.preset && !production.motions
       ? {
           version: "1.0.0",
-          seed: randomUUID(),
+          seed: sourcePlanSeed(JSON.stringify({ preset: production.preset, scenes: plan.scenes })),
           ambition: production.visualAmbition ?? "expressive",
         }
       : undefined);
@@ -171,6 +172,8 @@ export async function createProjectFromPlan(
             items: scene.items,
             background: backgrounds[order],
             hasVisualContent: Boolean(scene.visual),
+            current: scene.direction?.motion,
+            locked: Boolean(scene.direction?.motion),
           })),
           motionPlan,
         )
@@ -218,6 +221,7 @@ export async function createProjectFromPlan(
                 config.locks = production.sceneLocks[order];
               const motion = motions[order];
               if (motion) config.motion = motion;
+              if (scene.direction) config.direction = scene.direction;
               return {
                 ...(chapterPlan ? { id: sceneIds[order] } : {}),
                 order,

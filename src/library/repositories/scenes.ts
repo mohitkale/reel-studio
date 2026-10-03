@@ -77,7 +77,8 @@ export async function updateScene(
     data.mood !== undefined ||
     data.musicMood !== undefined ||
     data.locks !== undefined ||
-    data.motion !== undefined
+    data.motion !== undefined ||
+    data.templateId !== undefined
   ) {
     const current = await prisma.scene.findUnique({
       where: { id },
@@ -117,9 +118,11 @@ export async function updateScene(
     }
     if (data.locks !== undefined) config.locks = data.locks;
     if (data.motion !== undefined) {
+      delete config.direction;
       if (data.motion === null) delete config.motion;
       else config.motion = data.motion;
     }
+    if (data.templateId !== undefined) delete config.direction;
     layoutJson = Object.keys(config).length ? JSON.stringify(config) : "";
   }
 

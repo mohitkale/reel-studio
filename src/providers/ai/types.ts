@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { productionChartDataSchema } from "@/production/spec";
+import { shotDirectionSchema } from "@/video/shot-direction";
+import { normalizeOptionalPlanFields } from "./director-schema";
 
 import type { Orientation } from "@/lib/orientation";
 import type { VideoEngineId } from "@/engines/types";
@@ -103,6 +105,7 @@ export function planTemplateIdsForEngine(
 }
 
 const aiSceneTemplateSchema = z.object({
+  direction: shotDirectionSchema.optional(),
   text: z.string().min(1),
   /**
    * Longer voiceover when scriptStyle is "detailed". Omit/empty for short style
@@ -149,6 +152,7 @@ const aiSceneTemplateSchema = z.object({
 });
 
 export const aiSceneSchema = z.preprocess((input) => {
+  input = normalizeOptionalPlanFields(input);
   if (!input || typeof input !== "object" || Array.isArray(input)) return input;
   const scene = input as Record<string, unknown>;
   if (typeof scene.templateId === "string") return input;

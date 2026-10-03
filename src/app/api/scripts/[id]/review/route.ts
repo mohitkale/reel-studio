@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createVisualReview } from "@/library/visual-review";
+import { reviewAndRepairDirection } from "@/library/director-review";
 import { visualReviewRequestSchema } from "@/production/visual-review";
 import { authorize } from "@/server/auth";
 import { errorResponse, readRequestJson } from "@/server/api-helpers";
@@ -27,7 +28,7 @@ export async function POST(
       );
     const { id } = await ctx.params;
     return NextResponse.json({
-      review: await createVisualReview(
+      review: await (body.data.repairPasses ? reviewAndRepairDirection : createVisualReview)(
         id,
         body.data,
         new URL(req.url).origin,

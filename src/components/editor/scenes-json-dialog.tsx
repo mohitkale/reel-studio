@@ -17,6 +17,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { shotDirectionSchema, type ShotDirection } from "@/video/shot-direction";
 import { productionChartDataSchema } from "@/production/spec";
 import {
   motionDirectionSchema,
@@ -41,6 +42,7 @@ interface SceneJson {
   musicMood?: string;
   role?: ProductionSceneRole;
   motion?: MotionDirection;
+  direction?: ShotDirection;
 }
 
 function toJson(scenes: SceneDTO[], videoEngine: VideoEngineId): string {
@@ -58,6 +60,7 @@ function toJson(scenes: SceneDTO[], videoEngine: VideoEngineId): string {
     ...(s.musicMood ? { musicMood: s.musicMood } : {}),
     ...(s.role ? { role: s.role } : {}),
     ...(s.motion ? { motion: s.motion } : {}),
+    ...(s.direction ? { direction: s.direction } : {}),
   }));
   return JSON.stringify(payload, null, 2);
 }
@@ -181,6 +184,8 @@ function parseScenes(raw: string, videoEngine: VideoEngineId): SceneJson[] {
       s.role == null ? undefined : productionSceneRoleSchema.parse(s.role);
     const motion =
       s.motion == null ? undefined : motionDirectionSchema.parse(s.motion);
+    const direction =
+      s.direction == null ? undefined : shotDirectionSchema.parse(s.direction);
     let spokenText: string | null | undefined;
     if (s.spokenText === null) {
       spokenText = null;
@@ -202,6 +207,7 @@ function parseScenes(raw: string, videoEngine: VideoEngineId): SceneJson[] {
       musicMood,
       role,
       motion,
+      direction,
     };
   });
 }

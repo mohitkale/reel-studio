@@ -2,6 +2,7 @@ import { allowedPresetCapabilityIds } from "@/production/ai-preset-plan";
 import { capabilityIdsForEngine } from "@/engines/capabilities";
 
 import type { GeneratePlanInput } from "./types";
+import { SHOT_DIRECTION_JSON_SCHEMA, CHART_JSON_SCHEMA, strictOutputSchema } from "./director-schema";
 
 export function buildOpenAIVideoPlanJsonSchema(input: GeneratePlanInput) {
   const engineId = input.videoEngine ?? "hyperframes";
@@ -11,7 +12,7 @@ export function buildOpenAIVideoPlanJsonSchema(input: GeneratePlanInput) {
   return {
     name: "scene_plan",
     strict: true,
-    schema: {
+    schema: strictOutputSchema({
       type: "object",
       additionalProperties: false,
       properties: {
@@ -31,6 +32,8 @@ export function buildOpenAIVideoPlanJsonSchema(input: GeneratePlanInput) {
             type: "object",
             additionalProperties: false,
             properties: {
+              direction: SHOT_DIRECTION_JSON_SCHEMA,
+              chart: CHART_JSON_SCHEMA,
               text: { type: "string" },
               spokenText: { type: "string" },
               capabilityId: { type: "string", enum: capabilityIds },
@@ -68,7 +71,7 @@ export function buildOpenAIVideoPlanJsonSchema(input: GeneratePlanInput) {
         },
       },
       required: ["projectName", "scriptName", "styleId", "energy", "scenes"],
-    },
+    }),
   };
 }
 

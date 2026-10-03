@@ -242,6 +242,7 @@ export function productionSpecFromLegacyScript(
         order: scene.order,
         role: scene.role ?? inferLegacyRole(scene.templateId),
         motion: scene.motion,
+        direction: scene.direction,
         template: {
           sourceId: scene.templateId,
           resolvedId: engine.normalizeTemplateId(scene.templateId),
@@ -266,6 +267,7 @@ export function productionSpecFromLegacyScript(
       };
     }),
     narration: {
+      measuredWords: resolveSpokenWordWindows(script.captionTracks, resolved.takeUsable ? take?.id : null, script.fps),
       mode: script.voiceMode,
       readiness: narrationReadiness(take, resolved.takeUsable),
       takeId: take?.id,

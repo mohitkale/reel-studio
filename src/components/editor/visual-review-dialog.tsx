@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Grid2X2, Loader2, Smartphone } from "lucide-react";
 import { apiPost } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ export function VisualReviewDialog({
   sourceKey: string;
   onSelectScene: (id: string) => void;
 }) {
+  const queryClient = useQueryClient();
   const [open, setOpen] = React.useState(false);
   const [page, setPage] = React.useState(0);
   const [phoneSize, setPhoneSize] = React.useState(false);
@@ -45,6 +46,7 @@ export function VisualReviewDialog({
       samples: 1 | 4;
       sourceKey: string;
       mode: "scene" | "transition";
+      repairPasses: 0 | 1;
     }) => ({
       ...(await apiPost<{ review: VisualReviewResult }>(
         `/api/scripts/${scriptId}/review`,
@@ -53,10 +55,15 @@ export function VisualReviewDialog({
           samples: input.samples,
           voiceTakeId,
           mode: input.mode,
+          repairPasses: input.repairPasses,
         },
       )),
       sourceKey: input.sourceKey,
     }),
+    onSuccess: (data) => {
+      if (data.review.repair?.repairedSceneIds.length)
+        void queryClient.invalidateQueries({ queryKey: ["script", scriptId] });
+    },
   });
   const current =
     review.data?.sourceKey === sourceKey ? review.data.review : null;
@@ -65,8 +72,9 @@ export function VisualReviewDialog({
     sceneIds: string[],
     samples: 1 | 4,
     mode: "scene" | "transition" = "scene",
+    repairPasses: 0 | 1 = 0,
   ) {
-    review.mutate({ sceneIds, samples, sourceKey, mode });
+    review.mutate({ sceneIds, samples, sourceKey, mode, repairPasses });
   }
   function changePage(next: number) {
     review.reset();
@@ -102,6 +110,10 @@ export function VisualReviewDialog({
             {review.isPending && <Loader2 className="size-3.5 animate-spin" />}
             Generate scene sheet
           </Button>
+          <Button size="sm" variant="outline" disabled={review.isPending || !selectedSceneId}
+            onClick={() => selectedSceneId && generate([selectedSceneId], 1, "scene", 1)}>
+            Review and fix selected layout
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -133,6 +145,9 @@ export function VisualReviewDialog({
             <Smartphone className="size-3.5" /> Phone size
           </Button>
         </div>
+        {review.data?.review.repair && <p className="text-muted-foreground text-xs">
+          {review.data.review.repair.repairedSceneIds.length} layout(s) repaired in at most one pass; {review.data.review.repair.unresolved} findings remain. No paid calls. Copy, assets and voice timing are preserved. Review the refreshed preview.
+        </p>}
         {scenes.length > 8 && (
           <div className="flex items-center gap-2 text-xs">
             <Button

@@ -23,6 +23,7 @@ import {
 } from "./types";
 import { allowedPresetCapabilityIds } from "@/production/ai-preset-plan";
 import { capabilityIdsForEngine } from "@/engines/capabilities";
+import { SHOT_DIRECTION_JSON_SCHEMA, CHART_JSON_SCHEMA } from "./director-schema";
 
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 // flash-lite has the most free-tier/availability headroom; full flash often 503s.
@@ -56,6 +57,8 @@ function buildResponseSchema(input: GeneratePlanInput) {
         items: {
           type: "object",
           properties: {
+            direction: SHOT_DIRECTION_JSON_SCHEMA,
+            chart: CHART_JSON_SCHEMA,
             text: { type: "string" },
             spokenText: { type: "string" },
             capabilityId: {

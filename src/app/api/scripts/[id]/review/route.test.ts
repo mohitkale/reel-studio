@@ -47,7 +47,7 @@ it("uses only saved script and selected take inputs", async () => {
   expect(response.status).toBe(200);
   expect(createVisualReview).toHaveBeenCalledWith(
     "script",
-    { sceneIds: ["a"], samples: 1, voiceTakeId: "take", mode: "scene" },
+    { sceneIds: ["a"], samples: 1, voiceTakeId: "take", mode: "scene", repairPasses: 0 },
     "http://localhost",
     expect.any(AbortSignal),
   );

@@ -37,6 +37,7 @@ import { getProductionJobByIdempotencyKey } from "@/library/repositories/product
 import { productionJobViewWithRevision } from "@/library/production-job-view";
 import { runProductionWorkerOnce } from "@/library/production-worker";
 import { executeProductionJob } from "@/library/production-job-executor";
+import { directorBudgetSchema } from "@/video/shot-direction";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,6 +63,7 @@ const bodySchema = z.object({
   mediaPreference: mediaPreferenceSchema.default("auto"),
   quickProduce: quickProduceOptionsSchema.optional(),
   idempotencyKey: z.string().min(8).max(240).optional(),
+  directorBudget: directorBudgetSchema.optional(),
 });
 
 /** POST /api/projects/ai - generate a scene plan from a brief and create the project. */
@@ -86,6 +88,15 @@ export async function POST(req: Request) {
       throw new AIError("Select an AI provider", 400);
     }
     const providerIds = planner === "deterministic" ? [] : [planner];
+    // Selecting a cloud planner authorizes exactly its one initial invocation.
+    // An explicit zero budget rejects it before credentials/network are touched.
+    const paid = planner === "openai" || planner === "gemini";
+    const budget = body.directorBudget ?? { maxPaidCalls: paid ? 1 : 0 };
+    if (paid && budget.maxPaidCalls === 0)
+      throw new AIError(
+        "This director budget allows no paid planner calls.",
+        400,
+      );
     const auth = await authorizeProviderRequest(req, providerIds);
 
     const orientation = body.orientation ?? DEFAULT_ORIENTATION;
@@ -162,6 +173,7 @@ export async function POST(req: Request) {
       {
         hasVisualAsset: backgrounds.some(Boolean),
         sceneHasVisual: backgrounds.map(Boolean),
+        source: body.brief,
       },
     );
 
@@ -222,6 +234,11 @@ export async function POST(req: Request) {
         job: job ? await productionJobViewWithRevision(job) : null,
         plan,
         visualStyle,
+        directorBudget: {
+          ...budget,
+          paidCallsUsed: paid ? 1 : 0,
+          repairPassesUsed: 0,
+        },
         mediaDecisions: mediaDecisions.map(
           ({ state, kind, providerId, attemptedProviders, message }) => ({
             state,

@@ -166,6 +166,7 @@ export const preparedVideoCompositionSchema = z
             carouselImages: true,
             role: true,
             motion: true,
+            direction: true,
             mood: true,
             order: true,
           })
@@ -184,6 +185,7 @@ export const preparedVideoCompositionSchema = z
           durationFrames: z.number().int().nonnegative(),
         }),
       ),
+      spokenWords: z.array(z.object({ startFrame: z.number().int().nonnegative(), endFrame: z.number().int().positive() })).optional(),
       width: z.number().int().positive(),
       height: z.number().int().positive(),
       fps: z.number().positive(),

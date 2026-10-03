@@ -27,6 +27,7 @@ interface EnginePlayerProps {
   musicVolume?: number;
   sfxCues?: Array<{ url: string; startFrame: number; volume: number }>;
   captions?: ReelProps["captions"];
+  spokenWords?: ReelProps["spokenWords"];
   autoPlay?: boolean;
   loop?: boolean;
   tokens?: BrandTokens;
