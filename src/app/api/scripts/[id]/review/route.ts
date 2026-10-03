@@ -39,7 +39,7 @@ export async function POST(
     if (
       script &&
       (await currentVideoRevisionHash(id, body.data.voiceTakeId)) !==
-        review.revision
+        review.repair?.sourceRevision
     )
       throw new ProviderError(
         "The video changed after repair. Review its current revision.",

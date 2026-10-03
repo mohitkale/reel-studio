@@ -62,6 +62,9 @@ export async function reviewAndRepairDirection(
     }
     return ids;
   });
+  const sourceRevision = repairedSceneIds.length
+    ? await currentVideoRevisionHash(scriptId, input.voiceTakeId)
+    : revision;
   const result = repairedSceneIds.length
     ? await createVisualReview(
         scriptId,
@@ -70,11 +73,20 @@ export async function reviewAndRepairDirection(
         signal,
       )
     : initial;
+  if (
+    (await currentVideoRevisionHash(scriptId, input.voiceTakeId)) !==
+    sourceRevision
+  )
+    throw new ProviderError(
+      "The video changed during recapture. Review again.",
+      409,
+    );
   return {
     ...result,
     repair: {
       passesUsed: repairedSceneIds.length ? 1 : 0,
       paidCallsUsed: 0,
+      sourceRevision,
       repairedSceneIds,
       unresolved: result.findings.length,
     },

@@ -52,7 +52,10 @@ are clipping, safe area, contrast and fallback on short text-only scenes. The
 repair selects the measured layered title and preserves copy, narration, data,
 assets and timing. Locked scenes, media/data scenes, long text, reading-time and
 repetition findings require manual work. Transition reviews are not repaired.
-Revision and transactional scene checks reject concurrent changes with 409.
+Revision and transactional scene checks reject concurrent changes with 409,
+including edits during recapture. The editor refreshes from the matching saved
+script; still-cache keys and source-revision hashes are distinct. Silent review
+retains the current measured word windows.
 The result reports passes used, zero paid calls and remaining findings. It is
 not an aesthetic score or an unbounded optimization loop.
 
@@ -75,3 +78,9 @@ both formats. Offline probes made no external requests or paid calls. SHA-256:
 Behavior tests cover source grounding, schema parity, stable planning, current
 word/FPS rebasing, locked/manual repairs, concurrency, persistence and zero paid
 budgets. Real provider calls/new model downloads were not used for verification.
+
+An isolated populated database also passed an actual initial review, one saved
+layout repair, and one native recapture. The resulting graph text was measured
+for layout and pixel contrast, retained complete copy, removed the unsupported
+treatment finding, and matched the saved source revision. The local report is
+`.artifacts/m12-review-live/report.json`.

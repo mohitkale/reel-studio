@@ -72,8 +72,8 @@ it("uses only saved script and selected take inputs", async () => {
 
 it("returns the matching repaired script for editor refresh and rejects changes after recapture", async () => {
   repair.mockResolvedValue({
-    revision: "repaired",
-    repair: { repairedSceneIds: ["a"] },
+    revision: "visual-stage-cache-key",
+    repair: { repairedSceneIds: ["a"], sourceRevision: "repaired" },
     stills: [],
   });
   getScript.mockResolvedValue({

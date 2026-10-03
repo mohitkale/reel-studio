@@ -76,7 +76,13 @@ export function planVisualReview(
 }
 
 export interface VisualReviewResult {
-  repair?: { passesUsed: number; paidCallsUsed: 0; repairedSceneIds: string[]; unresolved: number };
+  repair?: {
+    passesUsed: number;
+    paidCallsUsed: 0;
+    sourceRevision: string;
+    repairedSceneIds: string[];
+    unresolved: number;
+  };
   layoutReview?: {
     status: "sampled" | "unavailable";
     frames: number[];

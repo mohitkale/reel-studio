@@ -61,6 +61,7 @@ it("performs exactly one repair and one fresh measurement without editing copy o
   expect(result.repair).toEqual({
     passesUsed: 1,
     paidCallsUsed: 0,
+    sourceRevision: "current",
     repairedSceneIds: ["scene"],
     unresolved: 0,
   });
@@ -136,4 +137,20 @@ it("leaves locked, media/data, long and already repaired scenes for explicit man
   expect(
     planDirectorRepair(scene, [{ ...finding, kind: "reading-time" }]),
   ).toBeNull();
+});
+
+it("rejects edits during the bounded recapture", async () => {
+  mocks.revision
+    .mockResolvedValueOnce("current")
+    .mockResolvedValueOnce("current")
+    .mockResolvedValueOnce("repaired")
+    .mockResolvedValueOnce("edited-again");
+  await expect(
+    reviewAndRepairDirection(
+      "script",
+      { sceneIds: ["scene"], repairPasses: 1 },
+      "http://localhost",
+    ),
+  ).rejects.toThrow("changed during recapture");
+  expect(mocks.review).toHaveBeenCalledTimes(2);
 });
