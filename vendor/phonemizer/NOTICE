@@ -1,0 +1,11 @@
+The compiled engine and voice data are eSpeak NG, GPL-3.0-or-later.
+The adapter/binding are Reel Studio application code, MIT (LICENSE.adapter).
+Linked engine distribution retains GPL terms. Additional upstream Apache,
+BSD and Unicode notices are preserved in COPYING.APACHE, COPYING.BSD2 and
+COPYING.UCD. Emscripten runtime terms are preserved in COPYING.EMSCRIPTEN.
+
+Exact source revision, compiler revision and output hashes: provenance.json.
+Complete corresponding source, binding and build scripts: the matching
+reel-phonemizer-corresponding-source.tar.gz release asset. Rebuild with
+scripts/build-phonemizer.sh using the pinned compiler documented in provenance.
+Source must accompany engine redistribution; do not relabel it Apache-only.

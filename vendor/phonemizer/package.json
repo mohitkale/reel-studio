@@ -1,0 +1,20 @@
+{
+  "name": "phonemizer",
+  "version": "1.2.1-reel.1",
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "exports": {
+    "types": "./index.d.ts",
+    "default": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "engine.js",
+    "provenance.json",
+    "COPYING*",
+    "NOTICE",
+    "LICENSE.adapter",
+    "reel-phonemizer.c"
+  ]
+}
