@@ -1,3 +1,8 @@
+> **Historical archive.** This document records an earlier plan or measurement.
+> Its instructions, versions, pending work, and dual-engine references are not
+> current project guidance. See [current documentation](../README.md)
+> and the [published v0.4.0 release](https://github.com/mohitkale/reel-studio/releases/tag/v0.4.0).
+
 # Dependency upgrade assessment
 
 Reviewed 2026-10-02 on Node 24.18.1. This milestone updates packages and the
@@ -9,39 +14,39 @@ packages stay synchronized until their removal milestone.
 
 ## Direct updates
 
-| Package | Before | After |
-| --- | --- | --- |
-| `@hyperframes/producer` | 0.8.40 | 0.8.111 |
-| `@remotion/bundler` | 4.0.523 | 4.0.532 |
-| `@remotion/cli` | 4.0.523 | 4.0.532 |
-| `@remotion/google-fonts` | 4.0.523 | 4.0.532 |
-| `@remotion/lottie` | 4.0.523 | 4.0.532 |
-| `@remotion/player` | 4.0.523 | 4.0.532 |
-| `@remotion/renderer` | 4.0.523 | 4.0.532 |
-| `@remotion/three` | 4.0.523 | 4.0.532 |
-| `@remotion/transitions` | 4.0.523 | 4.0.532 |
-| `@tanstack/react-query` | 5.102.8 | 5.104.0 |
-| `@types/three` | 0.185.4 | 0.186.0 |
-| `esbuild` | 0.25.12 | 0.28.2 |
-| `gsap` | 3.14.2 | 3.15.0 |
-| `lucide-react` | 1.44.0 | 1.49.0 |
-| `next` | 16.3.4 | 16.3.8 |
-| `react` | 19.2.8 | 19.3.0 |
-| `react-dom` | 19.2.8 | 19.3.0 |
-| `remotion` | 4.0.523 | 4.0.532 |
-| `tailwind-merge` | 3.6.0 | 3.7.0 |
-| `three` | 0.186.0 | 0.186.1 |
-| `zod` | 4.5.4 | 4.6.5 |
-| `@modelcontextprotocol/sdk` | 1.30.0 | 1.31.0 |
-| `@types/node` | 24.13.4 | 24.19.1 |
-| `@vitejs/plugin-react` | 5.2.0 | 6.1.1 |
-| `eslint-config-next` | 16.3.4 | 16.3.8 |
-| `hyperframes` | 0.8.40 | 0.8.110 |
-| `jsdom` | 30.0.1 | 30.1.1 |
-| `prettier` | 3.9.6 | 3.9.9 |
-| `tsx` | 4.23.13 | 4.23.15 |
-| `vite` | 7.3.5 | 8.3.2 |
-| `vitest` | 5.0.0 | 5.0.3 |
+| Package                     | Before  | After   |
+| --------------------------- | ------- | ------- |
+| `@hyperframes/producer`     | 0.8.40  | 0.8.111 |
+| `@remotion/bundler`         | 4.0.523 | 4.0.532 |
+| `@remotion/cli`             | 4.0.523 | 4.0.532 |
+| `@remotion/google-fonts`    | 4.0.523 | 4.0.532 |
+| `@remotion/lottie`          | 4.0.523 | 4.0.532 |
+| `@remotion/player`          | 4.0.523 | 4.0.532 |
+| `@remotion/renderer`        | 4.0.523 | 4.0.532 |
+| `@remotion/three`           | 4.0.523 | 4.0.532 |
+| `@remotion/transitions`     | 4.0.523 | 4.0.532 |
+| `@tanstack/react-query`     | 5.102.8 | 5.104.0 |
+| `@types/three`              | 0.185.4 | 0.186.0 |
+| `esbuild`                   | 0.25.12 | 0.28.2  |
+| `gsap`                      | 3.14.2  | 3.15.0  |
+| `lucide-react`              | 1.44.0  | 1.49.0  |
+| `next`                      | 16.3.4  | 16.3.8  |
+| `react`                     | 19.2.8  | 19.3.0  |
+| `react-dom`                 | 19.2.8  | 19.3.0  |
+| `remotion`                  | 4.0.523 | 4.0.532 |
+| `tailwind-merge`            | 3.6.0   | 3.7.0   |
+| `three`                     | 0.186.0 | 0.186.1 |
+| `zod`                       | 4.5.4   | 4.6.5   |
+| `@modelcontextprotocol/sdk` | 1.30.0  | 1.31.0  |
+| `@types/node`               | 24.13.4 | 24.19.1 |
+| `@vitejs/plugin-react`      | 5.2.0   | 6.1.1   |
+| `eslint-config-next`        | 16.3.4  | 16.3.8  |
+| `hyperframes`               | 0.8.40  | 0.8.110 |
+| `jsdom`                     | 30.0.1  | 30.1.1  |
+| `prettier`                  | 3.9.6   | 3.9.9   |
+| `tsx`                       | 4.23.13 | 4.23.15 |
+| `vite`                      | 7.3.5   | 8.3.2   |
+| `vitest`                    | 5.0.0   | 5.0.3   |
 
 ## Versions deliberately retained
 

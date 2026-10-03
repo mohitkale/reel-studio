@@ -1,63 +1,44 @@
 # Roadmap
 
-Reel Studio develops as a local content-production tool. This roadmap separates
-released work from ideas that still need design and validation.
+Current stable release: **[v0.4.0](https://github.com/mohitkale/reel-studio/releases/tag/v0.4.0)**.
+This roadmap separates released features from proposals; future items are not promises.
 
-## Shipped in 0.4
+## Shipped
 
-- A guided no-key production path from source content to verified output
-- Six versioned production presets for both HyperFrames and Remotion
-- Portrait, landscape, and square layouts that reflow at the scene level
-- Durable video, audio, podcast, audiogram, and batch production jobs
-- Editable captions, optional local transcription, centralized audio mixing, and
-  selective voice or podcast-turn regeneration
-- Scoped REST and MCP automation with explicit provider and usage limits
-- Safe database upgrades, local diagnostics, gallery examples, and release matrix
+- Prompt-first Generate → result → download, scene editing, and remix.
+- HyperFrames-only preview/export; six presets, sixteen authored motion treatments,
+  and portrait, landscape, and square layouts.
+- Deterministic, source-grounded direction plus optional constrained AI planning.
+- Local/cloud voice options, editable styled captions, and reusable narration.
+- Podcasts with turn reuse, finishing controls, transcripts, chapters, and audiograms.
+- Durable jobs/batches, cancellation/retry/recovery, scoped REST/MCP automation,
+  chapter authoring, and section-cached chapter exports.
+- Node 24 upgrades, Linux/Windows CI, safe database upgrades, bundled fonts/runtime,
+  media hardening, and verified speech-engine source/licensing.
 
-See [the changelog](CHANGELOG.md) and
-[release validation](docs/production/RELEASE_VALIDATION.md) for the exact
-behavior and evidence.
+See [CHANGELOG.md](CHANGELOG.md) for release history and
+[release validation](docs/production/RELEASE_VALIDATION.md) for v0.4.0 evidence.
 
-## Motion graphics branch
+## Next candidates
 
-- Eight authored treatments across type, supplied data, diagrams and media in
-  both engines, with seeded direction, ambition, scene locks and visible fallbacks
-- Native scene sheets, selected-scene samples, phone view and transition strips
-- Peak-aligned sound accents, narration protection, editable music beat maps and
-  optional measured final audio mastering
-- Full-source chapter drafts, outline editing and chapter-scoped AI rewriting
-- Controlled five-minute chapter production, resumable sections and continuous
-  audio; Remotion reuses sections unaffected by visual edits
+- Easier structured-data entry for charts and comparisons.
+- More distinct, curated motion treatments with readable three-format fixtures.
+- Clearer optional transcription/model setup and diagnostics.
+- Faster warm renders and better resource feedback on modest computers.
+- Streamlined CI triggers, stale-run cancellation, and shorter artifact retention.
+- More accessible editor controls and contributor examples.
 
-The exact shipped behavior and remaining motion scope are in
-[the motion plan](docs/production/MOTION_GRAPHICS_PLAN.md).
+Choose a concrete creator use case before starting one of these items. Typed
+provider/block registration already exists; broader plugin discovery and
+packaging remain possible future work.
 
-## Next
+## Longer-term exploration
 
-- A richer structured-data form for charts and comparisons
-- More curated, versioned HyperFrames catalog treatments for the six presets
-- Guided whisper.cpp installation and model diagnostics on supported platforms
-- Faster warm renders through more persistent browser and bundle reuse
-- Additional caption styling and accessible contrast controls
-- More contributor fixtures and template validation helpers
+- Desktop packaging after the local web workflow is stable.
+- Additional production formats backed by trustworthy supplied media.
+- Local scheduling with explicit resource/provider budgets.
+- Collaboration, cloud sync, or distributed rendering with a designed authentication
+  and isolation model.
 
-## Later
-
-- Optional plugin architecture for templates and providers
-- Desktop packaging after the local web release is stable
-- Additional production formats where users can supply trustworthy source media
-- Deeper automation scheduling with explicit local resource controls
-
-## Exploratory
-
-These are research directions rather than scheduled promises:
-
-- Real-time collaboration and cloud sync
-- Distributed rendering
-- Native mobile companion apps
-- Real-time voice conversion
-- Deep 3D model import pipelines
-
-Discuss proposals in
-[GitHub Discussions](https://github.com/mohitkale/reel-studio/discussions) or
-follow [CONTRIBUTING.md](CONTRIBUTING.md) with a concrete use case and fixture.
+Propose an idea through [GitHub Issues](https://github.com/mohitkale/reel-studio/issues)
+with example inputs and outputs. Follow [CONTRIBUTING.md](CONTRIBUTING.md) for implementation.

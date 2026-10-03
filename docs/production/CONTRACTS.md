@@ -16,7 +16,7 @@ the planner limit instead of silently truncating it.
 ## AI provider boundary
 
 Gemini and OpenAI retain their cloud-specific adapters. Ollama uses native
-`/api/tags` and `/api/chat`; LM Studio uses `/v1/models` and
+`/api/tags` and `/api/chat`; LM Studio and llama.cpp use `/v1/models` and
 `/v1/chat/completions` through the shared compatible transport. Local endpoints
 resolve only to loopback by default or private LAN after explicit opt-in, and
 redirects are rejected. Provider-owned credentials are constructed inside each
@@ -51,7 +51,7 @@ the source project never mutates that row or the worker input derived from it.
 
 UI, REST, MCP, and video batch rows import the same strict
 `quickProduceOptionsSchema`. `ai_create_project` may use deterministic, Gemini,
-OpenAI, Ollama, or LM Studio planning before it persists the project; a prepared
+OpenAI, Ollama, LM Studio, or llama.cpp planning before it persists the project; a prepared
 script request records planner metadata but does not re-plan existing scenes.
 Only server-capable narration providers can be selected for unattended work.
 
@@ -68,8 +68,7 @@ revision creates a new editable project rather than overwriting current edits.
 ## Presets and overrides
 
 The built-in `1.0.0` preset set is Product Launch, Editorial Explainer, Creator
-Punch, Data Story, Developer Demo and Cinematic Brand. Each preset supports both
-engines and declares its scene roles, pacing, typography, spacing, palette,
+Punch, Data Story, Developer Demo and Cinematic Brand. Each preset supports HyperFrames and declares its scene roles, pacing, typography, spacing, palette,
 captions, transitions, music mood and sound-effect intensity.
 
 Resolve values in this order:
@@ -87,7 +86,7 @@ placement, colors, box, outline, shadow, wrapping targets, highlight mode and
 per-ratio safe-area offsets. Null database values and older production specs
 resolve to the 0.4 legacy appearance. New tracks start from the active production
 preset; compatible brand typography resolves next, and explicit track values
-win. Both engines consume the same resolved measurements and preserve cue and
+win. Preview and export consume the same resolved measurements and preserve cue and
 word timing unchanged.
 
 ## Engine capability metadata
@@ -122,8 +121,8 @@ render workers can map the same asset to a local materialized path without
 changing scene, timing or style decisions.
 
 Portrait, landscape and square each have explicit safe areas, content/caption
-widths, caption and brand insets, progress-bar size and type scale. Both engines
-consume these values. Format variants must resolve the source content again for
+widths, caption and brand insets, progress-bar size and type scale. HyperFrames
+preview and export consume these values. Format variants must resolve the source content again for
 their canvas; they must not crop a previously rendered video.
 
 ## Factual data and catalog personalization
@@ -131,8 +130,10 @@ their canvas; they must not crop a previously rendered video.
 Charts accept structured labels, finite values, series labels, units and optional
 source attribution. The same structure is stored in scene layout data and carried
 through AI plans, JSON import/export, undo snapshots, production specifications
-and both renderer inputs. A chart layout without that structure resolves to a
-non-data statement; narration copy is never mined for values. Count-up templates
+and the preview/export inputs. A chart layout without that structure resolves to a
+non-data statement. The deterministic director admits only explicit supplied
+metrics or matching label/value/unit pairs; it does not invent data from unrelated
+numbers. Count-up templates
 likewise require an explicit numeric visual.
 
 Catalog demos are treated as source material rather than production content.
@@ -167,8 +168,7 @@ remote assets. Run `npm run test:render:editorial` to render the complete
 
 ## Creator Punch 1.0.0
 
-Creator Punch carries hook, tip, emphasis, payoff and CTA roles into both
-engines. The renderers use high-contrast creator typography, selective visual
+Creator Punch carries hook, tip, emphasis, payoff and CTA roles into HyperFrames. The renderers use high-contrast creator typography, selective visual
 symbols, beat-oriented entrances and responsive tip cards while preserving the
 same copy, timing and brand snapshot. The CTA label appears only when explicit
 item copy is supplied.
@@ -179,8 +179,7 @@ complete H.264 output from HyperFrames.
 
 ## Data Story 1.0.0
 
-Data Story carries metric, chart, comparison and takeaway roles into both
-engines. Metric scenes require an explicit display value. Chart and comparison
+Data Story carries metric, chart, comparison and takeaway roles into HyperFrames. Metric scenes require an explicit display value. Chart and comparison
 scenes require structured labels and series values, with optional units and
 source attribution. Both renderers scale bars from the supplied values and
 display the exact supplied labels; they never infer numbers from narration.
@@ -191,8 +190,7 @@ fixture values and attribution are asserted in the composition contract test.
 
 ## Developer Demo 1.0.0
 
-Developer Demo carries code, diff, terminal, browser and CTA roles into both
-engines. Code-like content is supplied as scene items and encoded as text before
+Developer Demo carries code, diff, terminal, browser and CTA roles into HyperFrames. Code-like content is supplied as scene items and encoded as text before
 rendering. Diff rows preserve explicit `+` and `-` markers, while browser proof
 requires a supplied image or video asset. The adapters do not execute displayed
 commands or source code.
@@ -203,8 +201,7 @@ render remains offline and deterministic.
 
 ## Cinematic Brand 1.0.0
 
-Cinematic Brand carries hero, feature, testimonial and logo roles into both
-engines. Hero scenes require a supplied image or video asset. Testimonial text
+Cinematic Brand carries hero, feature, testimonial and logo roles into HyperFrames. Hero scenes require a supplied image or video asset. Testimonial text
 and attribution must be supplied explicitly, while the logo close uses the
 provided short mark and brand snapshot. Motion stays measured and the adapters
 apply a vignette, subtle texture and readable foreground treatment.
@@ -222,7 +219,8 @@ Steps, ordered events and output records survive web or worker restarts.
 
 The shared pipeline step keys are validate, plan, resolve media, synthesize
 audio, time content, prepare composition, render/export and verify artifacts.
-The production worker is available through `npm run production:worker`. Video
+The normal launcher supervises the production worker; `npm run production:worker`
+is reserved for explicitly managed deployments. Video
 jobs pass through all eight stages and reuse the existing engine-aware render
 service. A job cannot succeed until `ffprobe` confirms a decodable MP4 with
 positive dimensions and duration, and an audio stream when the chosen take

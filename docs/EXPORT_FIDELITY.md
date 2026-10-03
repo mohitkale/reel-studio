@@ -36,23 +36,6 @@ Run `npm run test:export-fidelity` using installed Chromium and FFmpeg. Set
 is unavailable. `-- --preview-only` skips exports. The verifier does not install
 a browser or model. Evidence goes to ignored `.artifacts/m9-fidelity/`.
 
-Verified 2026-10-03 on local Chromium 153: offline same-origin iframe `srcDoc`
-preview with external requests blocked; identical native callback-suppressed,
-backward and repeated seeks; real EB Garamond Cyrillic/Greek subset loads;
-complete long copy; brand ink/background; continuing ambient motion at local
-six seconds. Actual isolated portrait 540×960 and landscape 960×540 H.264 exports
-each contain 450 frames at 30 fps (15 seconds). Exported scene-boundary and
-settled-copy frames were inspected. These are native composition fixtures;
-the broader catalog, media and release matrix remains the final release gate.
-The 803-test local suite, typecheck, lint, secret scan, release checks, production
-build and isolated real export/active cancellation gate passed.
-
-The first Windows run exposed seven fixture timeouts (six 5-second limits and
-one 20-second SQLite integration limit), without failed behavior assertions.
-Those specific native migration/module/filesystem fixtures now use bounded
-Windows budgets of 15 or 30 seconds. Other platforms, unit deadlines and every
-behavior assertion remain unchanged. Latest-head platform CI remains required.
-The replacement run passed those seven fixtures and exposed a separate
-10-second podcast-cache SQLite setup hook timeout. That Windows setup hook now
-has a 30-second budget; its cache behavior test and other-platform hook budget
-remain unchanged.
+The fixture covers offline/backward seeks, fonts, long copy, brand tokens,
+ambient holds, and actual portrait/landscape exports. Published matrix evidence
+is in [release validation](production/RELEASE_VALIDATION.md).

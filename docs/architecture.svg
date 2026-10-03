@@ -23,7 +23,7 @@
 
   <rect class="box" x="80" y="140" width="260" height="130" />
   <text class="label" x="105" y="185">Browser UI (Next.js App)</text>
-  <text class="small" x="105" y="215">Editor, Quick Produce, renders, settings</text>
+  <text class="small" x="105" y="215">Generate, results, editor, settings</text>
   <text class="small" x="105" y="238">TanStack Query + React client</text>
 
   <rect class="box" x="430" y="120" width="340" height="190" />
@@ -35,7 +35,7 @@
 
   <rect class="box" x="840" y="120" width="280" height="190" />
   <text class="label" x="865" y="165">Optional AI / Voice</text>
-  <text class="small" x="865" y="195">Ollama, LM Studio, Kokoro</text>
+  <text class="small" x="865" y="195">Ollama, LM Studio, llama.cpp, Kokoro</text>
   <text class="small" x="865" y="218">OpenAI, Gemini, cloud TTS</text>
   <text class="small" x="865" y="241">Explicit configuration only</text>
 

@@ -1,3 +1,6 @@
+> **Historical evidence.** Completed pre-release task ledger; use
+> [current documentation](../../README.md) for supported behavior.
+
 > Historical task ledger. Current implementation and release evidence are maintained in the active documentation.
 
 # Local-first PR 2 task ledger

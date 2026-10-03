@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "description": "Real v0.4.0 screenshots plus actual export; montage, not a continuous UI recording.",
+  "canvas": {
+    "width": 960,
+    "height": 600
+  },
+  "fps": 10,
+  "durationSeconds": 11.91,
+  "loop": true,
+  "audio": false,
+  "segments": [
+    {
+      "source": "docs/assets/reel-studio-home.png",
+      "seconds": 2
+    },
+    {
+      "source": "reel-studio-0.4.0-editorial-explainer-landscape.mp4",
+      "startSeconds": 0,
+      "seconds": 8
+    },
+    {
+      "source": "docs/assets/reel-studio-result.png",
+      "seconds": 2
+    }
+  ],
+  "sources": [
+    {
+      "path": "docs/assets/reel-studio-home.png",
+      "sha256": "73dc784f5e574bca41609cc390d42d3739c88cbddd713903e776eb421aeb79d4"
+    },
+    {
+      "path": "docs/assets/reel-studio-result.png",
+      "sha256": "43f152dfcfc98cc3cf6d216de2734f43f5046757510aa9491bb0685f08f7460b"
+    },
+    {
+      "releaseUrl": "https://github.com/mohitkale/reel-studio/releases/download/v0.4.0/reel-studio-0.4.0-editorial-explainer-landscape.mp4",
+      "sha256": "78aab0851ed8447e2c0f6e850b66ec249ec5787a7a5c92085e6c040825cb9c8a"
+    }
+  ],
+  "output": {
+    "path": "docs/assets/script-to-video.gif",
+    "bytes": 1635367,
+    "sha256": "129db4cd0bc1c9149a7ccc08bef3376c38e06d22d8d4681ae8adfca8bdae6259"
+  },
+  "conversion": {
+    "tool": "FFmpeg",
+    "paletteColors": 128,
+    "dither": "bayer",
+    "bayerScale": 3,
+    "instructions": "docs/DEMO_CAPTURE.md"
+  }
+}

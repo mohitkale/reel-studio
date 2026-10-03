@@ -1,3 +1,8 @@
+> **Historical archive.** This document records an earlier plan or measurement.
+> Its instructions, versions, pending work, and dual-engine references are not
+> current project guidance. See [current documentation](../README.md)
+> and the [published v0.4.0 release](https://github.com/mohitkale/reel-studio/releases/tag/v0.4.0).
+
 # Build Brief: "VoiceForge" — a local-first, open-source voice cloning service
 
 Paste this whole file into a fresh Cursor/Claude Code agent as the opening
@@ -150,12 +155,12 @@ file + one registry entry, nothing else changes.
 
 ### Recommended engines (build in this order)
 
-| Priority | Engine | Type | License | Zero-shot | Fine-tune | Notes |
-|---|---|---|---|---|---|---|
-| 1 (MVP) | **XTTS-v2** (Coqui) | TTS | CPML (non-commercial) | Yes, 6–30s ref | Community fine-tune recipes exist | Most mature, best docs/community, multilingual, streaming-capable. Use the maintained community fork (`coqui-tts` on PyPI) since original Coqui Inc. is defunct. |
-| 2 | **F5-TTS** | TTS | Apache-2.0/CC | Yes, ~10s ref | — | Newer, benchmarks above XTTS-v2 on similarity/naturalness in several evals, permissive license — good default once validated. |
-| 3 | **OpenVoice V2** (MyShell) | TTS + tone/style transfer | MIT | Yes, short ref | — | Genuinely permissive, lighter weight, decent quality, good CPU fallback candidate. |
-| 4 (high-fidelity tier) | **RVC** (Retrieval-based Voice Conversion) | Voice conversion (not TTS) | MIT | No — needs a short per-voice training run (minutes, GPU) | Yes (that's its whole design) | Pipeline: any base TTS engine generates speech in a neutral voice → RVC model (trained on the user's longer sample) converts timbre to the target voice. This is the realistic path to "90%+" similarity, and it's the same technique behind most AI voice-cover tools. |
+| Priority               | Engine                                     | Type                       | License               | Zero-shot                                                | Fine-tune                         | Notes                                                                                                                                                                                                                                                                   |
+| ---------------------- | ------------------------------------------ | -------------------------- | --------------------- | -------------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 (MVP)                | **XTTS-v2** (Coqui)                        | TTS                        | CPML (non-commercial) | Yes, 6–30s ref                                           | Community fine-tune recipes exist | Most mature, best docs/community, multilingual, streaming-capable. Use the maintained community fork (`coqui-tts` on PyPI) since original Coqui Inc. is defunct.                                                                                                        |
+| 2                      | **F5-TTS**                                 | TTS                        | Apache-2.0/CC         | Yes, ~10s ref                                            | —                                 | Newer, benchmarks above XTTS-v2 on similarity/naturalness in several evals, permissive license — good default once validated.                                                                                                                                           |
+| 3                      | **OpenVoice V2** (MyShell)                 | TTS + tone/style transfer  | MIT                   | Yes, short ref                                           | —                                 | Genuinely permissive, lighter weight, decent quality, good CPU fallback candidate.                                                                                                                                                                                      |
+| 4 (high-fidelity tier) | **RVC** (Retrieval-based Voice Conversion) | Voice conversion (not TTS) | MIT                   | No — needs a short per-voice training run (minutes, GPU) | Yes (that's its whole design)     | Pipeline: any base TTS engine generates speech in a neutral voice → RVC model (trained on the user's longer sample) converts timbre to the target voice. This is the realistic path to "90%+" similarity, and it's the same technique behind most AI voice-cover tools. |
 
 Start with **XTTS-v2 only** for the MVP (milestone M1). Add the others behind
 the same interface once the core plumbing (upload → embed → synthesize →
@@ -310,7 +315,7 @@ services:
   voiceforge:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.gpu   # swap to Dockerfile.cpu for CPU-only hosts
+      dockerfile: docker/Dockerfile.gpu # swap to Dockerfile.cpu for CPU-only hosts
     ports: ["8089:8089"]
     environment:
       - VOICEFORGE_API_TOKEN=${VOICEFORGE_API_TOKEN}
@@ -385,7 +390,7 @@ Kokoro) implements identically. Adding VoiceForge is additive and small:
    - `listVoices()` → `GET {url}/v1/voices`, map to `VoiceSummary` with
      `category: "cloned"`.
    - `listModels()` → `GET {url}/v1/engines`, expose engine choice as the
-     model dropdown for the *clone-creation* flow (not per-synthesis, since a
+     model dropdown for the _clone-creation_ flow (not per-synthesis, since a
      given cloned voice is already tied to the engine it was created with).
    - `synth(opts)` → `POST {url}/v1/synthesize`, parse the returned WAV with
      the existing `parseWav` helper from `src/lib/wav.ts`, same as

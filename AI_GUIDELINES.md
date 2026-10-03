@@ -41,21 +41,39 @@ Keep changes minimal, high-quality, and consistent with existing architecture.
 - Reuse existing components before creating new ones.
 - Preserve established UI patterns.
 
-## Required Checks Before Finalizing
+## Verification Policy
 
-Run relevant checks when code changes are made:
+Choose local checks by the behavior and risk of the change. Do not rerun the
+entire suite after every small edit or repeat passing checks without a new reason.
 
-- `npm run typecheck`
-- `npm run lint` (if lint-sensitive changes were made)
-- `npm run test` (when behavior changes)
-- `npm run security:scan`
+| Change                                            | Local verification                                                                                         | PR gate                                 |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| Documentation only                                | Markdown formatting, local links/anchors, command accuracy, current screenshots, secret scan               | Configured checks on latest head        |
+| Ordinary code                                     | Affected behavior tests, typecheck, relevant lint, secret scan                                             | Full configured Quality/Security checks |
+| Rendering, security, jobs, database, dependencies | Broader tests and relevant actual exports/browser/migration/cancellation scenarios                         | Linux/Windows checks and builds         |
+| Release                                           | Clean install/upgrade, full checks, browser workflows, actual render matrix, recovery, licenses and assets | Verified exact release commit           |
+
+Use `npm run test:unit -- tests/<affected>.test.ts --maxWorkers=2` for focused
+tests and `npm run test:unit -- --maxWorkers=2` for broader local runs. Add
+meaningful regression coverage; avoid tests that simply mirror implementation.
+Visual changes require actual exported frames and preview/export inspection.
+Keep paid providers and new model downloads opt-in; use fixtures where possible.
+
+Current Quality/Security workflows still run full checks on every PR update and
+push to `main`, including docs. The expensive render matrix is manual, and the
+phonemizer source build is path-filtered/manual. This policy does not skip or
+weaken existing required CI. Any workflow optimization needs its own reviewed
+change that preserves required-check behavior. Do not rerun the source compiler
+for unrelated changes. Avoid simultaneous heavy test/render workloads locally.
+
+See [release validation](docs/production/RELEASE_VALIDATION.md) for release gates.
 
 ## Rendering and Performance Notes
 
 - Rendering is CPU-heavy; prefer backend tuning over random UI workarounds.
 - Keep render queue/progress behavior stable.
 - Render only with the isolated HyperFrames worker. Preserve legacy project content through template migration.
-- HyperFrames needs Node ≥ 22; local http(s) media must be copied into the render project as relative assets (producer blocks remote downloads of localhost URLs).
+- Reel Studio requires Node 24 LTS, minimum 24.15; local http(s) media must be copied into the render project as relative assets (producer blocks remote downloads of localhost URLs).
 - Do not degrade output correctness for speed without explicit user approval.
 - ElevenLabs free/Starter rejects `wav_44100`; fallback + resample lives in `src/providers/voice/elevenlabs.ts` and `normalizeWavToTarget` in `src/lib/wav.ts`.
 
@@ -64,6 +82,12 @@ Run relevant checks when code changes are made:
 - Update `README.md` when setup, scripts, env vars, or architecture expectations change.
 - Keep docs concise and actionable.
 - Avoid private paths, personal identifiers, or proprietary references.
+- Use [docs/README.md](docs/README.md) as the index and keep one canonical guide
+  per topic. Current guides describe shipped behavior, not milestone transcripts.
+- Archive completed plans/audits with an explicit historical label; preserve
+  compatibility fixtures, license notices, and checksummed release evidence.
+- Validate links after moving documents. Keep README focused on the demo,
+  benefits, setup, and contribution paths; put operational detail in the guides.
 
 ## Agent Behavior
 
@@ -86,6 +110,44 @@ The user has requested this complete cycle; do not repeatedly ask for merge
 permission within the authorized task. Explicit draft-only, do-not-merge, pause,
 or alternative workflow requests take precedence. Preserve unrelated work, and
 report concrete blockers when the cycle cannot continue.
+
+## Commit Attribution
+
+Keep the maintainer's Git author/committer identity and append a co-author trailer
+only for the agent(s) actually involved:
+
+- Codex: `Co-authored-by: Codex <codex@openai.com>`.
+- Cursor: `Co-authored-by: Cursor <cursoragent@cursor.com>`.
+
+Do not suppress or strip these trailers. This explicit project preference
+overrides earlier no-AI-attribution rules. Preserve trailers in squash/merge
+messages, verify the final commit on `main`, and do not rewrite published history
+or change global Git identity. Contributors documentation supplements commit
+credit; it does not populate GitHub's Contributors view by itself.
+
+## Release Policy
+
+The maintainer authorizes agents completing repository work to assess and publish
+appropriate GitHub releases without asking for the same release permission again.
+Explicit pause, draft-only, do-not-release, or other user constraints take priority.
+
+- Assess unreleased changes after roughly 3–5 user-facing PRs or completion of
+  a coherent feature set. Release based on user value/readiness, not PR count alone.
+- A significant standalone bug/security fix can justify an earlier patch release.
+- Documentation, attribution, refactors without user-visible behavior, and small
+  maintenance join the next release; do not release after every PR or manufacture
+  changes to meet a count. No timer/scheduled automation is implied.
+- At task completion, compare `main` against the latest stable tag and report
+  whether a release is due or the changes are accumulating for the next one.
+- Choose patch/minor/major versions by compatibility and scope. Synchronize
+  package/lock metadata, changelog, upgrade notes, scripts and affected guides.
+- Before publishing, pass the relevant full release gates, latest-head platform
+  CI/builds, safe upgrade/rollback, actual exports, and component licensing gates.
+- Tag the exact merged, refreshed, verified `main` commit. Never overwrite a
+  published release/tag. Publish meaningful notes and verify downloadable assets
+  and checksums; include matching corresponding source when GPL components ship.
+- Keep provider usage/downloads within existing authorization. Missing provenance,
+  incompatible terms, failing gates, or required reviews block publication.
 
 ## Environment changes
 
