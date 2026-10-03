@@ -76,7 +76,7 @@ The follow-on local-first expansion and its task ledgers are documented in
   provider fallback while preserving explicit uploads, URLs, and selections.
   Stock videos render muted with deterministic scene timing and cover crops in
   HyperFrames, and output records retain their source attribution snapshots.
-- AI planning supports Gemini, OpenAI, Ollama, and LM Studio. Ollama and LM
+- AI planning supports Gemini, OpenAI, Ollama, LM Studio, and llama.cpp. Ollama and LM
   Studio use local endpoints configured in Settings; an absent local server is
   reported as an optional provider status. The deterministic no-key planner
   remains available.
@@ -206,14 +206,14 @@ retain their terms. See [docs/VIDEO_ENGINES.md](docs/VIDEO_ENGINES.md).
 
 ## Local vs optional cloud
 
-| Feature          | Local option                  | Optional cloud            |
-| ---------------- | ----------------------------- | ------------------------- |
-| Voice preview    | Web Speech                    | n/a                       |
-| Voice generation | Kokoro / VoiceForge           | ElevenLabs, Cartesia      |
-| Video render     | HyperFrames (on your machine) | n/a                       |
-| AI planning      | Manual, Ollama, or LM Studio  | Gemini, OpenAI            |
-| Backgrounds      | Upload / gradients            | Pexels, Pixabay, Unsplash |
-| Music            | Bundled CC0 / upload          | Jamendo                   |
+| Feature          | Local option                           | Optional cloud            |
+| ---------------- | -------------------------------------- | ------------------------- |
+| Voice preview    | Web Speech                             | n/a                       |
+| Voice generation | Kokoro / VoiceForge                    | ElevenLabs, Cartesia      |
+| Video render     | HyperFrames (on your machine)          | n/a                       |
+| AI planning      | Manual, Ollama, LM Studio or llama.cpp | Gemini, OpenAI            |
+| Backgrounds      | Upload / gradients                     | Pexels, Pixabay, Unsplash |
+| Music            | Bundled CC0 / upload                   | Jamendo                   |
 
 Caption timing can come from an imported SRT/VTT file, provider timing, or the
 scene timeline. Cartesia and ElevenLabs generation retain measured word timing,
@@ -308,7 +308,7 @@ imports continue to reject private-network targets and redirects.
 
 ### Local AI planning
 
-Start Ollama or LM Studio separately, then open **Settings → Local AI director**.
+Start Ollama, LM Studio or llama.cpp separately, then open **Settings → Local AI director**.
 Save the loopback endpoint, run **Check connection**, choose a discovered model,
 and save again. Reel Studio does not install, start, or download local models.
 
@@ -317,6 +317,10 @@ and save again. Reel Studio does not install, start, or download local models.
 - LM Studio default: `http://127.0.0.1:1234`; load a current 7B+ instruction
   model such as a Qwen 2.5 7B Instruct build. Add a local token only if the LM
   Studio server requires one.
+
+- llama.cpp default: `http://127.0.0.1:8080`; run your existing `llama-server`
+  with a model that supports schema-constrained chat completions. Its model and
+  context are managed by the server; an optional local API token is supported.
 
 Local configuration is stored in `.data/local-ai-config.json` with owner-only
 permissions, separately from cloud keys in `.env.local`. Loopback HTTP works by
@@ -733,3 +737,8 @@ The [director pipeline](docs/DIRECTOR_PIPELINE.md) recognizes supplied metrics,
 charts, lists, quotes and comparisons, saves bounded shot direction, and can
 repair one measured short-text layout per review. Verify its no-key planning,
 word-timed seeks and actual exports with `npm run test:director`.
+
+The typed local-provider and authored-block extension path, catalog compatibility
+audit and shared helpers are documented in [extension guide](docs/EXTENSIONS.md).
+Run `npm run test:extensions` for offline quote-block seeks and actual exports
+in all three formats.

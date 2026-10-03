@@ -82,6 +82,10 @@ them.
 | **Ollama**        | Optional local AI planning adapter     | Reel Studio sends prompts to the user-configured Ollama server. The user is responsible for the selected model's license and usage terms.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | **LM Studio**     | Optional local AI planning adapter     | Reel Studio sends prompts to the user-configured LM Studio server. The user is responsible for LM Studio and the selected model's license and usage terms.                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
+llama.cpp planning uses the user-configured server; the integration's code is MIT.
+The server and each selected model retain their own licenses. No model or server
+binary is bundled by this adapter. See the [llama.cpp server documentation](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md).
+
 **Web Speech API** (browser preview) is provided by the browser vendor; it is
 preview-only and is not used for final MP4 voice tracks.
 
@@ -120,7 +124,7 @@ license.
 
 ## Local-first expansion policy snapshot
 
-The [PR 1 snapshot](production/LOCAL_FIRST_TASKS.md#api-and-licensing-snapshot-2026-09-13)
+The [PR 1 snapshot](production/archive/LOCAL_FIRST_TASKS.md#api-and-licensing-snapshot-2026-09-13)
 records the earlier stock API research and release gates. M8 restricts Unsplash
 to hotlinked previews because the reviewed API guidance does not authorize a
 video-render staging exception; its exports remain gated. Coverr remains disabled pending resolution of its API license gate.

@@ -1,9 +1,18 @@
 import { z } from "zod";
 
-export const LOCAL_AI_PROVIDER_IDS = ["ollama", "lm-studio"] as const;
-export type LocalAIProviderId = (typeof LOCAL_AI_PROVIDER_IDS)[number];
+import {
+  LOCAL_AI_DEFINITIONS,
+  LOCAL_AI_PROVIDER_IDS,
+  type LocalAIProviderId,
+} from "./local-definitions";
+export {
+  LOCAL_AI_PROVIDER_IDS,
+  type LocalAIProviderId,
+} from "./local-definitions";
 
-export const LOCAL_AI_DEFAULTS: Record<
+export const LOCAL_AI_DEFAULTS = Object.fromEntries(
+  LOCAL_AI_PROVIDER_IDS.map((id) => [id, LOCAL_AI_DEFINITIONS[id].defaults]),
+) as Record<
   LocalAIProviderId,
   {
     baseUrl: string;
@@ -11,20 +20,7 @@ export const LOCAL_AI_DEFAULTS: Record<
     contextWindow?: number;
     maxOutputTokens?: number;
   }
-> = {
-  ollama: {
-    baseUrl: "http://127.0.0.1:11434",
-    temperature: 0.7,
-    contextWindow: 8192,
-    maxOutputTokens: 4096,
-  },
-  "lm-studio": {
-    baseUrl: "http://127.0.0.1:1234",
-    temperature: 0.7,
-    contextWindow: 8192,
-    maxOutputTokens: 4096,
-  },
-};
+>;
 
 export const localAIProviderConfigInputSchema = z
   .object({

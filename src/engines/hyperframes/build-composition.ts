@@ -1,3 +1,4 @@
+import { escapeHtml } from "@/lib/html";
 import { MOTION_LIBRARY_STYLES } from "./motion/library-styles";
 import { buildTextFitScript } from "./text-fit";
 import { validateMotionForReel } from "@/video/motion-spec";
@@ -65,21 +66,16 @@ import {
   buildStoryMotionScene,
   STORY_MOTION_STYLES,
 } from "@/engines/hyperframes/motion/story-scenes";
+import {
+  buildRegisteredMotionScene,
+  REGISTERED_MOTION_STYLES,
+} from "./motion/registered-blocks";
 import { isMediaMotionRecipe } from "@/production/motion";
 import {
   resolveCaptionRenderStyle,
   splitCaptionText,
   splitCaptionWords,
 } from "@/lib/caption-render";
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
 /** Style element content needs CSS string escaping, not HTML entities. */
 function cssFontStack(value: string): string {
@@ -930,22 +926,20 @@ function buildSeekScript(
 /**
  * Serialize ReelProps into a standalone HyperFrames HTML document.
  *
- * @param inlineCatalog When true (editor preview), embed catalog block markup
- *   into the host so srcDoc iframes work without a compositions/ folder.
- *   Producer renders should leave this false and rely on data-composition-src.
  */
 export function buildHyperframesCompositionHtml(
   props: ReelProps,
   opts: {
-    inlineCatalog?: boolean;
     producerMode?: boolean;
     runtimeUrl?: string;
     /** Preserve the complete endpoint for silent globally timed section projects. */
     totalFrames?: number;
   } = {},
 ): string {
-  const inlineCatalog = opts.inlineCatalog === true;
-  const motionSpec = validateMotionForReel({ ...props, motionSpec: props.motionSpec ?? compileDirectorMotion(props) });
+  const motionSpec = validateMotionForReel({
+    ...props,
+    motionSpec: props.motionSpec ?? compileDirectorMotion(props),
+  });
   const fps = props.fps || 30;
   const width = props.width || 1080;
   const height = props.height || 1920;
@@ -1023,6 +1017,7 @@ export function buildHyperframesCompositionHtml(
       transitionClass,
     };
     const authoredMotionScene =
+      buildRegisteredMotionScene(motionArgs) ??
       buildStoryMotionScene(motionArgs) ??
       buildMediaMotionScene(motionArgs) ??
       buildDiagramMotionScene(motionArgs) ??
@@ -1096,7 +1091,6 @@ export function buildHyperframesCompositionHtml(
         transitionClass,
         accent,
         motionStiffness,
-        inline: inlineCatalog,
         backgroundHtml: backgroundLayer(scene, absoluteStart, duration),
         catalogRevision: props.catalogRevision,
       });
@@ -1218,7 +1212,8 @@ export function buildHyperframesCompositionHtml(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reel Studio · HyperFrames</title>
-  <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}${TYPE_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_MOTION_STYLES}${STORY_MOTION_STYLES}${MOTION_LIBRARY_STYLES}
+  <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}${TYPE_MOTION_STYLES}
+${REGISTERED_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_MOTION_STYLES}${STORY_MOTION_STYLES}${MOTION_LIBRARY_STYLES}
     .rs-subtitle{position:absolute;z-index:50;inset:0;box-sizing:border-box;display:flex;flex-direction:column;justify-content:${captionResolved.outer.justifyContent};align-items:${captionResolved.outer.alignItems};padding:${captionResolved.outer.paddingTop}px ${captionResolved.outer.paddingRight}px ${captionResolved.outer.paddingBottom}px ${captionResolved.outer.paddingLeft}px;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
     .rs-subtitle>span{display:block;max-width:${captionInner.maxWidth}px;padding:${captionInner.padding};border-radius:${captionInner.borderRadius}px;background:${captionInner.background};color:${captionInner.color};font-family:${cssFontStack(captionInner.fontFamily)};font-weight:${captionInner.fontWeight};line-height:${captionInner.lineHeight};letter-spacing:${captionInner.letterSpacing};text-align:${captionInner.textAlign};text-shadow:${captionInner.textShadow};${captionInner.WebkitTextStroke ? `-webkit-text-stroke:${captionInner.WebkitTextStroke};` : ""}overflow-wrap:anywhere}
     .rs-caption-line{display:block}.rs-caption-word{display:inline-block;position:relative}.rs-caption-active{position:absolute;inset:0;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}

@@ -1,3 +1,5 @@
+> Historical task ledger. Current implementation and release evidence are maintained in the active documentation.
+
 # Local-first PR 2 task ledger
 
 Scope: tasks 5–6 only. Base: `f4e7286cc222e1d6eea052fe225fe03a544cd448`.
@@ -35,7 +37,7 @@ PR 1 was merged before this branch was created. Branch: `feat/podcast-finishing`
 - Passing checks: typecheck, zero-warning lint, 12 focused tests across five test
   files, release contract, and Next.js production build.
 - The compact committed render evidence is
-  [LOCAL_FIRST_PR2_RENDER_MATRIX.json](LOCAL_FIRST_PR2_RENDER_MATRIX.json).
+  [LOCAL_FIRST_PR2_RENDER_MATRIX.json](../LOCAL_FIRST_PR2_RENDER_MATRIX.json).
   Full MP4s, sampled frames, contact sheets, and the generated report remain in
   ignored `.artifacts` paths.
 

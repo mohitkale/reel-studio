@@ -1,3 +1,4 @@
+import { SSE_HEADERS } from "@/server/sse";
 import { ProviderError } from "@/providers/voice/types";
 import { errorResponse } from "@/server/api-helpers";
 import { authorize } from "@/server/auth";
@@ -50,11 +51,7 @@ export async function GET(
     }
 
     return new Response(upstream.body, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
+      headers: SSE_HEADERS,
     });
   } catch (e) {
     return errorResponse(e);

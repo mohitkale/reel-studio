@@ -1,3 +1,4 @@
+import { SSE_HEADERS } from "./sse";
 /** Database-backed SSE with one in-flight read and a bounded output queue. */
 export function progressResponse<T>(
   req: Request,
@@ -71,11 +72,6 @@ export function progressResponse<T>(
     { highWaterMark: 1 },
   );
   return new Response(stream, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache, no-transform",
-      Connection: "keep-alive",
-      "X-Accel-Buffering": "no",
-    },
+    headers: SSE_HEADERS,
   });
 }

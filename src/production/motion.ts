@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { EXTENSION_MOTION_RECIPES } from "@/video/motion-extensions";
 
 import type { ProductionSceneRole } from "@/production/roles";
 
@@ -116,25 +117,12 @@ export const MOTION_RECIPES = [
   ...DIAGRAM_MOTION_RECIPES,
   ...MEDIA_MOTION_RECIPES,
   ...STORY_MOTION_RECIPES,
+  ...EXTENSION_MOTION_RECIPES,
 ] as const;
 
-export const motionRecipeIdSchema = z.enum([
-  "type-stack",
-  "type-impact",
-  "type-editorial",
-  "data-spotlight",
-  "data-bars",
-  "diagram-path",
-  "diagram-orbit",
-  "media-device",
-  "media-cinematic",
-  "comparison-split",
-  "comparison-stack",
-  "quiet-divider",
-  "quiet-center",
-  "brand-lockup",
-  "brand-frame",
-]);
+export const motionRecipeIdSchema = z.enum(
+  MOTION_RECIPES.map((recipe) => recipe.id),
+);
 export type MotionRecipeId = z.infer<typeof motionRecipeIdSchema>;
 
 export const motionDirectionSchema = z.object({
@@ -225,6 +213,14 @@ export function motionFallbackReason(
     return "Word stack supports one to eight supplied words.";
   if (hasOtherVisualContent)
     return "This scene already has a visual or list that this treatment would hide.";
+  if (
+    EXTENSION_MOTION_RECIPES.some((recipe) => recipe.id === direction.recipeId)
+  ) {
+    if (!text.trim()) return "Add copy for this treatment.";
+    if (background?.url || chart || items?.length)
+      return "This treatment cannot hide supplied media, chart data or list items.";
+    return undefined;
+  }
   if (isStoryMotionRecipe(direction.recipeId)) {
     if (!text.trim()) return "Add copy for this treatment.";
     if (background?.url || chart)
@@ -418,6 +414,31 @@ export function chooseSceneMotion(input: {
   }
   if (input.hasVisualContent) return undefined;
   if (input.background?.url) return undefined;
+  const extensionChoices = EXTENSION_MOTION_RECIPES.filter((recipe) =>
+    recipe.roles.some((role) => role === input.role),
+  );
+  if (extensionChoices.length) {
+    const current = input.current;
+    const candidates =
+      current &&
+      extensionChoices.some((recipe) => recipe.id === current.recipeId)
+        ? [
+            current,
+            ...extensionChoices.map((recipe) => motionDirection(recipe.id)),
+          ]
+        : extensionChoices.map((recipe) => motionDirection(recipe.id));
+    return candidates.find(
+      (direction) =>
+        !motionFallbackReason(
+          direction,
+          input.text,
+          input.chart,
+          false,
+          input.items,
+          input.background,
+        ),
+    );
+  }
   const storyChoices: MotionRecipeId[] =
     input.role === "comparison" && !input.chart
       ? ["comparison-split", "comparison-stack"]

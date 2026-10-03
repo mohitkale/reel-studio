@@ -1,4 +1,5 @@
 "use client";
+import { isCompatibleLocalAIProvider } from "@/providers/ai/local-definitions";
 
 import * as React from "react";
 import { Activity, Check, CircleAlert } from "lucide-react";
@@ -49,7 +50,7 @@ export function LocalAIProviderCard({
           contextWindow: optionalNumber(contextWindow),
           maxOutputTokens: optionalNumber(maxOutputTokens),
           allowLan,
-          ...(status.id === "lm-studio" && token ? { token } : {}),
+          ...(isCompatibleLocalAIProvider(status.id) && token ? { token } : {}),
         },
       },
       {
@@ -175,7 +176,7 @@ export function LocalAIProviderCard({
             onChange={(event) => setMaxOutputTokens(event.target.value)}
           />
         </div>
-        {status.id === "lm-studio" ? (
+        {isCompatibleLocalAIProvider(status.id) ? (
           <div className="grid gap-2">
             <Label htmlFor="local-ai-lm-token">Optional local token</Label>
             <Input

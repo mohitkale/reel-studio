@@ -67,6 +67,10 @@ const content: Record<MotionRecipeId, Partial<ReelScene> & { text: string }> = {
   },
   "brand-lockup": { text: "Make something worth sharing.", role: "cta" },
   "brand-frame": { text: "Your next story starts here.", role: "logo" },
+  "quote-margin": {
+    text: "Make the message clear before adding motion.",
+    role: "quote",
+  },
 };
 export function motionLibraryFixture(width = 540, height = 960): ReelProps {
   const fps = 24;

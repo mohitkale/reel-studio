@@ -116,7 +116,7 @@ function checkReleaseMetadata() {
     "docs/production/RELEASE_MATRIX_0.4.0.json",
     "docs/production/LOCAL_FIRST_PR2_RENDER_MATRIX.json",
     "docs/production/RELEASE_VALIDATION.md",
-    "docs/production/LOCAL_FIRST_PR8_TASKS.md",
+    "docs/production/archive/LOCAL_FIRST_PR8_TASKS.md",
     "mcp/README.md",
   ]) {
     assert(

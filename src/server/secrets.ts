@@ -1,3 +1,4 @@
+import { createSerialQueue } from "@/lib/serial-queue";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
@@ -268,25 +269,22 @@ export async function revokeNamedMcpToken(id: string): Promise<boolean> {
   return true;
 }
 
-let namedTokenWrite = Promise.resolve();
+const namedTokenWrite = createSerialQueue();
 
 /** Reserve one unknown-price paid provider request before it starts. */
 export async function reserveNamedMcpPaidRequest(id: string): Promise<boolean> {
-  let reserved = false;
-  namedTokenWrite = namedTokenWrite.then(async () => {
+  return namedTokenWrite(async () => {
     const records = namedMcpTokens();
     const index = records.findIndex((record) => record.id === id);
-    if (index < 0) return;
+    if (index < 0) return false;
     const record = records[index];
-    if (record.paidRequestsUsed >= record.paidRequestLimit) return;
+    if (record.paidRequestsUsed >= record.paidRequestLimit) return false;
     records[index] = {
       ...record,
       paidRequestsUsed: record.paidRequestsUsed + 1,
       lastUsedAt: new Date().toISOString(),
     };
     await saveNamedMcpTokens(records);
-    reserved = true;
+    return true;
   });
-  await namedTokenWrite;
-  return reserved;
 }

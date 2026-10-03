@@ -204,9 +204,7 @@ describe("resolved production composition", () => {
       const resolved = resolveProductionComposition(
         productionSpec("hyperframes", orientation),
       );
-      const html = buildHyperframesCompositionHtml(resolved.reelProps, {
-        inlineCatalog: true,
-      });
+      const html = buildHyperframesCompositionHtml(resolved.reelProps, {});
 
       expect(html).toContain(`data-orientation="${orientation}"`);
       expect(html).toContain(`data-width="${resolved.layout.width}"`);

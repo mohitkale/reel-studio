@@ -8,9 +8,9 @@ import { motionLibraryFixture } from "../../tests/fixtures/motion-library";
 import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-composition";
 
 describe("authored motion library", () => {
-  it("compiles all fifteen validated blocks without falling back or making up data", () => {
+  it("compiles all registered validated blocks without falling back or making up data", () => {
     const props = motionLibraryFixture();
-    expect(MOTION_RECIPES).toHaveLength(15);
+    expect(MOTION_RECIPES).toHaveLength(16);
     for (const scene of props.scenes)
       expect(
         motionFallbackReason(
@@ -30,7 +30,7 @@ describe("authored motion library", () => {
       const html = buildHyperframesCompositionHtml({ ...props, width, height });
       for (const recipe of MOTION_RECIPES)
         expect(html).toContain(`data-motion-recipe="${recipe.id}"`);
-      expect(html.match(/class="ml-ambient"/g)).toHaveLength(15);
+      expect(html.match(/class="ml-ambient"/g)).toHaveLength(16);
       expect(html).toContain("72%");
       expect(html).toContain("Synthetic verification data");
       expect(html).toContain("--brand-foreground:");

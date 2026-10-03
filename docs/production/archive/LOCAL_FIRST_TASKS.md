@@ -1,3 +1,5 @@
+> Historical task ledger. Current implementation and release evidence are maintained in the active documentation.
+
 # Local-first PR 1 task ledger
 
 Scope: tasks 1–4 only. Base: `5e6a4b74599ffa51cb3fc8e504db2fbba2ae713a`.
@@ -28,7 +30,7 @@ replay after a worker lease expires.
 ## Baseline and validation fixtures
 
 - Exact installed and lockfile versions, licenses, integrity and registry URLs:
-  [LOCAL_FIRST_SNAPSHOT.json](LOCAL_FIRST_SNAPSHOT.json). Every direct installed
+  [LOCAL_FIRST_SNAPSHOT.json](../LOCAL_FIRST_SNAPSHOT.json). Every direct installed
   version was compared with package.json and package-lock.json; all match.
 - Existing contracts: CONTRACTS.md, production-jobs.test.ts,
   video-production-orchestrator.test.ts, production-batches.test.ts and REST/MCP
@@ -162,7 +164,7 @@ startup still needs sufficient Docker disk space. No cleanup or Docker settings
 change was performed; those require the user's approval. Test containers are
 stopped; test images/cache are retained locally.
 
-Final evidence is summarized in [PR1_VALIDATION.json](PR1_VALIDATION.json), with
+Final evidence is summarized in [PR1_VALIDATION.json](../PR1_VALIDATION.json), with
 raw Docker logs in `.artifacts/docker-runtime-final.log`. All PR 1 code gates are
 satisfied under the documented isolated validation configuration. The complete
 diff against main was reviewed for tasks 1–4 scope, compatibility, and whitespace;

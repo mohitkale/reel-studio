@@ -1,3 +1,5 @@
+> Historical task ledger. Current implementation and release evidence are maintained in the active documentation.
+
 # Local-first PR 6 task ledger
 
 Scope: Tasks 21–23 only. Base:

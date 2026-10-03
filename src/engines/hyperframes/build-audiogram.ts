@@ -1,13 +1,5 @@
+import { escapeHtml as escape } from "@/lib/html";
 import type { PodcastAudiogramProps } from "@/video/podcast-audiogram";
-
-function escape(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
 
 /** Timed speaker cards and waveform share one seekable timeline; audio is owned
  * by HyperFrames. Narration is the original selected podcast recording. */

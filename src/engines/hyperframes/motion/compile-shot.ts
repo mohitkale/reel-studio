@@ -1,14 +1,6 @@
+import { escapeHtml as escape } from "@/lib/html";
 import type { MotionShot } from "@/video/motion-spec";
 import type { BrandTokens } from "@/video/tokens";
-
-function escape(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
 
 /** The prototype accepts data only, never arbitrary CSS, JS, selectors or HTML. */
 export function compileMotionShot(

@@ -1,3 +1,4 @@
+import { escapeHtml } from "@/lib/html";
 import type { BrandTokens } from "@/video/tokens";
 import type { ReelScene } from "@/video/types";
 import {
@@ -6,14 +7,6 @@ import {
 } from "@/production/motion";
 import { storyBrandName, storyMotionGeometry } from "@/production/story-motion";
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 export function buildStoryMotionScene(args: {
   scene: ReelScene;
   tokens: BrandTokens;
