@@ -38,14 +38,24 @@ export async function phonemize(text, language = "en-us") {
     module._free(pointer);
   }
 }
-export async function list_voices() {
+export async function list_voices(language) {
   const module = await engine();
   const pointer = module.ccall("reel_voices", "number", [], []);
   if (!pointer) throw new Error("Could not list eSpeak voices");
   try {
-    return JSON.parse(module.UTF8ToString(pointer)).filter((voice) =>
+    const voices = JSON.parse(module.UTF8ToString(pointer))
+      .map((voice) => ({
+        ...voice,
+        languages: voice.languages.filter(
+          (value) => value.name.split("-")[0] === "en",
+        ),
+      }))
+      .filter((voice) => voice.languages.length);
+    if (!language) return voices;
+    const base = language.split("-")[0];
+    return voices.filter((voice) =>
       voice.languages.some(
-        (language) => language.name === "en" || language.name.startsWith("en-"),
+        (value) => value.name === base || value.name.startsWith(`${base}-`),
       ),
     );
   } finally {

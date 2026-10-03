@@ -9,11 +9,11 @@ git clone https://github.com/espeak-ng/espeak-ng.git "$build_dir/source"
 git -C "$build_dir/source" checkout --detach "$source_revision"
 cd "$build_dir/source"
 ./autogen.sh
-./configure --prefix=/usr --without-pcaudiolib --without-async --without-mbrola --without-sonic --disable-shared --enable-static
+./configure --prefix=/usr --with-gradle=disabled --without-pcaudiolib --without-async --without-mbrola --without-sonic --disable-shared --enable-static
 make -j2
 cp -R espeak-ng-data "$build_dir/compiled-data"
 make distclean
-emconfigure ./configure --prefix=/usr --without-pcaudiolib --without-async --without-mbrola --without-sonic --disable-shared --enable-static
+emconfigure ./configure --prefix=/usr --with-gradle=disabled --without-pcaudiolib --without-async --without-mbrola --without-sonic --disable-shared --enable-static
 emmake make -j2 src/libespeak-ng.la
 emcc "$root_dir/vendor/phonemizer/reel-phonemizer.c" src/.libs/libespeak-ng.a -Isrc/include -O2 \
   -sMODULARIZE=1 -sEXPORT_ES6=1 -sSINGLE_FILE=1 -sENVIRONMENT=web,worker \
