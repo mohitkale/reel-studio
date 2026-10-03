@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+: "${PHONEMIZER_NODE:?Save the Node 24 executable path before activating emsdk}"
 : "${EMSDK:?Activate pinned Emscripten 3.1.30 before building}"
 root_dir="$(pwd)"
 source_revision=0dfd1d77dd7f96ef1ea6856c9fa5cfac01599582
@@ -29,4 +30,4 @@ cp COPYING COPYING.APACHE COPYING.BSD2 COPYING.UCD "$root_dir/vendor/phonemizer/
 # corresponding-source archive (upstream tree + binding + adapter + build scripts).
 
 cd "$root_dir"
-node scripts/phonemizer-provenance.mjs "$source_revision" "$(emcc --version | head -1)" "$build_dir/source"
+"$PHONEMIZER_NODE" scripts/phonemizer-provenance.mjs "$source_revision" "$(emcc --version | head -1)" "$build_dir/source"

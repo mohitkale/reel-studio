@@ -33,6 +33,7 @@ jobs:
           .artifacts/emsdk/emsdk activate 3.1.30
       - name: Build pinned engine and corresponding source
         run: |
+          export PHONEMIZER_NODE="$(command -v node)"
           source .artifacts/emsdk/emsdk_env.sh
           bash scripts/build-phonemizer.sh
       - name: Smoke test actual engine

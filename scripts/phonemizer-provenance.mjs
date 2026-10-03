@@ -72,6 +72,18 @@ for (const file of ["build-phonemizer.sh", "phonemizer-provenance.mjs"])
     `scripts/${file}`,
     path.join(output, "reel-studio/scripts", file),
   );
+// Include the compiler runtime/library sources that are embedded in the engine.
+for (const directory of ["src", "system/lib", "system/include"]) {
+  await fs.cp(
+    path.join(process.env.EMSDK, "upstream/emscripten", directory),
+    path.join(output, "emscripten-runtime", directory),
+    { recursive: true },
+  );
+}
+await fs.copyFile(
+  path.join(process.env.EMSDK, "upstream/emscripten/LICENSE"),
+  path.join(output, "emscripten-runtime/LICENSE"),
+);
 await fs.copyFile(
   ".github/workflows/phonemizer-source.yml",
   path.join(output, "reel-studio/build-workflow.yml"),
