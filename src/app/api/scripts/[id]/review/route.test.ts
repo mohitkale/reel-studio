@@ -1,11 +1,22 @@
 // @vitest-environment node
 import { beforeEach, expect, it, vi } from "vitest";
-const { authorize, createVisualReview } = vi.hoisted(() => ({
-  authorize: vi.fn(),
-  createVisualReview: vi.fn(),
-}));
+const { authorize, createVisualReview, repair, getScript, revision } =
+  vi.hoisted(() => ({
+    authorize: vi.fn(),
+    createVisualReview: vi.fn(),
+    repair: vi.fn(),
+    getScript: vi.fn(),
+    revision: vi.fn(),
+  }));
 vi.mock("@/server/auth", () => ({ authorize }));
 vi.mock("@/library/visual-review", () => ({ createVisualReview }));
+vi.mock("@/library/director-review", () => ({
+  reviewAndRepairDirection: repair,
+}));
+vi.mock("@/library/repositories/scripts", () => ({ getScript }));
+vi.mock("@/library/production-revision", () => ({
+  currentVideoRevisionHash: revision,
+}));
 import { POST } from "./route";
 import { ProviderError } from "@/providers/voice/types";
 const context = { params: Promise.resolve({ id: "script" }) };
@@ -47,8 +58,45 @@ it("uses only saved script and selected take inputs", async () => {
   expect(response.status).toBe(200);
   expect(createVisualReview).toHaveBeenCalledWith(
     "script",
-    { sceneIds: ["a"], samples: 1, voiceTakeId: "take", mode: "scene" },
+    {
+      sceneIds: ["a"],
+      samples: 1,
+      voiceTakeId: "take",
+      mode: "scene",
+      repairPasses: 0,
+    },
     "http://localhost",
     expect.any(AbortSignal),
   );
+});
+
+it("returns the matching repaired script for editor refresh and rejects changes after recapture", async () => {
+  repair.mockResolvedValue({
+    revision: "visual-stage-cache-key",
+    repair: { repairedSceneIds: ["a"], sourceRevision: "repaired" },
+    stills: [],
+  });
+  getScript.mockResolvedValue({
+    id: "script",
+    scenes: [
+      {
+        id: "a",
+        direction: {
+          version: 1,
+          composition: "layered-title",
+          role: "headline",
+        },
+      },
+    ],
+  });
+  revision
+    .mockResolvedValueOnce("repaired")
+    .mockResolvedValueOnce("later-edit");
+  const body = '{"sceneIds":["a"],"repairPasses":1}';
+  const response = await POST(request(body), context);
+  expect(response.status).toBe(200);
+  expect((await response.json()).script.scenes[0].direction.composition).toBe(
+    "layered-title",
+  );
+  expect((await POST(request(body), context)).status).toBe(409);
 });

@@ -13,10 +13,11 @@ import {
   type ProductionPresetId,
 } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
-import { scenePlanSchema, type ScenePlan } from "@/providers/ai/types";
+import { aiSceneSchema, scenePlanSchema, type ScenePlan } from "@/providers/ai/types";
 import { proposeChapterPlan } from "@/production/chapters";
 import { estimateTimeline } from "@/lib/preview-timeline";
 import { PRODUCTION_LIMITS } from "@/production/limits";
+import { analyzeBeat, directScene } from "@/production/director";
 
 export const manualCreationSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -62,6 +63,7 @@ function sentencePieces(text: string): string[] {
     .split(/\n{2,}/)
     .filter(Boolean);
   return paragraphs.flatMap((paragraph) => {
+    if (["chart", "list", "comparison"].includes(analyzeBeat(paragraph).kind)) return [paragraph];
     const segments = Array.from(
       new Intl.Segmenter(undefined, { granularity: "sentence" }).segment(
         paragraph,
@@ -148,6 +150,7 @@ function wordCount(text: string): number {
 }
 
 function splitForShortScenes(piece: string, maxWords = 28): string[] {
+  if (analyzeBeat(piece).kind !== "prose" && piece.length <= 240) return [piece];
   const words = piece.split(/\s+/).filter(Boolean);
   if (words.length <= maxWords) return [piece];
   const chunks: string[] = [];
@@ -198,7 +201,7 @@ function polishedSentenceScore(
 export function segmentPolishedVideoText(text: string): string[] {
   const normalized = normalizeText(text);
   const all = sentencePieces(normalized).filter(
-    (piece) => wordCount(piece) >= 3,
+    (piece) => wordCount(piece) >= 3 || analyzeBeat(piece).kind !== "prose",
   );
   if (!all.length) return [normalized];
 
@@ -291,19 +294,20 @@ export function createDeterministicProductionPlan(args: {
   const scenes = segments.map((narration, index) => {
     const display = displayCopy(narration);
     shortened ||= display.shortened;
-    const role = roles[index]!;
-    return {
+    const directed = directScene(aiSceneSchema.parse({
       templateId:
         getPresetTemplateId({
           presetId: args.presetId,
           engineId: args.videoEngine,
-          role,
+          role: roles[index]!,
         }) ?? defaultTemplateIdForEngine(args.videoEngine),
       text: display.text,
       spokenText: narration === display.text ? undefined : narration,
       emphasis: [],
       musicMood: preset.defaults.musicMood,
-    };
+    }), roles[index]!, args.hasVisualAsset);
+    roles[index] = directed.role;
+    return directed.scene;
   });
   if (!scenes.length)
     throw new Error("Supply narration before creating a draft.");

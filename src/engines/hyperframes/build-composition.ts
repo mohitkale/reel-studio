@@ -1,6 +1,7 @@
 import { MOTION_LIBRARY_STYLES } from "./motion/library-styles";
 import { buildTextFitScript } from "./text-fit";
 import { validateMotionForReel } from "@/video/motion-spec";
+import { compileDirectorMotion } from "@/video/director-motion";
 import { compileMotionShot } from "./motion/compile-shot";
 import { LOCALIZABLE_GSAP_URLS, GSAP_PREVIEW_URL } from "./runtime";
 /**
@@ -944,7 +945,7 @@ export function buildHyperframesCompositionHtml(
   } = {},
 ): string {
   const inlineCatalog = opts.inlineCatalog === true;
-  const motionSpec = validateMotionForReel(props);
+  const motionSpec = validateMotionForReel({ ...props, motionSpec: props.motionSpec ?? compileDirectorMotion(props) });
   const fps = props.fps || 30;
   const width = props.width || 1080;
   const height = props.height || 1920;

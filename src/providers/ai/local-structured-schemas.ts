@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 import { productionChartDataSchema } from "@/production/spec";
+import { shotDirectionSchema } from "@/video/shot-direction";
+import { normalizeOptionalPlanFields } from "./director-schema";
 import {
   planEffectSchema,
   planEnergySchema,
@@ -12,6 +14,7 @@ import { podcastAiCharacterSchema, podcastAiTurnSchema } from "./podcast-types";
 
 const strictSceneSchema = z
   .object({
+    direction: shotDirectionSchema.optional(),
     text: z.string().min(1),
     spokenText: z.string().optional(),
     capabilityId: z
@@ -29,7 +32,7 @@ const strictSceneSchema = z
   })
   .strict();
 
-export const strictLocalScenePlanSchema = z
+export const strictLocalScenePlanSchema = z.preprocess(normalizeOptionalPlanFields, z
   .object({
     projectName: z.string().min(1),
     scriptName: z.string().min(1),
@@ -38,7 +41,7 @@ export const strictLocalScenePlanSchema = z
     energy: planEnergySchema,
     scenes: z.array(strictSceneSchema).min(1).max(20),
   })
-  .strict();
+  .strict());
 
 export const strictLocalPodcastPlanSchema = z
   .object({

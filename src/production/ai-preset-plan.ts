@@ -8,6 +8,7 @@ import {
 import type { ProductionSceneRole } from "@/production/roles";
 import { scenePlanSchema, type ScenePlan } from "@/providers/ai/types";
 import { capabilityIdForTemplateId } from "@/engines/capabilities";
+import { directScene, groundSceneData } from "@/production/director";
 
 const MEDIA_ROLES = new Set<ProductionSceneRole>([
   "screenshot-demo",
@@ -87,6 +88,8 @@ export function applyPresetToAIPlan(
     hasVisualAsset?: boolean;
     sceneHasVisual?: boolean[];
     continuation?: boolean;
+    /** Actual user source, used to admit numeric displays from AI output. */
+    source?: string;
   } = {},
 ): { plan: ScenePlan; roles: ProductionSceneRole[] } {
   const roles = resolvePresetRoles(presetId, plan.scenes.length, options);
@@ -95,15 +98,51 @@ export function applyPresetToAIPlan(
     plan: scenePlanSchema.parse({
       ...plan,
       scenes: plan.scenes.map((scene, index) => {
+        const directed = directScene(
+          scene,
+          roles[index]!,
+          options.sceneHasVisual?.[index] ?? options.hasVisualAsset,
+        );
+        let rejectedData = false;
+        if (options.source !== undefined) {
+          const grounded = groundSceneData(directed.scene, options.source);
+          if (
+            (directed.scene.chart && !grounded.chart) ||
+            (directed.scene.visual &&
+              !grounded.visual &&
+              /\d/.test(directed.scene.visual))
+          ) {
+            rejectedData = true;
+            grounded.templateId = "hf-statement";
+            directed.role = "explanation";
+            grounded.direction = {
+              version: 1,
+              role: "explanation",
+              composition: "authored",
+            };
+          }
+          directed.scene = grounded;
+        }
+        roles[index] = directed.role;
         const mapped =
           getPresetTemplateId({ presetId, engineId, role: roles[index]! }) ??
           defaultTemplateIdForEngine(engineId);
         return {
-          ...scene,
-          templateId:
-            mapped === "hf-broll" && options.sceneHasVisual?.[index] === false
-              ? "hf-statement"
-              : mapped,
+          ...directed.scene,
+          templateId: rejectedData
+            ? "hf-statement"
+            : directed.scene.templateId !== scene.templateId ||
+                directed.scene.direction?.composition === "layered-title" ||
+                ["chart", "metric", "quote", "diagram"].includes(
+                  directed.role,
+                ) ||
+                (directed.role === "comparison" &&
+                  Boolean(directed.scene.items?.length))
+              ? directed.scene.templateId
+              : mapped === "hf-broll" &&
+                  options.sceneHasVisual?.[index] === false
+                ? "hf-statement"
+                : mapped,
         };
       }),
     }),

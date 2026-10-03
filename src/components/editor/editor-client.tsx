@@ -202,6 +202,7 @@ export function EditorClient({
         carouselImages: s.carouselImages,
         role: s.role,
         motion: s.motion,
+        direction: s.direction,
         // Per-scene override wins; otherwise the script-wide default.
         hideText: s.hideText ?? script?.hideText,
         mood: s.mood as ReelScene["mood"],
@@ -228,6 +229,7 @@ export function EditorClient({
             carouselImages: selectedScene.carouselImages,
             role: selectedScene.role,
             motion: selectedScene.motion,
+            direction: selectedScene.direction,
             hideText: selectedScene.hideText ?? script?.hideText,
             mood: selectedScene.mood as ReelScene["mood"],
             order: selectedScene.order,
@@ -599,6 +601,7 @@ export function EditorClient({
                       chart: s.chart,
                       role: s.role,
                       motion: s.motion,
+                      direction: s.direction,
                       assetRefs: s.assetRefs,
                       locks: s.locks,
                       hideText: s.hideText,
@@ -972,6 +975,7 @@ export function EditorClient({
                   musicUrl={script.musicUrl ?? undefined}
                   musicVolume={script.musicVolume}
                   sfxCues={sfxCues}
+                  spokenWords={resolveSpokenWordWindows(script.captionTracks, takeUsable ? selectedTake?.id : null, fps)}
                   captions={script.captionTracks?.find(
                     (track) => track.enabled,
                   )}

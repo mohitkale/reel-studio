@@ -18,6 +18,7 @@ import {
 import { writeHyperframesReviewProject } from "@/library/hyperframes-render";
 import { getAssetStore } from "@/library/storage";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
+import { resolveSpokenWordWindows } from "@/lib/spoken-word-windows";
 import { resolveSpokenText } from "@/lib/spoken-text";
 import { coverFrames, type ReelProps } from "@/video/types";
 import { ProviderError } from "@/providers/voice/types";
@@ -270,6 +271,7 @@ export async function createVisualReview(
       height: captured.script.height,
       fps: captured.script.fps,
       audioUrl: undefined,
+      spokenWords: resolveSpokenWordWindows(captured.script.captionTracks, timing.takeUsable ? captured.take?.id : null, captured.script.fps),
       musicUrl: undefined,
       sfxCues: [],
     };

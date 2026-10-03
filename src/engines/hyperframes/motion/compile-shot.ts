@@ -39,7 +39,7 @@ export function compileMotionShot(
               element.kind === "text"
                 ? `color:${paint};font-size:${element.fontSize}px;text-align:${element.align};font-weight:700;line-height:1.1;overflow-wrap:anywhere;display:flex;align-items:center;justify-content:${element.align === "left" ? "flex-start" : element.align === "right" ? "flex-end" : "center"}`
                 : `background:${paint};border-radius:${element.shape === "ellipse" ? "50%" : "0"}`;
-            return `<div data-graph-element="${escape(element.id)}" data-graph-tracks="${escape(JSON.stringify(element.tracks))}" style="${style}${appearance}">${element.kind === "text" ? escape(element.text) : ""}</div>`;
+            return `<div data-graph-element="${escape(element.id)}" ${element.kind === "text" ? `data-graph-text data-review-content data-graph-font-size="${element.fontSize}"` : ""} data-graph-tracks="${escape(JSON.stringify(element.tracks))}" style="${style}${appearance}">${element.kind === "text" ? `<span>${escape(element.text)}</span>` : ""}</div>`;
           })
           .join("")}</div>`,
     )

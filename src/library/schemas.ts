@@ -4,6 +4,7 @@ import { audioMasteringSchema } from "@/production/audio-mastering";
 import { chapterPlanSchema } from "@/production/chapters";
 import { chapterDraftSchema } from "@/production/chapter-draft";
 import { motionPlanSettingsSchema } from "@/production/motion-plan";
+import { shotDirectionSchema } from "@/video/shot-direction";
 import { musicMapSchema } from "@/production/music-map";
 
 import { assertSafeMediaUrl } from "@/lib/media-url-safety";
@@ -157,6 +158,7 @@ export const DEFAULT_SCENE_LOCKS: SceneLocks = {
 
 /** Per-scene config stored in the Scene.layoutJson column. */
 export const sceneConfigSchema = z.object({
+  direction: shotDirectionSchema.optional(),
   /** Explicit, versioned visual direction. Absent means the legacy preset renderer. */
   motion: motionDirectionSchema.optional(),
   background: sceneBackgroundSchema.optional(),

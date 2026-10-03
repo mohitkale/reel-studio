@@ -267,7 +267,7 @@ export function repairChecklistScene(scene: AIScene): AIScene {
   return {
     ...scene,
     items,
-    visual: scene.visual?.trim() || "✓",
+    visual: scene.direction?.role === "diagram" ? undefined : scene.visual?.trim() || "✓",
   };
 }
 

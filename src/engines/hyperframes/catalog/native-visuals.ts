@@ -1272,22 +1272,9 @@ export function buildGsapMotionBootScript(
       if (card) tl.fromTo(card, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 0.4);
       if (money) {
         tl.fromTo(money, { opacity: 0, y: 36, scale: 0.86 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: 'back.out(1.6)' }, 0.12);
-        var countTo = Number(money.getAttribute('data-count-to') || '0');
-        var countSuffix = money.getAttribute('data-count-suffix') || '';
-        if (countTo > 0 && countTo <= 1000000) {
-          var counter = { v: 0 };
-          tl.to(counter, {
-            v: countTo,
-            duration: 0.9,
-            ease: 'power2.out',
-            onUpdate: function () {
-              var n = Math.round(counter.v);
-              money.textContent = countSuffix === '%' ? (n + '%')
-                : countSuffix === '×' ? (n + '×')
-                : String(n);
-            }
-          }, 0.18);
-        }
+        // Keep the exact supplied amount. Callback counters are not seek-safe
+        // when the producer suppresses timeline events. Reveal the factual
+        // value through native transforms instead of displaying a false zero.
       }
       if (moneyLine) tl.fromTo(moneyLine, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.4 }, 0.5);
       if (chartTitle) tl.fromTo(chartTitle, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.35 }, 0.1);

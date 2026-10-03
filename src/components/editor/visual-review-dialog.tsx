@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Grid2X2, Loader2, Smartphone } from "lucide-react";
 import { apiPost } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import type { ScriptDTO } from "@/lib/dto";
 import type { VisualReviewResult } from "@/production/visual-review";
 
 export function VisualReviewDialog({
@@ -31,6 +32,7 @@ export function VisualReviewDialog({
   sourceKey: string;
   onSelectScene: (id: string) => void;
 }) {
+  const queryClient = useQueryClient();
   const [open, setOpen] = React.useState(false);
   const [page, setPage] = React.useState(0);
   const [phoneSize, setPhoneSize] = React.useState(false);
@@ -45,18 +47,27 @@ export function VisualReviewDialog({
       samples: 1 | 4;
       sourceKey: string;
       mode: "scene" | "transition";
-    }) => ({
-      ...(await apiPost<{ review: VisualReviewResult }>(
-        `/api/scripts/${scriptId}/review`,
-        {
-          sceneIds: input.sceneIds,
-          samples: input.samples,
-          voiceTakeId,
-          mode: input.mode,
-        },
-      )),
-      sourceKey: input.sourceKey,
-    }),
+      repairPasses: 0 | 1;
+    }) => {
+      const result = await apiPost<{
+        review: VisualReviewResult;
+        script?: ScriptDTO;
+      }>(`/api/scripts/${scriptId}/review`, {
+        sceneIds: input.sceneIds,
+        samples: input.samples,
+        voiceTakeId,
+        mode: input.mode,
+        repairPasses: input.repairPasses,
+      });
+      if (result.script)
+        queryClient.setQueryData(["script", scriptId], result.script);
+      return {
+        review: result.review,
+        sourceKey: result.script
+          ? JSON.stringify([result.script, voiceTakeId ?? null])
+          : input.sourceKey,
+      };
+    },
   });
   const current =
     review.data?.sourceKey === sourceKey ? review.data.review : null;
@@ -65,8 +76,9 @@ export function VisualReviewDialog({
     sceneIds: string[],
     samples: 1 | 4,
     mode: "scene" | "transition" = "scene",
+    repairPasses: 0 | 1 = 0,
   ) {
-    review.mutate({ sceneIds, samples, sourceKey, mode });
+    review.mutate({ sceneIds, samples, sourceKey, mode, repairPasses });
   }
   function changePage(next: number) {
     review.reset();
@@ -106,6 +118,16 @@ export function VisualReviewDialog({
             size="sm"
             variant="outline"
             disabled={review.isPending || !selectedSceneId}
+            onClick={() =>
+              selectedSceneId && generate([selectedSceneId], 1, "scene", 1)
+            }
+          >
+            Review and fix selected layout
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={review.isPending || !selectedSceneId}
             onClick={() => selectedSceneId && generate([selectedSceneId], 4)}
           >
             Four moments · selected scene
@@ -133,6 +155,14 @@ export function VisualReviewDialog({
             <Smartphone className="size-3.5" /> Phone size
           </Button>
         </div>
+        {review.data?.review.repair && (
+          <p className="text-muted-foreground text-xs">
+            {review.data.review.repair.repairedSceneIds.length} layout(s)
+            repaired in at most one pass; {review.data.review.repair.unresolved}{" "}
+            findings remain. No paid calls. Copy, assets and voice timing are
+            preserved. Review the refreshed preview.
+          </p>
+        )}
         {scenes.length > 8 && (
           <div className="flex items-center gap-2 text-xs">
             <Button
@@ -176,6 +206,13 @@ export function VisualReviewDialog({
         )}
         {current && (
           <>
+            {current.repair && (
+              <p role="status" className="text-muted-foreground text-sm">
+                {current.repair.repairedSceneIds.length} layout(s) repaired ·{" "}
+                {current.repair.passesUsed}/1 pass · 0 paid calls ·{" "}
+                {current.repair.unresolved} remaining finding(s)
+              </p>
+            )}
             <p className="text-muted-foreground text-xs">
               {current.takeUsable
                 ? "Selected take timing"

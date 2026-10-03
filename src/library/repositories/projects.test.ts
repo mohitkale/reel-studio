@@ -144,4 +144,15 @@ describe("project motion persistence", () => {
       ),
     ).toEqual(decisions);
   });
+  it("persists admitted direction and uses a reproducible seed when creating the same supplied plan", async () => {
+    const directed = { ...plan, scenes: [{ ...plan.scenes[0], direction: {
+      version: 1 as const, role: "headline" as const, composition: "layered-title" as const,
+    } }] };
+    const production = { preset: { id: "editorial-explainer" as const, version: "1.0.0" }, roles: ["headline" as const] };
+    await createProjectFromPlan(directed, "portrait", [], "hyperframes", undefined, production);
+    await createProjectFromPlan(directed, "portrait", [], "hyperframes", undefined, production);
+    const [first, second] = create.mock.calls.map(([request]) => request.data.scripts.create);
+    expect(JSON.parse(first.scenes.create[0].layoutJson).direction).toEqual(directed.scenes[0].direction);
+    expect(JSON.parse(first.brandOverrides).motionPlan.seed).toBe(JSON.parse(second.brandOverrides).motionPlan.seed);
+  });
 });

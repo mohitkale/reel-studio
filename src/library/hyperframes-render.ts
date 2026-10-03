@@ -493,6 +493,7 @@ export async function runHyperframesRender(
           ),
           role: s.role,
           motion: s.motion,
+          direction: s.direction,
           hideText: s.hideText ?? script.hideText,
           mood: s.mood as ReelScene["mood"],
           order: s.order,
@@ -570,6 +571,7 @@ export async function runHyperframesRender(
     const legacyInputProps: ReelProps = {
       scenes,
       timeline: prepared?.props.timeline ?? resolved.timeline,
+      spokenWords: resolveSpokenWordWindows(script.captionTracks, resolved.takeUsable ? take?.id : null, script.fps),
       width: nativeDims.width,
       height: nativeDims.height,
       fps: script.fps,

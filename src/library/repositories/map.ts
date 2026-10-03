@@ -69,6 +69,7 @@ export function toSceneDTO(scene: Scene): SceneDTO {
     selectedVoiceClipId: scene.selectedVoiceClipId ?? null,
     role: config.role,
     motion: config.motion,
+    direction: config.direction,
     assetRefs: parseJsonColumn(scene.assetRefs, assetRefsSchema, []),
     locks: config.locks,
   };

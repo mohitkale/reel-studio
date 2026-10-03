@@ -160,4 +160,6 @@ as wholly Apache-2.0. Supported font subsets and upstream audit reachability
 limitations are recorded in the export-fidelity and portability/license docs.
 M10 merged after successful latest-head Linux/Windows checks: [PR #39](https://github.com/mohitkale/reel-studio/pull/39), merge `6edeec9`. Local `main` was refreshed and verified before M11. Its versioned motion compiler and acceptance evidence are in [MOTION_SPEC.md](MOTION_SPEC.md).
 
-M11 is in progress on `feature/review-m11-motion-library`; release publication has not started.
+M11 merged after successful latest-head Linux/Windows checks: [PR #40](https://github.com/mohitkale/reel-studio/pull/40), merge `617f43a`. Local `main` was refreshed and verified before M12. Its fifteen treatments and actual export evidence are in [MOTION_LIBRARY.md](MOTION_LIBRARY.md).
+
+M12 is in progress on `feature/review-m12-director`. Its source-grounded planner, constrained direction, bounded review repair and actual portrait/landscape evidence are in [DIRECTOR_PIPELINE.md](DIRECTOR_PIPELINE.md). Release publication has not started.

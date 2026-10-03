@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 
 import { createOpenAIProvider } from "./openai";
 import {
@@ -25,7 +26,10 @@ describe("OpenAI-compatible structured transport", () => {
       brief: "A product gallery",
       videoEngine: "hyperframes",
     });
-    const scene = output.schema.properties.scenes.items;
+    const scene = z.object({ properties: z.object({ scenes: z.object({ items: z.object({
+      properties: z.object({ capabilityId: z.object({ enum: z.array(z.string()) }) }).passthrough(),
+      required: z.array(z.string()),
+    }) }) }) }).parse(output.schema).properties.scenes.items;
 
     expect(scene.properties.capabilityId.enum).toContain(
       "hf.catalog.block.carousel-circle-1",

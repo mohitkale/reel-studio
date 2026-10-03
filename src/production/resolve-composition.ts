@@ -78,6 +78,7 @@ export function resolveProductionComposition(
       carouselImages: carouselImages.length ? carouselImages : undefined,
       role: scene.role,
       motion: scene.motion,
+      direction: scene.direction,
       background: backgroundAsset
         ? {
             type: backgroundAsset.type as "image" | "video",
@@ -105,6 +106,7 @@ export function resolveProductionComposition(
     audioUrl: narrationReady
       ? resolveAsset(assets, spec.narration.audioAssetRef, resolveUri)
       : undefined,
+    spokenWords: narrationReady ? spec.narration.measuredWords ?? [] : [],
     musicUrl: resolveAsset(assets, spec.audio.musicAssetRef, resolveUri),
     musicVolume: spec.audio.musicVolume * 100,
     sfxCues: spec.audio.sfx.map((cue) => ({
