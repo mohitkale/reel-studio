@@ -1,3 +1,4 @@
+import { escapeHtml } from "@/lib/html";
 import { MOTION_LIBRARY_TIMING } from "@/video/motion-library";
 import { STORY_MOTION_TRACKS } from "@/production/story-motion";
 import { GRAPH_TIMELINE_BOOT } from "../motion/compile-shot";
@@ -7,15 +8,6 @@ import { MOTION_EVENT_TIMINGS } from "@/production/motion-events";
 import type { BrandTokens } from "@/video/tokens";
 import type { ReelScene, SceneMood } from "@/video/types";
 import type { HfCatalogBlockMeta } from "@/engines/hyperframes/catalog/manifest";
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
 function emphasize(text: string, emphasis: string[]): string {
   let html = escapeHtml(text);
@@ -1260,7 +1252,7 @@ export function buildGsapMotionBootScript(
       // Line reveals — clipped, never overlapping
       lines.forEach(function (inner, i) {
         if (motif) tl.fromTo(inner, { x: motif.x, y: motif.y, opacity: 0 }, { x: 0, y: 0, opacity: 1, force3D: false, duration: 0.42, ease: 'power3.out' }, events.reveal + i * 0.1);
-        else tl.to(inner, { y: '0%', duration: 0.42, ease: 'power3.out' }, (recipe.startsWith('type-') ? events.reveal : 0.22) + i * 0.1);
+        else tl.fromTo(inner, { y: '110%' }, { y: '0%', duration: 0.42, ease: 'power3.out' }, (recipe.startsWith('type-') ? events.reveal : 0.22) + i * 0.1);
       });
 
       if (rule) tl.fromTo(rule, { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: 'power3.out' }, Math.max(0.55, 0.22 + lines.length * 0.1));

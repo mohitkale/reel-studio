@@ -65,6 +65,7 @@ describe("local AI config store", () => {
         temperature: 0.4,
         allowLan: false,
       }),
+      expect.objectContaining({ id: "llama-cpp", modelId: "" }),
     ]);
 
     await expect(store.list()).resolves.toEqual([
@@ -73,6 +74,7 @@ describe("local AI config store", () => {
         id: "lm-studio",
         modelId: "qwen2.5-7b-instruct",
       }),
+      expect.objectContaining({ id: "llama-cpp", modelId: "" }),
     ]);
   });
 });

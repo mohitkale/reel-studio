@@ -1,3 +1,4 @@
+import { escapeHtml } from "@/lib/html";
 import type { BrandTokens } from "@/video/tokens";
 import type { ReelScene } from "@/video/types";
 import { diagramLabelLines, orbitNodes } from "@/production/diagram-geometry";
@@ -5,15 +6,6 @@ import {
   isDiagramMotionRecipe,
   resolveMotionDirection,
 } from "@/production/motion";
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
 function labelTspans(label: string, x: number, fontSize: number): string {
   const lines = diagramLabelLines(label);

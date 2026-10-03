@@ -32,7 +32,13 @@ export const planEffectSchema = z.enum([
   "pan-down",
 ]);
 
-export const CLOUD_AI_PROVIDER_IDS = ["gemini", "openai"] as const;
+export const CLOUD_AI_DEFINITIONS = {
+  gemini: { label: "Gemini" },
+  openai: { label: "OpenAI" },
+} as const;
+export const CLOUD_AI_PROVIDER_IDS = Object.keys(
+  CLOUD_AI_DEFINITIONS,
+) as (keyof typeof CLOUD_AI_DEFINITIONS)[];
 export type CloudAIProviderId = (typeof CLOUD_AI_PROVIDER_IDS)[number];
 export const AI_PROVIDER_IDS = [
   ...CLOUD_AI_PROVIDER_IDS,

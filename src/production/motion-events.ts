@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { EXTENSION_MOTION_RECIPES } from "@/video/motion-extensions";
 import type { VideoEngineId } from "@/engines/types";
 import {
   motionDirectionSchema,
@@ -37,6 +38,9 @@ export const MOTION_EVENT_TIMINGS: Record<
     "quiet-center": { reveal: 0.2 },
     "brand-lockup": { reveal: 0.42 },
     "brand-frame": { reveal: 0.2 },
+    ...(Object.fromEntries(
+      EXTENSION_MOTION_RECIPES.map((recipe) => [recipe.id, recipe.anchors]),
+    ) as Record<(typeof EXTENSION_MOTION_RECIPES)[number]["id"], Anchors>),
   },
 };
 

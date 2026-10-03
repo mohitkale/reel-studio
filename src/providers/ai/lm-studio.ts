@@ -1,3 +1,7 @@
+import {
+  LOCAL_AI_DEFINITIONS,
+  type CompatibleLocalAIProviderId,
+} from "./local-definitions";
 import { buildPrompt } from "./prompt";
 import { buildPodcastPrompt } from "./podcast-prompt";
 import {
@@ -40,28 +44,37 @@ type Store = Pick<
   "readProvider" | "recordDiagnostic"
 >;
 
-async function availableModels(store: Store, signal?: AbortSignal) {
-  const config = await store.readProvider("lm-studio");
-  const diagnostic = await diagnoseLocalAIProvider("lm-studio", config, signal);
-  await store.recordDiagnostic("lm-studio", diagnostic);
+async function availableModels(
+  store: Store,
+  id: CompatibleLocalAIProviderId,
+  signal?: AbortSignal,
+) {
+  const config = await store.readProvider(id);
+  const diagnostic = await diagnoseLocalAIProvider(id, config, signal);
+  await store.recordDiagnostic(id, diagnostic);
   if (diagnostic.state === "offline") {
-    throw new AIError(diagnostic.message, 503, "lm-studio");
+    throw new AIError(diagnostic.message, 503, id);
   }
   if (diagnostic.state === "authentication-error") {
-    throw new AIError(diagnostic.message, 401, "lm-studio");
+    throw new AIError(diagnostic.message, 401, id);
   }
   if (diagnostic.state === "error") {
-    throw new AIError(diagnostic.message, 502, "lm-studio");
+    throw new AIError(diagnostic.message, 502, id);
   }
   return (diagnostic.modelIds ?? []).map((id) => ({ id, label: id }));
 }
 
-async function selectedModel(store: Store, requested?: string) {
-  return requested?.trim() || (await store.readProvider("lm-studio")).modelId;
+async function selectedModel(
+  store: Store,
+  id: CompatibleLocalAIProviderId,
+  requested?: string,
+) {
+  return requested?.trim() || (await store.readProvider(id)).modelId;
 }
 
 async function complete(
   store: Store,
+  id: CompatibleLocalAIProviderId,
   input: {
     modelId: string;
     system: string;
@@ -70,28 +83,28 @@ async function complete(
     signal?: AbortSignal;
   },
 ) {
-  const config = await store.readProvider("lm-studio");
+  const config = await store.readProvider(id);
   if (!input.modelId) {
     throw new AIError(
-      "Select an LM Studio model in Settings before planning.",
+      `Select a ${LOCAL_AI_DEFINITIONS[id].label} model in Settings before planning.`,
       400,
-      "lm-studio",
+      id,
     );
   }
   if (
-    !(await availableModels(store, input.signal)).some(
+    !(await availableModels(store, id, input.signal)).some(
       ({ id }) => id === input.modelId,
     )
   ) {
     throw new AIError(
-      `LM Studio model “${input.modelId}” is not available. Load it in LM Studio, then refresh model discovery.`,
+      `${LOCAL_AI_DEFINITIONS[id].label} model “${input.modelId}” is not available. Load it on the configured server, then refresh model discovery.`,
       404,
-      "lm-studio",
+      id,
     );
   }
   return createLocalOpenAICompatibleTransport({
-    providerId: "lm-studio",
-    label: "LM Studio",
+    providerId: id,
+    label: LOCAL_AI_DEFINITIONS[id].label,
     baseUrl: config.baseUrl,
     allowLan: config.allowLan,
     token: config.token,
@@ -107,20 +120,21 @@ async function complete(
   });
 }
 
-export function createLMStudioProvider(
+export function createLocalCompatibleProvider(
+  id: CompatibleLocalAIProviderId,
   store: Store = localAIConfigStore,
 ): AIProvider {
   return {
-    id: "lm-studio",
-    label: "LM Studio",
+    id: id,
+    label: LOCAL_AI_DEFINITIONS[id].label,
     isConfigured: () => true,
-    listModels: (): Promise<AIModel[]> => availableModels(store),
+    listModels: (): Promise<AIModel[]> => availableModels(store, id),
 
     async generatePlan(input: GeneratePlanInput): Promise<ScenePlan> {
       const prompt = buildPrompt(input);
-      const modelId = await selectedModel(store, input.modelId);
+      const modelId = await selectedModel(store, id, input.modelId);
       const jsonSchema = buildOpenAIVideoPlanJsonSchema(input);
-      const text = await complete(store, {
+      const text = await complete(store, id, {
         ...prompt,
         modelId,
         jsonSchema,
@@ -129,11 +143,11 @@ export function createLMStudioProvider(
       const raw = await parseStructuredOutput({
         text,
         schema: strictLocalScenePlanSchema,
-        providerId: "lm-studio",
-        providerLabel: "LM Studio",
+        providerId: id,
+        providerLabel: LOCAL_AI_DEFINITIONS[id].label,
         modelId,
         repair: (repair) =>
-          complete(store, {
+          complete(store, id, {
             ...repair,
             modelId,
             jsonSchema,
@@ -147,16 +161,12 @@ export function createLMStudioProvider(
       input: GeneratePodcastPlanInput,
     ): Promise<PodcastPlan> {
       if (input.characters.length < 2) {
-        throw new AIError(
-          "Podcast needs at least 2 characters",
-          400,
-          "lm-studio",
-        );
+        throw new AIError("Podcast needs at least 2 characters", 400, id);
       }
       const prompt = buildPodcastPrompt(input);
-      const modelId = await selectedModel(store, input.modelId);
+      const modelId = await selectedModel(store, id, input.modelId);
       const jsonSchema = OPENAI_PODCAST_JSON_SCHEMA;
-      const text = await complete(store, {
+      const text = await complete(store, id, {
         ...prompt,
         modelId,
         jsonSchema,
@@ -165,11 +175,11 @@ export function createLMStudioProvider(
       const structured = await parseStructuredOutput({
         text,
         schema: strictLocalPodcastPlanSchema,
-        providerId: "lm-studio",
-        providerLabel: "LM Studio",
+        providerId: id,
+        providerLabel: LOCAL_AI_DEFINITIONS[id].label,
         modelId,
         repair: (repair) =>
-          complete(store, {
+          complete(store, id, {
             ...repair,
             modelId,
             jsonSchema,
@@ -183,7 +193,7 @@ export function createLMStudioProvider(
         throw new AIError(
           error instanceof Error ? error.message : String(error),
           502,
-          "lm-studio",
+          id,
         );
       }
     },
@@ -192,9 +202,9 @@ export function createLMStudioProvider(
       input: GeneratePodcastClipSuggestionsInput,
     ): Promise<PodcastClipSuggestionCandidate[]> {
       const prompt = buildPodcastClipSuggestionsPrompt(input);
-      const modelId = await selectedModel(store, input.modelId);
+      const modelId = await selectedModel(store, id, input.modelId);
       const jsonSchema = OPENAI_PODCAST_CLIP_SUGGESTIONS_JSON_SCHEMA;
-      const text = await complete(store, {
+      const text = await complete(store, id, {
         ...prompt,
         modelId,
         jsonSchema,
@@ -203,11 +213,11 @@ export function createLMStudioProvider(
       const structured = await parseStructuredOutput({
         text,
         schema: strictLocalClipSuggestionsSchema,
-        providerId: "lm-studio",
-        providerLabel: "LM Studio",
+        providerId: id,
+        providerLabel: LOCAL_AI_DEFINITIONS[id].label,
         modelId,
         repair: (repair) =>
-          complete(store, {
+          complete(store, id, {
             ...repair,
             modelId,
             jsonSchema,
@@ -218,4 +228,11 @@ export function createLMStudioProvider(
         .suggestions;
     },
   };
+}
+
+/** Existing imports keep working; the implementation is shared by registrations. */
+export function createLMStudioProvider(
+  store: Store = localAIConfigStore,
+): AIProvider {
+  return createLocalCompatibleProvider("lm-studio", store);
 }

@@ -1,13 +1,13 @@
+import { escapeHtml } from "@/lib/html";
 import type { BrandTokens } from "@/video/tokens";
 import type { ReelScene } from "@/video/types";
 import {
   getCatalogBlockByTemplateId,
   type HfCatalogBlockMeta,
 } from "@/engines/hyperframes/catalog/manifest";
-import { personalizeCatalogBlock } from "@/engines/hyperframes/catalog/personalize";
 import { buildNativeCatalogVisual } from "@/engines/hyperframes/catalog/native-visuals";
 
-const NATIVE_ONLY_BLOCKS = new Set([
+export const NATIVE_ONLY_BLOCKS = new Set([
   "apple-money-count",
   "data-chart",
   "app-showcase",
@@ -34,24 +34,10 @@ function hasRequiredInputs(
   return true;
 }
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
 export interface CatalogSceneBuild {
   /** Outer scene markup (section + host). */
   html: string;
-  gsapNeeded: boolean;
   meta: HfCatalogBlockMeta;
-  /** Relative composition filename written for producer / future nesting. */
-  compositionFile: string;
-  /** Fully personalized upstream HTML (kept on disk for render experiments). */
-  personalizedHtml: string;
 }
 
 /**
@@ -73,7 +59,6 @@ export function buildCatalogSceneBlock(args: {
   transitionClass: string;
   accent: string;
   motionStiffness: string;
-  inline: boolean;
   backgroundHtml: string;
   catalogRevision?: string;
 }): CatalogSceneBuild | null {
@@ -91,14 +76,7 @@ export function buildCatalogSceneBlock(args: {
   });
   if (!native) return null;
   const nativeOnly = NATIVE_ONLY_BLOCKS.has(meta.id);
-  const personalized = nativeOnly
-    ? "<!doctype html><html><body><!-- Reel Studio uses the validated native adapter for this data-bound block. --></body></html>"
-    : personalizeCatalogBlock(meta, {
-        scene: args.scene,
-        tokens: args.tokens,
-      });
-
-  const srcName = `${meta.id}--${args.scene.id}.html`;
+  const srcName = catalogCompositionFileName(meta.id, args.scene.id);
   // Prefer real stock photos when present; otherwise keep native mood stages
   // (flat CSS washes look low-effort under VO).
   const hasMedia = /class="(?:bg-photo|bg-scrim)/.test(args.backgroundHtml);
@@ -132,25 +110,8 @@ export function buildCatalogSceneBlock(args: {
 
   return {
     html,
-    gsapNeeded: false,
     meta,
-    compositionFile: srcName,
-    personalizedHtml: personalized,
   };
-}
-
-export function catalogBlocksUsedInScenes(
-  scenes: Array<{ templateId: string }>,
-): HfCatalogBlockMeta[] {
-  const seen = new Set<string>();
-  const out: HfCatalogBlockMeta[] = [];
-  for (const scene of scenes) {
-    const meta = getCatalogBlockByTemplateId(scene.templateId);
-    if (!meta || seen.has(meta.id)) continue;
-    seen.add(meta.id);
-    out.push(meta);
-  }
-  return out;
 }
 
 export function catalogCompositionFileName(

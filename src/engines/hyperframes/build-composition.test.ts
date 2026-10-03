@@ -370,7 +370,7 @@ describe("buildHyperframesCompositionHtml", () => {
         fps: 30,
         tokens: defaultBrandTokens,
       },
-      { inlineCatalog: true },
+      {},
     );
 
     expect(html).toContain("slam-stack");
@@ -527,9 +527,7 @@ describe("buildHyperframesCompositionHtml", () => {
         tokens: defaultBrandTokens,
         catalogRevision: CURRENT_HF_CATALOG_REVISION,
       };
-      const preview = buildHyperframesCompositionHtml(props, {
-        inlineCatalog: true,
-      });
+      const preview = buildHyperframesCompositionHtml(props, {});
       const exported = buildHyperframesCompositionHtml(props, {
         producerMode: true,
         runtimeUrl: "/_runtime/gsap.min.js",

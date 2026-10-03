@@ -1,3 +1,4 @@
+import { NATIVE_ONLY_BLOCKS } from "@/engines/hyperframes/catalog/build-scene";
 import { copyHyperframesRuntime } from "@/library/hyperframes-runtime";
 import { downloadPublicMediaToFile } from "@/server/public-media-download";
 import { productionSignal } from "@/library/production-cancellation";
@@ -309,7 +310,7 @@ async function writeHyperframesProject(
         inputProps.catalogRevision,
       );
       if (!meta) continue;
-      if (meta.requiresCarouselImages) continue;
+      if (NATIVE_ONLY_BLOCKS.has(meta.id)) continue;
       const personalized = personalizeCatalogBlock(meta, {
         scene,
         tokens,
@@ -571,7 +572,11 @@ export async function runHyperframesRender(
     const legacyInputProps: ReelProps = {
       scenes,
       timeline: prepared?.props.timeline ?? resolved.timeline,
-      spokenWords: resolveSpokenWordWindows(script.captionTracks, resolved.takeUsable ? take?.id : null, script.fps),
+      spokenWords: resolveSpokenWordWindows(
+        script.captionTracks,
+        resolved.takeUsable ? take?.id : null,
+        script.fps,
+      ),
       width: nativeDims.width,
       height: nativeDims.height,
       fps: script.fps,

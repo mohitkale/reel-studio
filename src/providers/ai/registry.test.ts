@@ -41,6 +41,11 @@ describe("AI provider status", () => {
         kind: "local",
         configured: false,
       }),
+      expect.objectContaining({
+        id: "llama-cpp",
+        kind: "local",
+        configured: false,
+      }),
     ]);
     expect(fetchMock).not.toHaveBeenCalled();
   });

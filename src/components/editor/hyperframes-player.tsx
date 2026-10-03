@@ -164,7 +164,7 @@ export const HyperFramesPlayer = React.forwardRef<
         energy,
         preset,
       },
-      { inlineCatalog: true },
+      {},
     );
   }, [
     scenes,

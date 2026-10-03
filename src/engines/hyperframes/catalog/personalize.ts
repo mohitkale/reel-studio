@@ -1,7 +1,6 @@
 import type { BrandTokens } from "@/video/tokens";
 import type { ReelScene } from "@/video/types";
 import {
-  getCatalogBlockByTemplateId,
   type HfCatalogBlockId,
   type HfCatalogBlockMeta,
 } from "@/engines/hyperframes/catalog/manifest";
@@ -261,36 +260,4 @@ export function personalizeCatalogBlock(
   ctx: CatalogPersonalizeContext,
 ): string {
   return personalizeCatalogHtml(meta.id, ctx);
-}
-
-/**
- * Extract style + body markup + scripts from a full catalog HTML document so
- * it can be inlined into a host composition for srcDoc preview.
- */
-export function extractCatalogInlineParts(fullHtml: string): {
-  styles: string;
-  body: string;
-  scripts: string;
-  gsapNeeded: boolean;
-} {
-  const styles = [...fullHtml.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)]
-    .map((m) => m[1])
-    .join("\n");
-  const scripts = [
-    ...fullHtml.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi),
-  ]
-    .map((m) => m[1])
-    .join("\n;\n");
-  const bodyMatch = fullHtml.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-  let body = bodyMatch?.[1] ?? fullHtml;
-  // Drop nested script tags from body — we re-append them once after markup.
-  body = body.replace(/<script\b[\s\S]*?<\/script>/gi, "");
-  const gsapNeeded = /gsap@|gsap\.min\.js|gsap\.timeline/i.test(fullHtml);
-  return { styles, body, scripts, gsapNeeded };
-}
-
-export function resolveCatalogMetaForTemplate(
-  templateId: string,
-): HfCatalogBlockMeta | undefined {
-  return getCatalogBlockByTemplateId(templateId);
 }

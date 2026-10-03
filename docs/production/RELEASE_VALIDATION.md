@@ -28,7 +28,7 @@ The Gate 5 rerun on September 16, 2026 uses the commands below plus
 `npm run test:production-worker` and `npm run test:render`. A credential-free
 isolated sample export supplies the real H.264/AAC proof without requiring a
 Kokoro model download. Exact results and artifact paths are recorded in
-[`LOCAL_FIRST_PR8_TASKS.md`](LOCAL_FIRST_PR8_TASKS.md).
+[`LOCAL_FIRST_PR8_TASKS.md`](archive/LOCAL_FIRST_PR8_TASKS.md).
 
 Gate 5 result: **passed on September 16, 2026**. Typecheck, zero-warning lint,
 386 unit tests, secret scan, production build, release contract, fresh/populated

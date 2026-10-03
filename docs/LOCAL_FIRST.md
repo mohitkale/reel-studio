@@ -6,26 +6,26 @@ configure a provider key and use that feature.
 
 ## What stays local
 
-| Capability                                  | Local behaviour                                   |
-| ------------------------------------------- | ------------------------------------------------- |
-| Projects & scripts                          | SQLite database under `prisma/`                   |
-| Uploaded assets & renders                   | Files under `media/` (git-ignored)                |
+| Capability                       | Local behaviour                                   |
+| -------------------------------- | ------------------------------------------------- |
+| Projects & scripts               | SQLite database under `prisma/`                   |
+| Uploaded assets & renders        | Files under `media/` (git-ignored)                |
 | HyperFrames preview & MP4 export | Runs on your machine (or in Docker on localhost)  |
-| Kokoro TTS                                  | In-browser or `kokoro-server` — no vendor API key |
-| Web Speech preview                          | Browser-only                                      |
-| Bundled music                               | CC0 files in `public/music/`                      |
-| Podcast scripts & takes                     | Local DB + `media/` audio                         |
+| Kokoro TTS                       | In-browser or `kokoro-server` — no vendor API key |
+| Web Speech preview               | Browser-only                                      |
+| Bundled music                    | CC0 files in `public/music/`                      |
+| Podcast scripts & takes          | Local DB + `media/` audio                         |
 
 ## Optional cloud features
 
-| Feature                     | Local option                         | Optional cloud            |
-| --------------------------- | ------------------------------------ | ------------------------- |
-| Voice preview               | Web Speech                           | —                         |
-| Voice generation            | Kokoro / VoiceForge                  | ElevenLabs, Cartesia      |
-| Video engine                | HyperFrames (Apache-2.0) | — (renders locally)   |
-| AI scene / podcast planning | Manual, Ollama, or LM Studio         | Gemini, OpenAI            |
-| Backgrounds                 | Local upload / mood gradients        | Pexels, Pixabay, Unsplash |
-| Music                       | Bundled CC0 / user upload            | Jamendo                   |
+| Feature                     | Local option                           | Optional cloud            |
+| --------------------------- | -------------------------------------- | ------------------------- |
+| Voice preview               | Web Speech                             | —                         |
+| Voice generation            | Kokoro / VoiceForge                    | ElevenLabs, Cartesia      |
+| Video engine                | HyperFrames (Apache-2.0)               | — (renders locally)       |
+| AI scene / podcast planning | Manual, Ollama, LM Studio or llama.cpp | Gemini, OpenAI            |
+| Backgrounds                 | Local upload / mood gradients          | Pexels, Pixabay, Unsplash |
+| Music                       | Bundled CC0 / user upload              | Jamendo                   |
 
 ## What leaves your machine
 
@@ -51,7 +51,7 @@ The deterministic planner and stock-free fallback require no provider. Its
 default server-side Kokoro voice may download the model weights on first use;
 use voice-off Quick Produce when an initial model download is not acceptable.
 
-Ollama and LM Studio prompts go only to the configured local endpoint. Loopback
+Ollama, LM Studio and llama.cpp prompts go only to the configured local endpoint. Loopback
 is the default; private LAN endpoints require an explicit per-provider opt-in.
 Hostnames are resolved before each request, redirects are rejected, and cloud
 keys are never attached to local requests. Local server absence does not prevent

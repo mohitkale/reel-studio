@@ -164,4 +164,6 @@ M11 merged after successful latest-head Linux/Windows checks: [PR #40](https://g
 
 M12 merged after passing latest-head Linux/Windows checks: [PR #41](https://github.com/mohitkale/reel-studio/pull/41), merge `f13308d`. All 833 final-head local tests, real exports and measured repair recapture passed. Local `main` was refreshed and verified before M13. Its source-grounded planner, constrained direction, bounded review repair and actual portrait/landscape evidence are in [DIRECTOR_PIPELINE.md](DIRECTOR_PIPELINE.md). Release publication has not started.
 
-M13 is in progress on `feature/review-m13-creation-ux`. Its prompt-first home, result/remix flow, responsive editor timeline, README formatting and actual three-format browser evidence are recorded in [CREATION_UX.md](CREATION_UX.md).
+M13 merged after successful latest-head Linux/Windows checks: [PR #42](https://github.com/mohitkale/reel-studio/pull/42), merge `3102d03`. Local `main` was refreshed before M14. Its prompt-first home, results/remix, responsive editor, README formatting and 836-test/actual three-format browser evidence are recorded in [CREATION_UX.md](CREATION_UX.md).
+
+M14 is in progress on `feature/review-m14-extensions`. Typed llama.cpp and quote-block registrations, shared helpers, archive/compatibility cleanup and current acceptance evidence are in [EXTENSIONS.md](EXTENSIONS.md).

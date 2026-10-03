@@ -1,3 +1,4 @@
+import { createSerialQueue } from "@/lib/serial-queue";
 import {
   layoutEvidenceSchema,
   type LayoutEvidence,
@@ -86,25 +87,11 @@ function runSnapshot(
   });
 }
 // Review Chrome sessions are serialized; only a bounded number of requests wait.
-let tail: Promise<void> = Promise.resolve();
-let pending = 0;
-async function serialized<T>(action: () => Promise<T>): Promise<T> {
-  if (pending >= 4)
-    throw new ProviderError("Visual review is busy. Try again shortly.", 429);
-  pending++;
-  const previous = tail;
-  let release!: () => void;
-  tail = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  try {
-    await previous;
-    return await action();
-  } finally {
-    pending--;
-    release();
-  }
-}
+const serialized = createSerialQueue({
+  maxPending: 4,
+  onFull: () =>
+    new ProviderError("Visual review is busy. Try again shortly.", 429),
+});
 
 /** Engine-native stills; HyperFrames snapshot includes FFmpeg footage injection. */
 export async function renderVisualReviewFrames(
@@ -271,7 +258,11 @@ export async function createVisualReview(
       height: captured.script.height,
       fps: captured.script.fps,
       audioUrl: undefined,
-      spokenWords: resolveSpokenWordWindows(captured.script.captionTracks, timing.takeUsable ? captured.take?.id : null, captured.script.fps),
+      spokenWords: resolveSpokenWordWindows(
+        captured.script.captionTracks,
+        timing.takeUsable ? captured.take?.id : null,
+        captured.script.fps,
+      ),
       musicUrl: undefined,
       sfxCues: [],
     };

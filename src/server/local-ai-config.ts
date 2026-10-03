@@ -1,3 +1,4 @@
+import { createSerialQueue } from "@/lib/serial-queue";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
@@ -11,6 +12,7 @@ import {
   type LocalAIProviderId,
   type LocalAIProviderView,
 } from "@/providers/ai/local-types";
+import { LOCAL_AI_DEFINITIONS } from "@/providers/ai/local-definitions";
 import { validateLocalAIEndpoint } from "@/providers/ai/local-endpoint";
 
 const diagnosticSchema = z
@@ -41,20 +43,15 @@ const storedProviderSchema = localAIProviderConfigInputSchema
 const localAIConfigFileSchema = z
   .object({
     version: z.literal(1),
-    providers: z.object({
-      ollama: storedProviderSchema.optional(),
-      "lm-studio": storedProviderSchema.optional(),
-    }),
+    providers: z.partialRecord(
+      z.enum(LOCAL_AI_PROVIDER_IDS),
+      storedProviderSchema,
+    ),
   })
   .strict();
 
 type LocalAIConfigFile = z.infer<typeof localAIConfigFileSchema>;
 type StoredProvider = z.infer<typeof storedProviderSchema>;
-
-const LABELS: Record<LocalAIProviderId, string> = {
-  ollama: "Ollama",
-  "lm-studio": "LM Studio",
-};
 
 function defaultFilePath(): string {
   return path.join(process.cwd(), ".data", "local-ai-config.json");
@@ -73,7 +70,7 @@ function defaultProvider(id: LocalAIProviderId): StoredProvider {
 }
 
 export function createLocalAIConfigStore(filePath = defaultFilePath()) {
-  let pendingMutation = Promise.resolve();
+  const mutate = createSerialQueue();
 
   async function read(): Promise<LocalAIConfigFile> {
     try {
@@ -99,15 +96,6 @@ export function createLocalAIConfigStore(filePath = defaultFilePath()) {
     await fs.chmod(filePath, 0o600);
   }
 
-  function mutate<T>(operation: () => Promise<T>): Promise<T> {
-    const result = pendingMutation.then(operation);
-    pendingMutation = result.then(
-      () => undefined,
-      () => undefined,
-    );
-    return result;
-  }
-
   async function save(
     id: LocalAIProviderId,
     input: LocalAIProviderConfigInput,
@@ -121,7 +109,7 @@ export function createLocalAIConfigStore(filePath = defaultFilePath()) {
       const current = await read();
       const previous = current.providers[id];
       const token =
-        id === "lm-studio"
+        LOCAL_AI_DEFINITIONS[id].protocol === "openai-compatible"
           ? parsed.token === undefined
             ? previous?.token
             : parsed.token.trim() || undefined
@@ -172,7 +160,7 @@ export function createLocalAIConfigStore(filePath = defaultFilePath()) {
     };
     return {
       id,
-      label: LABELS[id],
+      label: LOCAL_AI_DEFINITIONS[id].label,
       baseUrl: stored.baseUrl,
       modelId: stored.modelId,
       temperature: stored.temperature,

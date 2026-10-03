@@ -8,34 +8,35 @@ import {
 import { createGeminiProvider, GEMINI_DEFAULT_MODEL } from "./gemini";
 import { createOpenAIProvider, OPENAI_DEFAULT_MODEL } from "./openai";
 import { createOllamaProvider } from "./ollama";
-import { createLMStudioProvider } from "./lm-studio";
+import { createLocalCompatibleProvider } from "./lm-studio";
+import {
+  LOCAL_AI_DEFINITIONS,
+  isLocalAIProviderId,
+  isCompatibleLocalAIProvider,
+} from "./local-definitions";
 import { localAIConfigStore } from "@/server/local-ai-config";
 
 /**
  * AI provider registry / factory. To add an LLM vendor: implement AIProvider in
  * a new file and add one entry here. Nothing else references vendors directly.
  */
-const factories: Record<
-  AIProviderId,
-  { create: () => AIProvider; defaultModel: string }
-> = {
+const cloudFactories = {
   gemini: { create: createGeminiProvider, defaultModel: GEMINI_DEFAULT_MODEL },
   openai: { create: createOpenAIProvider, defaultModel: OPENAI_DEFAULT_MODEL },
-  ollama: { create: createOllamaProvider, defaultModel: "" },
-  "lm-studio": {
-    create: createLMStudioProvider,
-    defaultModel: "",
-  },
 };
 
 const instances = new Map<AIProviderId, AIProvider>();
 
 export function getAIProvider(id: AIProviderId): AIProvider {
-  const entry = factories[id];
-  if (!entry) throw new AIError(`Unknown AI provider "${id}"`, 404);
+  if (!isAIProviderId(id))
+    throw new AIError(`Unknown AI provider "${id}"`, 404);
   let instance = instances.get(id);
   if (!instance) {
-    instance = entry.create();
+    instance = isLocalAIProviderId(id)
+      ? isCompatibleLocalAIProvider(id)
+        ? createLocalCompatibleProvider(id)
+        : createOllamaProvider()
+      : cloudFactories[id].create();
     instances.set(id, instance);
   }
   return instance;
@@ -46,18 +47,18 @@ export function isAIProviderId(value: string): value is AIProviderId {
 }
 
 export function aiDefaultModelFor(id: AIProviderId): string {
-  return factories[id].defaultModel;
+  return isLocalAIProviderId(id) ? "" : cloudFactories[id].defaultModel;
 }
 
 export async function listAIProviderStatuses(): Promise<AIProviderStatus[]> {
   return Promise.all(
     AI_PROVIDER_IDS.map(async (id) => {
-      if (id === "ollama" || id === "lm-studio") {
+      if (isLocalAIProviderId(id)) {
         const config = await localAIConfigStore.readProvider(id);
         return {
           id,
           kind: "local" as const,
-          label: id === "ollama" ? "Ollama" : "LM Studio",
+          label: LOCAL_AI_DEFINITIONS[id].label,
           configured: Boolean(config.modelId),
           defaultModel: config.modelId,
         };
@@ -68,7 +69,7 @@ export async function listAIProviderStatuses(): Promise<AIProviderStatus[]> {
         kind: "cloud" as const,
         label: provider.label,
         configured: provider.isConfigured(),
-        defaultModel: factories[id].defaultModel,
+        defaultModel: cloudFactories[id].defaultModel,
       };
     }),
   );

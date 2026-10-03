@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { LOCAL_AI_DEFINITIONS } from "./local-definitions";
 import { AIError } from "./types";
 import { secureLocalAIFetch } from "./local-http";
 import type { LocalAIDiagnosticState, LocalAIProviderId } from "./local-types";
@@ -39,9 +40,13 @@ export async function diagnoseLocalAIProvider(
       providerId,
       baseUrl: config.baseUrl,
       allowLan: config.allowLan,
-      path: providerId === "ollama" ? "/api/tags" : "/v1/models",
+      path:
+        LOCAL_AI_DEFINITIONS[providerId].protocol === "ollama"
+          ? "/api/tags"
+          : "/v1/models",
       headers:
-        providerId === "lm-studio" && config.token
+        LOCAL_AI_DEFINITIONS[providerId].protocol === "openai-compatible" &&
+        config.token
           ? { Authorization: `Bearer ${config.token}` }
           : undefined,
       signal,
@@ -63,7 +68,7 @@ export async function diagnoseLocalAIProvider(
 
     const json: unknown = await response.json();
     const modelIds =
-      providerId === "ollama"
+      LOCAL_AI_DEFINITIONS[providerId].protocol === "ollama"
         ? ollamaTagsSchema.parse(json).models.map((model) => model.name)
         : lmStudioModelsSchema.parse(json).data.map((model) => model.id);
     if (!config.modelId) {
