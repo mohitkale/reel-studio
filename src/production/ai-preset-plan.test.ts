@@ -36,6 +36,23 @@ describe("AI production preset planning", () => {
     ).toBe(true);
   });
 
+  it("uses a prose-safe template when a structural preset slot has no inputs", () => {
+    const result = applyPresetToAIPlan(plan, "product-launch", "hyperframes", {
+      hasVisualAsset: false,
+    });
+    expect(result.roles).not.toContain("comparison");
+    expect(
+      result.plan.scenes.some((scene) => scene.templateId === "hf-statement"),
+    ).toBe(true);
+    expect(
+      result.plan.scenes.every((scene) =>
+        allowedPresetTemplateIds("product-launch", "hyperframes").includes(
+          scene.templateId,
+        ),
+      ),
+    ).toBe(true);
+  });
+
   it("does not assign media-dependent roles without supplied visual media", () => {
     expect(
       resolvePresetRoles("developer-demo", 8, {

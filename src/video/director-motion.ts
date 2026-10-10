@@ -4,6 +4,7 @@ import {
   type MotionSpec,
 } from "./motion-spec";
 import type { ReelProps } from "./types";
+import { resolveMotionDirection } from "@/production/motion";
 
 /** Materialize frozen shot intent against CURRENT voice/beat timing. The graph
  * stays neutral and seek-safe; changing FPS/takes never replays planning. */
@@ -35,6 +36,14 @@ export function compileDirectorMotion(
     const scene = props.scenes.find((value) => value.id === shot.id)!;
     if (
       scene.direction?.composition !== "layered-title" ||
+      resolveMotionDirection(
+        scene.motion,
+        scene.text,
+        scene.chart,
+        Boolean(scene.visual),
+        scene.items,
+        scene.background,
+      ) ||
       scene.hideText ||
       scene.background ||
       scene.visual ||

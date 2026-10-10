@@ -87,7 +87,7 @@ export function MotionDirectionMenu({
             ) : (
               <Clapperboard className="size-3.5" />
             )}
-            {VISUAL_AMBITION_LABELS[ambition]}
+            Visual direction · {VISUAL_AMBITION_LABELS[ambition]}
             {issues.length > 0 && (
               <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
                 <TriangleAlert className="size-3.5" />

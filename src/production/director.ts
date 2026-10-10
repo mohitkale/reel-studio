@@ -65,6 +65,18 @@ export function analyzeBeat(text: string) {
       items: [comparison[1].trim(), comparison[2].trim()],
       emphasis: [] as string[],
     };
+  // An explicitly named transition provides its two endpoints. Do not infer
+  // a diagram from a vague mention of change or from unrelated noun phrases.
+  const transition =
+    /\b(?:transition|shift|switch|move|change)\s+from\s+(.{2,80}?)\s*,?\s+to\s+(.{2,80}?)[.!?]?$/i.exec(
+      text.trim(),
+    );
+  if (transition)
+    return {
+      kind: "comparison" as BeatKind,
+      items: [transition[1].trim().replace(/,$/, ""), transition[2].trim()],
+      emphasis: [] as string[],
+    };
   const quote = /[“"]([^”"\n]{3,240})[”"]/.exec(text);
   if (quote) return { kind: "quote" as BeatKind, emphasis: [quote[1]] };
   const metric = [...text.matchAll(METRIC_PATTERN)][0];
@@ -153,7 +165,14 @@ export function directScene(
   hasVisual = false,
 ): { scene: AIScene; role: ProductionSceneRole; direction: ShotDirection } {
   const beat = analyzeBeat(scene.spokenText ?? scene.text);
-  const role = beatRole(beat.kind, fallback);
+  const role = beatRole(
+    beat.kind,
+    beat.kind === "prose" &&
+      !hasVisual &&
+      ["diagram", "quote", "chart", "metric", "comparison"].includes(fallback)
+      ? "explanation"
+      : fallback,
+  );
   const enriched: AIScene = {
     ...scene,
     emphasis: [...new Set([...scene.emphasis, ...beat.emphasis])].filter(

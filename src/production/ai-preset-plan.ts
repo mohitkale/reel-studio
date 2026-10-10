@@ -126,7 +126,7 @@ export function applyPresetToAIPlan(
         roles[index] = directed.role;
         const mapped =
           getPresetTemplateId({ presetId, engineId, role: roles[index]! }) ??
-          defaultTemplateIdForEngine(engineId);
+          "hf-statement";
         return {
           ...directed.scene,
           templateId: rejectedData

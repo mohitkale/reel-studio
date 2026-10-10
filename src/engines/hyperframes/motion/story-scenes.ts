@@ -51,7 +51,7 @@ export function buildStoryMotionScene(args: {
     after = brand ? `<div class="sm-brand">${escapeHtml(brand)}</div>` : "";
   }
   if (id.startsWith("comparison-"))
-    after = `<div class="sm-panels">${scene.items?.map((item, index) => `<div class="sm-panel sm-label-${index}"><span class="sm-number">0${index + 1}</span><div class="sm-label">${escapeHtml(item)}</div></div>`).join("")}</div>`;
+    after = `<div class="sm-panels">${scene.items?.map((item, index) => `${index ? '<div class="sm-transfer" aria-hidden="true"><svg viewBox="0 0 64 24"><path d="M2 12h56M48 3l10 9-10 9"/></svg></div>' : ""}<div class="sm-panel sm-label-${index}"><span class="sm-number">0${index + 1}</span><div class="sm-label">${escapeHtml(item)}</div></div>`).join("")}</div>`;
   return `<section id="scene-${escapeHtml(scene.id)}" class="clip scene motion-scene ${args.transitionClass}" data-scene-id="${escapeHtml(scene.id)}" data-motion-recipe="${id}" data-motion-version="${motion.version}" data-start="${args.absoluteStart.toFixed(3)}" data-duration="${args.duration.toFixed(3)}" data-track-index="1" data-exit-window="${args.exitWindow.toFixed(3)}" style="--accent:${escapeHtml(tokens.accent)};--accent-2:${escapeHtml(tokens.accentSecondary)}">
     <div class="fx-stage sm-stage sm-${id}" data-motion-scene="${escapeHtml(scene.id)}" data-recipe="${id}" style="${Object.entries(
       { ...g, radius: tokens.radius },
@@ -65,12 +65,15 @@ export const STORY_MOTION_STYLES = `
   .sm-stage { color:#fffdf7; background:#101626; }
   .sm-content { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; gap:var(--sm-gap); padding:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left); }
   .sm-title { margin:0; position:relative; font-size:var(--sm-headline); font-weight:850; line-height:1.1; letter-spacing:-.035em; overflow-wrap:anywhere; }
-  .sm-panels { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:var(--sm-gap); }
+  .sm-panels { display:grid; grid-template-columns:minmax(0,1fr) 5% minmax(0,1fr); gap:calc(var(--sm-gap) * .5); align-items:center; }
   .sm-panel { display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:var(--sm-gap); min-width:0; min-height:var(--sm-panelHeight); padding:var(--sm-padding); box-sizing:border-box; background:#192337; border-top:4px solid var(--accent); border-radius:var(--sm-radius); }
   .sm-panel:nth-child(2) { background:#27344a; border-color:var(--accent-2); }
   .sm-number { font-size:calc(var(--sm-brand) * .65); flex-shrink:0; font-weight:600; }
   .sm-label { font-size:var(--sm-label); line-height:1.16; font-weight:650; overflow-wrap:anywhere; min-width:0; }
   .sm-comparison-stack .sm-panels { grid-template-columns:minmax(0,1fr); }
+  .sm-transfer { width:100%; height:28px; color:var(--brand-accent-text); }
+  .sm-transfer svg { display:block; width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:3; }
+  .sm-comparison-stack .sm-transfer { height:38px; width:64px; justify-self:center; transform:rotate(90deg); }
   .sm-comparison-stack .sm-panel { flex-direction:row; align-items:center; justify-content:flex-start; min-height:var(--sm-rowHeight); }
   .sm-quiet-divider, .sm-quiet-center { color:#241d19; background:#f2ece2; }
   .sm-quiet-divider .sm-title, .sm-quiet-center .sm-title { font-weight:500; }

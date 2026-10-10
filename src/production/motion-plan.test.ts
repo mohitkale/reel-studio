@@ -21,6 +21,31 @@ const readingScenes: MotionPlanScene[] = Array.from(
 );
 
 describe("sequence motion direction", () => {
+  it("gives prose explanations and incomplete diagram roles authored motion without inventing inputs", () => {
+    const scenes: MotionPlanScene[] = Array.from(
+      { length: 10 },
+      (_, index) => ({
+        text: `A complete supplied explanation ${index}.`,
+        role: index % 2 ? "diagram" : "explanation",
+      }),
+    );
+    const before = structuredClone(scenes);
+    const planned = planMotionSequence(scenes, settings);
+    expect(planned.every(Boolean)).toBe(true);
+    expect(
+      planned.filter((value) => value?.recipeId.startsWith("type-")).length,
+    ).toBeGreaterThan(5);
+    expect(
+      planMotionSequence(scenes, { ...settings, ambition: "clean" }).filter(
+        (value) => value?.recipeId.startsWith("quiet-"),
+      ).length,
+    ).toBeGreaterThan(5);
+    expect(scenes).toEqual(before);
+    expect([
+      ...planMotionSequence(scenes.slice(0, 4), settings),
+      ...planMotionSequence(scenes.slice(4), settings, planned.slice(0, 4)),
+    ]).toEqual(planned);
+  });
   it("freezes deterministic decisions and continues the same rhythm on append", () => {
     const whole = planMotionSequence(readingScenes, settings);
     const first = planMotionSequence(readingScenes.slice(0, 7), settings);

@@ -26,7 +26,7 @@ import { VisualAmbitionControl } from "@/components/visual/visual-ambition-contr
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Combobox } from "@/components/ui/combobox";
+import { NativeSelect } from "@/components/ui/native-select";
 import { HintTooltip } from "@/components/ui/hint-tooltip";
 import {
   MEDIA_PREFERENCES,
@@ -50,13 +50,13 @@ import {
 } from "@/components/ui/dialog";
 
 const EXAMPLE_BRIEFS = [
-  "Hook: I wasted 6 months on the wrong habit. Calm teach-me reel — warm lo-fi — 3 fixes + soft CTA.",
-  "Why your mornings feel chaotic (and the 2-minute fix). Soft cinematic mood. Slam hook → proof number → follow CTA.",
-  "One CapCut habit that doubles watch time. Energetic tech vibe. Kinetic slam → chart proof → Instagram follow.",
-  "Stop posting every day — do this weekly instead. Clean-story tone, calm focus music, punchy list + logo outro.",
+  "Explain three ways to build a consistent reading habit, with a practical example for each.",
+  "Introduce a note-taking app that turns meeting notes into action items. End with a try-it CTA.",
 ];
 
-export function CreateWithAIDialog() {
+export function CreateWithAIDialog({
+  trigger,
+}: { trigger?: React.ReactElement } = {}) {
   const router = useRouter();
   const { data: providers } = useAIProviders();
   const generate = useGenerateProject();
@@ -75,7 +75,7 @@ export function CreateWithAIDialog() {
   const [styleId, setStyleId] = React.useState<StylePick>("auto");
   const [energy, setEnergy] = React.useState<EnergyPick>("auto");
   const [productionPresetId, setProductionPresetId] =
-    React.useState<ProductionPresetId>("product-launch");
+    React.useState<ProductionPresetId>("editorial-explainer");
   const [visualAmbition, setVisualAmbition] =
     React.useState<VisualAmbition>("expressive");
   const [mediaPreference, setMediaPreference] =
@@ -84,16 +84,26 @@ export function CreateWithAIDialog() {
     DEFAULT_QUICK_PRODUCE_ENABLED,
   );
   const [quickPlanner, setQuickPlanner] = React.useState<
-    "deterministic" | AIProviderId
-  >("deterministic");
+    "deterministic" | AIProviderId | undefined
+  >();
+  const [narration, setNarration] = React.useState(false);
 
   const configured = (providers ?? []).filter((p) => p.configured);
   const effectiveProvider = providerId ?? configured[0]?.id;
 
+  const effectiveQuickPlanner =
+    quickPlanner ?? effectiveProvider ?? "deterministic";
+  const validBrief = brief.trim().length >= 3 && brief.trim().length <= 8000;
+
   function submit() {
     const trimmed = brief.trim();
-    if (!trimmed || (!quickProduce && !effectiveProvider)) return;
-    const planner = quickProduce ? quickPlanner : effectiveProvider;
+    if (
+      !validBrief ||
+      generate.isPending ||
+      (!quickProduce && !effectiveProvider)
+    )
+      return;
+    const planner = quickProduce ? effectiveQuickPlanner : effectiveProvider;
     generate.mutate(
       {
         providerId: planner === "deterministic" ? undefined : planner,
@@ -113,10 +123,10 @@ export function CreateWithAIDialog() {
               idempotencyKey: `quick-produce:${crypto.randomUUID()}`,
               quickProduce: {
                 enabled: true as const,
-                planner: quickPlanner,
+                planner: effectiveQuickPlanner,
                 mediaPreference,
                 voice: {
-                  enabled: true,
+                  enabled: narration,
                   providerId: "kokoro-server" as const,
                   voiceId: "af_heart",
                 },
@@ -131,26 +141,25 @@ export function CreateWithAIDialog() {
 
           setStyleId("auto");
           setEnergy("auto");
-          setProductionPresetId("product-launch");
+          setProductionPresetId("editorial-explainer");
           setMediaPreference("auto");
           setQuickProduce(DEFAULT_QUICK_PRODUCE_ENABLED);
-          setQuickPlanner("deterministic");
+          setQuickPlanner(undefined);
+          setNarration(false);
           const selected = mediaDecisions.filter(
             (decision) => decision.state === "selected",
           ).length;
           toast.success(
             quickProduce ? "Quick Produce started" : "Video drafted",
             {
-              description: selected
-                ? `${selected} stock background${selected === 1 ? "" : "s"} selected. Review every scene in the editor.`
-                : "No stock result was selected; animated mood backgrounds remain available.",
+              description: quickProduce
+                ? "Follow the saved progress, then download or edit your finished video."
+                : selected
+                  ? `${selected} stock background${selected === 1 ? "" : "s"} selected. Review every scene in the editor.`
+                  : "Your scenes are ready. Review the draft, add narration, and export when you’re happy with it.",
             },
           );
-          router.push(
-            job
-              ? `/editor/${scriptId}?productionJob=${encodeURIComponent(job.id)}`
-              : `/editor/${scriptId}`,
-          );
+          router.push(job ? `/results/${job.id}` : `/editor/${scriptId}`);
         },
         onError: (e) =>
           toast.error("Generation failed", {
@@ -161,59 +170,28 @@ export function CreateWithAIDialog() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!generate.isPending) setOpen(next);
+      }}
+    >
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <Sparkles />
-          Create with AI
-        </Button>
+        {trigger ?? (
+          <Button>
+            <Sparkles />
+            Create with AI
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create with AI</DialogTitle>
-          <DialogDescription asChild>
-            <div className="text-muted-foreground space-y-2 text-sm">
-              <p>
-                Describe your video. AI turns the supplied idea into editable
-                scenes using the selected production preset and brand kit.
-              </p>
-              <p className="text-xs">
-                Template choices follow each scene&apos;s content and engine
-                capabilities. Supplied facts stay grounded in your brief, and
-                every scene remains editable afterward.
-              </p>
-            </div>
+          <DialogDescription>
+            Describe your idea or paste a script. Your preset handles the visual
+            styling; AI creates editable scenes you can review before export.
           </DialogDescription>
         </DialogHeader>
-
-        <button
-          type="button"
-          aria-pressed={quickProduce}
-          onClick={() => setQuickProduce((value) => !value)}
-          className={cn(
-            "flex items-start justify-between gap-4 rounded-xl border p-4 text-left transition-colors",
-            quickProduce ? "border-primary bg-primary/8" : "hover:bg-muted/40",
-          )}
-        >
-          <span>
-            <span className="block text-sm font-medium">Quick Produce</span>
-            <span className="text-muted-foreground mt-1 block text-xs">
-              Create the editable project first, then produce a verified MP4 in
-              the durable local queue. Off by default.
-            </span>
-          </span>
-          <span
-            aria-hidden="true"
-            className={cn(
-              "mt-0.5 flex h-6 w-11 shrink-0 rounded-full p-0.5 transition-colors",
-              quickProduce
-                ? "bg-primary justify-end"
-                : "bg-muted justify-start",
-            )}
-          >
-            <span className="bg-background size-5 rounded-full shadow" />
-          </span>
-        </button>
 
         {configured.length === 0 && !quickProduce ? (
           <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm">
@@ -222,10 +200,11 @@ export function CreateWithAIDialog() {
             <Link href="/settings" className="text-primary underline">
               Settings
             </Link>{" "}
-            to use this, or create a project manually.
+            to use AI. Create production on the Projects page works with your
+            own text and no key.
           </p>
         ) : (
-          <div className="space-y-4">
+          <fieldset disabled={generate.isPending} className="min-w-0 space-y-4">
             <div className="grid grid-cols-2 gap-2">
               {(
                 [
@@ -261,6 +240,8 @@ export function CreateWithAIDialog() {
               <Textarea
                 id="ai-brief"
                 rows={mode === "idea" ? 3 : 6}
+                maxLength={8000}
+                autoFocus
                 value={brief}
                 onChange={(e) => setBrief(e.target.value)}
                 placeholder={
@@ -285,188 +266,249 @@ export function CreateWithAIDialog() {
               ) : null}
             </div>
 
-            <VisualAmbitionControl
-              id="ai-visual-ambition"
-              value={visualAmbition}
-              onChange={setVisualAmbition}
-              disabled={generate.isPending}
-            />
-
-            <StyleEnergyControls
-              styleId={styleId}
-              energy={energy}
-              onStyleChange={setStyleId}
-              onEnergyChange={setEnergy}
-              allowAuto
-              compact
-            />
-
-            <div className="grid gap-2">
-              <Label>Voice script</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="ai-production-preset">Production preset</Label>
+                <NativeSelect
+                  id="ai-production-preset"
+                  value={productionPresetId}
+                  onChange={(event) =>
+                    setProductionPresetId(
+                      event.target.value as ProductionPresetId,
+                    )
+                  }
+                >
+                  {PRODUCTION_PRESETS.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.name}
+                    </option>
+                  ))}
+                </NativeSelect>
+                <p className="text-muted-foreground text-xs">
                   {
-                    id: "short" as const,
-                    label: "Short",
-                    description:
-                      "Same short line on screen and in voice (~14–18 words).",
-                  },
-                  {
-                    id: "detailed" as const,
-                    label: "Detailed",
-                    description:
-                      "Short on-screen text + longer voiceover (~2–3×).",
-                  },
-                ].map((opt) => {
-                  const active = scriptStyle === opt.id;
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => setScriptStyle(opt.id)}
-                      className={cn(
-                        "flex flex-col items-start gap-0.5 rounded-lg border px-3 py-2 text-left text-sm transition-colors",
-                        active
-                          ? "border-primary bg-primary/10 text-foreground"
-                          : "text-muted-foreground hover:bg-accent",
-                      )}
-                    >
-                      <span className="font-medium">{opt.label}</span>
-                      <span className="text-xs opacity-70">
-                        {opt.description}
-                      </span>
-                    </button>
-                  );
-                })}
+                    PRODUCTION_PRESETS.find(
+                      (preset) => preset.id === productionPresetId,
+                    )?.description
+                  }
+                </p>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="ai-orientation">Orientation</Label>
+                <NativeSelect
+                  id="ai-orientation"
+                  value={orientation}
+                  onChange={(event) =>
+                    setOrientation(event.target.value as Orientation)
+                  }
+                >
+                  {ORIENTATIONS.map((value) => (
+                    <option key={value} value={value}>
+                      {ORIENTATION_LABELS[value]}
+                    </option>
+                  ))}
+                </NativeSelect>
               </div>
             </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="ai-production-preset">Production preset</Label>
-              <Combobox
-                id="ai-production-preset"
-                value={productionPresetId}
-                onChange={(value) =>
-                  setProductionPresetId(value as ProductionPresetId)
-                }
-                options={PRODUCTION_PRESETS.map((preset) => ({
-                  value: preset.id,
-                  label: preset.name,
-                }))}
-                searchPlaceholder="Search presets…"
-              />
-              <p className="text-muted-foreground text-xs">
-                {
-                  PRODUCTION_PRESETS.find(
-                    (preset) => preset.id === productionPresetId,
-                  )?.description
-                }
-              </p>
-              <p className="text-muted-foreground text-[11px]">
-                Auto Style and Energy use this preset&apos;s recommended
-                defaults.
-              </p>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="ai-orientation">Orientation</Label>
-              <Combobox
-                id="ai-orientation"
-                value={orientation}
-                onChange={(v) => setOrientation(v as Orientation)}
-                options={ORIENTATIONS.map((o) => ({
-                  value: o,
-                  label: ORIENTATION_LABELS[o],
-                }))}
-                searchPlaceholder="Search…"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="ai-media-preference">Automatic media</Label>
-              <Combobox
-                id="ai-media-preference"
-                value={mediaPreference}
-                onChange={(value) =>
-                  setMediaPreference(value as MediaPreference)
-                }
-                options={MEDIA_PREFERENCES.map((value) => ({
-                  value,
-                  label: MEDIA_PREFERENCE_LABELS[value],
-                }))}
-                searchPlaceholder="Search preferences…"
-              />
-              <p className="text-muted-foreground text-xs">
-                Image fallback: Pexels → Pixabay → Unsplash. Video fallback:
-                Pexels → Pixabay. Existing uploads and manual selections always
-                win; no result uses the animated mood background.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3">
               <div className="grid gap-2">
                 <Label htmlFor="ai-provider">Provider</Label>
-                <Combobox
+                <NativeSelect
                   id="ai-provider"
                   value={
-                    quickProduce ? quickPlanner : (effectiveProvider ?? "")
-                  }
-                  onChange={(v) =>
                     quickProduce
-                      ? setQuickPlanner(v as "deterministic" | AIProviderId)
-                      : setProviderId(v as AIProviderId)
+                      ? effectiveQuickPlanner
+                      : (effectiveProvider ?? "")
                   }
-                  options={[
-                    ...(quickProduce
-                      ? [
-                          {
-                            value: "deterministic",
-                            label: "Deterministic (no AI key)",
-                          },
-                        ]
-                      : []),
-                    ...configured.map((p) => ({
-                      value: p.id,
-                      label: p.label,
-                    })),
-                  ]}
-                  placeholder="Select provider…"
-                  searchPlaceholder="Search providers…"
-                />
-              </div>
-              <div className="grid gap-2">
-                <HintTooltip
-                  label="How many scenes the AI should write. Auto usually picks 5–10."
-                  side="top"
+                  onChange={(event) =>
+                    quickProduce
+                      ? setQuickPlanner(
+                          event.target.value as "deterministic" | AIProviderId,
+                        )
+                      : setProviderId(event.target.value as AIProviderId)
+                  }
                 >
-                  <Label htmlFor="ai-scenes">Scenes</Label>
-                </HintTooltip>
-                <Combobox
-                  id="ai-scenes"
-                  value={sceneCount}
-                  onChange={setSceneCount}
-                  options={[
-                    { value: "auto", label: "Auto (AI decides)" },
-                    ...[4, 5, 6, 7, 8, 10, 12, 14, 16].map((n) => ({
-                      value: String(n),
-                      label: `${n} scenes`,
-                    })),
-                  ]}
-                  searchPlaceholder="Search…"
-                />
+                  {quickProduce && (
+                    <option value="deterministic">
+                      Deterministic (no AI key)
+                    </option>
+                  )}
+                  {configured.map((provider) => (
+                    <option key={provider.id} value={provider.id}>
+                      {provider.label}
+                    </option>
+                  ))}
+                </NativeSelect>
               </div>
             </div>
-          </div>
+            {quickProduce && effectiveQuickPlanner === "deterministic" && (
+              <p className="text-muted-foreground text-xs">
+                The local planner arranges your supplied text into scenes. Paste
+                a finished script, or choose an AI provider to develop an idea.
+              </p>
+            )}
+            <details className="rounded-lg border p-3">
+              <summary className="cursor-pointer text-sm font-medium">
+                Customize style and media
+              </summary>
+              <div className="mt-4 space-y-4">
+                <VisualAmbitionControl
+                  id="ai-visual-ambition"
+                  value={visualAmbition}
+                  onChange={setVisualAmbition}
+                  disabled={generate.isPending}
+                />
+
+                <StyleEnergyControls
+                  styleId={styleId}
+                  energy={energy}
+                  onStyleChange={setStyleId}
+                  onEnergyChange={setEnergy}
+                  allowAuto
+                  compact
+                />
+
+                <div className="grid gap-2">
+                  <Label>Voice script</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      {
+                        id: "short" as const,
+                        label: "Short",
+                        description:
+                          "Same short line on screen and in voice (~14–18 words).",
+                      },
+                      {
+                        id: "detailed" as const,
+                        label: "Detailed",
+                        description:
+                          "Short on-screen text + longer voiceover (~2–3×).",
+                      },
+                    ].map((opt) => {
+                      const active = scriptStyle === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setScriptStyle(opt.id)}
+                          className={cn(
+                            "flex flex-col items-start gap-0.5 rounded-lg border px-3 py-2 text-left text-sm transition-colors",
+                            active
+                              ? "border-primary bg-primary/10 text-foreground"
+                              : "text-muted-foreground hover:bg-accent",
+                          )}
+                        >
+                          <span className="font-medium">{opt.label}</span>
+                          <span className="text-xs opacity-70">
+                            {opt.description}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="ai-media-preference">Automatic media</Label>
+                  <NativeSelect
+                    id="ai-media-preference"
+                    value={mediaPreference}
+                    onChange={(event) =>
+                      setMediaPreference(event.target.value as MediaPreference)
+                    }
+                  >
+                    {MEDIA_PREFERENCES.map((value) => (
+                      <option key={value} value={value}>
+                        {MEDIA_PREFERENCE_LABELS[value]}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                  <p className="text-muted-foreground text-xs">
+                    Exportable images: Pexels → Pixabay. Video fallback: Pexels
+                    → Pixabay. Existing uploads and manual selections always
+                    win; no result uses the animated mood background.
+                  </p>
+                </div>
+
+                <div className="grid gap-2">
+                  <HintTooltip
+                    label="How many scenes the AI should write. Auto usually picks 5–10."
+                    side="top"
+                  >
+                    <Label htmlFor="ai-scenes">Scenes</Label>
+                  </HintTooltip>
+                  <NativeSelect
+                    id="ai-scenes"
+                    value={sceneCount}
+                    onChange={(event) => setSceneCount(event.target.value)}
+                  >
+                    <option value="auto">Auto (AI decides)</option>
+                    {[4, 5, 6, 7, 8, 10, 12, 14, 16].map((count) => (
+                      <option key={count} value={count}>
+                        {count} scenes
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </div>
+              </div>
+            </details>
+          </fieldset>
         )}
 
-        <DialogFooter>
+        <fieldset
+          disabled={generate.isPending}
+          className="min-w-0 space-y-3 rounded-xl border p-4"
+        >
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={quickProduce}
+              onChange={(event) => setQuickProduce(event.target.checked)}
+              className="mt-1"
+            />
+            <span>
+              <span className="block text-sm font-medium">Quick Produce</span>
+              <span className="text-muted-foreground mt-1 block text-xs">
+                Automatically render a downloadable MP4 after creating the
+                draft. Leave off to review your scenes first.
+              </span>
+            </span>
+          </label>
+          {quickProduce && (
+            <label className="flex cursor-pointer items-start gap-3 border-t pt-3">
+              <input
+                type="checkbox"
+                checked={narration}
+                onChange={(event) => setNarration(event.target.checked)}
+                className="mt-1"
+              />
+              <span>
+                <span className="block text-sm font-medium">
+                  Add local narration
+                </span>
+                <span className="text-muted-foreground mt-1 block text-xs">
+                  Uses Kokoro voice af_heart. Set up local voice in Settings
+                  first; the first synthesis may download the model. Leave off
+                  for a silent video.
+                </span>
+              </span>
+            </label>
+          )}
+        </fieldset>
+        {generate.isError && (
+          <p role="alert" className="text-destructive text-sm">
+            {generate.error.message}
+          </p>
+        )}
+
+        <DialogFooter className="bg-card sticky -bottom-6 -mx-6 border-t px-6 pt-3 pb-6">
           <DialogClose asChild>
             <Button variant="ghost">Cancel</Button>
           </DialogClose>
           <Button
             onClick={submit}
             disabled={
-              !brief.trim() ||
+              !validBrief ||
               (!quickProduce && !effectiveProvider) ||
               generate.isPending
             }
@@ -479,7 +521,7 @@ export function CreateWithAIDialog() {
             ) : (
               <>
                 <Sparkles />
-                {quickProduce ? "Create and produce" : "Generate video"}
+                {quickProduce ? "Create and produce" : "Create draft"}
               </>
             )}
           </Button>

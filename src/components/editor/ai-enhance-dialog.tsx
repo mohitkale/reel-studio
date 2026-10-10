@@ -462,7 +462,7 @@ export function AIEnhanceDialog({
                   searchPlaceholder="Search preferences…"
                 />
                 <p className="text-muted-foreground text-xs">
-                  Image: Pexels → Pixabay → Unsplash. Video: Pexels → Pixabay.
+                  Exportable images and video: Pexels → Pixabay.
                   No result uses the animated mood background.
                 </p>
               </div>

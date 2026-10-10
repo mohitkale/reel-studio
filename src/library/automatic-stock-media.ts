@@ -22,10 +22,11 @@ import type {
   StockMediaCandidate,
   StockMediaKind,
 } from "@/providers/stock/schemas";
-import { UNSPLASH_API_GUIDELINES_URL } from "@/providers/stock/unsplash";
 
 export const STOCK_MEDIA_FALLBACK_ORDER = {
-  image: ["pexels", "pixabay", "unsplash"],
+  // Automatic choices must survive MP4 staging. Hotlink-only sources remain
+  // available for explicit preview selections, not unattended productions.
+  image: ["pexels", "pixabay"],
   video: ["pexels", "pixabay"],
 } as const;
 
@@ -62,7 +63,6 @@ interface Dependencies {
 const termsUrls: Record<string, string> = {
   pexels: PEXELS_LICENSE_URL,
   pixabay: PIXABAY_LICENSE_URL,
-  unsplash: UNSPLASH_API_GUIDELINES_URL,
 };
 
 function dependencies(overrides: Partial<Dependencies>): Dependencies {
@@ -188,7 +188,7 @@ export async function resolveAutomaticSceneMedia(
           perPage: Math.min(12, provider.capabilities.maxPageSize),
         });
         const candidate = deterministicStockCandidate(
-          search.items,
+          search.items.filter((item) => item.acquisitionPolicy !== "hotlink"),
           `${options.seed ?? query}:${providerId}:${kind}:${orientation}`,
         );
         if (!candidate) continue;
@@ -198,6 +198,7 @@ export async function resolveAutomaticSceneMedia(
           candidate,
           selected.id,
         );
+        if (resolved.candidate.acquisitionPolicy === "hotlink") continue;
         const snapshot = await deps.materialize({
           candidate: resolved.candidate,
           rendition: resolved.rendition,

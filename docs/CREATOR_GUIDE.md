@@ -1,25 +1,35 @@
 # Creator guide
 
-Reel Studio's default path is designed to finish a useful production without
-per-scene setup:
+Start on **Projects** with the path that matches your content:
 
-1. Paste your script or a few clear ideas on the home page.
-2. Choose one of the six visual presets and a format.
-3. Select **Generate** and follow the saved result page.
-4. Play the finished video and download the verified MP4.
-5. Choose **Edit video** for scene, narration and caption changes, or open
-   **Remix this video** to generate another preset/format from the same copy.
+1. Choose **Create with AI** to turn an idea into a script and varied scenes, or
+   **Create production** to arrange your own script/article and optional uploads.
+2. Add your content. Keep the preset defaults, or customize the style and format.
+3. Select **Create draft** (AI) or **Build draft** (local content).
+4. Review the scenes in the editor, generate or upload narration if desired,
+   then select **Export MP4**.
 
-Narration is off by default; no model or AI key is needed for the first export.
-Enable configured local Kokoro under **Narration options**, or add voice later.
-**More creation options** exposes the guided upload/import workflow, blank
-projects and optional AI planners. The editor's **Customize video** section
-contains detailed controls. Its timeline selects preview positions and saves
-scene reordering; timing labels distinguish narration from estimates.
+AI creation uses your configured provider. If none is configured, open Settings
+or use Create production, which works without an AI key. The local planner
+arranges supplied content rather than expanding an instruction into new copy.
+Use AI when you want a topic explained or an idea developed.
 
-The deterministic planner works without an AI key. It keeps the complete source
-as narration and derives short display copy for readable scenes. AI planning is
-optional and produces the same validated, editable structure.
+Create production starts with content and lets you build immediately. Its
+optional customization steps expose full-source voiceover, chaptered output,
+visual presets, brand kits, media, and one-take/per-scene narration workflows.
+The editor's **Customize video** section contains detailed finishing controls.
+It opens with **Full reel** so you can review the complete sequence. **Visual
+direction** and **Visual review** are beside **Export MP4**. Choose Expressive
+for varied type reveals, Clean for quieter reading layouts, or Showcase for
+more impact beats. Replanning preserves copy, narration, media and locked scenes;
+an explicit transition such as “a shift from X to Y” can stage those two supplied
+labels as a comparison. Select **This scene** for detailed scene work.
+
+For an unattended MP4, enable **Quick Produce** in Create with AI. The visible
+**Add local narration** checkbox uses Kokoro voice `af_heart`; leave it off for a
+silent video. Initial voice synthesis may download the model. The result page
+shows saved progress, playback, verified downloads, **Edit video**, and **Remix**.
+Blank projects are available beside the library for manual scene setup.
 
 ## Quick Produce or review first
 

@@ -33,6 +33,9 @@ servers and whisper.cpp remain optional and separately managed.
 | `npm run mcp`                     | Start the stdio agent integration       |
 
 The normal launcher supervises the web app and one durable production worker.
+In development, the worker watches its imported source so renderer edits reach
+both the browser preview and the next MP4 export. Editing source during an
+active development render can interrupt that job; retry after the reload.
 Do not start another worker for ordinary use. See [runtime](RUNTIME.md).
 
 ## Configuration and local AI

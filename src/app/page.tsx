@@ -3,7 +3,15 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Clapperboard, Trash2, FileVideo } from "lucide-react";
+import {
+  Plus,
+  Clapperboard,
+  Trash2,
+  FileVideo,
+  Sparkles,
+  FileText,
+  ArrowRight,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -21,7 +29,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Combobox } from "@/components/ui/combobox";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   type Orientation,
   ORIENTATIONS,
@@ -34,7 +42,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/shell/page-header";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CreateWithAIDialog } from "@/components/projects/create-with-ai-dialog";
-import { PromptCreator } from "@/components/projects/prompt-creator";
 import { CreationWizard } from "@/components/projects/creation-wizard";
 import { ViewModeToggle } from "@/components/ui/view-mode-toggle";
 import {
@@ -83,12 +90,12 @@ function NewProjectDialog() {
       <DialogTrigger asChild>
         <Button variant="outline">
           <Plus />
-          New project
+          Blank project
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New project</DialogTitle>
+          <DialogTitle>Blank project</DialogTitle>
           <DialogDescription>
             Name your project and choose its format.
           </DialogDescription>
@@ -107,16 +114,19 @@ function NewProjectDialog() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="project-orientation">Orientation</Label>
-            <Combobox
+            <NativeSelect
               id="project-orientation"
               value={orientation}
-              onChange={(v) => setOrientation(v as Orientation)}
-              options={ORIENTATIONS.map((o) => ({
-                value: o,
-                label: ORIENTATION_LABELS[o],
-              }))}
-              searchPlaceholder="Search…"
-            />
+              onChange={(event) =>
+                setOrientation(event.target.value as Orientation)
+              }
+            >
+              {ORIENTATIONS.map((value) => (
+                <option key={value} value={value}>
+                  {ORIENTATION_LABELS[value]}
+                </option>
+              ))}
+            </NativeSelect>
           </div>
         </div>
         <DialogFooter>
@@ -142,27 +152,82 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-8">
-      <PromptCreator />
+      <section aria-labelledby="create-heading" className="space-y-5">
+        <div>
+          <h1
+            id="create-heading"
+            className="text-3xl font-semibold tracking-tight"
+          >
+            Turn your ideas into videos
+          </h1>
+          <p className="text-muted-foreground mt-2 max-w-2xl text-sm">
+            Start with an idea or your own content. Reel Studio arranges the
+            scenes, applies a visual preset, and prepares an editable video.
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <CreateWithAIDialog
+            trigger={
+              <button
+                type="button"
+                className="bg-primary/5 hover:bg-primary/10 focus-visible:ring-ring border-primary/40 flex h-full flex-col items-start rounded-2xl border p-6 text-left transition-colors focus-visible:ring-2"
+              >
+                <div className="mb-4 flex w-full items-center justify-between gap-3">
+                  <Sparkles className="text-primary size-7" />
+                  <Badge>Recommended</Badge>
+                </div>
+                <h2 className="text-xl font-semibold">Create with AI</h2>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  Describe an idea. AI writes the script and plans varied scenes
+                  with styling and relevant media.
+                </p>
+                <span className="text-muted-foreground mt-3 text-xs">
+                  Uses your configured AI provider · Presets ready to use
+                </span>
+                <span className="text-primary mt-5 flex items-center gap-2 text-sm font-medium">
+                  Start with an idea <ArrowRight className="size-4" />
+                </span>
+              </button>
+            }
+          />
+          <CreationWizard
+            trigger={
+              <button
+                type="button"
+                className="bg-card hover:bg-muted/40 focus-visible:ring-ring flex h-full flex-col items-start rounded-2xl border p-6 text-left transition-colors focus-visible:ring-2"
+              >
+                <FileText className="text-primary mb-4 size-7" />
+                <h2 className="text-xl font-semibold">Create production</h2>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  Bring a script, article, or notes and optional uploads. Build
+                  styled scenes locally, ready for narration and export.
+                </p>
+                <span className="text-muted-foreground mt-3 text-xs">
+                  No AI key needed · Your content, arranged into scenes
+                </span>
+                <span className="text-primary mt-5 flex items-center gap-2 text-sm font-medium">
+                  Start with your content <ArrowRight className="size-4" />
+                </span>
+              </button>
+            }
+          />
+        </div>
+        <p className="text-muted-foreground text-xs">
+          1. Add content · 2. Create your draft · 3. Review, add narration, and
+          export. Want a finished MP4 automatically? Enable Quick Produce in
+          Create with AI.
+        </p>
+      </section>
       <PageHeader
         title="Your projects"
-        description="Create and manage your short-form video projects."
+        description="Continue editing a draft or start a blank project for manual scene setup."
         actions={
           <>
+            <NewProjectDialog />
             <ViewModeToggle value={view} onChange={setView} label="Projects" />
           </>
         }
       />
-
-      <details className="rounded-lg border p-3">
-        <summary className="cursor-pointer text-sm font-medium">
-          More creation options
-        </summary>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <NewProjectDialog />
-          <CreateWithAIDialog />
-          <CreationWizard />
-        </div>
-      </details>
 
       {isLoading ? (
         view === "list" ? (
@@ -182,7 +247,7 @@ export default function ProjectsPage() {
         <EmptyState
           icon={Clapperboard}
           title="No projects yet"
-          description="Paste your text above to generate a video, or open more creation options for uploads, imports and AI."
+          description="Choose Create with AI for an idea, or Create production for a script, article, or uploads."
         />
       ) : view === "list" ? (
         <div className="space-y-2">

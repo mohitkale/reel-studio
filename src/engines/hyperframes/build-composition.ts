@@ -1,5 +1,6 @@
 import { escapeHtml } from "@/lib/html";
 import { MOTION_LIBRARY_STYLES } from "./motion/library-styles";
+import { colorContrast, readableMotionPalette } from "@/video/readable-palette";
 import { buildTextFitScript } from "./text-fit";
 import { validateMotionForReel } from "@/video/motion-spec";
 import { compileDirectorMotion } from "@/video/director-motion";
@@ -944,7 +945,7 @@ export function buildHyperframesCompositionHtml(
   const width = props.width || 1080;
   const height = props.height || 1920;
   const layout = props.layout ?? resolveProductionLayout({ width, height });
-  const tokens = props.tokens;
+  const tokens = readableMotionPalette(props.tokens);
   const accent = tokens.accent ?? "#ff6b4a";
   const cover = coverFrames(fps, Boolean(props.coverUrl));
   const coverSeconds = framesToSeconds(cover, fps);
@@ -1025,7 +1026,7 @@ export function buildHyperframesCompositionHtml(
       buildTypeMotionScene(motionArgs);
     const motionScene = authoredMotionScene?.replace(
       /(<div\b[^>]*class="fx-stage[^>]*>)/,
-      '$1<div class="ml-ambient" aria-hidden="true"></div>',
+      '$1<div class="ml-ambient" aria-hidden="true"></div><div class="ml-trace" aria-hidden="true"></div>',
     );
     // Media recipes stage their own timed source. Keep a single decoder;
     // all other treatments continue using the shared background video layer.
@@ -1236,7 +1237,7 @@ ${REGISTERED_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_
          data-hide-progress="${hideProgress ? "1" : "0"}"
          data-grain="${grainAttr}"
          data-orientation="${layout.orientation}"
-         style="width:${width}px;height:${height}px;--brand-background:${tokens.background};--brand-foreground:${tokens.foreground};--brand-muted:${tokens.muted};--brand-accent-foreground:${tokens.accentForeground};--motion-radius:${tokens.radius}px;--motion-gap:${Math.min(width * 0.032, height * 0.045, 48)}px;--brand-font:${escapeHtml(cssFontStack(hyperframesBrandFont(tokens.fontFamily)))};font-family:var(--brand-font);--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}">
+         style="width:${width}px;height:${height}px;--brand-background:${tokens.background};--brand-foreground:${tokens.foreground};--brand-muted:${tokens.muted};--brand-accent-foreground:${tokens.accentForeground};--brand-accent-text:${(colorContrast(tokens.accent, tokens.background) ?? 0) >= 4.5 ? tokens.accent : tokens.foreground};--motion-radius:${tokens.radius}px;--motion-gap:${Math.min(width * 0.032, height * 0.045, 48)}px;--brand-font:${escapeHtml(cssFontStack(hyperframesBrandFont(tokens.fontFamily)))};font-family:var(--brand-font);--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}">
       ${coverBlock}
       ${progress}
       ${videoBlocks.join("\n")}

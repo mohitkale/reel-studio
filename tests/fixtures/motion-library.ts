@@ -10,6 +10,7 @@ const content: Record<MotionRecipeId, Partial<ReelScene> & { text: string }> = {
   "type-impact": { text: "Make every word matter.", role: "hook" },
   "type-editorial": {
     text: "Give a useful idea room to breathe.",
+    emphasis: ["useful idea"],
     role: "headline",
   },
   "data-spotlight": {
@@ -56,9 +57,9 @@ const content: Record<MotionRecipeId, Partial<ReelScene> & { text: string }> = {
     items: ["A focused opening", "A clear conclusion"],
   },
   "comparison-stack": {
-    text: "Two ways to tell the story.",
+    text: "A transition from artificial intelligence to situational intelligence.",
     role: "comparison",
-    items: ["A focused opening", "A clear conclusion"],
+    items: ["Artificial intelligence", "Situational intelligence"],
   },
   "quiet-divider": { text: "Let the next idea breathe.", role: "summary" },
   "quiet-center": {
@@ -68,7 +69,7 @@ const content: Record<MotionRecipeId, Partial<ReelScene> & { text: string }> = {
   "brand-lockup": { text: "Make something worth sharing.", role: "cta" },
   "brand-frame": { text: "Your next story starts here.", role: "logo" },
   "quote-margin": {
-    text: "Make the message clear before adding motion.",
+    text: "Make the message clear before adding motion, and give every complete sentence enough room to read.",
     role: "quote",
   },
 };

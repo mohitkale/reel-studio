@@ -28,7 +28,7 @@ export const quoteMarginBlock = {
 .qm-stage .qm-mark { display:block; color:var(--accent); font-family:"EB Garamond",serif; font-size:clamp(64px,10cqw,120px); line-height:1.3; }
 .qm-copy { margin:0; width:min(100%,var(--content-max-width)); }
 .qm-copy .fx-line-inner { color:inherit; font-family:"EB Garamond",serif; font-size:clamp(34px,5.6cqw,72px); line-height:1.12; letter-spacing:-.02em; white-space:normal; overflow-wrap:anywhere; padding-bottom:.12em; }
-.qm-stage.qm-long .qm-copy .fx-line-inner { font-size:clamp(26px,3.8cqw,48px); }
+.qm-stage.qm-long .qm-copy .fx-line-inner { font-size:clamp(34px,6.8cqw,88px); }
 .qm-rule { width:28%; height:3px; background:var(--accent); transform-origin:left center; }
 `,
 };

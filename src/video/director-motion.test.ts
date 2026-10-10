@@ -2,6 +2,7 @@ import { expect, it } from "vitest";
 import { compileDirectorMotion } from "./director-motion";
 import { defaultBrandTokens } from "./tokens";
 import type { ReelProps } from "./types";
+import { motionDirection } from "@/production/motion";
 
 const props: ReelProps = {
   tokens: defaultBrandTokens,
@@ -61,4 +62,12 @@ it("falls back without discarding media, chart data, hidden or overbudget copy",
     })!;
     expect(compiled.shots[0].layers[0].elements[0].kind).toBe("legacy-scene");
   }
+});
+
+it("keeps a compatible authored treatment ahead of a basic AI layered title", () => {
+  const compiled = compileDirectorMotion({
+    ...props,
+    scenes: [{ ...props.scenes[0], motion: motionDirection("type-editorial") }],
+  })!;
+  expect(compiled.shots[0].layers[0].elements[0].kind).toBe("legacy-scene");
 });

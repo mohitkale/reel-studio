@@ -1,9 +1,13 @@
 // @vitest-environment node
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { supervise, nextServerFlags } from "../../scripts/supervise.mjs";
+import {
+  supervise,
+  nextServerFlags,
+  productionWorkerCommand,
+} from "../../scripts/supervise.mjs";
 
 function assertChildrenStopped(events: string) {
   const pids = [...events.matchAll(/(?:web|worker):(\d+):start/g)].map(
@@ -36,6 +40,44 @@ describe("server listener", () => {
 });
 
 describe("process supervision", () => {
+  it("reloads imported TypeScript renderer changes in development", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "reel-worker-watch-"));
+    const file = path.join(dir, "events");
+    const renderer = path.join(dir, "renderer.ts");
+    const entry = path.join(dir, "worker.ts");
+    await writeFile(renderer, 'export const paint = "before";');
+    await writeFile(
+      entry,
+      `import { appendFileSync } from 'node:fs';
+       import { paint } from './renderer.ts';
+       appendFileSync(${JSON.stringify(file)}, paint + '\\n');
+       setInterval(() => {}, 1000);`,
+    );
+    const runner = supervise({
+      web: [
+        process.execPath,
+        "scripts/fixtures/supervisor-child.mjs",
+        "web",
+        file,
+      ],
+      worker: [...productionWorkerCommand("dev").slice(0, -1), entry],
+      graceMs: 1000,
+    });
+    try {
+      await expect
+        .poll(() => readFile(file, "utf8"), { timeout: 10000 })
+        .toContain("before");
+      await writeFile(renderer, 'export const paint = "after";');
+      await expect
+        .poll(() => readFile(file, "utf8"), { timeout: 10000 })
+        .toContain("after");
+      expect(productionWorkerCommand("start")).not.toContain("--watch");
+    } finally {
+      runner.stop();
+      await runner.done;
+      await rm(dir, { recursive: true, force: true });
+    }
+  }, 30000);
   it.each(["dev", "start", "docker"])(
     "stops both %s children on shutdown",
     async () => {

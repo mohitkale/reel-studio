@@ -22,7 +22,7 @@ function content(scene: ReelScene, tokens: BrandTokens): string {
     .map((item) => item.trim())
     .filter(Boolean)
     .slice(0, 5);
-  const label = `<div class="ed-label fx-kicker"><i style="background:${tokens.accent}"></i>${escapeHtml(role)}</div>`;
+  const label = `<div class="ed-label fx-kicker" aria-hidden="true"><i style="background:${tokens.accent}"></i></div>`;
 
   if (role === "diagram" && items.length >= 2) {
     return `${label}<h2 class="ed-title fx-line"><span class="fx-line-inner">${copy}</span></h2>

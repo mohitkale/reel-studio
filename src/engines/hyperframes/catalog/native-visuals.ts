@@ -1123,6 +1123,12 @@ export function buildGsapMotionBootScript(
       });
       var ambient = stage.querySelector('.ml-ambient');
       if (ambient) tl.fromTo(ambient, { xPercent:-4, opacity:libraryTiming.ambientLow }, { xPercent:4, opacity:libraryTiming.ambientHigh, duration:loopDuration(libraryTiming.ambientPeriod, 0), repeat:repeatThroughScene(libraryTiming.ambientPeriod, 0), yoyo:true, ease:'sine.inOut' }, 0);
+      var trace = stage.querySelector('.ml-trace');
+      if (trace) tl.fromTo(trace, { scaleX:0 }, { scaleX:1, duration:Math.min(1.2, sceneDuration * .35), ease:'power3.inOut' }, 0.08);
+      var folio = stage.querySelector('.tm-folio');
+      if (folio) tl.fromTo(folio, { y:32, opacity:0 }, { y:0, opacity:1, duration:.9, ease:'power2.out' }, .1);
+      var transfer = stage.querySelector('.sm-transfer svg');
+      if (transfer) tl.fromTo(transfer, { opacity:0, scaleX:0, transformOrigin:'left center' }, { opacity:1, scaleX:1, duration:.5, ease:'power3.out' }, .38);
       var events = motionEvents[recipe];
       if (events) {
         tl.addLabel("reveal", events.reveal);
@@ -1178,7 +1184,7 @@ export function buildGsapMotionBootScript(
         if (typeRule) tl.fromTo(typeRule, { scaleX: 0 }, { scaleX: 1, duration: 0.42, ease: 'power3.out' }, events.impact);
       }
       if (recipe === 'type-editorial' && typeRail) {
-        tl.fromTo(typeRail, { scaleY: 0 }, { scaleY: 1, duration: 0.78, ease: 'power2.out' }, 0.04);
+        tl.fromTo(typeRail, { scaleX: 0 }, { scaleX: 1, duration: 0.78, ease: 'power2.out' }, 0.04);
       }
       if (recipe === 'data-spotlight' && dataOrbit) {
         var orbitEnd = Number(dataOrbit.getAttribute('data-dash-end') || '0');

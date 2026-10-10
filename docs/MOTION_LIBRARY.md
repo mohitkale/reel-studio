@@ -2,6 +2,11 @@
 
 The current library has sixteen treatments, including the registered Margin quote. It builds on the existing
 native HyperFrames compiler and preserves saved scene direction/version values.
+Editorial type uses a supplied emphasis phrase for a larger focal line while
+keeping the complete copy in order. Animated folios, rules and comparison
+connectors provide structure around readable holds. Solid-background text paints
+are corrected when the saved pair has insufficient contrast; saved brand colours
+and accent graphics remain unchanged. This is not a contrast guarantee over media.
 **Word stack** reveals one to eight supplied words in sequence; copy
 that exceeds its eight-word/80-character budget falls back without truncation.
 The inspector lists this treatment from the same typed catalog.

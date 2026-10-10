@@ -1,6 +1,7 @@
 import { chapterPlanIssue } from "@/production/chapters";
 import { AIError } from "@/providers/ai/types";
 import { randomUUID } from "node:crypto";
+import { analyzeBeat } from "@/production/director";
 
 import { prisma } from "@/library/db";
 import { toSceneDTO } from "@/library/repositories/map";
@@ -15,7 +16,9 @@ import {
   type VisualAmbition,
 } from "@/production/motion-plan";
 
-/** Apply direction atomically. The only scene field written is layoutJson.motion. */
+/** Apply direction atomically. Structured endpoints come only from literal
+ * on-screen copy; existing diagrams, media, locks and all content are preserved.
+ */
 export async function replanMotionDirection(
   scriptId: string,
   input: {
@@ -60,6 +63,17 @@ export async function replanMotionDirection(
         input.ambition ?? overrides.motionPlan?.ambition ?? "expressive",
     };
     const scenes = script.scenes.map(toSceneDTO);
+    const structures = scenes.map((scene) => {
+      if (
+        scene.items?.length ||
+        scene.chart ||
+        scene.background?.url ||
+        scene.visual
+      )
+        return undefined;
+      const beat = analyzeBeat(scene.text);
+      return beat.kind === "comparison" && beat.items ? beat : undefined;
+    });
     const protectedScene = (index: number) =>
       Boolean(
         scenes[index].locks?.scene ||
@@ -74,10 +88,10 @@ export async function replanMotionDirection(
           ) ?? false;
         if (chapterStart) chapterIndex++;
         return {
-          role: scene.role,
+          role: structures[index] ? "comparison" : scene.role,
           text: scene.text,
           chart: scene.chart,
-          items: scene.items,
+          items: scene.items ?? structures[index]?.items,
           background: scene.background,
           hasVisualContent: Boolean(scene.visual),
           current: scene.motion,
@@ -96,7 +110,8 @@ export async function replanMotionDirection(
       if (
         before?.recipeId === after?.recipeId &&
         before?.version === after?.version &&
-        before?.typeEntrance === after?.typeEntrance
+        before?.typeEntrance === after?.typeEntrance &&
+        !structures[index]
       )
         continue;
       const config = parseJsonColumn(
@@ -106,6 +121,15 @@ export async function replanMotionDirection(
       );
       if (after) config.motion = after;
       else delete config.motion;
+      if (structures[index] && after?.recipeId.startsWith("comparison-")) {
+        config.items = structures[index]!.items;
+        config.role = "comparison";
+        config.direction = {
+          version: 1,
+          role: "comparison",
+          composition: "authored",
+        };
+      }
       await tx.scene.update({
         where: { id: row.id },
         data: { layoutJson: JSON.stringify(config) },

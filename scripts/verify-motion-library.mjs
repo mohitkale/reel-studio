@@ -368,7 +368,16 @@ try {
       );
       assert.equal(probe.streams[0].width, width);
       assert.equal(probe.streams[0].height, height);
-      assert.ok(Math.abs(Number(probe.format.duration) - 54) < 0.1);
+      const endpoint =
+        Math.max(
+          ...props.timeline.map(
+            (beat) => beat.startFrame + beat.durationFrames,
+          ),
+        ) / props.fps;
+      assert.ok(
+        Math.abs(Number(probe.format.duration) - endpoint) < 0.1,
+        `All ${props.scenes.length} treatments must export through the final hold (${endpoint}s).`,
+      );
       report.cases.at(-1).export = {
         probe,
         sha256: createHash("sha256")

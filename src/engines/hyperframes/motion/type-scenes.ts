@@ -7,6 +7,38 @@ import {
   resolveMotionDirection,
 } from "@/production/motion";
 
+/** One supplied emphasis phrase sets the hierarchy, preserving the source's
+ * casing, punctuation and word order. Never generate a replacement headline.
+ */
+export function editorialCopy(
+  scene: Pick<ReelScene, "text" | "emphasis">,
+): string {
+  const phrase = scene.emphasis.find(
+    (value) =>
+      value.trim().length >= 3 &&
+      value.trim().length <= 64 &&
+      scene.text.toLowerCase().includes(value.trim().toLowerCase()),
+  );
+  if (!phrase || scene.text.length > 200)
+    return `<span class="fx-line"><span class="fx-line-inner">${escapeHtml(scene.text)}</span></span>`;
+  const start = scene.text.toLowerCase().indexOf(phrase.trim().toLowerCase());
+  const phraseEnd = start + phrase.trim().length;
+  const end =
+    phraseEnd +
+    (scene.text.slice(phraseEnd).match(/^[,;:.!?]+/)?.[0].length ?? 0);
+  return [
+    scene.text.slice(0, start),
+    scene.text.slice(start, end),
+    scene.text.slice(end),
+  ]
+    .map((part, index) =>
+      part.trim()
+        ? `<span class="fx-line tm-copy-segment${index === 1 ? " tm-copy-focus" : ""}"><span class="fx-line-inner">${escapeHtml(part)}</span></span>`
+        : "",
+    )
+    .join("");
+}
+
 export function buildTypeMotionScene(args: {
   scene: ReelScene;
   tokens: BrandTokens;
@@ -31,7 +63,10 @@ export function buildTypeMotionScene(args: {
     return null;
   const impact = motion.recipeId === "type-impact";
   const stacked = motion.recipeId === "type-stack";
-  const role = escapeHtml(scene.role ?? "statement");
+  const brand =
+    tokens.handle.trim() && tokens.handle !== "@yourbrand"
+      ? escapeHtml(tokens.handle)
+      : "";
   const copy = escapeHtml(scene.text);
   const content = stacked
     ? `<div class="tm-stack-content fx-stack">${scene.text
@@ -45,14 +80,15 @@ export function buildTypeMotionScene(args: {
     : impact
       ? `<div class="tm-impact-shape"></div>
        <div class="tm-impact-content">
-         <div class="tm-kicker fx-kicker"><span class="tm-index">${String((scene.order ?? 0) + 1).padStart(2, "0")}</span>${role}</div>
+         <div class="tm-kicker fx-kicker"><span class="tm-index">${String((scene.order ?? 0) + 1).padStart(2, "0")}</span>${brand}</div>
          <h2 class="tm-impact-copy fx-line"><span class="fx-line-inner">${copy}</span></h2>
          <div class="tm-impact-rule"></div>
        </div>`
       : `<div class="tm-paper"></div><div class="tm-editorial-rail"></div>
+       <div class="tm-folio" aria-hidden="true">${String((scene.order ?? 0) + 1).padStart(2, "0")}</div>
        <div class="tm-editorial-content">
-         <div class="tm-editorial-kicker fx-kicker"><span>${String((scene.order ?? 0) + 1).padStart(2, "0")}</span>${role}</div>
-         <h2 class="tm-editorial-copy fx-line"><span class="fx-line-inner">${copy}</span></h2>
+         <div class="tm-editorial-kicker fx-kicker"><span>${String((scene.order ?? 0) + 1).padStart(2, "0")}</span>${brand}</div>
+         <h2 class="tm-editorial-copy${scene.emphasis.length ? " tm-has-emphasis" : ""}">${editorialCopy(scene)}</h2>
          <div class="tm-editorial-footer"><i></i><span>${String((scene.order ?? 0) + 1).padStart(2, "0")}</span></div>
        </div>`;
   return `<section id="scene-${escapeHtml(scene.id)}"
@@ -100,6 +136,16 @@ export const TYPE_MOTION_STYLES = `
   .tm-editorial-copy .fx-line-inner { color: inherit; font-family: "DM Sans", system-ui, sans-serif; font-size: clamp(44px, 6.5cqw, 86px); font-weight: 600; line-height: 1.09; letter-spacing: -.04em; white-space: normal; overflow-wrap: anywhere; }
   .tm-editorial-footer { display: flex; align-items: center; gap: 16px; font-size: clamp(14px, 1.7cqw, 22px); font-weight: 700; letter-spacing: .18em; opacity: .58; }
   .tm-editorial-footer i { display: block; width: 48px; height: 2px; background: currentColor; }
+  .tm-folio { position:absolute; right:var(--safe-right); top:var(--safe-top); font-size:clamp(130px,28cqw,360px); font-weight:850; line-height:1; letter-spacing:-.08em; color:transparent; -webkit-text-stroke:2px color-mix(in oklab,var(--brand-foreground) 22%,transparent); }
+  .tm-editorial-copy { margin:0; display:flex; flex-direction:column; gap:clamp(14px,2.2cqw,28px); }
+  .tm-editorial-copy .fx-line-inner { font-size:clamp(48px,8cqw,106px); font-weight:750; }
+  .tm-editorial-copy .tm-copy-segment .fx-line-inner { font-size:clamp(30px,4.4cqw,58px); font-weight:500; }
+  .tm-editorial-copy .tm-copy-focus .fx-line-inner { font-size:clamp(54px,10.2cqw,136px); font-weight:850; letter-spacing:-.045em; color:var(--brand-accent-text); }
+  .tm-editorial-kicker { color:var(--brand-muted); }
+  .tm-editorial-content { padding-left:var(--safe-left); }
+  .tm-editorial-rail { left:var(--safe-left); right:var(--safe-right); bottom:var(--safe-bottom); top:auto; width:auto; height:3px; transform-origin:left; }
+  .tm-editorial-footer { opacity:1; color:var(--brand-muted); }
+  @container (min-aspect-ratio: 5/4) { .tm-editorial-copy { max-width:72%; } .tm-folio { top:auto; bottom:var(--safe-bottom); font-size:40cqh; } }
   .scene.has-photo .tm-stage { background: rgba(5,8,15,.45); color: #fff; }
   .scene.has-photo .tm-stage::before { opacity: .45; }
   .scene.has-photo .tm-paper { background: rgba(5,8,15,.35); }

@@ -24,6 +24,12 @@ use the same admission rules. OpenAI's strict JSON schema makes optional fields
 required and nullable as specified by its
 [structured-output contract](https://developers.openai.com/api/docs/guides/structured-outputs).
 
+A compatible saved motion treatment takes precedence over the basic layered
+title. Prose uses text layouts when a preset's diagram/quote slot has no matching
+structure. Explicit transitions (“a shift from X to Y”) provide two literal
+comparison labels in creation and local visual replanning; no labels or numeric
+values are invented. Existing supplied diagrams and scene locks remain protected.
+
 Selecting a cloud planner authorizes its one initial call. The project API also
 accepts `directorBudget: { maxPaidCalls: 0 | 1 }`; explicit zero rejects a cloud
 planner before credential access or invocation. No-key planning and layout

@@ -12,6 +12,7 @@ import {
   type MotionRecipeId,
 } from "@/production/motion";
 import type { ProductionSceneRole } from "@/production/roles";
+import { analyzeBeat } from "./director";
 
 export const VISUAL_AMBITIONS = ["clean", "expressive", "showcase"] as const;
 export const visualAmbitionSchema = z.enum(VISUAL_AMBITIONS);
@@ -58,7 +59,31 @@ function seedOffset(seed: string): number {
   return hash >>> 0;
 }
 
-function candidates(scene: MotionPlanScene): MotionDirection[] {
+function candidates(
+  scene: MotionPlanScene,
+  ambition: VisualAmbition,
+): MotionDirection[] {
+  // Prose does not become a diagram merely because a preset assigned that role.
+  // Give text-only explanatory beats a real type treatment, and reserve quiet
+  // reading layouts for Clean or deliberate breathing space in the sequence.
+  const prose =
+    !scene.chart &&
+    !scene.items?.length &&
+    !scene.background?.url &&
+    !scene.hasVisualContent &&
+    (["explanation", "summary", "diagram", "tip", "feature"].includes(
+      scene.role ?? "",
+    ) ||
+      (scene.role === "quote" && analyzeBeat(scene.text).kind === "prose"));
+  if (prose) {
+    const ids: MotionRecipeId[] =
+      ambition === "clean"
+        ? ["quiet-divider", "quiet-center", "type-editorial"]
+        : ["type-editorial", "type-impact", "quiet-divider"];
+    return ids
+      .map(motionDirection)
+      .filter((direction) => !motionFallbackReason(direction, scene.text));
+  }
   const first = chooseSceneMotion({ ...scene, role: scene.role });
   if (!first) return [];
   let ids: MotionRecipeId[] = [first.recipeId];
@@ -115,7 +140,7 @@ export function planMotionSequence(
       recent.push(scene.current);
       return scene.current;
     }
-    const choices = candidates(scene);
+    const choices = candidates(scene, settings.ambition);
     const anchor =
       scene.role === "hook" ||
       scene.role === "payoff" ||
@@ -136,6 +161,11 @@ export function planMotionSequence(
           ? 1
           : 0
         : 0;
+      if (choice.recipeId.startsWith("quiet-")) {
+        // Expressive videos still need a reading hold, but not quiet slides on
+        // every explanation. Clean deliberately keeps that quieter language.
+        value += settings.ambition === "clean" ? 6 : -10;
+      }
       value +=
         choice.recipeId === "type-impact"
           ? settings.ambition === "clean" && !anchor

@@ -120,6 +120,7 @@ export const HyperFramesPlayer = React.forwardRef<
   const frameRef = React.useRef(0);
   const timeRef = React.useRef(0);
   const playingRef = React.useRef(false);
+  const posterRef = React.useRef(true);
   const [playing, setPlaying] = React.useState(false);
   const [currentTime, setCurrentTime] = React.useState(0);
   const [fullscreen, setFullscreen] = React.useState(false);
@@ -194,6 +195,7 @@ export const HyperFramesPlayer = React.forwardRef<
   const seekToTime = React.useCallback(
     (seconds: number) => {
       const next = Math.max(0, Math.min(durationSec, seconds));
+      posterRef.current = false;
       timeRef.current = next;
       frameRef.current = Math.round(next * fps);
       setCurrentTime(next);
@@ -208,11 +210,17 @@ export const HyperFramesPlayer = React.forwardRef<
   }, []);
 
   const play = React.useCallback(() => {
+    // A paused first look shows the opening's readable hold. Playback and any
+    // deliberate seek still start at the exact requested timeline position.
+    if (posterRef.current) {
+      seekIframe(timeRef.current);
+      posterRef.current = false;
+    }
     playingRef.current = true;
     setPlaying(true);
     // Kick audio inside the iframe from the user gesture (autoplay policy).
     setIframePlaying(true);
-  }, [setIframePlaying]);
+  }, [setIframePlaying, seekIframe]);
 
   const pause = React.useCallback(() => {
     playingRef.current = false;
@@ -276,6 +284,7 @@ export const HyperFramesPlayer = React.forwardRef<
     setReady(false);
     pause();
     seekToTime(0);
+    posterRef.current = true;
   }, [html]); // eslint-disable-line react-hooks/exhaustive-deps -- reset when composition rebuilds
 
   React.useEffect(() => {
@@ -347,7 +356,16 @@ export const HyperFramesPlayer = React.forwardRef<
           className="h-full w-full border-0 bg-black"
           onLoad={() => {
             setReady(true);
-            seekIframe(timeRef.current);
+            const first = timeline[0];
+            const posterTime = first
+              ? first.startFrame / fps +
+                Math.min(1.2, (first.durationFrames / fps) * 0.65)
+              : 0;
+            seekIframe(
+              posterRef.current && !autoPlay && !coverUrl
+                ? posterTime
+                : timeRef.current,
+            );
           }}
         />
       </div>

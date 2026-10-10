@@ -323,7 +323,7 @@ function BackgroundEditor({
             ? "Automatic stock search is disabled; the animated mood background is used."
             : mediaPreference === "video"
               ? "Auto tries Pexels, then Pixabay. No result keeps the animated mood background."
-              : "Auto tries Pexels, Pixabay, then Unsplash for images. An existing upload or selection always stays in place."}
+              : "Auto uses exportable media from Pexels, then Pixabay. An existing upload or selection always stays in place."}
         </p>
       </div>
 

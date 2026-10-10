@@ -6,6 +6,36 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+### Fixed
+
+- Gemini video planning sends the nested director/chart JSON Schema through
+  `responseJsonSchema`, resolving the `additionalProperties` HTTP 400 error.
+- Automatic stock selection uses exportable Pexels/Pixabay media and animated
+  fallbacks rather than selecting Unsplash hotlinks that cannot be staged for MP4.
+- Quick Produce retains the configured AI planner when enabled; local planning
+  is explicit, and narration is a visible choice.
+- Editor export progress, completion, and failure links remain visible beside
+  Export MP4 instead of being hidden inside Customize video.
+- Compatible authored motion takes precedence over an AI layered-title fade.
+  Editorial fallback scenes respect the saved brand palette, with readable text
+  paints for solid backgrounds and accent badges.
+- The development background worker reloads renderer imports alongside the web
+  preview, preventing stale MP4 designs after source edits.
+- Prose no longer fills unsupported quote/diagram slots. Explicit transition
+  endpoints can form a comparison without inventing labels or values.
+
+### Changed
+
+- Projects leads with Create with AI and Create production. Blank projects stay
+  beside the library; the text-only prompt flow is retained for remix.
+- AI creation uses preset defaults with optional style/media customization.
+  Local production starts with content and can build immediately with automatic
+  naming, while retaining the full customization workflow.
+- The editor opens the full reel and exposes Visual direction and Visual review
+  beside Export MP4. Expressive direction includes type treatments for prose,
+  stronger saved-emphasis hierarchy, animated structural details, and larger
+  reading text. Clean retains quieter layouts; locked scenes remain protected.
+
 ### Documentation
 
 - Shorter README with a current screen/export demo and contribution paths.
