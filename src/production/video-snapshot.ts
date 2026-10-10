@@ -77,6 +77,7 @@ export const videoScriptSnapshotSchema = z.object({
   styleId: z.enum(["bold-hook", "clean-story", "teach-me", "soft-brand"]),
   energy: z.enum(["calm", "normal", "high"]),
   productionPreset: brandOverridesSchema.shape.productionPreset,
+  visualTheme: brandOverridesSchema.shape.visualTheme,
   motionPlan: brandOverridesSchema.shape.motionPlan,
   musicMap: brandOverridesSchema.shape.musicMap,
   audioMastering: brandOverridesSchema.shape.audioMastering,
@@ -185,7 +186,14 @@ export const preparedVideoCompositionSchema = z
           durationFrames: z.number().int().nonnegative(),
         }),
       ),
-      spokenWords: z.array(z.object({ startFrame: z.number().int().nonnegative(), endFrame: z.number().int().positive() })).optional(),
+      spokenWords: z
+        .array(
+          z.object({
+            startFrame: z.number().int().nonnegative(),
+            endFrame: z.number().int().positive(),
+          }),
+        )
+        .optional(),
       width: z.number().int().positive(),
       height: z.number().int().positive(),
       fps: z.number().positive(),

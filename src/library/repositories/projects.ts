@@ -39,6 +39,9 @@ import {
   SAMPLE_SCENES,
 } from "@/library/sample-content";
 import { getDefaultBrandKit } from "./brandkits";
+import { resolveBrandTokens } from "./brandkits";
+import { CORAL_HARBOR_NAME, CORAL_HARBOR_PALETTE } from "@/lib/brand-defaults";
+import type { VisualTheme } from "@/production/creative-direction";
 import { chapterPlanFromStarts } from "@/production/chapters";
 
 function resolveEngine(engine?: VideoEngineId | string | null): VideoEngineId {
@@ -115,6 +118,7 @@ export async function createProjectFromPlan(
   videoEngine: VideoEngineId = DEFAULT_VIDEO_ENGINE,
   visualStyle?: { styleId?: StyleId; energy?: EnergyId },
   production?: {
+    visualTheme?: VisualTheme;
     brandKitId?: string | null;
     preset?: { id: ProductionPresetId; version: string };
     roles?: ProductionSceneRole[];
@@ -146,9 +150,19 @@ export async function createProjectFromPlan(
     ? chapterPlanFromStarts(production.chapterStarts, sceneIds)
     : undefined;
   const defaultKit = await getDefaultBrandKit();
+  // Automatic themes replace only the untouched starter palette. A selected
+  // or customized brand remains authoritative, including on later kit changes.
+  const starterKit = !defaultKit || (
+    defaultKit.name === CORAL_HARBOR_NAME &&
+    (!defaultKit.handle || defaultKit.handle === "@yourbrand") &&
+    (!defaultKit.fonts || defaultKit.fonts === "{}") &&
+    Object.entries(CORAL_HARBOR_PALETTE).every(([key, value]) =>
+      resolveBrandTokens(defaultKit)[key as keyof typeof CORAL_HARBOR_PALETTE] === value,
+    )
+  );
   const brandKitId =
     production?.brandKitId === undefined
-      ? (defaultKit?.id ?? null)
+      ? (production?.visualTheme && starterKit ? null : (defaultKit?.id ?? null))
       : production.brandKitId;
   const styleId = visualStyle?.styleId ?? plan.styleId ?? DEFAULT_STYLE_ID;
   const energy = visualStyle?.energy ?? plan.energy ?? DEFAULT_ENERGY_ID;
@@ -167,13 +181,14 @@ export async function createProjectFromPlan(
       ? planMotionSequence(
           plan.scenes.map((scene, order) => ({
             role: production?.roles?.[order],
+            energy,
             text: scene.text,
             chart: scene.chart,
             items: scene.items,
             background: backgrounds[order],
             hasVisualContent: Boolean(scene.visual),
             current: scene.direction?.motion,
-            locked: Boolean(scene.direction?.motion),
+            locked: Boolean(production?.sceneLocks?.[order]?.scene),
           })),
           motionPlan,
         )
@@ -189,6 +204,7 @@ export async function createProjectFromPlan(
           width,
           height,
           brandOverrides: JSON.stringify({
+            ...(production?.visualTheme ? { visualTheme: production.visualTheme } : {}),
             styleId,
             energy,
             ...(motionPlan ? { motionPlan } : {}),

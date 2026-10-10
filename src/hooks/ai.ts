@@ -117,7 +117,7 @@ export function useGenerateProject() {
       videoEngine?: VideoEngineId;
       styleId?: StyleId | "auto";
       energy?: EnergyId | "auto";
-      productionPresetId?: ProductionPresetId;
+      productionPresetId?: ProductionPresetId | "auto";
       visualAmbition?: VisualAmbition;
       mediaPreference?: MediaPreference;
       quickProduce?: {

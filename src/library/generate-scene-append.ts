@@ -114,6 +114,7 @@ export async function generateSceneAppend(input: {
     ? planMotionSequence(
         resolved.plan.scenes.map((scene, index) => ({
           role: roles[index],
+          energy: script.energy,
           chapterIndex:
             body.chapterTitle !== undefined
               ? (script.chapterPlan?.chapters.length ??
@@ -128,7 +129,7 @@ export async function generateSceneAppend(input: {
           background: backgrounds[index],
           hasVisualContent: Boolean(scene.visual),
           current: scene.direction?.motion,
-          locked: Boolean(scene.direction?.motion),
+          locked: false,
         })),
         script.motionPlan ?? {
           version: "1.0.0",

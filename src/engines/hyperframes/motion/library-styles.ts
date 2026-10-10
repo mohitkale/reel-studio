@@ -29,4 +29,6 @@ export const MOTION_LIBRARY_STYLES = `
   [data-motion-recipe] .tm-editorial-kicker span { color:var(--brand-accent-text); }
   .ml-trace { position:absolute; left:var(--safe-left); right:var(--safe-right); top:var(--safe-top); height:2px; transform-origin:left; background:color-mix(in oklab,var(--brand-foreground) 20%,transparent); }
   .ml-trace::after { content:""; position:absolute; right:0; top:-4px; width:10px; height:10px; border-radius:50%; background:var(--accent); }
+  [data-palette-tone="light"] .tm-impact-shape { opacity:.16; }
+  [data-palette-tone="light"] .tm-impact-copy .fx-line-inner { text-shadow:none; }
 `;

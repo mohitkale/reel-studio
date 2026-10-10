@@ -78,7 +78,7 @@ export function StyleEnergyControls({
           <PickCard
             active={styleId === "auto"}
             title="Auto"
-            description="Use the production preset's recommended look."
+            description="Match the content and selected visual direction."
             onClick={() => onStyleChange("auto")}
           />
         ) : null}
@@ -156,8 +156,8 @@ export function StyleEnergyControls({
                   ))}
                 </ul>
                 <p>
-                  <strong className="text-foreground">Energy</strong> only changes pace:
-                  Calm is slower, High is snappier. Your words and brand colors stay the same.
+                  <strong className="text-foreground">Energy</strong> sets pace and motion intensity:
+                  Calm favours measured reveals, High is snappier. Your words and brand colors stay the same.
                 </p>
               </div>
             </DialogDescription>

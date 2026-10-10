@@ -29,6 +29,30 @@ Voice protocol fixtures return labeled calibration audio: they prove jobs,
 downloads, and muxing, not live-model acoustic quality. These fixtures used no
 paid calls or new voice-model downloads.
 
+## Local creation and motion audit — 2026-10-10
+
+The unreleased `codex/creation-motion-quality` branch passed 174 test files / 876
+tests, typecheck, lint, secret scan and the production build. Live browser checks
+covered Gemini drafts, automatic topic themes, Quick Produce, local multi-scene
+creation, reorder, scene edits/locks, playback/seeking, cached server Kokoro
+narration, completed-revision recovery and MP4 export. Seven library/settings
+pages also passed loading checks; these are not live-provider acceptance tests.
+
+All 16 motion treatments passed the installed offline verifier in portrait and
+landscape, including actual 57-second MP4s, forward/backward seeking, native
+preview/export parity, supplied data, brand propagation and text-fit checks.
+Full-HD wellness, product and data examples were exported and their frames
+inspected. The wellness export included real cached Kokoro narration.
+
+Automatic direction selects a curated coherent theme and compatible scene
+treatments; it does not promise a unique generated design for every request.
+Generated copy requires review: a live data draft used inaccurate percent-change
+wording despite correct chart values. The QA copy was corrected in the editor,
+and prompt guidance was tightened. Unconfigured third-party voice/media paths
+and fresh model downloads were not accepted as working based on these checks.
+New release publication still requires merged-main platform CI and the remaining
+release gates below.
+
 ## Before the next release
 
 Follow [release policy](../../AI_GUIDELINES.md#release-policy). Release a coherent

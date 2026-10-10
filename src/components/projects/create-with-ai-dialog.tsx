@@ -74,8 +74,9 @@ export function CreateWithAIDialog({
   const videoEngine = DEFAULT_VIDEO_ENGINE;
   const [styleId, setStyleId] = React.useState<StylePick>("auto");
   const [energy, setEnergy] = React.useState<EnergyPick>("auto");
-  const [productionPresetId, setProductionPresetId] =
-    React.useState<ProductionPresetId>("editorial-explainer");
+  const [productionPresetId, setProductionPresetId] = React.useState<
+    ProductionPresetId | "auto"
+  >("auto");
   const [visualAmbition, setVisualAmbition] =
     React.useState<VisualAmbition>("expressive");
   const [mediaPreference, setMediaPreference] =
@@ -141,7 +142,7 @@ export function CreateWithAIDialog({
 
           setStyleId("auto");
           setEnergy("auto");
-          setProductionPresetId("editorial-explainer");
+          setProductionPresetId("auto");
           setMediaPreference("auto");
           setQuickProduce(DEFAULT_QUICK_PRODUCE_ENABLED);
           setQuickPlanner(undefined);
@@ -188,8 +189,8 @@ export function CreateWithAIDialog({
         <DialogHeader>
           <DialogTitle>Create with AI</DialogTitle>
           <DialogDescription>
-            Describe your idea or paste a script. Your preset handles the visual
-            styling; AI creates editable scenes you can review before export.
+            Describe your idea or paste a script. Automatic direction matches
+            the visual theme and scene treatments to your content.
           </DialogDescription>
         </DialogHeader>
 
@@ -268,16 +269,17 @@ export function CreateWithAIDialog({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
-                <Label htmlFor="ai-production-preset">Production preset</Label>
+                <Label htmlFor="ai-production-preset">Visual direction</Label>
                 <NativeSelect
                   id="ai-production-preset"
                   value={productionPresetId}
                   onChange={(event) =>
                     setProductionPresetId(
-                      event.target.value as ProductionPresetId,
+                      event.target.value as ProductionPresetId | "auto",
                     )
                   }
                 >
+                  <option value="auto">Automatic · match my content</option>
                   {PRODUCTION_PRESETS.map((preset) => (
                     <option key={preset.id} value={preset.id}>
                       {preset.name}
@@ -285,11 +287,11 @@ export function CreateWithAIDialog({
                   ))}
                 </NativeSelect>
                 <p className="text-muted-foreground text-xs">
-                  {
-                    PRODUCTION_PRESETS.find(
-                      (preset) => preset.id === productionPresetId,
-                    )?.description
-                  }
+                  {productionPresetId === "auto"
+                    ? "Choose a coherent theme, pacing and layouts for your topic. Custom brand kits keep their colours."
+                    : PRODUCTION_PRESETS.find(
+                        (preset) => preset.id === productionPresetId,
+                      )?.description}
                 </p>
               </div>
 

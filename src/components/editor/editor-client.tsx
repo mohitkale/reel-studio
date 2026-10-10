@@ -511,6 +511,7 @@ export function EditorClient({
             </Link>
           </HintTooltip>
         ) : null}
+          {script.visualTheme ? <span className="text-muted-foreground text-xs">Theme · {script.visualTheme.name}</span> : null}
           {script.productionPreset ? (
             <MotionDirectionMenu
               scriptId={scriptId}

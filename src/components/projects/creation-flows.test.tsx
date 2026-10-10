@@ -82,7 +82,7 @@ it("creates an AI draft from a brief using the configured provider and preset de
   expect(mocks.generate.mock.calls[0][0]).toMatchObject({
     providerId: "gemini",
     brief: "Explain how local video production works.",
-    productionPresetId: "editorial-explainer",
+    productionPresetId: "auto",
     styleId: "auto",
     energy: "auto",
   });

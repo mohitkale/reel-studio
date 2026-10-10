@@ -23,9 +23,19 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   preview, preventing stale MP4 designs after source edits.
 - Prose no longer fills unsupported quote/diagram slots. Explicit transition
   endpoints can form a comparison without inventing labels or values.
+- A grounded chart with prose copy keeps its chart layout. Explicit chart
+  requests can use a literal supplied dataset when AI returns only prose.
+- Template previews include illustrative chart data and list items.
 
 ### Changed
 
+- AI creation defaults to Automatic direction: content selects a preset family
+  and a frozen, readable theme instead of reusing one coral palette. AI can
+  choose style and energy; explicit presets, style choices, custom brand kits
+  and scene locks remain authoritative. AI motion suggestions are hints for
+  sequence planning, rather than user locks.
+- Calm energy favours measured openings; explicit Showcase and scene locks
+  preserve deliberately bold treatments.
 - Projects leads with Create with AI and Create production. Blank projects stay
   beside the library; the text-only prompt flow is retained for remix.
 - AI creation uses preset defaults with optional style/media customization.

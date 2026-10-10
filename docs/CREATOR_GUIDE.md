@@ -4,7 +4,8 @@ Start on **Projects** with the path that matches your content:
 
 1. Choose **Create with AI** to turn an idea into a script and varied scenes, or
    **Create production** to arrange your own script/article and optional uploads.
-2. Add your content. Keep the preset defaults, or customize the style and format.
+2. Add your content. AI uses Automatic direction to match the topic; choose a
+   specific preset or customize style and format when you have a look in mind.
 3. Select **Create draft** (AI) or **Build draft** (local content).
 4. Review the scenes in the editor, generate or upload narration if desired,
    then select **Export MP4**.

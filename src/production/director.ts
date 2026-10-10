@@ -164,7 +164,9 @@ export function directScene(
   fallback: ProductionSceneRole,
   hasVisual = false,
 ): { scene: AIScene; role: ProductionSceneRole; direction: ShotDirection } {
-  const beat = analyzeBeat(scene.spokenText ?? scene.text);
+  const beat = scene.chart
+    ? { kind: "chart" as const, chart: scene.chart, emphasis: [] as string[] }
+    : analyzeBeat(scene.spokenText ?? scene.text);
   const role = beatRole(
     beat.kind,
     beat.kind === "prose" &&

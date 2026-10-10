@@ -13,6 +13,7 @@ import {
 } from "@/production/motion";
 import type { ProductionSceneRole } from "@/production/roles";
 import { analyzeBeat } from "./director";
+import type { EnergyId } from "@/video/visual-style";
 
 export const VISUAL_AMBITIONS = ["clean", "expressive", "showcase"] as const;
 export const visualAmbitionSchema = z.enum(VISUAL_AMBITIONS);
@@ -37,6 +38,7 @@ export type MotionPlanSettings = z.infer<typeof motionPlanSettingsSchema>;
 
 export interface MotionPlanScene {
   role?: ProductionSceneRole;
+  energy?: EnergyId;
   text: string;
   chart?: MotionChartInput;
   items?: string[];
@@ -71,9 +73,18 @@ function candidates(
     !scene.items?.length &&
     !scene.background?.url &&
     !scene.hasVisualContent &&
-    (["explanation", "summary", "diagram", "tip", "feature"].includes(
-      scene.role ?? "",
-    ) ||
+    ([
+      "explanation",
+      "summary",
+      "diagram",
+      "tip",
+      "feature",
+      "code",
+      "diff",
+      "terminal",
+      "takeaway",
+      "testimonial",
+    ].includes(scene.role ?? "") ||
       (scene.role === "quote" && analyzeBeat(scene.text).kind === "prose"));
   if (prose) {
     const ids: MotionRecipeId[] =
@@ -174,6 +185,14 @@ export function planMotionSequence(
               ? 8
               : -30
           : 0;
+      // Calm content should not inherit a launch-style slam just because its
+      // opening is a hook. Explicit Showcase still permits those bold anchors.
+      if (
+        scene.energy === "calm" &&
+        settings.ambition !== "showcase" &&
+        choice.recipeId === "type-impact"
+      )
+        value -= 60;
       for (const [distance, previous] of recent.slice(-4).reverse().entries()) {
         if (previous?.recipeId === choice.recipeId) {
           value -= [20, 4, 2, 1][distance];

@@ -89,6 +89,7 @@ export async function replanMotionDirection(
         if (chapterStart) chapterIndex++;
         return {
           role: structures[index] ? "comparison" : scene.role,
+          energy: overrides.energy,
           text: scene.text,
           chart: scene.chart,
           items: scene.items ?? structures[index]?.items,

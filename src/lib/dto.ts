@@ -101,6 +101,7 @@ export interface VoiceTakeDTO {
 }
 
 export interface ScriptDTO {
+  visualTheme?: import("@/production/creative-direction").VisualTheme;
   id: string;
   projectId: string;
   name: string;

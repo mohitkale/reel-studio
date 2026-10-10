@@ -21,6 +21,26 @@ const readingScenes: MotionPlanScene[] = Array.from(
 );
 
 describe("sequence motion direction", () => {
+  it("uses measured type for calm openings while respecting explicit Showcase and locks", () => {
+    const opening: MotionPlanScene = {
+      role: "hook",
+      text: "Pause. Take one slow breath.",
+      energy: "calm",
+    };
+    expect(planMotionSequence([opening], settings)[0]?.recipeId).toBe(
+      "type-editorial",
+    );
+    expect(
+      planMotionSequence([opening], { ...settings, ambition: "showcase" })[0]
+        ?.recipeId,
+    ).toBe("type-impact");
+    expect(
+      planMotionSequence(
+        [{ ...opening, locked: true, current: motionDirection("type-impact") }],
+        settings,
+      )[0]?.recipeId,
+    ).toBe("type-impact");
+  });
   it("gives prose explanations and incomplete diagram roles authored motion without inventing inputs", () => {
     const scenes: MotionPlanScene[] = Array.from(
       { length: 10 },

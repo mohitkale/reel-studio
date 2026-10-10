@@ -71,6 +71,8 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
       energy: snapshot.script.energy,
     },
     {
+      visualTheme: snapshot.script.visualTheme,
+      brandKitId: snapshot.script.visualTheme ? null : undefined,
       preset: snapshot.script.productionPreset,
       motionPlan: snapshot.script.motionPlan,
       motions: snapshot.script.scenes.map((scene) => scene.motion),

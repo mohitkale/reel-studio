@@ -16,6 +16,13 @@ the input. Rejected data falls back to a text scene. These display-data guards
 are not a general fact checker for AI-written narration; review generated copy.
 
 A normalized source-derived seed makes initial motion choices reproducible.
+Automatic AI creation selects a compatible preset family and curated palette
+from the brief, then lets the model choose style and energy when these are Auto.
+Themes store their concrete palette in the draft and revision. User-selected
+presets/styles, customized brand kits and scene locks take priority. Suggested
+AI motion is admitted as a planning hint, not a user lock, so the sequence can
+avoid needless repeats without inventing structural inputs.
+
 Optional version-1 shot direction chooses an authored treatment or a bounded
 text/shape layered title, plus an admitted existing motion recipe. Media,
 charts, lists and long text retain authored treatments. Invalid, unknown or

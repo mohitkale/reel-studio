@@ -137,6 +137,11 @@ export function buildPrompt(input: GeneratePlanInput): {
     lengthRule,
     countRule,
     ...(presetRule ? [presetRule] : []),
+    ...(input.visualTheme
+      ? [
+          `- Visual theme: ${input.visualTheme}. Choose varied, compatible treatments for the actual beats within this coherent whole-reel direction. Do not repeat a quiet slide for every scene or force unsupported charts/diagrams.`,
+        ]
+      : []),
     "- Open with the clearest useful idea for the brief. A bold claim, supplied number, direct question, or current pain can work when supported by the source.",
     structureRule,
     "- When the brief calls for an action, end with a clear, low-pressure CTA (try this, save this, follow for more).",
@@ -145,6 +150,7 @@ export function buildPrompt(input: GeneratePlanInput): {
     '- Optional direction uses exactly {version:1, role, composition, motion?}. Roles: hook, headline, explanation, diagram, quote, comparison, metric, chart, summary, cta. composition is authored, or layered-title for a single text beat without media/items/chart. It is a bounded layer graph compiled by the app, never HTML, CSS or code. Optional motion is {recipeId,version:"1.0.0"}: type-stack, type-impact, type-editorial, data-spotlight, data-bars, diagram-path, diagram-orbit, media-device, media-cinematic, comparison-split, comparison-stack, quiet-divider, quiet-center, brand-lockup or brand-frame. Data needs source label:value rows; diagrams/comparisons need supplied items; media needs resolved media. Invalid input combinations fall back. Preserve all supplied numbers, list labels and quoted wording. Do not add data to fill a layout.',
     "- visual: only as required above; otherwise omit. Keep it SHORT (a number, one emoji, or a CTA label under ~20 characters).",
     "- Never invent statistics, chart values, testimonials, URLs, customers, or product results. Use only facts in the brief or supplied source; choose a non-data layout when facts are missing.",
+    "- When a chart is requested and exact label:value rows are supplied, include one chart beat with those exact labels, values and units. Other beats explain the comparison without claiming causation, quality or success that the source does not establish. Do not compute differences, ratios or new percentages unless those values are explicitly supplied. Never describe a percentage-point difference as a percent change.",
     "  LOOK OF THE WHOLE VIDEO:",
     styleLock,
     energyLock,

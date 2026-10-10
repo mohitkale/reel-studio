@@ -21,9 +21,33 @@ function TemplatePreviewCard({
     () => ({
       id: `preview-${template.id}`,
       templateId: template.id,
-      text: template.sampleText,
-      emphasis: template.sampleEmphasis,
-      visual: template.sampleVisual,
+      text:
+        template.id === "hf-data-chart"
+          ? "Compare the supplied demo values."
+          : template.sampleText,
+      emphasis: template.id === "hf-data-chart" ? [] : template.sampleEmphasis,
+      visual:
+        template.id === "hf-data-chart"
+          ? "Completion by stage"
+          : template.sampleVisual,
+      ...(template.id === "hf-list"
+        ? { items: template.sampleText.split("\n") }
+        : {}),
+      ...(template.id === "hf-data-chart"
+        ? {
+            chart: {
+              labels: ["Draft", "Review", "Release"],
+              series: [
+                {
+                  label: "Illustrative values",
+                  values: [42, 68, 91],
+                  unit: "%",
+                },
+              ],
+              sourceAttribution: "Demo data · illustrative only",
+            },
+          }
+        : {}),
     }),
     [template],
   );
@@ -99,7 +123,7 @@ export default function TemplatesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Templates"
-        description="HTML scene templates with live previews. Pick any in the scene inspector."
+        description="Explore scene layouts with live previews. AI combines these with content-matched motion treatments; use Visual direction in the editor to refine the whole reel."
       />
       <div className={LISTING_GRID_6_CARDS}>
         {TEMPLATES.map((t) => (
