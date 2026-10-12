@@ -2,6 +2,14 @@
 
 import * as React from "react";
 
+import { MOTION_SAMPLES } from "@/video/motion-samples";
+import { EXTENSION_MOTION_RECIPES } from "@/video/motion-extensions";
+import {
+  VISUAL_THEMES,
+  applyVisualTheme,
+} from "@/production/creative-direction";
+import { defaultBrandTokens } from "@/video/tokens";
+import { Button } from "@/components/ui/button";
 import { TEMPLATES } from "@/video/templates";
 import { HyperFramesPlayer } from "@/components/editor/hyperframes-player";
 import { PageHeader } from "@/components/shell/page-header";
@@ -118,17 +126,101 @@ function TemplatePreviewCard({
   );
 }
 
+function MotionPreviewCard({ index }: { index: number }) {
+  const scene = MOTION_SAMPLES[index];
+  const recipe = EXTENSION_MOTION_RECIPES[index];
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = React.useState(false);
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { rootMargin: "100px", threshold: 0.01 },
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+  const theme =
+    recipe.id === "type-poster"
+      ? VISUAL_THEMES.signal
+      : recipe.id.startsWith("data-") ||
+          recipe.id === "type-window" ||
+          recipe.id === "list-grid"
+        ? VISUAL_THEMES.circuit
+        : VISUAL_THEMES.paper;
+  return (
+    <Card className="overflow-hidden">
+      <div ref={ref} style={{ aspectRatio: "1080 / 1920" }}>
+        {visible ? (
+          <HyperFramesPlayer
+            scenes={[scene]}
+            timeline={[
+              { sceneId: scene.id, startFrame: 0, durationFrames: 120 },
+            ]}
+            totalFrames={120}
+            fps={30}
+            loop
+            tokens={applyVisualTheme(defaultBrandTokens, theme)}
+          />
+        ) : (
+          <div className="bg-muted/40 text-muted-foreground flex h-full items-center justify-center text-xs">
+            Scroll to preview
+          </div>
+        )}
+      </div>
+      <div className="space-y-2 p-4">
+        <h3 className="text-sm font-semibold">{recipe.name}</h3>
+        <p className="text-muted-foreground text-xs">{recipe.description}</p>
+        <p className="text-muted-foreground text-xs">
+          {recipe.content === "data"
+            ? "Requires supplied values"
+            : recipe.content === "list"
+              ? "Requires supplied list items"
+              : recipe.content === "image"
+                ? "Requires a supplied image"
+                : "Works with supplied text"}
+        </p>
+      </div>
+    </Card>
+  );
+}
+
 export default function TemplatesPage() {
+  const [view, setView] = React.useState<"motion" | "layouts">("motion");
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Templates"
-        description="Explore scene layouts with live previews. AI combines these with content-matched motion treatments; use Visual direction in the editor to refine the whole reel."
+        title="Templates & motion"
+        description="Explore authored motion treatments and scene layouts. AI selects a coherent visual family from your content. Change the family in Visual direction, or a treatment in the scene inspector."
       />
+      <div className="flex gap-2" role="group" aria-label="Preview category">
+        <Button
+          variant={view === "motion" ? "default" : "outline"}
+          aria-pressed={view === "motion"}
+          onClick={() => setView("motion")}
+        >
+          Motion treatments
+        </Button>
+        <Button
+          variant={view === "layouts" ? "default" : "outline"}
+          aria-pressed={view === "layouts"}
+          onClick={() => setView("layouts")}
+        >
+          Scene layouts
+        </Button>
+      </div>
+      <p className="text-muted-foreground text-sm">
+        {view === "motion"
+          ? "Play a preview to see its choreography. These examples use illustrative copy and data; your reel keeps your own content and brand colours."
+          : "Base layouts remain available for manual composition and longer or specialised content."}
+      </p>
       <div className={LISTING_GRID_6_CARDS}>
-        {TEMPLATES.map((t) => (
-          <TemplatePreviewCard key={t.id} template={t} />
-        ))}
+        {view === "motion"
+          ? MOTION_SAMPLES.map((scene, index) => (
+              <MotionPreviewCard key={scene.id} index={index} />
+            ))
+          : TEMPLATES.map((t) => (
+              <TemplatePreviewCard key={t.id} template={t} />
+            ))}
       </div>
     </div>
   );

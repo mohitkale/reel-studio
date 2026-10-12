@@ -516,6 +516,7 @@ export function EditorClient({
             <MotionDirectionMenu
               scriptId={scriptId}
               ambition={script.motionPlan?.ambition ?? "expressive"}
+              system={script.motionPlan?.system}
               chapterMotifs={script.motionPlan?.chapterMotifs}
               hasChapters={Boolean(script.chapterPlan)}
               scenes={scenes.map((scene) => ({

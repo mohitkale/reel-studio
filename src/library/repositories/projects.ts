@@ -41,6 +41,7 @@ import {
 import { getDefaultBrandKit } from "./brandkits";
 import { resolveBrandTokens } from "./brandkits";
 import { CORAL_HARBOR_NAME, CORAL_HARBOR_PALETTE } from "@/lib/brand-defaults";
+import { defaultMotionSystem } from "@/production/motion-systems";
 import type { VisualTheme } from "@/production/creative-direction";
 import { chapterPlanFromStarts } from "@/production/chapters";
 
@@ -173,6 +174,7 @@ export async function createProjectFromPlan(
           version: "1.0.0",
           seed: sourcePlanSeed(JSON.stringify({ preset: production.preset, scenes: plan.scenes })),
           ambition: production.visualAmbition ?? "expressive",
+          system: defaultMotionSystem(production.visualTheme?.id, production.preset.id),
         }
       : undefined);
   const motions =

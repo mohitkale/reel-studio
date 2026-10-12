@@ -25,6 +25,7 @@ import type { EnergyId, StyleId } from "@/video/visual-style";
 import type { ManualCreationInput } from "@/production/manual-planner";
 import type { SfxCueEditRequest } from "@/lib/sfx-cue-edit";
 import type { MotionDirection } from "@/production/motion";
+import type { MotionSystem } from "@/production/motion-systems";
 import type { VisualAmbition } from "@/production/motion-plan";
 
 async function apiSend<T>(
@@ -292,6 +293,7 @@ export function useReplanMotionDirection(scriptId: string) {
       ambition?: VisualAmbition;
       newVariation?: boolean;
       chapterMotifs?: boolean;
+      system?: MotionSystem;
     }) =>
       apiPost<{
         result: { changedSceneIds: string[]; protectedSceneCount: number };

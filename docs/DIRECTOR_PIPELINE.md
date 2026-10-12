@@ -23,6 +23,14 @@ presets/styles, customized brand kits and scene locks take priority. Suggested
 AI motion is admitted as a planning hint, not a user lock, so the sequence can
 avoid needless repeats without inventing structural inputs.
 
+New drafts also freeze an Editorial, Graphic or Precision motion family. This
+bounds a coherent vocabulary while recent-history penalties vary compatible
+layouts. Existing saved choices remain unchanged until replanned. The optional
+`motionPlan.system` field survives append, snapshots and revision restoration;
+older plans without the field retain their original planning vocabulary. Explicit
+Visual direction replanning can adopt a new family. See [motion presets](MOTION_LIBRARY.md)
+for composition, content admission and export verification details.
+
 Optional version-1 shot direction chooses an authored treatment or a bounded
 text/shape layered title, plus an admitted existing motion recipe. Media,
 charts, lists and long text retain authored treatments. Invalid, unknown or

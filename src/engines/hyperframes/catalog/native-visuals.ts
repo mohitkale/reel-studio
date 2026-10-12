@@ -1,3 +1,4 @@
+import { DESIGN_MOTION_BOOT } from "../motion/design-blocks";
 import { escapeHtml } from "@/lib/html";
 import { MOTION_LIBRARY_TIMING } from "@/video/motion-library";
 import { STORY_MOTION_TRACKS } from "@/production/story-motion";
@@ -1089,6 +1090,7 @@ export function buildGsapMotionBootScript(
       el.style.opacity = '1';
       el.style.transform = 'none';
     });
+    document.querySelectorAll('.am-shutter').forEach(function (el) { el.style.transform = "scaleX(0)"; });
     document.querySelectorAll('.dm-orbit-draw').forEach(function (el) { el.style.strokeDashoffset = el.getAttribute('data-dash-end') || '0'; });
     document.querySelectorAll('.gm-connector').forEach(function (el) { el.style.strokeDashoffset = '0'; });
   }
@@ -1212,6 +1214,8 @@ export function buildGsapMotionBootScript(
         });
       }
 
+      ${DESIGN_MOTION_BOOT}
+
       // Recipe-specific backgrounds
       if (recipe === 'void-slash') {
         letterbox.forEach(function (el) { tl.fromTo(el, { scaleY: 0 }, { scaleY: 1, duration: 0.35, ease: 'power3.out', overwrite: 'auto', immediateRender: false }, 0); });
@@ -1256,7 +1260,7 @@ export function buildGsapMotionBootScript(
       }
 
       // Line reveals — clipped, never overlapping
-      lines.forEach(function (inner, i) {
+      (stage.hasAttribute('data-design-block') ? [] : lines).forEach(function (inner, i) {
         if (motif) tl.fromTo(inner, { x: motif.x, y: motif.y, opacity: 0 }, { x: 0, y: 0, opacity: 1, force3D: false, duration: 0.42, ease: 'power3.out' }, events.reveal + i * 0.1);
         else tl.fromTo(inner, { y: '110%' }, { y: '0%', duration: 0.42, ease: 'power3.out' }, (recipe.startsWith('type-') ? events.reveal : 0.22) + i * 0.1);
       });

@@ -23,6 +23,9 @@ it("forwards explicit chapter motif changes and rejects arbitrary choreography",
   expect(
     schema.safeParse({ scriptId: "script", chapterMotifs: "freeform" }).success,
   ).toBe(false);
+  expect(schema.safeParse({ scriptId: "script", system: "css" }).success).toBe(
+    false,
+  );
   for (const chapterMotifs of [true, false]) {
     mocks.post.mockResolvedValue({ result: { state: "planned" } });
     const result = await handler(
@@ -34,4 +37,21 @@ it("forwards explicit chapter motif changes and rejects arbitrary choreography",
       { chapterMotifs },
     );
   }
+});
+
+it("forwards a bounded visual family through MCP", async () => {
+  const registerTool = vi.fn();
+  registerTools({ registerTool } as unknown as McpServer);
+  const [, config, handler] = registerTool.mock.calls.find(
+    ([name]) => name === "replan_motion_direction",
+  )!;
+  mocks.post.mockResolvedValue({ result: { state: "planned" } });
+  await handler(
+    z
+      .object(config.inputSchema)
+      .parse({ scriptId: "script", system: "precision" }),
+  );
+  expect(mocks.post).toHaveBeenLastCalledWith("/api/scripts/script/motion", {
+    system: "precision",
+  });
 });

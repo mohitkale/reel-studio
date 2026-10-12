@@ -1,3 +1,4 @@
+import { formatMotionValue } from "./motion";
 import type { ReelBeat, ReelScene } from "@/video/types";
 import {
   reviewMotionRepetition,
@@ -86,7 +87,22 @@ export function reviewVisualInputs(
     const end =
       timeline[index + 1]?.startFrame ?? beat.startFrame + beat.durationFrames;
     const seconds = (end - beat.startFrame) / fps;
-    const characters = Array.from(scene.text.replace(/\s/gu, "")).length;
+    const visibleCopy = [
+      scene.text,
+      ...(scene.items ?? []),
+      ...(scene.chart
+        ? [
+            ...scene.chart.labels,
+            ...scene.chart.series.flatMap((series) =>
+              series.values.map((value) =>
+                formatMotionValue(value, series.unit),
+              ),
+            ),
+            scene.chart.sourceAttribution ?? "",
+          ]
+        : []),
+    ].join(" ");
+    const characters = Array.from(visibleCopy.replace(/\s/gu, "")).length;
     if (!characters || seconds <= 0) continue;
     const allowance = 1 + characters / 20;
     // Avoid noisy warnings for rounding and very small differences.

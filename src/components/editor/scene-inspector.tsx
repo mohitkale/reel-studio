@@ -461,14 +461,14 @@ function ChecklistEditor({
           ? "Comparison labels"
           : diagram
             ? "Diagram ideas"
-            : "Checklist items"}
+            : "List items"}
       </Label>
       <p className="text-muted-foreground text-xs">
         {comparison
           ? "Supply two labels, up to 60 characters each. Their order stays the same in both comparison layouts."
           : diagram
             ? "Add 2–5 short ideas. Path follows their order; Orbit places the first idea at the center."
-            : "Each item becomes its own row with an icon badge. Leave empty to fall back to splitting the scene text."}
+            : "Keep each item short. Cascading list supports 2–5 items; Tile grid supports 2–4."}
       </p>
       <div className="grid gap-1.5">
         {draft.map((item, i) => (
@@ -749,6 +749,7 @@ export function SceneInspector({
     Boolean(scene.motion?.recipeId.startsWith("comparison-"));
   const isChecklist =
     isComparison ||
+    Boolean(scene.items?.length) ||
     normalId === "icon-grid" ||
     normalId === "hf-list" ||
     scene.role === "diagram" ||

@@ -1,3 +1,7 @@
+import {
+  defaultMotionSystem,
+  type MotionSystem,
+} from "@/production/motion-systems";
 import { chapterPlanIssue } from "@/production/chapters";
 import { AIError } from "@/providers/ai/types";
 import { randomUUID } from "node:crypto";
@@ -25,6 +29,7 @@ export async function replanMotionDirection(
     ambition?: VisualAmbition;
     newVariation?: boolean;
     chapterMotifs?: boolean;
+    system?: MotionSystem;
   },
 ) {
   return prisma.$transaction(async (tx) => {
@@ -55,6 +60,13 @@ export async function replanMotionDirection(
       );
     const settings: MotionPlanSettings = {
       version: "1.0.0",
+      system:
+        input.system ??
+        overrides.motionPlan?.system ??
+        defaultMotionSystem(
+          overrides.visualTheme?.id,
+          overrides.productionPreset.id,
+        ),
       ...(chapterMotifs !== undefined ? { chapterMotifs } : {}),
       seed: input.newVariation
         ? randomUUID()

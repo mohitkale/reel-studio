@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  motionSystemSchema,
+  SYSTEM_TYPE_RECIPES,
+  type MotionSystem,
+} from "./motion-systems";
 
 import {
   chooseSceneMotion,
@@ -33,6 +38,7 @@ export const motionPlanSettingsSchema = z.object({
   seed: z.string().min(1).max(160),
   ambition: visualAmbitionSchema,
   chapterMotifs: z.boolean().optional(),
+  system: motionSystemSchema.optional(),
 });
 export type MotionPlanSettings = z.infer<typeof motionPlanSettingsSchema>;
 
@@ -64,7 +70,81 @@ function seedOffset(seed: string): number {
 function candidates(
   scene: MotionPlanScene,
   ambition: VisualAmbition,
+  system?: MotionSystem,
 ): MotionDirection[] {
+  if (system) {
+    // The vocabulary may vary; supplied structure and media meaning may not.
+    let ids: MotionRecipeId[] = [];
+    if (!scene.hasVisualContent) {
+      if (
+        scene.chart &&
+        ["chart", "metric", "comparison"].includes(scene.role ?? "")
+      )
+        ids =
+          scene.chart.labels.length === 1
+            ? ["data-spotlight"]
+            : ["data-bars", "data-ledger"];
+      else if (scene.items?.length && !scene.background?.url) {
+        if (scene.role === "comparison")
+          ids = ["comparison-split", "comparison-stack"];
+        else if (scene.role === "diagram") {
+          // A hub and a path assert different relationships. Preserve their meaning.
+          ids =
+            scene.current?.recipeId === "diagram-orbit"
+              ? ["diagram-orbit"]
+              : ["diagram-path", "list-cascade"];
+        } else ids = ["list-cascade", "list-grid"];
+      } else if (
+        scene.background?.url &&
+        ["hero", "feature", "screenshot-demo"].includes(scene.role ?? "")
+      )
+        ids =
+          scene.role === "screenshot-demo"
+            ? ["media-device", "media-mat"]
+            : ["media-cinematic", "media-mat"];
+      else if (
+        !scene.chart &&
+        !scene.items?.length &&
+        !scene.background?.url &&
+        scene.text.trim()
+      ) {
+        if (["cta", "logo"].includes(scene.role ?? ""))
+          ids = ["brand-frame", "brand-lockup", "type-poster"];
+        else if (
+          scene.role === "quote" &&
+          analyzeBeat(scene.text).kind !== "prose"
+        )
+          ids = ["quote-margin"];
+        else if (
+          scene.role !== "metric" &&
+          scene.role !== "chart" &&
+          scene.role !== "browser"
+        ) {
+          ids = [...SYSTEM_TYPE_RECIPES[system]];
+          if (ambition === "clean" || scene.energy === "calm")
+            ids.push("quiet-divider", "quiet-center");
+          if (
+            ambition === "showcase" ||
+            ["hook", "payoff", "emphasis"].includes(scene.role ?? "")
+          )
+            ids.push("type-poster", "type-impact");
+        }
+      }
+    }
+    return ids
+      .map(motionDirection)
+      .filter(
+        (direction) =>
+          !motionFallbackReason(
+            direction,
+            scene.text,
+            scene.chart,
+            Boolean(scene.hasVisualContent),
+            scene.items,
+            scene.background,
+          ),
+      );
+  }
   // Prose does not become a diagram merely because a preset assigned that role.
   // Give text-only explanatory beats a real type treatment, and reserve quiet
   // reading layouts for Clean or deliberate breathing space in the sequence.
@@ -151,7 +231,17 @@ export function planMotionSequence(
       recent.push(scene.current);
       return scene.current;
     }
-    const choices = candidates(scene, settings.ambition);
+    const choices = candidates(
+      scene,
+      settings.ambition,
+      settings.chapterMotifs &&
+        scene.chapterIndex !== undefined &&
+        !scene.chart &&
+        !scene.items?.length &&
+        !scene.background?.url
+        ? undefined
+        : settings.system,
+    );
     const anchor =
       scene.role === "hook" ||
       scene.role === "payoff" ||
@@ -193,6 +283,37 @@ export function planMotionSequence(
         choice.recipeId === "type-impact"
       )
         value -= 60;
+      if (settings.system) {
+        // Opening beats should speak the selected family's language rather than
+        // giving every topic the same legacy impact intro.
+        if (
+          choice.recipeId === "type-impact" &&
+          settings.ambition !== "showcase"
+        )
+          value -= 12;
+        const vocabulary = SYSTEM_TYPE_RECIPES[settings.system];
+        const position = vocabulary.indexOf(choice.recipeId);
+        if (position >= 0)
+          value +=
+            5 +
+            ((offset + recent.length) % vocabulary.length === position ? 3 : 0);
+        if (choice.recipeId === "type-poster") {
+          value += settings.system === "poster" && wantImpact ? 8 : -8;
+          if (
+            (scene.energy === "calm" && settings.ambition !== "showcase") ||
+            (settings.ambition === "clean" && !anchor)
+          )
+            value -= 100;
+        }
+        if (choice.recipeId === "data-ledger")
+          value += settings.system === "precision" ? 2 : 0;
+        if (choice.recipeId === "list-grid")
+          value += settings.system === "precision" ? 3 : 0;
+        if (choice.recipeId === "list-cascade")
+          value += settings.system === "editorial" ? 3 : 0;
+        if (choice.recipeId === "media-mat")
+          value += (recent.length + offset) % 2 ? 3 : -2;
+      }
       for (const [distance, previous] of recent.slice(-4).reverse().entries()) {
         if (previous?.recipeId === choice.recipeId) {
           value -= [20, 4, 2, 1][distance];

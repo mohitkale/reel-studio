@@ -53,6 +53,36 @@ and fresh model downloads were not accepted as working based on these checks.
 New release publication still requires merged-main platform CI and the remaining
 release gates below.
 
+## Local motion-family audit — 2026-10-12
+
+The unreleased `codex/creation-motion-quality` branch passed 175 test files / 884
+tests, typecheck, lint, secret scan and the production build. Seven additional
+native treatments bring the library to 23. New production drafts save a coherent
+Editorial, Graphic or Precision family; compatibility, repeat avoidance, frozen
+choices, append behaviour, locks and revision restoration have regression coverage.
+
+All 23 treatments passed the offline verifier in portrait, landscape and square,
+including three actual 78-second MP4s (234 seconds total). Checks cover light/dark
+palettes, dense inputs, text bounds, effective opacity, overlap, forward/reverse
+seeking and native preview/producer parity. The seven new treatments also passed
+21 early-versus-settled exported-frame comparisons. Their exported frames were
+visually inspected in each format. The checks caught and resolved a CSS namespace
+collision and dense square-list spacing issues before acceptance.
+
+Browser checks covered the live gallery, automatic family selection on a new
+local draft, family selection on an existing AI-generated draft, compatible
+treatment choices and supplied-list editing after changing the base template.
+A real editor export completed through the background worker at 1080 × 1920,
+13.5 seconds; its supplied tile-grid items matched the preview. This audit made
+no new AI/voice-provider calls or model downloads. It does not replace the earlier
+live-provider checks or the remaining release gates. The additional compositions
+and gallery illustration are original app code/assets; no registry source or
+additional dependencies were installed. Reports, hashes and screenshots remain
+in ignored local verification artifacts.
+
+The feature batch remains unreleased until merged-main platform CI and the
+applicable release gates pass; the stable release is still v0.4.0.
+
 ## Before the next release
 
 Follow [release policy](../../AI_GUIDELINES.md#release-policy). Release a coherent

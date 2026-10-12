@@ -27,6 +27,17 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   requests can use a literal supplied dataset when AI returns only prose.
 - Template previews include illustrative chart data and list items.
 
+### Added
+
+- Seven authored motion treatments: Editorial spread, Colour-field poster, Focus
+  window, Cascading list, Tile grid, Metric ledger and Gallery mat, bringing the
+  library to 23. Each uses separate composition and seek-safe choreography.
+- Automatic coherent motion families for new drafts, content compatibility and
+  recent-history variation; optional Editorial/Graphic/Precision family controls
+  in Visual direction. Saved scene choices, revisions and locks remain intact.
+- Live motion previews in Templates, deterministic fitting for new compositions,
+  dense square-list layouts and list/data reading-time advice in Visual review.
+
 ### Changed
 
 - AI creation defaults to Automatic direction: content selects a preset family

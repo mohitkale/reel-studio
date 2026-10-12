@@ -132,7 +132,7 @@ describe("direction replanning", () => {
     ]);
     expect(JSON.parse(updateScene.mock.calls[0][0].data.layoutJson)).toEqual({
       ...JSON.parse(original.scenes[0].layoutJson),
-      motion: motionDirection("type-editorial"),
+      motion: motionDirection("quiet-divider"),
     });
     const overrides = JSON.parse(
       updateScript.mock.calls[0][0].data.brandOverrides,
@@ -239,7 +239,7 @@ describe("direction replanning", () => {
 
   it("does not write unchanged choices or legacy projects", async () => {
     findUnique.mockResolvedValue(
-      script([row("scene", { motion: motionDirection("type-editorial") })]),
+      script([row("scene", { motion: motionDirection("quiet-divider") })]),
     );
     expect(
       await replanMotionDirection("script", { ambition: "clean" }),

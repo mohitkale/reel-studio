@@ -24,7 +24,13 @@ direction** and **Visual review** are beside **Export MP4**. Choose Expressive
 for varied type reveals, Clean for quieter reading layouts, or Showcase for
 more impact beats. Replanning preserves copy, narration, media and locked scenes;
 an explicit transition such as “a shift from X to Y” can stage those two supplied
-labels as a comparison. Select **This scene** for detailed scene work.
+labels as a comparison. **Visual direction → Visual family** changes the
+composition vocabulary: Editorial, Graphic or Precision. The family is selected
+automatically for new drafts, and recent layout repeats are discouraged. Browse
+**Templates → Motion treatments** for live examples; choose a compatible
+**Motion treatment** in the scene inspector and lock a scene to preserve it.
+See [motion presets](MOTION_LIBRARY.md) for the seven additional compositions and
+input requirements. Select **This scene** for detailed scene work.
 
 For an unattended MP4, enable **Quick Produce** in Create with AI. The visible
 **Add local narration** checkbox uses Kokoro voice `af_heart`; leave it off for a
