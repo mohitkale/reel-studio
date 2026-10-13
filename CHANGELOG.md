@@ -8,6 +8,12 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- Create with AI aligns the Visual direction and Orientation controls at the
+  same height. Development AI provider factories refresh after prompt/schema
+  changes instead of retaining stale closures.
+- Export preparation and media localization retain narration used by semantic
+  illustrations. Isolated scene previews use the current full-story context,
+  matching full-reel playback and MP4 output.
 - Gemini video planning sends the nested director/chart JSON Schema through
   `responseJsonSchema`, resolving the `additionalProperties` HTTP 400 error.
 - Automatic stock selection uses exportable Pexels/Pixabay media and animated
@@ -29,6 +35,10 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- Automatic concept, comparison, overlap and process illustrations with semantic vector
+  subjects, source-grounded labels and continuity across story definitions.
+  Complete beats and concise headlines replace the default long sequence of
+  short sentence slides. Existing authored treatments remain available.
 - Seven authored motion treatments: Editorial spread, Colour-field poster, Focus
   window, Cascading list, Tile grid, Metric ledger and Gallery mat, bringing the
   library to 23. Each uses separate composition and seek-safe choreography.

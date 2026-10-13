@@ -58,6 +58,7 @@ export function prepareVideoComposition(
       id: s.id,
       templateId: normalizeHfTemplateId(s.templateId),
       text: s.text,
+      spokenText: s.spokenText ?? undefined,
       emphasis: s.emphasis,
       visual: s.visual,
       background: s.background

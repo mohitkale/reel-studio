@@ -28,6 +28,7 @@ interface EnginePlayerProps {
   sfxCues?: Array<{ url: string; startFrame: number; volume: number }>;
   captions?: ReelProps["captions"];
   spokenWords?: ReelProps["spokenWords"];
+  storySource?: ReelProps["storySource"];
   autoPlay?: boolean;
   loop?: boolean;
   tokens?: BrandTokens;

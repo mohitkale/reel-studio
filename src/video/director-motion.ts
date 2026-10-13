@@ -5,6 +5,7 @@ import {
 } from "./motion-spec";
 import type { ReelProps } from "./types";
 import { resolveMotionDirection } from "@/production/motion";
+import { resolveSemanticGraphic } from "@/production/semantic-direction";
 
 /** Materialize frozen shot intent against CURRENT voice/beat timing. The graph
  * stays neutral and seek-safe; changing FPS/takes never replays planning. */
@@ -36,6 +37,7 @@ export function compileDirectorMotion(
     const scene = props.scenes.find((value) => value.id === shot.id)!;
     if (
       scene.direction?.composition !== "layered-title" ||
+      resolveSemanticGraphic(scene) ||
       resolveMotionDirection(
         scene.motion,
         scene.text,

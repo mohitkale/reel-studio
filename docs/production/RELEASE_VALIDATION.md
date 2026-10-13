@@ -83,6 +83,52 @@ in ignored local verification artifacts.
 The feature batch remains unreleased until merged-main platform CI and the
 applicable release gates pass; the stable release is still v0.4.0.
 
+## Local content-direction audit — 2026-10-13
+
+The unreleased `feature/content-relevant-motion-system` branch adds automatic
+concept, comparison, qualitative overlap and process illustrations. Subject
+definitions are reused across the story and appended scenes; labels, symbol
+meaning and source quotations are revalidated against current copy. Existing
+media, data, custom visuals, overrides and locks remain authoritative. The
+Create with AI controls were also aligned and measured in the live browser.
+
+The final local suite passed 179 files / 896 tests, including real SQLite
+creation/restoration, provider-schema compatibility, current source admission,
+append continuity and export preparation/localization. Typecheck, lint,
+secret scan and the production build passed. All 23 existing treatments passed
+preview checks in three formats;
+their prior exported matrix remains historical evidence.
+
+Eight semantic scenes passed portrait, landscape and square checks, including
+three actual 48-second isolated-worker MP4s (144 seconds total). The verifier
+checks complete copy, reading size, opacity, bounds, overlap, vector animation,
+reverse seeking and preview/producer parity. Exported frames were inspected in
+each format, with separate examples for discovery, answers, synthesis, plants,
+code and ordered production steps.
+
+Live browser testing used the bare idea “SEO vs AEO vs GEO” and automatic
+direction. Three Gemini drafts succeeded; a fourth request returned provider
+HTTP 503. No automatic paid retry was made. Earlier drafts exposed inaccurate
+acronym expansions and repetitive prose; the prompt now supplies Google's
+published search terminology for this particular bare-idea comparison. Other
+topics are not automatically researched, and relevance guards do not establish
+general factual accuracy.
+
+The seven-scene acceptance draft was locally replanned with its model-generated
+copy and narration unchanged. Full-reel and isolated previews showed distinct
+subjects and shared foundations. A real editor export exposed lost narration
+context in two production boundaries; both were fixed and the durable
+preparation contract advanced. A recovered job and a fresh editor export then
+completed at 1080 × 1920, 30 FPS, 53 seconds. Decoded frames matched across all
+five illustrated scenes, and early/settled frames confirmed animation. These
+exports had no narrated voice take; no voice-model download or voice-provider
+call was used in this audit. The original user project remains unchanged.
+
+Artwork and choreography are original app code. No registry assets, new
+dependencies or models were installed. Reports, probes, hashes and screenshots
+remain in ignored local artifacts. This feature batch still requires merged-main
+platform CI and applicable release gates; stable remains v0.4.0.
+
 ## Before the next release
 
 Follow [release policy](../../AI_GUIDELINES.md#release-policy). Release a coherent

@@ -6,6 +6,12 @@ import { chapterPlanIssue } from "@/production/chapters";
 import { AIError } from "@/providers/ai/types";
 import { randomUUID } from "node:crypto";
 import { analyzeBeat } from "@/production/director";
+import {
+  inferSemanticGraphic,
+  resolveSemanticGraphic,
+  enrichSemanticSequence,
+  semanticStorySource,
+} from "@/production/semantic-direction";
 
 import { prisma } from "@/library/db";
 import { toSceneDTO } from "@/library/repositories/map";
@@ -91,6 +97,33 @@ export async function replanMotionDirection(
         scenes[index].locks?.scene ||
         (scenes[index].hideText ?? script.hideText),
       );
+    const directedScenes = enrichSemanticSequence(
+      scenes.map((scene) => ({
+        ...scene,
+        spokenText: scene.spokenText ?? undefined,
+      })),
+    );
+    const storySource = semanticStorySource(scenes);
+    const graphics = directedScenes.map((scene, index) =>
+      structures[index]
+        ? undefined
+        : resolveSemanticGraphic(
+            {
+              ...scene,
+              spokenText: scene.spokenText ?? undefined,
+              direction: {
+                ...scene.direction,
+                graphic:
+                  scene.direction?.graphic ??
+                  inferSemanticGraphic(
+                    scene.text,
+                    scene.spokenText ?? undefined,
+                  ),
+              },
+            },
+            storySource,
+          ),
+    );
     let chapterIndex = -1;
     const motions = planMotionSequence(
       scenes.map((scene, index) => {
@@ -103,6 +136,15 @@ export async function replanMotionDirection(
           role: structures[index] ? "comparison" : scene.role,
           energy: overrides.energy,
           text: scene.text,
+          spokenText: scene.spokenText ?? undefined,
+          direction: graphics[index]
+            ? {
+                version: 1,
+                role: scene.role ?? "explanation",
+                composition: "authored",
+                graphic: graphics[index],
+              }
+            : scene.direction,
           chart: scene.chart,
           items: scene.items ?? structures[index]?.items,
           background: scene.background,
@@ -124,7 +166,9 @@ export async function replanMotionDirection(
         before?.recipeId === after?.recipeId &&
         before?.version === after?.version &&
         before?.typeEntrance === after?.typeEntrance &&
-        !structures[index]
+        !structures[index] &&
+        JSON.stringify(scenes[index].direction?.graphic) ===
+          JSON.stringify(graphics[index])
       )
         continue;
       const config = parseJsonColumn(
@@ -134,6 +178,13 @@ export async function replanMotionDirection(
       );
       if (after) config.motion = after;
       else delete config.motion;
+      if (graphics[index])
+        config.direction = {
+          version: 1,
+          role: scenes[index].role ?? "explanation",
+          composition: "authored",
+          graphic: graphics[index],
+        };
       if (structures[index] && after?.recipeId.startsWith("comparison-")) {
         config.items = structures[index]!.items;
         config.role = "comparison";

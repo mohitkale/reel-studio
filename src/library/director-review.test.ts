@@ -121,6 +121,18 @@ it("leaves locked, media/data, long and already repaired scenes for explicit man
     { background: { type: "image", url: "/media/image.png" } },
     { items: ["Actual", "Data"] },
     {
+      direction: {
+        version: 1,
+        role: "explanation",
+        composition: "authored",
+        graphic: {
+          version: 1,
+          kind: "concept",
+          nodes: [{ label: "Idea", symbol: "idea" }],
+        },
+      },
+    },
+    {
       direction: { version: 1, role: "headline", composition: "layered-title" },
     },
   ])

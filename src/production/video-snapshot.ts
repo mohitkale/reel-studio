@@ -172,6 +172,7 @@ export const preparedVideoCompositionSchema = z
             order: true,
           })
           .extend({
+            spokenText: z.string().optional(),
             hideText: z.boolean().optional(),
             background: sceneConfigSchema.shape.background
               .unwrap()

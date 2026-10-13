@@ -19,6 +19,11 @@ import {
 import type { ProductionSceneRole } from "@/production/roles";
 import { analyzeBeat } from "./director";
 import type { EnergyId } from "@/video/visual-style";
+import type { ShotDirection } from "@/video/shot-direction";
+import {
+  resolveSemanticGraphic,
+  semanticStorySource,
+} from "./semantic-direction";
 
 export const VISUAL_AMBITIONS = ["clean", "expressive", "showcase"] as const;
 export const visualAmbitionSchema = z.enum(VISUAL_AMBITIONS);
@@ -46,6 +51,8 @@ export interface MotionPlanScene {
   role?: ProductionSceneRole;
   energy?: EnergyId;
   text: string;
+  spokenText?: string;
+  direction?: ShotDirection;
   chart?: MotionChartInput;
   items?: string[];
   background?: MotionMediaInput;
@@ -226,10 +233,17 @@ export function planMotionSequence(
 ): Array<MotionDirection | undefined> {
   const recent = [...history];
   const offset = seedOffset(settings.seed);
+  const storySource = semanticStorySource(scenes);
   return scenes.map((scene) => {
     if (scene.locked) {
       recent.push(scene.current);
       return scene.current;
+    }
+    // Meaningful illustrations outrank decorative typography. Family changes
+    // may not erase an admitted definition, comparison or process.
+    if (resolveSemanticGraphic(scene, storySource)) {
+      recent.push(undefined);
+      return undefined;
     }
     const choices = candidates(
       scene,

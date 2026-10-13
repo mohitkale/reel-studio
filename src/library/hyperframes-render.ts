@@ -349,6 +349,38 @@ export async function writeHyperframesProject(
   await fs.writeFile(path.join(projectDir, "index.html"), html, "utf8");
 }
 
+/** Localize media without dropping narration or frozen visual source context. */
+export async function materializeHyperframesScene(
+  scene: ReelScene,
+  projectDir: string,
+  index: number,
+  serverBaseUrl: string,
+): Promise<ReelScene> {
+  const localize = (url: string, name: string) =>
+    materializeUrl(
+      url.startsWith("http") ? url : `${serverBaseUrl}${url}`,
+      projectDir,
+      name,
+      serverBaseUrl,
+    );
+  const backgroundUrl = scene.background?.url
+    ? await localize(scene.background.url, `bg-${index}`)
+    : undefined;
+  const carouselImages = await Promise.all(
+    (scene.carouselImages ?? []).map((url, imageIndex) =>
+      localize(url, `carousel-${index}-${imageIndex}`),
+    ),
+  );
+  return {
+    ...scene,
+    templateId: normalizeHfTemplateId(scene.templateId),
+    background: scene.background
+      ? { ...scene.background, url: backgroundUrl ?? scene.background.url }
+      : undefined,
+    carouselImages: carouselImages.filter((url): url is string => Boolean(url)),
+  };
+}
+
 /** Review uses silent export props, with project-owned media localized identically. */
 export async function writeHyperframesReviewProject(
   projectDir: string,
@@ -457,49 +489,19 @@ export async function runHyperframesRender(
     await fs.mkdir(projectDir, { recursive: true });
 
     const scenes = await Promise.all(
-      (prepared?.props.scenes ?? script.scenes).map(async (s, i) => {
-        const bgUrl = s.background?.url
-          ? await materializeUrl(
-              s.background.url.startsWith("http")
-                ? s.background.url
-                : `${serverBaseUrl}${s.background.url}`,
-              projectDir,
-              `bg-${i}`,
-              serverBaseUrl,
-            )
-          : undefined;
-        const carouselImages = await Promise.all(
-          (s.carouselImages ?? []).map(async (url, imageIndex) =>
-            materializeUrl(
-              url.startsWith("http") ? url : `${serverBaseUrl}${url}`,
-              projectDir,
-              `carousel-${i}-${imageIndex}`,
-              serverBaseUrl,
-            ),
-          ),
-        );
-        return {
-          id: s.id,
-          templateId: normalizeHfTemplateId(s.templateId),
-          text: s.text,
-          emphasis: s.emphasis,
-          visual: s.visual,
-          background: s.background
-            ? { ...s.background, url: bgUrl ?? s.background.url }
-            : undefined,
-          items: s.items,
-          chart: s.chart,
-          carouselImages: carouselImages.filter((url): url is string =>
-            Boolean(url),
-          ),
-          role: s.role,
-          motion: s.motion,
-          direction: s.direction,
-          hideText: s.hideText ?? script.hideText,
-          mood: s.mood as ReelScene["mood"],
-          order: s.order,
-        };
-      }),
+      (prepared?.props.scenes ?? script.scenes).map((scene, index) =>
+        materializeHyperframesScene(
+          {
+            ...scene,
+            spokenText: scene.spokenText ?? undefined,
+            mood: scene.mood as ReelScene["mood"],
+            hideText: scene.hideText ?? script.hideText,
+          },
+          projectDir,
+          index,
+          serverBaseUrl,
+        ),
+      ),
     );
 
     const audioUrl = resolved.takeUsable

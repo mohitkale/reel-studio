@@ -1,4 +1,9 @@
 import { formatMotionValue } from "./motion";
+import {
+  resolveSemanticGraphic,
+  semanticGraphicCaptions,
+  semanticStorySource,
+} from "./semantic-direction";
 import type { ReelBeat, ReelScene } from "@/video/types";
 import {
   reviewMotionRepetition,
@@ -87,9 +92,16 @@ export function reviewVisualInputs(
     const end =
       timeline[index + 1]?.startFrame ?? beat.startFrame + beat.durationFrames;
     const seconds = (end - beat.startFrame) / fps;
+    const graphic = resolveSemanticGraphic(scene, semanticStorySource(scenes));
     const visibleCopy = [
       scene.text,
       ...(scene.items ?? []),
+      ...(graphic
+        ? semanticGraphicCaptions(scene.text, graphic).flatMap((node) => [
+            node.label,
+            node.detail ?? "",
+          ])
+        : []),
       ...(scene.chart
         ? [
             ...scene.chart.labels,

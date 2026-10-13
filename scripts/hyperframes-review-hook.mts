@@ -57,7 +57,7 @@ Page.prototype.screenshot = new Proxy(original, {
           root,
           args.layout,
           args.frame,
-          "section[data-scene-id] [data-graph-text], section[data-scene-id] .fx-line, section[data-scene-id] .fx-kicker, section[data-scene-id] .fx-check-item, section[data-scene-id] .dm-value, section[data-scene-id] .dm-value-label, section[data-scene-id] .dm-row-label, section[data-scene-id] .dm-source, section[data-scene-id] .gm-card, section[data-scene-id] .gm-number, section[data-scene-id] .tpl, section[data-scene-id] .sm-copy, section[data-scene-id] .sm-label, section[data-scene-id] .sm-number, section[data-scene-id] .sm-marker, section[data-scene-id] .sm-brand, section[data-scene-id] .am-item-copy, section[data-scene-id] .am-cell-label, section[data-scene-id] .am-value, section[data-scene-id] .am-source",
+          "section[data-scene-id] [data-graph-text], section[data-scene-id] .fx-line, section[data-scene-id] .fx-kicker, section[data-scene-id] .fx-check-item, section[data-scene-id] .dm-value, section[data-scene-id] .dm-value-label, section[data-scene-id] .dm-row-label, section[data-scene-id] .dm-source, section[data-scene-id] .gm-card, section[data-scene-id] .gm-number, section[data-scene-id] .tpl, section[data-scene-id] .sm-copy, section[data-scene-id] .sm-label, section[data-scene-id] .sm-number, section[data-scene-id] .sm-marker, section[data-scene-id] .sm-brand, section[data-scene-id] .am-item-copy, section[data-scene-id] .am-cell-label, section[data-scene-id] .am-value, section[data-scene-id] .am-source, section[data-scene-id] .sg-headline, section[data-scene-id] .sg-label, section[data-scene-id] .sg-detail",
         );
       },
       { layout: config.layout, frame: config.frames[evidence.length] },

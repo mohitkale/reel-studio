@@ -2,6 +2,10 @@ import type { AIScene } from "@/providers/ai/types";
 import type { ProductionSceneRole } from "./roles";
 import { motionFallbackReason } from "./motion";
 import type { ShotDirection } from "@/video/shot-direction";
+import {
+  inferSemanticGraphic,
+  resolveSemanticGraphic,
+} from "./semantic-direction";
 
 export type BeatKind =
   "prose" | "metric" | "chart" | "list" | "quote" | "comparison";
@@ -56,6 +60,9 @@ export function analyzeBeat(text: string) {
   ) {
     return { kind: "list" as BeatKind, items, emphasis: [] as string[] };
   }
+  // A multi-subject comparison must not collapse its final subjects into one label.
+  if (text.trim().split(/\s+(?:vs\.?|versus)\s+/i).length > 2)
+    return { kind: "prose" as BeatKind, emphasis: [] as string[] };
   const comparison = /^(.{1,80}?)\s+(?:vs\.?|versus)\s+(.{1,80}?)[.!]?$/i.exec(
     text.trim(),
   );
@@ -200,7 +207,7 @@ export function directScene(
       : "authored";
   // Roles conveying factual structure come from actual content; prose suggestions
   // cannot turn an unlabelled number into a chart or an invented testimonial.
-  const finalRole =
+  let finalRole =
     beat.kind === "prose" &&
     suggested &&
     [
@@ -232,5 +239,34 @@ export function directScene(
     composition,
     ...(motion ? { motion } : {}),
   };
+  const graphic =
+    resolveSemanticGraphic({
+      ...enriched,
+      background: hasVisual ? { url: "supplied" } : undefined,
+      items: suggested?.graphic ? scene.items : enriched.items,
+      direction: { graphic: suggested?.graphic },
+    }) ??
+    (beat.kind === "prose"
+      ? resolveSemanticGraphic({
+          ...enriched,
+          background: hasVisual ? { url: "supplied" } : undefined,
+          direction: {
+            graphic: inferSemanticGraphic(enriched.text, enriched.spokenText),
+          },
+        })
+      : undefined);
+  if (graphic) {
+    delete enriched.items;
+    direction.graphic = graphic;
+    finalRole =
+      graphic.kind === "comparison"
+        ? "comparison"
+        : graphic.kind === "flow"
+          ? "diagram"
+          : finalRole;
+    direction.role = finalRole;
+    direction.composition = "authored";
+    delete direction.motion;
+  }
   return { scene: { ...enriched, direction }, role: finalRole, direction };
 }

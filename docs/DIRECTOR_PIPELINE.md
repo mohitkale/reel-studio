@@ -1,6 +1,6 @@
 # Director pipeline
 
-Reel Studio uses content-aware direction to the existing no-key planner and the same
+Reel Studio applies content-aware direction to the existing no-key planner and the same
 validated local/OpenAI/Gemini scene contract. Direction is data, never generated
 HTML, JavaScript or an unrestricted animation graph.
 
@@ -52,11 +52,49 @@ repair use zero paid calls. Planning does not automatically replay paid work.
 
 ## Frozen direction and current timing
 
+### Automatic illustrations and story continuity
+
+New production drafts plan the meaning of a scene before assigning decorative
+type. Optional `direction.graphic` uses a bounded grammar: a single concept,
+a comparison of 2–4 subjects, or a flow of 2–4 ordered steps. The model proposes
+labels and semantic symbols; the local planner also recognises explicit
+definitions and named alternatives. Native vector artwork depicts search,
+answers, sources, documents, code, people, growth, goals, protection, time,
+ideas and media. Users do not need to supply graphic settings.
+
+A pass across the story reuses actual subject definitions in comparison
+overviews. A frozen `sourceQuote` may establish a subject's symbol from another
+scene; preview and export check that the quotation still exists in the current
+story. Local labels and details must occur in that scene's copy or narration.
+Flows preserve supplied order and require an explicit progression. Comparisons
+with an explicit shared relationship can use a qualitative overlap diagram
+for two or three short subjects; the regions do not imply quantitative sizes.
+Supplied
+charts, lists, media, custom visuals and whole-scene locks remain authoritative.
+Family changes preserve admitted illustrations. Explicit template or treatment
+edits remain optional overrides.
+
+Malformed optional graphic proposals are discarded without discarding the
+script. Unsupported symbols, stale labels, missing source quotations and
+invented relationships cannot render as illustrations. These checks establish
+visual relevance to the script, not general factual accuracy. AI copy still
+requires review. For bare SEO/AEO/GEO idea prompts, the app supplies
+[Google's published terminology and overlap guidance](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide)
+as source context. Other topics are not automatically researched.
+
+Short AI drafts normally request 5–7 complete beats with concise headlines and
+separate explanatory narration when useful. Illustrations omit a repeated
+detail sentence when the headline already contains it. Frozen direction is
+revalidated after copy edits and survives creation, append, snapshots and
+revision recovery. Text fitting uses layout metrics independent of animation
+transforms; arrows and vector strokes seek in both directions.
+
 Direction is saved with scene configuration and survives DTOs, snapshots,
 revision restoration, JSON import and undo. Explicit template/motion edits clear
-it so the chosen editor treatment takes effect. Preview and export compile the
-same scene direction into the neutral motion graph using the current
-canvas, FPS and scene timeline. Text remains complete and uses measured fitting.
+it so the chosen editor treatment takes effect. Preview and export use the same
+direction and current canvas, FPS and scene timeline. Layered titles compile
+into the neutral motion graph; semantic illustrations use native vector blocks
+with deterministic choreography. Text remains complete and uses measured fitting.
 
 A layered title enters on the first available measured spoken word in its beat,
 otherwise at the beat start. Word windows come from the current audible take
@@ -72,7 +110,8 @@ revision, then permits at most one repair and one recapture. Eligible findings
 are clipping, safe area, contrast and fallback on short text-only scenes. The
 repair selects the measured layered title and preserves copy, narration, data,
 assets and timing. Locked scenes, media/data scenes, long text, reading-time and
-repetition findings require manual work. Transition reviews are not repaired.
+repetition findings require manual work. Semantic illustrations are not flattened
+into titles by the conservative repair. Transition reviews are not repaired.
 Revision and transactional scene checks reject concurrent changes with 409,
 including edits during recapture. The editor refreshes from the matching saved
 script; still-cache keys and source-revision hashes are distinct. Silent review
@@ -81,6 +120,13 @@ The result reports passes used, zero paid calls and remaining findings. It is
 not an aesthetic score or an unbounded optimization loop.
 
 ## Verification
+
+`node --import tsx scripts/verify-semantic-graphics.mjs` checks concept,
+comparison and flow examples across portrait, landscape and square, including
+actual isolated-worker exports, label visibility, overlap, source preservation,
+forward/reverse choreography and preview/export parity. Artifacts are under
+`.artifacts/content-direction/semantic-matrix/`. Its `--preview-only` option
+explicitly skips exports.
 
 `npm run test:director` runs the real deterministic/preset pipeline, offline
 srcDoc and producer seeks (including backward seeking), and isolated worker

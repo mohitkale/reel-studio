@@ -267,7 +267,7 @@ export function CreateWithAIDialog({
               ) : null}
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid items-start gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="ai-production-preset">Visual direction</Label>
                 <NativeSelect

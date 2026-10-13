@@ -62,6 +62,7 @@ export function resolveProductionComposition(
       id: scene.id,
       templateId,
       text: scene.displayText,
+      spokenText: scene.narrationText,
       emphasis: [...scene.emphasis],
       visual: scene.visual,
       items: scene.items ? [...scene.items] : undefined,

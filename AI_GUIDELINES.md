@@ -91,6 +91,9 @@ See [release validation](docs/production/RELEASE_VALIDATION.md) for release gate
 
 ## Agent Behavior
 
+- Use `feature/<short-descriptive-name>` for feature branches. Preserve this
+  convention across agents unless the maintainer explicitly requests another name.
+
 - If uncertain, inspect existing code patterns first.
 - Explain tradeoffs clearly when making non-trivial choices.
 - If blocked by missing information, ask the smallest possible clarification.

@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { MotionDirection } from "@/production/motion";
 import type { ShotDirection } from "@/video/shot-direction";
 import { planMotionSequence } from "@/production/motion-plan";
+import { enrichSemanticSequence } from "@/production/semantic-direction";
 
 import type { SceneBackground, SceneChartData } from "@/video/types";
 import { orientationFromDims } from "@/lib/orientation";
@@ -110,9 +111,16 @@ export async function generateSceneAppend(input: {
       })
     : { plan: enriched, roles: [] as ProductionSceneRole[] };
   const roles = resolved.roles;
+  const directedScenes = enrichSemanticSequence(resolved.plan.scenes, [
+    ...script.scenes.map((scene) => ({
+      ...scene,
+      spokenText: scene.spokenText ?? undefined,
+    })),
+    ...resolved.plan.scenes,
+  ]);
   const motions = script.productionPreset
     ? planMotionSequence(
-        resolved.plan.scenes.map((scene, index) => ({
+        directedScenes.map((scene, index) => ({
           role: roles[index],
           energy: script.energy,
           chapterIndex:
@@ -124,6 +132,8 @@ export async function generateSceneAppend(input: {
                 : undefined,
           chapterStart: body.chapterTitle !== undefined && index === 0,
           text: scene.text,
+          spokenText: scene.spokenText,
+          direction: scene.direction,
           chart: scene.chart,
           items: scene.items,
           background: backgrounds[index],
@@ -146,7 +156,7 @@ export async function generateSceneAppend(input: {
     draftChapterId,
     mediaDecisions,
     signal: signal,
-    scenes: resolved.plan.scenes.map((scene, index) => {
+    scenes: directedScenes.map((scene, index) => {
       const motion = motions[index];
       return {
         templateId: scene.templateId,
@@ -162,7 +172,7 @@ export async function generateSceneAppend(input: {
               mediaDecisions[index]?.snapshot?.providerSnapshot.kind ??
               body.mediaPreference,
           },
-          roles[index],
+          scene.direction?.graphic ? scene.direction.role : roles[index],
           motion,
         ),
       };

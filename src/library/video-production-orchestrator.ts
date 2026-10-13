@@ -405,8 +405,8 @@ export async function executeVideoProductionJob(
     const prepared = await stage(
       "prepare_composition",
       {
-        // Version 3 adds measured-word SFX protection to prepared cue decisions.
-        compositionContract: 3,
+        // Version 4 preserves narration as source context for semantic illustrations.
+        compositionContract: 4,
         media: { ...media, snapshot: snapshotWithAudio },
         timing,
         orientation: input.orientation,

@@ -7,6 +7,30 @@ export const SHOT_DIRECTION_JSON_SCHEMA = {
     version: { type: "integer", enum: [1] },
     role: { type: "string" },
     composition: { type: "string", enum: ["authored", "layered-title"] },
+    graphic: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        version: { type: "integer", enum: [1] },
+        kind: { type: "string", enum: ["concept", "comparison", "flow"] },
+        relationship: { type: "string", enum: ["overlap"] },
+        nodes: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              label: { type: "string" },
+              detail: { type: "string" },
+              sourceQuote: { type: "string" },
+              symbol: { type: "string" },
+            },
+            required: ["label", "symbol"],
+          },
+        },
+      },
+      required: ["version", "kind", "nodes"],
+    },
     motion: {
       type: "object",
       additionalProperties: false,
@@ -77,6 +101,10 @@ export function strictOutputSchema(
 
 const optional = new Set([
   "direction",
+  "graphic",
+  "detail",
+  "sourceQuote",
+  "relationship",
   "motion",
   "spokenText",
   "visual",

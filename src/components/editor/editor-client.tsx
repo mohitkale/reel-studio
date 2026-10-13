@@ -71,6 +71,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SceneTimeline } from "@/components/editor/scene-timeline";
 import { SceneList } from "@/components/editor/scene-list";
 import { SceneInspector } from "@/components/editor/scene-inspector";
+import { semanticStorySource } from "@/production/semantic-direction";
 import { MotionDirectionMenu } from "@/components/editor/motion-direction-menu";
 import { VisualReviewDialog } from "@/components/editor/visual-review-dialog";
 import {
@@ -194,6 +195,7 @@ export function EditorClient({
         id: s.id,
         templateId: normalizeTemplateIdForEngine(videoEngine, s.templateId),
         text: s.text,
+        spokenText: s.spokenText ?? undefined,
         emphasis: s.emphasis,
         visual: s.visual,
         background: s.background,
@@ -221,6 +223,7 @@ export function EditorClient({
               selectedScene.templateId,
             ),
             text: selectedScene.text,
+            spokenText: selectedScene.spokenText ?? undefined,
             emphasis: selectedScene.emphasis,
             visual: selectedScene.visual,
             background: selectedScene.background,
@@ -932,6 +935,7 @@ export function EditorClient({
                     key={selectedReelScene.id}
                     videoEngine={videoEngine}
                     scenes={[selectedReelScene]}
+                    storySource={semanticStorySource(scenes)}
                     timeline={[
                       {
                         sceneId: selectedReelScene.id,
@@ -1015,6 +1019,7 @@ export function EditorClient({
               <SceneInspector
                 key={selectedScene.id}
                 scene={selectedScene}
+                storySource={semanticStorySource(scenes)}
                 hideTextDefault={script.hideText}
                 sceneIndex={scenes.findIndex((s) => s.id === effectiveSceneId)}
                 totalScenes={scenes.length}

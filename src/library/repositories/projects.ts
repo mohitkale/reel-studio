@@ -42,6 +42,7 @@ import { getDefaultBrandKit } from "./brandkits";
 import { resolveBrandTokens } from "./brandkits";
 import { CORAL_HARBOR_NAME, CORAL_HARBOR_PALETTE } from "@/lib/brand-defaults";
 import { defaultMotionSystem } from "@/production/motion-systems";
+import { enrichSemanticSequence } from "@/production/semantic-direction";
 import type { VisualTheme } from "@/production/creative-direction";
 import { chapterPlanFromStarts } from "@/production/chapters";
 
@@ -142,6 +143,10 @@ export async function createProjectFromPlan(
   },
 ): Promise<{ projectId: string; scriptId: string }> {
   const { width, height } = dimsFor(orientation);
+  const directedScenes =
+    production?.preset && !production.motions
+      ? enrichSemanticSequence(plan.scenes)
+      : plan.scenes;
   const engine = resolveEngine(videoEngine);
   const fallbackTemplate = defaultTemplateIdForEngine(engine);
   const sceneIds = production?.chapterStarts
@@ -181,10 +186,12 @@ export async function createProjectFromPlan(
     production?.motions ??
     (motionPlan
       ? planMotionSequence(
-          plan.scenes.map((scene, order) => ({
+          directedScenes.map((scene, order) => ({
             role: production?.roles?.[order],
             energy,
             text: scene.text,
+            spokenText: scene.spokenText,
+            direction: scene.direction,
             chart: scene.chart,
             items: scene.items,
             background: backgrounds[order],
@@ -223,7 +230,7 @@ export async function createProjectFromPlan(
           }),
           voiceMode: production?.voiceMode ?? "oneshot",
           scenes: {
-            create: plan.scenes.map((scene, order) => {
+            create: directedScenes.map((scene, order) => {
               const background = backgrounds[order];
               const config: Record<string, unknown> = {};
               if (background) config.background = background;
@@ -233,7 +240,9 @@ export async function createProjectFromPlan(
               if (scene.musicMood) config.musicMood = scene.musicMood;
               if (scene.items?.length) config.items = scene.items;
               if (scene.chart) config.chart = scene.chart;
-              const role = production?.roles?.[order];
+              const role = scene.direction?.graphic
+                ? scene.direction.role
+                : production?.roles?.[order];
               if (role) config.role = role;
               if (production?.sceneLocks?.[order])
                 config.locks = production.sceneLocks[order];

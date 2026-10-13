@@ -7,6 +7,13 @@ separate geometry and choreography.
 
 ## Automatic direction
 
+Definitions, named comparisons and explicit processes can now use automatic
+content illustrations before the typography family is considered. The planner
+reuses actual subjects across the story and draws their supported semantic
+symbols and relationships. This adds explanatory structure instead of rotating
+every prose scene through decorative type. See the
+[automatic illustration contract](DIRECTOR_PIPELINE.md#automatic-illustrations-and-story-continuity).
+
 New AI and local production drafts save a coherent motion family alongside the
 planning seed. Editorial topics favour asymmetric spreads and reading space;
 product, developer and data topics favour framed messages and structured

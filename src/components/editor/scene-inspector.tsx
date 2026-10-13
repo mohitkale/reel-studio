@@ -29,6 +29,10 @@ import { AssetThumbPicker } from "@/components/assets/asset-thumb-picker";
 import { StockMediaPicker } from "@/components/editor/stock-media-picker";
 import type { Orientation } from "@/lib/orientation";
 import {
+  resolveSemanticGraphic,
+  semanticGraphicIssue,
+} from "@/production/semantic-direction";
+import {
   MOTION_RECIPES,
   chooseSceneMotion,
   isDataMotionRecipe,
@@ -720,6 +724,7 @@ export function SceneInspector({
   videoEngine = "hyperframes",
   orientation = "portrait",
   hideTextDefault = false,
+  storySource,
 }: {
   scene: SceneDTO;
   sceneIndex: number;
@@ -731,6 +736,7 @@ export function SceneInspector({
   videoEngine?: VideoEngineId;
   orientation?: Orientation;
   hideTextDefault?: boolean;
+  storySource?: string;
 }) {
   const [text, setText] = React.useState(scene.text);
   const [spokenText, setSpokenText] = React.useState(
@@ -768,7 +774,14 @@ export function SceneInspector({
     scene.items?.length ||
     scene.background?.url,
   );
+  const sceneGraphic = resolveSemanticGraphic(
+    { ...scene, spokenText: scene.spokenText ?? undefined },
+    storySource,
+  );
   const motionOptions = [
+    ...(sceneGraphic
+      ? [{ value: "illustrated", label: "Content illustration" }]
+      : []),
     { value: "preset", label: "Preset look" },
     ...MOTION_RECIPES.filter(
       (recipe) =>
@@ -950,21 +963,28 @@ export function SceneInspector({
             <Label htmlFor="scene-motion">Motion treatment</Label>
             <Combobox
               id="scene-motion"
-              value={scene.motion?.recipeId ?? "preset"}
-              onChange={(value) =>
+              value={
+                sceneGraphic ? "illustrated" : (scene.motion?.recipeId ?? "preset")
+              }
+              onChange={(value) => {
+                if (value === "illustrated") return;
                 onUpdate({
                   id: scene.id,
                   motion:
                     value === "preset"
                       ? null
                       : motionDirection(value as MotionRecipeId),
-                })
-              }
+                });
+              }}
               options={motionOptions}
               searchPlaceholder="Search treatments…"
             />
             <p className="text-muted-foreground text-xs">
-              {scene.motion
+              {sceneGraphic
+                ? `An illustrated ${sceneGraphic.kind} built from ${sceneGraphic.nodes.map((node) => node.label).join(", ")}. Planned automatically from this scene's content.`
+                : scene.direction?.graphic
+                  ? `${semanticGraphicIssue(scene.direction.graphic, scene.text, scene.spokenText ?? undefined, storySource) ?? "This illustration cannot hide supplied media or data."} Replan visual direction or choose a treatment.`
+                  : scene.motion
                 ? resolveMotionDirection(
                     scene.motion,
                     scene.text,

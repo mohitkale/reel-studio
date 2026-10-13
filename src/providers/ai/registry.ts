@@ -30,7 +30,10 @@ const instances = new Map<AIProviderId, AIProvider>();
 export function getAIProvider(id: AIProviderId): AIProvider {
   if (!isAIProviderId(id))
     throw new AIError(`Unknown AI provider "${id}"`, 404);
-  let instance = instances.get(id);
+  // Development imports change with HMR; a cached factory closure can retain
+  // an old prompt/schema. Cloud/local factories perform no network calls here.
+  let instance =
+    process.env.NODE_ENV === "development" ? undefined : instances.get(id);
   if (!instance) {
     instance = isLocalAIProviderId(id)
       ? isCompatibleLocalAIProvider(id)

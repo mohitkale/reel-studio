@@ -60,6 +60,8 @@ export interface ReelScene {
   id: string;
   templateId: string;
   text: string;
+  /** Source context for semantic illustration labels; audio remains owned by the take. */
+  spokenText?: string;
   emphasis: string[];
   visual?: string;
   /** Per-scene full-bleed background (image or video), any template. */
@@ -113,6 +115,8 @@ export interface TemplateProps {
  * Input props for the root ReelComposition. Shared by the HTML compiler and editor.
  */
 export type ReelProps = {
+  /** Current full-story copy for an isolated scene preview; never frozen quotations. */
+  storySource?: string;
   /** Versioned engine-neutral graph prototype; absent preserves legacy visuals. */
   motionSpec?: MotionSpec;
   /** Measured narration windows from the current audible take, in content frames. */
