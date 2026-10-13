@@ -119,7 +119,32 @@ retains the current measured word windows.
 The result reports passes used, zero paid calls and remaining findings. It is
 not an aesthetic score or an unbounded optimization loop.
 
+### Progressive showpiece direction
+
+Optional `graphic.presentation` selects the bounded story-motion vocabulary;
+hierarchy/system extend the same typed visual grammar. Explicit team and system
+narration can upgrade an overview that was reduced to one concept. The pass
+handles natural connecting/supporting clauses and removes narration connectors
+from process labels while keeping every displayed phrase in the source.
+Hierarchy parents must precede their children and have a supplied relationship.
+Shared-region diagrams retain their overlap composition.
+
+Showpieces and their SFX use a common schedule derived from the current beat.
+Measured word text is admitted only through the existing take/FPS/provenance
+checks. Prepared artifacts preserve that text and explicit effect fades;
+media localization preserves narration and direction. Development validation
+uses freshly loaded server/worker code so stale imports cannot stand in for the
+production behavior. See [story motion](MOTION_LIBRARY.md#story-motion-showpieces).
+
 ## Verification
+
+`node --import tsx scripts/verify-showpieces.mjs` checks all six showpieces in
+three formats and exports actual MP4s with the bundled music/effects. It samples
+multiple phases, checks visible copy and container bounds, reverse seeking,
+preview/producer parity and decoded audio. `--stress` verifies a three-level,
+eight-actor hierarchy. `--showpiece=kinetic-handoff` targets one job;
+`--preview-only` explicitly skips exports. Reports are under
+`.artifacts/story-showpieces/`.
 
 `node --import tsx scripts/verify-semantic-graphics.mjs` checks concept,
 comparison and flow examples across portrait, landscape and square, including

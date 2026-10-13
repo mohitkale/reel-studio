@@ -1,6 +1,7 @@
 import type { CaptionTrackDTO } from "@/lib/dto";
 
 export interface SpokenWordWindow {
+  text?: string;
   startFrame: number;
   endFrame: number;
 }
@@ -14,6 +15,7 @@ export function resolveSpokenWordWindows(
   tracks: readonly CaptionTrackDTO[] | undefined,
   audibleTakeId: string | null | undefined,
   fps: number,
+  includeText = false,
 ): SpokenWordWindow[] {
   if (!audibleTakeId) return [];
   const track = tracks?.find(
@@ -35,6 +37,10 @@ export function resolveSpokenWordWindows(
           word.endFrame <= cue.endFrame &&
           word.endFrame > word.startFrame,
       )
-      .map(({ startFrame, endFrame }) => ({ startFrame, endFrame })),
+      .map(({ startFrame, endFrame, text }) => ({
+        startFrame,
+        endFrame,
+        ...(includeText ? { text } : {}),
+      })),
   );
 }

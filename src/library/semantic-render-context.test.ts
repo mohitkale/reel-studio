@@ -12,9 +12,15 @@ it("keeps whole-story narration through export media localization so the MP4 use
   props.scenes = enrichSemanticSequence(props.scenes);
   const preview = buildHyperframesCompositionHtml(props);
   const prepared = preparedVideoCompositionSchema.parse({
-    props,
+    props: {
+      ...props,
+      sfxCues: [
+        { url: "/sfx/pop.wav", startFrame: 24, volume: 0.06, fadeSeconds: 0 },
+      ],
+    },
     totalFrames: 1152,
   });
+  expect(prepared.props.sfxCues?.[0].fadeSeconds).toBe(0);
   const scenes = await Promise.all(
     prepared.props.scenes.map((scene, index) =>
       materializeHyperframesScene(
@@ -39,9 +45,9 @@ it("keeps whole-story narration through export media localization so the MP4 use
     { producerMode: true },
   );
   for (const html of [preview, exported]) {
-    expect(html.match(/data-semantic-block=/g)).toHaveLength(
-      props.scenes.length,
-    );
+    expect(
+      html.match(/<div[^>]+data-(?:semantic-block|showpiece)=/g),
+    ).toHaveLength(props.scenes.length);
     expect(html).toContain('class="sg-visual sg-overlap"');
     expect(html).toContain('data-subject="GEO" data-symbol="sources"');
   }
@@ -50,19 +56,19 @@ it("keeps whole-story narration through export media localization so the MP4 use
     scenes: [scenes[0]],
     timeline: [{ sceneId: scenes[0].id, startFrame: 0, durationFrames: 144 }],
   };
-  expect(buildHyperframesCompositionHtml(isolated)).not.toContain(
-    "data-semantic-block=",
+  expect(buildHyperframesCompositionHtml(isolated)).not.toMatch(
+    /<div[^>]+data-(?:semantic-block|showpiece)=/,
   );
   expect(
     buildHyperframesCompositionHtml({
       ...isolated,
       storySource: semanticStorySource(scenes),
     }),
-  ).toContain('data-semantic-block="comparison"');
+  ).toContain('data-showpiece="orbital-comparison"');
   expect(
     buildHyperframesCompositionHtml({
       ...isolated,
       storySource: "An unrelated story after a copy edit.",
     }),
-  ).not.toContain("data-semantic-block=");
+  ).not.toMatch(/<div[^>]+data-(?:semantic-block|showpiece)=/);
 });

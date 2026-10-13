@@ -12,7 +12,11 @@ export const SHOT_DIRECTION_JSON_SCHEMA = {
       additionalProperties: false,
       properties: {
         version: { type: "integer", enum: [1] },
-        kind: { type: "string", enum: ["concept", "comparison", "flow"] },
+        kind: {
+          type: "string",
+          enum: ["concept", "comparison", "flow", "hierarchy", "system"],
+        },
+        presentation: { type: "string" },
         relationship: { type: "string", enum: ["overlap"] },
         nodes: {
           type: "array",
@@ -24,6 +28,7 @@ export const SHOT_DIRECTION_JSON_SCHEMA = {
               detail: { type: "string" },
               sourceQuote: { type: "string" },
               symbol: { type: "string" },
+              parent: { type: "integer" },
             },
             required: ["label", "symbol"],
           },
@@ -105,6 +110,8 @@ const optional = new Set([
   "detail",
   "sourceQuote",
   "relationship",
+  "presentation",
+  "parent",
   "motion",
   "spokenText",
   "visual",

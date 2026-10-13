@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { SHOWPIECES } from "@/video/semantic-graphic";
+import { ShowpiecePreviewCard } from "@/components/editor/showpiece-preview-card";
 
 import { MOTION_SAMPLES } from "@/video/motion-samples";
 import { EXTENSION_MOTION_RECIPES } from "@/video/motion-extensions";
@@ -185,14 +187,27 @@ function MotionPreviewCard({ index }: { index: number }) {
 }
 
 export default function TemplatesPage() {
-  const [view, setView] = React.useState<"motion" | "layouts">("motion");
+  const [view, setView] = React.useState<"showpieces" | "motion" | "layouts">(
+    "showpieces",
+  );
   return (
     <div className="space-y-6">
       <PageHeader
         title="Templates & motion"
-        description="Explore authored motion treatments and scene layouts. AI selects a coherent visual family from your content. Change the family in Visual direction, or a treatment in the scene inspector."
+        description="Explore story-driven motion with dimensional scenes, progressive reveals and sound accents. AI chooses from your content; manual treatments and layouts remain available."
       />
-      <div className="flex gap-2" role="group" aria-label="Preview category">
+      <div
+        className="flex flex-wrap gap-2"
+        role="group"
+        aria-label="Preview category"
+      >
+        <Button
+          variant={view === "showpieces" ? "default" : "outline"}
+          aria-pressed={view === "showpieces"}
+          onClick={() => setView("showpieces")}
+        >
+          Story motion
+        </Button>
         <Button
           variant={view === "motion" ? "default" : "outline"}
           aria-pressed={view === "motion"}
@@ -209,18 +224,30 @@ export default function TemplatesPage() {
         </Button>
       </div>
       <p className="text-muted-foreground text-sm">
-        {view === "motion"
-          ? "Play a preview to see its choreography. These examples use illustrative copy and data; your reel keeps your own content and brand colours."
-          : "Base layouts remain available for manual composition and longer or specialised content."}
+        {view === "showpieces"
+          ? "Each example develops over eight seconds. Play to see the action and hear sparse sound accents. Copy is illustrative; your own story supplies the subjects and relationships."
+          : view === "motion"
+            ? "Play a preview to see its choreography. These examples use illustrative copy and data; your reel keeps your own content and brand colours."
+            : "Base layouts remain available for manual composition and longer or specialised content."}
       </p>
-      <div className={LISTING_GRID_6_CARDS}>
-        {view === "motion"
-          ? MOTION_SAMPLES.map((scene, index) => (
-              <MotionPreviewCard key={scene.id} index={index} />
+      <div
+        className={
+          view === "showpieces"
+            ? "grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
+            : LISTING_GRID_6_CARDS
+        }
+      >
+        {view === "showpieces"
+          ? SHOWPIECES.map((piece, index) => (
+              <ShowpiecePreviewCard key={piece.id} index={index} />
             ))
-          : TEMPLATES.map((t) => (
-              <TemplatePreviewCard key={t.id} template={t} />
-            ))}
+          : view === "motion"
+            ? MOTION_SAMPLES.map((scene, index) => (
+                <MotionPreviewCard key={scene.id} index={index} />
+              ))
+            : TEMPLATES.map((t) => (
+                <TemplatePreviewCard key={t.id} template={t} />
+              ))}
       </div>
     </div>
   );

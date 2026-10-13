@@ -4,6 +4,12 @@ import type { SceneDTO } from "@/lib/dto";
 import type { VideoEngineId } from "@/engines/types";
 import type { SpokenWordWindow } from "@/lib/spoken-word-windows";
 import { resolveMotionDirection } from "@/production/motion";
+import { showpieceEventSchema } from "@/video/semantic-graphic";
+import {
+  resolveSemanticGraphic,
+  semanticStorySource,
+} from "@/production/semantic-direction";
+import { showpieceSchedule } from "@/production/showpiece-plan";
 import {
   motionEventSchema,
   motionEventOffsetSeconds,
@@ -33,6 +39,7 @@ export const sfxCueSchema = z.object({
   source: z.enum(["automatic", "manual"]).optional(),
   locked: z.boolean().optional(),
   event: motionEventSchema.optional(),
+  showpieceEvent: showpieceEventSchema.optional(),
 });
 
 export function parseSfxState(raw: string | null | undefined): ScriptSfxState {
@@ -60,6 +67,8 @@ type SfxScene = Pick<
   SceneDTO,
   | "id"
   | "text"
+  | "spokenText"
+  | "direction"
   | "motion"
   | "chart"
   | "items"
@@ -74,6 +83,7 @@ interface ResolvedCue {
   endFrame: number;
   peakFrame: number;
   fadeSeconds?: number;
+  quietShowpiece?: boolean;
 }
 
 /** Resolve once against final narration timing, identically for preview/export.
@@ -111,6 +121,34 @@ export function resolveReelSfxCues(args: {
     const clip = getSfxClip(cue.sfxId);
     if (!beat || !clip || cue.volume === 0) return undefined;
     let offset = cue.offsetSeconds;
+    let quietShowpiece = false;
+    if (cue.showpieceEvent) {
+      const scene = scenes.get(cue.sceneId);
+      if (!scene || (scene.hideText ?? args.hideText)) return undefined;
+      const graphic = resolveSemanticGraphic(
+        { ...scene, spokenText: scene.spokenText ?? undefined },
+        semanticStorySource(args.scenes ?? []),
+      );
+      if (
+        !graphic?.presentation ||
+        graphic.presentation !== cue.showpieceEvent.presentation ||
+        cue.showpieceEvent.subjectIndex >= graphic.nodes.length
+      )
+        return undefined;
+      const schedule = showpieceSchedule(
+        graphic,
+        beat.durationFrames / args.fps,
+        args.fps,
+        beat.startFrame,
+        args.spokenWords,
+      );
+      const anchor =
+        cue.showpieceEvent.moment === "resolve"
+          ? schedule.resolve
+          : schedule.arrivals[cue.showpieceEvent.subjectIndex];
+      offset += anchor - clip.peakOffsetSeconds;
+      quietShowpiece = cue.source === "automatic" && !cue.locked;
+    }
     if (cue.event) {
       const scene = scenes.get(cue.sceneId);
       if (!scene || !args.videoEngine || (scene.hideText ?? args.hideText))
@@ -150,7 +188,8 @@ export function resolveReelSfxCues(args: {
     )
       return undefined;
     return {
-      ...(cue.event ? { fadeSeconds: 0 } : {}),
+      ...(cue.event || cue.showpieceEvent ? { fadeSeconds: 0 } : {}),
+      quietShowpiece,
       url: clip.url,
       startFrame,
       volume: cue.volume,
@@ -179,14 +218,15 @@ export function resolveReelSfxCues(args: {
   const speechClearance = Math.ceil(0.08 * args.fps);
   for (const cue of automatic) {
     if (
-      args.spokenWords?.some(
-        (word) =>
-          Number.isFinite(word.startFrame) &&
-          Number.isFinite(word.endFrame) &&
-          word.endFrame > word.startFrame &&
-          cue.startFrame < word.endFrame + speechClearance &&
-          cue.endFrame > word.startFrame - speechClearance,
-      ) ||
+      (!cue.quietShowpiece &&
+        args.spokenWords?.some(
+          (word) =>
+            Number.isFinite(word.startFrame) &&
+            Number.isFinite(word.endFrame) &&
+            word.endFrame > word.startFrame &&
+            cue.startFrame < word.endFrame + speechClearance &&
+            cue.endFrame > word.startFrame - speechClearance,
+        )) ||
       cue.peakFrame - lastPeak < gap ||
       accepted.some(
         (other) =>
@@ -196,6 +236,18 @@ export function resolveReelSfxCues(args: {
     )
       continue;
     accepted.push(cue);
+    // These are sparse picture accents, bounded and attenuated under speech.
+    // Existing louder automatic cues keep their speech-clearance policy.
+    if (cue.quietShowpiece) {
+      cue.volume = Math.min(0.08, cue.volume);
+      if (
+        args.spokenWords?.some(
+          (word) =>
+            cue.startFrame < word.endFrame && cue.endFrame > word.startFrame,
+        )
+      )
+        cue.volume *= 0.35;
+    }
     lastPeak = cue.peakFrame;
   }
   return accepted

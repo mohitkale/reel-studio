@@ -27,6 +27,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AssetThumbPicker } from "@/components/assets/asset-thumb-picker";
 import { StockMediaPicker } from "@/components/editor/stock-media-picker";
+import { SHOWPIECES } from "@/video/semantic-graphic";
 import type { Orientation } from "@/lib/orientation";
 import {
   resolveSemanticGraphic,
@@ -780,7 +781,7 @@ export function SceneInspector({
   );
   const motionOptions = [
     ...(sceneGraphic
-      ? [{ value: "illustrated", label: "Content illustration" }]
+      ? [{ value: "illustrated", label: sceneGraphic.presentation ? `Auto · ${SHOWPIECES.find(piece => piece.id === sceneGraphic.presentation)?.name}` : "Content illustration" }]
       : []),
     { value: "preset", label: "Preset look" },
     ...MOTION_RECIPES.filter(

@@ -120,7 +120,7 @@ export type ReelProps = {
   /** Versioned engine-neutral graph prototype; absent preserves legacy visuals. */
   motionSpec?: MotionSpec;
   /** Measured narration windows from the current audible take, in content frames. */
-  spokenWords?: Array<{ startFrame: number; endFrame: number }>;
+  spokenWords?: Array<{ startFrame: number; endFrame: number; text?: string }>;
   /** Internal native still measurement; omitted from playback and exports. */
   reviewLayout?: boolean;
   scenes: ReelScene[];

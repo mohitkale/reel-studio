@@ -3,19 +3,23 @@ import {
   type SemanticGraphic,
 } from "@/video/semantic-graphic";
 import type { ShotDirection } from "@/video/shot-direction";
+import { chooseShowpiece, showpieceCompatible } from "./showpiece-plan";
 
 const SYMBOL_WORDS: Record<SemanticGraphic["nodes"][number]["symbol"], RegExp> =
   {
+    agent: /\b(agents?|bots?|robots?|automation)\b/i,
+    cloud: /\b(cloud|server|servers|hosting|vm|network|cdn)\b/i,
+    device: /\b(phone|device|laptop|screen|wireframe|prototype|app)\b/i,
     search:
       /\b(search|searches|rank|ranking|find|found|discover|discovery|seo)\b/i,
     answer: /\b(answer|answers|question|questions|response|responses|aeo)\b/i,
     sources:
       /\b(source|sources|synthesis|synthesi[sz]e|generative|citations?|evidence)\b/i,
     document:
-      /\b(document|documents|article|articles|notes|script|scripts|content|page|pages|brief)\b/i,
+      /\b(document|documents|article|articles|notes|script|scripts|content|page|pages|brief|website)\b/i,
     code: /\b(code|coding|api|program|software|developer|database)\b/i,
     person:
-      /\b(person|people|audience|customer|customers|user|users|team|teams)\b/i,
+      /\b(person|people|audience|customer|customers|user|users|team|teams|ceo|cto|coo|cmo|cxo|designer|reviewer|tester|devops|engineer|manager)\b/i,
     growth: /\b(plant|plants|grow|growth|garden|gardening|seed|seeds)\b/i,
     target: /\b(goal|goals|target|focus|objective|objectives)\b/i,
     shield: /\b(safe|safety|protect|protection|security|secure|privacy)\b/i,
@@ -62,6 +66,10 @@ export function semanticGraphicIssue(
 ): string | undefined {
   if (!semanticGraphicSchema.safeParse(graphic).success)
     return "The visual structure is invalid.";
+  if (graphic.presentation && !showpieceCompatible(graphic))
+    return "This showpiece does not match the supplied visual structure.";
+  if (graphic.relationship && graphic.presentation)
+    return "Shared-region diagrams keep their overlap layout.";
   const copy = normalize(`${text} ${spokenText ?? ""}`);
   if (graphic.kind === "concept" && graphic.nodes[0].symbol === "none")
     return "A concept illustration needs a supported semantic subject.";
@@ -80,6 +88,25 @@ export function semanticGraphicIssue(
       `(?:^|[^\\p{L}\\p{N}])${normalize(fragment).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=$|[^\\p{L}\\p{N}])`,
       "u",
     ).test(copy);
+  if (
+    graphic.kind === "hierarchy" &&
+    !/\b(hires?|leads?|manages?|oversees?|supported by|reports?|teams?|hierarchy|branches?)\b/i.test(
+      copy,
+    )
+  )
+    return "A hierarchy needs an explicit organisation in the copy.";
+  if (
+    graphic.kind === "system" &&
+    !/\b(connect(?:s|ing)?|routes?|links?|feeds?|through|architecture)\b/i.test(
+      copy,
+    )
+  )
+    return "A system needs an explicit connection in the copy.";
+  if (
+    graphic.presentation === "device-evolution" &&
+    !/\b(app|phone|device|screen|wireframe|prototype|design)\b/i.test(copy)
+  )
+    return "Product evolution needs a supplied product or device story.";
   if (Array.from(text).length > 240)
     return "Shorten this scene to 240 characters for an illustrated layout.";
   if (
@@ -107,6 +134,33 @@ export function semanticGraphicIssue(
     )
       return "Choose a symbol that matches its supplied subject.";
   }
+  if (graphic.kind === "hierarchy") {
+    const depths: number[] = [];
+    const literal = (label: string) =>
+      `(?:^|[^\\p{L}\\p{N}])${normalize(label).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=$|[^\\p{L}\\p{N}])`;
+    for (let index = 0; index < graphic.nodes.length; index++) {
+      const node = graphic.nodes[index];
+      if (index === 0) {
+        depths.push(0);
+        continue;
+      }
+      const parentIndex = node.parent ?? 0;
+      depths.push(depths[parentIndex] + 1);
+      if (depths[index] > 2)
+        return "Group a deep organisation into readable scenes with at most three levels.";
+      const parent = graphic.nodes[parentIndex];
+      const forward = new RegExp(
+        `${literal(parent.label)}[^.!?;]{0,120}\\b(?:hires?|leads?|manages?|oversees?|supported by)\\b[^.!?;]{0,180}${literal(node.label)}`,
+        "u",
+      );
+      const reverse = new RegExp(
+        `${literal(node.label)}[^.!?;]{0,120}\\breports? to\\b[^.!?;]{0,120}${literal(parent.label)}`,
+        "u",
+      );
+      if (!forward.test(copy) && !reverse.test(copy))
+        return "Each hierarchy branch needs its supplied parent-child relationship.";
+    }
+  }
   if (
     new Set(graphic.nodes.map((node) => normalize(node.label))).size !==
     graphic.nodes.length
@@ -126,6 +180,13 @@ export function semanticGraphicIssue(
     )
   )
     return "A flow needs an explicit order or relationship in the supplied copy.";
+  if (
+    graphic.kind === "flow" &&
+    graphic.nodes.some((node) =>
+      /\b(?:and\s+)?(?:then|finally)$|[,;:]$/i.test(node.label),
+    )
+  )
+    return "Process labels describe the step, not a trailing narration connector.";
   if (
     graphic.kind === "flow" &&
     ![text, spokenText ?? ""].some((source) => {
@@ -149,6 +210,69 @@ export function inferSemanticGraphic(
   spokenText?: string,
 ): SemanticGraphic | undefined {
   const copy = (spokenText ?? text).trim();
+  const ordered = /\bfirst\b/i.test(copy)
+    ? copy.replace(/^First\s+/i, "").split(/\s*[,;]?\s+\b(?:then|finally)\s+/i)
+    : /\b(app|phone|device|product)\b/i.test(copy) && /\bfrom\b/i.test(copy)
+      ? copy
+          .split(/\bfrom\s+/i)
+          .at(-1)!
+          .split(/\s+(?:and\s+)?(?:finally\s+)?to\s+/i)
+      : [];
+  if (ordered.length >= 2 && ordered.length <= 6) {
+    const labels = ordered.map((label) =>
+      label
+        .replace(/[.!;,]$/, "")
+        .trim()
+        .replace(/^(?:a|an|the|your)\s+/i, ""),
+    );
+    const graphic: SemanticGraphic = {
+      version: 1,
+      kind: "flow",
+      nodes: labels.map((label) => ({
+        label,
+        symbol: symbolForContent(label),
+      })),
+    };
+    if (!semanticGraphicIssue(graphic, text, spokenText)) return graphic;
+  }
+  const naturalStructure =
+    /^(?:an?|the|your)\s+(.{2,32}?)\s+(?:acts as [^,]{1,60},\s+)?(connecting)\s+(.+?)[.!]?$/i.exec(
+      copy,
+    ) ??
+    /^(?:an?|the|your)?\s*(.{2,32}?)\s+[^.!?]{0,80}?\b(supported by|oversees)\s+(.+?)[.!]?$/i.exec(
+      copy,
+    );
+  const structure =
+    naturalStructure ??
+    /^(.{2,40}?)\s+(hires?|leads?|manages?|connects?|routes?|links?)\s+(.+?)[.!]?$/i.exec(
+      copy,
+    );
+  if (structure) {
+    const children = structure[3]
+      .split(/\s*,\s*(?:and\s+)?|\s+and\s+/i)
+      .map((label) => label.trim().replace(/^(?:a|an|the|your)\s+/i, ""))
+      .filter(Boolean);
+    if (
+      children.length >= 2 &&
+      children.length <= 7 &&
+      children.every((label) => label.length <= 32)
+    ) {
+      const kind = /^(hire|lead|manage|oversee|supported)/i.test(structure[2])
+        ? "hierarchy"
+        : "system";
+      const root = structure[1].replace(/^(?:a|an|the|your)\s+/i, "");
+      const graphic: SemanticGraphic = {
+        version: 1,
+        kind,
+        nodes: [root, ...children].map((label, index) => ({
+          label,
+          symbol: symbolForContent(label),
+          ...(kind === "hierarchy" && index ? { parent: 0 } : {}),
+        })),
+      };
+      if (!semanticGraphicIssue(graphic, text, spokenText)) return graphic;
+    }
+  }
   const namedDefinition =
     /^([\p{L}\p{N}][\p{L}\p{N} -]{1,31}),\s*(?:or\s+)?([^,]{3,96}),\s*/u.exec(
       copy,
@@ -347,6 +471,14 @@ export function enrichSemanticSequence<T extends StoryScene>(
       )
     )
       graphic.relationship = "overlap";
+    const structured = inferSemanticGraphic(text, scene.spokenText);
+    if (
+      !graphic &&
+      structured &&
+      ["hierarchy", "system"].includes(structured.kind) &&
+      (!scene.direction?.graphic || scene.direction.graphic.kind === "concept")
+    )
+      graphic = structured;
     graphic ??=
       resolveSemanticGraphic(scene, source) ??
       inferSemanticGraphic(text, scene.spokenText);
@@ -355,12 +487,21 @@ export function enrichSemanticSequence<T extends StoryScene>(
       semanticGraphicIssue(graphic, text, scene.spokenText, source)
     )
       return scene;
+    // Freeze a multi-phase showpiece on new drafts or an explicit replan.
+    // Older saved illustrations remain unchanged until this pass is requested.
+    if (!graphic.relationship)
+      graphic = {
+        ...graphic,
+        presentation:
+          graphic.presentation ??
+          chooseShowpiece(graphic, `${text} ${scene.spokenText ?? ""}`),
+      };
     const direction = {
       version: 1 as const,
       role:
         graphic.kind === "comparison"
           ? ("comparison" as const)
-          : graphic.kind === "flow"
+          : ["flow", "hierarchy", "system"].includes(graphic.kind)
             ? ("diagram" as const)
             : (scene.direction?.role ?? ("explanation" as const)),
       composition: "authored" as const,

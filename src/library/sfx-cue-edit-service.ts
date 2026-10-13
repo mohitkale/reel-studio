@@ -23,7 +23,7 @@ export async function editSfxCue(scriptId: string, input: SfxCueEditRequest) {
     if (body.action === "edit") {
       if (
         body.changes?.offsetSeconds !== undefined &&
-        (cue.event
+        (cue.event || cue.showpieceEvent
           ? Math.abs(body.changes.offsetSeconds) > 2
           : body.changes.offsetSeconds < 0)
       )
@@ -52,7 +52,10 @@ export async function editSfxCue(scriptId: string, input: SfxCueEditRequest) {
         state.cues.splice(
           Math.min(body.index, state.cues.length),
           0,
-          ...buildAutomaticSfxCues([toSceneDTO(scene)], script.hideText),
+          ...buildAutomaticSfxCues(
+            script.scenes.map(toSceneDTO),
+            script.hideText,
+          ).filter((candidate) => candidate.sceneId === cue.sceneId),
         );
       }
     }

@@ -1,4 +1,5 @@
 import { DESIGN_MOTION_BOOT } from "../motion/design-blocks";
+import { SHOWPIECE_BOOT } from "../motion/showpiece-blocks";
 import { SEMANTIC_GRAPHIC_BOOT } from "../motion/semantic-blocks";
 import { escapeHtml } from "@/lib/html";
 import { MOTION_LIBRARY_TIMING } from "@/video/motion-library";
@@ -1216,7 +1217,8 @@ export function buildGsapMotionBootScript(
       }
 
       ${DESIGN_MOTION_BOOT}
-      ${SEMANTIC_GRAPHIC_BOOT}
+      ${SHOWPIECE_BOOT}
+${SEMANTIC_GRAPHIC_BOOT}
 
       // Recipe-specific backgrounds
       if (recipe === 'void-slash') {

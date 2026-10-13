@@ -1,6 +1,10 @@
 import { defaultSfxForTemplate, type SfxCue } from "@/lib/sfx-library";
 import type { SceneDTO } from "@/lib/dto";
 import { resolveMotionDirection } from "@/production/motion";
+import {
+  resolveSemanticGraphic,
+  semanticStorySource,
+} from "@/production/semantic-direction";
 
 /**
  * Sparse, under-the-VO cue map.
@@ -36,6 +40,39 @@ export function buildAutomaticSfxCues(
 ): SfxCue[] {
   return scenes.flatMap((scene) => {
     if (scene.hideText ?? hideText) return [];
+    const graphic = resolveSemanticGraphic(
+      { ...scene, spokenText: scene.spokenText ?? undefined },
+      semanticStorySource(scenes),
+    );
+    if (graphic?.presentation)
+      return [
+        {
+          sceneId: scene.id,
+          sfxId: "pop" as const,
+          offsetSeconds: 0,
+          volume: 0.06,
+          source: "automatic" as const,
+          showpieceEvent: {
+            version: 1 as const,
+            presentation: graphic.presentation,
+            subjectIndex: Math.min(1, graphic.nodes.length - 1),
+            moment: "arrive" as const,
+          },
+        },
+        {
+          sceneId: scene.id,
+          sfxId: "swipe" as const,
+          offsetSeconds: 0,
+          volume: 0.07,
+          source: "automatic" as const,
+          showpieceEvent: {
+            version: 1 as const,
+            presentation: graphic.presentation,
+            subjectIndex: graphic.nodes.length - 1,
+            moment: "resolve" as const,
+          },
+        },
+      ];
     const motion = resolveMotionDirection(
       scene.motion,
       scene.text,

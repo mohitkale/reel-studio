@@ -55,7 +55,15 @@ it("automatically persists whole-story subjects on creation and restores the exa
         roles: fixture.scenes.map(() => "explanation"),
       },
     );
+    const { ensureSfxCues } = await import("./sfx-service");
+    const { parseSfxState } = await import("@/lib/sfx-cues");
+    await ensureSfxCues(created.scriptId);
     const script = (await getScript(created.scriptId))!;
+    expect(
+      parseSfxState(script.sfxJson).cues.some((cue) =>
+        Boolean(cue.showpieceEvent),
+      ),
+    ).toBe(true);
     expect(
       script.scenes[0].direction?.graphic?.nodes.map((node) => [
         node.label,
@@ -81,6 +89,11 @@ it("automatically persists whole-story subjects on creation and restores the exa
       await captureVideoSnapshot(created.scriptId),
     );
     const copy = (await getScript(restored.scriptId))!;
+    expect(
+      parseSfxState(copy.sfxJson).cues.map((cue) => cue.showpieceEvent),
+    ).toEqual(
+      parseSfxState(script.sfxJson).cues.map((cue) => cue.showpieceEvent),
+    );
     expect(copy.scenes.map((scene) => scene.direction)).toEqual(
       script.scenes.map((scene) => scene.direction),
     );

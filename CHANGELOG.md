@@ -35,6 +35,16 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- Six automatic story-motion showpieces: Depth reveal, Orbit & compare,
+  Growing hierarchy, Signal architecture, Work in motion and Product evolution.
+  Dimensional scenes develop over the narration beat, with shared subject
+  identities, vector action and sparse event-timed sound accents. The gallery
+  includes live previews with sound; existing treatments and layouts remain.
+- Natural team/system narration produces connected structures, with bounded
+  parent relationships and source-grounded process labels. Prepared renders
+  retain measured word text and explicit SFX fades; revisions and sound editing
+  preserve the new frozen direction and cues.
+
 - Automatic concept, comparison, overlap and process illustrations with semantic vector
   subjects, source-grounded labels and continuity across story definitions.
   Complete beats and concise headlines replace the default long sequence of

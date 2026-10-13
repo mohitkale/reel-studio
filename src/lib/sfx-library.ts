@@ -1,4 +1,5 @@
 import type { MotionEvent } from "@/production/motion-events";
+import type { ShowpieceEvent } from "@/video/semantic-graphic";
 
 /**
  * Bundled SFX starter pack (CC0 / public domain via scripts/generate-sfx.mjs).
@@ -121,6 +122,7 @@ export interface SfxCue {
   locked?: boolean;
   /** Offset becomes a trim relative to this visual event, after peak alignment. */
   event?: MotionEvent;
+  showpieceEvent?: ShowpieceEvent;
 }
 
 export interface ScriptSfxState {

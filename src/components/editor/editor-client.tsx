@@ -280,6 +280,7 @@ export function EditorClient({
           script?.captionTracks,
           takeUsable ? selectedTake?.id : null,
           fps,
+          script?.scenes.some((scene) => Boolean(scene.direction?.graphic?.presentation)) ?? false,
         ),
         timeline,
         fps,
@@ -990,7 +991,7 @@ export function EditorClient({
                   musicUrl={script.musicUrl ?? undefined}
                   musicVolume={script.musicVolume}
                   sfxCues={sfxCues}
-                  spokenWords={resolveSpokenWordWindows(script.captionTracks, takeUsable ? selectedTake?.id : null, fps)}
+                  spokenWords={resolveSpokenWordWindows(script.captionTracks, takeUsable ? selectedTake?.id : null, fps, scenes.some(scene => Boolean(scene.direction?.graphic?.presentation)))}
                   captions={script.captionTracks?.find(
                     (track) => track.enabled,
                   )}

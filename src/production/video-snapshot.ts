@@ -190,6 +190,7 @@ export const preparedVideoCompositionSchema = z
       spokenWords: z
         .array(
           z.object({
+            text: z.string().optional(),
             startFrame: z.number().int().nonnegative(),
             endFrame: z.number().int().positive(),
           }),
@@ -208,6 +209,7 @@ export const preparedVideoCompositionSchema = z
             url: z.string(),
             startFrame: z.number().int().nonnegative(),
             volume: z.number(),
+            fadeSeconds: z.number().finite().min(0).max(2).optional(),
           }),
         )
         .optional(),

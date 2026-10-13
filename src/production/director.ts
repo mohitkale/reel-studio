@@ -261,7 +261,7 @@ export function directScene(
     finalRole =
       graphic.kind === "comparison"
         ? "comparison"
-        : graphic.kind === "flow"
+        : ["flow", "hierarchy", "system"].includes(graphic.kind)
           ? "diagram"
           : finalRole;
     direction.role = finalRole;

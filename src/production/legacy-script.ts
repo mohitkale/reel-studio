@@ -267,7 +267,7 @@ export function productionSpecFromLegacyScript(
       };
     }),
     narration: {
-      measuredWords: resolveSpokenWordWindows(script.captionTracks, resolved.takeUsable ? take?.id : null, script.fps),
+      measuredWords: resolveSpokenWordWindows(script.captionTracks, resolved.takeUsable ? take?.id : null, script.fps, script.scenes.some(scene => Boolean(scene.direction?.graphic?.presentation))),
       mode: script.voiceMode,
       readiness: narrationReadiness(take, resolved.takeUsable),
       takeId: take?.id,

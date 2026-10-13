@@ -129,6 +129,54 @@ dependencies or models were installed. Reports, probes, hashes and screenshots
 remain in ignored local artifacts. This feature batch still requires merged-main
 platform CI and applicable release gates; stable remains v0.4.0.
 
+## Local story-motion audit
+
+The unreleased `feature/content-relevant-motion-system` branch adds six
+multi-phase story motion showpieces: depth reveal, independent comparison,
+growing hierarchy, signal architecture, work handoff and device evolution.
+New drafts select these from grounded copy/narration; existing frozen directions
+retain their render path. The gallery includes playable examples with sound.
+Relative sound cues share picture landmarks and preserve manual/locked priority.
+
+The broader local suite passed 181 files / 903 tests. Final direction-review
+changes then passed 17 affected tests, including natural organisation clauses,
+literal parent identity and comparison scenes without workflow links. Another
+19 boundary tests covered preparation, orchestration and sound-cue persistence.
+Typecheck, lint, secret scan and the production build passed. No tests, required
+checks or workflows were removed or weakened.
+
+The six-scene matrix passed preview/producer parity, reverse seeking, complete
+copy/bounds and continuing action in portrait, landscape and square, with actual
+48-second exports and decoded music/SFX. Final targeted exports cover revised
+hierarchy geometry, document handoffs, independent comparisons and a three-level
+eight-actor stress case. Together these produced 15 actual MP4s / 240 seconds.
+Exported frames were inspected; decoded audio was audible, finite and unclipped.
+All 23 existing treatments also passed three-format preview checks. Three fresh
+exports of the previous eight-scene illustration matrix preserved all 48 sampled
+decoded frames byte for byte against the prior accepted implementation.
+
+One live Gemini request for an illustrative software team succeeded in the
+browser. The resulting six-scene draft was locally replanned after its executive
+and API narratives initially collapsed to single concepts. Natural-language
+structure and process-label fixes preserved all source copy/narration. Fresh
+server/worker code produced eight audible sound cues. Two real editor exports
+completed at 1080 × 1920, 30 FPS, 33.9 seconds; the final export also verifies
+explicit event fades across the prepared-composition boundary. Its four
+illustrated decoded frames match the inspected earlier editor export.
+
+These exports had music/effects and estimated speech timing, with no narrated
+voice take. Measured-word alignment has regression coverage; this audit does not
+claim new live voice-provider acoustic acceptance. Hierarchies remain bounded
+to eight actors/three levels; this reusable vocabulary does not reproduce a
+bespoke 52-actor environment or full cinematic film. No new assets, dependencies
+or models were installed; artwork/choreography are original app code and sound
+uses existing bundled assets. Reports, hashes and screenshots remain in ignored
+local verification artifacts.
+
+Fresh GitHub assessment found stable v0.4.0 and one documentation-only commit
+on `main` since that release. The feature branch still needs merged-main platform
+CI and applicable release gates before publication; no release was published.
+
 ## Before the next release
 
 Follow [release policy](../../AI_GUIDELINES.md#release-policy). Release a coherent

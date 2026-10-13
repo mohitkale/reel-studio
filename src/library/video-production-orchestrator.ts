@@ -405,8 +405,8 @@ export async function executeVideoProductionJob(
     const prepared = await stage(
       "prepare_composition",
       {
-        // Version 4 preserves narration as source context for semantic illustrations.
-        compositionContract: 4,
+        // Version 6 retains measured word labels and explicit event fades for picture/sound landmarks.
+        compositionContract: 6,
         media: { ...media, snapshot: snapshotWithAudio },
         timing,
         orientation: input.orientation,

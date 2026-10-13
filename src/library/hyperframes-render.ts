@@ -543,6 +543,9 @@ export async function runHyperframesRender(
           script.captionTracks,
           resolved.takeUsable ? take?.id : null,
           script.fps,
+          script.scenes.some((scene) =>
+            Boolean(scene.direction?.graphic?.presentation),
+          ),
         ),
         timeline: resolved.timeline,
         fps: script.fps,
@@ -578,6 +581,9 @@ export async function runHyperframesRender(
         script.captionTracks,
         resolved.takeUsable ? take?.id : null,
         script.fps,
+        script.scenes.some((scene) =>
+          Boolean(scene.direction?.graphic?.presentation),
+        ),
       ),
       width: nativeDims.width,
       height: nativeDims.height,

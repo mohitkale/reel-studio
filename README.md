@@ -20,8 +20,10 @@ _Demo: real v0.4.0 screens and a locally rendered export. [Watch the full sample
 
 ## What you can make
 
-- **Videos:** six visual presets, sixteen authored motion treatments, your own
-  screenshots or footage, and portrait **9:16**, landscape **16:9**, or square **1:1** output.
+- **Videos:** six visual presets, 23 motion treatments and six
+  [story motion showpieces](docs/MOTION_LIBRARY.md#story-motion-showpieces)
+  chosen from your content, plus your own screenshots or footage. Export
+  portrait **9:16**, landscape **16:9**, or square **1:1**.
 - **Voiceovers and captions:** optional local Kokoro, configurable voice providers,
   editable captions, and SRT/VTT import and export.
 - **Podcasts:** solo, two-host, or interview scripts; reusable speech turns;

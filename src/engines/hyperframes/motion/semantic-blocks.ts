@@ -8,6 +8,12 @@ import type { MotionBlockArgs } from "./registered-blocks";
 
 /** Original schematic artwork. Paths convey the named subject; no fabricated UI text or data. */
 const ART: Record<SemanticGraphic["nodes"][number]["symbol"], string> = {
+  agent:
+    '<path d="M50 7v10M46 7h8M18 24h64v54H18ZM10 38v25m80-25v25M31 88h38"/><rect x="25" y="32" width="50" height="32" rx="7"/><path d="M35 46h5m20 0h5M40 58h20"/>',
+  cloud:
+    '<path d="M24 49a18 18 0 0 1-1-36 27 27 0 0 1 50 9 17 17 0 0 1 3 33H25M50 57v14M24 70h52M24 70v12m52-12v12"/><rect x="12" y="83" width="24" height="12" rx="3"/><rect x="64" y="83" width="24" height="12" rx="3"/>',
+  device:
+    '<rect x="27" y="5" width="46" height="90" rx="8"/><path d="M39 13h22M37 29h26M37 37h18M37 53h26M37 61h26M37 69h16M43 85h14"/>',
   search:
     '<rect x="8" y="12" width="70" height="65" rx="5"/><path d="M8 27h70M18 20h3m5 0h3M19 39h30M19 46h40M19 60h20M19 67h28"/><circle cx="71" cy="69" r="15"/><path d="m82 80 12 12"/>',
   answer:
@@ -32,7 +38,9 @@ const ART: Record<SemanticGraphic["nodes"][number]["symbol"], string> = {
     '<rect x="7" y="17" width="86" height="65" rx="5"/><path d="m40 34 25 16-25 16ZM7 27h86M18 17v10m16-10v10m16-10v10m16-10v10m16-10v10"/>',
   none: '<circle cx="50" cy="50" r="28"/><path d="M22 50h56M50 22v56"/>',
 };
-function art(symbol: SemanticGraphic["nodes"][number]["symbol"]): string {
+export function semanticArt(
+  symbol: SemanticGraphic["nodes"][number]["symbol"],
+): string {
   return `<svg class="sg-art" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ART[symbol].replace(/<(path|rect|circle)\b/g, '<$1 pathLength="1"')}</svg>`;
 }
 export function buildSemanticScene(
@@ -45,7 +53,7 @@ export function buildSemanticScene(
   const nodes = semanticGraphicCaptions(scene.text, graphic)
     .map(
       (node, index) =>
-        `<div class="sg-node" data-subject="${escapeHtml(node.label)}" data-symbol="${node.symbol}">${graphic.relationship ? '<i class="sg-region" aria-hidden="true"></i>' : ""}${art(node.symbol)}<div class="sg-node-copy"><h3 class="sg-label">${escapeHtml(node.label)}</h3>${node.detail ? `<p class="sg-detail">${escapeHtml(node.detail)}</p>` : ""}</div>${graphic.kind === "flow" && index < graphic.nodes.length - 1 ? '<span class="sg-arrow" aria-hidden="true">→</span>' : ""}</div>`,
+        `<div class="sg-node" data-subject="${escapeHtml(node.label)}" data-symbol="${node.symbol}">${graphic.relationship ? '<i class="sg-region" aria-hidden="true"></i>' : ""}${semanticArt(node.symbol)}<div class="sg-node-copy"><h3 class="sg-label">${escapeHtml(node.label)}</h3>${node.detail ? `<p class="sg-detail">${escapeHtml(node.detail)}</p>` : ""}</div>${graphic.kind === "flow" && index < graphic.nodes.length - 1 ? '<span class="sg-arrow" aria-hidden="true">→</span>' : ""}</div>`,
     )
     .join("");
   return `<section id="scene-${escapeHtml(scene.id)}" class="clip scene motion-scene ${args.transitionClass}" data-scene-id="${escapeHtml(scene.id)}" data-start="${args.absoluteStart.toFixed(3)}" data-duration="${args.duration.toFixed(3)}" data-track-index="1" data-exit-window="${args.exitWindow.toFixed(3)}" style="--accent:${escapeHtml(tokens.accent)};--accent-2:${escapeHtml(tokens.accentSecondary)}">
