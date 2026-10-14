@@ -15,6 +15,13 @@ or use Create production, which works without an AI key. The local planner
 arranges supplied content rather than expanding an instruction into new copy.
 Use AI when you want a topic explained or an idea developed.
 
+AI drafts choose a content-matched colour palette automatically. For branded
+work, select a saved kit under **Customize style and media → Colour palette**.
+The default kit does not override Automatic colours. Lunar and seasonal stories
+can use animated phases, a seasonal wheel and orbital rhythms, with a shared
+celestial atmosphere across compatible text beats. These are illustrations,
+not calculated moon dates or astronomical forecasts.
+
 Create production starts with content and lets you build immediately. Its
 optional customization steps expose full-source voiceover, chaptered output,
 visual presets, brand kits, media, and one-take/per-scene narration workflows.

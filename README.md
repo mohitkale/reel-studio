@@ -20,7 +20,7 @@ _Demo: real v0.4.0 screens and a locally rendered export. [Watch the full sample
 
 ## What you can make
 
-- **Videos:** six visual presets, 23 motion treatments and six
+- **Videos:** six visual presets, 23 motion treatments and nine
   [story motion showpieces](docs/MOTION_LIBRARY.md#story-motion-showpieces)
   chosen from your content, plus your own screenshots or footage. Export
   portrait **9:16**, landscape **16:9**, or square **1:1**.

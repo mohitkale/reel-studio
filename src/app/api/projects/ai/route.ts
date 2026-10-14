@@ -39,6 +39,7 @@ import { runProductionWorkerOnce } from "@/library/production-worker";
 import { executeProductionJob } from "@/library/production-job-executor";
 import { directorBudgetSchema } from "@/video/shot-direction";
 import { resolveCreativeDirection } from "@/production/creative-direction";
+import { getBrandKit } from "@/library/repositories/brandkits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,6 +61,8 @@ const bodySchema = z.object({
   /** "auto" lets the AI choose; otherwise lock Energy. */
   energy: z.enum(["auto", "calm", "normal", "high"]).optional(),
   visualAmbition: visualAmbitionSchema.default("expressive"),
+  /** Automatic colour direction unless a brand is explicitly selected. */
+  brandKitId: z.string().trim().min(1).max(120).nullable().default(null),
   productionPresetId: productionPresetIdSchema
     .or(z.literal("auto"))
     .default("auto"),
@@ -73,6 +76,8 @@ const bodySchema = z.object({
 export async function POST(req: Request) {
   try {
     const body = parseClientInput(bodySchema, await readRequestJson(req));
+    if (body.brandKitId && !(await getBrandKit(body.brandKitId)))
+      throw new AIError("The selected brand kit no longer exists.", 404);
     if (body.quickProduce && body.idempotencyKey) {
       const duplicate = await getProductionJobByIdempotencyKey(
         body.idempotencyKey,
@@ -205,6 +210,7 @@ export async function POST(req: Request) {
       visualStyle,
       {
         visualTheme: creative.theme,
+        brandKitId: body.brandKitId,
         preset: {
           id: presetId,
           version: preset.version,

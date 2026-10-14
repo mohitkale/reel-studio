@@ -70,6 +70,7 @@ export function prepareVideoComposition(
       role: s.role,
       motion: s.motion,
       direction: s.direction,
+      locks: s.locks,
       // Per-scene override wins; otherwise the script-wide default.
       hideText: s.hideText ?? script.hideText,
       mood: s.mood as ReelScene["mood"],

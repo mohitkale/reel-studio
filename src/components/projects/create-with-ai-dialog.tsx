@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import type { AIProviderId, ScriptStyle } from "@/providers/ai/types";
 import { useAIProviders, useGenerateProject } from "@/hooks/ai";
+import { useBrandKits } from "@/hooks/brandkits";
 import {
   type Orientation,
   ORIENTATIONS,
@@ -60,6 +61,8 @@ export function CreateWithAIDialog({
   const router = useRouter();
   const { data: providers } = useAIProviders();
   const generate = useGenerateProject();
+  const { data: brandKits = [] } = useBrandKits();
+  const [brandKitId, setBrandKitId] = React.useState("");
 
   const [open, setOpen] = React.useState(false);
   const [mode, setMode] = React.useState<"idea" | "story">("idea");
@@ -119,6 +122,7 @@ export function CreateWithAIDialog({
         productionPresetId,
         mediaPreference,
         visualAmbition,
+        brandKitId: brandKitId || null,
         ...(quickProduce
           ? {
               idempotencyKey: `quick-produce:${crypto.randomUUID()}`,
@@ -288,7 +292,7 @@ export function CreateWithAIDialog({
                 </NativeSelect>
                 <p className="text-muted-foreground text-xs">
                   {productionPresetId === "auto"
-                    ? "Choose a coherent theme, pacing and layouts for your topic. Custom brand kits keep their colours."
+                    ? "Match the theme, pacing and layouts to your topic. Choose brand colours under Customize style and media."
                     : PRODUCTION_PRESETS.find(
                         (preset) => preset.id === productionPresetId,
                       )?.description}
@@ -354,6 +358,26 @@ export function CreateWithAIDialog({
                 Customize style and media
               </summary>
               <div className="mt-4 space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="ai-brand-kit">Colour palette</Label>
+                  <NativeSelect
+                    id="ai-brand-kit"
+                    value={brandKitId}
+                    onChange={(event) => setBrandKitId(event.target.value)}
+                    disabled={generate.isPending}
+                  >
+                    <option value="">Automatic · match my content</option>
+                    {brandKits.map((kit) => (
+                      <option key={kit.id} value={kit.id}>
+                        {kit.name}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                  <p className="text-muted-foreground text-xs">
+                    Automatic uses the story’s palette. A selected brand kit
+                    keeps its colours.
+                  </p>
+                </div>
                 <VisualAmbitionControl
                   id="ai-visual-ambition"
                   value={visualAmbition}

@@ -138,7 +138,7 @@ production behavior. See [story motion](MOTION_LIBRARY.md#story-motion-showpiece
 
 ## Verification
 
-`node --import tsx scripts/verify-showpieces.mjs` checks all six showpieces in
+`node --import tsx scripts/verify-showpieces.mjs` checks all nine showpieces in
 three formats and exports actual MP4s with the bundled music/effects. It samples
 multiple phases, checks visible copy and container bounds, reverse seeking,
 preview/producer parity and decoded audio. `--stress` verifies a three-level,

@@ -9,6 +9,7 @@ export const VISUAL_THEME_IDS = [
   "studio",
   "signal",
   "ember",
+  "celestial",
 ] as const;
 const hex = z.string().regex(/^#[0-9a-f]{6}$/i);
 export const visualThemeSchema = z
@@ -63,6 +64,15 @@ function theme(
 
 /** Curated readable themes, chosen once and frozen with the draft. No generated CSS. */
 export const VISUAL_THEMES = {
+  celestial: theme("celestial", "Celestial almanac", [
+    "#161A2C",
+    "#252C46",
+    "#F4EFE4",
+    "#BAC2D7",
+    "#E8C98A",
+    "#A8B6E8",
+    "#161A2C",
+  ]),
   paper: theme("paper", "Paper & ink", [
     "#F5F0E6",
     "#E7DFD0",
@@ -125,6 +135,10 @@ export function resolveCreativeDirection(
   presetId?: ProductionPresetId,
 ) {
   const text = brief.toLowerCase();
+  const celestial =
+    /\b(moon|lunar|celestial|cosmos|astronomy|solstice|equinox)\b|wheel of the year/.test(
+      text,
+    );
   const data = /(?:^|\n)\s*[^:\n]{2,60}:\s*\d+(?:\.\d+)?\s*%?\s*(?:$|\n)/m.test(
     text,
   );
@@ -163,25 +177,27 @@ export function resolveCreativeDirection(
             : punch
               ? "creator-punch"
               : "editorial-explainer");
-  const id: VisualTheme["id"] = nature
-    ? "botanical"
-    : technologyTopic || data
-      ? "circuit"
-      : launch
-        ? "studio"
-        : cinema
-          ? "ember"
-          : punch
-            ? "signal"
-            : preset === "developer-demo" || preset === "data-story"
-              ? "circuit"
-              : preset === "product-launch"
-                ? "studio"
-                : preset === "creator-punch"
-                  ? "signal"
-                  : preset === "cinematic-brand"
-                    ? "ember"
-                    : "paper";
+  const id: VisualTheme["id"] = celestial
+    ? "celestial"
+    : nature
+      ? "botanical"
+      : technologyTopic || data
+        ? "circuit"
+        : launch
+          ? "studio"
+          : cinema
+            ? "ember"
+            : punch
+              ? "signal"
+              : preset === "developer-demo" || preset === "data-story"
+                ? "circuit"
+                : preset === "product-launch"
+                  ? "studio"
+                  : preset === "creator-punch"
+                    ? "signal"
+                    : preset === "cinematic-brand"
+                      ? "ember"
+                      : "paper";
   return { presetId: preset, theme: VISUAL_THEMES[id] };
 }
 

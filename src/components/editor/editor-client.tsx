@@ -205,6 +205,7 @@ export function EditorClient({
         role: s.role,
         motion: s.motion,
         direction: s.direction,
+        locks: s.locks,
         // Per-scene override wins; otherwise the script-wide default.
         hideText: s.hideText ?? script?.hideText,
         mood: s.mood as ReelScene["mood"],
@@ -233,6 +234,7 @@ export function EditorClient({
             role: selectedScene.role,
             motion: selectedScene.motion,
             direction: selectedScene.direction,
+            locks: selectedScene.locks,
             hideText: selectedScene.hideText ?? script?.hideText,
             mood: selectedScene.mood as ReelScene["mood"],
             order: selectedScene.order,

@@ -62,7 +62,11 @@ export function ShowpiecePreviewCard({ index }: { index: number }) {
             loop
             tokens={applyVisualTheme(
               defaultBrandTokens,
-              index === 4 ? VISUAL_THEMES.paper : VISUAL_THEMES.circuit,
+              index >= 6
+                ? VISUAL_THEMES.celestial
+                : index === 4
+                  ? VISUAL_THEMES.paper
+                  : VISUAL_THEMES.circuit,
             )}
             sfxCues={sfxCues}
           />

@@ -8,6 +8,12 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- AI creation uses the content palette by default instead of silently inheriting
+  the saved default brand. Explicit brand kits remain available in the creation
+  dialog and keep their colours; existing projects retain saved designs.
+- Lunar/calendar and celestial subjects receive animated phases, seasonal wheels
+  and orbital illustrations with a Celestial almanac palette.
+
 - Create with AI aligns the Visual direction and Orientation controls at the
   same height. Development AI provider factories refresh after prompt/schema
   changes instead of retaining stale closures.

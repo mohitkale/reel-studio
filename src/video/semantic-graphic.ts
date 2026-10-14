@@ -16,6 +16,9 @@ export const GRAPHIC_SYMBOLS = [
   "agent",
   "cloud",
   "device",
+  "moon",
+  "cycle",
+  "orbit",
   "none",
 ] as const;
 
@@ -55,6 +58,24 @@ export const SHOWPIECES = [
     name: "Product evolution",
     description:
       "One dimensional device carries the supplied stages from draft to result.",
+  },
+  {
+    id: "lunar-cycle",
+    name: "Lunar phases",
+    description:
+      "A shaded moon develops through an illustrative phase cycle, with a persistent phase rail.",
+  },
+  {
+    id: "year-cycle",
+    name: "Seasonal wheel",
+    description:
+      "A layered almanac dial unfolds into a rotating cycle with botanical details.",
+  },
+  {
+    id: "sky-orbit",
+    name: "Orbital rhythms",
+    description:
+      "A constellation assembles inside moving orbital paths, with a stable central focus.",
   },
 ] as const;
 export const showpieceIdSchema = z.enum(SHOWPIECES.map((piece) => piece.id));

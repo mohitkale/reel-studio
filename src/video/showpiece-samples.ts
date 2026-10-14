@@ -96,6 +96,37 @@ const samples: Array<{
       ],
     },
   },
+  {
+    id: "lunar-cycle",
+    text: "Track moon phases for intention setting.",
+    spokenText: "Track the moon phases to set intentions.",
+    graphic: {
+      version: 1,
+      kind: "concept",
+      nodes: [{ label: "moon phases", symbol: "moon" }],
+    },
+  },
+  {
+    id: "year-cycle",
+    text: "Understand the Wheel of the Year's cycles.",
+    spokenText: "Understand the Wheel of the Year's ancient cycles.",
+    graphic: {
+      version: 1,
+      kind: "concept",
+      nodes: [{ label: "Wheel of the Year", symbol: "cycle" }],
+    },
+  },
+  {
+    id: "sky-orbit",
+    text: "Align your life with celestial rhythms.",
+    spokenText:
+      "Imagine aligning your life with the natural rhythms of the cosmos.",
+    graphic: {
+      version: 1,
+      kind: "concept",
+      nodes: [{ label: "celestial rhythms", symbol: "orbit" }],
+    },
+  },
 ];
 export const SHOWPIECE_SAMPLES: ReelScene[] = samples.map((sample, order) => ({
   id: `showpiece-${sample.id}`,

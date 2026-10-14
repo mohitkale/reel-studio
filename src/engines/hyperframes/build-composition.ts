@@ -82,6 +82,11 @@ import {
 } from "./motion/showpiece-blocks";
 import { semanticStorySource } from "@/production/semantic-direction";
 import {
+  CELESTIAL_STYLES,
+  decorateCelestialType,
+} from "./motion/celestial-blocks";
+import { resolveSemanticGraphic } from "@/production/semantic-direction";
+import {
   resolveCaptionRenderStyle,
   splitCaptionText,
   splitCaptionWords,
@@ -971,6 +976,25 @@ export function buildHyperframesCompositionHtml(
   const beats: Array<{ id: string; start: number; duration: number }> = [];
   const sceneBlocks: string[] = [];
   const storySource = props.storySource ?? semanticStorySource(props.scenes);
+  const celestialStory =
+    props.scenes.some((scene) =>
+      ["lunar-cycle", "year-cycle", "sky-orbit"].includes(
+        resolveSemanticGraphic(scene, storySource)?.presentation ?? "",
+      ),
+    ) &&
+    /\b(moon|lunar|cosmos|celestial)\b|wheel of the year/i.test(storySource);
+  const atmosphereSceneIds = new Set(
+    props.scenes
+      .filter(
+        (scene) =>
+          !scene.locks?.scene &&
+          !scene.visual &&
+          !scene.chart &&
+          !scene.items?.length &&
+          !scene.background?.url,
+      )
+      .map((scene) => scene.id),
+  );
   const videoBlocks: string[] = [];
   const timeline = props.timeline as ReelBeat[];
 
@@ -1243,7 +1267,7 @@ export function buildHyperframesCompositionHtml(
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reel Studio · HyperFrames</title>
   <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}${TYPE_MOTION_STYLES}
-${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLES}${REGISTERED_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_MOTION_STYLES}${STORY_MOTION_STYLES}${MOTION_LIBRARY_STYLES}
+${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLES}${REGISTERED_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_MOTION_STYLES}${STORY_MOTION_STYLES}${MOTION_LIBRARY_STYLES}
     .rs-subtitle{position:absolute;z-index:50;inset:0;box-sizing:border-box;display:flex;flex-direction:column;justify-content:${captionResolved.outer.justifyContent};align-items:${captionResolved.outer.alignItems};padding:${captionResolved.outer.paddingTop}px ${captionResolved.outer.paddingRight}px ${captionResolved.outer.paddingBottom}px ${captionResolved.outer.paddingLeft}px;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
     .rs-subtitle>span{display:block;max-width:${captionInner.maxWidth}px;padding:${captionInner.padding};border-radius:${captionInner.borderRadius}px;background:${captionInner.background};color:${captionInner.color};font-family:${cssFontStack(captionInner.fontFamily)};font-weight:${captionInner.fontWeight};line-height:${captionInner.lineHeight};letter-spacing:${captionInner.letterSpacing};text-align:${captionInner.textAlign};text-shadow:${captionInner.textShadow};${captionInner.WebkitTextStroke ? `-webkit-text-stroke:${captionInner.WebkitTextStroke};` : ""}overflow-wrap:anywhere}
     .rs-caption-line{display:block}.rs-caption-word{display:inline-block;position:relative}.rs-caption-active{position:absolute;inset:0;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
@@ -1271,7 +1295,21 @@ ${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLES}${REGISTERED_MOTION_STYLES}${DATA_M
       ${coverBlock}
       ${progress}
       ${videoBlocks.join("\n")}
-      ${sceneBlocks.map((block, index) => block.replace(/(<section\b[^>]*>)([\s\S]*)(<\/section>\s*)$/, (_, open: string, body: string, close: string) => `${open}${open.includes("data-motion-recipe=") ? '<div class="ml-backplate" aria-hidden="true"></div>' : ""}<div class="scene-handoff" style="--handoff:${index === 0 ? "1" : "0"}" data-first-scene="${index === 0 ? "1" : "0"}">${body}</div>${close}`)).join("\n")}
+      ${sceneBlocks
+        .map((block) => {
+          const id = /data-scene-id="([^"]+)"/.exec(block)?.[1];
+          return celestialStory && id && atmosphereSceneIds.has(id)
+            ? decorateCelestialType(block)
+            : block;
+        })
+        .map((block, index) =>
+          block.replace(
+            /(<section\b[^>]*>)([\s\S]*)(<\/section>\s*)$/,
+            (_, open: string, body: string, close: string) =>
+              `${open}${open.includes("data-motion-recipe=") ? '<div class="ml-backplate" aria-hidden="true"></div>' : ""}<div class="scene-handoff" style="--handoff:${index === 0 ? "1" : "0"}" data-first-scene="${index === 0 ? "1" : "0"}">${body}</div>${close}`,
+          ),
+        )
+        .join("\n")}
       ${captionBlocks}
       ${audioTags.join("\n")}
     </div>

@@ -177,6 +177,54 @@ Fresh GitHub assessment found stable v0.4.0 and one documentation-only commit
 on `main` since that release. The feature branch still needs merged-main platform
 CI and applicable release gates before publication; no release was published.
 
+## Local AI colour and celestial-motion audit — 2026-10-14
+
+The unreleased `feature/content-relevant-motion-system` work fixes Automatic AI
+colours being masked by a customised default brand kit. Explicit kit selection
+remains authoritative; real SQLite regression coverage checks both cases. The
+user's 28 original projects, 28 scripts, 233 scenes and two brand kits remain
+identical to the backup.
+
+Three new native showpieces bring the story library to nine: lunar phases,
+seasonal wheel and orbital rhythms. Nine actual eight-second MP4s cover all
+three in portrait, landscape and square (72 seconds total). Checks passed for
+complete copy, text bounds/overlap, continued motion, reverse seeking,
+preview/producer parity, zero external requests and audible, unclipped decoded
+music/effects. Their exported frames were inspected. Compatible text beats
+also carry a shared celestial atmosphere; three-format preview/producer checks
+and persisted-lock regression coverage protect locked scenes and authored
+media/data. Legacy reels without this new direction keep their previous design.
+
+The tech reference previously lived only in a QA database. It and two calendar
+examples now appear in the active app's Projects list. Browser checks confirm
+aligned creation controls and the Automatic/explicit palette selector. Two live
+Gemini requests returned successful drafts. The first development request
+exposed stale creative-planner imports; a fresh production build produced the
+accepted AI example with Celestial almanac colours, seasonal/lunar showpieces,
+and no manual replanning. The first draft was retained unchanged. Illustrations
+do not calculate astronomical events; prompt guidance prohibits invented dates.
+
+Two fresh editor exports completed through the normal durable worker at
+1080 × 1920, 30 FPS: the accepted AI calendar (39.9 seconds) and the imported
+tech example (33.9 seconds). Both play in the app and have named download cards.
+Eighteen decoded frames were inspected; H.264/AAC, dimensions, frame rate and
+finite, audible, unclipped audio were verified. The new tech export matches
+the current editor identity instead of relying solely on the earlier reference
+movie. The landscape calendar example preserves the original source copy in
+a separate editable project; it is available as a preview, not a new full export.
+
+The final full suite passed 181 files / 907 tests; affected regressions also
+passed 22 tests across six files. A sandboxed rerun encountered file-watch/process
+inspection restrictions and an audio timeout; the unchanged suite passed with
+the required process permissions. The final production build, typecheck, lint
+and secret scan passed. No new dependencies,
+assets or models were downloaded. These checks use music/effects and estimated
+speech timing; they do not establish new voice-provider acoustic acceptance.
+
+Stable remains v0.4.0, with one documentation-only commit on `main` since the
+release. These feature changes need merged-main platform CI and the applicable
+release gates before publication; no release was published.
+
 ## Before the next release
 
 Follow [release policy](../../AI_GUIDELINES.md#release-policy). Release a coherent

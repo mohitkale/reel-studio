@@ -5,6 +5,12 @@ export function chooseShowpiece(
   graphic: SemanticGraphic,
   copy: string,
 ): ShowpieceId {
+  if (graphic.kind === "concept" && graphic.nodes[0].symbol === "moon")
+    return "lunar-cycle";
+  if (graphic.kind === "concept" && graphic.nodes[0].symbol === "cycle")
+    return "year-cycle";
+  if (graphic.kind === "concept" && graphic.nodes[0].symbol === "orbit")
+    return "sky-orbit";
   if (graphic.kind === "hierarchy") return "branch-cascade";
   if (graphic.kind === "system") return "signal-routing";
   if (graphic.kind === "comparison") return "orbital-comparison";
@@ -20,6 +26,9 @@ export function showpieceCompatible(graphic: SemanticGraphic): boolean {
     (
       {
         "depth-focus": ["concept"],
+        "lunar-cycle": ["concept"],
+        "year-cycle": ["concept"],
+        "sky-orbit": ["concept"],
         "orbital-comparison": ["comparison"],
         "branch-cascade": ["hierarchy"],
         "signal-routing": ["system"],
@@ -69,7 +78,9 @@ export function showpieceSchedule(
     );
   return {
     arrivals,
-    resolve: Math.min(duration - 0.25, Math.max(...arrivals) + 0.65),
+    resolve: ["lunar-cycle", "year-cycle"].includes(graphic.presentation ?? "")
+      ? Math.max(0.25, duration - 0.35)
+      : Math.min(duration - 0.25, Math.max(...arrivals) + 0.65),
     end,
   };
 }

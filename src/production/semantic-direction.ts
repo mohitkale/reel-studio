@@ -7,6 +7,10 @@ import { chooseShowpiece, showpieceCompatible } from "./showpiece-plan";
 
 const SYMBOL_WORDS: Record<SemanticGraphic["nodes"][number]["symbol"], RegExp> =
   {
+    moon: /\b(moon|lunar)\b/i,
+    orbit: /\b(celestial|cosmos|stars?|orbits?|astronomy)\b/i,
+    cycle:
+      /\b(cycles?|calendar|wheel|seasons?|year|rhythms?|cosmos|celestial)\b/i,
     agent: /\b(agents?|bots?|robots?|automation)\b/i,
     cloud: /\b(cloud|server|servers|hosting|vm|network|cdn)\b/i,
     device: /\b(phone|device|laptop|screen|wireframe|prototype|app)\b/i,
@@ -70,6 +74,25 @@ export function semanticGraphicIssue(
     return "This showpiece does not match the supplied visual structure.";
   if (graphic.relationship && graphic.presentation)
     return "Shared-region diagrams keep their overlap layout.";
+  if (
+    (graphic.presentation === "lunar-cycle" &&
+      graphic.nodes[0].symbol !== "moon") ||
+    (graphic.presentation === "year-cycle" &&
+      graphic.nodes[0].symbol !== "cycle")
+  )
+    return "The cycle visual needs its supplied lunar or cyclical subject.";
+  if (
+    graphic.presentation === "sky-orbit" &&
+    graphic.nodes[0].symbol !== "orbit"
+  )
+    return "An orbital visual needs a supplied celestial subject.";
+  if (
+    graphic.presentation === "sky-orbit" &&
+    !/\b(celestial|cosmos|orbits?|astronomy|constellations?)\b/i.test(
+      `${text} ${spokenText ?? ""}`,
+    )
+  )
+    return "An orbital visual needs astronomical context.";
   const copy = normalize(`${text} ${spokenText ?? ""}`);
   if (graphic.kind === "concept" && graphic.nodes[0].symbol === "none")
     return "A concept illustration needs a supported semantic subject.";
@@ -272,6 +295,34 @@ export function inferSemanticGraphic(
       };
       if (!semanticGraphicIssue(graphic, text, spokenText)) return graphic;
     }
+  }
+  const sky =
+    /\b(celestial rhythms?|cosmos|orbits?|astronomy|constellations?)\b/i.exec(
+      `${text} ${spokenText ?? ""}`,
+    );
+  const lunar = /\b(moon phases?|lunar(?: phases?)?|moon)\b/i.exec(
+    `${text} ${spokenText ?? ""}`,
+  );
+  const cycle =
+    /\b(wheel of the year|calendar|seasons?|year(?:'s)?(?: ancient)? cycles|rhythm)\b/i.exec(
+      `${text} ${spokenText ?? ""}`,
+    );
+  const cycleContext =
+    /\b(calendar|seasons?|year|cycles?|celestial|cosmos)\b/i.test(
+      `${text} ${spokenText ?? ""}`,
+    );
+  if (lunar || sky || (cycle && cycleContext)) {
+    const graphic: SemanticGraphic = {
+      version: 1,
+      kind: "concept",
+      nodes: [
+        {
+          label: (lunar ?? sky ?? cycle)![0],
+          symbol: lunar ? "moon" : sky ? "orbit" : "cycle",
+        },
+      ],
+    };
+    if (!semanticGraphicIssue(graphic, text, spokenText)) return graphic;
   }
   const namedDefinition =
     /^([\p{L}\p{N}][\p{L}\p{N} -]{1,31}),\s*(?:or\s+)?([^,]{3,96}),\s*/u.exec(

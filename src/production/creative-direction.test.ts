@@ -10,6 +10,11 @@ import { colorContrast } from "@/video/readable-palette";
 describe("content-led visual direction", () => {
   it.each([
     [
+      "Your 2027 Wheel of the Year and Moon Calendar",
+      "editorial-explainer",
+      "celestial",
+    ],
+    [
       "Explain how to create a mindful breathing habit.",
       "editorial-explainer",
       "botanical",

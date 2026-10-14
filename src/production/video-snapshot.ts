@@ -168,6 +168,7 @@ export const preparedVideoCompositionSchema = z
             role: true,
             motion: true,
             direction: true,
+            locks: true,
             mood: true,
             order: true,
           })

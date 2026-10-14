@@ -26,20 +26,34 @@ const selected = process.argv
   .find((arg) => arg.startsWith("--showpiece="))
   ?.split("=")[1];
 const dense = process.argv.includes("--stress");
-const selectedScenes = dense
-  ? [SHOWPIECE_STRESS]
-  : selected
-    ? SHOWPIECE_SAMPLES.filter(
-        (scene) => scene.direction.graphic.presentation === selected,
-      )
-    : SHOWPIECE_SAMPLES;
+const atmosphere = process.argv.includes("--atmosphere");
+const selectedScenes = atmosphere
+  ? [
+      SHOWPIECE_SAMPLES[6],
+      {
+        id: "celestial-type",
+        templateId: "hf-statement",
+        text: "Find your rhythm in 2027.",
+        emphasis: [],
+        motion: { recipeId: "type-window", version: "1.0.0" },
+      },
+    ]
+  : dense
+    ? [SHOWPIECE_STRESS]
+    : selected
+      ? SHOWPIECE_SAMPLES.filter(
+          (scene) => scene.direction.graphic.presentation === selected,
+        )
+      : SHOWPIECE_SAMPLES;
 assert.ok(selectedScenes.length, "Unknown showpiece filter");
 const root = path.resolve(
-  dense
-    ? ".artifacts/story-showpieces/matrix-stress"
-    : selected
-      ? `.artifacts/story-showpieces/matrix-${selected}`
-      : ".artifacts/story-showpieces/matrix",
+  atmosphere
+    ? ".artifacts/story-showpieces/matrix-atmosphere"
+    : dense
+      ? ".artifacts/story-showpieces/matrix-stress"
+      : selected
+        ? `.artifacts/story-showpieces/matrix-${selected}`
+        : ".artifacts/story-showpieces/matrix",
 );
 await mkdir(root, { recursive: true });
 const browser = await puppeteer.launch({
@@ -89,7 +103,17 @@ try {
       width,
       height,
       fps: 24,
-      tokens: applyVisualTheme(defaultBrandTokens, VISUAL_THEMES.circuit),
+      tokens: applyVisualTheme(
+        defaultBrandTokens,
+        atmosphere ||
+          selectedScenes.every((scene) =>
+            ["lunar-cycle", "year-cycle", "sky-orbit"].includes(
+              scene.direction.graphic.presentation,
+            ),
+          )
+          ? VISUAL_THEMES.celestial
+          : VISUAL_THEMES.circuit,
+      ),
       hideProgressBar: true,
       sfxCues,
       musicUrl: "music/tech-minimal.wav",
@@ -176,11 +200,11 @@ try {
             const scene = [...document.querySelectorAll(".scene")].findLast(
               (s) => getComputedStyle(s).visibility === "visible",
             );
-            const stage = scene.querySelector("[data-showpiece]");
+            const stage = scene.querySelector("[data-showpiece],.fx-stage");
             const box = stage.getBoundingClientRect();
             const text = [
               ...stage.querySelectorAll(
-                ".sp-headline,.sp-label,.sp-detail,.sp-snapshot",
+                ".sp-headline,.sp-label,.sp-detail,.sp-snapshot,.cy-eyebrow,.cy-disclosure,.am-copy",
               ),
             ].flatMap((el) => {
               let opacity = 1;
@@ -220,7 +244,7 @@ try {
               text,
               pose: [
                 ...stage.querySelectorAll(
-                  ".sp-camera,.sp-node,.sp-screen-state,.sp-packet",
+                  ".sp-camera,.sp-node,.sp-screen-state,.sp-packet,.cy-orrery,.cy-phase,.cy-wheel,.cy-constellation,.cy-satellite,.cy-star,.cs-sky",
                 ),
               ].map((el) => [el.style.transform, el.style.opacity]),
             };
@@ -252,7 +276,11 @@ try {
               });
               throw error;
             }
-            if (offset >= 2.4) assert.equal(state.text[0]?.copy, scene.text);
+            if (offset >= 2.4)
+              assert.ok(
+                state.text.some((item) => item.copy === scene.text),
+                "The complete headline must remain visible",
+              );
             samples.push(state);
             if (offset === 7.1)
               await page.screenshot({

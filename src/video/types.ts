@@ -76,6 +76,8 @@ export interface ReelScene {
   /** Explicit scene recipe; absent keeps the existing preset/template appearance. */
   motion?: MotionDirection;
   direction?: ShotDirection;
+  /** Persisted author locks; automatic atmosphere must respect scene ownership. */
+  locks?: { scene: boolean; copy: boolean; assets: boolean };
   /** When true, suppress the on-screen text/visual and show just the background. */
   hideText?: boolean;
   /** Emotional/visual tone; picks the dynamic background treatment when there's no photo/video background. */

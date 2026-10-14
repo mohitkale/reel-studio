@@ -18,8 +18,8 @@ New AI and local production drafts save a coherent motion family alongside the
 planning seed. Editorial topics favour asymmetric spreads and reading space;
 product, developer and data topics favour framed messages and structured
 layouts; energetic creator content favours graphic fields and bold type.
-Content-matched colour themes remain consistent throughout the reel. A selected
-or customised brand kit still controls the colours and fonts.
+Content-matched colour themes remain consistent throughout the reel. An explicitly
+selected brand kit controls the colours and fonts; saved projects retain their palette.
 
 The planner chooses among compatible treatments, penalises recent repeats and
 reserves strong hits for suitable beats. Calm energy suppresses graphic hits
@@ -33,20 +33,30 @@ an aesthetic score. Content length and available assets still constrain choice.
 
 ## Story motion showpieces
 
-New production drafts can also freeze one of six multi-phase showpieces. The
+New production drafts can also freeze one of nine multi-phase showpieces. The
 planner chooses the visual job from supplied copy and narration, rather than
 asking users to describe camera settings. **Templates & motion → Story motion**
 provides eight-second previews with sound; the existing treatments and layouts
 remain in their own tabs.
 
-| Showpiece           | Storytelling job               | What develops over the beat                                                        |
-| ------------------- | ------------------------------ | ---------------------------------------------------------------------------------- |
-| Depth reveal        | One supported concept          | A macro view opens into the subject; vector strokes and its explanation resolve    |
-| Orbit & compare     | 2–4 named alternatives         | Independent subjects assemble in depth and receive successive focus                |
-| Growing hierarchy   | Explicit organisation          | A root grows into up to eight supplied actors, with verified parent-child links    |
-| Signal architecture | Connected system               | A hub and its named components assemble; signals travel along their connections    |
-| Work in motion      | 2–6 ordered steps/owners       | A work token passes through the supplied sequence, with staged owner reveals       |
-| Product evolution   | Supplied device/product stages | One dimensional device changes state; a snapshot rail accumulates the named stages |
+| Showpiece           | Storytelling job                  | What develops over the beat                                                        |
+| ------------------- | --------------------------------- | ---------------------------------------------------------------------------------- |
+| Depth reveal        | One supported concept             | A macro view opens into the subject; vector strokes and its explanation resolve    |
+| Orbit & compare     | 2–4 named alternatives            | Independent subjects assemble in depth and receive successive focus                |
+| Growing hierarchy   | Explicit organisation             | A root grows into up to eight supplied actors, with verified parent-child links    |
+| Signal architecture | Connected system                  | A hub and its named components assemble; signals travel along their connections    |
+| Work in motion      | 2–6 ordered steps/owners          | A work token passes through the supplied sequence, with staged owner reveals       |
+| Product evolution   | Supplied device/product stages    | One dimensional device changes state; a snapshot rail accumulates the named stages |
+| Lunar phases        | Supplied moon/lunar subject       | A shaded moon develops through phases, with a persistent phase rail                |
+| Seasonal wheel      | Calendar or seasonal cycles       | An almanac dial builds a botanical wheel in stages                                 |
+| Orbital rhythms     | Explicit celestial/cosmos subject | A constellation resolves inside moving orbital paths                               |
+
+AI creation uses content colours automatically, even when a default brand kit
+exists. To keep a brand palette, select that kit under **Customize style and
+media → Colour palette**. Existing projects and explicitly selected kits keep
+their saved colours. Lunar/celestial topics select **Celestial almanac**, with
+warm gold, mist-blue accents and a dark ink canvas. Cycle visuals are qualitative
+illustrations, not calculated calendars, event dates or astronomical predictions.
 
 Each uses an establish/action/resolve schedule, finite camera/atmosphere motion,
 and deterministic vector choreography. Literal subject labels keep a stable

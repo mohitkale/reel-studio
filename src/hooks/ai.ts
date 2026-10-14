@@ -119,6 +119,7 @@ export function useGenerateProject() {
       energy?: EnergyId | "auto";
       productionPresetId?: ProductionPresetId | "auto";
       visualAmbition?: VisualAmbition;
+      brandKitId?: string | null;
       mediaPreference?: MediaPreference;
       quickProduce?: {
         enabled: true;

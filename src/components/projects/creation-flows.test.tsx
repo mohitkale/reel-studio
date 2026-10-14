@@ -85,6 +85,7 @@ it("creates an AI draft from a brief using the configured provider and preset de
     productionPresetId: "auto",
     styleId: "auto",
     energy: "auto",
+    brandKitId: null,
   });
   expect(mocks.generate.mock.calls[0][0]).not.toHaveProperty("quickProduce");
 });

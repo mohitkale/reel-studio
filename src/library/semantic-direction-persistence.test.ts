@@ -97,6 +97,47 @@ it("automatically persists whole-story subjects on creation and restores the exa
     expect(copy.scenes.map((scene) => scene.direction)).toEqual(
       script.scenes.map((scene) => scene.direction),
     );
+    const { ensureDefaultBrandKit } = await import("./repositories/brandkits");
+    const kit = await ensureDefaultBrandKit();
+    await prisma.brandKit.update({
+      where: { id: kit.id },
+      data: {
+        name: "Custom identity",
+        palette: JSON.stringify({ background: "#0D256F", accent: "#FF5900" }),
+      },
+    });
+    const automatic = await createProjectFromPlan(
+      plan,
+      "portrait",
+      [],
+      "hyperframes",
+      undefined,
+      {
+        preset: { id: "editorial-explainer", version: "1.0.0" },
+        visualTheme: VISUAL_THEMES.celestial,
+        brandKitId: null,
+      },
+    );
+    const themed = (await getScript(automatic.scriptId))!;
+    expect(themed.brandKitId).toBeNull();
+    expect(themed.brandTokens.background).toBe(
+      VISUAL_THEMES.celestial.palette.background,
+    );
+    const branded = await createProjectFromPlan(
+      plan,
+      "portrait",
+      [],
+      "hyperframes",
+      undefined,
+      {
+        preset: { id: "editorial-explainer", version: "1.0.0" },
+        visualTheme: VISUAL_THEMES.celestial,
+        brandKitId: kit.id,
+      },
+    );
+    expect((await getScript(branded.scriptId))!.brandTokens.background).toBe(
+      "#0D256F",
+    );
   } finally {
     await prisma.$disconnect();
     delete (globalThis as typeof globalThis & { prisma?: unknown }).prisma;

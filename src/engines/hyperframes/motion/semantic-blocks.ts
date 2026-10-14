@@ -8,6 +8,11 @@ import type { MotionBlockArgs } from "./registered-blocks";
 
 /** Original schematic artwork. Paths convey the named subject; no fabricated UI text or data. */
 const ART: Record<SemanticGraphic["nodes"][number]["symbol"], string> = {
+  orbit:
+    '<ellipse cx="50" cy="50" rx="42" ry="20"/><ellipse cx="50" cy="50" rx="42" ry="20" transform="rotate(60 50 50)"/><circle cx="50" cy="50" r="8"/><circle cx="87" cy="40" r="4"/>',
+  moon: '<path d="M69 10A41 41 0 1 0 90 71 36 36 0 0 1 69 10Z"/><circle cx="28" cy="58" r="5"/><circle cx="44" cy="78" r="3"/>',
+  cycle:
+    '<circle cx="50" cy="50" r="37"/><circle cx="50" cy="50" r="23"/><path d="M50 5v90M5 50h90M18 18l64 64M18 82l64-64"/>',
   agent:
     '<path d="M50 7v10M46 7h8M18 24h64v54H18ZM10 38v25m80-25v25M31 88h38"/><rect x="25" y="32" width="50" height="32" rx="7"/><path d="M35 46h5m20 0h5M40 58h20"/>',
   cloud:

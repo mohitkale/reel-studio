@@ -8,6 +8,7 @@ import { resolveSpokenWordWindows } from "@/lib/spoken-word-windows";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveReelSfxCues } from "@/lib/sfx-cues";
 import { motionDirection } from "@/production/motion";
+import { preparedVideoCompositionSchema } from "@/production/video-snapshot";
 
 const previousUrl = process.env.DATABASE_URL;
 afterEach(async () => {
@@ -76,7 +77,10 @@ it("migrates old tracks safely, freezes measured provenance, and keeps preview/e
         order: 0,
         templateId: "hook",
         text: "Measured speech",
-        layoutJson: JSON.stringify({ motion: motionDirection("type-impact") }),
+        layoutJson: JSON.stringify({
+          motion: motionDirection("type-impact"),
+          locks: { scene: true, copy: true, assets: false },
+        }),
       },
     });
     await prisma.voiceTake.create({
@@ -134,6 +138,16 @@ it("migrates old tracks safely, freezes measured provenance, and keeps preview/e
         30,
       );
       const props = prepareVideoComposition(snapshot, resolved).props;
+      expect(
+        preparedVideoCompositionSchema.parse({
+          props,
+          totalFrames: resolved.totalFrames,
+        }).props.scenes[0].locks,
+      ).toEqual({
+        scene: true,
+        copy: true,
+        assets: false,
+      });
       const preview = resolveReelSfxCues({
         sfxEnabled: true,
         sfxJson: snapshot.script.sfxJson,

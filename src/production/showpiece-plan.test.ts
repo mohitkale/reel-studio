@@ -12,6 +12,7 @@ import { showpieceSchedule, subjectLane } from "./showpiece-plan";
 import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-composition";
 import { SHOWPIECE_BOOT } from "@/engines/hyperframes/motion/showpiece-blocks";
 import { defaultBrandTokens } from "@/video/tokens";
+import { escapeHtml } from "@/lib/html";
 
 const props = {
   scenes: SHOWPIECE_SAMPLES,
@@ -26,8 +27,84 @@ const props = {
   tokens: defaultBrandTokens,
 };
 describe("story showpieces", () => {
+  it("carries celestial atmosphere through type beats while preserving locked scenes, authored media and legacy reels", () => {
+    const plain: ReelScene = {
+      ...SHOWPIECE_SAMPLES[0],
+      id: "plain",
+      direction: undefined,
+      text: "Let this idea land.",
+      motion: { recipeId: "type-window", version: "1.0.0" },
+    };
+    const scenes = [
+      SHOWPIECE_SAMPLES[6],
+      plain,
+      {
+        ...plain,
+        id: "locked",
+        locks: { scene: true, copy: false, assets: false },
+      },
+      {
+        ...plain,
+        id: "media",
+        background: { type: "image" as const, url: "/photo.png" },
+      },
+    ];
+    const html = buildHyperframesCompositionHtml({
+      ...props,
+      scenes,
+      timeline: scenes.map((scene, i) => ({
+        sceneId: scene.id,
+        startFrame: i * 240,
+        durationFrames: 240,
+      })),
+    });
+    expect(html.match(/<svg class="cs-sky"/g)).toHaveLength(1);
+    const legacy = buildHyperframesCompositionHtml({
+      ...props,
+      scenes: [plain],
+      timeline: [{ sceneId: plain.id, startFrame: 0, durationFrames: 240 }],
+    });
+    expect(legacy).not.toContain('<svg class="cs-sky"');
+  });
+  it("illustrates lunar and seasonal source copy automatically while preserving authored media and dates", () => {
+    const input: ReelScene[] = SHOWPIECE_SAMPLES.slice(6).map((scene) => ({
+      ...scene,
+      direction: undefined,
+    }));
+    const planned = enrichSemanticSequence(input);
+    expect(
+      planned.map((scene) => scene.direction?.graphic?.presentation),
+    ).toEqual(["lunar-cycle", "year-cycle", "sky-orbit"]);
+    expect(planned.map((scene) => [scene.text, scene.spokenText])).toEqual(
+      input.map((scene) => [scene.text, scene.spokenText]),
+    );
+    expect(
+      enrichSemanticSequence([
+        {
+          ...input[0],
+          background: { type: "image" as const, url: "/moon-photo.png" },
+        },
+      ])[0].direction,
+    ).toBeUndefined();
+    const lunar = planned[0].direction!.graphic!;
+    expect(
+      showpieceSchedule(lunar, 8, 30, 0, [
+        { text: "moon", startFrame: 60, endFrame: 75 },
+        { text: "phases", startFrame: 75, endFrame: 90 },
+      ]).arrivals,
+    ).toEqual([2]);
+    expect(showpieceSchedule(lunar, 8, 30).resolve).toBe(7.65);
+    expect(
+      inferSemanticGraphic("Movie stars perform on stage.")?.nodes[0].symbol,
+    ).not.toBe("orbit");
+    expect(
+      inferSemanticGraphic(
+        "A calendar app evolves from wireframe to prototype to launch.",
+      )?.kind,
+    ).toBe("flow");
+  });
   it("automatically plans an organisation, routing architecture and supplied product stages without a user choosing graphics", () => {
-    const inputs: ReelScene[] = SHOWPIECE_SAMPLES.slice(2).map((scene) => ({
+    const inputs: ReelScene[] = SHOWPIECE_SAMPLES.slice(2, 6).map((scene) => ({
       ...scene,
       direction: undefined,
     }));
@@ -179,8 +256,11 @@ describe("story showpieces", () => {
   });
   it("keeps frozen basic illustrations on their original path while new showpieces have deterministic choreography and disclosure", () => {
     const html = buildHyperframesCompositionHtml(props);
-    expect(html.match(/<div[^>]+data-showpiece=/g)).toHaveLength(6);
-    for (const scene of SHOWPIECE_SAMPLES) expect(html).toContain(scene.text);
+    expect(html.match(/<div[^>]+data-showpiece=/g)).toHaveLength(
+      SHOWPIECE_SAMPLES.length,
+    );
+    for (const scene of SHOWPIECE_SAMPLES)
+      expect(html).toContain(escapeHtml(scene.text));
     expect(html).toContain("Illustrative");
     const comparison = buildHyperframesCompositionHtml({
       ...props,

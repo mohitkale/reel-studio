@@ -7,6 +7,7 @@ import { showpieceSchedule, subjectLane } from "@/production/showpiece-plan";
 import type { ReelProps } from "@/video/types";
 import type { SemanticGraphic } from "@/video/semantic-graphic";
 import { semanticArt } from "./semantic-blocks";
+import { buildCelestialScene } from "./celestial-blocks";
 import type { MotionBlockArgs } from "./registered-blocks";
 
 function positions(graphic: SemanticGraphic, portrait: boolean) {
@@ -82,6 +83,8 @@ export function buildShowpieceScene(
     contentStartFrame,
     context.spokenWords,
   );
+  if (["lunar-cycle", "year-cycle", "sky-orbit"].includes(graphic.presentation))
+    return buildCelestialScene(args, graphic, contentDuration, schedule);
   const nodes = semanticGraphicCaptions(scene.text, graphic);
   const isDevice = graphic.presentation === "device-evolution";
   const cards = nodes
@@ -196,7 +199,7 @@ export const SHOWPIECE_STYLES = `
 }
 `;
 export const SHOWPIECE_BOOT = `
-if (stage.hasAttribute('data-showpiece')) {
+if (stage.hasAttribute('data-showpiece') && !stage.hasAttribute('data-celestial')) {
  var kind = stage.getAttribute('data-showpiece');
  var camera = stage.querySelector('.sp-camera');
  var done = Number(stage.getAttribute('data-resolve'));
