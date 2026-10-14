@@ -3,19 +3,24 @@
  * Uses an isolated SQLite database, Kokoro Server, the turn cache, and ffmpeg.
  */
 import { DatabaseSync } from "node:sqlite";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  mkdirSync,
+  writeFileSync,
+} from "node:fs";
+import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
 const directory = mkdtempSync(path.join(tmpdir(), "reel-podcast-audio-"));
 const filename = path.join(directory, "podcast.db");
 const sqlite = new DatabaseSync(filename);
-for (const migration of [
-  "20260910000100_baseline",
-  "20260912000200_audio_production",
-  "20260912000300_podcast_production",
-  "20260914000100_podcast_finishing",
-]) {
+for (const migration of readdirSync("prisma/migrations")
+  .filter((name) => !name.endsWith(".toml"))
+  .sort()) {
   sqlite.exec(
     readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),
   );
@@ -139,6 +144,55 @@ async function main() {
       if (!(await getAssetStore().exists(path))) {
         throw new Error(`Missing generated artifact: ${path}`);
       }
+    }
+    const evidence = process.argv
+      .find((arg) => arg.startsWith("--evidence="))
+      ?.slice("--evidence=".length);
+    if (evidence) {
+      const target = path.resolve(evidence);
+      mkdirSync(target, { recursive: true });
+      const savedTake = takes.find((take) => take.id === second.id);
+      if (!savedTake) throw new Error("Generated take was not persisted");
+      for (const [name, key] of [
+        ["podcast.wav", savedTake.audioPath],
+        ["podcast.mp3", savedTake.mp3Path],
+      ] as const) {
+        if (!key) throw new Error(`Missing ${name}`);
+        writeFileSync(path.join(target, name), await getAssetStore().get(key));
+      }
+      if (process.argv.includes("--audiogram")) {
+        execFileSync(
+          process.execPath,
+          [
+            "--import",
+            "tsx",
+            "scripts/render-podcast-audiogram.ts",
+            second.id,
+            `--evidence=${target}`,
+          ],
+          {
+            env: { ...process.env, DATABASE_URL: `file:${filename}` },
+            stdio: "inherit",
+            timeout: 300_000,
+          },
+        );
+      }
+      writeFileSync(
+        path.join(target, "audio-report.json"),
+        JSON.stringify(
+          {
+            provider: "kokoro-server",
+            voices: ["af_bella", "am_adam"],
+            cachedTurns: cached.length,
+            selectiveRegeneration: finalProgress,
+            legacyMp3Export: true,
+            wavAndMp3: true,
+            audiogram: process.argv.includes("--audiogram"),
+          },
+          null,
+          2,
+        ),
+      );
     }
     console.log(
       `Podcast audio smoke passed: ${cached.length} cached turns, one selective regeneration, legacy upgrade, WAV + MP3 artifacts.`,

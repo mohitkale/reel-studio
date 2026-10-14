@@ -81,5 +81,5 @@ docker compose up --build
 - Limit heavy local checks to two workers; avoid running video matrices and the full suite together on a small machine.
 - Keep `.env.local`, `.data/`, SQLite/WAL/SHM files, and `media/` out of Git.
 - Stop app/worker before database changes. Use `npm run db:migrate`, not `db:push`.
-- Follow [v0.4.0 upgrade/rollback notes](RELEASE_0.4.0.md); back up both database and media.
+- Follow [v0.5.0 upgrade/rollback notes](RELEASE_0.5.0.md); back up both database and media.
 - Remote browser hosting needs a designed authentication layer; read [SECURITY.md](../SECURITY.md).

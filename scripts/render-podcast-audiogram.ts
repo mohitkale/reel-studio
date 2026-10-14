@@ -49,10 +49,13 @@ async function main() {
     const output = completed?.outputs.find((item) => item.kind === "audiogram");
     if (!output) throw new Error("Audiogram output was not recorded");
     const source = path.join(process.cwd(), "media", output.path);
+    const evidence = process.argv
+      .find((arg) => arg.startsWith("--evidence="))
+      ?.slice("--evidence=".length);
     const destination = path.join(
-      process.cwd(),
-      ".artifacts",
-      "podcast-audiogram",
+      evidence
+        ? path.resolve(evidence)
+        : path.join(process.cwd(), ".artifacts", "podcast-audiogram"),
       "podcast-audiogram.mp4",
     );
     await fs.mkdir(path.dirname(destination), { recursive: true });

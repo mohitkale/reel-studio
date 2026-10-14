@@ -20,6 +20,11 @@ const startedAt = new Date();
 const results: Array<Record<string, unknown>> = [];
 const tsxCli = path.join(root, "node_modules", "tsx", "dist", "cli.mjs");
 const resume = process.argv.includes("--resume");
+const outputRoot = path.resolve(
+  process.argv
+    .find((arg) => arg.startsWith("--output-root="))
+    ?.slice("--output-root=".length) || ".artifacts",
+);
 
 function probe(filename: string) {
   return JSON.parse(
@@ -59,8 +64,7 @@ async function main() {
       );
       const filenames = (["hyperframes"] as const).map((engine) =>
         path.join(
-          root,
-          ".artifacts",
+          outputRoot,
           "render-regression",
           presetId,
           `brief-${briefIndex + 1}`,
@@ -79,6 +83,7 @@ async function main() {
             `--preset=${presetId}`,
             `--brief-index=${briefIndex}`,
             `--orientation=${orientation}`,
+            `--output-root=${path.join(outputRoot, "render-regression")}`,
           ],
           { cwd: root, stdio: "inherit", timeout: 12 * 60 * 1_000 },
         );
@@ -161,7 +166,7 @@ async function main() {
     },
     outputs: results,
   };
-  const reportDir = path.join(root, ".artifacts", "release-matrix");
+  const reportDir = path.join(outputRoot, "release-matrix");
   mkdirSync(reportDir, { recursive: true });
   const reportPath = path.join(reportDir, "report.json");
   writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`);

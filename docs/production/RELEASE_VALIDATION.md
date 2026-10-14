@@ -1,12 +1,52 @@
 # Release validation
 
+## v0.5.0 release candidate — 2026-10-15
+
+Release preparation follows merged [PR #46](https://github.com/mohitkale/reel-studio/pull/46)
+on `main` commit `2488c36784bea7713c2a0aed23f9488db8a473eb`.
+The application source is unchanged during release preparation. Its merged-main
+Linux/Windows Quality builds and Security passed; the release commit also requires
+its own latest-head and merged-main checks before tagging.
+
+- Full local suite: **181 files / 907 tests**; typecheck, lint, secret scan,
+  component compatibility and release contracts passed.
+- Fresh render matrix: **18 H.264 exports**, six presets × three formats,
+  **199.5 seconds** total; decoded frames inspected. Matrix clips are silent.
+- Real cached local Kokoro: two voices, reusable turns, selective regeneration,
+  legacy MP3 repair, WAV/MP3 and a durable audiogram export. Native-channel
+  decoded audio is audible, finite and unclipped; audiogram true peak is −1.15 dBTP.
+  Remote model loading was disabled; no model downloads or paid calls were made.
+- Cancellation/retry: **210 seconds / 5,040 frames**, seven cached sections,
+  identical completed MP4 hashes and decoded audio. This recovery fixture uses
+  labeled calibration narration, separate from the live cached-model check.
+- Published v0.3.0 and v0.4.0 upgrades, all fourteen frozen migration hashes,
+  populated rows, paired media and backup restoration passed. No schema or
+  dependency changes are introduced by v0.5.0.
+- All 28 original projects, 28 scripts, 233 scenes and two brand kits still match
+  the pre-change backup. The three feature review examples remain in the active app.
+- Fresh browser checks cover aligned AI controls, automatic palette selection,
+  local four-scene creation, full-reel playback, a normal durable MP4 export and
+  its checksum-matching browser download. The 9.7-second silent release-workflow
+  example is saved in Projects; its four decoded scene frames were inspected.
+- The unchanged speech engine's pinned hashes, notices and matching complete
+  corresponding-source archive passed the distribution gate.
+
+[Integrated candidate evidence](RELEASE_ACCEPTANCE_0.5.0.json),
+[fresh matrix](RELEASE_MATRIX_0.5.0.json),
+[upgrade/rollback](../RELEASE_0.5.0.md), and
+[motion demo provenance](../DEMO_CAPTURE.md).
+The published validation asset records the final release commit and platform
+CI runs. Measurements describe this workstation, not universal performance.
+
+## Historical v0.4.0 publication
+
 Stable **[v0.4.0](https://github.com/mohitkale/reel-studio/releases/tag/v0.4.0)**
 was published **2026-10-03** from verified `main` commit
 `2081ac3edd9eab1f4dc2068c37d1f1deec06c4f1` after [PR #44](https://github.com/mohitkale/reel-studio/pull/44).
 Latest-head PR checks, the isolated source build, and merged-main Quality/Security
 checks passed. Later changes need fresh evidence appropriate to their scope.
 
-## Published evidence
+### Published evidence
 
 | Gate         | Verified result                                                                                                                  |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------- |

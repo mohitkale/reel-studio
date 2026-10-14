@@ -1,6 +1,23 @@
 # README demo and screenshots
 
-The README's `assets/script-to-video.gif` shows **real v0.4.0 home/result
+The README's `assets/story-motion-0.5.0.gif` shows three native story-motion
+exports: lunar phases, the seasonal wheel and orbital rhythms. The 24-second
+montage concatenates unchanged, verified feature exports from 2026-10-14; it
+does not claim to record AI generation or a fresh release-matrix render.
+The [manifest](assets/story-motion-0.5.0.json) records source and output hashes.
+The full MP4 in the v0.5.0 release retains music and sound effects.
+
+Regenerate the silent GIF from that verified local MP4 with installed FFmpeg:
+
+```bash
+ffmpeg -y -i .artifacts/release-v0.5.0/assets/reel-studio-0.5.0-story-motion.mp4 \
+  -filter_complex "fps=12,scale=720:-1:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=3" \
+  -an -loop 0 docs/assets/story-motion-0.5.0.gif
+```
+
+## Historical v0.4.0 screen montage
+
+The retained `assets/script-to-video.gif` shows **real v0.4.0 home/result
 screenshots and a verified local HyperFrames export**. It is a screen/output
 montage, not a recording of the full Generate interaction.
 

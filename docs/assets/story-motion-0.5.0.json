@@ -1,0 +1,31 @@
+{
+  "release": "0.5.0",
+  "kind": "Native story-motion export montage",
+  "sourceCommit": "2488c36784bea7713c2a0aed23f9488db8a473eb",
+  "sourceExports": "Unchanged feature acceptance exports, recorded 2026-10-14; concatenated without re-rendering",
+  "durationSeconds": 24,
+  "inputs": [
+    {
+      "file": ".artifacts/story-showpieces/matrix-lunar-cycle/landscape.mp4",
+      "sha256": "f7fde3a7de9200fa64348e8cc1fb5d66f4580325b8b79c61c1e4af7ec30c3d2b"
+    },
+    {
+      "file": ".artifacts/story-showpieces/matrix-year-cycle/landscape.mp4",
+      "sha256": "98d9c208fde69eff6642a2bf18b6313a2d22addada7be509712397926c139416"
+    },
+    {
+      "file": ".artifacts/story-showpieces/matrix-sky-orbit/landscape.mp4",
+      "sha256": "65e4713a0931d06313636ab91e280b5a7844de4f033a020a4dcef2664806a34c"
+    }
+  ],
+  "gifSha256": "41c67085953312d97ad8dd546f8f4f221e520544ee805bc8e1f4ddbadc86cd99",
+  "gifBytes": 5086579,
+  "gif": {
+    "width": 480,
+    "fps": 10,
+    "paletteColours": 64,
+    "dither": "bayer",
+    "bayerScale": 3,
+    "audio": false
+  }
+}

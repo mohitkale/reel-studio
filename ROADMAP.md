@@ -1,15 +1,17 @@
 # Roadmap
 
-Current stable release: **[v0.4.0](https://github.com/mohitkale/reel-studio/releases/tag/v0.4.0)**.
+Current release: **[v0.5.0](https://github.com/mohitkale/reel-studio/releases/tag/v0.5.0)**.
 This roadmap separates released features from proposals; future items are not promises.
 
 ## Shipped
 
 - Prompt-first Generate → result → download, scene editing, and remix.
-- HyperFrames-only preview/export; six presets, sixteen authored motion treatments,
+- HyperFrames-only preview/export; six presets, 23 authored motion treatments,
   and portrait, landscape, and square layouts.
 - Deterministic, source-grounded direction plus optional constrained AI planning.
 - Local/cloud voice options, editable styled captions, and reusable narration.
+- AI-first creation, content-matched palettes and motion families, nine story
+  showpieces with event-timed sound, and preserved scene locks/media/revisions.
 - Podcasts with turn reuse, finishing controls, transcripts, chapters, and audiograms.
 - Durable jobs/batches, cancellation/retry/recovery, scoped REST/MCP automation,
   chapter authoring, and section-cached chapter exports.
@@ -17,7 +19,7 @@ This roadmap separates released features from proposals; future items are not pr
   media hardening, and verified speech-engine source/licensing.
 
 See [CHANGELOG.md](CHANGELOG.md) for release history and
-[release validation](docs/production/RELEASE_VALIDATION.md) for v0.4.0 evidence.
+[release validation](docs/production/RELEASE_VALIDATION.md) for release evidence.
 
 ## Next candidates
 
@@ -31,6 +33,9 @@ See [CHANGELOG.md](CHANGELOG.md) for release history and
 Choose a concrete creator use case before starting one of these items. Typed
 provider/block registration already exists; broader plugin discovery and
 packaging remain possible future work.
+
+No next feature milestone is currently committed; these are proposals for a
+future release rather than prerequisites for v0.5.0.
 
 ## Longer-term exploration
 

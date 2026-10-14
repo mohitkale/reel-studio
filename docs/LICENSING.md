@@ -149,7 +149,7 @@ license texts accompany the engine. Node and offline browser verification match
 `en-us` and British `en` language contract. Other language dictionaries are not
 bundled. This test does not download or evaluate model weights.
 
-The [v0.4.0 release](https://github.com/mohitkale/reel-studio/releases/tag/v0.4.0)
+The [v0.5.0 release](https://github.com/mohitkale/reel-studio/releases/tag/v0.5.0)
 provides `reel-phonemizer-corresponding-source.tar.gz`: complete pinned eSpeak
 source, voice/dictionary sources, the adapter/binding, build instructions,
 compatibility fixture, and embedded Emscripten library/runtime source and notices.
