@@ -8,6 +8,8 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- Windows CI uses a pinned, SHA-256-verified FFmpeg archive instead of depending
+  on the unavailable Chocolatey package feed. All existing checks remain required.
 - AI creation uses the content palette by default instead of silently inheriting
   the saved default brand. Explicit brand kits remain available in the creation
   dialog and keep their colours; existing projects retain saved designs.
