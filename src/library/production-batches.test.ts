@@ -29,6 +29,7 @@ describe("durable production batches", () => {
   let client: ReturnType<typeof createPrismaClient>;
   let previous: string | undefined;
 
+  // Allow slow Windows fixture I/O without extending test assertion timeouts.
   beforeEach(() => {
     directory = mkdtempSync(path.join(tmpdir(), "reel-production-batch-"));
     const filename = path.join(directory, "batch.db");
@@ -65,7 +66,7 @@ describe("durable production batches", () => {
     previous = process.env.DATABASE_URL;
     process.env.DATABASE_URL = `file:${filename}`;
     client = createPrismaClient();
-  });
+  }, process.platform === "win32" ? 30_000 : 10_000);
 
   afterEach(async () => {
     await client.$disconnect();

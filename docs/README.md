@@ -1,6 +1,6 @@
 # Documentation
 
-Reel Studio **v0.4.0** uses HyperFrames for preview, export, and audiograms.
+Reel Studio **v0.5.0** uses HyperFrames for preview, export, and audiograms.
 Start with the guides below. Completed milestone plans are historical, not the
 current setup instructions or a pending to-do list.
 
@@ -12,7 +12,7 @@ current setup instructions or a pending to-do list.
 - [Advanced editing](ADVANCED_EDITING.md): motion review, sound, chapters, and longer exports.
 - [Local-first behavior](LOCAL_FIRST.md): local data and optional outbound provider calls.
 - [Voice providers](VOICE_PROVIDERS.md): browser, local server, and cloud capabilities.
-- [Upgrade to v0.4.0](RELEASE_0.4.0.md): backups, migrations, and rollback.
+- [Upgrade to v0.5.0](RELEASE_0.5.0.md): backups, preserved designs, and rollback.
 - [MCP guide](../mcp/README.md): scoped agent automation and examples.
 
 ## Develop and operate

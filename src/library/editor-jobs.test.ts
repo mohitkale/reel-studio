@@ -35,6 +35,8 @@ import {
   requestProductionJobCancellation,
 } from "./repositories/production-jobs";
 let previous: string | undefined;
+// Hosted Windows SQLite setup can exceed the default hook budget under I/O load.
+// Keep assertion timeouts and non-Windows fixture budgets unchanged.
 beforeEach(async () => {
   state.directory = mkdtempSync(path.join(tmpdir(), "reel-editor-jobs-"));
   const filename = path.join(state.directory, "jobs.db");
@@ -62,7 +64,7 @@ beforeEach(async () => {
       templateId: "hf-typewriter",
     },
   });
-});
+}, process.platform === "win32" ? 30_000 : 10_000);
 afterEach(async () => {
   await state.db!.$disconnect();
   if (previous === undefined) delete process.env.DATABASE_URL;

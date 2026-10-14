@@ -6,6 +6,8 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+## 0.5.0
+
 ### Fixed
 
 - Windows CI uses a pinned, SHA-256-verified FFmpeg archive instead of depending

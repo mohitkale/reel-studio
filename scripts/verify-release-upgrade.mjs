@@ -1,4 +1,4 @@
-/** Published v0.3.0 upgrade, automatic backup/restore and isolated fresh setup. */
+/** Published v0.3.0/v0.4.0 upgrade, backup/restore and isolated fresh setup. */
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
@@ -9,7 +9,11 @@ import { tmpdir } from "node:os";
 import { schemaSignature } from "./migrate-database.mjs";
 
 const root = process.cwd(),
-  evidence = path.join(root, ".artifacts/m15-upgrade");
+  evidence = path.resolve(
+    process.argv
+      .find((arg) => arg.startsWith("--evidence="))
+      ?.slice("--evidence=".length) || ".artifacts/m15-upgrade",
+  );
 await fs.mkdir(evidence, { recursive: true });
 const provenance = JSON.parse(
   await fs.readFile("tests/fixtures/release-v030/provenance.json", "utf8"),
@@ -144,7 +148,66 @@ assert.equal(
   again.prepare("SELECT text FROM CaptionCue").get().text,
   "Saved subtitle",
 );
+const published040 = JSON.parse(
+  await fs.readFile("tests/fixtures/release-v040/provenance.json", "utf8"),
+);
+assert.equal(
+  createHash("sha256")
+    .update(await fs.readFile(published040.schemaPath))
+    .digest("hex"),
+  published040.sourceSchemaSha256,
+  "v0.5.0 keeps the published v0.4.0 schema",
+);
+for (const [file, hash] of Object.entries(published040.migrations))
+  assert.equal(
+    createHash("sha256")
+      .update(await fs.readFile(file))
+      .digest("hex"),
+    hash,
+    `Published v0.4.0 migration drift: ${file}`,
+  );
+const snapshot040 = (db) =>
+  Object.fromEntries(
+    [
+      "Project",
+      "Script",
+      "Scene",
+      "VoiceTake",
+      "Render",
+      "Asset",
+      "CaptionTrack",
+      "CaptionCue",
+      "_prisma_migrations",
+    ].map((table) => [
+      table,
+      db.prepare(`SELECT * FROM ${table} ORDER BY id`).all(),
+    ]),
+  );
+const before040 = snapshot040(again);
 again.close();
+const backup040 = path.join(fixture, "published-v040.db");
+await fs.copyFile(filename, backup040);
+execFileSync(process.execPath, ["scripts/migrate-database.mjs"], {
+  cwd: root,
+  env,
+  stdio: "pipe",
+});
+const upgraded040 = new DatabaseSync(filename);
+assert.deepEqual(
+  snapshot040(upgraded040),
+  before040,
+  "v0.4.0 upgrade preserves every populated row",
+);
+upgraded040.close();
+const restored040Path = path.join(fixture, "restored-v040.db");
+await fs.copyFile(backup040, restored040Path);
+const restored040 = new DatabaseSync(restored040Path);
+assert.deepEqual(
+  snapshot040(restored040),
+  before040,
+  "v0.4.0 backup restores every populated row",
+);
+restored040.close();
 await fs.copyFile(
   path.join(fixture, backup),
   path.join(fixture, "restored.db"),
@@ -223,6 +286,11 @@ await fs.writeFile(
     {
       verifiedAt: new Date().toISOString(),
       publishedSource: provenance,
+      published040,
+      published040RowsPreserved: true,
+      published040BackupRestore: true,
+      targetVersion: JSON.parse(await fs.readFile("package.json", "utf8"))
+        .version,
       migrations: 14,
       backupRestore: true,
       copy: true,
@@ -239,5 +307,5 @@ await fs.writeFile(
 );
 await fs.rm(fixture, { recursive: true, force: true });
 console.log(
-  "Published v0.3.0 populated upgrade, backup/restore, saved media/copy/takes/exports/captions and isolated fresh setup passed.",
+  "Published v0.3.0/v0.4.0 populated upgrades, backup/restore, saved media/copy/takes/exports/captions and isolated fresh setup passed.",
 );

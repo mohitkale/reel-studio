@@ -38,6 +38,10 @@ import type { SceneDTO } from "../src/lib/dto";
 async function main() {
   const run = promisify(execFile);
   const args = process.argv.slice(2);
+  const outputRoot =
+    args
+      .find((arg) => arg.startsWith("--output-root="))
+      ?.slice("--output-root=".length) || ".artifacts/render-regression";
   const presetArg = args.find((arg) => arg.startsWith("--preset="));
   const orientationArg = args.find((arg) => arg.startsWith("--orientation="));
   const briefIndexArg = args.find((arg) => arg.startsWith("--brief-index="));
@@ -90,7 +94,7 @@ async function main() {
   const renderCinematicBrand = presetId === "cinematic-brand";
   const output = orientation
     ? path.resolve(
-        ".artifacts/render-regression",
+        outputRoot,
         renderStockVideo
           ? motionRecipeId
             ? `${motionRecipeId}-video`
@@ -104,7 +108,7 @@ async function main() {
         orientation,
       )
     : path.resolve(
-        ".artifacts/render-regression",
+        outputRoot,
         renderStockVideo
           ? motionRecipeId
             ? `${motionRecipeId}-video`

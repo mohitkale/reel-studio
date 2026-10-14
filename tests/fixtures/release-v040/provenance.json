@@ -1,0 +1,23 @@
+{
+  "tag": "v0.4.0",
+  "commit": "2081ac3edd9eab1f4dc2068c37d1f1deec06c4f1",
+  "schemaPath": "prisma/schema.prisma",
+  "sourceSchemaSha256": "34ac71873ac604f53c828fef087bcb8bc40bf69be5e34325b80fd49fdc3e4a62",
+  "migrations": {
+    "prisma/migrations/20260910000100_baseline/migration.sql": "5c1906cb5f6e3aa014670a0d96b718668fab83ee2bc657b2e1efe0556eccdf0b",
+    "prisma/migrations/20260911000100_production_jobs/migration.sql": "e15ee1e4a362da177c4dccaf3b9aa7cad0f4548e4b95ea4587ec3285601a4d30",
+    "prisma/migrations/20260912000100_caption_tracks/migration.sql": "6aa1a8e1c8e7c3b7a3db4ad203f0c7ea14f61fcfe5254ed8fccf6b6f94ecde57",
+    "prisma/migrations/20260912000200_audio_production/migration.sql": "47f80abfa792c7f8a717871bec618ba827492f52408d368d86355ec51c2e6092",
+    "prisma/migrations/20260912000300_podcast_production/migration.sql": "978975da366af709439b69482cb52aa58742d4fecf2a1bb6553edfa95075a4d3",
+    "prisma/migrations/20260913000100_production_batches/migration.sql": "2846738b045db0aa246e26bb940a1fd96e43d609359ff263537e4ac3f2701b86",
+    "prisma/migrations/20260914000100_podcast_finishing/migration.sql": "90ffcb3c6e33ddc6ace9af41440793df7bd818eba0e6aabb6022c7c7f623fd2c",
+    "prisma/migrations/20260914000200_stock_media_schema/migration.sql": "e534fa930defb18aca2468b560e8038e8c91e21e03f883d22633ff2a426c60f1",
+    "prisma/migrations/20260914000300_stock_media_services/migration.sql": "f3ef6a0a2890d064c7c1d96fb8bd7f36f2225ae04f08a488b9c3447a2466d08a",
+    "prisma/migrations/20260915000100_caption_styles/migration.sql": "40de887dd888b894ef3db50d3c8767d710d53254316bbac7ada1795a92fce33b",
+    "prisma/migrations/20260916000100_quick_produce_revisions/migration.sql": "22d88e81492ddaa8612d5b39dba96a7a58ee1d226ea3e14f99ac7d85aaaa8141",
+    "prisma/migrations/20260930000100_caption_take_provenance/migration.sql": "7c67a19729365fe8a50aeda1eb9c179690b93aa6458003d1a8c2c391df448e91",
+    "prisma/migrations/20261002000100_hyperframes_only/migration.sql": "f55ebe6d1ec458f541a69a782149b6ca8eaeb56845964d302e03af17da657132",
+    "prisma/migrations/20261002000200_sqlite_render_lookup/migration.sql": "2e4e93346026cb7f00a7f8978c3ea5fe7a68918cf01299cd5eccd616c027b257"
+  },
+  "fixture": "Published v0.3.0 fixture upgraded through byte-identical v0.4.0 migrations, then populated with caption tracks; no schema migration is introduced by v0.5.0."
+}
