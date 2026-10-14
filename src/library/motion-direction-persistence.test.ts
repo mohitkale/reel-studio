@@ -182,4 +182,5 @@ it("persists visual direction in SQLite without changing content and rolls back 
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-}, 15_000);
+  // Include migration setup and cold repository imports on Windows runners.
+}, process.platform === "win32" ? 30_000 : 15_000);

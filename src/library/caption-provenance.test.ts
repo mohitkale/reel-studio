@@ -186,4 +186,5 @@ it("migrates old tracks safely, freezes measured provenance, and keeps preview/e
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-});
+  // Include migration setup and cold repository imports on Windows runners.
+}, process.platform === "win32" ? 30_000 : 5_000);

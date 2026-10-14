@@ -146,4 +146,5 @@ it("automatically persists whole-story subjects on creation and restores the exa
     vi.resetModules();
     rmSync(directory, { recursive: true, force: true });
   }
-});
+  // Include migration setup and cold repository imports on Windows runners.
+}, process.platform === "win32" ? 30_000 : 5_000);
