@@ -4,7 +4,7 @@
 
 Release preparation follows merged [PR #46](https://github.com/mohitkale/reel-studio/pull/46)
 on `main` commit `2488c36784bea7713c2a0aed23f9488db8a473eb`.
-The application source is unchanged during release preparation. Its merged-main
+The application runtime source is unchanged during release preparation. Its merged-main
 Linux/Windows Quality builds and Security passed; the release commit also requires
 its own latest-head and merged-main checks before tagging.
 
@@ -28,6 +28,10 @@ its own latest-head and merged-main checks before tagging.
   local four-scene creation, full-reel playback, a normal durable MP4 export and
   its checksum-matching browser download. The 9.7-second silent release-workflow
   example is saved in Projects; its four decoded scene frames were inspected.
+- Initial release PR Windows CI passed 905 tests but timed out in two SQLite
+  fixture setup hooks. Those hooks now have the existing 30-second Windows
+  fixture budget; assertions and non-Windows limits are unchanged. The updated
+  PR must pass the complete suite and build before merge.
 - The unchanged speech engine's pinned hashes, notices and matching complete
   corresponding-source archive passed the distribution gate.
 

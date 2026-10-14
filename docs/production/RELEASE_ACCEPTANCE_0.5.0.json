@@ -4,8 +4,8 @@
   "verifiedOn": "2026-10-15",
   "applicationSource": {
     "commit": "2488c36784bea7713c2a0aed23f9488db8a473eb",
-    "srcTree": "7c400b98c42376b637e853c52b84a6438e01c332",
-    "note": "Release preparation changes metadata, documentation and verification scripts; application source remains unchanged."
+    "note": "Application runtime source is unchanged during release preparation. Release verification includes two additional Windows-only SQLite setup hook budgets; assertion and non-Windows timeouts stay unchanged.",
+    "baselineSrcTree": "7c400b98c42376b637e853c52b84a6438e01c332"
   },
   "unitSuite": {
     "files": 181,
@@ -462,5 +462,15 @@
     "productionBuild": true,
     "releaseCheck": true,
     "localDocumentLinks": 94
+  },
+  "windowsFixtureCorrection": {
+    "failedRun": 38621986498,
+    "passedTests": 905,
+    "failedSetupHooks": 2,
+    "fixtures": ["editor-jobs", "production-batches"],
+    "windowsHookTimeoutMs": 30000,
+    "otherPlatformsHookTimeoutMs": 10000,
+    "testAssertionsUnchanged": true,
+    "latestHeadMustPass": true
   }
 }
