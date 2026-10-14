@@ -37,7 +37,11 @@ export function planDirectorRepair(
     )
   )
     return null;
-  if (config.direction?.composition === "layered-title") return null;
+  if (
+    config.direction?.composition === "layered-title" ||
+    config.direction?.graphic
+  )
+    return null;
   return {
     ...config,
     motion: undefined,

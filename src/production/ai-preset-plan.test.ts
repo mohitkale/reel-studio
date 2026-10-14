@@ -18,6 +18,52 @@ const plan = scenePlanSchema.parse({
 });
 
 describe("AI production preset planning", () => {
+  it("shows a requested literal dataset even when AI returned only prose, without inventing missing values", () => {
+    const source =
+      "Show the results in a chart.\nDraft: 42%\nReview: 68%\nRelease: 91%";
+    const result = applyPresetToAIPlan(plan, "data-story", "hyperframes", {
+      source,
+    });
+    const middle = result.plan.scenes[2];
+    expect(result.roles[2]).toBe("chart");
+    expect(middle.templateId).toBe("hf-data-chart");
+    expect(middle.text).toBe(plan.scenes[2].text);
+    expect(middle.chart?.labels).toEqual(["Draft", "Review", "Release"]);
+    expect(middle.chart?.series[0].values).toEqual([42, 68, 91]);
+    expect(middle.chart?.series[0].unit).toBe("%");
+    for (const incomplete of [
+      "Draw a chart with improving results",
+      "Show a chart.\nDraft: 42%\nReview: 68",
+    ]) {
+      expect(
+        applyPresetToAIPlan(plan, "data-story", "hyperframes", {
+          source: incomplete,
+        }).plan.scenes.some((scene) => scene.chart),
+      ).toBe(false);
+    }
+  });
+  it("preserves a grounded chart with prose copy instead of remapping it to a stat template", () => {
+    const supplied = scenePlanSchema.parse({
+      ...plan,
+      scenes: [
+        {
+          templateId: "hf-data-chart",
+          text: "Compare the supplied results.",
+          emphasis: [],
+          chart: {
+            labels: ["Draft", "Release"],
+            series: [{ label: "Supplied values", values: [42, 91], unit: "%" }],
+          },
+        },
+      ],
+    });
+    const result = applyPresetToAIPlan(supplied, "data-story", "hyperframes", {
+      source: "Draft: 42%\nRelease: 91%",
+    });
+    expect(result.roles).toEqual(["chart"]);
+    expect(result.plan.scenes[0].templateId).toBe("hf-data-chart");
+    expect(result.plan.scenes[0].chart).toEqual(supplied.scenes[0].chart);
+  });
   it("maps every generated scene to a template supported by its preset and engine", () => {
     const result = applyPresetToAIPlan(plan, "product-launch", "hyperframes", {
       hasVisualAsset: true,
@@ -33,6 +79,23 @@ describe("AI production preset planning", () => {
     ]);
     expect(
       result.plan.scenes.every((scene) => allowed.includes(scene.templateId)),
+    ).toBe(true);
+  });
+
+  it("uses a prose-safe template when a structural preset slot has no inputs", () => {
+    const result = applyPresetToAIPlan(plan, "product-launch", "hyperframes", {
+      hasVisualAsset: false,
+    });
+    expect(result.roles).not.toContain("comparison");
+    expect(
+      result.plan.scenes.some((scene) => scene.templateId === "hf-statement"),
+    ).toBe(true);
+    expect(
+      result.plan.scenes.every((scene) =>
+        allowedPresetTemplateIds("product-launch", "hyperframes").includes(
+          scene.templateId,
+        ),
+      ),
     ).toBe(true);
   });
 

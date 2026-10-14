@@ -27,7 +27,12 @@ import { Combobox } from "@/components/ui/combobox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AssetThumbPicker } from "@/components/assets/asset-thumb-picker";
 import { StockMediaPicker } from "@/components/editor/stock-media-picker";
+import { SHOWPIECES } from "@/video/semantic-graphic";
 import type { Orientation } from "@/lib/orientation";
+import {
+  resolveSemanticGraphic,
+  semanticGraphicIssue,
+} from "@/production/semantic-direction";
 import {
   MOTION_RECIPES,
   chooseSceneMotion,
@@ -323,7 +328,7 @@ function BackgroundEditor({
             ? "Automatic stock search is disabled; the animated mood background is used."
             : mediaPreference === "video"
               ? "Auto tries Pexels, then Pixabay. No result keeps the animated mood background."
-              : "Auto tries Pexels, Pixabay, then Unsplash for images. An existing upload or selection always stays in place."}
+              : "Auto uses exportable media from Pexels, then Pixabay. An existing upload or selection always stays in place."}
         </p>
       </div>
 
@@ -461,14 +466,14 @@ function ChecklistEditor({
           ? "Comparison labels"
           : diagram
             ? "Diagram ideas"
-            : "Checklist items"}
+            : "List items"}
       </Label>
       <p className="text-muted-foreground text-xs">
         {comparison
           ? "Supply two labels, up to 60 characters each. Their order stays the same in both comparison layouts."
           : diagram
             ? "Add 2–5 short ideas. Path follows their order; Orbit places the first idea at the center."
-            : "Each item becomes its own row with an icon badge. Leave empty to fall back to splitting the scene text."}
+            : "Keep each item short. Cascading list supports 2–5 items; Tile grid supports 2–4."}
       </p>
       <div className="grid gap-1.5">
         {draft.map((item, i) => (
@@ -720,6 +725,7 @@ export function SceneInspector({
   videoEngine = "hyperframes",
   orientation = "portrait",
   hideTextDefault = false,
+  storySource,
 }: {
   scene: SceneDTO;
   sceneIndex: number;
@@ -731,6 +737,7 @@ export function SceneInspector({
   videoEngine?: VideoEngineId;
   orientation?: Orientation;
   hideTextDefault?: boolean;
+  storySource?: string;
 }) {
   const [text, setText] = React.useState(scene.text);
   const [spokenText, setSpokenText] = React.useState(
@@ -749,6 +756,7 @@ export function SceneInspector({
     Boolean(scene.motion?.recipeId.startsWith("comparison-"));
   const isChecklist =
     isComparison ||
+    Boolean(scene.items?.length) ||
     normalId === "icon-grid" ||
     normalId === "hf-list" ||
     scene.role === "diagram" ||
@@ -767,7 +775,14 @@ export function SceneInspector({
     scene.items?.length ||
     scene.background?.url,
   );
+  const sceneGraphic = resolveSemanticGraphic(
+    { ...scene, spokenText: scene.spokenText ?? undefined },
+    storySource,
+  );
   const motionOptions = [
+    ...(sceneGraphic
+      ? [{ value: "illustrated", label: sceneGraphic.presentation ? `Auto · ${SHOWPIECES.find(piece => piece.id === sceneGraphic.presentation)?.name}` : "Content illustration" }]
+      : []),
     { value: "preset", label: "Preset look" },
     ...MOTION_RECIPES.filter(
       (recipe) =>
@@ -949,21 +964,28 @@ export function SceneInspector({
             <Label htmlFor="scene-motion">Motion treatment</Label>
             <Combobox
               id="scene-motion"
-              value={scene.motion?.recipeId ?? "preset"}
-              onChange={(value) =>
+              value={
+                sceneGraphic ? "illustrated" : (scene.motion?.recipeId ?? "preset")
+              }
+              onChange={(value) => {
+                if (value === "illustrated") return;
                 onUpdate({
                   id: scene.id,
                   motion:
                     value === "preset"
                       ? null
                       : motionDirection(value as MotionRecipeId),
-                })
-              }
+                });
+              }}
               options={motionOptions}
               searchPlaceholder="Search treatments…"
             />
             <p className="text-muted-foreground text-xs">
-              {scene.motion
+              {sceneGraphic
+                ? `An illustrated ${sceneGraphic.kind} built from ${sceneGraphic.nodes.map((node) => node.label).join(", ")}. Planned automatically from this scene's content.`
+                : scene.direction?.graphic
+                  ? `${semanticGraphicIssue(scene.direction.graphic, scene.text, scene.spokenText ?? undefined, storySource) ?? "This illustration cannot hide supplied media or data."} Replan visual direction or choose a treatment.`
+                  : scene.motion
                 ? resolveMotionDirection(
                     scene.motion,
                     scene.text,

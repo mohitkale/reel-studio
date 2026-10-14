@@ -95,3 +95,38 @@ it("ignores narration length and tolerates empty, hidden and missing timed copy"
   ).toEqual([]);
   expect(reviewVisualInputs(scenes, timeline, ["empty"], 0)).toEqual([]);
 });
+
+it("includes supplied lists and data in reading-time advice without retiming narration", () => {
+  const list: ReelScene = {
+    ...scene("list", "Ideas"),
+    motion: motionDirection("list-cascade"),
+    items: [
+      "A complete idea with useful detail.",
+      "Another complete idea that needs a reading hold.",
+      "The last idea matters just as much.",
+    ],
+  };
+  const before = structuredClone(list);
+  const timeline = [{ sceneId: list.id, startFrame: 0, durationFrames: 90 }];
+  expect(reviewVisualInputs([list], timeline, [list.id], 30)).toEqual([
+    expect.objectContaining({ kind: "reading-time" }),
+  ]);
+  expect(list).toEqual(before);
+  const chart: ReelScene = {
+    ...scene("data", "Results"),
+    motion: motionDirection("data-ledger"),
+    chart: {
+      labels: ["First measured stage", "Second measured stage"],
+      series: [{ label: "Count", values: [42, 68], unit: "%" }],
+      sourceAttribution: "Supplied demonstration values",
+    },
+  };
+  expect(
+    reviewVisualInputs(
+      [chart],
+      [{ sceneId: chart.id, startFrame: 0, durationFrames: 60 }],
+      [chart.id],
+      30,
+    ).some((finding) => finding.kind === "reading-time"),
+  ).toBe(true);
+});

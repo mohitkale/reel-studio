@@ -1,6 +1,7 @@
 import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
 import type { ScriptDTO, VoiceMode } from "@/lib/dto";
 import { serverDefaultTokens } from "@/lib/brand-defaults";
+import { applyVisualTheme } from "@/production/creative-direction";
 import {
   DEFAULT_ENERGY_ID,
   DEFAULT_STYLE_ID,
@@ -100,9 +101,11 @@ export async function getScripts(
         voiceClips: script.voiceClips.map(toVoiceClipDTO),
         voiceMode: resolveVoiceMode(script.voiceMode),
         brandKitId: script.project.brandKitId,
-        brandTokens: brandKit
-          ? resolveBrandTokens(brandKit)
-          : { ...serverDefaultTokens },
+        brandTokens: applyVisualTheme(
+          brandKit ? resolveBrandTokens(brandKit) : { ...serverDefaultTokens },
+          script.project.brandKitId ? undefined : overrides.visualTheme,
+        ),
+        visualTheme: script.project.brandKitId ? undefined : overrides.visualTheme,
         coverUrl: script.coverUrl,
         musicUrl: script.musicUrl,
         musicVolume: script.musicVolume,

@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { HintTooltip } from "@/components/ui/hint-tooltip";
 import { useReplanMotionDirection } from "@/hooks/script";
+import { MOTION_SYSTEMS, type MotionSystem } from "@/production/motion-systems";
+import Link from "next/link";
 import { MOTION_RECIPES } from "@/production/motion";
 import {
   VISUAL_AMBITIONS,
@@ -34,6 +36,7 @@ import {
 export function MotionDirectionMenu({
   scriptId,
   ambition,
+  system,
   chapterMotifs,
   hasChapters,
   scenes,
@@ -41,6 +44,7 @@ export function MotionDirectionMenu({
 }: {
   scriptId: string;
   ambition: VisualAmbition;
+  system?: MotionSystem;
   chapterMotifs?: boolean;
   hasChapters?: boolean;
   scenes: readonly MotionReviewScene[];
@@ -53,6 +57,7 @@ export function MotionDirectionMenu({
     ambition?: VisualAmbition;
     newVariation?: boolean;
     chapterMotifs?: boolean;
+    system?: MotionSystem;
   }) {
     replan.mutate(input, {
       onSuccess: ({ result }) =>
@@ -87,7 +92,7 @@ export function MotionDirectionMenu({
             ) : (
               <Clapperboard className="size-3.5" />
             )}
-            {VISUAL_AMBITION_LABELS[ambition]}
+            Visual direction · {VISUAL_AMBITION_LABELS[ambition]}
             {issues.length > 0 && (
               <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
                 <TriangleAlert className="size-3.5" />
@@ -165,6 +170,28 @@ export function MotionDirectionMenu({
             </div>
           </>
         )}
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel>Visual family</DropdownMenuLabel>
+        {MOTION_SYSTEMS.map((family) => (
+          <DropdownMenuItem
+            key={family.id}
+            onSelect={() => apply({ system: family.id })}
+            className="items-start"
+          >
+            <div>
+              <p>
+                {family.name}
+                {system === family.id ? " · current" : ""}
+              </p>
+              <p className="text-muted-foreground mt-1 text-xs">
+                {family.description}
+              </p>
+            </div>
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuItem asChild>
+          <Link href="/templates?view=motion">Preview motion treatments</Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Replan visual direction</DropdownMenuLabel>
         {VISUAL_AMBITIONS.map((value) => (

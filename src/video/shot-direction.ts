@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { productionSceneRoleSchema } from "@/production/roles";
 import { motionDirectionSchema } from "@/production/motion";
+import { semanticGraphicSchema } from "./semantic-graphic";
 
 /** The same bounded, data-only direction is used by local and AI planning. */
 export const shotDirectionSchema = z
@@ -9,6 +10,7 @@ export const shotDirectionSchema = z
     role: productionSceneRoleSchema,
     composition: z.enum(["authored", "layered-title"]),
     motion: motionDirectionSchema.optional(),
+    graphic: semanticGraphicSchema.optional().catch(undefined),
   })
   .strict();
 export type ShotDirection = z.infer<typeof shotDirectionSchema>;

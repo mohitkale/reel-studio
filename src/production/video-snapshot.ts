@@ -77,6 +77,7 @@ export const videoScriptSnapshotSchema = z.object({
   styleId: z.enum(["bold-hook", "clean-story", "teach-me", "soft-brand"]),
   energy: z.enum(["calm", "normal", "high"]),
   productionPreset: brandOverridesSchema.shape.productionPreset,
+  visualTheme: brandOverridesSchema.shape.visualTheme,
   motionPlan: brandOverridesSchema.shape.motionPlan,
   musicMap: brandOverridesSchema.shape.musicMap,
   audioMastering: brandOverridesSchema.shape.audioMastering,
@@ -167,10 +168,12 @@ export const preparedVideoCompositionSchema = z
             role: true,
             motion: true,
             direction: true,
+            locks: true,
             mood: true,
             order: true,
           })
           .extend({
+            spokenText: z.string().optional(),
             hideText: z.boolean().optional(),
             background: sceneConfigSchema.shape.background
               .unwrap()
@@ -185,7 +188,15 @@ export const preparedVideoCompositionSchema = z
           durationFrames: z.number().int().nonnegative(),
         }),
       ),
-      spokenWords: z.array(z.object({ startFrame: z.number().int().nonnegative(), endFrame: z.number().int().positive() })).optional(),
+      spokenWords: z
+        .array(
+          z.object({
+            text: z.string().optional(),
+            startFrame: z.number().int().nonnegative(),
+            endFrame: z.number().int().positive(),
+          }),
+        )
+        .optional(),
       width: z.number().int().positive(),
       height: z.number().int().positive(),
       fps: z.number().positive(),
@@ -199,6 +210,7 @@ export const preparedVideoCompositionSchema = z
             url: z.string(),
             startFrame: z.number().int().nonnegative(),
             volume: z.number(),
+            fadeSeconds: z.number().finite().min(0).max(2).optional(),
           }),
         )
         .optional(),

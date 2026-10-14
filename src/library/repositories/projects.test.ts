@@ -6,7 +6,10 @@ const { create, getDefaultBrandKit } = vi.hoisted(() => ({
   getDefaultBrandKit: vi.fn(),
 }));
 vi.mock("@/library/db", () => ({ prisma: { project: { create } } }));
-vi.mock("./brandkits", () => ({ getDefaultBrandKit }));
+vi.mock("./brandkits", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./brandkits")>()),
+  getDefaultBrandKit,
+}));
 
 import { createProjectFromPlan } from "./projects";
 import { scenePlanSchema } from "@/providers/ai/types";
@@ -15,6 +18,8 @@ import {
   planMotionSequence,
 } from "@/production/motion-plan";
 import { motionDirection } from "@/production/motion";
+import { VISUAL_THEMES } from "@/production/creative-direction";
+import { CORAL_HARBOR_NAME, CORAL_HARBOR_PALETTE } from "@/lib/brand-defaults";
 
 const plan = scenePlanSchema.parse({
   projectName: "Motion story",
@@ -32,6 +37,88 @@ describe("project motion persistence", () => {
     vi.clearAllMocks();
     getDefaultBrandKit.mockResolvedValue(null);
     create.mockResolvedValue({ id: "project", scripts: [{ id: "script" }] });
+  });
+  it("freezes an automatic theme without attaching the untouched starter kit", async () => {
+    getDefaultBrandKit.mockResolvedValue({
+      id: "starter",
+      name: CORAL_HARBOR_NAME,
+      palette: JSON.stringify(CORAL_HARBOR_PALETTE),
+      handle: "@yourbrand",
+      fonts: null,
+    });
+    await createProjectFromPlan(
+      plan,
+      "portrait",
+      [],
+      "hyperframes",
+      undefined,
+      { visualTheme: VISUAL_THEMES.botanical },
+    );
+    const project = create.mock.calls[0][0].data;
+    expect(project.brandKitId).toBeNull();
+    expect(
+      JSON.parse(project.scripts.create.brandOverrides).visualTheme,
+    ).toEqual(VISUAL_THEMES.botanical);
+  });
+  it("respects a customized default brand and an explicit kit", async () => {
+    getDefaultBrandKit.mockResolvedValue({
+      id: "custom",
+      name: CORAL_HARBOR_NAME,
+      palette: JSON.stringify({ ...CORAL_HARBOR_PALETTE, accent: "#123456" }),
+      handle: "@yourbrand",
+      fonts: null,
+    });
+    await createProjectFromPlan(
+      plan,
+      "portrait",
+      [],
+      "hyperframes",
+      undefined,
+      { visualTheme: VISUAL_THEMES.botanical },
+    );
+    expect(create.mock.calls[0][0].data.brandKitId).toBe("custom");
+    await createProjectFromPlan(
+      plan,
+      "portrait",
+      [],
+      "hyperframes",
+      undefined,
+      { visualTheme: VISUAL_THEMES.botanical, brandKitId: "chosen" },
+    );
+    expect(create.mock.calls[1][0].data.brandKitId).toBe("chosen");
+  });
+  it("treats repeated AI motion suggestions as hints and retains explicit scene locks", async () => {
+    const directed = {
+      ...plan,
+      scenes: plan.scenes.map((scene) => ({
+        ...scene,
+        direction: {
+          version: 1 as const,
+          role: "explanation" as const,
+          composition: "authored" as const,
+          motion: motionDirection("quiet-center"),
+        },
+      })),
+    };
+    await createProjectFromPlan(
+      directed,
+      "portrait",
+      [],
+      "hyperframes",
+      undefined,
+      {
+        preset: { id: "editorial-explainer", version: "1.0.0" },
+        roles: ["explanation", "explanation", "explanation"],
+        sceneLocks: [undefined, { scene: true, copy: false, assets: false }],
+      },
+    );
+    const motions =
+      create.mock.calls[0][0].data.scripts.create.scenes.create.map(
+        (scene: { layoutJson: string }) =>
+          JSON.parse(scene.layoutJson).motion.recipeId,
+      );
+    expect(motions[1]).toBe("quiet-center");
+    expect(new Set(motions).size).toBeGreaterThan(1);
   });
   it("creates scene IDs and their chapter boundaries in the same nested database write", async () => {
     const long = {
@@ -124,13 +211,20 @@ describe("project motion persistence", () => {
       undefined,
       motionDirection("type-impact"),
     ];
-    await createProjectFromPlan(plan, "portrait", [], "hyperframes", undefined, {
-      preset: { id: "creator-punch", version: "1.0.0" },
-      roles: [...roles],
-      motionPlan: settings,
-      motions: decisions,
-      sceneLocks: [{ copy: false, assets: false, scene: true }],
-    });
+    await createProjectFromPlan(
+      plan,
+      "portrait",
+      [],
+      "hyperframes",
+      undefined,
+      {
+        preset: { id: "creator-punch", version: "1.0.0" },
+        roles: [...roles],
+        motionPlan: settings,
+        motions: decisions,
+        sceneLocks: [{ copy: false, assets: false, scene: true }],
+      },
+    );
     const script = create.mock.calls[0][0].data.scripts.create;
     expect(JSON.parse(script.brandOverrides).motionPlan).toEqual(settings);
     expect(JSON.parse(script.scenes.create[0].layoutJson).locks).toEqual({
@@ -145,14 +239,47 @@ describe("project motion persistence", () => {
     ).toEqual(decisions);
   });
   it("persists admitted direction and uses a reproducible seed when creating the same supplied plan", async () => {
-    const directed = { ...plan, scenes: [{ ...plan.scenes[0], direction: {
-      version: 1 as const, role: "headline" as const, composition: "layered-title" as const,
-    } }] };
-    const production = { preset: { id: "editorial-explainer" as const, version: "1.0.0" }, roles: ["headline" as const] };
-    await createProjectFromPlan(directed, "portrait", [], "hyperframes", undefined, production);
-    await createProjectFromPlan(directed, "portrait", [], "hyperframes", undefined, production);
-    const [first, second] = create.mock.calls.map(([request]) => request.data.scripts.create);
-    expect(JSON.parse(first.scenes.create[0].layoutJson).direction).toEqual(directed.scenes[0].direction);
-    expect(JSON.parse(first.brandOverrides).motionPlan.seed).toBe(JSON.parse(second.brandOverrides).motionPlan.seed);
+    const directed = {
+      ...plan,
+      scenes: [
+        {
+          ...plan.scenes[0],
+          direction: {
+            version: 1 as const,
+            role: "headline" as const,
+            composition: "layered-title" as const,
+          },
+        },
+      ],
+    };
+    const production = {
+      preset: { id: "editorial-explainer" as const, version: "1.0.0" },
+      roles: ["headline" as const],
+    };
+    await createProjectFromPlan(
+      directed,
+      "portrait",
+      [],
+      "hyperframes",
+      undefined,
+      production,
+    );
+    await createProjectFromPlan(
+      directed,
+      "portrait",
+      [],
+      "hyperframes",
+      undefined,
+      production,
+    );
+    const [first, second] = create.mock.calls.map(
+      ([request]) => request.data.scripts.create,
+    );
+    expect(JSON.parse(first.scenes.create[0].layoutJson).direction).toEqual(
+      directed.scenes[0].direction,
+    );
+    expect(JSON.parse(first.brandOverrides).motionPlan.seed).toBe(
+      JSON.parse(second.brandOverrides).motionPlan.seed,
+    );
   });
 });

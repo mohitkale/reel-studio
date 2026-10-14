@@ -405,8 +405,8 @@ export async function executeVideoProductionJob(
     const prepared = await stage(
       "prepare_composition",
       {
-        // Version 3 adds measured-word SFX protection to prepared cue decisions.
-        compositionContract: 3,
+        // Version 6 retains measured word labels and explicit event fades for picture/sound landmarks.
+        compositionContract: 6,
         media: { ...media, snapshot: snapshotWithAudio },
         timing,
         orientation: input.orientation,

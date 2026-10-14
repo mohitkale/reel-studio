@@ -60,6 +60,8 @@ export interface ReelScene {
   id: string;
   templateId: string;
   text: string;
+  /** Source context for semantic illustration labels; audio remains owned by the take. */
+  spokenText?: string;
   emphasis: string[];
   visual?: string;
   /** Per-scene full-bleed background (image or video), any template. */
@@ -74,6 +76,8 @@ export interface ReelScene {
   /** Explicit scene recipe; absent keeps the existing preset/template appearance. */
   motion?: MotionDirection;
   direction?: ShotDirection;
+  /** Persisted author locks; automatic atmosphere must respect scene ownership. */
+  locks?: { scene: boolean; copy: boolean; assets: boolean };
   /** When true, suppress the on-screen text/visual and show just the background. */
   hideText?: boolean;
   /** Emotional/visual tone; picks the dynamic background treatment when there's no photo/video background. */
@@ -113,10 +117,12 @@ export interface TemplateProps {
  * Input props for the root ReelComposition. Shared by the HTML compiler and editor.
  */
 export type ReelProps = {
+  /** Current full-story copy for an isolated scene preview; never frozen quotations. */
+  storySource?: string;
   /** Versioned engine-neutral graph prototype; absent preserves legacy visuals. */
   motionSpec?: MotionSpec;
   /** Measured narration windows from the current audible take, in content frames. */
-  spokenWords?: Array<{ startFrame: number; endFrame: number }>;
+  spokenWords?: Array<{ startFrame: number; endFrame: number; text?: string }>;
   /** Internal native still measurement; omitted from playback and exports. */
   reviewLayout?: boolean;
   scenes: ReelScene[];

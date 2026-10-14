@@ -1,5 +1,6 @@
 import { escapeHtml } from "@/lib/html";
 import { MOTION_LIBRARY_STYLES } from "./motion/library-styles";
+import { colorContrast, readableMotionPalette } from "@/video/readable-palette";
 import { buildTextFitScript } from "./text-fit";
 import { validateMotionForReel } from "@/video/motion-spec";
 import { compileDirectorMotion } from "@/video/director-motion";
@@ -71,6 +72,20 @@ import {
   REGISTERED_MOTION_STYLES,
 } from "./motion/registered-blocks";
 import { isMediaMotionRecipe } from "@/production/motion";
+import {
+  buildSemanticScene,
+  SEMANTIC_GRAPHIC_STYLES,
+} from "./motion/semantic-blocks";
+import {
+  buildShowpieceScene,
+  SHOWPIECE_STYLES,
+} from "./motion/showpiece-blocks";
+import { semanticStorySource } from "@/production/semantic-direction";
+import {
+  CELESTIAL_STYLES,
+  decorateCelestialType,
+} from "./motion/celestial-blocks";
+import { resolveSemanticGraphic } from "@/production/semantic-direction";
 import {
   resolveCaptionRenderStyle,
   splitCaptionText,
@@ -944,7 +959,7 @@ export function buildHyperframesCompositionHtml(
   const width = props.width || 1080;
   const height = props.height || 1920;
   const layout = props.layout ?? resolveProductionLayout({ width, height });
-  const tokens = props.tokens;
+  const tokens = readableMotionPalette(props.tokens);
   const accent = tokens.accent ?? "#ff6b4a";
   const cover = coverFrames(fps, Boolean(props.coverUrl));
   const coverSeconds = framesToSeconds(cover, fps);
@@ -960,6 +975,26 @@ export function buildHyperframesCompositionHtml(
 
   const beats: Array<{ id: string; start: number; duration: number }> = [];
   const sceneBlocks: string[] = [];
+  const storySource = props.storySource ?? semanticStorySource(props.scenes);
+  const celestialStory =
+    props.scenes.some((scene) =>
+      ["lunar-cycle", "year-cycle", "sky-orbit"].includes(
+        resolveSemanticGraphic(scene, storySource)?.presentation ?? "",
+      ),
+    ) &&
+    /\b(moon|lunar|cosmos|celestial)\b|wheel of the year/i.test(storySource);
+  const atmosphereSceneIds = new Set(
+    props.scenes
+      .filter(
+        (scene) =>
+          !scene.locks?.scene &&
+          !scene.visual &&
+          !scene.chart &&
+          !scene.items?.length &&
+          !scene.background?.url,
+      )
+      .map((scene) => scene.id),
+  );
   const videoBlocks: string[] = [];
   const timeline = props.timeline as ReelBeat[];
 
@@ -992,6 +1027,25 @@ export function buildHyperframesCompositionHtml(
     );
 
     const shot = motionSpec?.shots[i];
+    const showpiece = buildShowpieceScene(
+      { scene, tokens, absoluteStart, duration, exitWindow, transitionClass },
+      storySource,
+      { width, height, fps, spokenWords: props.spokenWords },
+      beat.startFrame,
+      beat.durationFrames / fps,
+    );
+    if (showpiece) {
+      sceneBlocks.push(showpiece);
+      continue;
+    }
+    const semanticScene = buildSemanticScene(
+      { scene, tokens, absoluteStart, duration, exitWindow, transitionClass },
+      storySource,
+    );
+    if (semanticScene) {
+      sceneBlocks.push(semanticScene);
+      continue;
+    }
     const graphScene =
       shot &&
       compileMotionShot(
@@ -1025,7 +1079,7 @@ export function buildHyperframesCompositionHtml(
       buildTypeMotionScene(motionArgs);
     const motionScene = authoredMotionScene?.replace(
       /(<div\b[^>]*class="fx-stage[^>]*>)/,
-      '$1<div class="ml-ambient" aria-hidden="true"></div>',
+      '$1<div class="ml-ambient" aria-hidden="true"></div><div class="ml-trace" aria-hidden="true"></div>',
     );
     // Media recipes stage their own timed source. Keep a single decoder;
     // all other treatments continue using the shared background video layer.
@@ -1213,7 +1267,7 @@ export function buildHyperframesCompositionHtml(
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reel Studio · HyperFrames</title>
   <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}${TYPE_MOTION_STYLES}
-${REGISTERED_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_MOTION_STYLES}${STORY_MOTION_STYLES}${MOTION_LIBRARY_STYLES}
+${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLES}${REGISTERED_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_MOTION_STYLES}${STORY_MOTION_STYLES}${MOTION_LIBRARY_STYLES}
     .rs-subtitle{position:absolute;z-index:50;inset:0;box-sizing:border-box;display:flex;flex-direction:column;justify-content:${captionResolved.outer.justifyContent};align-items:${captionResolved.outer.alignItems};padding:${captionResolved.outer.paddingTop}px ${captionResolved.outer.paddingRight}px ${captionResolved.outer.paddingBottom}px ${captionResolved.outer.paddingLeft}px;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
     .rs-subtitle>span{display:block;max-width:${captionInner.maxWidth}px;padding:${captionInner.padding};border-radius:${captionInner.borderRadius}px;background:${captionInner.background};color:${captionInner.color};font-family:${cssFontStack(captionInner.fontFamily)};font-weight:${captionInner.fontWeight};line-height:${captionInner.lineHeight};letter-spacing:${captionInner.letterSpacing};text-align:${captionInner.textAlign};text-shadow:${captionInner.textShadow};${captionInner.WebkitTextStroke ? `-webkit-text-stroke:${captionInner.WebkitTextStroke};` : ""}overflow-wrap:anywhere}
     .rs-caption-line{display:block}.rs-caption-word{display:inline-block;position:relative}.rs-caption-active{position:absolute;inset:0;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
@@ -1236,11 +1290,26 @@ ${REGISTERED_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_
          data-hide-progress="${hideProgress ? "1" : "0"}"
          data-grain="${grainAttr}"
          data-orientation="${layout.orientation}"
-         style="width:${width}px;height:${height}px;--brand-background:${tokens.background};--brand-foreground:${tokens.foreground};--brand-muted:${tokens.muted};--brand-accent-foreground:${tokens.accentForeground};--motion-radius:${tokens.radius}px;--motion-gap:${Math.min(width * 0.032, height * 0.045, 48)}px;--brand-font:${escapeHtml(cssFontStack(hyperframesBrandFont(tokens.fontFamily)))};font-family:var(--brand-font);--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}">
+         data-palette-tone="${(colorContrast(tokens.background, "#000000") ?? 0) > (colorContrast(tokens.background, "#FFFFFF") ?? 0) ? "light" : "dark"}"
+         style="width:${width}px;height:${height}px;--brand-background:${tokens.background};--brand-foreground:${tokens.foreground};--brand-muted:${tokens.muted};--brand-accent-foreground:${tokens.accentForeground};--brand-accent-text:${(colorContrast(tokens.accent, tokens.background) ?? 0) >= 4.5 ? tokens.accent : tokens.foreground};--motion-radius:${tokens.radius}px;--motion-gap:${Math.min(width * 0.032, height * 0.045, 48)}px;--brand-font:${escapeHtml(cssFontStack(hyperframesBrandFont(tokens.fontFamily)))};font-family:var(--brand-font);--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}">
       ${coverBlock}
       ${progress}
       ${videoBlocks.join("\n")}
-      ${sceneBlocks.map((block, index) => block.replace(/(<section\b[^>]*>)([\s\S]*)(<\/section>\s*)$/, (_, open: string, body: string, close: string) => `${open}${open.includes("data-motion-recipe=") ? '<div class="ml-backplate" aria-hidden="true"></div>' : ""}<div class="scene-handoff" style="--handoff:${index === 0 ? "1" : "0"}" data-first-scene="${index === 0 ? "1" : "0"}">${body}</div>${close}`)).join("\n")}
+      ${sceneBlocks
+        .map((block) => {
+          const id = /data-scene-id="([^"]+)"/.exec(block)?.[1];
+          return celestialStory && id && atmosphereSceneIds.has(id)
+            ? decorateCelestialType(block)
+            : block;
+        })
+        .map((block, index) =>
+          block.replace(
+            /(<section\b[^>]*>)([\s\S]*)(<\/section>\s*)$/,
+            (_, open: string, body: string, close: string) =>
+              `${open}${open.includes("data-motion-recipe=") ? '<div class="ml-backplate" aria-hidden="true"></div>' : ""}<div class="scene-handoff" style="--handoff:${index === 0 ? "1" : "0"}" data-first-scene="${index === 0 ? "1" : "0"}">${body}</div>${close}`,
+          ),
+        )
+        .join("\n")}
       ${captionBlocks}
       ${audioTags.join("\n")}
     </div>

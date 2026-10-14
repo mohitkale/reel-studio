@@ -7,6 +7,7 @@ import { z } from "zod";
 import { AI_PROVIDER_IDS } from "@/providers/ai/types";
 import { mediaPreferenceSchema } from "@/lib/media-preference";
 import { productionPresetIdSchema } from "@/production/presets";
+import { motionSystemSchema } from "@/production/motion-systems";
 import { visualAmbitionSchema } from "@/production/motion-plan";
 import { sfxCueEditRequestSchema } from "@/lib/sfx-cue-edit";
 import { musicMapEditSchema } from "@/production/music-map";
@@ -557,11 +558,12 @@ export function registerTools(server: McpServer): void {
     "replan_motion_direction",
     {
       description:
-        "Replan a preset video's visual treatments with Clean, Expressive or Showcase ambition. Preserves copy, narration, data, media, locked scenes and hidden-text scenes. newVariation chooses a new saved seed; eligible choices may remain unchanged. chapterMotifs enables alternating sweep/rise type choreography from a valid saved chapter outline; false returns unlocked scenes to standard choreography.",
+        "Replan a preset video's visual treatments with Clean, Expressive or Showcase ambition. Preserves copy, narration, data, media, locked scenes and hidden-text scenes. newVariation chooses a new saved seed; eligible choices may remain unchanged. system selects a coherent editorial, poster or precision visual family. chapterMotifs enables alternating sweep/rise type choreography from a valid saved chapter outline; false returns unlocked scenes to standard choreography.",
       inputSchema: {
         scriptId: z.string().min(1),
         ambition: visualAmbitionSchema.optional(),
         chapterMotifs: z.boolean().optional(),
+        system: motionSystemSchema.optional(),
         newVariation: z.boolean().optional(),
       },
     },

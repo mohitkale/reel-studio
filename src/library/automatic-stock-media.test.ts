@@ -66,19 +66,19 @@ describe("automatic stock-media selection", () => {
   });
 
   it("falls back from requested B-roll video to an image when Auto has no video provider", async () => {
-    const item = candidate("fallback", "unsplash", "image");
+    const item = candidate("fallback", "pixabay", "image");
     const registry = {
       get: vi.fn((id: string) => ({
         id,
         label: id,
         capabilities: {
-          kinds: id === "unsplash" ? ["image"] : ["image", "video"],
+          kinds: id === "pixabay" ? ["image"] : ["image", "video"],
           maxPageSize: 30,
           usageReporting: false,
         },
       })),
       health: vi.fn(async (id: string) => ({
-        status: id === "unsplash" ? "ready" : "unconfigured",
+        status: id === "pixabay" ? "ready" : "unconfigured",
       })),
       search: vi.fn(async () => ({ items: [item] })),
       resolve: vi.fn(async () => ({
@@ -110,10 +110,58 @@ describe("automatic stock-media selection", () => {
     expect(result).toMatchObject({
       state: "selected",
       kind: "image",
-      providerId: "unsplash",
+      providerId: "pixabay",
       background: { type: "image", url: "/media/fallback.jpg" },
     });
     expect(result.message).toMatch(/automatic fallback/i);
+  });
+
+  it("does not auto-select preview-only stock even when it is the only configured provider", async () => {
+    const registry = {
+      get: vi.fn(() => ({
+        capabilities: { kinds: ["image"], maxPageSize: 30 },
+      })),
+      health: vi.fn(async (id: string) => ({
+        status: id === "unsplash" ? "ready" : "unconfigured",
+      })),
+      search: vi.fn(),
+    } as unknown as StockMediaProviderRegistry;
+    const materialize = vi.fn();
+    const result = await resolveAutomaticSceneMedia(
+      { backgroundQuery: "reading" },
+      "portrait",
+      "auto",
+      { dependencies: { registry, materialize } },
+    );
+    expect(result.state).toBe("no-provider");
+    expect(result.background).toBeUndefined();
+    expect(registry.search).not.toHaveBeenCalled();
+    expect(materialize).not.toHaveBeenCalled();
+  });
+
+  it("rejects hotlink-only candidates before materialization", async () => {
+    const item = {
+      ...candidate("preview"),
+      acquisitionPolicy: "hotlink" as const,
+    };
+    const registry = {
+      get: vi.fn(() => ({
+        capabilities: { kinds: ["image"], maxPageSize: 30 },
+      })),
+      health: vi.fn(async () => ({ status: "ready" })),
+      search: vi.fn(async () => ({ items: [item] })),
+      resolve: vi.fn(),
+    } as unknown as StockMediaProviderRegistry;
+    const materialize = vi.fn();
+    const result = await resolveAutomaticSceneMedia(
+      { backgroundQuery: "reading" },
+      "portrait",
+      "auto",
+      { dependencies: { registry, materialize } },
+    );
+    expect(result.state).toBe("no-result");
+    expect(registry.resolve).not.toHaveBeenCalled();
+    expect(materialize).not.toHaveBeenCalled();
   });
 
   it("chooses the same candidate for the same bounded intent", () => {

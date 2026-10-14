@@ -23,13 +23,17 @@ import {
 } from "./types";
 import { allowedPresetCapabilityIds } from "@/production/ai-preset-plan";
 import { capabilityIdsForEngine } from "@/engines/capabilities";
-import { SHOT_DIRECTION_JSON_SCHEMA, CHART_JSON_SCHEMA } from "./director-schema";
+import {
+  SHOT_DIRECTION_JSON_SCHEMA,
+  CHART_JSON_SCHEMA,
+} from "./director-schema";
 
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 // flash-lite has the most free-tier/availability headroom; full flash often 503s.
 export const GEMINI_DEFAULT_MODEL = "gemini-2.5-flash-lite";
 
-// Gemini responseSchema (OpenAPI subset). Template enum switches with engine.
+// Gemini responseJsonSchema accepts our shared JSON Schema, including nested
+// additionalProperties. responseSchema is an OpenAPI subset and rejects it.
 function buildResponseSchema(input: GeneratePlanInput) {
   const engineId = input.videoEngine ?? "hyperframes";
   const capabilityIds = input.productionPresetId
@@ -196,7 +200,7 @@ export function createGeminiProvider(): AIProvider {
             contents: [{ role: "user", parts: [{ text: user }] }],
             generationConfig: {
               responseMimeType: "application/json",
-              responseSchema: buildResponseSchema(input),
+              responseJsonSchema: buildResponseSchema(input),
               temperature: 0.85,
             },
           }),
@@ -243,7 +247,7 @@ export function createGeminiProvider(): AIProvider {
             contents: [{ role: "user", parts: [{ text: user }] }],
             generationConfig: {
               responseMimeType: "application/json",
-              responseSchema: PODCAST_RESPONSE_SCHEMA,
+              responseJsonSchema: PODCAST_RESPONSE_SCHEMA,
               temperature: 0.9,
             },
           }),
@@ -296,7 +300,7 @@ export function createGeminiProvider(): AIProvider {
             contents: [{ role: "user", parts: [{ text: user }] }],
             generationConfig: {
               responseMimeType: "application/json",
-              responseSchema: PODCAST_CLIP_SUGGESTIONS_RESPONSE_SCHEMA,
+              responseJsonSchema: PODCAST_CLIP_SUGGESTIONS_RESPONSE_SCHEMA,
               temperature: 0.3,
             },
           }),

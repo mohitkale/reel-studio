@@ -4,6 +4,7 @@ import { audioMasteringSchema } from "@/production/audio-mastering";
 import { chapterPlanSchema } from "@/production/chapters";
 import { chapterDraftSchema } from "@/production/chapter-draft";
 import { motionPlanSettingsSchema } from "@/production/motion-plan";
+import { visualThemeSchema } from "@/production/creative-direction";
 import { shotDirectionSchema } from "@/video/shot-direction";
 import { musicMapSchema } from "@/production/music-map";
 
@@ -76,6 +77,7 @@ export const visualStyleSchema = z.object({
 
 export const brandOverridesSchema = z
   .object({
+    visualTheme: visualThemeSchema.optional(),
     styleId: z
       .enum(["bold-hook", "clean-story", "teach-me", "soft-brand"])
       .optional(),

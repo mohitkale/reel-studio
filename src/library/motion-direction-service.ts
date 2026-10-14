@@ -1,6 +1,17 @@
+import {
+  defaultMotionSystem,
+  type MotionSystem,
+} from "@/production/motion-systems";
 import { chapterPlanIssue } from "@/production/chapters";
 import { AIError } from "@/providers/ai/types";
 import { randomUUID } from "node:crypto";
+import { analyzeBeat } from "@/production/director";
+import {
+  inferSemanticGraphic,
+  resolveSemanticGraphic,
+  enrichSemanticSequence,
+  semanticStorySource,
+} from "@/production/semantic-direction";
 
 import { prisma } from "@/library/db";
 import { toSceneDTO } from "@/library/repositories/map";
@@ -15,13 +26,16 @@ import {
   type VisualAmbition,
 } from "@/production/motion-plan";
 
-/** Apply direction atomically. The only scene field written is layoutJson.motion. */
+/** Apply direction atomically. Structured endpoints come only from literal
+ * on-screen copy; existing diagrams, media, locks and all content are preserved.
+ */
 export async function replanMotionDirection(
   scriptId: string,
   input: {
     ambition?: VisualAmbition;
     newVariation?: boolean;
     chapterMotifs?: boolean;
+    system?: MotionSystem;
   },
 ) {
   return prisma.$transaction(async (tx) => {
@@ -52,6 +66,13 @@ export async function replanMotionDirection(
       );
     const settings: MotionPlanSettings = {
       version: "1.0.0",
+      system:
+        input.system ??
+        overrides.motionPlan?.system ??
+        defaultMotionSystem(
+          overrides.visualTheme?.id,
+          overrides.productionPreset.id,
+        ),
       ...(chapterMotifs !== undefined ? { chapterMotifs } : {}),
       seed: input.newVariation
         ? randomUUID()
@@ -60,11 +81,49 @@ export async function replanMotionDirection(
         input.ambition ?? overrides.motionPlan?.ambition ?? "expressive",
     };
     const scenes = script.scenes.map(toSceneDTO);
+    const structures = scenes.map((scene) => {
+      if (
+        scene.items?.length ||
+        scene.chart ||
+        scene.background?.url ||
+        scene.visual
+      )
+        return undefined;
+      const beat = analyzeBeat(scene.text);
+      return beat.kind === "comparison" && beat.items ? beat : undefined;
+    });
     const protectedScene = (index: number) =>
       Boolean(
         scenes[index].locks?.scene ||
         (scenes[index].hideText ?? script.hideText),
       );
+    const directedScenes = enrichSemanticSequence(
+      scenes.map((scene) => ({
+        ...scene,
+        spokenText: scene.spokenText ?? undefined,
+      })),
+    );
+    const storySource = semanticStorySource(scenes);
+    const graphics = directedScenes.map((scene, index) =>
+      structures[index]
+        ? undefined
+        : resolveSemanticGraphic(
+            {
+              ...scene,
+              spokenText: scene.spokenText ?? undefined,
+              direction: {
+                ...scene.direction,
+                graphic:
+                  scene.direction?.graphic ??
+                  inferSemanticGraphic(
+                    scene.text,
+                    scene.spokenText ?? undefined,
+                  ),
+              },
+            },
+            storySource,
+          ),
+    );
     let chapterIndex = -1;
     const motions = planMotionSequence(
       scenes.map((scene, index) => {
@@ -74,10 +133,20 @@ export async function replanMotionDirection(
           ) ?? false;
         if (chapterStart) chapterIndex++;
         return {
-          role: scene.role,
+          role: structures[index] ? "comparison" : scene.role,
+          energy: overrides.energy,
           text: scene.text,
+          spokenText: scene.spokenText ?? undefined,
+          direction: graphics[index]
+            ? {
+                version: 1,
+                role: scene.role ?? "explanation",
+                composition: "authored",
+                graphic: graphics[index],
+              }
+            : scene.direction,
           chart: scene.chart,
-          items: scene.items,
+          items: scene.items ?? structures[index]?.items,
           background: scene.background,
           hasVisualContent: Boolean(scene.visual),
           current: scene.motion,
@@ -96,7 +165,10 @@ export async function replanMotionDirection(
       if (
         before?.recipeId === after?.recipeId &&
         before?.version === after?.version &&
-        before?.typeEntrance === after?.typeEntrance
+        before?.typeEntrance === after?.typeEntrance &&
+        !structures[index] &&
+        JSON.stringify(scenes[index].direction?.graphic) ===
+          JSON.stringify(graphics[index])
       )
         continue;
       const config = parseJsonColumn(
@@ -106,6 +178,22 @@ export async function replanMotionDirection(
       );
       if (after) config.motion = after;
       else delete config.motion;
+      if (graphics[index])
+        config.direction = {
+          version: 1,
+          role: scenes[index].role ?? "explanation",
+          composition: "authored",
+          graphic: graphics[index],
+        };
+      if (structures[index] && after?.recipeId.startsWith("comparison-")) {
+        config.items = structures[index]!.items;
+        config.role = "comparison";
+        config.direction = {
+          version: 1,
+          role: "comparison",
+          composition: "authored",
+        };
+      }
       await tx.scene.update({
         where: { id: row.id },
         data: { layoutJson: JSON.stringify(config) },

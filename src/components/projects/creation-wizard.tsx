@@ -52,7 +52,7 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 
-const STEPS = ["Output", "Content", "Style", "Finish"] as const;
+const STEPS = ["Content", "Output", "Style", "Finish"] as const;
 type SourceKind = "text" | "url";
 type OutputType = "video" | "voiceover";
 
@@ -82,7 +82,7 @@ function ChoiceCard({
 }
 
 export function CreationWizard({
-  initialPresetId = "product-launch",
+  initialPresetId = "editorial-explainer",
   trigger,
 }: {
   initialPresetId?: ProductionPresetId;
@@ -119,11 +119,10 @@ export function CreationWizard({
 
   const busy = create.isPending || upload.isPending;
   const contentValid =
-    name.trim().length > 0 &&
-    (sourceKind === "text"
+    sourceKind === "text"
       ? text.trim().length >= 20 && text.trim().length <= 12_000
-      : /^https?:\/\//i.test(url.trim()));
-  const canContinue = step !== 1 || contentValid;
+      : /^https?:\/\//i.test(url.trim());
+  const canContinue = step !== 0 || contentValid;
 
   function reset() {
     setStep(0);
@@ -154,7 +153,14 @@ export function CreationWizard({
         uploaded.push(await upload.mutateAsync(formData));
       }
       const result = await create.mutateAsync({
-        name: name.trim(),
+        name:
+          name.trim() ||
+          (sourceKind === "text"
+            ? text
+                .trim()
+                .split(/[.!?\n]/, 1)[0]!
+                .slice(0, 120)
+            : "Article video"),
         outputType,
         structure,
         source:
@@ -194,8 +200,9 @@ export function CreationWizard({
     <Dialog
       open={open}
       onOpenChange={(next) => {
+        if (busy) return;
         setOpen(next);
-        if (!next && !busy) reset();
+        if (!next) reset();
       }}
     >
       <DialogTrigger asChild>
@@ -206,12 +213,12 @@ export function CreationWizard({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-h-[92vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[92vh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create without per-scene setup</DialogTitle>
+          <DialogTitle>Create production</DialogTitle>
           <DialogDescription>
-            Supply your content and assets. Reel Studio builds a deterministic,
-            editable draft locally; no AI key is required.
+            Paste your content or import an article. Build a styled draft now,
+            or customize the output first. No AI key is required.
           </DialogDescription>
         </DialogHeader>
 
@@ -238,8 +245,8 @@ export function CreationWizard({
           ))}
         </ol>
 
-        <div className="min-h-80 py-2">
-          {step === 0 ? (
+        <fieldset disabled={busy} className="min-h-80 min-w-0 py-2">
+          {step === 1 ? (
             <div className="grid gap-3 sm:grid-cols-3">
               <ChoiceCard
                 active={outputType === "video" && structure === "single"}
@@ -286,19 +293,17 @@ export function CreationWizard({
             </div>
           ) : null}
 
-          {step === 1 ? (
+          {step === 0 ? (
             <div className="space-y-5">
-              <div className="grid gap-2">
-                <Label htmlFor="production-name">Project name</Label>
-                <Input
-                  id="production-name"
-                  value={name}
-                  maxLength={120}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="e.g. September product walkthrough"
-                  autoFocus
-                />
-              </div>
+              <p className="bg-muted/30 rounded-lg border p-3 text-sm">
+                Ready to use:{" "}
+                {
+                  PRODUCTION_PRESETS.find((preset) => preset.id === presetId)
+                    ?.name
+                }{" "}
+                · {ORIENTATION_LABELS[orientation]} · Default brand kit. Review
+                your scenes, then add narration and export in the editor.
+              </p>
               <div className="grid grid-cols-2 gap-2">
                 <ChoiceCard
                   active={sourceKind === "text"}
@@ -324,6 +329,7 @@ export function CreationWizard({
                   <Label htmlFor="production-copy">Source content</Label>
                   <Textarea
                     id="production-copy"
+                    autoFocus
                     rows={8}
                     value={text}
                     maxLength={12_000}
@@ -343,6 +349,7 @@ export function CreationWizard({
                   <Label htmlFor="production-url">Article URL</Label>
                   <Input
                     id="production-url"
+                    autoFocus
                     type="url"
                     value={url}
                     maxLength={2_048}
@@ -355,6 +362,16 @@ export function CreationWizard({
                   </p>
                 </div>
               )}
+              <div className="grid gap-2">
+                <Label htmlFor="production-name">Project name (optional)</Label>
+                <Input
+                  id="production-name"
+                  value={name}
+                  maxLength={120}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="e.g. September product walkthrough"
+                />
+              </div>
               <div className="grid gap-2">
                 <Label htmlFor="production-assets">
                   Screenshots, images, video, or audio (optional)
@@ -512,9 +529,14 @@ export function CreationWizard({
               </div>
             </div>
           ) : null}
-        </div>
+        </fieldset>
+        {create.isError && (
+          <p role="alert" className="text-destructive text-sm">
+            {create.error.message}
+          </p>
+        )}
 
-        <DialogFooter className="gap-2 sm:justify-between">
+        <DialogFooter className="bg-card sticky -bottom-6 -mx-6 gap-2 border-t px-6 pt-3 pb-6 sm:justify-between">
           <Button
             variant="ghost"
             onClick={() => setStep((value) => Math.max(0, value - 1))}
@@ -522,12 +544,26 @@ export function CreationWizard({
           >
             <ArrowLeft /> Back
           </Button>
-          {step < STEPS.length - 1 ? (
+          {step === 0 ? (
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setStep(1)}
+                disabled={!contentValid || busy}
+              >
+                Customize options <ArrowRight />
+              </Button>
+              <Button onClick={submit} disabled={!contentValid || busy}>
+                {busy ? <Loader2 className="animate-spin" /> : <WandSparkles />}
+                {busy ? "Building draft…" : "Build draft"}
+              </Button>
+            </div>
+          ) : step < STEPS.length - 1 ? (
             <Button
               onClick={() =>
                 setStep((value) => Math.min(STEPS.length - 1, value + 1))
               }
-              disabled={!canContinue}
+              disabled={!canContinue || busy}
             >
               Continue <ArrowRight />
             </Button>

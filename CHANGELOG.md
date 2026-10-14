@@ -6,6 +6,85 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+### Fixed
+
+- Windows CI uses a pinned, SHA-256-verified FFmpeg archive instead of depending
+  on the unavailable Chocolatey package feed. All existing checks remain required.
+- AI creation uses the content palette by default instead of silently inheriting
+  the saved default brand. Explicit brand kits remain available in the creation
+  dialog and keep their colours; existing projects retain saved designs.
+- Lunar/calendar and celestial subjects receive animated phases, seasonal wheels
+  and orbital illustrations with a Celestial almanac palette.
+
+- Create with AI aligns the Visual direction and Orientation controls at the
+  same height. Development AI provider factories refresh after prompt/schema
+  changes instead of retaining stale closures.
+- Export preparation and media localization retain narration used by semantic
+  illustrations. Isolated scene previews use the current full-story context,
+  matching full-reel playback and MP4 output.
+- Gemini video planning sends the nested director/chart JSON Schema through
+  `responseJsonSchema`, resolving the `additionalProperties` HTTP 400 error.
+- Automatic stock selection uses exportable Pexels/Pixabay media and animated
+  fallbacks rather than selecting Unsplash hotlinks that cannot be staged for MP4.
+- Quick Produce retains the configured AI planner when enabled; local planning
+  is explicit, and narration is a visible choice.
+- Editor export progress, completion, and failure links remain visible beside
+  Export MP4 instead of being hidden inside Customize video.
+- Compatible authored motion takes precedence over an AI layered-title fade.
+  Editorial fallback scenes respect the saved brand palette, with readable text
+  paints for solid backgrounds and accent badges.
+- The development background worker reloads renderer imports alongside the web
+  preview, preventing stale MP4 designs after source edits.
+- Prose no longer fills unsupported quote/diagram slots. Explicit transition
+  endpoints can form a comparison without inventing labels or values.
+- A grounded chart with prose copy keeps its chart layout. Explicit chart
+  requests can use a literal supplied dataset when AI returns only prose.
+- Template previews include illustrative chart data and list items.
+
+### Added
+
+- Six automatic story-motion showpieces: Depth reveal, Orbit & compare,
+  Growing hierarchy, Signal architecture, Work in motion and Product evolution.
+  Dimensional scenes develop over the narration beat, with shared subject
+  identities, vector action and sparse event-timed sound accents. The gallery
+  includes live previews with sound; existing treatments and layouts remain.
+- Natural team/system narration produces connected structures, with bounded
+  parent relationships and source-grounded process labels. Prepared renders
+  retain measured word text and explicit SFX fades; revisions and sound editing
+  preserve the new frozen direction and cues.
+
+- Automatic concept, comparison, overlap and process illustrations with semantic vector
+  subjects, source-grounded labels and continuity across story definitions.
+  Complete beats and concise headlines replace the default long sequence of
+  short sentence slides. Existing authored treatments remain available.
+- Seven authored motion treatments: Editorial spread, Colour-field poster, Focus
+  window, Cascading list, Tile grid, Metric ledger and Gallery mat, bringing the
+  library to 23. Each uses separate composition and seek-safe choreography.
+- Automatic coherent motion families for new drafts, content compatibility and
+  recent-history variation; optional Editorial/Graphic/Precision family controls
+  in Visual direction. Saved scene choices, revisions and locks remain intact.
+- Live motion previews in Templates, deterministic fitting for new compositions,
+  dense square-list layouts and list/data reading-time advice in Visual review.
+
+### Changed
+
+- AI creation defaults to Automatic direction: content selects a preset family
+  and a frozen, readable theme instead of reusing one coral palette. AI can
+  choose style and energy; explicit presets, style choices, custom brand kits
+  and scene locks remain authoritative. AI motion suggestions are hints for
+  sequence planning, rather than user locks.
+- Calm energy favours measured openings; explicit Showcase and scene locks
+  preserve deliberately bold treatments.
+- Projects leads with Create with AI and Create production. Blank projects stay
+  beside the library; the text-only prompt flow is retained for remix.
+- AI creation uses preset defaults with optional style/media customization.
+  Local production starts with content and can build immediately with automatic
+  naming, while retaining the full customization workflow.
+- The editor opens the full reel and exposes Visual direction and Visual review
+  beside Export MP4. Expressive direction includes type treatments for prose,
+  stronger saved-emphasis hierarchy, animated structural details, and larger
+  reading text. Clean retains quieter layouts; locked scenes remain protected.
+
 ### Documentation
 
 - Shorter README with a current screen/export demo and contribution paths.

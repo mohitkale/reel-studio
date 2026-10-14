@@ -14,6 +14,17 @@ export function nextServerFlags(flags, env = process.env) {
     : ["--hostname", env.REEL_BIND_HOST || "127.0.0.1", ...flags];
 }
 
+/** Next reloads web modules; the separate dev worker must reload its imports too. */
+export function productionWorkerCommand(mode) {
+  return [
+    process.execPath,
+    ...(mode === "dev" ? ["--watch", "--watch-preserve-output"] : []),
+    "--import",
+    "tsx",
+    "scripts/production-worker.ts",
+  ];
+}
+
 /** A failed web process stops the pair; worker crashes restart with bounded backoff. */
 export function supervise({
   web,
@@ -114,12 +125,7 @@ if (
       mode,
       ...nextServerFlags(flags),
     ],
-    worker: [
-      process.execPath,
-      "--import",
-      "tsx",
-      "scripts/production-worker.ts",
-    ],
+    worker: productionWorkerCommand(mode),
     env: {
       ...process.env,
       REEL_SUPERVISED_WORKER: "1",

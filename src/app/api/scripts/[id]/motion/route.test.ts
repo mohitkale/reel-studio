@@ -38,6 +38,7 @@ it("rejects malformed JSON and unsupported input, including content edits", asyn
   for (const body of [
     "{",
     '{"ambition":"random"}',
+    '{"system":"unbounded-css"}',
     '{"ambition":"clean","spokenText":"Changed copy"}',
   ]) {
     expect((await POST(request(body), context)).status).toBe(400);
@@ -88,4 +89,17 @@ it("forwards the chapter motif setting and rejects unbounded choreography input"
   expect(
     (await POST(request('{"chapterMotifs":"random"}'), context)).status,
   ).toBe(400);
+});
+
+it("forwards only admitted visual families", async () => {
+  replan.mockResolvedValue({ state: "planned", changedSceneIds: [] });
+  for (const system of ["editorial", "poster", "precision"]) {
+    expect(
+      (await POST(request(JSON.stringify({ system })), context)).status,
+    ).toBe(200);
+    expect(replan).toHaveBeenLastCalledWith("script", {
+      system,
+      newVariation: false,
+    });
+  }
 });

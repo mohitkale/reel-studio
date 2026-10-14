@@ -22,6 +22,40 @@ export function buildTextFitScript(): string {
       if (parseFloat(element.style.fontSize) < 22)
         element.dataset.textFitWarning = 'Split this copy into shorter scenes for readable text.';
     });
+    // Fit curated design blocks before render seeks. offset/client metrics are
+    // independent of GSAP transforms, so reverse seeking cannot change typography.
+    document.querySelectorAll('[data-design-block],[data-semantic-block]').forEach(function (stage) {
+      var container = stage.querySelector('.am-spread,.am-poster,.am-window,.am-list-content,.am-ledger-content,.am-gallery-content,.sg-frame');
+      if (!container) return;
+      var text = Array.from(container.querySelectorAll('.fx-line-inner,.am-item-copy,.am-value,.am-cell-label,.am-source,.sg-headline,.sg-label,.sg-detail'));
+      var sizes = text.map(function (el) { return parseFloat(getComputedStyle(el).fontSize); });
+      var layout = getComputedStyle(container);
+      function fits() {
+        var height = container.clientHeight - parseFloat(layout.paddingTop || 0) - parseFloat(layout.paddingBottom || 0);
+        var children = Array.from(container.children).filter(function (el) { return getComputedStyle(el).position !== 'absolute'; });
+        var gap = parseFloat(layout.rowGap) || 0;
+        var total = children.reduce(function (sum, el) { return sum + el.offsetHeight; }, 0) + gap * Math.max(0, children.length - 1);
+        if (container.classList.contains('am-spread')) {
+          total = children[0].offsetHeight + Math.max(children[1].offsetHeight, children[2].offsetHeight) + children[3].offsetHeight + gap * 2;
+        } else if (container.classList.contains('am-gallery-content') && layout.flexDirection === 'row') {
+          total = Math.max.apply(null, children.map(function (el) { return el.offsetHeight; }));
+        }
+        var semantic = container.querySelector('.sg-visual');
+        var semanticFits = !semantic || Array.from(semantic.querySelectorAll('.sg-node')).every(function (node) {
+          var style = getComputedStyle(node);
+          var parts = Array.from(node.children).filter(function (el) { return getComputedStyle(el).position !== 'absolute'; });
+          var padding = parseFloat(style.paddingTop || 0) + parseFloat(style.paddingBottom || 0);
+          var heights = parts.map(function (el) { return el.offsetHeight === undefined ? el.clientHeight : el.offsetHeight; });
+          var contentHeight = style.flexDirection === 'column' ? heights.reduce(function (a,b) { return a+b; },0) + (parseFloat(style.rowGap) || 0) * Math.max(0,parts.length-1) : Math.max.apply(null,heights);
+          return contentHeight <= node.clientHeight - padding + 1;
+        });
+        return total <= height + 1 && semanticFits && text.every(function (el) { return el.scrollWidth <= el.clientWidth + 1; });
+      }
+      for (var iteration = 1; iteration <= 32 && !fits(); iteration++) {
+        text.forEach(function (el, index) { el.style.fontSize = Math.max(Math.min(sizes[index], el.classList.contains('am-source') ? 16 : 22), sizes[index] * Math.pow(.96, iteration)).toFixed(3) + 'px'; });
+      }
+      if (!fits()) stage.dataset.textFitWarning = 'Split this copy or list into shorter scenes for readable text.';
+    });
     document.querySelectorAll('.fx-stack').forEach(function (stack) {
       var stage = stack.closest('.fx-stage');
       var lines = Array.from(stack.querySelectorAll('.fx-line-inner'));

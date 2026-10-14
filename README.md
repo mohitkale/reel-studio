@@ -8,7 +8,8 @@
 **Your idea → animated video → downloadable MP4. On your machine.**
 
 Make Reels, Shorts, explainers, voiceovers, podcasts, and audiograms from your
-scripts and media. Choose a look, generate, then edit or remix the result.
+scripts and media. Let AI develop an idea, or build a production from your own
+content with preset styling, then edit and export the result.
 The first video needs **no AI key or voice-model download**.
 
 [![Reel Studio: current creation screen, animated export, and downloadable result](docs/assets/script-to-video.gif)](https://github.com/mohitkale/reel-studio/releases/tag/v0.4.0)
@@ -19,8 +20,10 @@ _Demo: real v0.4.0 screens and a locally rendered export. [Watch the full sample
 
 ## What you can make
 
-- **Videos:** six visual presets, sixteen authored motion treatments, your own
-  screenshots or footage, and portrait **9:16**, landscape **16:9**, or square **1:1** output.
+- **Videos:** six visual presets, 23 motion treatments and nine
+  [story motion showpieces](docs/MOTION_LIBRARY.md#story-motion-showpieces)
+  chosen from your content, plus your own screenshots or footage. Export
+  portrait **9:16**, landscape **16:9**, or square **1:1**.
 - **Voiceovers and captions:** optional local Kokoro, configurable voice providers,
   editable captions, and SRT/VTT import and export.
 - **Podcasts:** solo, two-host, or interview scripts; reusable speech turns;
@@ -49,10 +52,10 @@ npm run dev
 
 Open **[localhost:3000](http://localhost:3000)**:
 
-1. Paste your script or a few clear ideas.
-2. Choose a preset and format; leave narration off for your first export.
-3. Select **Generate**, play the finished result, and **Download MP4**.
-4. Choose **Edit video** to customize scenes, voice, captions, and branding—or **Remix** to try another look.
+1. Choose **Create with AI** for an idea, or **Create production** for your own script/article and uploads.
+2. Add content and keep the preset defaults, or customize the style and format.
+3. Select **Create draft** or **Build draft**, review the scenes, add narration if desired, then **Export MP4**.
+4. For an automatic MP4, enable **Quick Produce** in AI creation; follow the saved result to play, download, edit, or remix.
 
 The launcher runs both the app and its production worker. `npm run doctor`
 checks your runtime; `npm run sample:export` creates a bundled local example.
@@ -74,7 +77,7 @@ migrations, preserved media, and the move to HyperFrames-only rendering.
 
 Charts use supplied values. Review optional AI-generated claims before publishing.
 
-![Prompt-first creation with six visual presets](docs/assets/reel-studio-home.png)
+![Projects with visible AI and local production creation paths](docs/assets/reel-studio-home.png)
 
 ## Local tools and optional providers
 

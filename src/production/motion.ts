@@ -152,7 +152,7 @@ export interface MotionChartInput {
 }
 
 export function isDataMotionRecipe(id: MotionRecipeId): boolean {
-  return id === "data-spotlight" || id === "data-bars";
+  return id === "data-spotlight" || id === "data-bars" || id === "data-ledger";
 }
 
 export function isDiagramMotionRecipe(id: MotionRecipeId): boolean {
@@ -160,7 +160,9 @@ export function isDiagramMotionRecipe(id: MotionRecipeId): boolean {
 }
 
 export function isMediaMotionRecipe(id: MotionRecipeId): boolean {
-  return id === "media-device" || id === "media-cinematic";
+  return (
+    id === "media-device" || id === "media-cinematic" || id === "media-mat"
+  );
 }
 
 export function isStoryMotionRecipe(id: MotionRecipeId): boolean {
@@ -213,9 +215,21 @@ export function motionFallbackReason(
     return "Word stack supports one to eight supplied words.";
   if (hasOtherVisualContent)
     return "This scene already has a visual or list that this treatment would hide.";
-  if (
-    EXTENSION_MOTION_RECIPES.some((recipe) => recipe.id === direction.recipeId)
-  ) {
+  const extension = EXTENSION_MOTION_RECIPES.find(
+    (recipe) => recipe.id === direction.recipeId,
+  );
+  if (extension?.content === "list") {
+    if (!text.trim()) return "Add a headline for this treatment.";
+    if (background?.url || chart)
+      return "This treatment cannot hide supplied media or chart data.";
+    const maxItems = direction.recipeId === "list-grid" ? 4 : 5;
+    if (!items || items.length < 2 || items.length > maxItems)
+      return `Supply two to ${maxItems} list items.`;
+    if (items.some((item) => !item.trim() || Array.from(item).length > 60))
+      return "Keep each supplied list item to 60 characters or fewer.";
+    return undefined;
+  }
+  if (extension?.content === "text") {
     if (!text.trim()) return "Add copy for this treatment.";
     if (background?.url || chart || items?.length)
       return "This treatment cannot hide supplied media, chart data or list items.";
@@ -239,10 +253,18 @@ export function motionFallbackReason(
     if (!background?.url)
       return "Add a supplied image or video for this media treatment.";
     if (!text.trim()) return "Add a short headline for this media treatment.";
+    if (direction.recipeId === "media-mat" && background.type !== "image")
+      return "Gallery mat needs a supplied image; choose a video treatment for footage.";
     if (chart || items?.length)
       return "This media treatment cannot hide chart data or diagram ideas.";
     return undefined;
   }
+  if (
+    background?.url &&
+    (isDataMotionRecipe(direction.recipeId) ||
+      isDiagramMotionRecipe(direction.recipeId))
+  )
+    return "This treatment cannot hide supplied media.";
   if (isDiagramMotionRecipe(direction.recipeId)) {
     if (chart) return "This scene has chart data; choose a data treatment.";
     if (
@@ -268,7 +290,7 @@ export function motionFallbackReason(
   if (
     !values ||
     labels.length !== values.length ||
-    labels.length < (direction.recipeId === "data-bars" ? 2 : 1) ||
+    labels.length < (direction.recipeId === "data-spotlight" ? 1 : 2) ||
     labels.length > 6
   )
     return "Use one to six matching labels and values (at least two for bars).";
@@ -414,8 +436,10 @@ export function chooseSceneMotion(input: {
   }
   if (input.hasVisualContent) return undefined;
   if (input.background?.url) return undefined;
-  const extensionChoices = EXTENSION_MOTION_RECIPES.filter((recipe) =>
-    recipe.roles.some((role) => role === input.role),
+  const extensionChoices = EXTENSION_MOTION_RECIPES.filter(
+    (recipe) =>
+      recipe.id === "quote-margin" &&
+      recipe.roles.some((role) => role === input.role),
   );
   if (extensionChoices.length) {
     const current = input.current;

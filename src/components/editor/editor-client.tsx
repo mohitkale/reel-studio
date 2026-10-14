@@ -71,6 +71,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SceneTimeline } from "@/components/editor/scene-timeline";
 import { SceneList } from "@/components/editor/scene-list";
 import { SceneInspector } from "@/components/editor/scene-inspector";
+import { semanticStorySource } from "@/production/semantic-direction";
 import { MotionDirectionMenu } from "@/components/editor/motion-direction-menu";
 import { VisualReviewDialog } from "@/components/editor/visual-review-dialog";
 import {
@@ -134,7 +135,7 @@ export function EditorClient({
     return window.localStorage.getItem(takeKey(scriptId)) === TAKE_CLEARED;
   });
   const [previewMode, setPreviewMode] = React.useState<"scene" | "reel">(
-    "scene",
+    "reel",
   );
   // Editor-only preview fidelity: "draft" trims expensive effects for smoother
   // scrubbing on lower-end machines. Never affects the final render.
@@ -151,7 +152,7 @@ export function EditorClient({
 
   // Inline render progress: track the most recently queued render from this
   // editor session so the toolbar can show live % instead of only a toast +
-  // link to /renders. Cleared once the job finishes (done or error).
+  // link to /renders. Keep completion/failure visible alongside Export MP4.
   const [activeRender, setActiveRender] = React.useState<{
     id: string;
     label: string;
@@ -194,6 +195,7 @@ export function EditorClient({
         id: s.id,
         templateId: normalizeTemplateIdForEngine(videoEngine, s.templateId),
         text: s.text,
+        spokenText: s.spokenText ?? undefined,
         emphasis: s.emphasis,
         visual: s.visual,
         background: s.background,
@@ -203,6 +205,7 @@ export function EditorClient({
         role: s.role,
         motion: s.motion,
         direction: s.direction,
+        locks: s.locks,
         // Per-scene override wins; otherwise the script-wide default.
         hideText: s.hideText ?? script?.hideText,
         mood: s.mood as ReelScene["mood"],
@@ -221,6 +224,7 @@ export function EditorClient({
               selectedScene.templateId,
             ),
             text: selectedScene.text,
+            spokenText: selectedScene.spokenText ?? undefined,
             emphasis: selectedScene.emphasis,
             visual: selectedScene.visual,
             background: selectedScene.background,
@@ -230,6 +234,7 @@ export function EditorClient({
             role: selectedScene.role,
             motion: selectedScene.motion,
             direction: selectedScene.direction,
+            locks: selectedScene.locks,
             hideText: selectedScene.hideText ?? script?.hideText,
             mood: selectedScene.mood as ReelScene["mood"],
             order: selectedScene.order,
@@ -277,6 +282,7 @@ export function EditorClient({
           script?.captionTracks,
           takeUsable ? selectedTake?.id : null,
           fps,
+          script?.scenes.some((scene) => Boolean(scene.direction?.graphic?.presentation)) ?? false,
         ),
         timeline,
         fps,
@@ -446,7 +452,9 @@ export function EditorClient({
             },
           );
         },
-        onError: () => toast.error("Failed to queue render"),
+        onError: (error) => toast.error("Failed to queue render", {
+          description: error.message,
+        }),
       },
     );
   }
@@ -481,6 +489,58 @@ export function EditorClient({
           </div>
         </div>
         <Button disabled={createRender.isPending || !scenes.length} onClick={() => queueRender()}><Video className="size-4" /> Export MP4</Button>
+        {activeRender ? (
+          <HintTooltip
+            label={`${activeRender.label}: ${activeRender.status} — open Renders page`}
+            side="bottom"
+          >
+            <Link
+              href="/renders"
+              className="text-muted-foreground hover:text-foreground flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs"
+            >
+              {activeRenderIsLive && <Loader2 className="size-3.5 shrink-0 animate-spin" />}
+              <span className="min-w-0">
+                {activeRender.status === "done"
+                  ? "MP4 ready — view and download"
+                  : activeRender.status === "error"
+                    ? "Export failed — view details and retry"
+                    : `${activeRender.label}: ${activeRender.status} · ${Math.round(activeRender.progress * 100)}%`}
+              </span>
+              <span className="bg-muted h-1.5 w-14 overflow-hidden rounded-full">
+                <span
+                  className="bg-primary block h-full rounded-full transition-all duration-300"
+                  style={{
+                    width: `${Math.round(activeRender.progress * 100)}%`,
+                  }}
+                />
+              </span>
+            </Link>
+          </HintTooltip>
+        ) : null}
+          {script.visualTheme ? <span className="text-muted-foreground text-xs">Theme · {script.visualTheme.name}</span> : null}
+          {script.productionPreset ? (
+            <MotionDirectionMenu
+              scriptId={scriptId}
+              ambition={script.motionPlan?.ambition ?? "expressive"}
+              system={script.motionPlan?.system}
+              chapterMotifs={script.motionPlan?.chapterMotifs}
+              hasChapters={Boolean(script.chapterPlan)}
+              scenes={scenes.map((scene) => ({
+                ...scene,
+                hideText: scene.hideText ?? script.hideText,
+                hasVisualContent: Boolean(scene.visual),
+              }))}
+              onSelectScene={selectScene}
+            />
+          ) : null}
+          <VisualReviewDialog
+            scriptId={scriptId}
+            scenes={scenes}
+            selectedSceneId={effectiveSceneId}
+            voiceTakeId={effectiveTakeId ?? undefined}
+            sourceKey={JSON.stringify([script, effectiveTakeId])}
+            onSelectScene={selectScene}
+          />
         <details className="w-full rounded-lg border p-3">
           <summary className="cursor-pointer text-sm font-medium">Customize video</summary>
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -549,28 +609,6 @@ export function EditorClient({
               />
             </div>
           </HintTooltip>
-          {script.productionPreset ? (
-            <MotionDirectionMenu
-              scriptId={scriptId}
-              ambition={script.motionPlan?.ambition ?? "expressive"}
-              chapterMotifs={script.motionPlan?.chapterMotifs}
-              hasChapters={Boolean(script.chapterPlan)}
-              scenes={scenes.map((scene) => ({
-                ...scene,
-                hideText: scene.hideText ?? script.hideText,
-                hasVisualContent: Boolean(scene.visual),
-              }))}
-              onSelectScene={selectScene}
-            />
-          ) : null}
-          <VisualReviewDialog
-            scriptId={scriptId}
-            scenes={scenes}
-            selectedSceneId={effectiveSceneId}
-            voiceTakeId={effectiveTakeId ?? undefined}
-            sourceKey={JSON.stringify([script, effectiveTakeId])}
-            onSelectScene={selectScene}
-          />
           <ChapterDialog
             script={script}
             timeline={timeline}
@@ -791,32 +829,6 @@ export function EditorClient({
               AI
             </Button>
           </HintTooltip>
-          {activeRenderIsLive && activeRender ? (
-            <HintTooltip
-              label={`${activeRender.label}: ${activeRender.status} — open Renders page`}
-              side="bottom"
-            >
-              <Link
-                href="/renders"
-                className="text-muted-foreground hover:text-foreground flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs"
-              >
-                <Loader2 className="size-3.5 shrink-0 animate-spin" />
-                <span className="whitespace-nowrap">
-                  {activeRender.status === "bundling"
-                    ? "Bundling…"
-                    : `${Math.round(activeRender.progress * 100)}%`}
-                </span>
-                <span className="bg-muted h-1.5 w-14 overflow-hidden rounded-full">
-                  <span
-                    className="bg-primary block h-full rounded-full transition-all duration-300"
-                    style={{
-                      width: `${Math.round(activeRender.progress * 100)}%`,
-                    }}
-                  />
-                </span>
-              </Link>
-            </HintTooltip>
-          ) : null}
           <div className="flex items-center">
             <HintTooltip
               label="Export the reel as MP4 at standard quality"
@@ -926,6 +938,7 @@ export function EditorClient({
                     key={selectedReelScene.id}
                     videoEngine={videoEngine}
                     scenes={[selectedReelScene]}
+                    storySource={semanticStorySource(scenes)}
                     timeline={[
                       {
                         sceneId: selectedReelScene.id,
@@ -980,7 +993,7 @@ export function EditorClient({
                   musicUrl={script.musicUrl ?? undefined}
                   musicVolume={script.musicVolume}
                   sfxCues={sfxCues}
-                  spokenWords={resolveSpokenWordWindows(script.captionTracks, takeUsable ? selectedTake?.id : null, fps)}
+                  spokenWords={resolveSpokenWordWindows(script.captionTracks, takeUsable ? selectedTake?.id : null, fps, scenes.some(scene => Boolean(scene.direction?.graphic?.presentation)))}
                   captions={script.captionTracks?.find(
                     (track) => track.enabled,
                   )}
@@ -1009,6 +1022,7 @@ export function EditorClient({
               <SceneInspector
                 key={selectedScene.id}
                 scene={selectedScene}
+                storySource={semanticStorySource(scenes)}
                 hideTextDefault={script.hideText}
                 sceneIndex={scenes.findIndex((s) => s.id === effectiveSceneId)}
                 totalScenes={scenes.length}

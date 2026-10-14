@@ -88,7 +88,7 @@ it("persists visual direction in SQLite without changing content and rolls back 
       }).toEqual(before[index]);
       expect(JSON.parse(scene.layoutJson!)).toMatchObject({
         customPosition: 80,
-        motion: { recipeId: "type-editorial" },
+        motion: { version: "1.0.0" },
         locks: { copy: true, assets: true },
       });
     }
@@ -101,6 +101,7 @@ it("persists visual direction in SQLite without changing content and rolls back 
       version: "1.0.0",
       seed: "script",
       ambition: "clean",
+      system: "poster",
     });
     expect(
       await replanMotionDirection("script", { ambition: "clean" }),
@@ -139,6 +140,7 @@ it("persists visual direction in SQLite without changing content and rolls back 
     );
     const restoredScript = (await getScript(restored.scriptId))!;
     expect(restoredScript.motionPlan!.chapterMotifs).toBe(true);
+    expect(restoredScript.motionPlan).toEqual(directed.motionPlan);
     expect(restoredScript.scenes.map((scene) => scene.motion)).toEqual(
       directed.scenes.map((scene) => scene.motion),
     );
@@ -180,4 +182,5 @@ it("persists visual direction in SQLite without changing content and rolls back 
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-}, 15_000);
+  // Include migration setup and cold repository imports on Windows runners.
+}, process.platform === "win32" ? 30_000 : 15_000);

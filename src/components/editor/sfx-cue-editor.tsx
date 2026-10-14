@@ -36,6 +36,7 @@ function CueRow({
   const [timing, setTiming] = React.useState(String(cue.offsetSeconds));
   const volume = Number(level) / 100;
   const offsetSeconds = Number(timing);
+  const relativeEvent = Boolean(cue.event || cue.showpieceEvent);
   const valid =
     level.trim() !== "" &&
     timing.trim() !== "" &&
@@ -43,8 +44,8 @@ function CueRow({
     volume >= 0 &&
     volume <= 1 &&
     Number.isFinite(offsetSeconds) &&
-    offsetSeconds >= (cue.event ? -2 : 0) &&
-    offsetSeconds <= (cue.event ? 2 : 120);
+    offsetSeconds >= (relativeEvent ? -2 : 0) &&
+    offsetSeconds <= (relativeEvent ? 2 : 120);
   const dirty =
     sound !== cue.sfxId ||
     Math.abs(volume - cue.volume) > 0.00001 ||
@@ -119,13 +120,15 @@ function CueRow({
           <Label htmlFor={`${id}-timing`} className="text-xs">
             {cue.event
               ? `Shift from ${cue.event.anchor} (s)`
-              : "After scene start (s)"}
+              : cue.showpieceEvent
+                ? `Shift from ${cue.showpieceEvent.moment === "arrive" ? "subject arrival" : "resolution"} (s)`
+                : "After scene start (s)"}
           </Label>
           <Input
             id={`${id}-timing`}
             type="number"
-            min={cue.event ? -2 : 0}
-            max={cue.event ? 2 : 120}
+            min={relativeEvent ? -2 : 0}
+            max={relativeEvent ? 2 : 120}
             step={0.01}
             value={timing}
             disabled={busy}
@@ -134,7 +137,7 @@ function CueRow({
         </div>
       </div>
       <p className="text-muted-foreground text-[11px]">
-        {cue.event
+        {relativeEvent
           ? "Negative shifts play earlier; positive shifts play later. Up to two seconds either way."
           : "Timing is measured from this scene’s start."}
       </p>

@@ -2,6 +2,10 @@ import type { AIScene } from "@/providers/ai/types";
 import type { ProductionSceneRole } from "./roles";
 import { motionFallbackReason } from "./motion";
 import type { ShotDirection } from "@/video/shot-direction";
+import {
+  inferSemanticGraphic,
+  resolveSemanticGraphic,
+} from "./semantic-direction";
 
 export type BeatKind =
   "prose" | "metric" | "chart" | "list" | "quote" | "comparison";
@@ -56,6 +60,9 @@ export function analyzeBeat(text: string) {
   ) {
     return { kind: "list" as BeatKind, items, emphasis: [] as string[] };
   }
+  // A multi-subject comparison must not collapse its final subjects into one label.
+  if (text.trim().split(/\s+(?:vs\.?|versus)\s+/i).length > 2)
+    return { kind: "prose" as BeatKind, emphasis: [] as string[] };
   const comparison = /^(.{1,80}?)\s+(?:vs\.?|versus)\s+(.{1,80}?)[.!]?$/i.exec(
     text.trim(),
   );
@@ -63,6 +70,18 @@ export function analyzeBeat(text: string) {
     return {
       kind: "comparison" as BeatKind,
       items: [comparison[1].trim(), comparison[2].trim()],
+      emphasis: [] as string[],
+    };
+  // An explicitly named transition provides its two endpoints. Do not infer
+  // a diagram from a vague mention of change or from unrelated noun phrases.
+  const transition =
+    /\b(?:transition|shift|switch|move|change)\s+from\s+(.{2,80}?)\s*,?\s+to\s+(.{2,80}?)[.!?]?$/i.exec(
+      text.trim(),
+    );
+  if (transition)
+    return {
+      kind: "comparison" as BeatKind,
+      items: [transition[1].trim().replace(/,$/, ""), transition[2].trim()],
       emphasis: [] as string[],
     };
   const quote = /[“"]([^”"\n]{3,240})[”"]/.exec(text);
@@ -152,8 +171,17 @@ export function directScene(
   fallback: ProductionSceneRole,
   hasVisual = false,
 ): { scene: AIScene; role: ProductionSceneRole; direction: ShotDirection } {
-  const beat = analyzeBeat(scene.spokenText ?? scene.text);
-  const role = beatRole(beat.kind, fallback);
+  const beat = scene.chart
+    ? { kind: "chart" as const, chart: scene.chart, emphasis: [] as string[] }
+    : analyzeBeat(scene.spokenText ?? scene.text);
+  const role = beatRole(
+    beat.kind,
+    beat.kind === "prose" &&
+      !hasVisual &&
+      ["diagram", "quote", "chart", "metric", "comparison"].includes(fallback)
+      ? "explanation"
+      : fallback,
+  );
   const enriched: AIScene = {
     ...scene,
     emphasis: [...new Set([...scene.emphasis, ...beat.emphasis])].filter(
@@ -179,7 +207,7 @@ export function directScene(
       : "authored";
   // Roles conveying factual structure come from actual content; prose suggestions
   // cannot turn an unlabelled number into a chart or an invented testimonial.
-  const finalRole =
+  let finalRole =
     beat.kind === "prose" &&
     suggested &&
     [
@@ -211,5 +239,34 @@ export function directScene(
     composition,
     ...(motion ? { motion } : {}),
   };
+  const graphic =
+    resolveSemanticGraphic({
+      ...enriched,
+      background: hasVisual ? { url: "supplied" } : undefined,
+      items: suggested?.graphic ? scene.items : enriched.items,
+      direction: { graphic: suggested?.graphic },
+    }) ??
+    (beat.kind === "prose"
+      ? resolveSemanticGraphic({
+          ...enriched,
+          background: hasVisual ? { url: "supplied" } : undefined,
+          direction: {
+            graphic: inferSemanticGraphic(enriched.text, enriched.spokenText),
+          },
+        })
+      : undefined);
+  if (graphic) {
+    delete enriched.items;
+    direction.graphic = graphic;
+    finalRole =
+      graphic.kind === "comparison"
+        ? "comparison"
+        : ["flow", "hierarchy", "system"].includes(graphic.kind)
+          ? "diagram"
+          : finalRole;
+    direction.role = finalRole;
+    direction.composition = "authored";
+    delete direction.motion;
+  }
   return { scene: { ...enriched, direction }, role: finalRole, direction };
 }

@@ -2,6 +2,7 @@ import type { BrandTokens } from "@/video/tokens";
 import type { ReelScene } from "@/video/types";
 import { EXTENSION_MOTION_RECIPES } from "@/video/motion-extensions";
 import { resolveMotionDirection } from "@/production/motion";
+import { DESIGN_MOTION_BLOCKS } from "./design-blocks";
 import { quoteMarginBlock } from "./quote-block";
 
 export interface MotionBlockArgs {
@@ -20,10 +21,11 @@ interface MotionBlockRegistration {
 /** Renderer registrations keep new blocks out of the core composition dispatch. */
 export const REGISTERED_MOTION_BLOCKS = [
   quoteMarginBlock,
+  ...DESIGN_MOTION_BLOCKS,
 ] as const satisfies readonly MotionBlockRegistration[];
-export const REGISTERED_MOTION_STYLES = REGISTERED_MOTION_BLOCKS.map(
-  (block) => block.styles,
-).join("\n");
+export const REGISTERED_MOTION_STYLES = [
+  ...new Set(REGISTERED_MOTION_BLOCKS.map((block) => block.styles)),
+].join("\n");
 export function buildRegisteredMotionScene(
   args: MotionBlockArgs,
 ): string | null {

@@ -232,6 +232,8 @@ export type AIScene = Omit<ParsedAIScene, "visual"> & {
 export type ScenePlan = z.infer<typeof scenePlanSchema>;
 
 export interface GeneratePlanInput {
+  /** Bounded, app-selected visual context; never executable styling. */
+  visualTheme?: string;
   mode:
     | "idea"
     | "story"

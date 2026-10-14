@@ -16,6 +16,23 @@ const scene = (text: string) => ({
   emphasis: [],
 });
 describe("source-grounded director", () => {
+  it("does not label ordinary prose as a quote or diagram just to fill preset slots", () => {
+    for (const role of [
+      "quote",
+      "diagram",
+      "chart",
+      "metric",
+      "comparison",
+    ] as const) {
+      const directed = directScene(
+        scene("Understand the real world using your own judgment."),
+        role,
+      );
+      expect(directed.role).toBe("explanation");
+      expect(directed.scene.items).toBeUndefined();
+      expect(directed.scene.chart).toBeUndefined();
+    }
+  });
   it("retains structural paragraphs containing short bullet rows in the real no-key pipeline", () => {
     const result = directorFixture();
     expect(result.scenes.map((value) => value.role)).toEqual([
@@ -52,6 +69,17 @@ describe("source-grounded director", () => {
       items: ["Manual editing", "guided creation"],
     });
     expect(analyzeBeat("In 2024, we learned 3 lessons.").kind).toBe("prose");
+    expect(
+      analyzeBeat(
+        "It's the transition from AI, artificial intelligence, to SI: Situational Intelligence.",
+      ),
+    ).toMatchObject({
+      kind: "comparison",
+      items: ["AI, artificial intelligence", "SI: Situational Intelligence"],
+    });
+    expect(analyzeBeat("Change the way you respond to the world.").kind).toBe(
+      "prose",
+    );
   });
   it("does not fabricate a dataset from unrelated numbers or mixed units", () => {
     expect(

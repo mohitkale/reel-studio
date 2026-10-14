@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createGeminiProvider, GEMINI_DEFAULT_MODEL } from "./gemini";
+import { capabilityIdForTemplateId } from "@/engines/capabilities";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -26,7 +27,10 @@ describe("Gemini provider regression", () => {
                     scenes: [
                       {
                         text: "Hello",
-                        templateId: "kinetic",
+                        capabilityId: capabilityIdForTemplateId(
+                          "hyperframes",
+                          "hf-statement",
+                        ),
                         emphasis: [],
                       },
                     ],
@@ -61,7 +65,59 @@ describe("Gemini provider regression", () => {
       generationConfig: {
         responseMimeType: "application/json",
         temperature: 0.85,
+        responseJsonSchema: {
+          properties: {
+            scenes: {
+              items: {
+                properties: {
+                  direction: {
+                    additionalProperties: false,
+                    properties: { motion: { additionalProperties: false } },
+                  },
+                  chart: {
+                    additionalProperties: false,
+                    properties: {
+                      series: { items: { additionalProperties: false } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
+    // Sending these JSON Schema fields via responseSchema caused live HTTP 400s.
+    expect(JSON.parse(String(init.body)).generationConfig).not.toHaveProperty(
+      "responseSchema",
+    );
+  });
+
+  it("still rejects invalid scene output after provider parsing", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text: JSON.stringify({
+                      projectName: "Invalid",
+                      scriptName: "Invalid",
+                      scenes: [{ text: "", capabilityId: "unknown" }],
+                    }),
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+      ),
+    );
+    await expect(
+      createGeminiProvider().generatePlan({ mode: "idea", brief: "A test" }),
+    ).rejects.toThrow();
   });
 });

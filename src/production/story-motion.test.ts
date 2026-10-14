@@ -128,7 +128,7 @@ describe("authored comparison, quiet and brand families", () => {
     expect(planned.map((motion) => motion?.recipeId.split("-")[0])).toEqual([
       "comparison",
       "comparison",
-      "quiet",
+      "type",
       "quiet",
       "brand",
       "brand",

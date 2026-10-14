@@ -56,6 +56,48 @@ function script(scenes = [row("scene")]) {
 }
 
 describe("direction replanning", () => {
+  it("stages literal transition endpoints without rewriting copy or replacing a supplied diagram", async () => {
+    const source =
+      "It's the transition from AI, artificial intelligence, to SI: Situational Intelligence.";
+    findUnique.mockResolvedValue(
+      script([
+        row(
+          "transition",
+          { role: "diagram", motion: undefined },
+          { text: source },
+        ),
+        row(
+          "supplied",
+          {
+            role: "diagram",
+            items: ["Keep", "These"],
+            motion: motionDirection("diagram-path"),
+          },
+          { text: source },
+        ),
+      ]),
+    );
+    await replanMotionDirection("script", { ambition: "expressive" });
+    const config = JSON.parse(
+      updateScene.mock.calls.find(
+        ([call]) => call.where.id === "transition",
+      )![0].data.layoutJson,
+    );
+    expect(config.items).toEqual([
+      "AI, artificial intelligence",
+      "SI: Situational Intelligence",
+    ]);
+    expect(config.role).toBe("comparison");
+    expect(config.motion.recipeId).toMatch(/^comparison-/);
+    expect(
+      updateScene.mock.calls.every(
+        ([call]) => Object.keys(call.data).join() === "layoutJson",
+      ),
+    ).toBe(true);
+    expect(
+      updateScene.mock.calls.find(([call]) => call.where.id === "supplied"),
+    ).toBeUndefined();
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     transaction.mockImplementation(async (callback) =>
@@ -90,7 +132,7 @@ describe("direction replanning", () => {
     ]);
     expect(JSON.parse(updateScene.mock.calls[0][0].data.layoutJson)).toEqual({
       ...JSON.parse(original.scenes[0].layoutJson),
-      motion: motionDirection("type-editorial"),
+      motion: motionDirection("quiet-divider"),
     });
     const overrides = JSON.parse(
       updateScript.mock.calls[0][0].data.brandOverrides,
@@ -197,7 +239,7 @@ describe("direction replanning", () => {
 
   it("does not write unchanged choices or legacy projects", async () => {
     findUnique.mockResolvedValue(
-      script([row("scene", { motion: motionDirection("type-editorial") })]),
+      script([row("scene", { motion: motionDirection("quiet-divider") })]),
     );
     expect(
       await replanMotionDirection("script", { ambition: "clean" }),

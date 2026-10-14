@@ -69,9 +69,9 @@ export function PromptCreator({
       aria-label="Create a video"
     >
       <div className="mb-4">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-          What would you like to make?
-        </h1>
+        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          Create another version
+        </h2>
         <p className="text-muted-foreground mt-2 text-sm">
           Paste your script or a few clear ideas. Choose a look and generate a
           video you can download and edit.
@@ -153,10 +153,7 @@ export function PromptCreator({
         No AI key required. Uses your supplied text with animated backgrounds.
         Narration is off by default.
       </p>
-      <details className="mt-4 text-sm">
-        <summary className="cursor-pointer font-medium">
-          Narration options
-        </summary>
+      <div className="mt-4 text-sm">
         <label className="mt-2 flex items-center gap-2">
           <input
             type="checkbox"
@@ -170,7 +167,7 @@ export function PromptCreator({
           Voice setup is available in Settings. You can also add or change
           narration later in the editor.
         </p>
-      </details>
+      </div>
       {generate.isError && (
         <p role="alert" className="text-destructive mt-3 text-sm">
           {generate.error.message}

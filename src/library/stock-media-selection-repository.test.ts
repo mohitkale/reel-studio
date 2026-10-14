@@ -9,7 +9,8 @@ import type { ResolvedStockAsset } from "@/providers/stock/schemas";
 
 const previousDatabaseUrl = process.env.DATABASE_URL;
 
-vi.setConfig({ testTimeout: 15_000 });
+// Include migration setup and cold repository imports on Windows runners.
+vi.setConfig({ testTimeout: process.platform === "win32" ? 30_000 : 15_000 });
 
 afterEach(async () => {
   const globalWithPrisma = globalThis as typeof globalThis & {

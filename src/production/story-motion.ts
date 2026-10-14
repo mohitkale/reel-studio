@@ -9,8 +9,8 @@ export function storyMotionGeometry(
   const longLabels = items.some((item) => Array.from(item).length > 36);
   return {
     headline: longCopy
-      ? Math.min(width * 0.042, height * 0.06, 64)
-      : Math.min(width * 0.061, height * 0.082, 90),
+      ? Math.min(width * 0.067, height * 0.085, 92)
+      : Math.min(width * 0.086, height * 0.11, 120),
     label: longLabels
       ? Math.min(width * 0.03, height * 0.045, 42)
       : Math.min(width * 0.042, height * 0.06, 56),

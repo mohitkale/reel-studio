@@ -4,21 +4,19 @@ These four workflows use shipped fixtures or local providers. Run `npm run setup
 and `npm run dev` first. Open **Diagnostics** and resolve every required check;
 whisper.cpp may remain an optional warning.
 
-## 1. Text to MP4 without a key or model
+## 1. Content to a multi-scene draft without an AI key
 
-1. On the home page, paste: “Start with one clear idea. Show how it works.
-   Share the finished result.”
-2. Choose **Editorial Explainer** and **Portrait**. Leave narration off.
-3. Select **Generate**. The result page follows the durable job automatically.
-4. When **Ready to download** appears, play the video and select **Download MP4**.
-5. Refresh the result URL to confirm recovery, then choose **Edit video**.
-6. Select the second scene in **Timeline** and move it earlier. Preview the
-   changed order; open **Customize video** for brand, voice and caption controls.
-7. Return to the result and open **Remix this video**. Choose another format
-   and generate a separate result. The original submitted export stays intact.
+1. On Projects, select **Create production** and paste: “Start with one clear
+   idea. Show how it works. Share the finished result.”
+2. Confirm the shown Editorial Explainer/Portrait defaults; a name is optional.
+3. Select **Build draft**. The editor opens with three editable scenes.
+4. Preview the timeline, optionally add narration, then select **Export MP4**.
+5. Follow the render and download the completed output under **Renders**.
 
-The shipped defaults require no AI key, stock provider or voice model. To import
-an asset instead, expand **More creation options** and use **Create production**.
+To test AI planning, choose **Create with AI**, enter a topic with several points
+and examples, and select **Create draft** using a configured provider. Verify
+that the editor contains developed copy and multiple scenes. Keep Quick Produce
+off when testing planning alone. For unattended creation, use workflow 4.
 For a bundled command-line render, run `npm run sample:export`.
 
 ## 2. Exact data story in three formats
@@ -69,25 +67,26 @@ from the command line with a local take ID.
 This proves the off-by-default control, unattended durable stages, immutable
 revision reporting, and editable result without a cloud or stock key.
 
-1. On the home page, expand **More creation options**, choose **Create with AI**, and confirm **Quick Produce** is
+1. On Projects, choose **Create with AI** and confirm **Quick Produce** is
    initially off.
-2. Enable it, choose the **Deterministic (no key)** planner, set stock media to
+2. Enable it, explicitly choose the **Deterministic (no AI key)** planner, set stock media to
    **None**, select **Editorial Explainer** and **Portrait**.
 3. Use this brief: “Explain why immutable inputs make a local video pipeline
    easier to retry, inspect, and trust.” Choose **Create and produce**.
-4. The editor opens immediately. Follow the persisted plan, media, audio,
+4. The saved result page opens immediately. Follow the persisted plan, media, audio,
    caption/timing, composition, render, and verification stages. Refresh during
    the run and confirm the same job/revision reconnects.
-5. Edit one scene while the submitted revision runs. The completed artifact must
+5. Choose **Edit video** and edit one scene while the submitted revision runs. The completed artifact must
    retain the submitted hash; the editor should report that the current project
    differs, without discarding either version.
 6. Download the verified MP4, open the completed revision as a new editable
    project, then use **Produce current revision** to create a separate job from
    the newer edit.
 
-Quick Produce uses server-side Kokoro by default, which may download its model
-on first use. The equivalent REST/MCP fixture can set `voice.enabled` to `false`
-when validating on a host where that initial download is intentionally disabled.
+Quick Produce leaves narration off in the creation dialog until **Add local
+narration** is selected. Enable it only when local Kokoro is set up; first use
+may download its model. The REST/MCP fixture can set `voice.enabled` to `false`
+for validation without voice synthesis.
 Duplicate idempotency, worker restart, cancellation/retry, and partial batch
 cases are covered by the production contract suite.
 

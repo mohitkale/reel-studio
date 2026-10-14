@@ -1,10 +1,89 @@
 # Authored motion library
 
-The current library has sixteen treatments, including the registered Margin quote. It builds on the existing
-native HyperFrames compiler and preserves saved scene direction/version values.
-**Word stack** reveals one to eight supplied words in sequence; copy
-that exceeds its eight-word/80-character budget falls back without truncation.
-The inspector lists this treatment from the same typed catalog.
+Reel Studio separates the content preset, the colour theme and the motion
+family. A different palette is not a different composition. The authored motion
+library contains **23 treatments**, including seven additional layouts with
+separate geometry and choreography.
+
+## Automatic direction
+
+Definitions, named comparisons and explicit processes can now use automatic
+content illustrations before the typography family is considered. The planner
+reuses actual subjects across the story and draws their supported semantic
+symbols and relationships. This adds explanatory structure instead of rotating
+every prose scene through decorative type. See the
+[automatic illustration contract](DIRECTOR_PIPELINE.md#automatic-illustrations-and-story-continuity).
+
+New AI and local production drafts save a coherent motion family alongside the
+planning seed. Editorial topics favour asymmetric spreads and reading space;
+product, developer and data topics favour framed messages and structured
+layouts; energetic creator content favours graphic fields and bold type.
+Content-matched colour themes remain consistent throughout the reel. An explicitly
+selected brand kit controls the colours and fonts; saved projects retain their palette.
+
+The planner chooses among compatible treatments, penalises recent repeats and
+reserves strong hits for suitable beats. Calm energy suppresses graphic hits
+unless Showcase is explicitly selected. Lists, charts and media require supplied
+inputs; a diagram hub is not changed into a process merely for variety. Identical
+content and settings produce identical saved decisions. **Try another variation**
+changes the saved planning seed, not the content or colours.
+
+These are bounded design rules, not a guarantee that every output is unique or
+an aesthetic score. Content length and available assets still constrain choice.
+
+## Story motion showpieces
+
+New production drafts can also freeze one of nine multi-phase showpieces. The
+planner chooses the visual job from supplied copy and narration, rather than
+asking users to describe camera settings. **Templates & motion → Story motion**
+provides eight-second previews with sound; the existing treatments and layouts
+remain in their own tabs.
+
+| Showpiece           | Storytelling job                  | What develops over the beat                                                        |
+| ------------------- | --------------------------------- | ---------------------------------------------------------------------------------- |
+| Depth reveal        | One supported concept             | A macro view opens into the subject; vector strokes and its explanation resolve    |
+| Orbit & compare     | 2–4 named alternatives            | Independent subjects assemble in depth and receive successive focus                |
+| Growing hierarchy   | Explicit organisation             | A root grows into up to eight supplied actors, with verified parent-child links    |
+| Signal architecture | Connected system                  | A hub and its named components assemble; signals travel along their connections    |
+| Work in motion      | 2–6 ordered steps/owners          | A work token passes through the supplied sequence, with staged owner reveals       |
+| Product evolution   | Supplied device/product stages    | One dimensional device changes state; a snapshot rail accumulates the named stages |
+| Lunar phases        | Supplied moon/lunar subject       | A shaded moon develops through phases, with a persistent phase rail                |
+| Seasonal wheel      | Calendar or seasonal cycles       | An almanac dial builds a botanical wheel in stages                                 |
+| Orbital rhythms     | Explicit celestial/cosmos subject | A constellation resolves inside moving orbital paths                               |
+
+AI creation uses content colours automatically, even when a default brand kit
+exists. To keep a brand palette, select that kit under **Customize style and
+media → Colour palette**. Existing projects and explicitly selected kits keep
+their saved colours. Lunar/celestial topics select **Celestial almanac**, with
+warm gold, mist-blue accents and a dark ink canvas. Cycle visuals are qualitative
+illustrations, not calculated calendars, event dates or astronomical predictions.
+
+Each uses an establish/action/resolve schedule, finite camera/atmosphere motion,
+and deterministic vector choreography. Literal subject labels keep a stable
+accent lane across scenes. Brand colours remain authoritative; scene geometry
+responds to portrait, landscape and square. Device screens are explicitly
+illustrative schematics, not fabricated screenshots or product evidence.
+
+Hierarchy actors support three levels and need explicit supplied relationships.
+Flows retain source order. Unsupported structures, stale labels, media/data
+scenes and whole-scene locks cannot be overwritten by a showpiece. Short
+headlines and concise labels give the visuals room; a full 52-actor diagram or
+a bespoke environment is not generated by this bounded grammar.
+
+Measured word labels from the current audible take anchor subject arrivals when
+available. Otherwise the complete beat uses estimated timing. Picture and sound
+share those landmarks. Automatic accents use bundled effects, at most two
+suggestions per beat, spacing/collision guards and quiet gain under speech.
+Existing louder automatic cues keep their speech-clearance policy; authored,
+legacy and locked cues retain priority. Relative timing edits and automatic
+refresh use the existing sound controls. Music remains one selected track across
+the film, with the existing ducking and optional mastering.
+
+Existing saved directions retain their old render path until explicitly
+replanned. Revision restoration preserves showpieces and event cues. No new
+assets, models or dependencies are required.
+
+## Existing treatments
 
 | Family        | Treatments                           | Required source inputs                                              |
 | ------------- | ------------------------------------ | ------------------------------------------------------------------- |
@@ -17,41 +96,72 @@ The inspector lists this treatment from the same typed catalog.
 | Quiet reading | Quiet divider, Quiet center          | Supplied copy                                                       |
 | Brand         | Brand lockup, Brand frame            | Supplied copy and optional saved wordmark                           |
 
-All treatments now inherit the saved brand background, ink, muted color,
-accents and real offline font. Shared spacing/radius tokens preserve the safe
-area contract. The stage clips the composition; authored headline glyphs can
-paint through their individual reveal-line boxes so the real font's ascenders
-and descenders are complete. Data labels remain the supplied endpoint values;
-an orbit/bar reveal does not invent a statistic or substitute a counter value.
+Word stack admits one to eight words and up to 80 characters. Path and Orbit
+retain ordered versus hub relationships. Complete supplied copy, values, units
+and attribution are preserved; incompatible inputs use a visible fallback.
 
-A shared ambient motif uses finite, duration-derived timelines. It remains
-active during long reading holds without moving the copy. Scene handoffs use
-the shared overlapping tail/root timeline. Authored treatments add a full-bleed
-background child outside the fading wrapper so incoming/outgoing headlines do
-not show through each other during the reveal. The library remains deliberately
-small; adding dozens of look-alike blocks is outside the current curated library.
+## Seven additional treatments
 
-## Reproduce acceptance
+| Treatment           | Composition and motion                                                                          | Required content                                                                      |
+| ------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Editorial spread    | Asymmetric text/graphic columns; columns assemble from their bases while copy slides into place | Supplied text, up to 200 characters; optional existing emphasis                       |
+| Colour-field poster | Inset colour field unfolds from below; oversized copy settles in scale; final rule draws        | Short supplied text, up to 100 characters                                             |
+| Focus window        | Opposing shutters open a reading window; corner marks converge                                  | Supplied text, up to 180 characters                                                   |
+| Cascading list      | Offset indexed rows assemble in supplied order                                                  | Headline up to 100 characters; 2–5 items, each up to 60 characters                    |
+| Tile grid           | Tiles enter from alternating sides and hold in an indexed grid                                  | Headline up to 100 characters; 2–4 items, each up to 60 characters                    |
+| Metric ledger       | Ruled value cells assemble with exact labels, values and attribution                            | Headline up to 110 characters; one supplied series with 2–6 nonnegative finite values |
+| Gallery mat         | An offset image mat rotates into alignment beside a separate caption                            | Headline up to 100 characters and a supplied image; the image remains uncropped       |
 
-Run `npm run test:motion-library` (or `node --import tsx
-scripts/verify-motion-library.mjs`) with an installed browser. Optionally set
-`REEL_VERIFY_CHROME` to its executable. The fixture creates a deterministic,
-MIT product UI image; chart values are explicitly synthetic supplied data.
-No account, paid provider, new model or remote media is required.
+Metric labels, formatted values and source attribution use the same bounds as the
+existing data treatments. The ledger does not count from a fictional zero or
+invent comparisons. Gallery mat accepts images; use Product frame or Cinematic
+cover for footage. Oversized or incompatible inputs retain a compatible base
+layout rather than discarding content.
 
-The verifier checks all sixteen blocks in portrait and landscape, including dark
-and light brand kits. It checks complete supplied copy, text ranges against real
-clipping ancestors/stage bounds, saved ink, data values, external/failed requests,
-preview/producer seek parity and backward seeks during a twelve-second reading
-hold. It writes review contact sheets and then renders actual 24 FPS
-MP4 fixtures through the isolated worker, probes dimensions/duration, hashes each export,
-and extracts every fixture block plus handoff/long-hold frames. Outputs and logs are
-ignored under `.artifacts/m11-motion-library/`. `--preview-only` does not satisfy
-the export gate and its report explicitly records that exports were skipped.
+## Use and preview
 
-These are verified fixture/copy budgets, not a promise that arbitrary supplied
-media, arbitrary fonts or unlimited copy fit every treatment. Existing fallback
-reasons remain visible and preserve content. See [director planning](DIRECTOR_PIPELINE.md), [extension registration](EXTENSIONS.md),
-and [creation UX](CREATION_UX.md).
+Open **Templates → Motion treatments** to play live examples. Demo data is
+explicitly illustrative. Players mount near the viewport and unmount offscreen.
+The **Scene layouts** view retains the original base templates.
 
-Published export evidence is in [release validation](production/RELEASE_VALIDATION.md).
+In the editor, **Visual direction → Visual family** offers Editorial, Graphic
+and Precision. Selecting a family replans unlocked scenes while preserving copy,
+narration, values, assets and timing. Choose **Motion treatment** in the scene
+inspector for a particular compatible composition. Lock the whole scene to keep
+that choice through later replanning. Older saved projects retain their existing
+decisions until explicitly replanned; restored revisions retain their saved
+family and treatments.
+
+New blocks share the existing local fonts, GSAP timeline and isolated export
+worker. Preview and export use the same native compositions; no dependencies,
+remote runtime assets, model calls or registry downloads are needed to play them.
+The shared handoff uses the existing root timeline and an opaque background
+child, keeping incoming/outgoing headlines separated. The older treatments retain
+their finite ambient motif during long reading holds. New blocks use their own
+structural entrances and stable copy holds rather than adding moving decoration
+to every frame. Solid-background text paints are checked for readability; media
+contrast still needs visual review. Motion finishes early enough to leave a
+reading hold. Deterministic text fitting
+uses layout metrics independently of animation transforms, with a 22px floor for
+main copy when fitting is necessary; labels and attribution retain their smaller
+designed sizes. Dense square lists use a compact
+layout. Visual review counts list/data copy in reading-time advice; narration and
+scene duration are not silently changed.
+
+## Verification
+
+`npm run test:motion-library` uses an installed browser (optionally selected with
+`REEL_VERIFY_CHROME`) and verifies all 23 treatments in portrait, landscape
+and square. It checks light/dark palettes, copy and supplied-data preservation,
+text bounds, dense-input fitting, forward/reverse seeks, native preview/producer
+parity, blocked external requests, and actual isolated-worker MP4 exports.
+Artifacts and the report are in `.artifacts/m11-motion-library/`.
+`--preview-only` explicitly skips MP4s and is not export acceptance.
+
+The registry was searched before implementation. The additional blocks are
+original native app code, built for Reel Studio's saved-content and seek contract;
+no third-party registry source or new assets were downloaded. The gallery image
+is an original local SVG illustration. Real model copy quality and whole-reel
+pacing still need editorial review before publishing.
+
+See [director planning](DIRECTOR_PIPELINE.md), [extension registration](EXTENSIONS.md), [creation UX](CREATION_UX.md) and [release validation](production/RELEASE_VALIDATION.md).

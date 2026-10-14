@@ -38,6 +38,8 @@ import { productionJobViewWithRevision } from "@/library/production-job-view";
 import { runProductionWorkerOnce } from "@/library/production-worker";
 import { executeProductionJob } from "@/library/production-job-executor";
 import { directorBudgetSchema } from "@/video/shot-direction";
+import { resolveCreativeDirection } from "@/production/creative-direction";
+import { getBrandKit } from "@/library/repositories/brandkits";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,7 +61,11 @@ const bodySchema = z.object({
   /** "auto" lets the AI choose; otherwise lock Energy. */
   energy: z.enum(["auto", "calm", "normal", "high"]).optional(),
   visualAmbition: visualAmbitionSchema.default("expressive"),
-  productionPresetId: productionPresetIdSchema.default("product-launch"),
+  /** Automatic colour direction unless a brand is explicitly selected. */
+  brandKitId: z.string().trim().min(1).max(120).nullable().default(null),
+  productionPresetId: productionPresetIdSchema
+    .or(z.literal("auto"))
+    .default("auto"),
   mediaPreference: mediaPreferenceSchema.default("auto"),
   quickProduce: quickProduceOptionsSchema.optional(),
   idempotencyKey: z.string().min(8).max(240).optional(),
@@ -70,6 +76,8 @@ const bodySchema = z.object({
 export async function POST(req: Request) {
   try {
     const body = parseClientInput(bodySchema, await readRequestJson(req));
+    if (body.brandKitId && !(await getBrandKit(body.brandKitId)))
+      throw new AIError("The selected brand kit no longer exists.", 404);
     if (body.quickProduce && body.idempotencyKey) {
       const duplicate = await getProductionJobByIdempotencyKey(
         body.idempotencyKey,
@@ -103,16 +111,25 @@ export async function POST(req: Request) {
     const mediaPreference =
       body.quickProduce?.mediaPreference ?? body.mediaPreference;
     const videoEngine = body.videoEngine ?? DEFAULT_VIDEO_ENGINE;
-    const preset = getProductionPreset(body.productionPresetId);
+    const creative = resolveCreativeDirection(
+      body.brief,
+      body.productionPresetId === "auto" ? undefined : body.productionPresetId,
+    );
+    const presetId = creative.presetId;
+    const preset = getProductionPreset(presetId);
     if (!preset) throw new AIError("Unknown production preset", 400);
     const styleLock =
       body.styleId && body.styleId !== "auto"
         ? body.styleId
-        : preset.defaults.styleId;
+        : body.productionPresetId === "auto"
+          ? "auto"
+          : preset.defaults.styleId;
     const energyLock =
       body.energy && body.energy !== "auto"
         ? body.energy
-        : preset.defaults.energy;
+        : body.productionPresetId === "auto"
+          ? "auto"
+          : preset.defaults.energy;
     let raw;
     if (planner === "deterministic") {
       raw = createDeterministicProductionPlan({
@@ -120,7 +137,7 @@ export async function POST(req: Request) {
           body.brief.split(/[.!?\n]/, 1)[0]?.slice(0, 80) || "Quick Produce",
         text: body.brief,
         outputType: "video",
-        presetId: body.productionPresetId,
+        presetId,
         videoEngine,
         hasVisualAsset: false,
       }).plan;
@@ -146,7 +163,8 @@ export async function POST(req: Request) {
         videoEngine,
         styleId: styleLock,
         energy: energyLock,
-        productionPresetId: body.productionPresetId,
+        productionPresetId: presetId,
+        visualTheme: creative.theme.name,
         mediaPreference,
         signal: req.signal,
       });
@@ -155,10 +173,17 @@ export async function POST(req: Request) {
       ...raw,
       scenes: enrichScenePlan(raw.scenes, videoEngine),
     };
-    const visualStyle = resolvePlanVisualStyle(enriched, {
-      styleId: styleLock,
-      energy: energyLock,
-    });
+    const visualStyle = resolvePlanVisualStyle(
+      {
+        ...enriched,
+        styleId: enriched.styleId ?? preset.defaults.styleId,
+        energy: enriched.energy ?? preset.defaults.energy,
+      },
+      {
+        styleId: styleLock,
+        energy: energyLock,
+      },
+    );
 
     const mediaDecisions = await resolveAutomaticSceneMediaBatch(
       enriched.scenes,
@@ -168,7 +193,7 @@ export async function POST(req: Request) {
     const backgrounds = mediaDecisions.map((decision) => decision.background);
     const { plan, roles } = applyPresetToAIPlan(
       enriched,
-      body.productionPresetId,
+      presetId,
       videoEngine,
       {
         hasVisualAsset: backgrounds.some(Boolean),
@@ -184,8 +209,10 @@ export async function POST(req: Request) {
       videoEngine,
       visualStyle,
       {
+        visualTheme: creative.theme,
+        brandKitId: body.brandKitId,
         preset: {
-          id: body.productionPresetId,
+          id: presetId,
           version: preset.version,
         },
         roles,
@@ -234,6 +261,7 @@ export async function POST(req: Request) {
         job: job ? await productionJobViewWithRevision(job) : null,
         plan,
         visualStyle,
+        creativeDirection: creative,
         directorBudget: {
           ...budget,
           paidCallsUsed: paid ? 1 : 0,

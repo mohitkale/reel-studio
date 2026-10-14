@@ -3,6 +3,7 @@ import {
   motionDirection,
   type MotionRecipeId,
 } from "../../src/production/motion";
+import { MOTION_SAMPLE_CONTENT } from "../../src/video/motion-samples";
 import { defaultBrandTokens } from "../../src/video/tokens";
 import type { ReelProps, ReelScene } from "../../src/video/types";
 const content: Record<MotionRecipeId, Partial<ReelScene> & { text: string }> = {
@@ -10,6 +11,7 @@ const content: Record<MotionRecipeId, Partial<ReelScene> & { text: string }> = {
   "type-impact": { text: "Make every word matter.", role: "hook" },
   "type-editorial": {
     text: "Give a useful idea room to breathe.",
+    emphasis: ["useful idea"],
     role: "headline",
   },
   "data-spotlight": {
@@ -56,9 +58,9 @@ const content: Record<MotionRecipeId, Partial<ReelScene> & { text: string }> = {
     items: ["A focused opening", "A clear conclusion"],
   },
   "comparison-stack": {
-    text: "Two ways to tell the story.",
+    text: "A transition from artificial intelligence to situational intelligence.",
     role: "comparison",
-    items: ["A focused opening", "A clear conclusion"],
+    items: ["Artificial intelligence", "Situational intelligence"],
   },
   "quiet-divider": { text: "Let the next idea breathe.", role: "summary" },
   "quiet-center": {
@@ -67,8 +69,13 @@ const content: Record<MotionRecipeId, Partial<ReelScene> & { text: string }> = {
   },
   "brand-lockup": { text: "Make something worth sharing.", role: "cta" },
   "brand-frame": { text: "Your next story starts here.", role: "logo" },
+  ...MOTION_SAMPLE_CONTENT,
+  "media-mat": {
+    ...MOTION_SAMPLE_CONTENT["media-mat"],
+    background: { type: "image", url: "fixture.jpg" },
+  },
   "quote-margin": {
-    text: "Make the message clear before adding motion.",
+    text: "Make the message clear before adding motion, and give every complete sentence enough room to read.",
     role: "quote",
   },
 };
@@ -88,10 +95,16 @@ export function motionLibraryFixture(width = 540, height = 960): ReelProps {
     fps,
     tokens: { ...defaultBrandTokens, handle: "STORY STUDIO" },
     scenes,
-    timeline: scenes.map((scene, index) => ({
-      sceneId: scene.id,
-      startFrame: index * fps * 3,
-      durationFrames: index === scenes.length - 1 ? fps * 12 : fps * 3,
-    })),
+    timeline: scenes.reduce<ReelProps["timeline"]>((beats, scene) => {
+      const previous = beats.at(-1);
+      beats.push({
+        sceneId: scene.id,
+        startFrame: previous
+          ? previous.startFrame + previous.durationFrames
+          : 0,
+        durationFrames: scene.id === "quote-margin" ? fps * 12 : fps * 3,
+      });
+      return beats;
+    }, []),
   };
 }

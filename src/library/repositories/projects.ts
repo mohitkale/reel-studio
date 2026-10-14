@@ -39,6 +39,11 @@ import {
   SAMPLE_SCENES,
 } from "@/library/sample-content";
 import { getDefaultBrandKit } from "./brandkits";
+import { resolveBrandTokens } from "./brandkits";
+import { CORAL_HARBOR_NAME, CORAL_HARBOR_PALETTE } from "@/lib/brand-defaults";
+import { defaultMotionSystem } from "@/production/motion-systems";
+import { enrichSemanticSequence } from "@/production/semantic-direction";
+import type { VisualTheme } from "@/production/creative-direction";
 import { chapterPlanFromStarts } from "@/production/chapters";
 
 function resolveEngine(engine?: VideoEngineId | string | null): VideoEngineId {
@@ -115,6 +120,7 @@ export async function createProjectFromPlan(
   videoEngine: VideoEngineId = DEFAULT_VIDEO_ENGINE,
   visualStyle?: { styleId?: StyleId; energy?: EnergyId },
   production?: {
+    visualTheme?: VisualTheme;
     brandKitId?: string | null;
     preset?: { id: ProductionPresetId; version: string };
     roles?: ProductionSceneRole[];
@@ -137,6 +143,10 @@ export async function createProjectFromPlan(
   },
 ): Promise<{ projectId: string; scriptId: string }> {
   const { width, height } = dimsFor(orientation);
+  const directedScenes =
+    production?.preset && !production.motions
+      ? enrichSemanticSequence(plan.scenes)
+      : plan.scenes;
   const engine = resolveEngine(videoEngine);
   const fallbackTemplate = defaultTemplateIdForEngine(engine);
   const sceneIds = production?.chapterStarts
@@ -146,9 +156,19 @@ export async function createProjectFromPlan(
     ? chapterPlanFromStarts(production.chapterStarts, sceneIds)
     : undefined;
   const defaultKit = await getDefaultBrandKit();
+  // Automatic themes replace only the untouched starter palette. A selected
+  // or customized brand remains authoritative, including on later kit changes.
+  const starterKit = !defaultKit || (
+    defaultKit.name === CORAL_HARBOR_NAME &&
+    (!defaultKit.handle || defaultKit.handle === "@yourbrand") &&
+    (!defaultKit.fonts || defaultKit.fonts === "{}") &&
+    Object.entries(CORAL_HARBOR_PALETTE).every(([key, value]) =>
+      resolveBrandTokens(defaultKit)[key as keyof typeof CORAL_HARBOR_PALETTE] === value,
+    )
+  );
   const brandKitId =
     production?.brandKitId === undefined
-      ? (defaultKit?.id ?? null)
+      ? (production?.visualTheme && starterKit ? null : (defaultKit?.id ?? null))
       : production.brandKitId;
   const styleId = visualStyle?.styleId ?? plan.styleId ?? DEFAULT_STYLE_ID;
   const energy = visualStyle?.energy ?? plan.energy ?? DEFAULT_ENERGY_ID;
@@ -159,21 +179,25 @@ export async function createProjectFromPlan(
           version: "1.0.0",
           seed: sourcePlanSeed(JSON.stringify({ preset: production.preset, scenes: plan.scenes })),
           ambition: production.visualAmbition ?? "expressive",
+          system: defaultMotionSystem(production.visualTheme?.id, production.preset.id),
         }
       : undefined);
   const motions =
     production?.motions ??
     (motionPlan
       ? planMotionSequence(
-          plan.scenes.map((scene, order) => ({
+          directedScenes.map((scene, order) => ({
             role: production?.roles?.[order],
+            energy,
             text: scene.text,
+            spokenText: scene.spokenText,
+            direction: scene.direction,
             chart: scene.chart,
             items: scene.items,
             background: backgrounds[order],
             hasVisualContent: Boolean(scene.visual),
             current: scene.direction?.motion,
-            locked: Boolean(scene.direction?.motion),
+            locked: Boolean(production?.sceneLocks?.[order]?.scene),
           })),
           motionPlan,
         )
@@ -189,6 +213,7 @@ export async function createProjectFromPlan(
           width,
           height,
           brandOverrides: JSON.stringify({
+            ...(production?.visualTheme ? { visualTheme: production.visualTheme } : {}),
             styleId,
             energy,
             ...(motionPlan ? { motionPlan } : {}),
@@ -205,7 +230,7 @@ export async function createProjectFromPlan(
           }),
           voiceMode: production?.voiceMode ?? "oneshot",
           scenes: {
-            create: plan.scenes.map((scene, order) => {
+            create: directedScenes.map((scene, order) => {
               const background = backgrounds[order];
               const config: Record<string, unknown> = {};
               if (background) config.background = background;
@@ -215,7 +240,9 @@ export async function createProjectFromPlan(
               if (scene.musicMood) config.musicMood = scene.musicMood;
               if (scene.items?.length) config.items = scene.items;
               if (scene.chart) config.chart = scene.chart;
-              const role = production?.roles?.[order];
+              const role = scene.direction?.graphic
+                ? scene.direction.role
+                : production?.roles?.[order];
               if (role) config.role = role;
               if (production?.sceneLocks?.[order])
                 config.locks = production.sceneLocks[order];

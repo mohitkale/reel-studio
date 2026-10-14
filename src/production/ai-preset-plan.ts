@@ -8,7 +8,11 @@ import {
 import type { ProductionSceneRole } from "@/production/roles";
 import { scenePlanSchema, type ScenePlan } from "@/providers/ai/types";
 import { capabilityIdForTemplateId } from "@/engines/capabilities";
-import { directScene, groundSceneData } from "@/production/director";
+import {
+  analyzeBeat,
+  directScene,
+  groundSceneData,
+} from "@/production/director";
 
 const MEDIA_ROLES = new Set<ProductionSceneRole>([
   "screenshot-demo",
@@ -64,7 +68,7 @@ export function allowedPresetTemplateIds(
       }),
     ),
   ];
-  if (ids.includes("hf-broll")) {
+  if (!ids.includes("hf-statement")) {
     ids.push("hf-statement");
   }
   return ids;
@@ -93,13 +97,41 @@ export function applyPresetToAIPlan(
   } = {},
 ): { plan: ScenePlan; roles: ProductionSceneRole[] } {
   const roles = resolvePresetRoles(presetId, plan.scenes.length, options);
+  // A requested chart must survive an AI response that splits supplied rows
+  // into prose beats. Admit only a contiguous, literal dataset with matching
+  // units; never reconstruct values from an AI claim or arbitrary numbers.
+  const sourceRows = options.source?.split(/\r?\n/) ?? [];
+  const blocks: string[][] = [];
+  let block: string[] = [];
+  for (const row of [...sourceRows, ""]) {
+    if (/^\s*[^:]{1,24}:\s*\d+(?:\.\d+)?\s*%?\s*$/.test(row)) block.push(row);
+    else if (block.length) {
+      blocks.push(block);
+      block = [];
+    }
+  }
+  const requestedChart =
+    presetId === "data-story" &&
+    /\b(chart|graph)\b/i.test(options.source ?? "") &&
+    !plan.scenes.some((scene) => scene.chart)
+      ? blocks.map((rows) => analyzeBeat(rows.join("\n")).chart).find(Boolean)
+      : undefined;
   return {
     roles,
     plan: scenePlanSchema.parse({
       ...plan,
       scenes: plan.scenes.map((scene, index) => {
+        const input =
+          requestedChart && index === Math.floor(plan.scenes.length / 2)
+            ? {
+                ...scene,
+                chart: requestedChart,
+                visual: undefined,
+                items: undefined,
+              }
+            : scene;
         const directed = directScene(
-          scene,
+          input,
           roles[index]!,
           options.sceneHasVisual?.[index] ?? options.hasVisualAsset,
         );
@@ -126,7 +158,7 @@ export function applyPresetToAIPlan(
         roles[index] = directed.role;
         const mapped =
           getPresetTemplateId({ presetId, engineId, role: roles[index]! }) ??
-          defaultTemplateIdForEngine(engineId);
+          "hf-statement";
         return {
           ...directed.scene,
           templateId: rejectedData

@@ -65,7 +65,7 @@ export function buildPrompt(input: GeneratePlanInput): {
         ? "3 to 5"
         : isDetailed
           ? "between 6 and 20"
-          : "between 5 and 12";
+          : "between 5 and 7";
 
   const orientation = input.orientation ?? "portrait";
   const ASPECT: Record<typeof orientation, string> = {
@@ -85,7 +85,7 @@ export function buildPrompt(input: GeneratePlanInput): {
 
   const lengthRule = isDetailed
     ? "- Each scene has TWO copy fields: (1) 'text' = short ON-SCREEN line (about 12 to 18 words, easy to read at a glance). (2) 'spokenText' = the VOICEOVER script, about 2 to 3 times longer than 'text' (about 30 to 55 words, 2 to 3 spoken sentences). spokenText expands the same beat with one concrete detail, example, or number — never filler. emphasis phrases should appear in 'text' (preferred) or 'spokenText'."
-    : "- Each scene is one short spoken sentence, or two very short ones (about 14 words max). Put that in 'text' only. Leave 'spokenText' empty — voice uses the same words as on screen.";
+    : "- Each scene is one complete short voiceover beat (about 14 words max). Use a concise on-screen headline (about 4–8 words) and spokenText for the complete explanation when an illustration benefits from separate labels or details. Otherwise text may hold the same complete sentence and spokenText may be omitted. Do not split one idea into filler slides.";
 
   const structureRule = isDetailed
     ? "- Shape: Hook → why it matters to YOU → insight → proof or short steps → punch → soft CTA. Let the spokenText breathe while on-screen text stays scannable."
@@ -137,14 +137,24 @@ export function buildPrompt(input: GeneratePlanInput): {
     lengthRule,
     countRule,
     ...(presetRule ? [presetRule] : []),
+    ...(input.visualTheme
+      ? [
+          `- Visual theme: ${input.visualTheme}. Choose varied, compatible treatments for the actual beats within this coherent whole-reel direction. Do not repeat a quiet slide for every scene or force unsupported charts/diagrams.`,
+        ]
+      : []),
     "- Open with the clearest useful idea for the brief. A bold claim, supplied number, direct question, or current pain can work when supported by the source.",
+    "- Develop complete useful beats, not a slide for every short sentence. Avoid filler scenes such as 'Think of it like this' with no explanatory content. For comparisons, name the subjects and explain their actual differences. Expand ambiguous acronyms from context before defining them; never guess a meaning from similar letters.",
+    "- In a search-marketing brief, SEO means search engine optimisation, AEO means answer engine optimisation and GEO means generative engine optimisation. AEO is not app-store optimisation; GEO is not a synonym for local-map SEO. Explain their overlap rather than portraying them as mutually exclusive channels. In other contexts, use the source's explicit expansion or acknowledge ambiguity.",
     structureRule,
     "- When the brief calls for an action, end with a clear, low-pressure CTA (try this, save this, follow for more).",
     ...hyperframesTemplateRules(),
     "- emphasis: 1–2 short phrases that appear VERBATIM in that scene's text (highlights for the eye).",
-    '- Optional direction uses exactly {version:1, role, composition, motion?}. Roles: hook, headline, explanation, diagram, quote, comparison, metric, chart, summary, cta. composition is authored, or layered-title for a single text beat without media/items/chart. It is a bounded layer graph compiled by the app, never HTML, CSS or code. Optional motion is {recipeId,version:"1.0.0"}: type-stack, type-impact, type-editorial, data-spotlight, data-bars, diagram-path, diagram-orbit, media-device, media-cinematic, comparison-split, comparison-stack, quiet-divider, quiet-center, brand-lockup or brand-frame. Data needs source label:value rows; diagrams/comparisons need supplied items; media needs resolved media. Invalid input combinations fall back. Preserve all supplied numbers, list labels and quoted wording. Do not add data to fill a layout.',
+    '- Optional direction uses exactly {version:1, role, composition, motion?, graphic?}. Roles: hook, headline, explanation, diagram, quote, comparison, metric, chart, summary, cta. composition is authored, or layered-title for a single text beat without media/items/chart. Optional motion is {recipeId,version:"1.0.0"}: type-stack, type-impact, type-editorial, data-spotlight, data-bars, diagram-path, diagram-orbit, media-device, media-cinematic, comparison-split, comparison-stack, quiet-divider, quiet-center, brand-lockup or brand-frame. Preserve supplied numbers and relationships. Do not invent data to fill a layout.',
+    '- CONTENT-LED VISUAL STORY: design an explanatory graphic for definition, comparison and process beats when media or exact data is not needed. Prefer it over cycling text layouts. direction.graphic is {version:1,kind:"concept"|"comparison"|"flow"|"hierarchy"|"system",nodes:[{label,detail?,symbol}]}. Concept has exactly one subject; comparison has 2–4, flow/system 2–6, hierarchy 2–8. Hierarchy nodes may have parent (index of an earlier node; root has none). Include real organisational or system relationships in narration. Every label (max 48 chars) and detail (max 96 chars) MUST be a verbatim excerpt from this scene text or spokenText. State a real comparison/order in the copy before using those kinds. Prefer a concise on-screen headline and put explanatory narration in spokenText; do not repeat the same full sentence in graphic captions. Symbols: search, answer, sources, document, code, person, growth, target, shield, clock, idea, media, agent, cloud, device, moon, cycle, orbit, none; choose one grounded in each node\'s wording, never an unrelated decorative icon. Omit visual/items/chart/backgroundQuery on these illustrated beats. Use orbit for supplied celestial/cosmos subjects. For lunar/calendar topics, use moon for supplied lunar subjects and cycle for a supplied calendar, season or Wheel of the Year; these become animated phase or almanac illustrations. Do not invent calendar event dates, equinoxes, solstices or dated lunar events. Use dates only when supplied in the source; otherwise explain the cycles conceptually without date lists. The app draws, connects and animates the named subjects. Use different structures for different storytelling jobs, not random colors or card grids. Keep meaningful visual nouns consistent across scenes. Never return HTML/CSS/code, fake metrics, fake search results or unsupported causal arrows.',
+    "- Build a visual story that changes over time: a hierarchy grows when teams are named, work moves between supplied owners, architecture carries signals, product states progress inside one device, and comparisons reveal their subjects in depth. One showpiece per explanatory scene, with a useful reveal and resolution; avoid sentence-per-slide padding. The app assigns presentation, camera motion and sparse sound accents automatically. Preserve recurring subjects and literal labels across scenes. Device stages must be supplied states (e.g. wireframe → prototype → launch); never fabricate a working product UI, approvals, user counts, clocks or simulation outcomes. When illustrating a hypothetical story, say it is simulated in the copy. Separate concise headlines from complete narration so a beat can have multiple visual moments.",
     "- visual: only as required above; otherwise omit. Keep it SHORT (a number, one emoji, or a CTA label under ~20 characters).",
     "- Never invent statistics, chart values, testimonials, URLs, customers, or product results. Use only facts in the brief or supplied source; choose a non-data layout when facts are missing.",
+    "- When a chart is requested and exact label:value rows are supplied, include one chart beat with those exact labels, values and units. Other beats explain the comparison without claiming causation, quality or success that the source does not establish. Do not compute differences, ratios or new percentages unless those values are explicitly supplied. Never describe a percentage-point difference as a percent change.",
     "  LOOK OF THE WHOLE VIDEO:",
     styleLock,
     energyLock,
@@ -190,5 +200,16 @@ export function buildPrompt(input: GeneratePlanInput): {
       : `Add scenes ${startNum}+ to a short video that already has ${input.existingSceneCount ?? "several"} scenes.\n\nRules:\n- Fresh value only.\n- No CTA (the video already ends with one).\n- Start with a curiosity gap that still feels kind and clear.${ctx}\n\nFocus: ${input.brief}`;
   }
 
+  // Supply concise, authoritative context for this known ambiguous comparison.
+  // This is application-provided source context, not additional user setup.
+  if (
+    input.mode === "idea" &&
+    /\bseo\b/i.test(input.brief) &&
+    /\baeo\b/i.test(input.brief) &&
+    /\bgeo\b/i.test(input.brief)
+  ) {
+    user +=
+      "\n\nSource context from Google Search Central (https://developers.google.com/search/docs/fundamentals/ai-optimization-guide): SEO is search engine optimisation; AEO is answer engine optimisation; GEO is generative engine optimisation. SEO best practices remain relevant for AI search, so these approaches overlap. Explain this comparison using these expansions. Use an illustrated comparison overview plus distinct search, answer and sources concept illustrations. Include their exact labels and expansions in the relevant scene copy or narration so the app can admit the graphic. Do not insert empty transition beats.";
+  }
   return { system, user };
 }

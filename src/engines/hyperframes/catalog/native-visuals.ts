@@ -1,3 +1,7 @@
+import { DESIGN_MOTION_BOOT } from "../motion/design-blocks";
+import { SHOWPIECE_BOOT } from "../motion/showpiece-blocks";
+import { CELESTIAL_BOOT } from "../motion/celestial-blocks";
+import { SEMANTIC_GRAPHIC_BOOT } from "../motion/semantic-blocks";
 import { escapeHtml } from "@/lib/html";
 import { MOTION_LIBRARY_TIMING } from "@/video/motion-library";
 import { STORY_MOTION_TRACKS } from "@/production/story-motion";
@@ -1089,6 +1093,7 @@ export function buildGsapMotionBootScript(
       el.style.opacity = '1';
       el.style.transform = 'none';
     });
+    document.querySelectorAll('.am-shutter').forEach(function (el) { el.style.transform = "scaleX(0)"; });
     document.querySelectorAll('.dm-orbit-draw').forEach(function (el) { el.style.strokeDashoffset = el.getAttribute('data-dash-end') || '0'; });
     document.querySelectorAll('.gm-connector').forEach(function (el) { el.style.strokeDashoffset = '0'; });
   }
@@ -1123,6 +1128,12 @@ export function buildGsapMotionBootScript(
       });
       var ambient = stage.querySelector('.ml-ambient');
       if (ambient) tl.fromTo(ambient, { xPercent:-4, opacity:libraryTiming.ambientLow }, { xPercent:4, opacity:libraryTiming.ambientHigh, duration:loopDuration(libraryTiming.ambientPeriod, 0), repeat:repeatThroughScene(libraryTiming.ambientPeriod, 0), yoyo:true, ease:'sine.inOut' }, 0);
+      var trace = stage.querySelector('.ml-trace');
+      if (trace) tl.fromTo(trace, { scaleX:0 }, { scaleX:1, duration:Math.min(1.2, sceneDuration * .35), ease:'power3.inOut' }, 0.08);
+      var folio = stage.querySelector('.tm-folio');
+      if (folio) tl.fromTo(folio, { y:32, opacity:0 }, { y:0, opacity:1, duration:.9, ease:'power2.out' }, .1);
+      var transfer = stage.querySelector('.sm-transfer svg');
+      if (transfer) tl.fromTo(transfer, { opacity:0, scaleX:0, transformOrigin:'left center' }, { opacity:1, scaleX:1, duration:.5, ease:'power3.out' }, .38);
       var events = motionEvents[recipe];
       if (events) {
         tl.addLabel("reveal", events.reveal);
@@ -1178,7 +1189,7 @@ export function buildGsapMotionBootScript(
         if (typeRule) tl.fromTo(typeRule, { scaleX: 0 }, { scaleX: 1, duration: 0.42, ease: 'power3.out' }, events.impact);
       }
       if (recipe === 'type-editorial' && typeRail) {
-        tl.fromTo(typeRail, { scaleY: 0 }, { scaleY: 1, duration: 0.78, ease: 'power2.out' }, 0.04);
+        tl.fromTo(typeRail, { scaleX: 0 }, { scaleX: 1, duration: 0.78, ease: 'power2.out' }, 0.04);
       }
       if (recipe === 'data-spotlight' && dataOrbit) {
         var orbitEnd = Number(dataOrbit.getAttribute('data-dash-end') || '0');
@@ -1205,6 +1216,10 @@ export function buildGsapMotionBootScript(
           if (path) tl.fromTo(path, { strokeDashoffset: 700 }, { strokeDashoffset: 0, duration: 0.6, ease: 'power2.out' }, 0.52 + i * 0.16);
         });
       }
+
+      ${DESIGN_MOTION_BOOT}
+${CELESTIAL_BOOT}${SHOWPIECE_BOOT}
+${SEMANTIC_GRAPHIC_BOOT}
 
       // Recipe-specific backgrounds
       if (recipe === 'void-slash') {
@@ -1250,7 +1265,7 @@ export function buildGsapMotionBootScript(
       }
 
       // Line reveals — clipped, never overlapping
-      lines.forEach(function (inner, i) {
+      (stage.hasAttribute('data-design-block') ? [] : lines).forEach(function (inner, i) {
         if (motif) tl.fromTo(inner, { x: motif.x, y: motif.y, opacity: 0 }, { x: 0, y: 0, opacity: 1, force3D: false, duration: 0.42, ease: 'power3.out' }, events.reveal + i * 0.1);
         else tl.fromTo(inner, { y: '110%' }, { y: '0%', duration: 0.42, ease: 'power3.out' }, (recipe.startsWith('type-') ? events.reveal : 0.22) + i * 0.1);
       });

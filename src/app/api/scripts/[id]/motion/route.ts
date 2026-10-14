@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { replanMotionDirection } from "@/library/motion-direction-service";
 import { getScript } from "@/library/repositories/scripts";
+import { motionSystemSchema } from "@/production/motion-systems";
 import { visualAmbitionSchema } from "@/production/motion-plan";
 import { authorize } from "@/server/auth";
 import { errorResponse, readRequestJson } from "@/server/api-helpers";
@@ -13,6 +14,7 @@ const bodySchema = z
   .object({
     ambition: visualAmbitionSchema.optional(),
     chapterMotifs: z.boolean().optional(),
+    system: motionSystemSchema.optional(),
     newVariation: z.boolean().default(false),
   })
   .strict();

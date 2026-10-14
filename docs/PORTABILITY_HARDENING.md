@@ -12,6 +12,16 @@ has its own two-platform gate. Action v4 references are pinned to their resolved
 commit SHAs, checkout does not retain credentials, and workflows grant only
 `contents: read`.
 
+Windows CI fetches the pinned FFmpeg 9.0.2 essentials archive from
+[Gyan's release](https://github.com/GyanD/codexffmpeg/releases/tag/9.0.2), a build
+provider linked by [FFmpeg](https://ffmpeg.org/download.html). Its SHA-256 is
+verified before extraction. FFmpeg and FFprobe must both be present before the
+existing full checks run; a feed outage does not remove any validation gate.
+
+SQLite integration fixtures include full migrations and cold repository imports.
+Their Windows timeout is bounded at 30 seconds, matching the existing music-map
+fixture budget; non-Windows limits and all functional assertions are retained.
+
 Text, including vendored catalog HTML/JS, checks out as LF. Binary assets remain
 binary. Transcription fixtures execute Node explicitly with `shell: false`,
 rather than depending on a POSIX shebang/executable bit. Owner-only mode checks

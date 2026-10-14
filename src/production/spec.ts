@@ -222,7 +222,7 @@ export const productionSpecSchema = z
     assets: z.array(productionAssetSchema),
     scenes: z.array(productionSceneSchema).min(1).max(240),
     narration: z.object({
-      measuredWords: z.array(z.object({ startFrame: frameSchema, endFrame: positiveFrameSchema })
+      measuredWords: z.array(z.object({ startFrame: frameSchema, endFrame: positiveFrameSchema, text: z.string().optional() })
         .refine((word) => word.endFrame > word.startFrame, "Invalid measured word window")).max(24000).optional(),
       mode: z.enum(["none", "oneshot", "per_scene", "podcast_cast"]),
       readiness: z.enum(["missing", "ready", "placeholder", "stale"]),
