@@ -1,0 +1,83 @@
+import { serverDefaultTokens } from "@/lib/brand-defaults";
+import { videoSnapshotSchema } from "@/production/video-snapshot";
+
+export function filmSnapshot() {
+  return videoSnapshotSchema.parse({
+    version: 1,
+    take: null,
+    stockMedia: [],
+    script: {
+      id: "script",
+      projectId: "project",
+      name: "M1 compatibility",
+      fps: 30,
+      width: 1080,
+      height: 1920,
+      videoEngine: "hyperframes",
+      brandTokens: serverDefaultTokens,
+      coverUrl: null,
+      musicUrl: null,
+      musicVolume: 20,
+      sfxEnabled: false,
+      sfxJson: null,
+      hideText: false,
+      hideProgressBar: false,
+      styleId: "clean-story",
+      energy: "normal",
+      motionPlan: {
+        version: "1.0.0",
+        seed: "m1-fixture",
+        ambition: "expressive",
+        system: "precision",
+      },
+      scenes: [
+        {
+          id: "legacy",
+          scriptId: "script",
+          order: 0,
+          templateId: "hf-statement",
+          text: "A clear introduction",
+          spokenText: null,
+          emphasis: [],
+          hideText: null,
+          selectedVoiceClipId: null,
+        },
+        {
+          id: "motion",
+          scriptId: "script",
+          order: 1,
+          templateId: "hf-statement",
+          text: "Keep the chosen motion",
+          spokenText: null,
+          emphasis: ["motion"],
+          hideText: false,
+          selectedVoiceClipId: null,
+          motion: { recipeId: "type-window", version: "1.0.0" },
+          locks: { copy: true, assets: true, scene: true },
+        },
+        {
+          id: "semantic",
+          scriptId: "script",
+          order: 2,
+          templateId: "hf-statement",
+          text: "Search finds sources",
+          spokenText: null,
+          emphasis: [],
+          hideText: null,
+          selectedVoiceClipId: null,
+          direction: {
+            version: 1,
+            role: "explanation",
+            composition: "authored",
+            graphic: {
+              version: 1,
+              kind: "concept",
+              nodes: [{ label: "Search", symbol: "search" }],
+              presentation: "depth-focus",
+            },
+          },
+        },
+      ],
+    },
+  });
+}

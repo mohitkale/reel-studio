@@ -1,4 +1,9 @@
 import { createHash } from "node:crypto";
+import {
+  filmPlanSource,
+  withResolvedFilmPlan,
+  filmPlanMatchesSource,
+} from "@/production/film-plan";
 
 import { prisma } from "@/library/db";
 import { captureVideoSnapshot } from "@/library/video-snapshot";
@@ -19,11 +24,17 @@ function stable(value: unknown): string {
 }
 
 export function videoRevisionHash(snapshot: VideoSnapshot): string {
-  return createHash("sha256").update(stable(snapshot)).digest("hex");
+  // Derived metadata must not make previously captured revisions appear edited.
+  return createHash("sha256")
+    .update(stable(filmPlanSource(snapshot)))
+    .digest("hex");
 }
 
 export async function createProductionRevision(snapshot: VideoSnapshot) {
-  const parsed = videoSnapshotSchema.parse(snapshot);
+  const source = videoSnapshotSchema.parse(snapshot);
+  if (source.filmPlan && !filmPlanMatchesSource(source))
+    throw new Error("Film plan does not match the submitted source");
+  const parsed = withResolvedFilmPlan(source);
   return prisma.productionRevision.create({
     data: {
       projectId: parsed.script.projectId,

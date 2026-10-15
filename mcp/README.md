@@ -325,3 +325,7 @@ Sweep/Rise type choreography from a valid saved outline and seed. Turning it off
 replans unlocked scenes to standard choreography. Locks, copy, narration, media
 and audio anchors remain intact; no provider request is made. Appended chapters
 inherit the saved setting, and saved production revisions freeze each choice.
+
+### Film plan checkpoints
+
+`get_film_plan` reads the current versioned compatibility plan (optional `voiceTakeId`) or a saved `revisionId`. Pass the returned document to `save_film_plan` with the same `scriptId` to checkpoint it. Changed source content returns a conflict; this does not overwrite scenes or generate media. See [adaptive contracts](../docs/ADAPTIVE_CONTRACTS.md).

@@ -21,6 +21,7 @@ current setup instructions or a pending to-do list.
 - [Architecture](ARCHITECTURE.md) and [runtime/recovery](RUNTIME.md).
 - [Production contracts](production/CONTRACTS.md): shared REST/MCP/revision contracts.
 - [Template authoring](TEMPLATE_AUTHORING.md) and [provider/block extensions](EXTENSIONS.md).
+- [Adaptive film contracts](ADAPTIVE_CONTRACTS.md): versioned recipes, compatibility plans, and JSON checkpoints.
 - [Motion spec](MOTION_SPEC.md), [motion treatments and visual families](MOTION_LIBRARY.md), and [director pipeline](DIRECTOR_PIPELINE.md).
 - [Export fidelity](EXPORT_FIDELITY.md), [bounded IO](IO_RECOVERY.md), and [voice timing](VOICE_RESILIENCE.md).
 - [Creation UX](CREATION_UX.md) and [demo capture](DEMO_CAPTURE.md).
@@ -28,6 +29,7 @@ current setup instructions or a pending to-do list.
 
 ## Policies and history
 
+- [Adaptive content factory upgrade plan](ADAPTIVE_CONTENT_FACTORY_PLAN.md): M1 contract foundation and proposed later milestones with phased acceptance gates.
 - [Security](../SECURITY.md), [hardening and advisory snapshot](PORTABILITY_HARDENING.md), and [licensing](LICENSING.md).
 - [Changelog](../CHANGELOG.md), [roadmap](../ROADMAP.md), and [contributors](../CONTRIBUTORS.md).
 - [Historical archive](archive/README.md): earlier briefs, audits, numbered plans, and measurements.

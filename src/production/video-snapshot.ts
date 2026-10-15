@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { resolvedFilmPlanSchema } from "@/video/resolved-film-plan";
 import {
   sceneConfigSchema,
   timelineSchema,
@@ -113,6 +114,8 @@ export const videoScriptSnapshotSchema = z.object({
 export const videoSnapshotSchema = z
   .object({
     version: z.literal(1),
+    /** Submitted source plan. Worker-local media/timing may subsequently resolve further. */
+    filmPlan: resolvedFilmPlanSchema.optional(),
     sfxAssets: z.record(z.string(), z.string()).optional(),
     stockMedia: z
       .array(
