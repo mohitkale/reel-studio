@@ -77,6 +77,9 @@ migrations, preserved media, and the move to HyperFrames-only rendering.
 
 Charts use supplied values. Review optional AI-generated claims before publishing.
 
+Checkpoint the current design from **Customize video → Film plan JSON** or through
+REST/MCP. See [adaptive film contracts](docs/ADAPTIVE_CONTRACTS.md).
+
 ![Projects with visible AI and local production creation paths](docs/assets/reel-studio-home.png)
 
 ## Local tools and optional providers

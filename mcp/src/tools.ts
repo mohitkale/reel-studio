@@ -1,4 +1,5 @@
 import { cutSuggestionRequestSchema } from "@/production/cut-suggestions";
+import { filmPlanDocumentSchema } from "@/production/film-plan-document";
 import { randomUUID } from "node:crypto";
 
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -90,6 +91,19 @@ const backgroundShape = z.object({
 });
 
 export function registerTools(server: McpServer): void {
+  server.registerTool("get_film_plan", {
+    description: "Read a versioned film plan and its captured scene/brand/media source. Optionally read a saved revision. Does not generate content or render.",
+    inputSchema: { scriptId: z.string().min(1), voiceTakeId: z.string().min(1).optional(), revisionId: z.string().min(1).optional() },
+  }, guard(async ({ scriptId, voiceTakeId, revisionId }) => {
+    const query = new URLSearchParams();
+    if (voiceTakeId) query.set("voiceTakeId", voiceTakeId);
+    if (revisionId) query.set("revisionId", revisionId);
+    return ok(await apiGet(`/api/scripts/${encode(scriptId)}/film-plan${query.size ? `?${query}` : ""}`));
+  }));
+  server.registerTool("save_film_plan", {
+    description: "Save an unchanged current film plan document as an immutable revision. Use get_film_plan first. Rejects stale or modified plans; never overwrites scenes or invokes providers.",
+    inputSchema: { scriptId: z.string().min(1), document: filmPlanDocumentSchema },
+  }, guard(async ({ scriptId, document }) => ok(await apiPost(`/api/scripts/${encode(scriptId)}/film-plan`, { document }))));
   /* ---- Read tools ---- */
 
   server.registerTool(

@@ -1,5 +1,6 @@
 /** Server-only render orchestration; HyperFrames runs in an isolated worker. */
 import type { VideoSnapshot } from "@/production/video-snapshot";
+import { CURRENT_HF_CATALOG_REVISION } from "@/engines/hyperframes/catalog/versions";
 import type { ResolvedTimeline } from "@/lib/reel-timeline";
 import { type ReelProps, type ReelScene, coverFrames } from "@/video/types";
 import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
@@ -108,6 +109,7 @@ export function prepareVideoComposition(
     styleId: script.styleId,
     energy: script.energy,
     preset: script.productionPreset,
+    catalogRevision: snapshot.filmPlan?.catalogRevision ?? CURRENT_HF_CATALOG_REVISION,
     captions: script.captionTracks?.find((track) => track.enabled),
   };
 

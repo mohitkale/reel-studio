@@ -81,6 +81,7 @@ import {
 import { VoiceoverPanel } from "@/components/editor/voiceover-panel";
 import { AIEnhanceDialog } from "@/components/editor/ai-enhance-dialog";
 import { ScenesJsonDialog } from "@/components/editor/scenes-json-dialog";
+import { FilmPlanDialog } from "@/components/editor/film-plan-dialog";
 import { CoverControl } from "@/components/editor/cover-control";
 import { MusicControl } from "@/components/editor/music-control";
 import { ChapterDialog } from "@/components/editor/chapter-dialog";
@@ -544,6 +545,7 @@ export function EditorClient({
         <details className="w-full rounded-lg border p-3">
           <summary className="cursor-pointer text-sm font-medium">Customize video</summary>
         <div className="mt-3 flex flex-wrap items-center gap-2">
+          <FilmPlanDialog scriptId={scriptId} voiceTakeId={effectiveTakeId ?? undefined} />
           <HintTooltip
             label="Brand kit: colors and @handle on every scene. Star a kit on Brand Kits to make it the default for new projects."
             side="bottom"
