@@ -179,6 +179,16 @@ describe("M2 adaptive recipes", () => {
     expect(short.panels.every((p) => p.at === 0 && p.focus === 0)).toBe(true);
     expect(short.warnings.length).toBeGreaterThan(0);
   });
+  it("treats an empty optional item array as absent without losing chart values", () => {
+    const evidence = { ...ADAPTIVE_SAMPLES[3], items: [] };
+    expect(
+      resolveAdaptiveLayout(evidence, 1080, 1920, 8).plan?.panels,
+    ).toHaveLength(3);
+    const concept = { ...ADAPTIVE_SAMPLES[0], items: [] };
+    expect(
+      resolveAdaptiveLayout(concept, 1080, 1920, 8).plan?.reason,
+    ).toContain("1 subject");
+  });
   it("freezes adaptive geometry and manifest hashes while validating source bindings", () => {
     const snapshot = filmSnapshot();
     snapshot.script.scenes = [

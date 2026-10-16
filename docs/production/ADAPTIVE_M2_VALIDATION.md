@@ -53,7 +53,7 @@ export matrix or a model-quality evaluation.
 
 - Broader unit run: 942 passed and one old treatment-count assertion failed;
   corrected the expected library size from 23 to 29.
-- Final affected regression set: 47 tests passed across eight files, including
+- Final affected regression set: 48 tests passed across eight files, including
   adaptive layout, film plans, SQLite restore and motion planning/library.
 - `npm run typecheck`, `npm run lint`, `npm run security:scan`, `npm run build`:
   passed.

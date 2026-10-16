@@ -127,7 +127,7 @@ export function resolveAdaptiveLayout(
     gap = 28 * scale,
     pad = 28 * scale;
   const system = scene.motion?.system ?? "precision";
-  const count = scene.items?.length ?? scene.chart?.labels.length ?? 1;
+  const count = scene.items?.length || scene.chart?.labels.length || 1;
   const dense =
     (scene.items ?? scene.chart?.labels ?? []).join("").length > 140 ||
     scene.text.length > 130;
