@@ -81,7 +81,10 @@ Checkpoint the current design from **Customize video → Film plan JSON** or thr
 REST/MCP. Six [adaptive recipes](docs/ADAPTIVE_RECIPES.md) reflow supplied content
 by density, duration and aspect.
 [Sequence direction](docs/SEQUENCE_DIRECTION.md) adds local lookahead, recurring
-subject identities, decision explanations and supported card handoffs. See [adaptive film contracts](docs/ADAPTIVE_CONTRACTS.md).
+subject identities, decision explanations and supported card handoffs. The
+[creation workflow](docs/CREATION_UX.md) adds a contact sheet, draft animatic,
+reviewed scene/chapter/film variations with guarded undo, and optional local AI
+readiness tests. See [adaptive film contracts](docs/ADAPTIVE_CONTRACTS.md).
 
 ![Projects with visible AI and local production creation paths](docs/assets/reel-studio-home.png)
 

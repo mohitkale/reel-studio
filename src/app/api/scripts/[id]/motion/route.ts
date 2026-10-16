@@ -1,3 +1,4 @@
+import { directionWorkflowSchema } from "@/production/direction-workflow";
 import { subjectRegistrySchema } from "@/video/sequence-direction";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -21,6 +22,7 @@ const bodySchema = z
     system: motionSystemSchema.optional(),
     newVariation: z.boolean().default(false),
   })
+  .extend(directionWorkflowSchema.shape)
   .strict();
 
 export async function POST(

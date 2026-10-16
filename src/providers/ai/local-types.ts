@@ -1,3 +1,4 @@
+import { generationProbeSchema } from "./readiness-schema";
 import { z } from "zod";
 
 import {
@@ -58,6 +59,7 @@ export const localAIProviderViewSchema = z.object({
   maxOutputTokens: z.number().int().optional(),
   allowLan: z.boolean(),
   hasToken: z.boolean(),
+  generationProbe: generationProbeSchema.optional(),
   endpointScope: z.enum(["loopback", "lan"]).optional(),
   diagnostic: z.object({
     state: localAIDiagnosticStateSchema,

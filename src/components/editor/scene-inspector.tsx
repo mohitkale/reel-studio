@@ -886,9 +886,9 @@ export function SceneInspector({
         <div className="grid gap-2">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <Label>AI regeneration locks</Label>
+              <Label>Regeneration and variation locks</Label>
               <p className="text-muted-foreground mt-1 text-xs">
-                Keep selected parts unchanged when AI rewrites this project.
+                Keep selected parts unchanged during regeneration. Whole scene also protects layout, motion and subject identity during variations.
               </p>
             </div>
             <Lock className="text-muted-foreground size-4" />

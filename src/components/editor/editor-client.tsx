@@ -71,6 +71,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { FilmContactSheet } from "./film-contact-sheet";
 import { SceneTimeline } from "@/components/editor/scene-timeline";
 import { SceneList } from "@/components/editor/scene-list";
 import { SceneInspector } from "@/components/editor/scene-inspector";
@@ -141,7 +142,7 @@ export function EditorClient({
   const [previewMode, setPreviewMode] = React.useState<"scene" | "reel">(
     "reel",
   );
-  // Editor-only preview fidelity: "draft" trims expensive effects for smoother
+  // Editor-only preview fidelity: "draft" omits grain and text blur for smoother
   // scrubbing on lower-end machines. Never affects the final render.
   const [previewQuality, setPreviewQuality] = React.useState<
     "standard" | "draft"
@@ -153,6 +154,8 @@ export function EditorClient({
     null,
   );
   const playerRef = React.useRef<EnginePlayerHandle>(null);
+  const pendingAnimatic = React.useRef(false);
+  const previewCardRef = React.useRef<HTMLDivElement>(null);
 
   // Inline render progress: track the most recently queued render from this
   // editor session so the toolbar can show live % instead of only a toast +
@@ -524,6 +527,8 @@ export function EditorClient({
           {script.visualTheme ? <span className="text-muted-foreground text-xs">Theme · {script.visualTheme.name}</span> : null}
           {script.productionPreset ? (
             <MotionDirectionMenu
+              selectedId={effectiveSceneId ?? undefined}
+              chapters={script.chapterPlan}
               scriptId={scriptId}
               ambition={script.motionPlan?.ambition ?? "expressive"}
               system={script.motionPlan?.system}
@@ -905,6 +910,28 @@ export function EditorClient({
         </div>
         </details>
       </div>
+      <FilmContactSheet
+        script={script}
+        scenes={reelScenes}
+        timeline={timeline}
+        fps={fps}
+        measured={takeUsable}
+        onSelect={selectScene}
+        onAnimatic={() => {
+          pendingAnimatic.current = true;
+          setPreviewMode("reel");
+          setPreviewQuality("draft");
+          if (previewMode === "reel" && previewQuality === "draft") {
+            pendingAnimatic.current = false;
+            playerRef.current?.seekTo(0);
+            playerRef.current?.play();
+          }
+          previewCardRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }}
+      />
       <SceneTimeline scenes={scenes} timeline={timeline} fps={fps} selectedId={effectiveSceneId} onSelect={selectScene} onMove={handleMove} busy={sceneBusy} measured={takeUsable} />
 
       {/* The center column (player) defines the row height; the side panels are
@@ -925,7 +952,7 @@ export function EditorClient({
           </div>
         </Card>
 
-        <Card>
+        <Card ref={previewCardRef}>
           <CardContent className="p-4">
             <Tabs
               value={previewMode}
@@ -992,6 +1019,12 @@ export function EditorClient({
               <TabsContent value="reel">
                 <EnginePlayer
                   ref={playerRef}
+                  onReady={() => {
+                    if (!pendingAnimatic.current) return;
+                    pendingAnimatic.current = false;
+                    playerRef.current?.seekTo(0);
+                    playerRef.current?.play();
+                  }}
                   videoEngine={videoEngine}
                   scenes={reelScenes}
                   timeline={timeline}

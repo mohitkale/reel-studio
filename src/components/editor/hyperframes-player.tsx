@@ -40,6 +40,7 @@ interface HyperFramesPlayerProps {
   storySource?: ReelProps["storySource"];
   sequenceDirection?: ReelProps["sequenceDirection"];
   autoPlay?: boolean;
+  onReady?(): void;
   loop?: boolean;
   tokens?: BrandTokens;
   coverUrl?: string;
@@ -109,6 +110,8 @@ export const HyperFramesPlayer = React.forwardRef<
     storySource,
     sequenceDirection,
     autoPlay,
+    onReady,
+    previewQuality,
     loop = true,
     tokens,
     coverUrl,
@@ -170,6 +173,7 @@ export const HyperFramesPlayer = React.forwardRef<
         styleId,
         energy,
         preset,
+        previewQuality,
       },
       {},
     );
@@ -193,6 +197,7 @@ export const HyperFramesPlayer = React.forwardRef<
     styleId,
     energy,
     preset,
+    previewQuality,
   ]);
 
   const seekIframe = React.useCallback((seconds: number) => {
@@ -374,6 +379,7 @@ export const HyperFramesPlayer = React.forwardRef<
                 ? posterTime
                 : timeRef.current,
             );
+            onReady?.();
           }}
         />
       </div>

@@ -31,7 +31,7 @@ current setup instructions or a pending to-do list.
 
 ## Policies and history
 
-- [Adaptive content factory upgrade plan](ADAPTIVE_CONTENT_FACTORY_PLAN.md): M1 contracts, M2 recipes, M3 sequence direction and proposed later milestones with phased acceptance gates.
+- [Adaptive content factory upgrade plan](ADAPTIVE_CONTENT_FACTORY_PLAN.md): M1 contracts, M2 recipes, M3 sequence direction, M4 creation workflow and proposed later milestones with phased acceptance gates.
 - [Security](../SECURITY.md), [hardening and advisory snapshot](PORTABILITY_HARDENING.md), and [licensing](LICENSING.md).
 - [Changelog](../CHANGELOG.md), [roadmap](../ROADMAP.md), and [contributors](../CONTRIBUTORS.md).
 - [Historical archive](archive/README.md): earlier briefs, audits, numbered plans, and measurements.

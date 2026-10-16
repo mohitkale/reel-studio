@@ -1275,6 +1275,11 @@ export function buildHyperframesCompositionHtml(
       : "";
 
   const grainAttr = chrome.grainOpacity > 0 ? "1" : "0";
+  // Preview-only paint savings. Producer output always retains the authored look.
+  const previewStyles =
+    props.previewQuality === "draft" && !opts.producerMode
+    ? "#root[data-grain]::before{display:none!important}#root .scene .content{filter:none!important}"
+    : "";
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -1282,7 +1287,7 @@ export function buildHyperframesCompositionHtml(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Reel Studio · HyperFrames</title>
-  <style>${STYLES}${HYPERFRAMES_PRESET_STYLES}${TYPE_MOTION_STYLES}
+  <style>${STYLES}${previewStyles}${HYPERFRAMES_PRESET_STYLES}${TYPE_MOTION_STYLES}
 ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLES}${REGISTERED_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_MOTION_STYLES}${STORY_MOTION_STYLES}${MOTION_LIBRARY_STYLES}
     .rs-subtitle{position:absolute;z-index:50;inset:0;box-sizing:border-box;display:flex;flex-direction:column;justify-content:${captionResolved.outer.justifyContent};align-items:${captionResolved.outer.alignItems};padding:${captionResolved.outer.paddingTop}px ${captionResolved.outer.paddingRight}px ${captionResolved.outer.paddingBottom}px ${captionResolved.outer.paddingLeft}px;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
     .rs-subtitle>span{display:block;max-width:${captionInner.maxWidth}px;padding:${captionInner.padding};border-radius:${captionInner.borderRadius}px;background:${captionInner.background};color:${captionInner.color};font-family:${cssFontStack(captionInner.fontFamily)};font-weight:${captionInner.fontWeight};line-height:${captionInner.lineHeight};letter-spacing:${captionInner.letterSpacing};text-align:${captionInner.textAlign};text-shadow:${captionInner.textShadow};${captionInner.WebkitTextStroke ? `-webkit-text-stroke:${captionInner.WebkitTextStroke};` : ""}overflow-wrap:anywhere}

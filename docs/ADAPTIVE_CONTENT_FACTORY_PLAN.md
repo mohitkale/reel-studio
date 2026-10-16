@@ -1,6 +1,6 @@
 # Adaptive content factory: next major upgrade
 
-Status: M1 contracts, M2 adaptive recipes and M3 sequence/continuity are implemented and locally accepted. Milestone PRs record platform CI and merge delivery gates. M4–M6 remain proposals. M0 visual-baseline work has not been executed; the user selected M1 contracts first.
+Status: M1 contracts, M2 adaptive recipes, M3 sequence/continuity and M4 creation workflow are implemented and locally accepted. Milestone PRs record platform CI and merge delivery gates. M5–M6 remain proposals. M0 visual-baseline work has not been executed; the user selected M1 contracts first.
 
 See [adaptive contracts](ADAPTIVE_CONTRACTS.md) for implemented behavior.
 Prepared 2026-10-15 against v0.5.0, commit `4a8dacd`.
@@ -338,7 +338,7 @@ pass for measurable problems; subjective quality still needs human review.
 
 Implement as sequential, independently reviewable milestones. Follow the
 repository's milestone workflow when implementation is explicitly requested.
-Implementation follows the authorized milestone workflow, one PR per milestone. M3 is authorized; stop after M3 until the user requests the next milestone.
+Implementation follows the authorized milestone workflow, one PR per milestone. M4 is authorized; stop after M4 until the user requests the next milestone.
 
 | Milestone                    | Concrete result                                                                                  | Main code ownership                                                          | Exit gate                                                                                       |
 | ---------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
@@ -368,8 +368,11 @@ product upgrade does not automatically require a SemVer major release.
 - [x] M2 delivery: [PR #49](https://github.com/mohitkale/reel-studio/pull/49) merged after platform CI; local main refreshed.
 - [x] M3 implementation: bounded sequence search, source-bound decisions, subject registry and explicit aliases, narrow shared-card handoff, section dependencies.
 - [x] M3 local acceptance: three seven-scene examples, actual section exports, identity/checkpoint restoration, boundary cache invalidation and seek checks. See [validation](production/ADAPTIVE_M3_VALIDATION.md).
-- M3 delivery gate: latest-head platform CI, merge and refreshed local main; the milestone PR records those results.
-- [ ] M4–M6: await separate authorization, one PR per milestone.
+- [x] M3 delivery: [PR #50](https://github.com/mohitkale/reel-studio/pull/50) merged after platform CI; local main refreshed.
+- [x] M4 implementation: shared manual/AI planning, on-demand contact sheet, draft animatic, reviewed scoped variations, persistent guarded undo, and optional local readiness probe.
+- [x] M4 local acceptance: matching admitted content through manual and configured loopback AI transport, SQLite reconnect/undo, offline isolated-worker exports and browser review. See [validation](production/ADAPTIVE_M4_VALIDATION.md).
+- M4 delivery gate: latest-head platform CI, merge and refreshed local main; the milestone PR records those results.
+- [ ] M5–M6: await separate authorization, one PR per milestone.
 
 ### First vertical slice
 
@@ -415,4 +418,4 @@ actual briefs show where that library cannot explain something well.
   Upstream main is a reference, not a claim that the project's pinned runtime
   supports every current upstream capability.
 
-The original review was planning-only against v0.5.0. M1 implements the compatibility contract foundation and M2 adds six adaptive recipes. M3 adds local sequence direction and a narrow shared-card adapter; M4–M6 remain unimplemented. No new dependencies, model downloads, or paid provider calls are needed for M1–M3. Contracts and documentation accumulate toward the next feature release.
+The original review was planning-only against v0.5.0. M1 implements the compatibility contract foundation and M2 adds six adaptive recipes. M3 adds local sequence direction and a narrow shared-card adapter. M4 adds reviewed creation controls and readiness diagnostics; M5–M6 remain unimplemented. No new dependencies, model downloads, or paid provider calls are needed for M1–M4. Contracts and documentation accumulate toward the next feature release.
