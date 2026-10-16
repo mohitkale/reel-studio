@@ -1,5 +1,6 @@
 "use client";
 
+import { CreationReadiness } from "@/components/projects/creation-readiness";
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -218,6 +219,14 @@ export default function ProjectsPage() {
           Create with AI.
         </p>
       </section>
+      <details className="rounded-xl border p-3">
+        <summary className="cursor-pointer text-sm font-medium">
+          Check creation readiness
+        </summary>
+        <div className="mt-3">
+          <CreationReadiness />
+        </div>
+      </details>
       <PageHeader
         title="Your projects"
         description="Continue editing a draft or start a blank project for manual scene setup."

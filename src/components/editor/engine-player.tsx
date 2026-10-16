@@ -31,6 +31,7 @@ interface EnginePlayerProps {
   storySource?: ReelProps["storySource"];
   sequenceDirection?: ReelProps["sequenceDirection"];
   autoPlay?: boolean;
+  onReady?(): void;
   loop?: boolean;
   tokens?: BrandTokens;
   coverUrl?: string;

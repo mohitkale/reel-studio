@@ -163,8 +163,8 @@ export type ReelProps = {
   /** When true, suppress the top progress bar on every scene. */
   hideProgressBar?: boolean;
   /**
-   * Editor-only preview fidelity switch: "draft" trims expensive effects
-   * (background blur, grain, 3D particle count/DPR) for smoother scrubbing.
+   * Editor-only preview fidelity switch: "draft" omits grain and
+   * text blur for smoother scrubbing.
    * Renders always use "standard" (the default).
    */
   previewQuality?: "standard" | "draft";

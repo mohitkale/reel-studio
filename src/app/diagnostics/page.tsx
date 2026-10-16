@@ -1,5 +1,6 @@
 "use client";
 
+import { CreationReadiness } from "@/components/projects/creation-readiness";
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -60,6 +61,7 @@ export default function DiagnosticsPage() {
         }
       />
 
+      <CreationReadiness />
       {diagnostics.isLoading ? (
         <div className="grid gap-4 md:grid-cols-2">
           {Array.from({ length: 8 }).map((_, index) => (

@@ -18,7 +18,7 @@ afterEach(async () => {
   container?.remove();
   vi.unstubAllGlobals();
 });
-async function mount() {
+async function mount(onReady?: () => void) {
   const ref = createRef<HyperFramesPlayerHandle>();
   container = document.createElement("div");
   document.body.append(container);
@@ -27,6 +27,8 @@ async function mount() {
     root.render(
       <HyperFramesPlayer
         ref={ref}
+        onReady={onReady}
+        previewQuality="draft"
         scenes={[
           {
             id: "opening",
@@ -70,4 +72,20 @@ it("honors deliberate seeks through iframe reloads and playback instead of resto
   await act(async () => ref.current!.play());
   expect(seek).toHaveBeenLastCalledWith(2);
   expect(ref.current!.getCurrentFrame()).toBe(60);
+});
+
+it("starts an animatic when the draft iframe reports ready", async () => {
+  const onReady = vi.fn();
+  const { ref, iframe } = await mount(onReady);
+  expect(iframe.srcdoc).toContain(
+    "#root[data-grain]::before{display:none!important}",
+  );
+  expect(onReady).toHaveBeenCalled();
+  onReady.mockImplementation(() => {
+    ref.current?.seekTo(0);
+    ref.current?.play();
+  });
+  await act(async () => iframe.dispatchEvent(new Event("load")));
+  expect(container.querySelector('[aria-label="Pause"]')).not.toBeNull();
+  expect(ref.current?.getCurrentFrame()).toBe(0);
 });

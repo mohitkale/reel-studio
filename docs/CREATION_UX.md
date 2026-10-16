@@ -51,6 +51,70 @@ the result video. The sidebar version comes from package metadata.
 ![Result and download](assets/reel-studio-result.png)
 ![Editor timeline and scene controls](assets/reel-studio-editor-current.png)
 
+## Review a draft before production
+
+Manual and configured AI planning persist through the same project repository,
+adaptive resolver, subject registry, revision and render contracts. Both open
+an editable draft before voice generation or export unless Quick Produce was
+explicitly enabled.
+
+Open **Contact sheet and animatic** in the editor to review actual local scene
+previews, supplied copy, visual purpose, decision explanations and timing.
+Four previews mount at a time; pagination keeps large drafts bounded. Timing is
+labelled estimated until a usable take is selected. **Play animatic** opens the
+shared Full reel player in draft preview quality and starts from the beginning.
+The selected take, cover and current scenes remain the playback source; final
+export keeps its existing quality settings.
+
+**Visual direction** now opens a review before applying a family, pacing,
+adaptive/sequence setting or **Try another composition**. Choose the whole
+film, selected scene, or selected chapter from a saved outline. **Clean** offers
+a quieter compatible direction. Review the change list, then **Apply direction**.
+A scoped variation preserves film-wide settings and changes only eligible
+scenes in that scope. Compatible content may have only one arrangement, so a
+variation can produce no change. Subject identities and **Why this visual?**
+remain available in the editor.
+
+Variations preserve copy, narration, exact data, assets, brand and locks.
+The existing **Whole scene** lock protects its layout, motion and subject
+choices; Copy/Assets retain their regeneration meaning. A reviewed source hash
+rejects applying a proposal after a later edit. **Undo last direction** stores
+one previous direction in SQLite and survives browser/server restart. Later
+scene or direction edits can invalidate undo; it never overwrites those edits.
+This is one guarded direction undo, separate from the existing Undo AI action.
+
+The existing `POST /api/scripts/:id/motion` also accepts `preview: true`, an
+optional bounded `sceneIds` scope, and returns `sourceHash`, `settings.seed`
+and a change list. Apply the same options with `expectedHash` and
+`variationSeed: settings.seed` to reproduce the review. `{ undo: true }`
+restores the last direction if its saved post-change hash still matches.
+Existing direct callers remain compatible. No planner/provider runs here.
+
+## Creation readiness
+
+Projects → **Check creation readiness**, or **Production diagnostics**, shows:
+
+- **Works immediately:** supplied text/manual planning; choose no automatic
+  media and leave narration off for offline work. Rendering prerequisites have
+  their own diagnostics. Voice weights must already be cached for offline voice.
+- **Local AI:** selected model and last saved discovery, configured context/output
+  bounds, and any successful structured-output probe with language requested,
+  timestamp and latency. Opening this panel only reads saved configuration.
+- **Optional connected generation:** configured cloud planners; the creator
+  still selects a provider explicitly and existing paid-call budgets apply.
+
+**Test local planning** runs a bounded planning test through the selected local
+provider. It validates the real scene-plan response, offers cancel, and has a
+60-second deadline. No model is installed or pulled. A passing probe is saved
+locally and invalidated by configuration changes; a failed repeat clears it.
+Context is configured capacity, not a measured capability. English, Hindi and
+Hinglish are selectable test requests; schema success does not certify fluency,
+factual accuracy or model-side cancellation. Model discovery remains in Settings.
+
+`GET /api/creation-readiness` uses studio read authorization and returns saved
+local status plus configured cloud summaries without tokens. Its web-only `POST`
+accepts a local `providerId` and optional `language`; cloud IDs are rejected.
+
 ## Verification
 
 Use [the walkthroughs](WALKTHROUGHS.md) on desktop/mobile. Check live AI brief → multi-scene draft, local content → draft, Quick Produce →

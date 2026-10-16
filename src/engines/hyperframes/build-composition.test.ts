@@ -742,3 +742,33 @@ it("overlaps only visual tails, preserving beat and audio timing for native hand
     "--handoff:0",
   );
 });
+
+it("limits draft paint reductions to preview and keeps producer output identical", () => {
+  const props = {
+    scenes: [
+      {
+        id: "draft",
+        templateId: "hf-statement",
+        text: "Retain this exact copy",
+        emphasis: [],
+      },
+    ],
+    timeline: [{ sceneId: "draft", startFrame: 0, durationFrames: 90 }],
+    tokens: defaultBrandTokens,
+  };
+  const standard = buildHyperframesCompositionHtml(props);
+  const draft = buildHyperframesCompositionHtml({
+    ...props,
+    previewQuality: "draft",
+  });
+  expect(draft).toContain("#root[data-grain]::before{display:none!important}");
+  expect(standard).not.toContain(
+    "#root[data-grain]::before{display:none!important}",
+  );
+  expect(
+    buildHyperframesCompositionHtml(
+      { ...props, previewQuality: "draft" },
+      { producerMode: true },
+    ),
+  ).toBe(buildHyperframesCompositionHtml(props, { producerMode: true }));
+});

@@ -2,7 +2,8 @@
 
 M1 supplies versioned contracts and a compatibility adapter. M2 adds six
 [adaptive recipes](ADAPTIVE_RECIPES.md), resolved geometry and local previews.
-M3 adds [sequence direction and subject continuity](SEQUENCE_DIRECTION.md); later workflows remain in the
+M3 adds [sequence direction and subject continuity](SEQUENCE_DIRECTION.md).
+M4 adds the [creation workflow](CREATION_UX.md); later workflows remain in the
 [upgrade plan](ADAPTIVE_CONTENT_FACTORY_PLAN.md).
 
 ## Recipe manifests

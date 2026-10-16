@@ -1,3 +1,4 @@
+import { generationProbeSchema } from "@/providers/ai/readiness-schema";
 import { createSerialQueue } from "@/lib/serial-queue";
 import { promises as fs } from "node:fs";
 import path from "node:path";
@@ -30,6 +31,7 @@ const storedProviderSchema = localAIProviderConfigInputSchema
     token: z.string().max(4096).optional(),
     endpointScope: z.enum(["loopback", "lan"]).optional(),
     diagnostic: diagnosticSchema.optional(),
+    generationProbe: generationProbeSchema.optional(),
     lastSuccessfulDiscovery: z
       .object({
         checkedAt: z.string().datetime({ offset: true }),
@@ -119,6 +121,16 @@ export function createLocalAIConfigStore(filePath = defaultFilePath()) {
         baseUrl: endpoint.baseUrl,
         token,
         endpointScope: endpoint.scope,
+        generationProbe:
+          previous?.modelId === parsed.modelId &&
+          previous?.baseUrl === endpoint.baseUrl &&
+          previous?.token === token &&
+          previous?.contextWindow === parsed.contextWindow &&
+          previous?.maxOutputTokens === parsed.maxOutputTokens &&
+          previous?.temperature === parsed.temperature &&
+          previous?.allowLan === parsed.allowLan
+            ? previous.generationProbe
+            : undefined,
         diagnostic:
           previous?.baseUrl === endpoint.baseUrl &&
           previous.modelId === parsed.modelId
@@ -163,6 +175,7 @@ export function createLocalAIConfigStore(filePath = defaultFilePath()) {
       label: LOCAL_AI_DEFINITIONS[id].label,
       baseUrl: stored.baseUrl,
       modelId: stored.modelId,
+      generationProbe: stored.generationProbe,
       temperature: stored.temperature,
       contextWindow: stored.contextWindow,
       maxOutputTokens: stored.maxOutputTokens,
@@ -182,6 +195,36 @@ export function createLocalAIConfigStore(filePath = defaultFilePath()) {
   }
 
   return {
+    recordGenerationProbe: async (
+      id: LocalAIProviderId,
+      probe: z.infer<typeof generationProbeSchema> | undefined,
+      expected: z.infer<typeof localAIProviderConfigInputSchema>,
+    ) =>
+      mutate(async () => {
+        const current = await read();
+        const provider = current.providers[id];
+        if (
+          !provider ||
+          [
+            "baseUrl",
+            "modelId",
+            "token",
+            "contextWindow",
+            "maxOutputTokens",
+            "temperature",
+            "allowLan",
+          ].some(
+            (key) =>
+              provider[key as keyof typeof provider] !==
+              expected[key as keyof typeof expected],
+          )
+        )
+          return;
+        provider.generationProbe = probe
+          ? generationProbeSchema.parse(probe)
+          : undefined;
+        await write(current);
+      }),
     readProvider: async (id: LocalAIProviderId) => {
       const file = await read();
       return file.providers[id] ?? defaultProvider(id);

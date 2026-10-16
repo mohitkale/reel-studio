@@ -78,3 +78,30 @@ describe("local AI config store", () => {
     ]);
   });
 });
+
+it("keeps a successful planning probe across restart and invalidates changed settings", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "reel-readiness-"));
+  const filename = path.join(directory, "config.json");
+  const store = createLocalAIConfigStore(filename);
+  const config = {
+    baseUrl: "http://127.0.0.1:11434",
+    modelId: "fixture",
+    temperature: 0.3,
+    allowLan: false,
+  };
+  await store.save("ollama", config);
+  const probe = {
+    modelId: "fixture",
+    checkedAt: new Date().toISOString(),
+    latencyMs: 100,
+    language: "English" as const,
+    structuredOutput: true,
+  };
+  await store.recordGenerationProbe("ollama", probe, config);
+  const restarted = createLocalAIConfigStore(filename);
+  expect((await restarted.list())[0].generationProbe).toEqual(probe);
+  await restarted.save("ollama", { ...config, temperature: 0.4 });
+  expect((await restarted.list())[0].generationProbe).toBeUndefined();
+  await store.recordGenerationProbe("ollama", probe, config);
+  expect((await restarted.list())[0].generationProbe).toBeUndefined();
+});

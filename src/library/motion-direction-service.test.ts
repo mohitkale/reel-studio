@@ -237,6 +237,51 @@ describe("direction replanning", () => {
     expect(motifs.sort()).toEqual(["rise", "sweep"]);
   });
 
+  it("previews without writes, applies exactly the reviewed seed, and rejects stale edits", async () => {
+    const original = script([row("one"), row("two")]);
+    findUnique.mockResolvedValue(original);
+    const proposal = await replanMotionDirection("script", {
+      preview: true,
+      ambition: "clean",
+      sceneIds: ["one"],
+      newVariation: true,
+    });
+    expect(updateScene).not.toHaveBeenCalled();
+    expect(updateScript).not.toHaveBeenCalled();
+    expect(proposal).toMatchObject({
+      changedSceneIds: ["one"],
+      protectedSceneCount: 1,
+    });
+    if (proposal.state !== "planned") throw new Error("Expected a proposal");
+    const applied = await replanMotionDirection("script", {
+      ambition: "clean",
+      sceneIds: ["one"],
+      newVariation: true,
+      variationSeed: proposal.settings.seed,
+      expectedHash: proposal.sourceHash,
+    });
+    expect(applied).toEqual(proposal);
+    expect(updateScene).toHaveBeenCalledTimes(1);
+    expect(
+      JSON.parse(updateScript.mock.lastCall![0].data.brandOverrides).motionPlan,
+    ).toEqual(JSON.parse(original.brandOverrides).motionPlan);
+    findUnique.mockResolvedValue({
+      ...original,
+      scenes: [row("one", {}, { text: "Later source edit" }), row("two")],
+    });
+    await expect(
+      replanMotionDirection("script", { expectedHash: proposal.sourceHash }),
+    ).rejects.toMatchObject({ status: 409 });
+  });
+
+  it("rejects foreign scopes before writes", async () => {
+    findUnique.mockResolvedValue(script());
+    await expect(
+      replanMotionDirection("script", { sceneIds: ["foreign"] }),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(updateScene).not.toHaveBeenCalled();
+  });
+
   it("does not write unchanged choices or legacy projects", async () => {
     findUnique.mockResolvedValue(
       script([row("scene", { motion: motionDirection("quiet-divider") })]),
