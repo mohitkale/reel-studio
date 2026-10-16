@@ -7,6 +7,7 @@ import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
 import type { MotionDirection } from "@/production/motion";
 import type { CaptionStyleSnapshot } from "@/lib/caption-style";
+import type { SequenceConfig } from "./sequence-direction";
 
 /** Image pan/zoom animations available for a background image. */
 export type PanEffect =
@@ -117,6 +118,8 @@ export interface TemplateProps {
  * Input props for the root ReelComposition. Shared by the HTML compiler and editor.
  */
 export type ReelProps = {
+  /** Explicit opt-in; absent preserves saved M1/M2 composition behavior. */
+  sequenceDirection?: SequenceConfig;
   /** Current full-story copy for an isolated scene preview; never frozen quotations. */
   storySource?: string;
   /** Versioned engine-neutral graph prototype; absent preserves legacy visuals. */

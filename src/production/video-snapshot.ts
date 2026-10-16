@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sequenceConfigSchema } from "@/video/sequence-direction";
 import { resolvedFilmPlanSchema } from "@/video/resolved-film-plan";
 import {
   sceneConfigSchema,
@@ -157,6 +158,7 @@ export const preparedVideoCompositionSchema = z
   .object({
     totalFrames: z.number().int().positive(),
     props: z.object({
+      sequenceDirection: sequenceConfigSchema.optional(),
       scenes: z.array(
         scene
           .pick({

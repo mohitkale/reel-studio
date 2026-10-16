@@ -39,6 +39,7 @@ export function MotionDirectionMenu({
   system,
   chapterMotifs,
   adaptiveRecipes,
+  sequenceDirection,
   hasChapters,
   scenes,
   onSelectScene,
@@ -47,6 +48,7 @@ export function MotionDirectionMenu({
   ambition: VisualAmbition;
   system?: MotionSystem;
   adaptiveRecipes?: boolean;
+  sequenceDirection?: boolean;
   chapterMotifs?: boolean;
   hasChapters?: boolean;
   scenes: readonly MotionReviewScene[];
@@ -59,6 +61,7 @@ export function MotionDirectionMenu({
     ambition?: VisualAmbition;
     newVariation?: boolean;
     adaptiveRecipes?: boolean;
+    sequenceDirection?: boolean;
     chapterMotifs?: boolean;
     system?: MotionSystem;
   }) {
@@ -197,6 +200,7 @@ export function MotionDirectionMenu({
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Replan visual direction</DropdownMenuLabel>
+        <DropdownMenuItem onSelect={()=>apply({sequenceDirection:!sequenceDirection})}>Sequence direction{sequenceDirection?" · on":" · off"}</DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => apply({ adaptiveRecipes: !adaptiveRecipes })}
         >

@@ -1,3 +1,4 @@
+import { collectSequenceSubjects } from "@/production/sequence-subjects";
 import { randomUUID } from "node:crypto";
 
 import type { ProjectDTO } from "@/lib/dto";
@@ -181,14 +182,18 @@ export async function createProjectFromPlan(
           ambition: production.visualAmbition ?? "expressive",
           system: defaultMotionSystem(production.visualTheme?.id, production.preset.id),
           adaptiveRecipes: true,
+          sequenceDirection: true,
         }
       : undefined);
+  if(motionPlan?.sequenceDirection && !production?.motions)
+    motionPlan.subjectRegistry=collectSequenceSubjects(directedScenes,motionPlan.subjectRegistry);
   const motions =
     production?.motions ??
     (motionPlan
       ? planMotionSequence(
           directedScenes.map((scene, order) => ({
             role: production?.roles?.[order],
+            layout: {width,height,duration:Math.max(3,Math.min(120,(scene.spokenText??scene.text).split(/\s+/).length/2.5+1))},
             energy,
             text: scene.text,
             spokenText: scene.spokenText,

@@ -29,6 +29,7 @@ interface EnginePlayerProps {
   captions?: ReelProps["captions"];
   spokenWords?: ReelProps["spokenWords"];
   storySource?: ReelProps["storySource"];
+  sequenceDirection?: ReelProps["sequenceDirection"];
   autoPlay?: boolean;
   loop?: boolean;
   tokens?: BrandTokens;

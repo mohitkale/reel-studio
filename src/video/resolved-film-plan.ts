@@ -1,4 +1,5 @@
 import { adaptiveLayoutSchema } from "./adaptive-layout";
+import { resolvedSequenceSchema } from "./sequence-direction";
 import { z } from "zod";
 import {
   adaptiveRecipeManifestSchema,
@@ -14,7 +15,8 @@ const frame = z.number().int().nonnegative();
 export const resolvedFilmPlanSchema = z
   .object({
     schemaVersion: z.literal(1),
-    resolverVersion: z.enum(["1.0.0", "1.1.0"]),
+    resolverVersion: z.enum(["1.0.0", "1.1.0", "1.2.0"]),
+    sequence: resolvedSequenceSchema.optional(),
     mode: z.enum(["compatibility", "adaptive"]),
     sourceHash: filmDigestSchema,
     scriptId: referenceSchema,
@@ -94,7 +96,8 @@ export const resolvedFilmPlanSchema = z
     const hasAdaptive = plan.shots.some((s) => s.adaptive);
     if (
       (plan.mode === "adaptive") !== hasAdaptive ||
-      (hasAdaptive && plan.resolverVersion !== "1.1.0")
+      (hasAdaptive && !["1.1.0", "1.2.0"].includes(plan.resolverVersion)) ||
+      Boolean(plan.sequence) !== (plan.resolverVersion === "1.2.0")
     )
       ctx.addIssue({
         code: "custom",

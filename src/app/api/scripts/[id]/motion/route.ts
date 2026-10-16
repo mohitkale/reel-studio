@@ -1,3 +1,4 @@
+import { subjectRegistrySchema } from "@/video/sequence-direction";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -15,6 +16,8 @@ const bodySchema = z
     ambition: visualAmbitionSchema.optional(),
     chapterMotifs: z.boolean().optional(),
     adaptiveRecipes: z.boolean().optional(),
+    sequenceDirection: z.boolean().optional(),
+    subjectRegistry: subjectRegistrySchema.optional(),
     system: motionSystemSchema.optional(),
     newVariation: z.boolean().default(false),
   })

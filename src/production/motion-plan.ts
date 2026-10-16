@@ -4,6 +4,8 @@ import {
   type AdaptiveRecipeId,
 } from "@/video/adaptive-catalog";
 import { z } from "zod";
+import { subjectRegistrySchema } from "@/video/sequence-direction";
+import { directMotionSequence } from "./sequence-planner";
 import {
   motionSystemSchema,
   SYSTEM_TYPE_RECIPES,
@@ -49,11 +51,15 @@ export const motionPlanSettingsSchema = z.object({
   ambition: visualAmbitionSchema,
   chapterMotifs: z.boolean().optional(),
   adaptiveRecipes: z.boolean().optional(),
+  sequenceDirection: z.boolean().optional(),
+  subjectRegistry: subjectRegistrySchema.optional(),
   system: motionSystemSchema.optional(),
 });
 export type MotionPlanSettings = z.infer<typeof motionPlanSettingsSchema>;
 
 export interface MotionPlanScene {
+  /** Actual canvas and estimated narration window for candidate admission. */
+  layout?: { width: number; height: number; duration: number };
   role?: ProductionSceneRole;
   energy?: EnergyId;
   text: string;
@@ -237,6 +243,25 @@ export function planMotionSequence(
   settings: MotionPlanSettings,
   history: readonly (MotionDirection | undefined)[] = [],
 ): Array<MotionDirection | undefined> {
+  if (settings.sequenceDirection) {
+    const legacy = planMotionSequence(
+      scenes,
+      { ...settings, sequenceDirection: false },
+      history,
+    );
+    const source = semanticStorySource(scenes);
+    return directMotionSequence(
+      scenes,
+      settings,
+      history,
+      scenes.map((scene, index) => {
+        if (scene.locked || resolveSemanticGraphic(scene, source))
+          return [legacy[index]];
+        const options = candidates(scene, settings.ambition, settings.system);
+        return [legacy[index], ...options];
+      }),
+    );
+  }
   const recent = [...history];
   const offset = seedOffset(settings.seed);
   const storySource = semanticStorySource(scenes);

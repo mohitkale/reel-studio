@@ -1,4 +1,5 @@
 import { NATIVE_ONLY_BLOCKS } from "@/engines/hyperframes/catalog/build-scene";
+import { sequenceConfigFor } from "@/video/sequence-direction";
 import { copyHyperframesRuntime } from "@/library/hyperframes-runtime";
 import { downloadPublicMediaToFile } from "@/server/public-media-download";
 import { productionSignal } from "@/library/production-cancellation";
@@ -35,7 +36,7 @@ import { sanitizeKey } from "@/library/storage/local-disk";
 import { getScript } from "@/library/repositories/scripts";
 import { listTakes } from "@/library/repositories/takes";
 import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
-import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-composition";
+import { buildHyperframesCompositionHtml, compositionTotalFrames } from "@/engines/hyperframes/build-composition";
 import { getCatalogBlockByTemplateId } from "@/engines/hyperframes/catalog/manifest";
 import { catalogCompositionFileName } from "@/engines/hyperframes/catalog/build-scene";
 import { personalizeCatalogBlock } from "@/engines/hyperframes/catalog/personalize";
@@ -575,6 +576,7 @@ export async function runHyperframesRender(
     );
 
     const legacyInputProps: ReelProps = {
+      sequenceDirection: sequenceConfigFor(script.motionPlan),
       scenes,
       timeline: prepared?.props.timeline ?? resolved.timeline,
       spokenWords: resolveSpokenWordWindows(
@@ -606,7 +608,11 @@ export async function runHyperframesRender(
       : legacyInputProps;
 
     await writeHyperframesProject(projectDir, inputProps);
-    if (script.chapterPlan && [24, 30, 60].includes(script.fps))
+    const useSections = Boolean(
+      script.chapterPlan ||
+      (inputProps.sequenceDirection && compositionTotalFrames(inputProps) > script.fps * 30),
+    ) && [24, 30, 60].includes(script.fps);
+    if (useSections)
       await writeHyperframesVisualSections(projectDir, inputProps);
 
     const store = getAssetStore();
@@ -624,7 +630,7 @@ export async function runHyperframesRender(
       fps: script.fps,
       quality,
       sections:
-        script.chapterPlan && [24, 30, 60].includes(script.fps)
+        useSections
           ? nativeDims
           : undefined,
       onProgress: (pct) => {

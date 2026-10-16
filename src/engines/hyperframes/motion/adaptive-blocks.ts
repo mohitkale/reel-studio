@@ -1,12 +1,15 @@
 import { escapeHtml } from "@/lib/html";
 import { resolveAdaptiveLayout } from "@/production/adaptive-layout";
 import type { MotionBlockArgs } from "./registered-blocks";
+import type { ResolvedSequence } from "@/video/sequence-direction";
 
 export function buildAdaptiveScene(
   args: MotionBlockArgs,
   width: number,
   height: number,
   contentDuration: number,
+  sequence?: ResolvedSequence,
+  fps = 30,
 ): string | null {
   const { scene } = args;
   const { plan } = resolveAdaptiveLayout(scene, width, height, contentDuration);
@@ -32,7 +35,27 @@ export function buildAdaptiveScene(
         content = `<div class="ar-evidence"><span class="ar-label">${escapeHtml(chart.labels[p.index])}</span><strong>${escapeHtml(String(value))}<small>${escapeHtml(series.unit ?? "")}</small></strong></div>${plan.variant === "bars" ? `<div class="ar-bar-track"><i class="ar-bar" style="width:${(value / max) * 100}%"></i></div>` : ""}`;
       } else
         content = `<span class="ar-number">${String(p.index + 1).padStart(2, "0")}</span><div class="ar-copy">${escapeHtml(scene.items![p.index])}</div>`;
-      return `<div class="ar-panel" data-at="${p.at}" data-focus="${p.focus}" style="${box(p)}">${content}<i class="ar-focus-line" aria-hidden="true"></i></div>`;
+      const port = sequence?.ports.find(
+        (port) => port.sceneId === scene.id && port.index === p.index,
+      );
+      const subject =
+        port && sequence!.subjects.find((s) => s.id === port.subjectId);
+      const incoming = sequence?.boundaries.find(
+        (b) =>
+          b.kind === "shared-card" &&
+          b.to?.sceneId === scene.id &&
+          b.to.index === p.index,
+      );
+      const outgoing = sequence?.boundaries.find(
+        (b) =>
+          b.kind === "shared-card" &&
+          b.from?.sceneId === scene.id &&
+          b.from.index === p.index,
+      );
+      const panel = `<div class="ar-panel" data-at="${p.at}" data-focus="${p.focus}"${incoming ? ' data-continuity-in="1"' : ""} style="${subject ? "inset:0;font-size:inherit" : box(p)}">${content}<i class="ar-focus-line" aria-hidden="true"></i></div>`;
+      return subject
+        ? `<div data-subject-host="${escapeHtml(subject.id)}" data-subject-scene="${escapeHtml(scene.id)}" data-panel-index="${p.index}"${incoming ? ` data-sequence-in="${(incoming.startFrame + incoming.durationFrames) / fps - args.absoluteStart}"` : ""}${outgoing ? ` data-sequence-out="${outgoing.startFrame / fps - args.absoluteStart}"` : ""} style="position:absolute;opacity:${incoming ? 0 : 1};${box(p)};--accent:${escapeHtml(args.tokens[subject.colorSlot])}">${panel}</div>`
+        : panel;
     })
     .join("");
   const connections =
@@ -104,7 +127,11 @@ if(stage.hasAttribute('data-adaptive')) {
  tl.fromTo(head,{opacity:0,y:16},{opacity:1,y:0,duration:enter,ease:'power2.out'},0);
  stage.querySelectorAll('.ar-panel').forEach(function(panel){
   var at=Number(panel.getAttribute('data-at')),focus=Number(panel.getAttribute('data-focus'));
-  tl.fromTo(panel,{opacity:0,y:20},{opacity:1,y:0,duration:enter,ease:'power3.out'},at);
+  var host=panel.parentElement;
+  if(host.hasAttribute('data-sequence-in'))tl.fromTo(host,{opacity:0},{opacity:1,duration:.03,ease:'none'},Number(host.dataset.sequenceIn)-.03);
+  if(host.hasAttribute('data-sequence-out'))tl.fromTo(host,{opacity:1},{opacity:0,duration:.03,ease:'none',immediateRender:false},Number(host.dataset.sequenceOut));
+  if(panel.hasAttribute('data-continuity-in')) tl.fromTo(panel,{opacity:1,y:0},{opacity:1,y:0,duration:enter,ease:'none'},0);
+  else tl.fromTo(panel,{opacity:0,y:20},{opacity:1,y:0,duration:enter,ease:'power3.out'},at);
   var focusLine=panel.querySelector('.ar-focus-line');if(focusLine) tl.fromTo(focusLine,{scaleX:0},{scaleX:1,duration:Math.min(.55,contentTime*.08),ease:'power2.inOut'},focus);
   if(focus>0) tl.fromTo(panel,{scale:1},{scale:1.012,duration:Math.min(.35,contentTime*.04),yoyo:true,repeat:1,ease:'sine.inOut',immediateRender:false},focus);
   var bar=panel.querySelector('.ar-bar');if(bar) tl.fromTo(bar,{scaleX:0},{scaleX:1,duration:enter,ease:'power3.out'},at);

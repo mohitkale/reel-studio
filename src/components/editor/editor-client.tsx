@@ -1,4 +1,7 @@
 "use client";
+import { sequenceConfigFor } from "@/video/sequence-direction";
+
+import { SubjectRegistryDialog } from "./subject-registry-dialog";
 
 import * as React from "react";
 import Link from "next/link";
@@ -526,6 +529,7 @@ export function EditorClient({
               system={script.motionPlan?.system}
               chapterMotifs={script.motionPlan?.chapterMotifs}
               adaptiveRecipes={script.motionPlan?.adaptiveRecipes}
+              sequenceDirection={script.motionPlan?.sequenceDirection}
               hasChapters={Boolean(script.chapterPlan)}
               scenes={scenes.map((scene) => ({
                 ...scene,
@@ -535,6 +539,7 @@ export function EditorClient({
               onSelectScene={selectScene}
             />
           ) : null}
+          {script.productionPreset && <SubjectRegistryDialog scriptId={scriptId} subjects={script.motionPlan?.subjectRegistry}/>}
           <VisualReviewDialog
             scriptId={scriptId}
             scenes={scenes}
@@ -960,6 +965,7 @@ export function EditorClient({
                     styleId={script.styleId}
                     energy={script.energy}
                     preset={script.productionPreset}
+                    sequenceDirection={sequenceConfigFor(script.motionPlan)}
                   />
                 ) : (
                   <EnginePlayer
@@ -974,6 +980,7 @@ export function EditorClient({
                     styleId={script.styleId}
                     energy={script.energy}
                     preset={script.productionPreset}
+                    sequenceDirection={sequenceConfigFor(script.motionPlan)}
                   />
                 )}
                 <p className="text-muted-foreground mt-3 text-center text-xs">
@@ -1008,6 +1015,7 @@ export function EditorClient({
                   styleId={script.styleId}
                   energy={script.energy}
                   preset={script.productionPreset}
+                  sequenceDirection={sequenceConfigFor(script.motionPlan)}
                 />
                 <p className="text-muted-foreground mt-3 text-center text-xs">
                   {takeUsable
