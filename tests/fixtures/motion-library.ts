@@ -1,3 +1,4 @@
+import { ADAPTIVE_SAMPLE_CONTENT } from "../../src/video/adaptive-samples";
 import {
   MOTION_RECIPES,
   motionDirection,
@@ -70,6 +71,11 @@ const content: Record<MotionRecipeId, Partial<ReelScene> & { text: string }> = {
   "brand-lockup": { text: "Make something worth sharing.", role: "cta" },
   "brand-frame": { text: "Your next story starts here.", role: "logo" },
   ...MOTION_SAMPLE_CONTENT,
+  ...ADAPTIVE_SAMPLE_CONTENT,
+  "adaptive-media": {
+    ...ADAPTIVE_SAMPLE_CONTENT["adaptive-media"],
+    background: { type: "image", url: "fixture.jpg" },
+  },
   "media-mat": {
     ...MOTION_SAMPLE_CONTENT["media-mat"],
     background: { type: "image", url: "fixture.jpg" },

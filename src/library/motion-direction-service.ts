@@ -34,6 +34,7 @@ export async function replanMotionDirection(
   input: {
     ambition?: VisualAmbition;
     newVariation?: boolean;
+    adaptiveRecipes?: boolean;
     chapterMotifs?: boolean;
     system?: MotionSystem;
   },
@@ -66,6 +67,8 @@ export async function replanMotionDirection(
       );
     const settings: MotionPlanSettings = {
       version: "1.0.0",
+      adaptiveRecipes:
+        input.adaptiveRecipes ?? overrides.motionPlan?.adaptiveRecipes,
       system:
         input.system ??
         overrides.motionPlan?.system ??
@@ -166,6 +169,7 @@ export async function replanMotionDirection(
         before?.recipeId === after?.recipeId &&
         before?.version === after?.version &&
         before?.typeEntrance === after?.typeEntrance &&
+        before?.system === after?.system &&
         !structures[index] &&
         JSON.stringify(scenes[index].direction?.graphic) ===
           JSON.stringify(graphics[index])
@@ -185,7 +189,11 @@ export async function replanMotionDirection(
           composition: "authored",
           graphic: graphics[index],
         };
-      if (structures[index] && after?.recipeId.startsWith("comparison-")) {
+      if (
+        structures[index] &&
+        (after?.recipeId.startsWith("comparison-") ||
+          after?.recipeId === "adaptive-comparison")
+      ) {
         config.items = structures[index]!.items;
         config.role = "comparison";
         config.direction = {

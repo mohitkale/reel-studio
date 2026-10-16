@@ -328,4 +328,8 @@ inherit the saved setting, and saved production revisions freeze each choice.
 
 ### Film plan checkpoints
 
-`get_film_plan` reads the current versioned compatibility plan (optional `voiceTakeId`) or a saved `revisionId`. Pass the returned document to `save_film_plan` with the same `scriptId` to checkpoint it. Changed source content returns a conflict; this does not overwrite scenes or generate media. See [adaptive contracts](../docs/ADAPTIVE_CONTRACTS.md).
+`get_film_plan` reads the current versioned compatibility/adaptive plan (optional `voiceTakeId`) or a saved `revisionId`. Pass the returned document to `save_film_plan` with the same `scriptId` to checkpoint it. Changed source content returns a conflict; this does not overwrite scenes or generate media. See [adaptive contracts](../docs/ADAPTIVE_CONTRACTS.md).
+
+`replan_motion_direction` accepts optional `adaptiveRecipes` to enable or disable
+the six bundled content-aware recipes. Existing locks and semantic illustrations
+remain authoritative. See [adaptive recipes](../docs/ADAPTIVE_RECIPES.md).

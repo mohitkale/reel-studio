@@ -180,6 +180,7 @@ export async function createProjectFromPlan(
           seed: sourcePlanSeed(JSON.stringify({ preset: production.preset, scenes: plan.scenes })),
           ambition: production.visualAmbition ?? "expressive",
           system: defaultMotionSystem(production.visualTheme?.id, production.preset.id),
+          adaptiveRecipes: true,
         }
       : undefined);
   const motions =

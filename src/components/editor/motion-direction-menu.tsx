@@ -38,6 +38,7 @@ export function MotionDirectionMenu({
   ambition,
   system,
   chapterMotifs,
+  adaptiveRecipes,
   hasChapters,
   scenes,
   onSelectScene,
@@ -45,6 +46,7 @@ export function MotionDirectionMenu({
   scriptId: string;
   ambition: VisualAmbition;
   system?: MotionSystem;
+  adaptiveRecipes?: boolean;
   chapterMotifs?: boolean;
   hasChapters?: boolean;
   scenes: readonly MotionReviewScene[];
@@ -56,6 +58,7 @@ export function MotionDirectionMenu({
   function apply(input: {
     ambition?: VisualAmbition;
     newVariation?: boolean;
+    adaptiveRecipes?: boolean;
     chapterMotifs?: boolean;
     system?: MotionSystem;
   }) {
@@ -194,6 +197,15 @@ export function MotionDirectionMenu({
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuLabel>Replan visual direction</DropdownMenuLabel>
+        <DropdownMenuItem
+          onSelect={() => apply({ adaptiveRecipes: !adaptiveRecipes })}
+        >
+          Adaptive recipes{adaptiveRecipes ? " · on" : " · off"}
+        </DropdownMenuItem>
+        <p className="text-muted-foreground px-2 pb-2 text-xs">
+          Fit eligible scenes to their content and format. Existing
+          illustrations and locked scenes stay protected.
+        </p>
         {VISUAL_AMBITIONS.map((value) => (
           <DropdownMenuItem
             key={value}

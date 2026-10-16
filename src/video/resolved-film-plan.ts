@@ -1,3 +1,4 @@
+import { adaptiveLayoutSchema } from "./adaptive-layout";
 import { z } from "zod";
 import {
   adaptiveRecipeManifestSchema,
@@ -13,8 +14,8 @@ const frame = z.number().int().nonnegative();
 export const resolvedFilmPlanSchema = z
   .object({
     schemaVersion: z.literal(1),
-    resolverVersion: z.literal("1.0.0"),
-    mode: z.literal("compatibility"),
+    resolverVersion: z.enum(["1.0.0", "1.1.0"]),
+    mode: z.enum(["compatibility", "adaptive"]),
     sourceHash: filmDigestSchema,
     scriptId: referenceSchema,
     seed: z.string().min(1).max(240),
@@ -67,7 +68,9 @@ export const resolvedFilmPlanSchema = z
                 sceneHash: filmDigestSchema,
               })
               .strict(),
-            layout: z.literal("existing-renderer"),
+            layout: z.enum(["existing-renderer", "adaptive"]),
+            adaptive: adaptiveLayoutSchema.optional(),
+            fallbackReason: z.string().optional(),
             reason: z.literal(
               "Preserve saved scene content, direction, media and locks.",
             ),
@@ -88,6 +91,15 @@ export const resolvedFilmPlanSchema = z
         path: ["timing"],
         message: "Invalid total frame count",
       });
+    const hasAdaptive = plan.shots.some((s) => s.adaptive);
+    if (
+      (plan.mode === "adaptive") !== hasAdaptive ||
+      (hasAdaptive && plan.resolverVersion !== "1.1.0")
+    )
+      ctx.addIssue({
+        code: "custom",
+        message: "Adaptive plans require resolver 1.1.0 and adaptive mode",
+      });
     const recipes = new Map(
       plan.recipes.map((r) => [`${r.manifest.id}@${r.manifest.version}`, r]),
     );
@@ -105,12 +117,26 @@ export const resolvedFilmPlanSchema = z
       if (
         !recipe ||
         recipe.hash !== shot.recipe.hash ||
-        recipe.manifest.mode !== "compatibility"
+        recipe.manifest.mode !==
+          (shot.layout === "adaptive" ? "adaptive" : "compatibility")
       )
         ctx.addIssue({
           code: "custom",
           path: ["shots", i, "recipe"],
           message: "Unknown or incompatible recipe reference",
+        });
+      if (
+        (shot.layout === "adaptive") !== Boolean(shot.adaptive) ||
+        (shot.adaptive &&
+          (shot.adaptive.recipeId !== shot.recipe.id ||
+            shot.adaptive.recipeVersion !== shot.recipe.version ||
+            shot.adaptive.width !== plan.canvas.width ||
+            shot.adaptive.height !== plan.canvas.height))
+      )
+        ctx.addIssue({
+          code: "custom",
+          path: ["shots", i],
+          message: "Adaptive layout does not match its recipe or canvas",
         });
       if (ids.has(shot.id) || scenes.has(shot.sceneId) || shot.order !== i)
         ctx.addIssue({

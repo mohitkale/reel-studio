@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { AdaptiveRecipePicker } from "./adaptive-recipe-catalog";
 import {
   Trash2,
   ChevronUp,
@@ -725,6 +726,7 @@ export function SceneInspector({
   videoEngine = "hyperframes",
   orientation = "portrait",
   hideTextDefault = false,
+  tokens,
   storySource,
 }: {
   scene: SceneDTO;
@@ -737,6 +739,7 @@ export function SceneInspector({
   videoEngine?: VideoEngineId;
   orientation?: Orientation;
   hideTextDefault?: boolean;
+  tokens?: import("@/video/tokens").BrandTokens;
   storySource?: string;
 }) {
   const [text, setText] = React.useState(scene.text);
@@ -980,6 +983,17 @@ export function SceneInspector({
               options={motionOptions}
               searchPlaceholder="Search treatments…"
             />
+            <AdaptiveRecipePicker
+              tokens={tokens}
+              scene={{
+                ...scene,
+                mood: undefined,
+                spokenText: scene.spokenText ?? undefined,
+                hideText: scene.hideText ?? hideTextDefault,
+              }}
+              onSelect={(motion) => onUpdate({ id: scene.id, motion })}
+            />
+
             <p className="text-muted-foreground text-xs">
               {sceneGraphic
                 ? `An illustrated ${sceneGraphic.kind} built from ${sceneGraphic.nodes.map((node) => node.label).join(", ")}. Planned automatically from this scene's content.`

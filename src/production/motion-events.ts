@@ -1,3 +1,7 @@
+import {
+  ADAPTIVE_RECIPES,
+  type AdaptiveRecipeId,
+} from "@/video/adaptive-catalog";
 import { z } from "zod";
 import { EXTENSION_MOTION_RECIPES } from "@/video/motion-extensions";
 import type { VideoEngineId } from "@/engines/types";
@@ -23,6 +27,9 @@ export const MOTION_EVENT_TIMINGS: Record<
   Record<MotionRecipeId, Anchors>
 > = {
   hyperframes: {
+    ...(Object.fromEntries(
+      ADAPTIVE_RECIPES.map((r) => [r.id, { reveal: 0 }]),
+    ) as Record<AdaptiveRecipeId, Anchors>),
     "type-stack": { reveal: 0.22 },
     "type-impact": { reveal: 0.22, impact: 0.58 },
     "type-editorial": { reveal: 0.22 },

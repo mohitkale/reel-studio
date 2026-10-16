@@ -1,6 +1,6 @@
 # Adaptive content factory: next major upgrade
 
-Status: M1 implementation and local acceptance complete; PR checks and merge gate the milestone handoff. M2–M6 remain proposals. M0 visual-baseline work has not been executed; the user selected M1 contracts first.
+Status: M1 contracts and M2 adaptive recipes are implemented and locally accepted. Milestone PRs record platform CI and merge delivery gates. M3–M6 remain proposals. M0 visual-baseline work has not been executed; the user selected M1 contracts first.
 
 See [adaptive contracts](ADAPTIVE_CONTRACTS.md) for implemented behavior.
 Prepared 2026-10-15 against v0.5.0, commit `4a8dacd`.
@@ -338,7 +338,7 @@ pass for measurable problems; subjective quality still needs human review.
 
 Implement as sequential, independently reviewable milestones. Follow the
 repository's milestone workflow when implementation is explicitly requested.
-Implementation follows the authorized milestone workflow, one PR per milestone. Stop after M1 until the user requests the next milestone.
+Implementation follows the authorized milestone workflow, one PR per milestone. M2 is authorized; stop after M2 until the user requests the next milestone.
 
 | Milestone                    | Concrete result                                                                                  | Main code ownership                                                          | Exit gate                                                                                       |
 | ---------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
@@ -362,9 +362,11 @@ product upgrade does not automatically require a SemVer major release.
 - [x] M1 local acceptance: compatibility tests, production build, browser save,
       and three-format isolated-worker exports. See the
       [validation record](production/ADAPTIVE_M1_VALIDATION.md).
-- M1 delivery gate: latest-head platform CI, merge, and refreshed local main
-  are required before handoff; the milestone PR records those results.
-- [ ] M2–M6: await separate authorization, one PR per milestone.
+- [x] M1 delivery: [PR #48](https://github.com/mohitkale/reel-studio/pull/48) merged after platform CI; local main refreshed.
+- [x] M2 implementation: six versioned recipes, density/aspect/timing resolver, catalog and scene previews, shared local planner, adaptive film plans.
+- [x] M2 local acceptance: three-format isolated-worker exports, fallback/input checks, source/lock preservation, SQLite restore and reverse-seek checks. See [validation](production/ADAPTIVE_M2_VALIDATION.md).
+- M2 delivery gate: latest-head CI, merge and refreshed local main are required; the M2 PR records those results.
+- [ ] M3–M6: await separate authorization, one PR per milestone.
 
 ### First vertical slice
 
@@ -410,4 +412,4 @@ actual briefs show where that library cannot explain something well.
   Upstream main is a reference, not a claim that the project's pinned runtime
   supports every current upstream capability.
 
-The original review was planning-only against v0.5.0. M1 now implements the compatibility contract foundation; later milestones remain unimplemented. No new dependencies, model downloads, or paid provider calls are needed for M1. Contracts and documentation accumulate toward the next feature release.
+The original review was planning-only against v0.5.0. M1 implements the compatibility contract foundation and M2 adds six adaptive recipes. M3–M6 remain unimplemented. No new dependencies, model downloads, or paid provider calls are needed for M1/M2. Contracts and documentation accumulate toward the next feature release.

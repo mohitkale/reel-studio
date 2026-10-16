@@ -292,6 +292,7 @@ export function useReplanMotionDirection(scriptId: string) {
     mutationFn: (vars: {
       ambition?: VisualAmbition;
       newVariation?: boolean;
+      adaptiveRecipes?: boolean;
       chapterMotifs?: boolean;
       system?: MotionSystem;
     }) =>

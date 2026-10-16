@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { AdaptiveRecipeCatalog } from "@/components/editor/adaptive-recipe-catalog";
 import { SHOWPIECES } from "@/video/semantic-graphic";
 import { ShowpiecePreviewCard } from "@/components/editor/showpiece-preview-card";
 
@@ -187,9 +188,9 @@ function MotionPreviewCard({ index }: { index: number }) {
 }
 
 export default function TemplatesPage() {
-  const [view, setView] = React.useState<"showpieces" | "motion" | "layouts">(
-    "showpieces",
-  );
+  const [view, setView] = React.useState<
+    "showpieces" | "motion" | "layouts" | "adaptive"
+  >("showpieces");
   return (
     <div className="space-y-6">
       <PageHeader
@@ -201,6 +202,13 @@ export default function TemplatesPage() {
         role="group"
         aria-label="Preview category"
       >
+        <Button
+          variant={view === "adaptive" ? "default" : "outline"}
+          aria-pressed={view === "adaptive"}
+          onClick={() => setView("adaptive")}
+        >
+          Adaptive recipes
+        </Button>
         <Button
           variant={view === "showpieces" ? "default" : "outline"}
           aria-pressed={view === "showpieces"}
@@ -223,32 +231,38 @@ export default function TemplatesPage() {
           Scene layouts
         </Button>
       </div>
-      <p className="text-muted-foreground text-sm">
-        {view === "showpieces"
-          ? "Each example develops over eight seconds. Play to see the action and hear sparse sound accents. Copy is illustrative; your own story supplies the subjects and relationships."
-          : view === "motion"
-            ? "Play a preview to see its choreography. These examples use illustrative copy and data; your reel keeps your own content and brand colours."
-            : "Base layouts remain available for manual composition and longer or specialised content."}
-      </p>
-      <div
-        className={
-          view === "showpieces"
-            ? "grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
-            : LISTING_GRID_6_CARDS
-        }
-      >
-        {view === "showpieces"
-          ? SHOWPIECES.map((piece, index) => (
-              <ShowpiecePreviewCard key={piece.id} index={index} />
-            ))
-          : view === "motion"
-            ? MOTION_SAMPLES.map((scene, index) => (
-                <MotionPreviewCard key={scene.id} index={index} />
-              ))
-            : TEMPLATES.map((t) => (
-                <TemplatePreviewCard key={t.id} template={t} />
-              ))}
-      </div>
+      {view === "adaptive" ? (
+        <AdaptiveRecipeCatalog />
+      ) : (
+        <>
+          <p className="text-muted-foreground text-sm">
+            {view === "showpieces"
+              ? "Each example develops over eight seconds. Play to see the action and hear sparse sound accents. Copy is illustrative; your own story supplies the subjects and relationships."
+              : view === "motion"
+                ? "Play a preview to see its choreography. These examples use illustrative copy and data; your reel keeps your own content and brand colours."
+                : "Base layouts remain available for manual composition and longer or specialised content."}
+          </p>
+          <div
+            className={
+              view === "showpieces"
+                ? "grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3"
+                : LISTING_GRID_6_CARDS
+            }
+          >
+            {view === "showpieces"
+              ? SHOWPIECES.map((piece, index) => (
+                  <ShowpiecePreviewCard key={piece.id} index={index} />
+                ))
+              : view === "motion"
+                ? MOTION_SAMPLES.map((scene, index) => (
+                    <MotionPreviewCard key={scene.id} index={index} />
+                  ))
+                : TEMPLATES.map((t) => (
+                    <TemplatePreviewCard key={t.id} template={t} />
+                  ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

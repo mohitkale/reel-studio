@@ -1,3 +1,8 @@
+import { adaptiveInputReason } from "./adaptive-layout";
+import {
+  isAdaptiveRecipe,
+  type AdaptiveRecipeId,
+} from "@/video/adaptive-catalog";
 import { z } from "zod";
 import {
   motionSystemSchema,
@@ -43,6 +48,7 @@ export const motionPlanSettingsSchema = z.object({
   seed: z.string().min(1).max(160),
   ambition: visualAmbitionSchema,
   chapterMotifs: z.boolean().optional(),
+  adaptiveRecipes: z.boolean().optional(),
   system: motionSystemSchema.optional(),
 });
 export type MotionPlanSettings = z.infer<typeof motionPlanSettingsSchema>;
@@ -245,6 +251,31 @@ export function planMotionSequence(
       recent.push(undefined);
       return undefined;
     }
+    if (settings.adaptiveRecipes && !scene.hasVisualContent) {
+      const id: AdaptiveRecipeId = scene.chart
+        ? "adaptive-evidence"
+        : scene.background
+          ? "adaptive-media"
+          : scene.items?.length
+            ? scene.role === "comparison"
+              ? "adaptive-comparison"
+              : "adaptive-process"
+            : scene.text.length > 130 || scene.role === "quote"
+              ? "adaptive-editorial"
+              : "adaptive-concept";
+      // Lists only become an ordered process when their saved role already asserts a diagram.
+      if (
+        !(id === "adaptive-process" && scene.role !== "diagram") &&
+        !adaptiveInputReason(id, scene)
+      ) {
+        const choice = {
+          ...motionDirection(id),
+          system: settings.system ?? ("precision" as const),
+        };
+        recent.push(choice);
+        return choice;
+      }
+    }
     const choices = candidates(
       scene,
       settings.ambition,
@@ -355,6 +386,8 @@ export function planMotionSequence(
         typeEntrance: (offset + scene.chapterIndex) % 2 ? "rise" : "sweep",
       };
     }
+    if (selected && isAdaptiveRecipe(selected.recipeId))
+      selected = { ...selected, system: settings.system ?? "precision" };
     recent.push(selected);
     return selected;
   });

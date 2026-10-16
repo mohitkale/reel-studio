@@ -1,3 +1,5 @@
+import { resolveAdaptiveLayout } from "./adaptive-layout";
+import { ADAPTIVE_MANIFESTS } from "@/video/adaptive-catalog";
 import { createHash } from "node:crypto";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveSpokenText } from "@/lib/spoken-text";
@@ -90,10 +92,25 @@ export function resolveCompatibilityFilmPlan(
     version: COMPATIBILITY_RECIPE.version,
     hash: filmDigest(COMPATIBILITY_RECIPE),
   };
+  const adaptive = timing.timeline.map((beat, index) =>
+    resolveAdaptiveLayout(
+      {
+        ...script.scenes[index],
+        spokenText: script.scenes[index].spokenText ?? undefined,
+        hideText: script.scenes[index].hideText ?? script.hideText,
+      },
+      script.width,
+      script.height,
+      beat.durationFrames / script.fps,
+    ),
+  );
+  const manifests = ADAPTIVE_MANIFESTS.filter((m) =>
+    adaptive.some((a) => a.plan?.recipeId === m.id),
+  );
   return resolvedFilmPlanSchema.parse({
     schemaVersion: 1,
-    resolverVersion: "1.0.0",
-    mode: "compatibility",
+    resolverVersion: manifests.length ? "1.1.0" : "1.0.0",
+    mode: manifests.length ? "adaptive" : "compatibility",
     sourceHash: filmDigest(filmPlanSource(snapshot)),
     scriptId: script.id,
     seed: script.motionPlan?.seed ?? script.id,
@@ -109,7 +126,13 @@ export function resolveCompatibilityFilmPlan(
       totalFrames: timing.totalFrames + coverFrames,
     },
     catalogRevision: CURRENT_HF_CATALOG_REVISION,
-    recipes: [{ manifest: COMPATIBILITY_RECIPE, hash: recipe.hash }],
+    recipes: [
+      { manifest: COMPATIBILITY_RECIPE, hash: recipe.hash },
+      ...manifests.map((manifest) => ({
+        manifest,
+        hash: filmDigest(manifest),
+      })),
+    ],
     shots: timing.timeline.map((beat, index) => ({
       id: script.scenes[index].id,
       sceneId: beat.sceneId,
@@ -120,12 +143,28 @@ export function resolveCompatibilityFilmPlan(
         beat.durationFrames,
         timing.totalFrames - beat.startFrame,
       ),
-      recipe,
+      recipe: adaptive[index].plan
+        ? (() => {
+            const manifest = manifests.find(
+              (m) => m.id === adaptive[index].plan!.recipeId,
+            )!;
+            return {
+              id: manifest.id,
+              version: manifest.version,
+              hash: filmDigest(manifest),
+            };
+          })()
+        : recipe,
+      ...(adaptive[index].plan
+        ? { adaptive: adaptive[index].plan }
+        : adaptive[index].reason
+          ? { fallbackReason: adaptive[index].reason }
+          : {}),
       binding: {
         kind: "snapshot-scene",
         sceneHash: filmDigest(script.scenes[index]),
       },
-      layout: "existing-renderer",
+      layout: adaptive[index].plan ? "adaptive" : "existing-renderer",
       reason: "Preserve saved scene content, direction, media and locks.",
     })),
   });
