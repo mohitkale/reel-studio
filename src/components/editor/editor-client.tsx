@@ -525,6 +525,7 @@ export function EditorClient({
               ambition={script.motionPlan?.ambition ?? "expressive"}
               system={script.motionPlan?.system}
               chapterMotifs={script.motionPlan?.chapterMotifs}
+              adaptiveRecipes={script.motionPlan?.adaptiveRecipes}
               hasChapters={Boolean(script.chapterPlan)}
               scenes={scenes.map((scene) => ({
                 ...scene,
@@ -1022,6 +1023,7 @@ export function EditorClient({
           <div className="absolute inset-0 overflow-y-auto p-4">
             {selectedScene ? (
               <SceneInspector
+                tokens={script.brandTokens}
                 key={selectedScene.id}
                 scene={selectedScene}
                 storySource={semanticStorySource(scenes)}

@@ -20,7 +20,7 @@ _Native motion examples from v0.5.0's verified feature exports. [Watch with soun
 
 ## What you can make
 
-- **Videos:** six visual presets, 23 motion treatments and nine
+- **Videos:** six visual presets, 29 motion treatments and nine
   [story motion showpieces](docs/MOTION_LIBRARY.md#story-motion-showpieces)
   chosen from your content, plus your own screenshots or footage. Export
   portrait **9:16**, landscape **16:9**, or square **1:1**.
@@ -78,7 +78,8 @@ migrations, preserved media, and the move to HyperFrames-only rendering.
 Charts use supplied values. Review optional AI-generated claims before publishing.
 
 Checkpoint the current design from **Customize video → Film plan JSON** or through
-REST/MCP. See [adaptive film contracts](docs/ADAPTIVE_CONTRACTS.md).
+REST/MCP. Six [adaptive recipes](docs/ADAPTIVE_RECIPES.md) reflow supplied content
+by density, duration and aspect. See [adaptive film contracts](docs/ADAPTIVE_CONTRACTS.md).
 
 ![Projects with visible AI and local production creation paths](docs/assets/reel-studio-home.png)
 

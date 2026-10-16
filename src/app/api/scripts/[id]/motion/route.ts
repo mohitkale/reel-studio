@@ -14,6 +14,7 @@ const bodySchema = z
   .object({
     ambition: visualAmbitionSchema.optional(),
     chapterMotifs: z.boolean().optional(),
+    adaptiveRecipes: z.boolean().optional(),
     system: motionSystemSchema.optional(),
     newVariation: z.boolean().default(false),
   })

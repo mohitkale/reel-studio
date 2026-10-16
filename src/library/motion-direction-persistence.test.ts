@@ -151,6 +151,39 @@ it("persists visual direction in SQLite without changing content and rolls back 
       ),
     ).toBe(true);
 
+    await replanMotionDirection("script", {
+      adaptiveRecipes: true,
+      system: "editorial",
+    });
+    expect((await getScript("script"))!.motionPlan?.adaptiveRecipes).toBe(
+      true,
+    );
+    expect(
+      (await getScript("script"))!.scenes.every(
+        (s) => s.motion?.recipeId === "adaptive-concept",
+      ),
+    ).toBe(true);
+    const adaptiveSnapshot = await captureVideoSnapshot("script");
+    expect(adaptiveSnapshot.filmPlan?.mode).toBe("adaptive");
+    const adaptiveRestored =
+      await restoreProductionRevision(adaptiveSnapshot);
+    expect(
+      (await getScript(adaptiveRestored.scriptId))!.motionPlan
+        ?.adaptiveRecipes,
+    ).toBe(true);
+    await replanMotionDirection("script", { system: "precision" });
+    expect(
+      (await getScript("script"))!.scenes.every(
+        (s) => s.motion?.system === "precision",
+      ),
+    ).toBe(true);
+    await replanMotionDirection("script", { adaptiveRecipes: false });
+    expect(
+      (await getScript("script"))!.scenes.every(
+        (s) => !s.motion?.recipeId.startsWith("adaptive-"),
+      ),
+    ).toBe(true);
+
     await prisma.scene.updateMany({
       where: { scriptId: "script" },
       data: { layoutJson: originalLayout },

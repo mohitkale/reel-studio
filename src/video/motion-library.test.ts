@@ -10,7 +10,7 @@ import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-com
 describe("authored motion library", () => {
   it("compiles all registered validated blocks without falling back or making up data", () => {
     const props = motionLibraryFixture();
-    expect(MOTION_RECIPES).toHaveLength(23);
+    expect(MOTION_RECIPES).toHaveLength(29);
     for (const scene of props.scenes)
       expect(
         motionFallbackReason(

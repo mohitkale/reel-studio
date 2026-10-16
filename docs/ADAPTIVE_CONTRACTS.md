@@ -1,7 +1,8 @@
 # Adaptive film contracts
 
-M1 adds versioned contracts and a compatibility adapter. New adaptive visuals
-and sequence direction are later milestones in the
+M1 supplies versioned contracts and a compatibility adapter. M2 adds six
+[adaptive recipes](ADAPTIVE_RECIPES.md), resolved geometry and local previews.
+Sequence direction remains a later milestone in the
 [upgrade plan](ADAPTIVE_CONTENT_FACTORY_PLAN.md).
 
 ## Recipe manifests
@@ -16,11 +17,13 @@ A manifest describes capabilities; it does not install or execute a renderer.
 The initial `saved-scene@1.0.0` adapter delegates to the existing renderer. Its
 ranges describe the compatibility envelope, not aesthetic certification or
 resource guarantees. It has no new continuity ports or choreography events.
-Adaptive manifests can be validated, but are not admitted as renderable M1 plans.
+Six bundled M2 manifests are admitted by resolver `1.1.0` as adaptive plans.
+Their shots include validated geometry, type sizes and timing; unavailable inputs
+retain `saved-scene` with an explicit fallback reason.
 
 ## Resolved film plans
 
-`src/video/resolved-film-plan.ts` defines the version-1 compatibility plan.
+`src/video/resolved-film-plan.ts` defines the version-1 compatibility/adaptive plan.
 `src/production/film-plan.ts` adapts an existing captured video snapshot without
 replanning. Each shot binds to a complete scene by ID and SHA-256, preserving
 copy, narration, chart data, media, saved motion/direction, and locks. The source

@@ -2,7 +2,7 @@
 
 Reel Studio separates the content preset, the colour theme and the motion
 family. A different palette is not a different composition. The authored motion
-library contains **23 treatments**, including seven additional layouts with
+library contains **29 treatments**, including seven additional layouts with
 separate geometry and choreography.
 
 ## Automatic direction
@@ -151,7 +151,7 @@ scene duration are not silently changed.
 ## Verification
 
 `npm run test:motion-library` uses an installed browser (optionally selected with
-`REEL_VERIFY_CHROME`) and verifies all 23 treatments in portrait, landscape
+`REEL_VERIFY_CHROME`) and verifies all 29 treatments in portrait, landscape
 and square. It checks light/dark palettes, copy and supplied-data preservation,
 text bounds, dense-input fitting, forward/reverse seeks, native preview/producer
 parity, blocked external requests, and actual isolated-worker MP4 exports.
@@ -165,3 +165,6 @@ is an original local SVG illustration. Real model copy quality and whole-reel
 pacing still need editorial review before publishing.
 
 See [director planning](DIRECTOR_PIPELINE.md), [extension registration](EXTENSIONS.md), [creation UX](CREATION_UX.md) and [release validation](production/RELEASE_VALIDATION.md).
+
+Six bundled [adaptive recipes](ADAPTIVE_RECIPES.md) add content-aware fitting,
+format reflow and duration-aware focus within the same three visual families.

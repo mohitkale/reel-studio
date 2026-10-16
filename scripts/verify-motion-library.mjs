@@ -78,7 +78,10 @@ try {
     const stress = {
       ...props,
       scenes: props.scenes.map((scene, index) => {
-        if (index < 16) return scene;
+        // Adaptive admission ceilings can deliberately fall back at extreme
+        // density. Their boundary cases are covered by adaptive-layout tests.
+        if (index < 16 || scene.motion.recipeId.startsWith("adaptive-"))
+          return scene;
         const recipe = MOTION_RECIPES.find(
           (recipe) => recipe.id === scene.motion.recipeId,
         );
@@ -213,7 +216,7 @@ try {
             const rect = stage.getBoundingClientRect();
             const leaves = Array.from(
               stage.querySelectorAll(
-                ".fx-line-inner,.sm-copy,.sm-label,.sm-brand,.dm-value,.dm-row-label,.dm-source,.gm-card,.am-item-copy,.am-cell-label,.am-value,.am-source,svg text",
+                ".fx-line-inner,.sm-copy,.sm-label,.sm-brand,.dm-value,.dm-row-label,.dm-source,.gm-card,.am-item-copy,.am-cell-label,.am-value,.am-source,.ar-headline,.ar-copy,.ar-label,.ar-evidence strong,.ar-source,svg text",
               ),
             );
             return {
@@ -221,7 +224,7 @@ try {
               sceneId: scene.dataset.sceneId,
               color: getComputedStyle(stage).color,
               fitWarning: stage.dataset.textFitWarning ?? null,
-              ambient: stage.querySelector(".ml-ambient").style.transform,
+              ambient: stage.querySelector(".ml-ambient")?.style.transform ?? null,
               leaves: leaves.map((el) => {
                 const r = el.getBoundingClientRect();
                 const range = document.createRange();
@@ -418,7 +421,7 @@ try {
             frame.evaluate((time) => {
               window.__timelines.reel.seek(time, true);
               return Array.from(
-                document.querySelectorAll("[data-design-block] *"),
+                document.querySelectorAll("[data-design-block] *,[data-adaptive] *"),
               ).map((el) => [el.style.transform, el.style.opacity]);
             }, t);
           if (index >= 16) {

@@ -1,3 +1,5 @@
+import { ADAPTIVE_RECIPES, isAdaptiveRecipe } from "@/video/adaptive-catalog";
+import { adaptiveInputReason } from "./adaptive-layout";
 import { z } from "zod";
 import { EXTENSION_MOTION_RECIPES } from "@/video/motion-extensions";
 
@@ -118,6 +120,7 @@ export const MOTION_RECIPES = [
   ...MEDIA_MOTION_RECIPES,
   ...STORY_MOTION_RECIPES,
   ...EXTENSION_MOTION_RECIPES,
+  ...ADAPTIVE_RECIPES,
 ] as const;
 
 export const motionRecipeIdSchema = z.enum(
@@ -128,6 +131,7 @@ export type MotionRecipeId = z.infer<typeof motionRecipeIdSchema>;
 export const motionDirectionSchema = z.object({
   recipeId: motionRecipeIdSchema,
   version: z.literal(MOTION_RECIPE_VERSION),
+  system: z.enum(["editorial", "precision", "poster"]).optional(),
   typeEntrance: z.enum(["sweep", "rise"]).optional(),
 });
 export type MotionDirection = z.infer<typeof motionDirectionSchema>;
@@ -152,16 +156,29 @@ export interface MotionChartInput {
 }
 
 export function isDataMotionRecipe(id: MotionRecipeId): boolean {
-  return id === "data-spotlight" || id === "data-bars" || id === "data-ledger";
+  return (
+    id === "adaptive-evidence" ||
+    id === "data-spotlight" ||
+    id === "data-bars" ||
+    id === "data-ledger"
+  );
 }
 
 export function isDiagramMotionRecipe(id: MotionRecipeId): boolean {
-  return id === "diagram-path" || id === "diagram-orbit";
+  return (
+    id === "adaptive-process" ||
+    id === "adaptive-comparison" ||
+    id === "diagram-path" ||
+    id === "diagram-orbit"
+  );
 }
 
 export function isMediaMotionRecipe(id: MotionRecipeId): boolean {
   return (
-    id === "media-device" || id === "media-cinematic" || id === "media-mat"
+    id === "adaptive-media" ||
+    id === "media-device" ||
+    id === "media-cinematic" ||
+    id === "media-mat"
   );
 }
 
@@ -206,6 +223,14 @@ export function motionFallbackReason(
   const recipe = MOTION_RECIPES.find((item) => item.id === direction.recipeId);
   if (!recipe || direction.version !== MOTION_RECIPE_VERSION)
     return "This motion treatment version is unavailable.";
+  if (isAdaptiveRecipe(direction.recipeId))
+    return adaptiveInputReason(direction.recipeId, {
+      text,
+      chart,
+      items,
+      background,
+      visual: hasOtherVisualContent ? "existing" : undefined,
+    });
   if (Array.from(text).length > recipe.maxCharacters)
     return `This treatment supports up to ${recipe.maxCharacters} characters of copy.`;
   if (
