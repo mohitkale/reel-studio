@@ -61,8 +61,9 @@ plans continue using resolver `1.0.0`; old revisions are not migrated in place.
 Final export preparation resolves against its actual canvas and measured timing
 using the pinned recipe implementation; submitted plans remain provenance.
 
-M2 supplies per-scene adaptation. Subject identity, sequence search, object
-handoffs, chapter direction and batch versions remain later milestones in the
+M2 supplies per-scene adaptation. M3 adds [sequence search, subject identities
+and shared-card handoffs](SEQUENCE_DIRECTION.md). Chapter direction and batch
+versions remain later milestones in the
 [upgrade plan](ADAPTIVE_CONTENT_FACTORY_PLAN.md). This is not yet certification
 of the full baseline corpus or all local AI models. See the
 [M2 validation record](production/ADAPTIVE_M2_VALIDATION.md) for measured coverage.

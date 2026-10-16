@@ -1,7 +1,12 @@
 import { randomUUID } from "node:crypto";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/library/db";
-import { brandOverridesSchema, parseJsonColumn } from "@/library/schemas";
+import {
+  brandOverridesSchema,
+  sceneConfigSchema,
+  parseJsonColumn,
+} from "@/library/schemas";
+import { collectSequenceSubjects } from "@/production/sequence-subjects";
 import type { AutomaticMediaDecision } from "@/library/automatic-stock-media";
 import {
   assertSceneRewriteState,
@@ -98,6 +103,14 @@ export async function commitSceneAppend(input: {
         },
       });
     }
+    if (overrides.motionPlan?.sequenceDirection) {
+      overrides.motionPlan.subjectRegistry = collectSequenceSubjects(
+        [...row.scenes, ...input.scenes].map((scene) =>
+          parseJsonColumn(scene.layoutJson, sceneConfigSchema, {}),
+        ),
+        overrides.motionPlan.subjectRegistry,
+      );
+    }
     if (input.chapterTitle !== undefined) {
       const chapterPlan = chapterPlanSchema.parse({
         version: "1.0.0",
@@ -140,10 +153,16 @@ export async function commitSceneAppend(input: {
           ),
         });
       }
+      overrides.chapterPlan = chapterPlan;
+    }
+    if (
+      input.chapterTitle !== undefined ||
+      overrides.motionPlan?.sequenceDirection
+    ) {
       await tx.script.update({
         where: { id: input.scriptId },
         data: {
-          brandOverrides: JSON.stringify({ ...overrides, chapterPlan }),
+          brandOverrides: JSON.stringify(overrides),
         },
       });
     }

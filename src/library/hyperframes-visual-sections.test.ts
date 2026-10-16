@@ -7,6 +7,44 @@ import type { ReelProps } from "@/video/types";
 import { serverDefaultTokens } from "@/lib/brand-defaults";
 import { hashRenderDirectory } from "@/library/render-section-cache";
 import { writeHyperframesVisualSections } from "./hyperframes-visual-sections";
+import { sequenceFixture } from "../../tests/fixtures/sequence-direction";
+
+it("hashes both shared-card endpoint sections while preserving unrelated later cached visuals", async () => {
+  const root = await fs.mkdtemp(
+    path.join(os.tmpdir(), "reel-continuity-scopes-"),
+  );
+  const project = path.join(root, "project");
+  await fs.mkdir(path.join(project, "_runtime"), { recursive: true });
+  await fs.writeFile(path.join(project, "_runtime/gsap.min.js"), "runtime");
+  const props = sequenceFixture();
+  props.scenes = [
+    props.scenes[0],
+    props.scenes[1],
+    { ...props.scenes.at(-1)!, id: "reading" },
+    { ...props.scenes.at(-1)!, id: "unrelated" },
+  ];
+  props.timeline = props.scenes.map((scene, index) => ({
+    sceneId: scene.id,
+    startFrame: index * 900,
+    durationFrames: 900,
+  }));
+  const hash = (index: number) =>
+    hashRenderDirectory(
+      path.join(`${project}-sections/visuals`, String(index)),
+    );
+  try {
+    await writeHyperframesVisualSections(project, props);
+    const before = await Promise.all([0, 1, 3].map(hash));
+    props.scenes[1].items!.push("Final check");
+    await writeHyperframesVisualSections(project, props);
+    const after = await Promise.all([0, 1, 3].map(hash));
+    expect(after[0]).not.toBe(before[0]);
+    expect(after[1]).not.toBe(before[1]);
+    expect(after[2]).toBe(before[2]);
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
 
 it("freezes only active native visuals/media and captions, preserving global endpoint and audio isolation", async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "reel-visual-scopes-"));

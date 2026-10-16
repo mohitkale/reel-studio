@@ -293,6 +293,8 @@ export function useReplanMotionDirection(scriptId: string) {
       ambition?: VisualAmbition;
       newVariation?: boolean;
       adaptiveRecipes?: boolean;
+      sequenceDirection?: boolean;
+      subjectRegistry?: import("@/video/sequence-direction").Subject[];
       chapterMotifs?: boolean;
       system?: MotionSystem;
     }) =>

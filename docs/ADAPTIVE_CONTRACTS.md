@@ -2,7 +2,7 @@
 
 M1 supplies versioned contracts and a compatibility adapter. M2 adds six
 [adaptive recipes](ADAPTIVE_RECIPES.md), resolved geometry and local previews.
-Sequence direction remains a later milestone in the
+M3 adds [sequence direction and subject continuity](SEQUENCE_DIRECTION.md); later workflows remain in the
 [upgrade plan](ADAPTIVE_CONTENT_FACTORY_PLAN.md).
 
 ## Recipe manifests
@@ -95,3 +95,8 @@ npm run test:unit -- src/production/film-plan.test.ts src/library/film-plan-serv
 The [M1 validation record](production/ADAPTIVE_M1_VALIDATION.md) records the
 implementation acceptance evidence. Rendering remains on the isolated worker;
 M1 does not install models, use paid providers, or change export quality.
+
+M3 opt-in sequence plans use resolver `1.2.0`, retaining the M2 recipe versions.
+The plan freezes subject definitions, typed panel ports and handoff/fallback
+boundaries; saved scene motion retains source-bound choice explanations. Old
+plans without sequence direction continue using their previous resolver.

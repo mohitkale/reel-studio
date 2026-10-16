@@ -1,6 +1,7 @@
 import { ADAPTIVE_RECIPES, isAdaptiveRecipe } from "@/video/adaptive-catalog";
 import { adaptiveInputReason } from "./adaptive-layout";
 import { z } from "zod";
+import { visualProfileSchema } from "@/video/sequence-direction";
 import { EXTENSION_MOTION_RECIPES } from "@/video/motion-extensions";
 
 import type { ProductionSceneRole } from "@/production/roles";
@@ -133,6 +134,27 @@ export const motionDirectionSchema = z.object({
   version: z.literal(MOTION_RECIPE_VERSION),
   system: z.enum(["editorial", "precision", "poster"]).optional(),
   typeEntrance: z.enum(["sweep", "rise"]).optional(),
+  sequenceVersion: z.literal(1).optional(),
+  decision: z
+    .object({
+      version: z.literal(1),
+      sourceKey: z.string().min(1).max(40),
+      subjectIds: z.array(z.string().min(1).max(100)).max(100),
+      reason: z.string().min(1).max(600),
+      profile: visualProfileSchema,
+      alternatives: z
+        .array(
+          z
+            .object({
+              recipeId: motionRecipeIdSchema,
+              reason: z.string().min(1).max(300),
+            })
+            .strict(),
+        )
+        .max(2),
+    })
+    .strict()
+    .optional(),
 });
 export type MotionDirection = z.infer<typeof motionDirectionSchema>;
 

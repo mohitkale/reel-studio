@@ -1,4 +1,6 @@
+import { sequenceConfigFor } from "@/video/sequence-direction";
 import { resolveAdaptiveLayout } from "./adaptive-layout";
+import { resolveSequenceContinuity } from "./sequence-continuity";
 import { ADAPTIVE_MANIFESTS } from "@/video/adaptive-catalog";
 import { createHash } from "node:crypto";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
@@ -107,9 +109,24 @@ export function resolveCompatibilityFilmPlan(
   const manifests = ADAPTIVE_MANIFESTS.filter((m) =>
     adaptive.some((a) => a.plan?.recipeId === m.id),
   );
+  const sequence = resolveSequenceContinuity({
+    sequenceDirection: sequenceConfigFor(script.motionPlan),
+    scenes: script.scenes.map((scene) => ({
+      ...scene,
+      spokenText: scene.spokenText ?? undefined,
+      hideText: scene.hideText ?? script.hideText,
+    })),
+    timeline: timing.timeline,
+    width: script.width,
+    height: script.height,
+    fps: script.fps,
+    tokens: script.brandTokens,
+    coverUrl: script.coverUrl ?? undefined,
+  });
   return resolvedFilmPlanSchema.parse({
     schemaVersion: 1,
-    resolverVersion: manifests.length ? "1.1.0" : "1.0.0",
+    resolverVersion: sequence ? "1.2.0" : manifests.length ? "1.1.0" : "1.0.0",
+    ...(sequence ? { sequence } : {}),
     mode: manifests.length ? "adaptive" : "compatibility",
     sourceHash: filmDigest(filmPlanSource(snapshot)),
     scriptId: script.id,

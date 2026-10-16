@@ -1,4 +1,6 @@
 import { buildAdaptiveScene, ADAPTIVE_STYLES } from "./motion/adaptive-blocks";
+import { resolveSequenceContinuity } from "@/production/sequence-continuity";
+import { buildSequenceHandoffs } from "./motion/sequence-handoff";
 import { escapeHtml } from "@/lib/html";
 import { MOTION_LIBRARY_STYLES } from "./motion/library-styles";
 import { colorContrast, readableMotionPalette } from "@/video/readable-palette";
@@ -957,6 +959,7 @@ export function buildHyperframesCompositionHtml(
     motionSpec: props.motionSpec ?? compileDirectorMotion(props),
   });
   const fps = props.fps || 30;
+  const sequence = resolveSequenceContinuity(props);
   const width = props.width || 1080;
   const height = props.height || 1920;
   const layout = props.layout ?? resolveProductionLayout({ width, height });
@@ -1032,6 +1035,8 @@ export function buildHyperframesCompositionHtml(
       width,
       height,
       beat.durationFrames / fps,
+      sequence,
+      fps,
     );
     if (adaptive) {
       sceneBlocks.push(adaptive);
@@ -1321,6 +1326,7 @@ ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLE
           ),
         )
         .join("\n")}
+      ${buildSequenceHandoffs(sequence, tokens, fps, width, height)}
       ${captionBlocks}
       ${audioTags.join("\n")}
     </div>

@@ -1,3 +1,4 @@
+import { sequenceConfigFor } from "@/video/sequence-direction";
 /** Server-only render orchestration; HyperFrames runs in an isolated worker. */
 import type { VideoSnapshot } from "@/production/video-snapshot";
 import { CURRENT_HF_CATALOG_REVISION } from "@/engines/hyperframes/catalog/versions";
@@ -55,6 +56,7 @@ export function prepareVideoComposition(
     : { width: script.width, height: script.height };
 
   const inputProps: ReelProps = {
+    sequenceDirection: sequenceConfigFor(script.motionPlan),
     scenes: script.scenes.map((s) => ({
       id: s.id,
       templateId: normalizeHfTemplateId(s.templateId),

@@ -1,3 +1,4 @@
+import { sequenceConfigFor } from "@/video/sequence-direction";
 import type { ReelProps, ReelScene } from "@/video/types";
 import { getVideoEngine } from "@/engines/registry";
 import {
@@ -98,6 +99,7 @@ export function resolveProductionComposition(
   const narrationReady = spec.narration.readiness === "ready";
   const coverAsset = assets.get("asset:cover");
   const reelProps: ReelProps = {
+    sequenceDirection: sequenceConfigFor(spec.motionPlan),
     scenes,
     timeline: spec.scenes.map((scene) => ({
       sceneId: scene.id,

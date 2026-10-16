@@ -184,6 +184,30 @@ it("persists visual direction in SQLite without changing content and rolls back 
       ),
     ).toBe(true);
 
+    await prisma.scene.updateMany({where:{scriptId:"script"},data:{layoutJson:JSON.stringify({...JSON.parse(originalLayout),role:"comparison",items:["Draft","Publish"]})}});
+    await replanMotionDirection("script",{adaptiveRecipes:true,sequenceDirection:true,subjectRegistry:[{id:"draft",label:"Draft",aliases:["First pass"],symbol:"none",colorSlot:"accentSecondary"}]});
+    const sequenceScript=(await getScript("script"))!;
+    expect(sequenceScript.motionPlan?.subjectRegistry?.find(s=>s.id==="draft")?.aliases).toEqual(["First pass"]);
+    expect(sequenceScript.scenes.every(s=>Boolean(s.motion?.decision?.reason))).toBe(true);
+    expect((await replanMotionDirection("script",{})).changedSceneIds).toEqual([]);
+    const {readFilmPlanDocument,saveFilmPlanDocument}=await import("./film-plan-service");
+    const sequenceDocument=await readFilmPlanDocument("script");
+    const checkpoint=await saveFilmPlanDocument("script",JSON.parse(JSON.stringify(sequenceDocument)));
+    expect((await readFilmPlanDocument("script",{revisionId:checkpoint.revisionId})).snapshot.filmPlan?.sequence).toEqual(sequenceDocument.snapshot.filmPlan?.sequence);
+    const sequenceRestored=await restoreProductionRevision(sequenceDocument.snapshot);
+    expect((await getScript(sequenceRestored.scriptId))!.motionPlan).toEqual(sequenceScript.motionPlan);
+    expect((await getScript(sequenceRestored.scriptId))!.scenes.map(s=>s.motion)).toEqual(sequenceScript.scenes.map(s=>s.motion));
+
+    const {updateScene}=await import("./repositories/scenes");
+    await updateScene("scene-0",{motion:{recipeId:"adaptive-comparison",version:"1.0.0",system:"precision"}});
+    await updateScene("scene-0",{locks:{copy:true,assets:true,scene:true}});
+    expect((await getScript("script"))!.scenes[0].motion?.sequenceVersion).toBe(1);
+    expect((await captureVideoSnapshot("script")).filmPlan?.sequence?.ports.some(p=>p.sceneId==="scene-0")).toBe(true);
+    await prisma.scene.update({where:{id:"scene-1"},data:{layoutJson:JSON.stringify({role:"comparison",items:["Draft","Publish"],motion:{recipeId:"adaptive-comparison",version:"1.0.0",system:"precision"},locks:{copy:true,assets:true,scene:true}})}});
+    await replanMotionDirection("script",{});
+    expect((await getScript("script"))!.scenes[1].motion?.sequenceVersion).toBeUndefined();
+    expect((await captureVideoSnapshot("script")).filmPlan?.sequence?.ports.some(p=>p.sceneId==="scene-1")).toBe(false);
+
     await prisma.scene.updateMany({
       where: { scriptId: "script" },
       data: { layoutJson: originalLayout },

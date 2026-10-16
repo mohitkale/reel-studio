@@ -3,7 +3,7 @@ import { defaultTemplateIdForEngine } from "@/engines/registry";
 import { isVideoEngineId, DEFAULT_VIDEO_ENGINE } from "@/engines/types";
 import { prisma } from "@/library/db";
 import { ProviderError } from "@/providers/voice/types";
-import { sceneConfigSchema, parseJsonColumn } from "../schemas";
+import { sceneConfigSchema, parseJsonColumn, brandOverridesSchema } from "../schemas";
 import type { SceneLocks } from "../schemas";
 import type { MotionDirection } from "@/production/motion";
 import type { MediaPreference } from "@/lib/media-preference";
@@ -82,7 +82,7 @@ export async function updateScene(
   ) {
     const current = await prisma.scene.findUnique({
       where: { id },
-      select: { layoutJson: true },
+      select: { layoutJson: true, script: { select: { brandOverrides: true } } },
     });
     const config = parseJsonColumn(current?.layoutJson, sceneConfigSchema, {});
     if (data.background !== undefined) {
@@ -122,6 +122,13 @@ export async function updateScene(
       if (data.motion === null) delete config.motion;
       else config.motion = data.motion;
     }
+    // Freeze participation when a creator locks an already directed scene.
+    // Older locked scenes are never opted in by the automatic replanner.
+    const sequenceEnabled = parseJsonColumn(
+      current?.script?.brandOverrides, brandOverridesSchema, {},
+    ).motionPlan?.sequenceDirection;
+    if ((data.motion || data.locks?.scene) && config.motion && sequenceEnabled)
+      config.motion = { ...config.motion, sequenceVersion: 1 };
     if (data.templateId !== undefined) delete config.direction;
     layoutJson = Object.keys(config).length ? JSON.stringify(config) : "";
   }

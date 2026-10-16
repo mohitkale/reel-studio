@@ -1,3 +1,4 @@
+import { subjectRegistrySchema } from "../../src/video/sequence-direction.js";
 import { cutSuggestionRequestSchema } from "@/production/cut-suggestions";
 import { filmPlanDocumentSchema } from "@/production/film-plan-document";
 import { randomUUID } from "node:crypto";
@@ -572,12 +573,14 @@ export function registerTools(server: McpServer): void {
     "replan_motion_direction",
     {
       description:
-        "Replan a preset video's visual treatments with Clean, Expressive or Showcase ambition. Preserves copy, narration, data, media, locked scenes and hidden-text scenes. newVariation chooses a new saved seed; eligible choices may remain unchanged. system selects a coherent editorial, poster or precision visual family. adaptiveRecipes opts eligible scenes into content-aware layout and timing; false returns unlocked scenes to the existing treatment planner. chapterMotifs enables alternating sweep/rise type choreography from a valid saved chapter outline; false returns unlocked scenes to standard choreography.",
+        "Replan a preset video's visual treatments with Clean, Expressive or Showcase ambition. Preserves copy, narration, data, media, locked scenes and hidden-text scenes. newVariation chooses a new saved seed; eligible choices may remain unchanged. system selects a coherent editorial, poster or precision visual family. adaptiveRecipes opts eligible scenes into content-aware layout and timing; false returns unlocked scenes to the existing treatment planner. sequenceDirection enables bounded lookahead and supported recurring-card continuity. subjectRegistry replaces explicit subject definitions and aliases; ambiguous identities are rejected. chapterMotifs enables alternating sweep/rise type choreography from a valid saved chapter outline; false returns unlocked scenes to standard choreography.",
       inputSchema: {
         scriptId: z.string().min(1),
         ambition: visualAmbitionSchema.optional(),
         chapterMotifs: z.boolean().optional(),
         adaptiveRecipes: z.boolean().optional(),
+        sequenceDirection: z.boolean().optional(),
+        subjectRegistry: subjectRegistrySchema.optional(),
         system: motionSystemSchema.optional(),
         newVariation: z.boolean().optional(),
       },

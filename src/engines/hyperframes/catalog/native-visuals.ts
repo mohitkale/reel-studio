@@ -1,4 +1,5 @@
 import { ADAPTIVE_BOOT } from "../motion/adaptive-blocks";
+import { SEQUENCE_HANDOFF_BOOT } from "../motion/sequence-handoff";
 import { DESIGN_MOTION_BOOT } from "../motion/design-blocks";
 import { SHOWPIECE_BOOT } from "../motion/showpiece-blocks";
 import { CELESTIAL_BOOT } from "../motion/celestial-blocks";
@@ -1218,7 +1219,7 @@ export function buildGsapMotionBootScript(
         });
       }
 
-      ${ADAPTIVE_BOOT}${DESIGN_MOTION_BOOT}
+      ${SEQUENCE_HANDOFF_BOOT}${ADAPTIVE_BOOT}${DESIGN_MOTION_BOOT}
 ${CELESTIAL_BOOT}${SHOWPIECE_BOOT}
 ${SEMANTIC_GRAPHIC_BOOT}
 

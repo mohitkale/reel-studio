@@ -57,6 +57,11 @@ it("atomically appends chapters and stock, preserves prior work, and rejects rac
               chapterPlan: plan,
               customBrandField: "retained",
               audioMastering: "balanced",
+              motionPlan: {
+                version: "1.0.0", seed: "append", ambition: "expressive",
+                sequenceDirection: true,
+                subjectRegistry: [{ id: "saved-collect", label: "Collect", aliases: ["Gather"], symbol: "none", colorSlot: "accentSecondary" }],
+              },
             }),
             scenes: {
               create: Array.from({ length: 24 }, (_, index) => ({
@@ -127,7 +132,7 @@ it("atomically appends chapters and stock, preserves prior work, and rejects rac
       {
         templateId: "kinetic",
         text: "New opening",
-        layoutJson: JSON.stringify({ background: selected.background }),
+        layoutJson: JSON.stringify({ background: selected.background, items: ["Gather", "Review"] }),
       },
       { templateId: "kinetic", text: "New takeaway" },
     ];
@@ -172,6 +177,10 @@ it("atomically appends chapters and stock, preserves prior work, and rejects rac
       customBrandField: "retained",
       audioMastering: "balanced",
     });
+    expect(after.motionPlan?.subjectRegistry).toEqual([
+      { id: "saved-collect", label: "Collect", aliases: ["Gather"], symbol: "none", colorSlot: "accentSecondary" },
+      expect.objectContaining({ label: "Review" }),
+    ]);
     const stock = await prisma.stockMediaSelection.findUniqueOrThrow({
       where: { sceneId: ids[0] },
     });

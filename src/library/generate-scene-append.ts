@@ -122,6 +122,7 @@ export async function generateSceneAppend(input: {
     ? planMotionSequence(
         directedScenes.map((scene, index) => ({
           role: roles[index],
+          layout: {width:script.width,height:script.height,duration:Math.max(3,Math.min(120,(scene.spokenText??scene.text).split(/\s+/).length/2.5+1))},
           energy: script.energy,
           chapterIndex:
             body.chapterTitle !== undefined

@@ -79,7 +79,9 @@ Charts use supplied values. Review optional AI-generated claims before publishin
 
 Checkpoint the current design from **Customize video → Film plan JSON** or through
 REST/MCP. Six [adaptive recipes](docs/ADAPTIVE_RECIPES.md) reflow supplied content
-by density, duration and aspect. See [adaptive film contracts](docs/ADAPTIVE_CONTRACTS.md).
+by density, duration and aspect.
+[Sequence direction](docs/SEQUENCE_DIRECTION.md) adds local lookahead, recurring
+subject identities, decision explanations and supported card handoffs. See [adaptive film contracts](docs/ADAPTIVE_CONTRACTS.md).
 
 ![Projects with visible AI and local production creation paths](docs/assets/reel-studio-home.png)
 

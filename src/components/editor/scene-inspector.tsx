@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { AdaptiveRecipePicker } from "./adaptive-recipe-catalog";
+import { sequenceSourceKey } from "@/production/sequence-subjects";
 import {
   Trash2,
   ChevronUp,
@@ -429,17 +430,21 @@ function ChecklistEditor({
   onChange,
   diagram = false,
   comparison = false,
+  adaptive,
 }: {
   items: string[];
   onChange: (items: string[]) => void;
   diagram?: boolean;
   comparison?: boolean;
+  adaptive?: "comparison" | "process";
 }) {
   // Initialized once per mount; SceneInspector is keyed by scene.id, so switching
   // scenes remounts this with the right items — no resync effect needed.
   const [draft, setDraft] = React.useState<string[]>(
     items.length ? items : [""],
   );
+
+  const maximum = adaptive === "comparison" ? 4 : adaptive === "process" ? 6 : comparison ? 2 : undefined;
 
   function commit(next: string[]) {
     setDraft(next);
@@ -470,7 +475,9 @@ function ChecklistEditor({
             : "List items"}
       </Label>
       <p className="text-muted-foreground text-xs">
-        {comparison
+        {adaptive
+          ? `Supply 2–${maximum} ${adaptive === "process" ? "ordered steps" : "alternatives"}, up to 96 characters each. Existing identities follow exact labels or saved aliases.`
+          : comparison
           ? "Supply two labels, up to 60 characters each. Their order stays the same in both comparison layouts."
           : diagram
             ? "Add 2–5 short ideas. Path follows their order; Orbit places the first idea at the center."
@@ -488,7 +495,7 @@ function ChecklistEditor({
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  if (!comparison || draft.length < 2)
+                  if (!maximum || draft.length < maximum)
                     commit([
                       ...draft.slice(0, i + 1),
                       "",
@@ -535,7 +542,7 @@ function ChecklistEditor({
         size="sm"
         variant="outline"
         className="justify-start"
-        disabled={comparison && draft.length >= 2}
+        disabled={maximum !== undefined && draft.length >= maximum}
         onClick={() => commit([...draft, ""])}
       >
         <Plus className="size-3.5" />
@@ -993,6 +1000,22 @@ export function SceneInspector({
               }}
               onSelect={(motion) => onUpdate({ id: scene.id, motion })}
             />
+            {scene.motion?.decision && (
+              <div className="bg-muted space-y-2 rounded p-3 text-xs">
+                <strong>Why this visual?</strong>
+                {scene.motion.decision.sourceKey === sequenceSourceKey({ ...scene, hasVisualContent: Boolean(scene.visual) }) ? (
+                  <>
+                    <p>{scene.motion.decision.reason.replace(scene.motion.recipeId, MOTION_RECIPES.find(recipe => recipe.id === scene.motion?.recipeId)?.name ?? scene.motion.recipeId)}</p>
+                    {scene.motion.decision.alternatives.map(alternative => (
+                      <Button key={alternative.recipeId} size="sm" variant="outline" disabled={scene.locks?.scene} title={alternative.reason}
+                        onClick={() => onUpdate({ id: scene.id, motion: { recipeId: alternative.recipeId, version: "1.0.0", system: scene.motion?.system } })}>
+                        Try {MOTION_RECIPES.find(recipe => recipe.id === alternative.recipeId)?.name ?? alternative.recipeId}
+                      </Button>
+                    ))}
+                  </>
+                ) : <p>Content changed after this decision. Replan visual direction to refresh the explanation.</p>}
+              </div>
+            )}
 
             <p className="text-muted-foreground text-xs">
               {sceneGraphic
@@ -1065,6 +1088,7 @@ export function SceneInspector({
             items={scene.items ?? []}
             diagram={scene.role === "diagram"}
             comparison={isComparison}
+            adaptive={scene.motion?.recipeId === "adaptive-comparison" ? "comparison" : scene.motion?.recipeId === "adaptive-process" ? "process" : undefined}
             onChange={(items) => {
               const motion =
                 scene.role === "diagram" || scene.role === "comparison"

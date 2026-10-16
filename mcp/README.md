@@ -333,3 +333,7 @@ inherit the saved setting, and saved production revisions freeze each choice.
 `replan_motion_direction` accepts optional `adaptiveRecipes` to enable or disable
 the six bundled content-aware recipes. Existing locks and semantic illustrations
 remain authoritative. See [adaptive recipes](../docs/ADAPTIVE_RECIPES.md).
+
+`replan_motion_direction` also accepts `sequenceDirection` and a validated
+`subjectRegistry` replacement. Identity aliases are explicit; locks, source copy
+and narration remain protected. See [sequence direction](../docs/SEQUENCE_DIRECTION.md).

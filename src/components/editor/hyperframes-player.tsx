@@ -38,6 +38,7 @@ interface HyperFramesPlayerProps {
   captions?: ReelProps["captions"];
   spokenWords?: ReelProps["spokenWords"];
   storySource?: ReelProps["storySource"];
+  sequenceDirection?: ReelProps["sequenceDirection"];
   autoPlay?: boolean;
   loop?: boolean;
   tokens?: BrandTokens;
@@ -106,6 +107,7 @@ export const HyperFramesPlayer = React.forwardRef<
     captions,
     spokenWords,
     storySource,
+    sequenceDirection,
     autoPlay,
     loop = true,
     tokens,
@@ -158,6 +160,7 @@ export const HyperFramesPlayer = React.forwardRef<
         captions,
         spokenWords,
         storySource,
+        sequenceDirection,
         tokens: resolvedTokens,
         coverUrl: toAbsoluteUrl(coverUrl),
         width,
@@ -180,6 +183,7 @@ export const HyperFramesPlayer = React.forwardRef<
     captions,
     spokenWords,
     storySource,
+    sequenceDirection,
     resolvedTokens,
     coverUrl,
     width,

@@ -5,6 +5,8 @@ import {
 import { chapterPlanIssue } from "@/production/chapters";
 import { AIError } from "@/providers/ai/types";
 import { randomUUID } from "node:crypto";
+import { collectSequenceSubjects } from "@/production/sequence-subjects";
+import type { Subject } from "@/video/sequence-direction";
 import { analyzeBeat } from "@/production/director";
 import {
   inferSemanticGraphic,
@@ -35,6 +37,8 @@ export async function replanMotionDirection(
     ambition?: VisualAmbition;
     newVariation?: boolean;
     adaptiveRecipes?: boolean;
+    sequenceDirection?: boolean;
+    subjectRegistry?: Subject[];
     chapterMotifs?: boolean;
     system?: MotionSystem;
   },
@@ -69,6 +73,10 @@ export async function replanMotionDirection(
       version: "1.0.0",
       adaptiveRecipes:
         input.adaptiveRecipes ?? overrides.motionPlan?.adaptiveRecipes,
+      sequenceDirection:
+        input.sequenceDirection ?? overrides.motionPlan?.sequenceDirection,
+      subjectRegistry:
+        input.subjectRegistry ?? overrides.motionPlan?.subjectRegistry,
       system:
         input.system ??
         overrides.motionPlan?.system ??
@@ -107,6 +115,11 @@ export async function replanMotionDirection(
       })),
     );
     const storySource = semanticStorySource(scenes);
+    if (settings.sequenceDirection)
+      settings.subjectRegistry = collectSequenceSubjects(
+        directedScenes,
+        settings.subjectRegistry,
+      );
     const graphics = directedScenes.map((scene, index) =>
       structures[index]
         ? undefined
@@ -137,6 +150,17 @@ export async function replanMotionDirection(
         if (chapterStart) chapterIndex++;
         return {
           role: structures[index] ? "comparison" : scene.role,
+          layout: {
+            width: script.width,
+            height: script.height,
+            duration: Math.max(
+              3,
+              Math.min(
+                120,
+                (scene.spokenText ?? scene.text).split(/\s+/).length / 2.5 + 1,
+              ),
+            ),
+          },
           energy: overrides.energy,
           text: scene.text,
           spokenText: scene.spokenText ?? undefined,
@@ -170,6 +194,8 @@ export async function replanMotionDirection(
         before?.version === after?.version &&
         before?.typeEntrance === after?.typeEntrance &&
         before?.system === after?.system &&
+        before?.sequenceVersion === after?.sequenceVersion &&
+        JSON.stringify(before?.decision) === JSON.stringify(after?.decision) &&
         !structures[index] &&
         JSON.stringify(scenes[index].direction?.graphic) ===
           JSON.stringify(graphics[index])
