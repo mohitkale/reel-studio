@@ -30,6 +30,7 @@ export function TopicChapterDraft({
   const [providerId, setProviderId] = React.useState<AIProviderId>();
   const provider = providerId ?? configured[0]?.id;
   const [topic, setTopic] = React.useState(script.chapterDraft?.topic ?? "");
+  const [targetSeconds, setTargetSeconds] = React.useState(0);
   const [chapterCount, setChapterCount] = React.useState(2);
   const [scenesPerChapter, setScenesPerChapter] = React.useState(4);
   const [draft, setDraft] = React.useState<ChapterDraft | null>(
@@ -53,6 +54,7 @@ export function TopicChapterDraft({
         topic,
         chapterCount,
         scenesPerChapter,
+        ...(targetSeconds ? { targetSeconds } : {}),
       }),
     onSuccess: saved,
     onSettled: refresh,
@@ -150,6 +152,23 @@ export function TopicChapterDraft({
             onChange={(event) => setTopic(event.target.value)}
           />
         </div>
+        <label className="grid gap-1 text-xs">
+          Narrative policy
+          <select
+            aria-label="Chapter writing policy"
+            className="bg-background rounded border p-2"
+            disabled={busy}
+            value={targetSeconds}
+            onChange={(event) => setTargetSeconds(Number(event.target.value))}
+          >
+            <option value={0}>Standard chapter briefs</option>
+            {[180, 300, 600].map((seconds) => (
+              <option key={seconds} value={seconds}>
+                Lesson · {seconds / 60} minute target
+              </option>
+            ))}
+          </select>
+        </label>
         <div className="grid grid-cols-3 gap-2">
           <div className="grid gap-1">
             <Label htmlFor="chapter-draft-provider">Provider</Label>
@@ -270,6 +289,85 @@ export function TopicChapterDraft({
                     edit(index, { brief: event.target.value })
                   }
                 />
+                {chapter.direction && (
+                  <div className="grid gap-2">
+                    <Label htmlFor={`chapter-draft-goal-${index}`}>
+                      Chapter goal
+                    </Label>
+                    <Input
+                      id={`chapter-draft-goal-${index}`}
+                      maxLength={500}
+                      value={chapter.direction.goal}
+                      disabled={busy || Boolean(chapter.generated)}
+                      onChange={(event) =>
+                        edit(index, {
+                          direction: {
+                            ...chapter.direction!,
+                            goal: event.target.value,
+                          },
+                        })
+                      }
+                    />
+                    <label className="grid gap-1 text-xs">
+                      Narrative phase
+                      <select
+                        aria-label={`Writing chapter ${index + 1} phase`}
+                        className="bg-background rounded border p-2"
+                        disabled={busy || Boolean(chapter.generated)}
+                        value={chapter.direction.phase}
+                        onChange={(event) =>
+                          edit(index, {
+                            direction: {
+                              ...chapter.direction!,
+                              phase: event.target.value as
+                                "develop" | "example" | "recap",
+                              ...(event.target.value === "recap" &&
+                              index > 0 &&
+                              !chapter.direction?.callbackChapterId
+                                ? { callbackChapterId: draft.chapters[0].id }
+                                : {}),
+                            },
+                          })
+                        }
+                      >
+                        {[
+                          "develop",
+                          "example",
+                          ...(index > 0 ? ["recap"] : []),
+                        ].map((phase) => (
+                          <option key={phase}>{phase}</option>
+                        ))}
+                      </select>
+                    </label>
+                    {index > 0 && (
+                      <label className="grid gap-1 text-xs">
+                        Return to earlier chapter
+                        <select
+                          aria-label={`Writing chapter ${index + 1} callback`}
+                          className="bg-background rounded border p-2"
+                          disabled={busy || Boolean(chapter.generated)}
+                          value={chapter.direction.callbackChapterId ?? ""}
+                          onChange={(event) =>
+                            edit(index, {
+                              direction: {
+                                ...chapter.direction!,
+                                callbackChapterId:
+                                  event.target.value || undefined,
+                              },
+                            })
+                          }
+                        >
+                          <option value="">No callback</option>
+                          {draft.chapters.slice(0, index).map((prior) => (
+                            <option key={prior.id} value={prior.id}>
+                              {prior.title}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                  </div>
+                )}
                 <Label htmlFor={`chapter-draft-scene-count-${index}`}>
                   Planned scenes
                 </Label>

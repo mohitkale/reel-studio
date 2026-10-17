@@ -1,3 +1,5 @@
+import { filmCanonicalJson } from "@/production/film-plan";
+import { estimateTimeline } from "@/lib/preview-timeline";
 import { getScript } from "@/library/repositories/scripts";
 import {
   captureSceneRewriteState,
@@ -23,7 +25,10 @@ export async function generateDraftChapter(
     expectedState,
     await captureSceneRewriteState(scriptId),
   );
-  if (JSON.stringify(script.chapterDraft) !== JSON.stringify(input.expected))
+  if (
+    filmCanonicalJson(script.chapterDraft ?? null) !==
+    filmCanonicalJson(input.expected)
+  )
     throw new AIError(
       "The writing draft changed. Reload before generating.",
       409,
@@ -54,6 +59,41 @@ export async function generateDraftChapter(
       input.providerId,
     );
   if (signal?.aborted) throw new AIError("Generation canceled", 499);
+  const callback = chapter.direction?.callbackChapterId
+    ? draft.chapters.find(
+        (prior) => prior.id === chapter.direction!.callbackChapterId,
+      )?.generated?.chapterId
+    : undefined;
+  if (chapter.direction?.callbackChapterId && !callback)
+    throw new AIError("Generate the callback chapter before this recap.", 400);
+  const direction = chapter.direction
+    ? { ...chapter.direction, callbackChapterId: callback }
+    : undefined;
+  const generatedIds = new Set(
+    draft.chapters.flatMap((item) => item.generated?.sceneIds ?? []),
+  );
+  const baseline = estimateTimeline(
+    script.scenes
+      .filter((scene) => !generatedIds.has(scene.id))
+      .map((scene) => ({ id: scene.id, text: scene.spokenText ?? scene.text })),
+    script.fps,
+  );
+  const existingSeconds = script.scenes.some(
+    (scene) => !generatedIds.has(scene.id),
+  )
+    ? baseline.totalFrames / script.fps
+    : 0;
+  const chapterTargetSeconds = draft.longForm
+    ? Math.floor(
+        (draft.longForm.targetSeconds - existingSeconds) /
+          draft.chapters.length,
+      )
+    : undefined;
+  if (chapterTargetSeconds !== undefined && chapterTargetSeconds < 1)
+    throw new AIError(
+      "The existing film fills this duration target. Raise the lesson target or shorten its content.",
+      400,
+    );
   await authorizeProvider();
   // Budget is fixed at one adapter invocation; existing provider repair/token policy stays intact.
   await generateSceneAppend({
@@ -61,6 +101,9 @@ export async function generateDraftChapter(
     expectedState,
     signal,
     draftChapterId: chapter.id,
+    chapterDirection: direction,
+    longForm: draft.longForm,
+    chapterTargetSeconds,
     body: {
       providerId: input.providerId,
       modelId: input.modelId,

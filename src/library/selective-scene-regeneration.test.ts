@@ -265,3 +265,50 @@ describe("chapter regeneration scopes", () => {
     ).toThrow(/too much copy/);
   });
 });
+
+it("keeps lesson scene selections in one chapter and preserves locked semantic intent", () => {
+  const script = {
+    scenes: [scene({ id: "a" }), scene({ id: "b" })],
+    chapterPlan: {
+      version: "1.0.0" as const,
+      longForm: { version: "1.0.0" as const, targetSeconds: 180 },
+      chapters: [
+        {
+          id: "first",
+          title: "Original",
+          firstSceneId: "a",
+          direction: {
+            goal: "Explain supplied material",
+            phase: "develop" as const,
+          },
+        },
+        {
+          id: "last",
+          title: "Recap",
+          firstSceneId: "b",
+          direction: {
+            goal: "Revisit supplied material",
+            phase: "recap" as const,
+            callbackChapterId: "first",
+          },
+        },
+      ],
+    },
+  };
+  expect(() => prepareRegenerationScope(script, {})).toThrow(
+    /one lesson chapter/,
+  );
+  const selected = prepareRegenerationScope(script, { sceneIds: ["b"] });
+  expect(selected.chapterDirection).toMatchObject({
+    phase: "recap",
+    targetSeconds: 90,
+  });
+  expect(selected.context).toContain("Deliberate return to Original");
+  const existing = scene({
+    locks: { copy: true, assets: false, scene: false },
+    direction: { version: 1, role: "feature", composition: "authored" },
+  });
+  expect(
+    JSON.parse(mergeGeneratedScene(existing, generated).layoutJson).direction,
+  ).toEqual(existing.direction);
+});

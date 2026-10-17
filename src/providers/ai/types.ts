@@ -1,3 +1,4 @@
+import type { ChapterWritingDirection } from "@/production/long-form";
 import { z } from "zod";
 import { productionChartDataSchema } from "@/production/spec";
 import { shotDirectionSchema } from "@/video/shot-direction";
@@ -232,6 +233,7 @@ export type AIScene = Omit<ParsedAIScene, "visual"> & {
 export type ScenePlan = z.infer<typeof scenePlanSchema>;
 
 export interface GeneratePlanInput {
+  chapterDirection?: ChapterWritingDirection;
   /** Bounded, app-selected visual context; never executable styling. */
   visualTheme?: string;
   mode:

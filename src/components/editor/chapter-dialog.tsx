@@ -1,4 +1,5 @@
 "use client";
+import { lessonDirections } from "@/production/long-form";
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiPost } from "@/lib/api-client";
@@ -50,8 +51,9 @@ export function ChapterDialog({
             <DialogDescription>
               Name storyboard sections and choose where they begin. Suggestions
               use the selected take&apos;s timing when available. Exports
-              currently support up to 5 minutes with a valid saved chapter plan
-              at 24, 30, or 60 fps. Other storyboards support up to 3 minutes.
+              support up to 10 minutes with saved lesson direction, or 5 minutes
+              with a legacy chapter plan at 24, 30, or 60 fps. Other storyboards
+              support up to 3 minutes.
             </DialogDescription>
           </DialogHeader>
           {open && (
@@ -201,6 +203,14 @@ function ChapterForm({
                   id: `chapter:${crypto.randomUUID()}`,
                   title: `Chapter ${base.chapters.length + 1}`,
                   firstSceneId: selectedSceneId!,
+                  ...(base.longForm
+                    ? {
+                        direction: {
+                          goal: "Explain the supplied chapter material",
+                          phase: "develop" as const,
+                        },
+                      }
+                    : {}),
                 },
               ].sort(
                 (a, b) =>
@@ -217,6 +227,61 @@ function ChapterForm({
         Suggestions are drafts until saved. Each chapter contains up to 20
         scenes. Chapter titles organize the storyboard.
       </p>
+      {draft && (
+        <div className="grid gap-2 rounded-lg border p-3">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busy || stale}
+            onClick={() => {
+              const directions = lessonDirections(draft.chapters);
+              setDraft({
+                ...draft,
+                longForm: { version: "1.0.0", targetSeconds: 300 },
+                chapters: draft.chapters.map((chapter, index) => ({
+                  ...chapter,
+                  direction: chapter.direction ?? directions[index],
+                })),
+              });
+            }}
+          >
+            {draft.longForm
+              ? "Reset lesson target to 5 minutes"
+              : "Enable lesson direction"}
+          </Button>
+          {draft.longForm && (
+            <label className="grid gap-1 text-xs">
+              Lesson duration target
+              <select
+                aria-label="Lesson duration target"
+                className="bg-background rounded border p-2"
+                value={draft.longForm.targetSeconds}
+                disabled={busy || stale}
+                onChange={(event) =>
+                  setDraft({
+                    ...draft,
+                    longForm: {
+                      version: "1.0.0",
+                      targetSeconds: Number(event.target.value),
+                    },
+                  })
+                }
+              >
+                {[180, 300, 600].map((seconds) => (
+                  <option value={seconds} key={seconds}>
+                    {seconds / 60} minutes
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <p className="text-muted-foreground text-xs">
+            Goals guide chapter writing and rewrites. A target does not retime
+            scenes or narration. Recaps return to an earlier chapter. Save
+            before generating.
+          </p>
+        </div>
+      )}
       {timingSource && (
         <p className="text-muted-foreground text-xs">
           Suggested using{" "}
@@ -299,6 +364,111 @@ function ChapterForm({
                   ))}
               </select>
             </Label>
+            {chapter.direction && (
+              <div className="grid gap-2">
+                <Label className="grid gap-1 text-xs">
+                  Chapter goal
+                  <Input
+                    aria-label={`Chapter ${index + 1} goal`}
+                    value={chapter.direction.goal}
+                    maxLength={500}
+                    disabled={busy || stale}
+                    onChange={(event) =>
+                      setDraft({
+                        ...draft,
+                        chapters: draft.chapters.map((item) =>
+                          item.id === chapter.id
+                            ? {
+                                ...item,
+                                direction: {
+                                  ...chapter.direction!,
+                                  goal: event.target.value,
+                                },
+                              }
+                            : item,
+                        ),
+                      })
+                    }
+                  />
+                </Label>
+                <label className="grid gap-1 text-xs">
+                  Narrative phase
+                  <select
+                    aria-label={`Chapter ${index + 1} phase`}
+                    className="bg-background rounded border p-2"
+                    value={chapter.direction.phase}
+                    disabled={busy || stale}
+                    onChange={(event) =>
+                      setDraft({
+                        ...draft,
+                        chapters: draft.chapters.map((item) =>
+                          item.id === chapter.id
+                            ? {
+                                ...item,
+                                direction: {
+                                  ...chapter.direction!,
+                                  phase: event.target.value as
+                                    "develop" | "example" | "recap",
+                                  ...(event.target.value === "recap" &&
+                                  index > 0 &&
+                                  !chapter.direction?.callbackChapterId
+                                    ? {
+                                        callbackChapterId: draft.chapters[0].id,
+                                      }
+                                    : {}),
+                                },
+                              }
+                            : item,
+                        ),
+                      })
+                    }
+                  >
+                    {[
+                      "develop",
+                      "example",
+                      ...(index > 0 ? ["recap"] : []),
+                    ].map((phase) => (
+                      <option key={phase}>{phase}</option>
+                    ))}
+                  </select>
+                </label>
+                {index > 0 && (
+                  <label className="grid gap-1 text-xs">
+                    Return to earlier chapter
+                    <select
+                      aria-label={`Chapter ${index + 1} callback`}
+                      className="bg-background rounded border p-2"
+                      value={chapter.direction.callbackChapterId ?? ""}
+                      disabled={busy || stale}
+                      onChange={(event) =>
+                        setDraft({
+                          ...draft,
+                          chapters: draft.chapters.map((item) =>
+                            item.id === chapter.id
+                              ? {
+                                  ...item,
+                                  direction: {
+                                    ...chapter.direction!,
+                                    callbackChapterId:
+                                      event.target.value || undefined,
+                                  },
+                                }
+                              : item,
+                          ),
+                        })
+                      }
+                    >
+                      <option value="">No callback</option>
+                      {draft.chapters.slice(0, index).map((prior) => (
+                        <option value={prior.id} key={prior.id}>
+                          {prior.title}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+              </div>
+            )}
             {section && (
               <p className="text-muted-foreground text-xs">
                 {section.sceneIds.length} scenes ·{" "}

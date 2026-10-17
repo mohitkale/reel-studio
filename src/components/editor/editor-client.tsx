@@ -72,7 +72,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FilmContactSheet } from "./film-contact-sheet";
-import { SceneTimeline } from "@/components/editor/scene-timeline";
+import { ChapterTimeline } from "@/components/editor/chapter-timeline";
 import { SceneList } from "@/components/editor/scene-list";
 import { SceneInspector } from "@/components/editor/scene-inspector";
 import { semanticStorySource } from "@/production/semantic-direction";
@@ -932,7 +932,7 @@ export function EditorClient({
           });
         }}
       />
-      <SceneTimeline scenes={scenes} timeline={timeline} fps={fps} selectedId={effectiveSceneId} onSelect={selectScene} onMove={handleMove} busy={sceneBusy} measured={takeUsable} />
+      <ChapterTimeline plan={script.chapterPlan} scenes={scenes} timeline={timeline} fps={fps} selectedId={effectiveSceneId} onSelect={selectScene} onMove={handleMove} busy={sceneBusy} measured={takeUsable} />
 
       {/* The center column (player) defines the row height; the side panels are
           stretched to match it and scroll internally. Their content is absolutely

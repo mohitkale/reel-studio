@@ -1,9 +1,15 @@
+import {
+  chapterDirectionSchema,
+  chapterDirectionIssue,
+  longFormPolicySchema,
+} from "./long-form";
 import { z } from "zod";
 import { chapterPlanIssue, type ChapterPlan } from "./chapters";
 
 export const chapterDraftSchema = z
   .object({
     version: z.literal("1.0.0"),
+    longForm: longFormPolicySchema.optional(),
     topic: z.string().trim().min(3).max(4000),
     chapters: z
       .array(
@@ -12,6 +18,7 @@ export const chapterDraftSchema = z
             id: z.string().min(1).max(160),
             title: z.string().trim().min(1).max(120),
             brief: z.string().trim().min(3).max(2000),
+            direction: chapterDirectionSchema.optional(),
             sceneCount: z.number().int().min(1).max(20),
             generated: z
               .object({
@@ -91,6 +98,12 @@ export function pendingChapterDraftIssue(
   script: { scenes: readonly { id: string }[]; chapterPlan?: ChapterPlan },
   draft: ChapterDraft,
 ): string | undefined {
+  if (draft.longForm && script.scenes.length && !script.chapterPlan?.longForm)
+    return "Enable lesson direction on the saved outline before adding lesson chapters.";
+  const directionIssue = chapterDirectionIssue(draft.chapters);
+  if (directionIssue) return directionIssue;
+  if (draft.longForm && draft.chapters.some((chapter) => !chapter.direction))
+    return "Give every lesson chapter a goal and narrative phase.";
   const ids = new Set(script.scenes.map((scene) => scene.id));
   for (const chapter of draft.chapters) {
     if (!chapter.generated) continue;
