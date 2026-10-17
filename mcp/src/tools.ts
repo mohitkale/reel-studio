@@ -1,3 +1,4 @@
+import {factoryProfileRequestSchema,factoryRunRequestSchema} from "@/production/factory";
 import { subjectRegistrySchema } from "../../src/video/sequence-direction.js";
 import { cutSuggestionRequestSchema } from "@/production/cut-suggestions";
 import { filmPlanDocumentSchema } from "@/production/film-plan-document";
@@ -105,6 +106,12 @@ export function registerTools(server: McpServer): void {
     description: "Save an unchanged current film plan document as an immutable revision. Use get_film_plan first. Rejects stale or modified plans; never overwrites scenes or invokes providers.",
     inputSchema: { scriptId: z.string().min(1), document: filmPlanDocumentSchema },
   }, guard(async ({ scriptId, document }) => ok(await apiPost(`/api/scripts/${encode(scriptId)}/film-plan`, { document }))));
+  server.registerTool("list_factory",{description:"Read saved series profiles, pinned recipe packs, frozen master revisions and factory runs.",inputSchema:{}},guard(async()=>ok(await apiGet("/api/factory"))));
+  server.registerTool("save_series_profile",{description:"Publish an immutable local series profile version from a saved revision. Pins brand/design, delivery defaults and a bundled recipe pack. No provider calls.",inputSchema:factoryProfileRequestSchema.shape},guard(async input=>ok(await apiPost("/api/factory/profiles",input))));
+  server.registerTool("create_factory_run",{description:"Derive up to six full-story aspect variants or explicit whole-scene cutdowns from a frozen revision and optional series profile. Retains immutable lineage. No AI or voice generation; normal rendering approval and token limits apply. Reuse the same idempotency key to resume submission.",inputSchema:factoryRunRequestSchema.shape},guard(async input=>ok(await apiPost("/api/factory/runs",input))));
+  server.registerTool("get_factory_run",{description:"Read factory variant lineage and durable batch progress.",inputSchema:{id:z.string().min(1)}},guard(async ({id})=>ok(await apiGet(`/api/factory/runs/${encode(id)}`))));
+  server.registerTool("control_factory_run",{description:"Cancel or explicitly resume incomplete factory work. Successful outputs are retained. Approval stays in the studio.",inputSchema:{id:z.string().min(1),action:z.enum(["cancel","resume"])}},guard(async ({id,action})=>ok(await apiPost(`/api/factory/runs/${encode(id)}`,{action}))));
+  server.registerTool("get_factory_revision",{description:"Read a frozen variant plan with its source lineage and pack pin.",inputSchema:{id:z.string().min(1)}},guard(async ({id})=>ok(await apiGet(`/api/factory/revisions/${encode(id)}`))));
   /* ---- Read tools ---- */
 
   server.registerTool(

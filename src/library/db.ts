@@ -19,6 +19,7 @@ const globalForPrisma = globalThis as unknown as {
     stockMediaResponseCache?: unknown;
     stockMediaQuotaState?: unknown;
     stockMediaMaterialization?: unknown;
+    factoryRun?: unknown;
   };
 };
 
@@ -37,7 +38,8 @@ function getClient(): PrismaClient {
       existing.stockMediaSelection == null ||
       existing.stockMediaResponseCache == null ||
       existing.stockMediaQuotaState == null ||
-      existing.stockMediaMaterialization == null
+      existing.stockMediaMaterialization == null ||
+      existing.factoryRun == null
     ) {
       void existing.$disconnect().catch(() => undefined);
       const fresh = createClient();

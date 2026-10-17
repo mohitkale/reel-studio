@@ -88,6 +88,7 @@ import { ScenesJsonDialog } from "@/components/editor/scenes-json-dialog";
 import { FilmPlanDialog } from "@/components/editor/film-plan-dialog";
 import { CoverControl } from "@/components/editor/cover-control";
 import { MusicControl } from "@/components/editor/music-control";
+import { FactoryDialog } from "@/components/editor/factory-dialog";
 import { ChapterDialog } from "@/components/editor/chapter-dialog";
 import { CaptionsMenu } from "@/components/editor/captions-menu";
 import { Combobox } from "@/components/ui/combobox";
@@ -622,6 +623,7 @@ export function EditorClient({
               />
             </div>
           </HintTooltip>
+          <FactoryDialog scriptId={script.id} voiceTakeId={effectiveTakeId??undefined}/>
           <ChapterDialog
             script={script}
             timeline={timeline}

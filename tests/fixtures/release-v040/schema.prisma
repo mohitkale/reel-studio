@@ -1,0 +1,539 @@
+// Reel Studio data model. SQLite for local-first; all access goes through the
+// repository layer (src/library/repositories) so a future cloud DB swap is
+// isolated. JSON-shaped columns are stored as strings and validated with Zod.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Project {
+  id          String    @id @default(cuid())
+  name        String
+  /// Video composition engine: "remotion" | "hyperframes"
+  videoEngine String    @default("hyperframes")
+  brandKitId  String?
+  brandKit    BrandKit? @relation(fields: [brandKitId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  scripts             Script[]
+  productionRevisions ProductionRevision[]
+}
+
+model BrandKit {
+  id          String   @id @default(cuid())
+  name        String
+  palette     String? // JSON: color token overrides
+  fonts       String? // JSON: {fontFamily?}
+  logoAssetId String?
+  handle      String?
+  ctaDefaults String? // JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projects Project[]
+}
+
+model Script {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name            String
+  fps             Int      @default(30)
+  width           Int      @default(1080) // render canvas width (orientation)
+  height          Int      @default(1920) // render canvas height (orientation)
+  brandOverrides  String? // JSON
+  coverUrl        String? // cover/thumbnail image baked as the reel's opening frame
+  musicUrl        String? // optional background music, mixed (ducked) under the voiceover
+  musicVolume     Int      @default(20) // background music level, 0-100
+  /// When false, skip mixing bundled SFX even if sfxJson has cues.
+  sfxEnabled      Boolean  @default(true)
+  /// JSON: { enabled?: boolean, cues: [{ sceneId, sfxId, offsetSeconds, volume }] }
+  sfxJson         String?
+  hideText        Boolean  @default(false) // global default: hide on-screen scene text
+  hideProgressBar Boolean  @default(false) // global: hide the top progress bar
+  /// Voice workflow: "oneshot" (full take) | "per_scene" (clip library + assemble)
+  voiceMode       String   @default("oneshot")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  scenes              Scene[]
+  takes               VoiceTake[]
+  voiceClips          SceneVoiceClip[]
+  renders             Render[]
+  captionTracks       CaptionTrack[]
+  productionRevisions ProductionRevision[]
+
+  @@index([projectId])
+}
+
+/// Editable subtitle track with explicit timing provenance.
+model CaptionTrack {
+  id           String   @id @default(cuid())
+  scriptId     String
+  script       Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  label        String   @default("Subtitles")
+  language     String   @default("en")
+  timingSource String   @default("estimated")
+  enabled      Boolean  @default(true)
+  /// Versioned CaptionStyleSnapshot JSON. Null preserves the 0.4 legacy appearance.
+  styleJson    String?
+  /// Measured word timing is trusted only for this take and frame rate.
+  sourceTakeId String?
+  sourceFps    Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  cues CaptionCue[]
+
+  @@index([scriptId, updatedAt])
+}
+
+model CaptionCue {
+  id         String       @id @default(cuid())
+  trackId    String
+  track      CaptionTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  order      Int
+  startFrame Int
+  endFrame   Int
+  text       String
+  wordsJson  String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@index([trackId, order])
+}
+
+model Scene {
+  id                  String          @id @default(cuid())
+  scriptId            String
+  script              Script          @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  order               Int
+  templateId          String          @default("placeholder")
+  /// On-screen display text for the template.
+  text                String
+  /// Voiceover script. Null = same as `text` (most scenes).
+  spokenText          String?
+  emphasis            String? // JSON array of emphasized phrases
+  visual              String? // emoji, icon name, or stat value for the visual slot
+  layoutJson          String? // JSON
+  assetRefs           String? // JSON array of asset ids
+  hideText            Boolean? // per-scene override for on-screen text; null = inherit script default
+  /// Active clip in per_scene voice mode; null = no selection.
+  selectedVoiceClipId String?         @unique
+  selectedVoiceClip   SceneVoiceClip? @relation("SceneSelectedClip", fields: [selectedVoiceClipId], references: [id], onDelete: SetNull)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  voiceClips          SceneVoiceClip[]     @relation("SceneClips")
+  stockMediaSelection StockMediaSelection?
+
+  @@index([scriptId, order])
+}
+
+model VoiceTake {
+  id            String   @id @default(cuid())
+  scriptId      String
+  script        Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  label         String?
+  providerId    String
+  voiceId       String
+  modelId       String?
+  fps           Int      @default(30)
+  totalFrames   Int
+  timingJson    String // JSON: [{ sceneId, startFrame, durationFrames, text }]
+  audioPath     String // AssetStore key for the stitched WAV
+  isPlaceholder Boolean  @default(false)
+  /// "oneshot" (full generate) | "assembled" (stitched from selected scene clips)
+  source        String   @default("oneshot")
+  createdAt     DateTime @default(now())
+
+  @@index([scriptId])
+}
+
+/// User-facing per-scene voice versions (mix-and-match in per_scene mode).
+model SceneVoiceClip {
+  id             String   @id @default(cuid())
+  scriptId       String
+  script         Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  sceneId        String
+  scene          Scene    @relation("SceneClips", fields: [sceneId], references: [id], onDelete: Cascade)
+  providerId     String
+  voiceId        String
+  modelId        String?
+  text           String // spoken text snapshot at synth time
+  textHash       String
+  audioPath      String // AssetStore key for this scene's WAV
+  durationFrames Int
+  fps            Int      @default(30)
+  label          String?
+  isPlaceholder  Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  selectedByScene Scene? @relation("SceneSelectedClip")
+
+  @@index([scriptId])
+  @@index([sceneId, createdAt])
+}
+
+model Render {
+  id            String   @id @default(cuid())
+  scriptId      String
+  script        Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  voiceTakeId   String?
+  templateSetId String?
+  name          String?
+  status        String   @default("queued") // queued | rendering | done | error
+  quality       String? // "draft" | "standard" | "high"; null = "standard"
+  progress      Float    @default(0)
+  outputPath    String?
+  error         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([scriptId])
+}
+
+// Per-scene synthesized-audio cache, keyed by exactly what determines the
+// audio (scene, provider, voice, model, spoken text). Lets voice generation
+// skip re-calling the TTS API for scenes that haven't changed since a prior
+// take — a large speed win for iterative editing. Populated best-effort by
+// take-service.ts; stale rows (text/voice changed) are simply ignored by future
+// lookups and left for now rather than actively pruned.
+model SceneAudioBeat {
+  id         String   @id @default(cuid())
+  scriptId   String
+  sceneId    String
+  providerId String
+  voiceId    String
+  modelId    String   @default("") // normalized: "" when the provider has no model concept
+  textHash   String
+  audioPath  String // AssetStore key for this single scene's WAV
+  createdAt  DateTime @default(now())
+
+  @@unique([sceneId, providerId, voiceId, modelId, textHash])
+  @@index([scriptId])
+}
+
+model Asset {
+  id        String   @id @default(cuid())
+  type      String // image | lottie | audio | 3d | avatar
+  name      String?
+  path      String // AssetStore key
+  meta      String? // JSON
+  createdAt DateTime @default(now())
+
+  stockMediaSelections       StockMediaSelection[]
+  stockMediaMaterializations StockMediaMaterialization[]
+}
+
+/// Immutable provider metadata retained when a scene selects stock media.
+/// The current background remains in Scene.layoutJson for render compatibility.
+model StockMediaSelection {
+  id              String   @id @default(cuid())
+  sceneId         String   @unique
+  scene           Scene    @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  providerId      String
+  providerAssetId String
+  kind            String
+  snapshotJson    String
+  localAssetId    String?
+  localAsset      Asset?   @relation(fields: [localAssetId], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([providerId, providerAssetId])
+  @@index([localAssetId])
+}
+
+/// Provider search responses cached by a canonical request hash and expiry.
+model StockMediaResponseCache {
+  requestHash  String   @id
+  providerId   String
+  operation    String
+  requestJson  String
+  responseJson String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([providerId, operation])
+  @@index([expiresAt])
+}
+
+/// Latest quota headers observed for a provider request.
+model StockMediaQuotaState {
+  providerId   String    @id
+  limit        Int?
+  remaining    Int?
+  resetAt      DateTime?
+  observedAt   DateTime
+  metadataJson String?
+  updatedAt    DateTime  @updatedAt
+}
+
+/// Idempotency record linking one provider rendition to immutable local bytes.
+model StockMediaMaterialization {
+  requestHash     String   @id
+  providerId      String
+  providerAssetId String
+  renditionId     String
+  sourceUrl       String
+  assetId         String
+  asset           Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  contentHash     String
+  metadataJson    String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([providerId, providerAssetId])
+  @@index([assetId])
+}
+
+model ProviderSetting {
+  providerId   String  @id
+  hasKey       Boolean @default(false)
+  defaultModel String?
+}
+
+model ProductionJob {
+  id                   String    @id @default(cuid())
+  kind                 String
+  state                String    @default("queued")
+  inputSnapshot        String
+  idempotencyKey       String    @unique
+  priority             Int       @default(0)
+  attempt              Int       @default(0)
+  cancelRequested      Boolean   @default(false)
+  leaseOwner           String?
+  leaseExpiresAt       DateTime?
+  heartbeatAt          DateTime?
+  error                String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  startedAt            DateTime?
+  finishedAt           DateTime?
+  batchItemId          String?   @unique
+  productionRevisionId String?   @unique
+
+  steps              ProductionJobStep[]
+  events             ProductionJobEvent[]
+  outputs            ProductionJobOutput[]
+  batchItem          ProductionBatchItem?  @relation(fields: [batchItemId], references: [id], onDelete: SetNull)
+  productionRevision ProductionRevision?   @relation(fields: [productionRevisionId], references: [id], onDelete: SetNull)
+
+  @@index([state, priority, createdAt])
+  @@index([leaseExpiresAt])
+}
+
+/// Immutable project/script snapshot captured before a durable production job
+/// is enqueued. The editable project may continue changing independently.
+model ProductionRevision {
+  id           String   @id @default(cuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  scriptId     String
+  script       Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  revisionHash String
+  snapshotJson String
+  source       String   @default("quick_produce")
+  createdAt    DateTime @default(now())
+
+  job ProductionJob?
+
+  @@index([projectId, createdAt])
+  @@index([scriptId, createdAt])
+  @@index([revisionHash])
+}
+
+model ProductionBatch {
+  id              String   @id @default(cuid())
+  idempotencyKey  String   @unique
+  requestSnapshot String
+  priority        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  items ProductionBatchItem[]
+
+  @@index([createdAt])
+}
+
+model ProductionBatchItem {
+  id              String          @id @default(cuid())
+  batchId         String
+  batch           ProductionBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  rowIndex        Int
+  variantIndex    Int
+  label           String?
+  orientation     String?
+  requestSnapshot String
+  validationError String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  job ProductionJob?
+
+  @@unique([batchId, rowIndex, variantIndex])
+  @@index([batchId, rowIndex])
+}
+
+model ProductionJobStep {
+  id         String        @id @default(cuid())
+  jobId      String
+  job        ProductionJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  key        String
+  state      String        @default("queued")
+  progress   Float         @default(0)
+  cacheKey   String?
+  detailJson String?
+  error      String?
+  startedAt  DateTime?
+  finishedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@unique([jobId, key])
+  @@index([jobId, state])
+  @@index([cacheKey])
+}
+
+model ProductionJobEvent {
+  id        Int           @id @default(autoincrement())
+  jobId     String
+  job       ProductionJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  type      String
+  dataJson  String?
+  createdAt DateTime      @default(now())
+
+  @@index([jobId, id])
+}
+
+model ProductionJobOutput {
+  id           String        @id @default(cuid())
+  jobId        String
+  job          ProductionJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  kind         String
+  format       String
+  path         String
+  checksum     String?
+  metadataJson String?
+  createdAt    DateTime      @default(now())
+
+  @@index([jobId])
+}
+
+/// Voice-only multi-speaker podcast (separate from video Project/Script).
+model Podcast {
+  id                 String   @id @default(cuid())
+  title              String
+  description        String   @default("")
+  /// Target length hint for AI/JSON: "short" (~2-3 min) | "long" (~5-10 min)
+  length             String   @default("short")
+  /// "solo-narration" | "two-host-discussion" | "interview"
+  presetId           String   @default("two-host-discussion")
+  /// Optional uploaded audio assets used as fixed-length opening/closing bumpers.
+  introMusicAssetId  String?
+  outroMusicAssetId  String?
+  /// JSON: [{ find, replaceWith, caseSensitive }]
+  pronunciationsJson String   @default("[]")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  characters PodcastCharacter[]
+  turns      PodcastTurn[]
+  takes      PodcastTake[]
+}
+
+model PodcastCharacter {
+  id         String   @id @default(cuid())
+  podcastId  String
+  podcast    Podcast  @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  /// Stable id for JSON/AI (e.g. "host", "guest")
+  key        String
+  name       String
+  /// "male" | "female" | "neutral"
+  gender     String   @default("neutral")
+  /// Personality / role brief used when AI writes this character's lines.
+  definition String   @default("")
+  providerId String   @default("")
+  voiceId    String   @default("")
+  modelId    String?
+  order      Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  turns PodcastTurn[]
+
+  @@unique([podcastId, key])
+  @@index([podcastId, order])
+}
+
+model PodcastTurn {
+  id                String           @id @default(cuid())
+  podcastId         String
+  podcast           Podcast          @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  characterId       String
+  character         PodcastCharacter @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  order             Int
+  text              String
+  /// Explicit silence after this turn; null uses the preset's default pacing.
+  pauseAfterSeconds Float?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  audioBeats PodcastTurnAudioBeat[]
+
+  @@index([podcastId, order])
+}
+
+/// Content-addressed synthesized audio for a podcast turn. Editing text or a
+/// cast voice naturally misses this cache while unchanged turns remain reusable.
+model PodcastTurnAudioBeat {
+  id         String      @id @default(cuid())
+  podcastId  String
+  turnId     String
+  turn       PodcastTurn @relation(fields: [turnId], references: [id], onDelete: Cascade)
+  providerId String
+  voiceId    String
+  modelId    String      @default("")
+  textHash   String
+  audioPath  String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@unique([turnId, providerId, voiceId, modelId, textHash])
+  @@index([podcastId])
+}
+
+model PodcastTake {
+  id            String   @id @default(cuid())
+  podcastId     String
+  podcast       Podcast  @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  label         String?
+  /// Metadata from first character voice used (mixed takes use multiple voices).
+  providerId    String
+  voiceId       String
+  modelId       String?
+  fps           Int      @default(30)
+  totalFrames   Int
+  /// JSON: [{ turnId, startFrame, durationFrames, text, characterKey? }]
+  timingJson    String
+  /// Deterministic chapters derived from turn boundaries at generation time.
+  chaptersJson  String   @default("[]")
+  /// JSON snapshot of cast voices used for this take:
+  /// [{ key, name, providerId, voiceId, modelId? }]
+  voicesJson    String   @default("[]")
+  /// Immutable JSON snapshot of bumpers, pauses, and pronunciation rules used.
+  finishingJson String   @default("{}")
+  audioPath     String
+  /// Optional production MP3 generated from the final normalized WAV.
+  mp3Path       String?
+  createdAt     DateTime @default(now())
+
+  @@index([podcastId])
+}

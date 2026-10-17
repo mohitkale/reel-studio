@@ -29,6 +29,7 @@ export const productionBatchRowSchema = z.discriminatedUnion("kind", [
     ...rowFields,
     kind: z.literal("video"),
     scriptId: z.string().min(1),
+    revisionId: z.string().min(1).max(160).optional(),
     voiceTakeId: z.string().min(1).optional(),
     orientations: variantOrientationsSchema,
     quality: z.enum(["draft", "standard", "high"]).default("standard"),
@@ -100,6 +101,7 @@ export interface ExpandedProductionBatchItem {
     | {
         kind: "video";
         scriptId: string;
+        revisionId?: string;
         voiceTakeId?: string;
         orientation: (typeof ORIENTATIONS)[number];
         quality: "draft" | "standard" | "high";

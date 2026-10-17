@@ -1,3 +1,4 @@
+import { factoryLineageSchema } from "./factory-lineage";
 import { z } from "zod";
 import { sequenceConfigSchema } from "@/video/sequence-direction";
 import { resolvedFilmPlanSchema } from "@/video/resolved-film-plan";
@@ -115,6 +116,7 @@ export const videoScriptSnapshotSchema = z.object({
 export const videoSnapshotSchema = z
   .object({
     version: z.literal(1),
+    factory: factoryLineageSchema.optional(),
     /** Submitted source plan. Worker-local media/timing may subsequently resolve further. */
     filmPlan: resolvedFilmPlanSchema.optional(),
     sfxAssets: z.record(z.string(), z.string()).optional(),

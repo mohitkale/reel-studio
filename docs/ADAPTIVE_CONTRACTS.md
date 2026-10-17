@@ -4,8 +4,7 @@ M1 supplies versioned contracts and a compatibility adapter. M2 adds six
 [adaptive recipes](ADAPTIVE_RECIPES.md), resolved geometry and local previews.
 M3 adds [sequence direction and subject continuity](SEQUENCE_DIRECTION.md).
 M4 adds the [creation workflow](CREATION_UX.md), and M5 adds
-[lesson direction](LONG_FORM_DIRECTION.md). Factory workflows remain in the
-[upgrade plan](ADAPTIVE_CONTENT_FACTORY_PLAN.md).
+[lesson direction](LONG_FORM_DIRECTION.md). M6 adds [factory workflows](FACTORY_WORKFLOWS.md) on the same revision and batch services.
 
 ## Recipe manifests
 
@@ -117,3 +116,18 @@ Generated draft callbacks resolve to saved outline IDs at the atomic scene
 append. Snapshot/revision capture and restoration retain lesson policy, goals,
 callbacks and the saved subject registry. Optimistic draft comparisons use
 canonical JSON so harmless serialization key order changes do not block resume.
+
+## Factory lineage and compatibility
+
+Factory snapshots optionally carry `factory` version 1: parent revision ID/hash,
+pack digest, optional profile digest, operation kind and original selected scene
+IDs. Aspect and cutdown revisions are immutable children; mutable master edits
+and newer profile versions do not rewrite their source. Restored projects retain
+this historical lineage and frozen brand tokens. Explicitly choosing another
+brand kit releases the restored token override.
+
+Historical revisions sometimes hashed undefined in-memory fields that JSON
+omitted. Factory reads retain these through their canonical M1 film/source
+binding. New factory children hash their serialized snapshot and enforce the
+stored digest as well as the film binding. Absent factory metadata does not
+change legacy captures or batched current-revision hashing.

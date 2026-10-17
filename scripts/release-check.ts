@@ -119,8 +119,8 @@ function checkReleaseMetadata() {
     withFileTypes: true,
   }).filter((entry) => entry.isDirectory()).length;
   assert(
-    migrationCount === 14,
-    `expected 14 database migrations, found ${migrationCount}`,
+    migrationCount === 15,
+    `expected 15 database migrations, found ${migrationCount}`,
   );
 
   for (const filename of [

@@ -119,7 +119,8 @@ export function productionJobView(
 export async function productionJobViewWithRevision(
   job: Parameters<typeof productionJobView>[0] & { inputSnapshot: string },
 ) {
-  if (!job.productionRevision) return productionJobView(job);
+  if (!job.productionRevision || job.productionRevision.source === "factory")
+    return productionJobView(job);
   const input = videoProductionJobInputSchema.safeParse(
     parse(job.inputSnapshot),
   );
@@ -137,7 +138,7 @@ export async function productionJobViewsWithRevisions(
   jobs: Array<Parameters<typeof productionJobViewWithRevision>[0]>,
 ) {
   const inputs = jobs.map((job) =>
-    job.productionRevision
+    job.productionRevision && job.productionRevision.source !== "factory"
       ? videoProductionJobInputSchema.safeParse(parse(job.inputSnapshot))
       : null,
   );

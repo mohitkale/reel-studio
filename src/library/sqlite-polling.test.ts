@@ -137,6 +137,11 @@ it("reduces revision reads for 50 distinct jobs while exposing edits on the very
     captions.get('["script-2",null]'),
   );
 
+  const variantJob={...jobs[0],productionRevision:{...jobs[0].productionRevision!,source:"factory"}};
+  const variant=await productionJobViewWithRevision(variantJob);
+  expect(variant.revision?.currentHash).toBeNull();
+  expect(variant.revision?.conflict).toBe(false);
+  expect((await productionJobViewsWithRevisions([variantJob]))[0].revision?.conflict).toBe(false);
   console.log(
     `[polling] 50 distinct scripts: ${individual} individual queries -> ${batchCount} batched queries; immediate edit detection passed`,
   );

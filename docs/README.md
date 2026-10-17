@@ -11,6 +11,7 @@ current setup instructions or a pending to-do list.
 - [Walkthroughs](WALKTHROUGHS.md): reproducible text-to-video and podcast flows.
 - [Advanced editing](ADVANCED_EDITING.md): motion review, sound, chapters, and longer exports.
 - [Lesson direction](LONG_FORM_DIRECTION.md): chapter goals, recaps, continuity and bounded ten-minute exports.
+- [Content factory](FACTORY_WORKFLOWS.md): series profiles, frozen aspect/cutdown variants, pack archives and resumable batches.
 - [Local-first behavior](LOCAL_FIRST.md): local data and optional outbound provider calls.
 - [Voice providers](VOICE_PROVIDERS.md): browser, local server, and cloud capabilities.
 - [Upgrade to v0.5.0](RELEASE_0.5.0.md): backups, preserved designs, and rollback.
@@ -32,7 +33,7 @@ current setup instructions or a pending to-do list.
 
 ## Policies and history
 
-- [Adaptive content factory upgrade plan](ADAPTIVE_CONTENT_FACTORY_PLAN.md): M1 contracts, M2 recipes, M3 sequence direction, M4 creation workflow, M5 lesson direction and proposed factory workflows with phased acceptance gates.
+- [Adaptive content factory upgrade plan](ADAPTIVE_CONTENT_FACTORY_PLAN.md): M1 contracts, M2 recipes, M3 sequence direction, M4 creation workflow, M5 lesson direction and M6 factory workflows with phased acceptance gates.
 - [Security](../SECURITY.md), [hardening and advisory snapshot](PORTABILITY_HARDENING.md), and [licensing](LICENSING.md).
 - [Changelog](../CHANGELOG.md), [roadmap](../ROADMAP.md), and [contributors](../CONTRIBUTORS.md).
 - [Historical archive](archive/README.md): earlier briefs, audits, numbered plans, and measurements.

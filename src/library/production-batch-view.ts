@@ -27,6 +27,7 @@ type BatchRecord = {
 };
 
 function itemState(item: BatchRecord["items"][number]): string {
+  if (item.validationError === "Canceled before submission") return "canceled";
   if (item.validationError) return "failed";
   return item.job?.state ?? "queued";
 }
