@@ -37,7 +37,9 @@ results; supplied media and speech must still be listened to before publishing.
 - Sweep/Rise chapter motifs share saved seed/direction while preserving data/media choreography.
 
 Limits: **12 chapters, 240 scenes total, 20 scenes per chapter**. Valid chapter
-storyboards support video production up to **300 seconds** at 24/30/60 FPS;
+storyboards support video production up to **300 seconds** at 24/30/60 FPS.
+Opt-in [lesson direction](LONG_FORM_DIRECTION.md) adds goals, examples and recap
+callbacks with a **600-second** allowance and collapsible chapter navigation;
 ordinary video and standalone audio retain their 180-second limits. Scoped-token
 limits still apply. Longer editable drafts do not silently lose narration, but
 can exceed export policy.

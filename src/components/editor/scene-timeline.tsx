@@ -15,6 +15,7 @@ export function SceneTimeline({
   onMove,
   busy,
   measured,
+  sceneOffset = 0,
 }: {
   scenes: readonly { id: string; text: string }[];
   timeline: readonly ReelBeat[];
@@ -24,6 +25,7 @@ export function SceneTimeline({
   onMove(id: string, direction: -1 | 1): void;
   busy: boolean;
   measured: boolean;
+  sceneOffset?: number;
 }) {
   return (
     <section
@@ -52,13 +54,14 @@ export function SceneTimeline({
             >
               <button
                 type="button"
-                aria-label={`Preview scene ${index + 1}`}
+                aria-label={`Preview scene ${sceneOffset + index + 1}`}
                 aria-pressed={selectedId === scene.id}
                 onClick={() => onSelect(scene.id)}
                 className="focus-visible:outline-primary w-full text-left"
               >
                 <span className="text-muted-foreground block text-xs">
-                  {index + 1} · {((beat?.startFrame ?? 0) / fps).toFixed(1)}s ·{" "}
+                  {sceneOffset + index + 1} ·{" "}
+                  {((beat?.startFrame ?? 0) / fps).toFixed(1)}s ·{" "}
                   {seconds.toFixed(1)}s
                 </span>
                 <span className="mt-1 block truncate text-sm">
@@ -71,7 +74,7 @@ export function SceneTimeline({
                   size="icon"
                   variant="ghost"
                   className="size-7"
-                  aria-label={`Move scene ${index + 1} earlier`}
+                  aria-label={`Move scene ${sceneOffset + index + 1} earlier`}
                   disabled={index === 0 || busy}
                   onClick={() => onMove(scene.id, -1)}
                 >
@@ -82,7 +85,7 @@ export function SceneTimeline({
                   size="icon"
                   variant="ghost"
                   className="size-7"
-                  aria-label={`Move scene ${index + 1} later`}
+                  aria-label={`Move scene ${sceneOffset + index + 1} later`}
                   disabled={index === scenes.length - 1 || busy}
                   onClick={() => onMove(scene.id, 1)}
                 >

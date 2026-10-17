@@ -407,3 +407,168 @@ it("generates one reviewed chapter, resumes/retries pending work and atomically 
     rmSync(directory, { recursive: true, force: true });
   }
 }, 20_000);
+
+it("preserves lesson goals, callback links and subject aliases through resumed chapter generation and revision restore", async () => {
+  const directory = mkdtempSync(path.join(tmpdir(), "reel-m5-chapters-"));
+  const filename = path.join(directory, "m5.db"),
+    database = new DatabaseSync(filename);
+  for (const migration of readdirSync("prisma/migrations")
+    .filter((name) => !name.endsWith(".toml"))
+    .sort())
+    database.exec(
+      readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),
+    );
+  database.close();
+  process.env.DATABASE_URL = `file:${filename}`;
+  vi.resetModules();
+  const { prisma } = await import("./db");
+  const { getScript } = await import("./repositories/scripts");
+  const { saveChapterDraft } = await import("./chapter-draft-service");
+  const { generateDraftChapter } = await import("./chapter-generation-service");
+  const { prepareRegenerationScope } =
+    await import("./selective-scene-regeneration");
+  const { captureVideoSnapshot } = await import("./video-snapshot");
+  const { restoreProductionRevision } =
+    await import("./restore-production-revision");
+  const subjects = [
+    {
+      id: "collect",
+      label: "Collect",
+      aliases: ["Gather"],
+      symbol: "document",
+      colorSlot: "accent",
+    },
+  ];
+  const draft: ChapterDraft = {
+    version: "1.0.0",
+    topic: "Gather, then Review. These are supplied process steps.",
+    longForm: { version: "1.0.0", targetSeconds: 180 },
+    chapters: [
+      {
+        id: "develop",
+        title: "Develop",
+        brief: "Explain Gather, then Review",
+        sceneCount: 2,
+        direction: { goal: "Explain the supplied process", phase: "develop" },
+      },
+      {
+        id: "recap",
+        title: "Return",
+        brief: "Return to Gather, then Review",
+        sceneCount: 2,
+        direction: {
+          goal: "Revisit the same process",
+          phase: "recap",
+          callbackChapterId: "develop",
+        },
+      },
+    ],
+  };
+  try {
+    await prisma.project.create({
+      data: {
+        id: "m5-project",
+        name: "M5 fixture",
+        scripts: {
+          create: {
+            id: "m5",
+            name: "M5",
+            brandOverrides: JSON.stringify({
+              productionPreset: { id: "editorial-explainer", version: "1.0.0" },
+              motionPlan: {
+                version: "1.0.0",
+                seed: "m5",
+                ambition: "clean",
+                adaptiveRecipes: true,
+                sequenceDirection: true,
+                subjectRegistry: subjects,
+              },
+            }),
+          },
+        },
+      },
+    });
+    await saveChapterDraft("m5", { draft, expected: null });
+    mocks.configured.mockReturnValue(true);
+    mocks.generate.mockResolvedValue({
+      projectName: "Fixture",
+      scriptName: "Fixture",
+      scenes: Array.from({ length: 2 }, () => ({
+        text: "Gather, then Review.",
+        spokenText: "Gather, then Review. These are the supplied steps.",
+        templateId: "hf-list",
+        items: ["Gather", "Review"],
+        emphasis: [],
+      })),
+    });
+    mocks.media.mockResolvedValue(
+      Array.from({ length: 2 }, () => ({
+        state: "disabled",
+        attemptedProviders: [],
+        message: "Disabled",
+      })),
+    );
+    const auth = vi.fn();
+    await generateDraftChapter(
+      "m5",
+      {
+        providerId: "ollama",
+        expected: draft,
+        chapterId: "develop",
+        maxProviderCalls: 1,
+        mediaPreference: "none",
+      },
+      auth,
+    );
+    const first = (await getScript("m5"))!;
+    expect(first.chapterPlan?.longForm).toEqual(draft.longForm);
+    const before = first.scenes;
+    await prisma.$disconnect();
+    await generateDraftChapter(
+      "m5",
+      {
+        providerId: "ollama",
+        expected: first.chapterDraft!,
+        chapterId: "recap",
+        maxProviderCalls: 1,
+        mediaPreference: "none",
+      },
+      auth,
+    );
+    const result = (await getScript("m5"))!;
+    expect(result.scenes.slice(0, 2)).toEqual(before);
+    expect(result.chapterPlan?.chapters[1].direction?.callbackChapterId).toBe(
+      result.chapterPlan?.chapters[0].id,
+    );
+    expect(
+      result.motionPlan?.subjectRegistry?.find(
+        (subject) => subject.id === "collect",
+      ),
+    ).toEqual(subjects[0]);
+    expect(mocks.generate.mock.lastCall?.[0]).toMatchObject({
+      chapterDirection: { phase: "recap", goal: "Revisit the same process" },
+      existingContext: expect.stringContaining("Deliberate return to Develop"),
+    });
+    const scope = prepareRegenerationScope(result, {
+      chapterId: result.chapterPlan!.chapters[1].id,
+    });
+    expect(scope.context).toContain('"aliases":["Gather"]');
+    expect(scope.context).toContain("Saved callback excerpt");
+    expect(scope.chapterDirection?.phase).toBe("recap");
+    const restored = await restoreProductionRevision(
+      await captureVideoSnapshot("m5"),
+    );
+    const restoredScript = (await getScript(restored.scriptId))!;
+    expect(restoredScript.chapterPlan?.longForm).toEqual(draft.longForm);
+    expect(
+      restoredScript.chapterPlan?.chapters.map((chapter) => chapter.direction),
+    ).toEqual(result.chapterPlan?.chapters.map((chapter) => chapter.direction));
+    expect(restoredScript.motionPlan?.subjectRegistry).toEqual(
+      result.motionPlan?.subjectRegistry,
+    );
+    expect(auth).toHaveBeenCalledTimes(2);
+  } finally {
+    await prisma.$disconnect();
+    rmSync(directory, { recursive: true, force: true });
+  }
+}, 30_000);

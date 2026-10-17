@@ -1,3 +1,5 @@
+import { longFormChapterContext } from "./long-form-context";
+import type { ChapterDirection, LongFormPolicy } from "@/production/long-form";
 import { z } from "zod";
 import type { MotionDirection } from "@/production/motion";
 import type { ShotDirection } from "@/video/shot-direction";
@@ -53,6 +55,9 @@ export async function generateSceneAppend(input: {
   body: z.output<typeof aiEnhanceRequestSchema>;
   signal?: AbortSignal;
   draftChapterId?: string;
+  chapterDirection?: ChapterDirection;
+  longForm?: LongFormPolicy;
+  chapterTargetSeconds?: number;
 }) {
   const { script, expectedState, body, signal, draftChapterId } = input;
   const scriptId = script.id;
@@ -63,11 +68,24 @@ export async function generateSceneAppend(input: {
     script.scenes.length || !draftChapterId
       ? prepareSceneAppendScope(script, body).context
       : "";
+  const longForm = input.longForm ?? script.chapterPlan?.longForm;
+  const chapterDirection =
+    input.chapterDirection ??
+    (body.chapterTitle
+      ? { goal: body.brief.slice(0, 500), phase: "develop" as const }
+      : script.chapterPlan?.chapters.at(-1)?.direction);
+  const fullContext = longForm
+    ? `${longFormChapterContext(script, chapterDirection)}\n${context}`
+    : context;
   const raw = await provider.generatePlan({
     mode: "append",
     brief: body.brief,
     sceneCount: body.sceneCount,
-    existingContext: context,
+    existingContext: fullContext,
+    chapterDirection:
+      longForm && chapterDirection
+        ? { ...chapterDirection, targetSeconds: input.chapterTargetSeconds }
+        : undefined,
     chapterTitle: body.chapterTitle,
     existingSceneCount: script.scenes.length,
     modelId: body.modelId,
@@ -106,7 +124,7 @@ export async function generateSceneAppend(input: {
   const resolved = script.productionPreset
     ? applyPresetToAIPlan(enriched, script.productionPreset.id, videoEngine, {
         continuation: true,
-        source: `${body.brief}\n${context}`,
+        source: `${body.brief}\n${fullContext}`,
         hasVisualAsset: backgrounds.some(Boolean),
       })
     : { plan: enriched, roles: [] as ProductionSceneRole[] };
@@ -122,7 +140,17 @@ export async function generateSceneAppend(input: {
     ? planMotionSequence(
         directedScenes.map((scene, index) => ({
           role: roles[index],
-          layout: {width:script.width,height:script.height,duration:Math.max(3,Math.min(120,(scene.spokenText??scene.text).split(/\s+/).length/2.5+1))},
+          layout: {
+            width: script.width,
+            height: script.height,
+            duration: Math.max(
+              3,
+              Math.min(
+                120,
+                (scene.spokenText ?? scene.text).split(/\s+/).length / 2.5 + 1,
+              ),
+            ),
+          },
           energy: script.energy,
           chapterIndex:
             body.chapterTitle !== undefined
@@ -155,6 +183,8 @@ export async function generateSceneAppend(input: {
     expectedState: expectedState,
     chapterTitle: body.chapterTitle,
     draftChapterId,
+    chapterDirection: longForm ? chapterDirection : undefined,
+    longForm,
     mediaDecisions,
     signal: signal,
     scenes: directedScenes.map((scene, index) => {

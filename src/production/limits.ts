@@ -3,6 +3,7 @@ import { chapterPlanIssue, type ChapterPlan } from "@/production/chapters";
 export const PRODUCTION_LIMITS = {
   videoSeconds: 180,
   chapterVideoSeconds: 300,
+  lessonVideoSeconds: 600,
   audioSeconds: 180,
   podcastSeconds: 600,
   audiogramSeconds: 90,
@@ -20,7 +21,9 @@ export function videoDurationLimit(script: {
       script.chapterPlan,
       script.scenes.map((scene) => scene.id),
     )
-    ? PRODUCTION_LIMITS.chapterVideoSeconds
+    ? script.chapterPlan.longForm
+      ? PRODUCTION_LIMITS.lessonVideoSeconds
+      : PRODUCTION_LIMITS.chapterVideoSeconds
     : PRODUCTION_LIMITS.videoSeconds;
 }
 
@@ -39,7 +42,7 @@ export function assertVideoDuration(
   if (
     !Number.isFinite(maximumSeconds) ||
     maximumSeconds <= 0 ||
-    maximumSeconds > PRODUCTION_LIMITS.chapterVideoSeconds
+    maximumSeconds > PRODUCTION_LIMITS.lessonVideoSeconds
   )
     throw new Error("Video duration policy is invalid.");
   if (totalFrames > Math.floor(fps * maximumSeconds))

@@ -1,3 +1,5 @@
+import { longFormChapterContext } from "./long-form-context";
+import type { ChapterDirection } from "@/production/long-form";
 import type { SceneBackground, SceneDTO, ScriptDTO } from "@/lib/dto";
 import type { AIScene } from "@/providers/ai/types";
 import { DEFAULT_SCENE_LOCKS } from "@/library/schemas";
@@ -6,12 +8,14 @@ import { AIError } from "@/providers/ai/types";
 
 /** A chapter is a bounded provider call, with neighboring copy for continuity. */
 export function prepareRegenerationScope(
-  script: Pick<ScriptDTO, "scenes" | "chapterPlan">,
+  script: Pick<ScriptDTO, "scenes" | "chapterPlan"> &
+    Partial<Pick<ScriptDTO, "motionPlan">>,
   input: { chapterId?: string; sceneIds?: string[] },
 ) {
   const ids = script.scenes.map((scene) => scene.id);
   let allowed = ids;
   let chapterTitle: string | undefined;
+  let chapterDirection: ChapterDirection | undefined;
   if (input.chapterId) {
     const plan = script.chapterPlan;
     if (!plan) throw new AIError("Save a chapter outline first", 400);
@@ -24,6 +28,7 @@ export function prepareRegenerationScope(
       throw new AIError("The selected chapter no longer exists", 400);
     const chapter = plan.chapters[index];
     chapterTitle = chapter.title;
+    chapterDirection = chapter.direction;
     allowed = ids.slice(
       ids.indexOf(chapter.firstSceneId),
       index + 1 < plan.chapters.length
@@ -51,6 +56,29 @@ export function prepareRegenerationScope(
       "Rewrite up to 20 scenes at a time. Choose a chapter or a smaller selection.",
       400,
     );
+  if (script.chapterPlan?.longForm && !input.chapterId) {
+    const plan = script.chapterPlan;
+    const issue = chapterPlanIssue(plan, ids);
+    if (issue) throw new AIError(`Update the chapter outline: ${issue}`, 400);
+    const selectedChapters = plan.chapters.filter((chapter, index) => {
+      const start = ids.indexOf(chapter.firstSceneId);
+      const end =
+        index + 1 < plan.chapters.length
+          ? ids.indexOf(plan.chapters[index + 1].firstSceneId)
+          : ids.length;
+      return targets.some((scene) => {
+        const position = ids.indexOf(scene.id);
+        return position >= start && position < end;
+      });
+    });
+    if (selectedChapters.length !== 1)
+      throw new AIError(
+        "Choose one lesson chapter at a time to preserve its goal and callbacks.",
+        400,
+      );
+    chapterTitle = selectedChapters[0].title;
+    chapterDirection = selectedChapters[0].direction;
+  }
   const positions = targets.map((scene) => ids.indexOf(scene.id) + 1);
   const contextIds = new Set(
     input.chapterId ? allowed : targets.map((scene) => scene.id),
@@ -62,6 +90,9 @@ export function prepareRegenerationScope(
       contextIds.has(ids[index + 1]),
   );
   const context = [
+    ...(script.chapterPlan?.longForm
+      ? [longFormChapterContext(script, chapterDirection)]
+      : []),
     ...(chapterTitle
       ? [
           `Chapter: ${chapterTitle}. Preserve continuity with the adjacent chapters.`,
@@ -79,7 +110,25 @@ export function prepareRegenerationScope(
       "This selection contains too much copy for one rewrite. Select fewer scenes.",
       400,
     );
-  return { targets, positions, context, chapterTitle };
+  return {
+    targets,
+    positions,
+    context,
+    chapterTitle,
+    ...(chapterDirection
+      ? {
+          chapterDirection: {
+            ...chapterDirection,
+            targetSeconds: script.chapterPlan?.longForm
+              ? Math.round(
+                  script.chapterPlan.longForm.targetSeconds /
+                    script.chapterPlan.chapters.length,
+                )
+              : undefined,
+          },
+        }
+      : {}),
+  };
 }
 
 export function selectRegenerationTargets(
@@ -128,6 +177,9 @@ export function mergeGeneratedScene(
       : {}),
     ...(existing.role ? { role: existing.role } : {}),
     ...(existing.motion ? { motion: existing.motion } : {}),
+    ...((keepCopy ? existing.direction : generated.direction)
+      ? { direction: keepCopy ? existing.direction : generated.direction }
+      : {}),
     locks,
   };
 

@@ -1,9 +1,15 @@
+import {
+  chapterDirectionSchema,
+  chapterDirectionIssue,
+  longFormPolicySchema,
+} from "./long-form";
 import { z } from "zod";
 import type { ReelBeat } from "@/video/types";
 
 export const chapterPlanSchema = z
   .object({
     version: z.literal("1.0.0"),
+    longForm: longFormPolicySchema.optional(),
     chapters: z
       .array(
         z
@@ -11,6 +17,7 @@ export const chapterPlanSchema = z
             id: z.string().min(1).max(160),
             title: z.string().trim().min(1).max(120),
             firstSceneId: z.string().min(1).max(160),
+            direction: chapterDirectionSchema.optional(),
           })
           .strict(),
       )
@@ -59,6 +66,10 @@ export function chapterPlanIssue(
 ): string | undefined {
   if (!orderedSceneIds.length || orderedSceneIds.length > 240)
     return "Chapter planning supports 1–240 scenes.";
+  const directionIssue = chapterDirectionIssue(plan.chapters);
+  if (directionIssue) return directionIssue;
+  if (plan.longForm && plan.chapters.some((chapter) => !chapter.direction))
+    return "Give every lesson chapter a goal and narrative phase.";
   const positions = plan.chapters.map((chapter) =>
     orderedSceneIds.indexOf(chapter.firstSceneId),
   );

@@ -3,7 +3,8 @@
 M1 supplies versioned contracts and a compatibility adapter. M2 adds six
 [adaptive recipes](ADAPTIVE_RECIPES.md), resolved geometry and local previews.
 M3 adds [sequence direction and subject continuity](SEQUENCE_DIRECTION.md).
-M4 adds the [creation workflow](CREATION_UX.md); later workflows remain in the
+M4 adds the [creation workflow](CREATION_UX.md), and M5 adds
+[lesson direction](LONG_FORM_DIRECTION.md). Factory workflows remain in the
 [upgrade plan](ADAPTIVE_CONTENT_FACTORY_PLAN.md).
 
 ## Recipe manifests
@@ -101,3 +102,18 @@ M3 opt-in sequence plans use resolver `1.2.0`, retaining the M2 recipe versions.
 The plan freezes subject definitions, typed panel ports and handoff/fallback
 boundaries; saved scene motion retains source-bound choice explanations. Old
 plans without sequence direction continue using their previous resolver.
+
+## Lesson metadata compatibility
+
+Chapter-plan and writing-draft version `1.0.0` accept optional
+`longForm: { version: "1.0.0", targetSeconds: 180..600 }`. Chapters optionally
+carry `direction: { goal, phase, callbackChapterId? }`. Phase is `develop`,
+`example`, or `recap`; recap requires a callback, and all callbacks reference
+an earlier chapter. Explicit lesson policy requires direction on every chapter.
+Unknown policy versions, executable fields, and invalid references are rejected.
+Old plans omit these fields and retain their existing limits without a rewrite.
+
+Generated draft callbacks resolve to saved outline IDs at the atomic scene
+append. Snapshot/revision capture and restoration retain lesson policy, goals,
+callbacks and the saved subject registry. Optimistic draft comparisons use
+canonical JSON so harmless serialization key order changes do not block resume.

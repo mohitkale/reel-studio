@@ -162,6 +162,7 @@ export async function POST(
       const { targets, positions, context } = rewriteScope!;
       const raw = await provider.generatePlan({
         mode: "rewrite",
+        chapterDirection: rewriteScope?.chapterDirection,
         brief: body.brief,
         sceneCount: targets.length,
         existingContext: context,

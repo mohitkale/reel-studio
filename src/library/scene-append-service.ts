@@ -1,3 +1,4 @@
+import type { ChapterDirection, LongFormPolicy } from "@/production/long-form";
 import { randomUUID } from "node:crypto";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/library/db";
@@ -14,7 +15,7 @@ import {
 } from "@/library/scene-rewrite-service";
 import { prepareSceneAppendScope } from "@/library/scene-append-scope";
 import { chapterDraftSchema } from "@/production/chapter-draft";
-import { chapterPlanSchema } from "@/production/chapters";
+import { chapterPlanIssue, chapterPlanSchema } from "@/production/chapters";
 import { AIError } from "@/providers/ai/types";
 import { resolvedStockAssetSchema } from "@/providers/stock/schemas";
 
@@ -24,6 +25,8 @@ export async function commitSceneAppend(input: {
   expectedState: string;
   chapterTitle?: string;
   draftChapterId?: string;
+  chapterDirection?: ChapterDirection;
+  longForm?: LongFormPolicy;
   scenes: Pick<
     Prisma.SceneCreateManyInput,
     "templateId" | "text" | "spokenText" | "emphasis" | "visual" | "layoutJson"
@@ -114,15 +117,26 @@ export async function commitSceneAppend(input: {
     if (input.chapterTitle !== undefined) {
       const chapterPlan = chapterPlanSchema.parse({
         version: "1.0.0",
+        ...((input.longForm ?? overrides.chapterPlan?.longForm)
+          ? { longForm: input.longForm ?? overrides.chapterPlan?.longForm }
+          : {}),
         chapters: [
           ...(overrides.chapterPlan?.chapters ?? []),
           {
             id: `chapter:${randomUUID()}`,
             title: input.chapterTitle,
             firstSceneId: ids[0],
+            ...(input.chapterDirection
+              ? { direction: input.chapterDirection }
+              : {}),
           },
         ],
       });
+      const planIssue = chapterPlanIssue(chapterPlan, [
+        ...row.scenes.map((scene) => scene.id),
+        ...ids,
+      ]);
+      if (planIssue) throw new AIError(planIssue, 400);
       if (input.draftChapterId) {
         const draft = overrides.chapterDraft;
         const chapter = draft?.chapters.find(

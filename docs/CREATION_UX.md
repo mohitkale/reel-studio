@@ -129,3 +129,11 @@ Regenerate preset examples with `npm run preset:previews` and installed Chrome.
 Projects screenshots show the revised creation entry points; result/editor
 screenshots are from v0.4.0. Each creator's source/brand determine the output.
 Published browser evidence is in [release validation](production/RELEASE_VALIDATION.md).
+
+## Longer lessons
+
+Topic writing drafts offer explicit 3-, 5-, and 10-minute lesson targets with
+chapter goals, example development and earlier-chapter recap callbacks. Existing
+manual outlines can enable the same policy in **Chapters**. The chapter timeline
+groups saved scenes, keeps an overview, and distinguishes timing from the writing
+target. See [lesson direction](LONG_FORM_DIRECTION.md) for limits and recovery.

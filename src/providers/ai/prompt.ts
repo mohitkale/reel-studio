@@ -47,15 +47,16 @@ export function buildPrompt(input: GeneratePlanInput): {
   if (input.mode === "chapter_outline") {
     const capability = "hf.template.statement";
     return {
-      system: `Plan a coherent chapter outline for a creator. Return the existing JSON plan schema, with exactly ${input.sceneCount} entries in scenes. Each entry is a proposed chapter, not a finished scene: text is a distinct chapter title (1–120 characters), spokenText is a writing brief (3–2000 characters) with purpose, supplied facts and a takeaway. Use plain conversational English. Preserve supplied facts; never invent statistics, sources, product claims or URLs. Do not repeat previous chapters or write full narration. Set capabilityId to ${capability}, emphasis to [], styleId to clean-story and energy to calm. Omit media, charts and visual fields. Include short projectName and scriptName values. Return only JSON that matches the provided schema.`,
+      system: `Plan a coherent chapter outline for a creator. Return the existing JSON plan schema, with exactly ${input.sceneCount} entries in scenes. ${input.chapterDirection ? "Use a lesson arc: chapter goals, developed argument, concrete supplied examples, and a final recap/callback to an earlier idea. Do not give every chapter an independent hook or CTA." : ""} Each entry is a proposed chapter, not a finished scene: text is a distinct chapter title (1–120 characters), spokenText is a writing brief (3–2000 characters) with purpose, supplied facts and a takeaway. Use plain conversational English. Preserve supplied facts; never invent statistics, sources, product claims or URLs. Do not repeat previous chapters or write full narration. Set capabilityId to ${capability}, emphasis to [], styleId to clean-story and energy to calm. Omit media, charts and visual fields. Include short projectName and scriptName values. Return only JSON that matches the provided schema.`,
       user: `Topic and supplied source:\n${input.brief}\n\nPrior context (do not rewrite):\n${input.existingContext ?? "None"}`,
     };
   }
+  const chapterDirection = input.chapterDirection;
   const isAppend = input.mode === "append";
   const isRewrite = input.mode === "rewrite";
   const isHookVariants = input.mode === "hook_variants";
   const style = input.scriptStyle ?? "short";
-  const isDetailed = style === "detailed";
+  const isDetailed = !!chapterDirection || style === "detailed";
 
   const count = input.sceneCount
     ? `${input.sceneCount}`
@@ -83,13 +84,17 @@ export function buildPrompt(input: GeneratePlanInput): {
         ? `- Output exactly ${input.replacementSceneNumbers.length} replacement scenes for positions ${input.replacementSceneNumbers.join(", ")}, in that order. Do not return locked or unselected scenes.`
         : `- Use ${count} scenes total. If the user's brief explicitly requests a specific number, honour it (max 20).`;
 
-  const lengthRule = isDetailed
-    ? "- Each scene has TWO copy fields: (1) 'text' = short ON-SCREEN line (about 12 to 18 words, easy to read at a glance). (2) 'spokenText' = the VOICEOVER script, about 2 to 3 times longer than 'text' (about 30 to 55 words, 2 to 3 spoken sentences). spokenText expands the same beat with one concrete detail, example, or number — never filler. emphasis phrases should appear in 'text' (preferred) or 'spokenText'."
-    : "- Each scene is one complete short voiceover beat (about 14 words max). Use a concise on-screen headline (about 4–8 words) and spokenText for the complete explanation when an illustration benefits from separate labels or details. Otherwise text may hold the same complete sentence and spokenText may be omitted. Do not split one idea into filler slides.";
+  const lengthRule = chapterDirection
+    ? `- Each scene has TWO copy fields: 'text' is a short ON-SCREEN line (about 12 to 18 words). 'spokenText' develops the complete explanation with supplied details and examples. Budget narration across ${count} scenes toward the chapter duration target at about 150 spoken words per minute, allowing different beat lengths. If supplied material cannot support the target, keep it complete and shorter. Never pad, invent facts, or truncate source material. emphasis phrases should appear in text or spokenText.`
+    : isDetailed
+      ? "- Each scene has TWO copy fields: (1) 'text' = short ON-SCREEN line (about 12 to 18 words, easy to read at a glance). (2) 'spokenText' = the VOICEOVER script, about 2 to 3 times longer than 'text' (about 30 to 55 words, 2 to 3 spoken sentences). spokenText expands the same beat with one concrete detail, example, or number — never filler. emphasis phrases should appear in 'text' (preferred) or 'spokenText'."
+      : "- Each scene is one complete short voiceover beat (about 14 words max). Use a concise on-screen headline (about 4–8 words) and spokenText for the complete explanation when an illustration benefits from separate labels or details. Otherwise text may hold the same complete sentence and spokenText may be omitted. Do not split one idea into filler slides.";
 
-  const structureRule = isDetailed
-    ? "- Shape: Hook → why it matters to YOU → insight → proof or short steps → punch → soft CTA. Let the spokenText breathe while on-screen text stays scannable."
-    : "- Shape: Hook → relatable problem → insight or proof → punch → clear CTA. Every beat earns the next second of attention.";
+  const structureRule = chapterDirection
+    ? `- Chapter goal: ${chapterDirection.goal}. Phase: ${chapterDirection.phase}. ${chapterDirection.phase === "recap" ? "Return to the supplied earlier chapter excerpts and familiar subjects/diagrams. Synthesize supported points without introducing new evidence." : chapterDirection.phase === "example" ? "Work through a supplied example to develop the argument; do not invent outcomes." : "Develop the argument with a clear explanation and a useful takeaway."} Preserve persistent subject labels and aliases. No independent hook, scroll-stopping premise, whole-film intro or CTA. ${chapterDirection.targetSeconds ? `Aim for about ${chapterDirection.targetSeconds} seconds of narration across these scenes; this is an estimate, never permission to pad or truncate supplied copy.` : ""}`
+    : isDetailed
+      ? "- Shape: Hook → why it matters to YOU → insight → proof or short steps → punch → soft CTA. Let the spokenText breathe while on-screen text stays scannable."
+      : "- Shape: Hook → relatable problem → insight or proof → punch → clear CTA. Every beat earns the next second of attention.";
 
   const styleLock =
     input.styleId && input.styleId !== "auto"
@@ -128,8 +133,12 @@ export function buildPrompt(input: GeneratePlanInput): {
     : undefined;
 
   const system = [
-    `You are a short-form video director for ${aspect} using the HyperFrames HTML template catalog.`,
-    "Viewer reality: they are scrolling. You have ~3 seconds. Sound may be off. Text must be readable. The feel should be personal (talk to 'you') and professional — calm confidence, not shouting ads.",
+    chapterDirection
+      ? `You direct one coherent chapter in a longer film for ${aspect} using the HyperFrames HTML template catalog.`
+      : `You are a short-form video director for ${aspect} using the HyperFrames HTML template catalog.`,
+    chapterDirection
+      ? "The audience is following a longer explanation. Use development, examples and deliberate returns; allow reading time and keep the established visual vocabulary."
+      : "Viewer reality: they are scrolling. You have ~3 seconds. Sound may be off. Text must be readable. The feel should be personal (talk to 'you') and professional — calm confidence, not shouting ads.",
     `Creative direction for this take: write in the voice of ${pickCreativeAngle()}. Specific beats beat generic advice.`,
     "Rules:",
     "- Plain conversational English. Use 'you' and 'your'. No em-dashes. No corporate filler. No clickbait all-caps energy in the words.",
@@ -142,11 +151,17 @@ export function buildPrompt(input: GeneratePlanInput): {
           `- Visual theme: ${input.visualTheme}. Choose varied, compatible treatments for the actual beats within this coherent whole-reel direction. Do not repeat a quiet slide for every scene or force unsupported charts/diagrams.`,
         ]
       : []),
-    "- Open with the clearest useful idea for the brief. A bold claim, supplied number, direct question, or current pain can work when supported by the source.",
+    chapterDirection
+      ? "- Continue the saved chapter argument. Establish its purpose without restarting the whole film."
+      : "- Open with the clearest useful idea for the brief. A bold claim, supplied number, direct question, or current pain can work when supported by the source.",
     "- Develop complete useful beats, not a slide for every short sentence. Avoid filler scenes such as 'Think of it like this' with no explanatory content. For comparisons, name the subjects and explain their actual differences. Expand ambiguous acronyms from context before defining them; never guess a meaning from similar letters.",
     "- In a search-marketing brief, SEO means search engine optimisation, AEO means answer engine optimisation and GEO means generative engine optimisation. AEO is not app-store optimisation; GEO is not a synonym for local-map SEO. Explain their overlap rather than portraying them as mutually exclusive channels. In other contexts, use the source's explicit expansion or acknowledge ambiguity.",
     structureRule,
-    "- When the brief calls for an action, end with a clear, low-pressure CTA (try this, save this, follow for more).",
+    ...(chapterDirection
+      ? []
+      : [
+          "- When the brief calls for an action, end with a clear, low-pressure CTA (try this, save this, follow for more).",
+        ]),
     ...hyperframesTemplateRules(),
     "- emphasis: 1–2 short phrases that appear VERBATIM in that scene's text (highlights for the eye).",
     '- Optional direction uses exactly {version:1, role, composition, motion?, graphic?}. Roles: hook, headline, explanation, diagram, quote, comparison, metric, chart, summary, cta. composition is authored, or layered-title for a single text beat without media/items/chart. Optional motion is {recipeId,version:"1.0.0"}: type-stack, type-impact, type-editorial, data-spotlight, data-bars, diagram-path, diagram-orbit, media-device, media-cinematic, comparison-split, comparison-stack, quiet-divider, quiet-center, brand-lockup or brand-frame. Preserve supplied numbers and relationships. Do not invent data to fill a layout.',
@@ -183,7 +198,7 @@ export function buildPrompt(input: GeneratePlanInput): {
     const positions = input.replacementSceneNumbers?.length
       ? ` Replace only scene positions ${input.replacementSceneNumbers.join(", ")} and return exactly ${input.replacementSceneNumbers.length} replacement scenes in that order.`
       : "";
-    user = `Rewrite the requested parts of this short video to feel more personal and clear.${positions} Preserve supplied facts and keep the tone professional and soothing.\n\nTopic: ${input.brief}${ctx}`;
+    user = `Rewrite the requested parts of this ${chapterDirection ? "chaptered film" : "short video"} to feel more personal and clear.${positions} Preserve supplied facts and keep the tone professional and soothing.\n\nTopic: ${input.brief}${ctx}`;
   } else if (input.mode === "hook_variants") {
     const ctx = input.existingContext
       ? `\n\nCurrent opening for context:\n${input.existingContext}`
@@ -196,8 +211,10 @@ export function buildPrompt(input: GeneratePlanInput): {
       ? `\n\nExisting scenes (do NOT repeat these):\n${input.existingContext}`
       : "";
     user = input.chapterTitle
-      ? `Append a new chapter titled ${JSON.stringify(input.chapterTitle)}, starting at scene ${startNum}, to this video. Build one small arc: introduce the chapter, explain the supplied topic, then resolve its takeaway. Use fresh value and preserve supplied facts. Do not rewrite earlier chapters or add a whole-video intro or CTA.${ctx}\n\nFocus: ${input.brief}`
-      : `Add scenes ${startNum}+ to a short video that already has ${input.existingSceneCount ?? "several"} scenes.\n\nRules:\n- Fresh value only.\n- No CTA (the video already ends with one).\n- Start with a curiosity gap that still feels kind and clear.${ctx}\n\nFocus: ${input.brief}`;
+      ? `Append a new chapter titled ${JSON.stringify(input.chapterTitle)}, starting at scene ${startNum}, to this video. ${chapterDirection ? "Follow the chapter goal and narrative phase in the system instructions." : "Build one small arc: introduce the chapter, explain the supplied topic, then resolve its takeaway."} Use fresh value and preserve supplied facts. Do not rewrite earlier chapters or add a whole-video intro or CTA.${ctx}\n\nFocus: ${input.brief}`
+      : chapterDirection
+        ? `Continue the current lesson chapter at scene ${startNum}. Develop its saved goal and narrative phase, preserving supplied facts and familiar subjects. Do not restart the film or add an independent hook or CTA.${ctx}\n\nFocus: ${input.brief}`
+        : `Add scenes ${startNum}+ to a short video that already has ${input.existingSceneCount ?? "several"} scenes.\n\nRules:\n- Fresh value only.\n- No CTA (the video already ends with one).\n- Start with a curiosity gap that still feels kind and clear.${ctx}\n\nFocus: ${input.brief}`;
   }
 
   // Supply concise, authoritative context for this known ambiguous comparison.

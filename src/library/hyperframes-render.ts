@@ -1,3 +1,4 @@
+import { assertLessonHtmlBudget } from "@/production/long-form";
 import { NATIVE_ONLY_BLOCKS } from "@/engines/hyperframes/catalog/build-scene";
 import { sequenceConfigFor } from "@/video/sequence-direction";
 import { copyHyperframesRuntime } from "@/library/hyperframes-runtime";
@@ -290,6 +291,7 @@ async function runWorker(args: {
 export async function writeHyperframesProject(
   projectDir: string,
   inputProps: ReelProps,
+  lessonBudget = false,
 ) {
   const scenes = inputProps.scenes;
   const runtimeDir = path.join(projectDir, "_runtime");
@@ -347,6 +349,7 @@ export async function writeHyperframesProject(
       runtimeUrl: GSAP_RENDER_URL,
     },
   );
+  if (lessonBudget) assertLessonHtmlBudget(Buffer.byteLength(html));
   await fs.writeFile(path.join(projectDir, "index.html"), html, "utf8");
 }
 
@@ -607,7 +610,7 @@ export async function runHyperframesRender(
       ? { ...prepared.props, scenes, audioUrl, musicUrl, sfxCues, coverUrl }
       : legacyInputProps;
 
-    await writeHyperframesProject(projectDir, inputProps);
+    await writeHyperframesProject(projectDir, inputProps, Boolean(script.chapterPlan?.longForm));
     const useSections = Boolean(
       script.chapterPlan ||
       (inputProps.sequenceDirection && compositionTotalFrames(inputProps) > script.fps * 30),

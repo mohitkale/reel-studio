@@ -1,3 +1,6 @@
+import { filmCanonicalJson } from "@/production/film-plan";
+import { lessonDirections } from "@/production/long-form";
+import { longFormChapterContext } from "./long-form-context";
 import { randomUUID } from "node:crypto";
 import { prisma } from "@/library/db";
 import { getScript } from "@/library/repositories/scripts";
@@ -36,6 +39,15 @@ export async function generateChapterDraft(
       "Discard the completed writing draft before planning another.",
       400,
     );
+  if (
+    input.targetSeconds &&
+    script.scenes.length &&
+    !script.chapterPlan?.longForm
+  )
+    throw new AIError(
+      "Enable lesson direction on the saved outline before planning lesson chapters.",
+      400,
+    );
   const issue = chapterDraftCapacityIssue(
     script,
     Array(input.chapterCount).fill(input.scenesPerChapter),
@@ -57,7 +69,16 @@ export async function generateChapterDraft(
       mode: "chapter_outline",
       brief: input.topic,
       sceneCount: input.chapterCount,
-      existingContext: sceneContinuityContext(script),
+      existingContext: input.targetSeconds
+        ? longFormChapterContext(script)
+        : sceneContinuityContext(script),
+      chapterDirection: input.targetSeconds
+        ? {
+            goal: "Plan a coherent lesson with development, examples and a final recap returning to an earlier idea. No independent hooks or chapter CTAs.",
+            phase: "develop",
+            targetSeconds: input.targetSeconds,
+          }
+        : undefined,
       modelId: input.modelId,
       videoEngine: script.videoEngine,
       mediaPreference: "none",
@@ -69,14 +90,22 @@ export async function generateChapterDraft(
       "The provider did not return the requested chapter count",
       502,
     );
+  const chapters = plan.scenes.map((scene) => ({
+    id: `draft:${randomUUID()}`,
+    title: scene.text,
+    brief: scene.spokenText,
+    sceneCount: input.scenesPerChapter,
+  }));
+  const directions = lessonDirections(chapters);
   const draft = chapterDraftSchema.parse({
     version: "1.0.0",
     topic: input.topic,
-    chapters: plan.scenes.map((scene) => ({
-      id: `draft:${randomUUID()}`,
-      title: scene.text,
-      brief: scene.spokenText,
-      sceneCount: input.scenesPerChapter,
+    ...(input.targetSeconds
+      ? { longForm: { version: "1.0.0", targetSeconds: input.targetSeconds } }
+      : {}),
+    chapters: chapters.map((chapter, index) => ({
+      ...chapter,
+      ...(input.targetSeconds ? { direction: directions[index] } : {}),
     })),
   });
   return saveChapterDraft(scriptId, { draft, expectedState, signal });
@@ -118,8 +147,8 @@ export async function saveChapterDraft(
     );
     if (
       input.expected !== undefined &&
-      JSON.stringify(input.expected) !==
-        JSON.stringify(overrides.chapterDraft ?? null)
+      filmCanonicalJson(input.expected) !==
+        filmCanonicalJson(overrides.chapterDraft ?? null)
     )
       throw new AIError(
         "The chapter draft changed. Reload before saving your edits.",
@@ -131,7 +160,7 @@ export async function saveChapterDraft(
           (chapter) => chapter.generated,
         ) ?? [];
       const completed = draft.chapters.filter((chapter) => chapter.generated);
-      if (JSON.stringify(priorCompleted) !== JSON.stringify(completed))
+      if (filmCanonicalJson(priorCompleted) !== filmCanonicalJson(completed))
         throw new AIError(
           "Generated chapter progress cannot be edited. Edit its scenes in the storyboard.",
           400,
