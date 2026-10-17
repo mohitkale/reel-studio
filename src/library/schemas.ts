@@ -1,3 +1,4 @@
+import {factoryLineageSchema} from "@/production/factory-lineage";
 import { frameWordsSchema } from "@/lib/speech-words";
 import { z } from "zod";
 import { audioMasteringSchema } from "@/production/audio-mastering";
@@ -87,6 +88,8 @@ export const brandOverridesSchema = z
     audioMastering: audioMasteringSchema.optional(),
     chapterPlan: chapterPlanSchema.optional(),
     chapterDraft: chapterDraftSchema.optional(),
+    factoryLineage:factoryLineageSchema.optional(),
+    frozenBrandTokens:z.object({background:z.string(),backgroundAccent:z.string(),foreground:z.string(),muted:z.string(),accent:z.string(),accentSecondary:z.string(),accentForeground:z.string(),handle:z.string(),fontFamily:z.string(),radius:z.number()}).optional(),
     productionPreset: z
       .object({
         id: productionPresetIdSchema,

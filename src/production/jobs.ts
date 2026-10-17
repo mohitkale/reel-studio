@@ -56,7 +56,7 @@ export const videoProductionJobInputSchema = z.object({
   productionRevisionId: z.string().min(1).optional(),
   revisionHash: z.string().length(64).optional(),
   // Freeze submission policy; generated voice must not bypass token limits.
-  maxDurationSeconds: z.number().finite().positive().max(300).default(180),
+  maxDurationSeconds: z.number().finite().positive().max(600).default(180),
 });
 export type VideoProductionJobInput = z.infer<
   typeof videoProductionJobInputSchema

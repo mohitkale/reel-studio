@@ -1,3 +1,4 @@
+import { frozenRevisionMatches } from "./frozen-revision";
 import { captureVideoSnapshot } from "@/library/video-snapshot";
 import { estimateSpeechSeconds } from "@/lib/audio-timing";
 import type { RequestAuthorization } from "@/server/auth";
@@ -43,10 +44,49 @@ async function resolveRequest(
   serverBaseUrl: string,
 ): Promise<ResolvedRequest> {
   if (request.kind === "video") {
-    const snapshot = await captureVideoSnapshot(
-      request.scriptId,
-      request.voiceTakeId,
-    );
+    if (request.revisionId && request.quickProduce)
+      throw new ProviderError(
+        "Frozen revision jobs cannot run quick production",
+        400,
+      );
+    const revision = request.revisionId
+      ? await prisma.productionRevision.findUnique({
+          where: { id: request.revisionId },
+        })
+      : null;
+    if (
+      request.revisionId &&
+      (!revision || revision.scriptId !== request.scriptId)
+    )
+      throw new ProviderError("Revision does not belong to this script", 400);
+    const snapshot = revision
+      ? videoSnapshotSchema.parse(JSON.parse(revision.snapshotJson))
+      : await captureVideoSnapshot(request.scriptId, request.voiceTakeId);
+    if (revision && !frozenRevisionMatches(revision, snapshot))
+      throw new ProviderError(
+        "Revision content failed integrity verification",
+        409,
+      );
+    if (
+      revision &&
+      request.voiceTakeId &&
+      request.voiceTakeId !== snapshot.take?.id
+    )
+      throw new ProviderError("Take differs from the frozen revision", 400);
+    if (
+      revision &&
+      (await prisma.productionJob.findUnique({
+        where: { productionRevisionId: revision.id },
+      }))
+    )
+      throw new ProviderError(
+        "This revision already belongs to a production job; retry that job",
+        409,
+      );
+    if (snapshot.factory) {
+      const { verifyFactoryPack } = await import("./factory-packs");
+      await verifyFactoryPack(snapshot.factory.packDigest);
+    }
     const script = snapshot.script;
     const timing = resolveReelTimeline(
       script.scenes.map((scene) => ({
@@ -68,6 +108,12 @@ async function resolveRequest(
           ? [request.quickProduce.voice.providerId]
           : [],
       inputSnapshot: {
+        ...(revision
+          ? {
+              productionRevisionId: revision.id,
+              revisionHash: revision.revisionHash,
+            }
+          : {}),
         snapshot,
         scriptId: request.scriptId,
         voiceTakeId: request.voiceTakeId,

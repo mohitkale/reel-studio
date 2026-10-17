@@ -438,6 +438,7 @@ export async function approveProductionJob(
 export async function retryProductionJob(
   id: string,
   db: PrismaClient = prisma,
+  nextState:"queued"|"awaiting_approval"="queued",
 ) {
   return db.$transaction(async (tx) => {
     const job = await tx.productionJob.findUnique({ where: { id } });
@@ -446,7 +447,7 @@ export async function retryProductionJob(
     const updated = await tx.productionJob.update({
       where: { id },
       data: {
-        state: "queued",
+        state: nextState,
         cancelRequested: false,
         leaseOwner: null,
         leaseExpiresAt: null,

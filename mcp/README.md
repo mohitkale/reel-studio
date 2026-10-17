@@ -337,3 +337,14 @@ remain authoritative. See [adaptive recipes](../docs/ADAPTIVE_RECIPES.md).
 `replan_motion_direction` also accepts `sequenceDirection` and a validated
 `subjectRegistry` replacement. Identity aliases are explicit; locks, source copy
 and narration remain protected. See [sequence direction](../docs/SEQUENCE_DIRECTION.md).
+
+## Content factory
+
+Use `list_factory` to choose a frozen master revision and optional versioned
+series profile. `save_series_profile` publishes immutable brand/design and
+delivery defaults. `create_factory_run` accepts up to six aspect or explicit
+whole-scene cutdown variants and requires an idempotency key. Inspect lineage
+with `get_factory_run` / `get_factory_revision`, and cancel or resume through
+`control_factory_run`. Saved review policy and scoped automatic-render rules
+remain active; approval stays in the studio. Download output bundles with the
+existing batch tools. See [factory contracts and limits](../docs/FACTORY_WORKFLOWS.md).

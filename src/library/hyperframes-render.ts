@@ -292,11 +292,13 @@ export async function writeHyperframesProject(
   projectDir: string,
   inputProps: ReelProps,
   lessonBudget = false,
+  packDigest?:string,
 ) {
   const scenes = inputProps.scenes;
   const runtimeDir = path.join(projectDir, "_runtime");
   await fs.mkdir(runtimeDir, { recursive: true });
-  await copyHyperframesRuntime(runtimeDir);
+  if(packDigest){const {copyFactoryRuntime}=await import("./factory-packs");await copyFactoryRuntime(packDigest,runtimeDir);}
+  else await copyHyperframesRuntime(runtimeDir);
 
   // Materialize curated catalog blocks as compositions/*.html so the producer
   // can resolve data-composition-src on the host index.html.
@@ -610,7 +612,7 @@ export async function runHyperframesRender(
       ? { ...prepared.props, scenes, audioUrl, musicUrl, sfxCues, coverUrl }
       : legacyInputProps;
 
-    await writeHyperframesProject(projectDir, inputProps, Boolean(script.chapterPlan?.longForm));
+    await writeHyperframesProject(projectDir, inputProps, Boolean(script.chapterPlan?.longForm),snapshot?.factory?.packDigest);
     const useSections = Boolean(
       script.chapterPlan ||
       (inputProps.sequenceDirection && compositionTotalFrames(inputProps) > script.fps * 30),

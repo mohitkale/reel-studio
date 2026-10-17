@@ -19,6 +19,7 @@ export const produceContentRequestSchema = z.discriminatedUnion("kind", [
     ...common,
     kind: z.literal("video"),
     scriptId: z.string().min(1),
+    revisionId: z.string().min(1).max(160).optional(),
     voiceTakeId: z.string().min(1).optional(),
     orientation: orientationSchema.optional(),
     quality: productionQualitySchema.default("standard"),

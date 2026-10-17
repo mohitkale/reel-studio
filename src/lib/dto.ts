@@ -141,6 +141,9 @@ export interface ScriptDTO {
   musicMap?: MusicMap;
   audioMastering?: import("@/production/audio-mastering").AudioMastering;
   chapterPlan?: import("@/production/chapters").ChapterPlan;
+  factoryLineage?: import("zod").infer<
+    typeof import("@/production/factory-lineage").factoryLineageSchema
+  >;
   chapterDraft?: import("@/production/chapter-draft").ChapterDraft;
   captionTracks?: CaptionTrackDTO[];
 }

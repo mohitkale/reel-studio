@@ -101,10 +101,12 @@ export async function getScripts(
         voiceClips: script.voiceClips.map(toVoiceClipDTO),
         voiceMode: resolveVoiceMode(script.voiceMode),
         brandKitId: script.project.brandKitId,
-        brandTokens: applyVisualTheme(
-          brandKit ? resolveBrandTokens(brandKit) : { ...serverDefaultTokens },
-          script.project.brandKitId ? undefined : overrides.visualTheme,
-        ),
+        brandTokens:
+          overrides.frozenBrandTokens ??
+          applyVisualTheme(
+            brandKit ? resolveBrandTokens(brandKit) : { ...serverDefaultTokens },
+            script.project.brandKitId ? undefined : overrides.visualTheme,
+          ),
         visualTheme: script.project.brandKitId ? undefined : overrides.visualTheme,
         coverUrl: script.coverUrl,
         musicUrl: script.musicUrl,
@@ -125,6 +127,7 @@ export async function getScripts(
         audioMastering: overrides.audioMastering ?? "original",
         chapterPlan: overrides.chapterPlan,
         chapterDraft: overrides.chapterDraft,
+        factoryLineage: overrides.factoryLineage,
       };
       return [script.id, dto] as const;
     }),
@@ -150,6 +153,8 @@ export async function updateScript(
     energy?: EnergyId;
     voiceMode?: VoiceMode;
     audioMastering?: import("@/production/audio-mastering").AudioMastering;
+    frozenBrandTokens?: import("@/video/tokens").BrandTokens;
+    factoryLineage?: import("@/lib/dto").ScriptDTO["factoryLineage"];
     chapterDraft?: import("@/production/chapter-draft").ChapterDraft;
   },
 ): Promise<void> {
@@ -176,7 +181,9 @@ export async function updateScript(
       data.styleId !== undefined ||
       data.energy !== undefined ||
       data.audioMastering !== undefined ||
-      data.chapterDraft !== undefined
+      data.chapterDraft !== undefined ||
+      data.frozenBrandTokens !== undefined ||
+      data.factoryLineage !== undefined
     ) {
       const current = await tx.script.findUnique({
         where: { id },
@@ -189,6 +196,10 @@ export async function updateScript(
       );
       patch.brandOverrides = JSON.stringify({
         ...overrides,
+        ...(data.frozenBrandTokens
+          ? { frozenBrandTokens: data.frozenBrandTokens }
+          : {}),
+        ...(data.factoryLineage ? { factoryLineage: data.factoryLineage } : {}),
         ...(data.styleId !== undefined ? { styleId: data.styleId } : {}),
         ...(data.energy !== undefined ? { energy: data.energy } : {}),
         ...(data.chapterDraft !== undefined

@@ -1,4 +1,5 @@
 "use client";
+import {FactoryPanel} from "@/components/production/factory-panel";
 
 import * as React from "react";
 import {
@@ -521,6 +522,7 @@ export default function RendersPage() {
         description="Track render jobs and download finished MP4 videos."
       />
 
+      <details className="rounded-xl border p-4"><summary className="cursor-pointer text-sm font-medium">Content factory</summary><div className="mt-4"><FactoryPanel/></div></details>
       <ProductionBatchList />
       <ProductionJobList />
 

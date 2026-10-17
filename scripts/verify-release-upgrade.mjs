@@ -132,7 +132,7 @@ assert.equal(
       "SELECT count(*) AS count FROM _prisma_migrations WHERE finished_at IS NOT NULL",
     )
     .get().count,
-  14,
+  15,
 );
 upgraded.exec(
   `INSERT INTO CaptionTrack (id,scriptId,label,language,timingSource,enabled,updatedAt) VALUES ('captions','script','Saved captions','en','imported',1,CURRENT_TIMESTAMP); INSERT INTO CaptionCue (id,trackId,"order",startFrame,endFrame,text,updatedAt) VALUES ('cue','captions',0,0,30,'Saved subtitle',CURRENT_TIMESTAMP);`,
@@ -153,10 +153,10 @@ const published040 = JSON.parse(
 );
 assert.equal(
   createHash("sha256")
-    .update(await fs.readFile(published040.schemaPath))
+    .update(await fs.readFile("tests/fixtures/release-v040/schema.prisma"))
     .digest("hex"),
   published040.sourceSchemaSha256,
-  "v0.5.0 keeps the published v0.4.0 schema",
+  "Published v0.4.0 schema fixture remains unchanged",
 );
 for (const [file, hash] of Object.entries(published040.migrations))
   assert.equal(
@@ -166,6 +166,21 @@ for (const [file, hash] of Object.entries(published040.migrations))
     hash,
     `Published v0.4.0 migration drift: ${file}`,
   );
+// Reconstruct the exact 14-migration published database from this owned test
+// database. M6 is additive only; compare its remaining schema against the
+// checksummed historical migrations before exercising the real upgrade.
+again.exec(
+  `DROP TABLE FactoryVariant; DROP TABLE FactoryRun; DROP TABLE FactoryProfile; DROP TABLE FactoryPack; DELETE FROM _prisma_migrations WHERE migration_name='20261017000100_factory_workflows';`,
+);
+const expected040 = new DatabaseSync(":memory:");
+for (const filename of Object.keys(published040.migrations))
+  expected040.exec(await fs.readFile(filename, "utf8"));
+assert.equal(
+  schemaSignature(again),
+  schemaSignature(expected040),
+  "Reconstructed published v0.4.0 schema matches its unchanged migrations",
+);
+expected040.close();
 const snapshot040 = (db) =>
   Object.fromEntries(
     [
@@ -180,7 +195,14 @@ const snapshot040 = (db) =>
       "_prisma_migrations",
     ].map((table) => [
       table,
-      db.prepare(`SELECT * FROM ${table} ORDER BY id`).all(),
+      db
+        .prepare(`SELECT * FROM ${table} ORDER BY id`)
+        .all()
+        .filter(
+          (row) =>
+            table !== "_prisma_migrations" ||
+            row.migration_name !== "20261017000100_factory_workflows",
+        ),
     ]),
   );
 const before040 = snapshot040(again);
@@ -193,6 +215,19 @@ execFileSync(process.execPath, ["scripts/migrate-database.mjs"], {
   stdio: "pipe",
 });
 const upgraded040 = new DatabaseSync(filename);
+assert.equal(
+  upgraded040
+    .prepare(
+      "SELECT count(*) AS count FROM _prisma_migrations WHERE finished_at IS NOT NULL",
+    )
+    .get().count,
+  15,
+);
+assert.equal(
+  upgraded040.prepare("SELECT count(*) AS count FROM FactoryRun").get().count,
+  0,
+);
+assert.deepEqual(upgraded040.prepare("PRAGMA foreign_key_check").all(), []);
 assert.deepEqual(
   snapshot040(upgraded040),
   before040,
@@ -277,7 +312,7 @@ assert.equal(
       "SELECT count(*) AS count FROM _prisma_migrations WHERE finished_at IS NOT NULL",
     )
     .get().count,
-  14,
+  15,
 );
 freshDb.close();
 await fs.writeFile(
@@ -291,7 +326,7 @@ await fs.writeFile(
       published040BackupRestore: true,
       targetVersion: JSON.parse(await fs.readFile("package.json", "utf8"))
         .version,
-      migrations: 14,
+      migrations: 15,
       backupRestore: true,
       copy: true,
       media: hashes,

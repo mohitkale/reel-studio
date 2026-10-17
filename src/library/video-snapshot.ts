@@ -18,6 +18,7 @@ export async function captureVideoSnapshot(
   return withResolvedFilmPlan(
     videoSnapshotSchema.parse({
       version: 1,
+      ...(script.factoryLineage ? { factory: script.factoryLineage } : {}),
       script,
       take: take ?? null,
       stockMedia,

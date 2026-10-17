@@ -79,6 +79,7 @@ export async function currentVideoRevisionHashes(
       videoRevisionHash(
         videoSnapshotSchema.parse({
           version: 1,
+          ...(script.factoryLineage ? { factory: script.factoryLineage } : {}),
           script,
           take: take ?? null,
           stockMedia: selections.get(input.scriptId) ?? [],

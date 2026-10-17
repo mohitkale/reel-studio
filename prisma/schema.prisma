@@ -537,3 +537,51 @@ model PodcastTake {
 
   @@index([podcastId])
 }
+
+/// Immutable, bounded reusable series design/defaults. New edits publish a version.
+model FactoryProfile {
+  id           String   @id @default(cuid())
+  key          String
+  version      Int
+  name         String
+  documentJson String
+  digest       String
+  archived     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@unique([key, version])
+}
+
+/// Factory lineage stays separate from mutable editor data and durable job state.
+model FactoryRun {
+  id               String           @id @default(cuid())
+  idempotencyKey   String           @unique
+  sourceRevisionId String
+  requestJson      String
+  packDigest       String
+  batchId          String?          @unique
+  createdAt        DateTime         @default(now())
+  variants         FactoryVariant[]
+}
+
+model FactoryVariant {
+  id          String     @id @default(cuid())
+  runId       String
+  run         FactoryRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  key         String
+  revisionId  String     @unique
+  lineageJson String
+
+  @@unique([runId, key])
+}
+
+/// Only bundled, checked assets are registered; no executable pack uploads.
+model FactoryPack {
+  digest       String   @id
+  key          String
+  version      String
+  manifestJson String
+  createdAt    DateTime @default(now())
+
+  @@unique([key, version])
+}

@@ -1,3 +1,5 @@
+import { hasMcpScope } from "@/production/mcp-access";
+import { filmCanonicalJson } from "@/production/film-plan";
 import type { RequestAuthorization } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
 import {
@@ -43,18 +45,32 @@ export async function submitProductionBatch(args: {
   const duplicate = await getProductionBatchByIdempotencyKey(
     request.idempotencyKey,
   );
-  if (duplicate) return duplicate;
+  if (
+    duplicate &&
+    filmCanonicalJson(JSON.parse(duplicate.requestSnapshot)) !==
+      filmCanonicalJson(request)
+  )
+    throw new ProviderError(
+      "Idempotency key belongs to a different batch request",
+      409,
+    );
 
   const expanded = expandProductionBatch(request);
-  let batch = await createProductionBatch({
-    idempotencyKey: request.idempotencyKey,
-    requestSnapshot: request,
-    priority: request.priority,
-    items: expanded,
-  });
+  let batch =
+    duplicate ??
+    (await createProductionBatch({
+      idempotencyKey: request.idempotencyKey,
+      requestSnapshot: request,
+      priority: request.priority,
+      items: expanded,
+    }));
 
   for (const item of batch.items) {
     if (item.job || item.validationError) continue;
+    const current = (await getProductionBatch(batch.id))?.items.find(
+      (row) => row.id === item.id,
+    );
+    if (current?.validationError || current?.job) continue;
     const expandedItem = expanded.find(
       (candidate) =>
         candidate.rowIndex === item.rowIndex &&
@@ -72,6 +88,11 @@ export async function submitProductionBatch(args: {
         batchItemId: item.id,
       });
       if (!job) throw new Error("Production job could not be created");
+      const current = (await getProductionBatch(batch.id))?.items.find(
+        (row) => row.id === item.id,
+      );
+      if (current?.validationError === "Canceled before submission")
+        await requestProductionJobCancellation(job.id);
       await linkProductionBatchItem(item.id, job.id);
     } catch (error) {
       await failProductionBatchItem(item.id, errorMessage(error));
@@ -90,10 +111,22 @@ export async function retryProductionBatch(args: {
   if (!batch) return null;
   for (const item of batch.items) {
     if (item.job && ["failed", "canceled"].includes(item.job.state)) {
-      await retryProductionJob(item.job.id);
+      const saved = produceContentRequestSchema.parse(
+        JSON.parse(item.requestSnapshot),
+      );
+      const approval =
+        saved.runMode === "approval" ||
+        (args.auth.origin === "mcp" &&
+          (args.auth.token.kind !== "named" ||
+            !hasMcpScope(args.auth.token.record, "production:automatic")));
+      await retryProductionJob(
+        item.job.id,
+        undefined,
+        approval ? "awaiting_approval" : "queued",
+      );
       continue;
     }
-    if (!item.job && item.validationError) {
+    if (!item.job) {
       try {
         const request = produceContentRequestSchema.parse(
           JSON.parse(item.requestSnapshot),
@@ -119,7 +152,9 @@ export async function cancelProductionBatch(id: string) {
   if (!batch) return null;
   await Promise.all(
     batch.items.map((item) =>
-      item.job ? requestProductionJobCancellation(item.job.id) : null,
+      item.job
+        ? requestProductionJobCancellation(item.job.id)
+        : failProductionBatchItem(item.id, "Canceled before submission"),
     ),
   );
   return getProductionBatch(id);

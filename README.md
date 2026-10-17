@@ -85,7 +85,9 @@ subject identities, decision explanations and supported card handoffs. The
 [creation workflow](docs/CREATION_UX.md) adds a contact sheet, draft animatic,
 reviewed scene/chapter/film variations with guarded undo, and optional local AI
 readiness tests. [Lesson direction](docs/LONG_FORM_DIRECTION.md) adds chapter
-goals, recap callbacks and bounded ten-minute exports. See [adaptive film contracts](docs/ADAPTIVE_CONTRACTS.md).
+goals, recap callbacks and bounded ten-minute exports. The
+[content factory](docs/FACTORY_WORKFLOWS.md) adds versioned series profiles, frozen
+aspect/cutdown variants and pinned recipe-pack archives. See [adaptive film contracts](docs/ADAPTIVE_CONTRACTS.md).
 
 ![Projects with visible AI and local production creation paths](docs/assets/reel-studio-home.png)
 

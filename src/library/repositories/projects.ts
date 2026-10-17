@@ -1,3 +1,4 @@
+import { parseJsonColumn, brandOverridesSchema } from "@/library/schemas";
 import { collectSequenceSubjects } from "@/production/sequence-subjects";
 import { randomUUID } from "node:crypto";
 
@@ -103,9 +104,27 @@ export async function assignBrandKit(
   projectId: string,
   brandKitId: string | null,
 ): Promise<void> {
-  await prisma.project.update({
-    where: { id: projectId },
-    data: { brandKitId },
+  await prisma.$transaction(async (tx) => {
+    await tx.project.update({ where: { id: projectId }, data: { brandKitId } });
+    const scripts = await tx.script.findMany({
+      where: { projectId },
+      select: { id: true, brandOverrides: true },
+    });
+    for (const script of scripts) {
+      const overrides = parseJsonColumn(
+        script.brandOverrides,
+        brandOverridesSchema,
+        {},
+      );
+      if (overrides.frozenBrandTokens) {
+        const { frozenBrandTokens: _tokens, ...rest } = overrides;
+        void _tokens;
+        await tx.script.update({
+          where: { id: script.id },
+          data: { brandOverrides: JSON.stringify(rest) },
+        });
+      }
+    }
   });
 }
 
