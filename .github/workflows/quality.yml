@@ -66,7 +66,10 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
-      - run: npm run test:unit -- --maxWorkers=2
+      - name: Run full unit and integration suite
+        # Windows SQLite fixtures compete for disk/CPU under parallel workers.
+        # Keep every test and existing deadline; reduce only worker concurrency.
+        run: npm run test:unit -- --maxWorkers=${{ runner.os == 'Windows' && 1 || 2 }}
       - run: npm run security:scan
       - run: node scripts/dependency-inventory.mjs > dependency-inventory.json
       - run: npm run test:phonemizer

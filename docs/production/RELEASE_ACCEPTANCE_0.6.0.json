@@ -9,13 +9,13 @@
     "capturedSourceCommit": "f1eb174b7604f1e31aa1dc3d4cd8f15e1cda246d",
     "runtimeSourceContentSha256": "40dda2f25eaca05f35362264085cd148bedb69e3fa9f074191a5361d26f6cc22",
     "runtimeSourceScope": "Ordered tracked src, public/reel-runtime and renderer worker files excluding .test/.spec source files",
-    "note": "Full source digest captures the validated export snapshot; later src changes correct only component-test readiness and a Windows-only integration-test budget. Runtime bytes remain identical."
+    "note": "Full source digest captures the validated export snapshot. Later src changes affect only test readiness, a Windows integration-test budget and transactional fixture seeding. Runtime bytes remain identical."
   },
   "unitSuite": {
     "files": 200,
     "tests": 985,
     "passed": true,
-    "maxWorkers": 2
+    "maxWorkers": 1
   },
   "dependencies": {
     "dependenciesUnchanged": true,
@@ -461,7 +461,7 @@
   },
   "featureDelivery": {
     "milestones": ["M0", "M1", "M2", "M3", "M4", "M5", "M6"],
-    "priorMergedPullRequests": [48, 49, 50, 51, 52, 53],
+    "priorMergedPullRequests": [48, 49, 50, 51, 52, 53, 54],
     "longFormEvidence": "ADAPTIVE_M5_VALIDATION.md",
     "factoryEvidence": "ADAPTIVE_M6_VALIDATION.md",
     "examplesRetainedInActiveApp": true
@@ -470,7 +470,7 @@
     "checkedOn": "2026-10-21",
     "productionBuildRestarted": true,
     "scriptId": "cmvgf4agq001lu19kj12d1igp",
-    "visibleName": "M0 \u00b7 m0-08 \u00b7 current \u00b7 en dense",
+    "visibleName": "M0 · m0-08 · current · en dense",
     "preview": {
       "suppliedImageVisible": true,
       "chartValues": [18, 11],
@@ -551,5 +551,20 @@
     "otherPlatformsTimeoutMs": 5000,
     "assertionsUnchanged": true,
     "reason": "Fifteen SQLite migrations, cold service imports and database reconnect exceeded the default five-second deadline on Windows."
+  },
+  "ciFixtureStability": {
+    "reason": "Merged-main Windows runs exceeded SQLite fixture deadlines under parallel test workers.",
+    "initialMergedMainCommit": "cc7e122a67a017754f326e99f3256f12df1dd142",
+    "failedQualityRun": 39581061237,
+    "failedAttempts": [1, 2],
+    "fixture": "src/library/sqlite-polling.test.ts",
+    "change": "Seed the same fifty scripts/scenes in one transaction instead of fifty commits; all assertions and deadlines remain unchanged.",
+    "workflow": "Windows runs the full suite with one worker; Linux retains two. No checks or tests are skipped.",
+    "localSuite": {
+      "files": 200,
+      "tests": 985,
+      "maxWorkers": 1,
+      "passed": true
+    }
   }
 }

@@ -50,17 +50,20 @@ beforeEach(async () => {
   await state.db.project.create({
     data: { id: "project", name: "Fixture", brandKitId: "kit" },
   });
-  for (let i = 0; i < 50; i++)
-    await state.db.script.create({
-      data: {
-        id: `script-${i}`,
-        name: "Fixture",
-        projectId: "project",
-        scenes: {
-          create: { text: "Original text", order: 0, templateId: "hf-opener" },
+  // Setup commits once; fifty separate fsyncs can exhaust a Windows hook budget.
+  await state.db.$transaction(async (tx) => {
+    for (let i = 0; i < 50; i++)
+      await tx.script.create({
+        data: {
+          id: `script-${i}`,
+          name: "Fixture",
+          projectId: "project",
+          scenes: {
+            create: { text: "Original text", order: 0, templateId: "hf-opener" },
+          },
         },
-      },
-    });
+      });
+  });
 });
 afterEach(async () => {
   await state.db!.$disconnect();
