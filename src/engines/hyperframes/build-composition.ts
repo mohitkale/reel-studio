@@ -1133,7 +1133,10 @@ export function buildHyperframesCompositionHtml(
         sceneBlocks.push(
           addBackgroundToPresetScene(
             presetScene,
-            scene.background?.type === "video"
+            scene.background?.type === "video" ||
+              (props.preset.id === "data-story" &&
+                scene.chart &&
+                scene.background?.type === "image")
               ? backgroundLayer(scene, absoluteStart, duration)
               : "",
           ),

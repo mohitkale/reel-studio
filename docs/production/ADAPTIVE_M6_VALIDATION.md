@@ -2,8 +2,8 @@
 
 Acceptance date: 2026-10-17. This is functional, compatibility and recovery
 validation using existing adaptive graphics and silent timing fixtures. It does
-not certify model-written stories, speech quality, or the unexecuted M0 visual
-baseline. No dependencies, models, paid calls or external rendering were added.
+not certify model-written stories, speech quality, or the M0 visual
+baseline, which was unexecuted on this acceptance date. No dependencies, models, paid calls or external rendering were added.
 
 ## Active-app examples and actual exports
 
@@ -106,6 +106,8 @@ Published provenance and old migration bytes remain unchanged.
 
 M1–M6 are a coherent feature set for a future minor release. Publication still
 requires a fresh full release-render matrix and exact-release-commit gates; these
-factory exports do not substitute for that matrix. M0 remains unexecuted. Current
+factory exports do not substitute for that matrix. At this acceptance date M0
+remained unexecuted; the later [M0 baseline](ADAPTIVE_BASELINE.md) and
+[v0.6.0 release validation](RELEASE_VALIDATION.md) supersede that release status. Current
 limits, data/asset pack boundaries and retention behavior are documented in the
 [factory guide](../FACTORY_WORKFLOWS.md).

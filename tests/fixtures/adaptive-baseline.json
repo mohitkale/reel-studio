@@ -1,0 +1,436 @@
+{
+  "version": 1,
+  "seed": "m0-frozen-2026-10-20",
+  "cases": [
+    {
+      "id": "m0-01",
+      "presetId": "product-launch",
+      "orientation": "portrait",
+      "density": "sparse",
+      "language": "en",
+      "suppliedMedia": false,
+      "chapters": false,
+      "roles": ["hook", "diagram", "explanation", "summary"],
+      "scenes": [
+        {
+          "templateId": "hf-statement",
+          "text": "One idea. A clear story.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Capture the source, review the evidence, then publish the approved version.",
+          "items": ["Capture", "Review", "Publish"],
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-statement",
+          "text": "Return to Capture and Review before Publish. Keep the supplied labels, facts and order when changing the visual treatment.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "The same three stages: Capture, Review, Publish.",
+          "items": ["Capture", "Review", "Publish"],
+          "emphasis": []
+        }
+      ]
+    },
+    {
+      "id": "m0-02",
+      "presetId": "product-launch",
+      "orientation": "landscape",
+      "density": "dense",
+      "language": "en",
+      "suppliedMedia": true,
+      "chapters": true,
+      "roles": ["hook", "diagram", "explanation", "summary"],
+      "scenes": [
+        {
+          "templateId": "hf-statement",
+          "text": "One idea. A clear story.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Capture the source, review the evidence, then publish the approved version.",
+          "items": ["Capture", "Review", "Publish"],
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-statement",
+          "text": "Return to Capture and Review before Publish. Keep the supplied labels, facts and order when changing the visual treatment. A saved draft remains editable; changing the format must preserve the complete source and the names of all three stages.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "The same three stages: Capture, Review, Publish.",
+          "items": ["Capture", "Review", "Publish"],
+          "emphasis": []
+        }
+      ]
+    },
+    {
+      "id": "m0-03",
+      "presetId": "editorial-explainer",
+      "orientation": "square",
+      "density": "sparse",
+      "language": "en",
+      "suppliedMedia": false,
+      "chapters": false,
+      "roles": ["hook", "diagram", "explanation", "summary"],
+      "scenes": [
+        {
+          "templateId": "hf-statement",
+          "text": "Why does a saved plan matter?",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Inputs, decisions, and outputs form one traceable chain.",
+          "items": ["Inputs", "Decisions", "Outputs"],
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-statement",
+          "text": "Inputs carry the supplied facts. Decisions choose a legal visual. Outputs preserve the same meaning.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Return to Inputs, Decisions, Outputs.",
+          "items": ["Inputs", "Decisions", "Outputs"],
+          "emphasis": []
+        }
+      ]
+    },
+    {
+      "id": "m0-04",
+      "presetId": "editorial-explainer",
+      "orientation": "portrait",
+      "density": "dense",
+      "language": "hi",
+      "suppliedMedia": true,
+      "chapters": false,
+      "roles": ["hook", "diagram", "explanation", "summary"],
+      "scenes": [
+        {
+          "templateId": "hf-statement",
+          "text": "एक स्पष्ट प्रश्न से शुरू करें।",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "स्रोत पढ़ें, अर्थ समझें, फिर निष्कर्ष बताएँ।",
+          "items": ["स्रोत", "अर्थ", "निष्कर्ष"],
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-statement",
+          "text": "किसी दावे को सरल बनाते समय उसका अर्थ न बदलें। मूल स्रोत और उदाहरण साथ रखें। जाँच के बाद उसी प्रश्न पर लौटें।",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "तीन चरण: स्रोत, अर्थ, निष्कर्ष।",
+          "items": ["स्रोत", "अर्थ", "निष्कर्ष"],
+          "emphasis": []
+        }
+      ]
+    },
+    {
+      "id": "m0-05",
+      "presetId": "creator-punch",
+      "orientation": "landscape",
+      "density": "sparse",
+      "language": "hinglish",
+      "suppliedMedia": false,
+      "chapters": false,
+      "roles": ["hook", "diagram", "explanation", "summary"],
+      "scenes": [
+        {
+          "templateId": "hf-statement",
+          "text": "Reel ko readable banao.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Ek hook, teen useful tips, aur clear payoff.",
+          "items": ["Hook", "Tips", "Payoff"],
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-statement",
+          "text": "Hook ko short rakho. Tips ko ek ek karke dikhao. Payoff mein same idea par wapas aao.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Hook, Tips, Payoff.",
+          "items": ["Hook", "Tips", "Payoff"],
+          "emphasis": []
+        }
+      ]
+    },
+    {
+      "id": "m0-06",
+      "presetId": "creator-punch",
+      "orientation": "square",
+      "density": "dense",
+      "language": "en",
+      "suppliedMedia": true,
+      "chapters": false,
+      "roles": ["hook", "diagram", "explanation", "summary"],
+      "scenes": [
+        {
+          "templateId": "hf-statement",
+          "text": "Make captions support the message.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Split at meaning. Keep a safe margin. Allow reading time.",
+          "items": ["Meaning", "Margin", "Time"],
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-statement",
+          "text": "A dense explanation needs more time than a short hook. Keep the original sentence and its evidence intact while arranging the same copy for each canvas.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Return to Meaning, Margin, Time.",
+          "items": ["Meaning", "Margin", "Time"],
+          "emphasis": []
+        }
+      ]
+    },
+    {
+      "id": "m0-07",
+      "presetId": "data-story",
+      "orientation": "portrait",
+      "density": "sparse",
+      "language": "en",
+      "suppliedMedia": false,
+      "chapters": false,
+      "roles": ["hook", "diagram", "chart", "summary"],
+      "scenes": [
+        {
+          "templateId": "hf-statement",
+          "text": "Compare the supplied review audit.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Draft and Reviewed are two measured states.",
+          "items": ["Draft", "Reviewed"],
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-data-chart",
+          "text": "Supplied audit: Draft 18 min; Reviewed 11 min.",
+          "emphasis": [],
+          "chart": {
+            "labels": ["Draft", "Reviewed"],
+            "series": [
+              {
+                "label": "Review time",
+                "values": [18, 11],
+                "unit": " min"
+              }
+            ],
+            "sourceAttribution": "M0 supplied calibration audit"
+          }
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Return to Draft and Reviewed.",
+          "items": ["Draft", "Reviewed"],
+          "emphasis": []
+        }
+      ]
+    },
+    {
+      "id": "m0-08",
+      "presetId": "data-story",
+      "orientation": "landscape",
+      "density": "dense",
+      "language": "en",
+      "suppliedMedia": true,
+      "chapters": false,
+      "roles": ["hook", "diagram", "chart", "summary"],
+      "scenes": [
+        {
+          "templateId": "hf-statement",
+          "text": "Read values before drawing conclusions.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Compare Draft and Reviewed from the supplied audit.",
+          "items": ["Draft", "Reviewed"],
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-data-chart",
+          "text": "Supplied audit: Draft 18 min; Reviewed 11 min. The smaller value describes this fixture only, not a promised improvement for every project.",
+          "emphasis": [],
+          "chart": {
+            "labels": ["Draft", "Reviewed"],
+            "series": [
+              {
+                "label": "Review time",
+                "values": [18, 11],
+                "unit": " min"
+              }
+            ],
+            "sourceAttribution": "M0 supplied calibration audit"
+          }
+        },
+        {
+          "templateId": "hf-list",
+          "text": "The same audit: Draft and Reviewed.",
+          "items": ["Draft", "Reviewed"],
+          "emphasis": []
+        }
+      ]
+    },
+    {
+      "id": "m0-09",
+      "presetId": "developer-demo",
+      "orientation": "square",
+      "density": "sparse",
+      "language": "en",
+      "suppliedMedia": false,
+      "chapters": false,
+      "roles": ["hook", "diagram", "explanation", "summary"],
+      "scenes": [
+        {
+          "templateId": "hf-statement",
+          "text": "A local build has three visible stages.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Validate inputs, compile the project, verify the export.",
+          "items": ["Validate", "Compile", "Verify"],
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-statement",
+          "text": "Validate checks the source contract. Compile prepares local assets. Verify checks duration, frames and dimensions.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Return to Validate, Compile, Verify.",
+          "items": ["Validate", "Compile", "Verify"],
+          "emphasis": []
+        }
+      ]
+    },
+    {
+      "id": "m0-10",
+      "presetId": "developer-demo",
+      "orientation": "portrait",
+      "density": "dense",
+      "language": "hinglish",
+      "suppliedMedia": true,
+      "chapters": true,
+      "roles": ["hook", "diagram", "explanation", "summary"],
+      "scenes": [
+        {
+          "templateId": "hf-statement",
+          "text": "Local workflow ko trace karo.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Pehle Validate, phir Compile, phir Verify.",
+          "items": ["Validate", "Compile", "Verify"],
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-statement",
+          "text": "Validate mein source check karo. Compile mein local assets prepare karo. Verify mein output frames, duration aur canvas ko inspect karo.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Recap: Validate, Compile, Verify.",
+          "items": ["Validate", "Compile", "Verify"],
+          "emphasis": []
+        }
+      ]
+    },
+    {
+      "id": "m0-11",
+      "presetId": "cinematic-brand",
+      "orientation": "landscape",
+      "density": "sparse",
+      "language": "en",
+      "suppliedMedia": false,
+      "chapters": false,
+      "roles": ["hook", "diagram", "explanation", "summary"],
+      "scenes": [
+        {
+          "templateId": "hf-statement",
+          "text": "Craft starts with a clear intention.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Shape the story. Refine the detail. Keep the promise.",
+          "items": ["Story", "Detail", "Promise"],
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-statement",
+          "text": "Return to the same intention through Story, Detail and Promise.",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "Story. Detail. Promise.",
+          "items": ["Story", "Detail", "Promise"],
+          "emphasis": []
+        }
+      ]
+    },
+    {
+      "id": "m0-12",
+      "presetId": "cinematic-brand",
+      "orientation": "square",
+      "density": "dense",
+      "language": "hi",
+      "suppliedMedia": true,
+      "chapters": false,
+      "roles": ["hook", "diagram", "explanation", "summary"],
+      "scenes": [
+        {
+          "templateId": "hf-statement",
+          "text": "कहानी में एक स्पष्ट उद्देश्य रखें।",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "कहानी बनाएँ, विवरण सँवारें, वादा निभाएँ।",
+          "items": ["कहानी", "विवरण", "वादा"],
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-statement",
+          "text": "दृश्य बदलने पर भी कहानी का उद्देश्य न बदलें। विवरण को पढ़ने का समय दें। अंत में उसी विचार और उन्हीं नामों पर लौटें।",
+          "emphasis": []
+        },
+        {
+          "templateId": "hf-list",
+          "text": "कहानी, विवरण, वादा।",
+          "items": ["कहानी", "विवरण", "वादा"],
+          "emphasis": []
+        }
+      ]
+    }
+  ]
+}

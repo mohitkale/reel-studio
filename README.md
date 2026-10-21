@@ -61,8 +61,8 @@ The launcher runs both the app and its production worker. `npm run doctor`
 checks your runtime; `npm run sample:export` creates a bundled local example.
 Kokoro downloads and caches model weights on first synthesis if needed.
 
-**Upgrading?** [v0.5.0 upgrade notes](docs/RELEASE_0.5.0.md) cover backups,
-migrations, preserved media, and the move to HyperFrames-only rendering.
+**Upgrading?** [v0.6.0 upgrade notes](docs/RELEASE_0.6.0.md) cover backups,
+migrations, preserved media, and rollback.
 
 ## Choose a look
 
@@ -126,6 +126,6 @@ Built by **[Mohit Kale](https://github.com/mohitkale)** with
   Read [SECURITY.md](SECURITY.md).
 - App code is **MIT**; HyperFrames is **Apache-2.0**.
 - The speech phonemizer includes a **GPL-3.0-or-later** engine. Its matching
-  source archive and notices accompany [v0.5.0](https://github.com/mohitkale/reel-studio/releases/tag/v0.5.0).
+  source archive and notices accompany [v0.6.0](https://github.com/mohitkale/reel-studio/releases/tag/v0.6.0).
 - GSAP, fonts, model weights, providers, and media retain their own terms.
   See the complete [licensing inventory](docs/LICENSING.md).

@@ -6,6 +6,32 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+## 0.6.0
+
+### Added
+
+- Six adaptive recipes with density/aspect/timing resolution, persisted film-plan
+  checkpoints, bounded sequence direction and recurring subject identity.
+- Contact sheets, draft animatics, scoped variations with guarded undo, and
+  optional local readiness diagnostics in the creation workflow.
+- Explicit chapter goals, examples and recap callbacks for lessons up to ten
+  minutes; normal and chaptered video retain their existing duration limits.
+- Versioned series profiles, resumable factory batches, frozen aspect/cutdown
+  revisions with lineage, and pinned bundled data/asset packs.
+- Retrospective M0 corpus: twelve paired v0.5.0/current films, capability inventory,
+  review rubric, output checksums and decoded comparisons. Human preference
+  targets remain unmeasured.
+
+### Fixed
+
+- Data Story's native chart fallback preserves a supplied background image
+  together with source copy, chart values and attribution in all three formats.
+
+### Upgrade
+
+- One additive factory-workflow migration; no dependency or model changes.
+  See [upgrade and rollback](docs/RELEASE_0.6.0.md).
+
 ## 0.5.0
 
 ### Fixed
