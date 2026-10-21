@@ -44,6 +44,11 @@ inputs and the same pinned producer/CLI. This ordering is explicit in the
   React's test boundary and restores that setup afterward. Ten independent focused
   runs and the full 985-test suite passed; idempotency/review assertions and runtime bytes are unchanged.
   The updated head requires the complete platform suite and build again.
+- Replacement Windows CI passed the corrected factory test but exceeded the
+  default five-second deadline in the SQLite direction-workflow integration.
+  That fixture now uses the existing 30-second Windows integration budget;
+  non-Windows limits and all assertions remain unchanged. The latest head must
+  pass the complete platform suite and build before merge.
 - The unchanged phonemizer passed fresh compatibility and distribution gates;
   its matching complete corresponding-source archive accompanies the release.
 

@@ -9,7 +9,7 @@
     "capturedSourceCommit": "f1eb174b7604f1e31aa1dc3d4cd8f15e1cda246d",
     "runtimeSourceContentSha256": "40dda2f25eaca05f35362264085cd148bedb69e3fa9f074191a5361d26f6cc22",
     "runtimeSourceScope": "Ordered tracked src, public/reel-runtime and renderer worker files excluding .test/.spec source files",
-    "note": "Full source digest captures the validated export snapshot; the only later src change corrects a component test fixture. Runtime bytes remain identical."
+    "note": "Full source digest captures the validated export snapshot; later src changes correct only component-test readiness and a Windows-only integration-test budget. Runtime bytes remain identical."
   },
   "unitSuite": {
     "files": 200,
@@ -541,5 +541,15 @@
     "failedQualityRun": 39577245413,
     "independentFocusedRuns": 10,
     "fullLocalSuiteAfterCorrectionPassed": true
+  },
+  "windowsIntegrationBudget": {
+    "file": "src/library/direction-workflow.test.ts",
+    "failedQualityRun": 39578815961,
+    "passedOtherTests": 984,
+    "priorTimeoutMs": 5000,
+    "windowsTimeoutMs": 30000,
+    "otherPlatformsTimeoutMs": 5000,
+    "assertionsUnchanged": true,
+    "reason": "Fifteen SQLite migrations, cold service imports and database reconnect exceeded the default five-second deadline on Windows."
   }
 }
