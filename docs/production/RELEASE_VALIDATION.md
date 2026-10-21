@@ -49,6 +49,11 @@ inputs and the same pinned producer/CLI. This ordering is explicit in the
   That fixture now uses the existing 30-second Windows integration budget;
   non-Windows limits and all assertions remain unchanged. The latest head must
   pass the complete platform suite and build before merge.
+- Merged-main Windows then hit SQLite fixture timeouts on its first attempt and
+  unchanged-commit retry. A focused follow-up seeds the same fifty polling-test
+  scripts in one transaction and uses one Windows test worker to reduce fixture
+  I/O/contention. Linux retains two workers. All tests, assertions, deadlines,
+  platform jobs and release checks remain required; runtime bytes are unchanged.
 - The unchanged phonemizer passed fresh compatibility and distribution gates;
   its matching complete corresponding-source archive accompanies the release.
 
