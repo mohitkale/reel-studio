@@ -54,6 +54,11 @@ inputs and the same pinned producer/CLI. This ordering is explicit in the
   scripts in one transaction and uses one Windows test worker to reduce fixture
   I/O/contention. Linux retains two workers. All tests, assertions, deadlines,
   platform jobs and release checks remain required; runtime bytes are unchanged.
+- The next merged-main run still exceeded the polling setup deadline while
+  creating the empty schema. The fixture now applies the same fifteen migrations
+  in memory and copies the schema to disk once with SQLite backup. All 112 schema
+  entries match the direct on-disk migration result; integrity/foreign-key checks
+  and all three real on-disk polling/locking tests pass. Deadlines are unchanged.
 - The unchanged phonemizer passed fresh compatibility and distribution gates;
   its matching complete corresponding-source archive accompanies the release.
 
