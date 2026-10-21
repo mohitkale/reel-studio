@@ -3,7 +3,7 @@ import {
   productionJobViewWithRevision,
   productionJobViewsWithRevisions,
 } from "./production-job-view";
-import { DatabaseSync } from "node:sqlite";
+import { backup, DatabaseSync } from "node:sqlite";
 import { spawn, type ChildProcess } from "node:child_process";
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
@@ -36,13 +36,20 @@ let previous: string | undefined;
 beforeEach(async () => {
   dir = mkdtempSync(path.join(tmpdir(), "reel-sqlite-polling-"));
   filename = path.join(dir, "test.db");
-  const sqlite = new DatabaseSync(filename);
-  for (const migration of readdirSync("prisma/migrations").sort())
-    if (!migration.endsWith(".toml"))
-      sqlite.exec(
-        readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),
-      );
-  sqlite.close();
+  // These tests exercise real on-disk polling/locking, not migration I/O.
+  // Build the identical schema in memory, then copy it to disk once so every
+  // CREATE/ALTER statement does not require its own Windows disk sync.
+  const sqlite = new DatabaseSync(":memory:");
+  try {
+    for (const migration of readdirSync("prisma/migrations").sort())
+      if (!migration.endsWith(".toml"))
+        sqlite.exec(
+          readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),
+        );
+    await backup(sqlite, filename);
+  } finally {
+    sqlite.close();
+  }
   previous = process.env.DATABASE_URL;
   process.env.DATABASE_URL = `file:${filename}`;
   state.db = createPrismaClient({ onQuery: (sql) => state.queries.push(sql) });

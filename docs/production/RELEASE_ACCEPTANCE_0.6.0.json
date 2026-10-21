@@ -470,7 +470,7 @@
     "checkedOn": "2026-10-21",
     "productionBuildRestarted": true,
     "scriptId": "cmvgf4agq001lu19kj12d1igp",
-    "visibleName": "M0 · m0-08 · current · en dense",
+    "visibleName": "M0 \u00b7 m0-08 \u00b7 current \u00b7 en dense",
     "preview": {
       "suppliedImageVisible": true,
       "chartValues": [18, 11],
@@ -564,6 +564,22 @@
       "files": 200,
       "tests": 985,
       "maxWorkers": 1,
+      "passed": true
+    },
+    "followupMergedMainCommit": "b164ee328a2c614b4d35ff3a8e1405aac6fb8be3",
+    "followupFailedQualityRun": 39649677238,
+    "followupFailure": "The first polling beforeEach still exceeded 10000 ms while constructing the empty schema; 984 other tests passed.",
+    "schemaFixtureChange": "Apply all fifteen unchanged migrations in memory and use the SQLite backup API to copy the identical schema to the real disk fixture once. Polling, locking, busy-timeout assertions and all deadlines remain unchanged.",
+    "schemaParity": {
+      "migrations": 15,
+      "schemaEntries": 112,
+      "schemaSha256": "c2f956e398fe9c4b10a7151c6b5c3eae1989dd289d3ae478ad1dad1fc260cf8d",
+      "identicalToDiskMigrations": true,
+      "integrityCheck": true,
+      "foreignKeyCheck": true
+    },
+    "focusedTestsAfterSchemaChange": {
+      "tests": 3,
       "passed": true
     }
   }
