@@ -15,6 +15,44 @@ import {
 import { ORIENTATIONS, dimsFor } from "@/lib/orientation";
 
 describe("buildHyperframesCompositionHtml", () => {
+  it.each(ORIENTATIONS)(
+    "retains supplied chart media and values in the %s preset fallback",
+    (orientation) => {
+      const html = buildHyperframesCompositionHtml({
+        preset: { id: "data-story", version: "1.0.0" },
+        scenes: [
+          {
+            id: "audit",
+            templateId: "hf-data-chart",
+            role: "chart",
+            text: "Draft 18 min; Reviewed 11 min.",
+            emphasis: [],
+            background: { type: "image", url: "/media/audit.png" },
+            chart: {
+              labels: ["Draft", "Reviewed"],
+              series: [{ label: "Review time", values: [18, 11], unit: " min" }],
+              sourceAttribution: "Supplied audit",
+            },
+          },
+        ],
+        timeline: [{ sceneId: "audit", startFrame: 0, durationFrames: 180 }],
+        ...dimsFor(orientation),
+        fps: 30,
+        tokens: defaultBrandTokens,
+      });
+      const document = new DOMParser().parseFromString(html, "text/html");
+      const scene = document.querySelector('[data-scene-id="audit"]')!;
+      expect(scene.querySelector(".bg-photo")?.getAttribute("style")).toContain(
+        "/media/audit.png",
+      );
+      expect(scene.classList.contains("has-photo")).toBe(true);
+      expect(scene.querySelector(".ds-bars")?.textContent).toContain("18 min");
+      expect(scene.querySelector(".ds-bars")?.textContent).toContain("11 min");
+      expect(scene.querySelector(".ds-source")?.textContent).toContain(
+        "Supplied audit",
+      );
+    },
+  );
   it("emits a HyperFrames root with scene clips and seek API", () => {
     const html = buildHyperframesCompositionHtml({
       scenes: [

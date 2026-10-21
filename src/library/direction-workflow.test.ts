@@ -17,6 +17,10 @@ afterEach(async () => {
   vi.resetModules();
 });
 
+// This fixture applies all migrations and cold-loads services across two SQLite
+// connections. Match the existing Windows integration budget; keep other limits.
+const workflowTimeoutMs = process.platform === "win32" ? 30_000 : 5_000;
+
 it("persists scoped review/apply/undo across a fresh database connection and protects later edits", async () => {
   const directory = mkdtempSync(path.join(tmpdir(), "reel-m4-"));
   const filename = path.join(directory, "test.db");
@@ -118,4 +122,4 @@ it("persists scoped review/apply/undo across a fresh database connection and pro
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-});
+}, workflowTimeoutMs);

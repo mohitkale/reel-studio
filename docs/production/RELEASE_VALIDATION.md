@@ -1,6 +1,72 @@
 # Release validation
 
-## v0.5.0 release candidate — 2026-10-15
+## v0.6.0 release candidate — 2026-10-21
+
+M1–M6 were delivered through merged PRs #48–53. M0 was subsequently executed
+retrospectively against actual published v0.5.0 source, with identical frozen
+inputs and the same pinned producer/CLI. This ordering is explicit in the
+[baseline record](ADAPTIVE_BASELINE.md).
+
+- Full local suite: **200 files / 985 tests**. Typecheck, lint, secret scan,
+  component compatibility and release contracts passed.
+- Fresh matrix: **18 H.264 exports**, six presets × three canvases,
+  **199.5 seconds** total, rendered in **616.4 seconds** on the reference Mac.
+  All eighteen decoded frames were inspected; these visual fixtures are silent.
+  [Portrait](../assets/release-0.6.0/matrix-portrait.jpg),
+  [landscape](../assets/release-0.6.0/matrix-landscape.jpg), and
+  [square](../assets/release-0.6.0/matrix-square.jpg) show presets in catalog order.
+- M0: **24 accepted MP4s / 96 decoded scene frames**, twelve paired films.
+  Current dense media layouts preserve complete source copy. A Data Story native
+  chart fallback omitted supplied images; the scoped fix, three orientation
+  regressions and regenerated output preserve image, values and attribution.
+- Fresh recovery: **210 seconds / 5,040 frames** at 24 FPS. An intentional
+  interruption retained committed work; retry reused all seven sections. Final
+  MP4 and decoded audio hashes match, with zero relative RMS error. These are
+  labeled calibration signals; actual cached speech is checked separately.
+- Fresh cached Kokoro speech: two voices, reusable turns, selective regeneration,
+  legacy MP3 repair, WAV/MP3 and a completed audiogram. Native-channel float PCM
+  decoding is nonzero, finite and unclipped. Remote model loading was disabled.
+- Fresh production-build browser checks cover full-reel playback to the end,
+  forward/reverse seek, chart/image/source parity, normal durable editor export,
+  and a checksum-matching browser download: **18 seconds / 540 frames**, H.264
+  at 1920×1080. The [preview capture](../assets/release-0.6.0/chart-preview.png)
+  matches the inspected exported chart frame; no browser console errors occurred.
+- Published v0.3.0/v0.4.0 populated upgrades, backup restoration and isolated
+  fresh setup passed with fifteen migrations. Published v0.5.0's schema and
+  fourteen historical migration hashes match v0.4.0 exactly. Only the additive
+  factory-workflow migration is new; dependency pins are unchanged.
+- All pre-M0 **48 projects, 48 scripts, 393 scenes, two brand kits, 42 takes
+  and 64 renders** match the consistent pre-change backup. M0 comparison
+  projects and verified exports remain available in the active app.
+- Initial release PR Linux CI passed 984 tests but exposed a race in the factory
+  component test: its readiness text also matched an always-present label. The
+  test now waits for the fetched master option, commits query notifications through
+  React's test boundary and restores that setup afterward. Ten independent focused
+  runs and the full 985-test suite passed; idempotency/review assertions and runtime bytes are unchanged.
+  The updated head requires the complete platform suite and build again.
+- Replacement Windows CI passed the corrected factory test but exceeded the
+  default five-second deadline in the SQLite direction-workflow integration.
+  That fixture now uses the existing 30-second Windows integration budget;
+  non-Windows limits and all assertions remain unchanged. The latest head must
+  pass the complete platform suite and build before merge.
+- The unchanged phonemizer passed fresh compatibility and distribution gates;
+  its matching complete corresponding-source archive accompanies the release.
+
+[Integrated local acceptance](RELEASE_ACCEPTANCE_0.6.0.json),
+[fresh matrix](RELEASE_MATRIX_0.6.0.json),
+[M0 checksummed comparisons](ADAPTIVE_M0_BASELINE.json), and
+[upgrade/rollback](../RELEASE_0.6.0.md).
+The published validation asset identifies the final commit/tree and successful
+latest-head PR and merged-main Quality/Security runs, including Linux/Windows
+clean installs, full suites, process cancellation and production builds.
+No tag is published before those exact-commit gates pass.
+
+Human repair-free/blind-preference targets remain unmeasured. Hindi visual
+samples use host font fallback; portable Devanagari coverage and Hindi speech
+quality are not certified. No paid calls, new models or cloud renders were used.
+Workstation timings are observations, not universal performance guarantees.
+
+## Historical v0.5.0 release acceptance — 2026-10-15
 
 Release preparation follows merged [PR #46](https://github.com/mohitkale/reel-studio/pull/46)
 on `main` commit `2488c36784bea7713c2a0aed23f9488db8a473eb`.
