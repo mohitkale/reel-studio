@@ -38,6 +38,12 @@ inputs and the same pinned producer/CLI. This ordering is explicit in the
 - All pre-M0 **48 projects, 48 scripts, 393 scenes, two brand kits, 42 takes
   and 64 renders** match the consistent pre-change backup. M0 comparison
   projects and verified exports remain available in the active app.
+- Initial release PR Linux CI passed 984 tests but exposed a race in the factory
+  component test: its readiness text also matched an always-present label. The
+  test now waits for the fetched master option, commits query notifications through
+  React's test boundary and restores that setup afterward. Ten independent focused
+  runs and the full 985-test suite passed; idempotency/review assertions and runtime bytes are unchanged.
+  The updated head requires the complete platform suite and build again.
 - The unchanged phonemizer passed fresh compatibility and distribution gates;
   its matching complete corresponding-source archive accompanies the release.
 

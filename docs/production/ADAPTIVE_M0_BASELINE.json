@@ -12,7 +12,10 @@
     "mediaSha256": "974bbaef841594e986cfd89042078b6a9b9cbc6e94113988cc1f3304da9da12d",
     "runnerSha256": "98d1deac0127566fa2bcc7c8237fbe598d607cd46547d191768813d97a91ad93",
     "dependenciesUnchanged": true,
-    "historicalTagObject": "50e5104e064628f66a5a1751adecf74493fd7e4b"
+    "historicalTagObject": "50e5104e064628f66a5a1751adecf74493fd7e4b",
+    "capturedSourceCommit": "f1eb174b7604f1e31aa1dc3d4cd8f15e1cda246d",
+    "runtimeSourceContentSha256": "40dda2f25eaca05f35362264085cd148bedb69e3fa9f074191a5361d26f6cc22",
+    "runtimeSourceScope": "Ordered tracked src, public/reel-runtime and renderer worker files excluding .test/.spec source files"
   },
   "reference": {
     "platform": "darwin",

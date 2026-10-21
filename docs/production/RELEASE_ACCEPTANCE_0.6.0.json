@@ -5,7 +5,11 @@
   "applicationSource": {
     "baseCommit": "abe5e1153bacf34ad906b37a0344061a3eb5f403",
     "contentSha256": "61d4830c666e4d71feb203930f911563dfe44258cca8579d8f804dde245a3622",
-    "method": "SHA256 of ordered tracked src/public runtime/worker file paths and individual SHA256 digests; includes the M0 chart/image fix. Final commit/tree are recorded by the publication asset."
+    "method": "SHA256 of ordered tracked src/public runtime/worker file paths and individual SHA256 digests; includes the M0 chart/image fix. Final commit/tree are recorded by the publication asset.",
+    "capturedSourceCommit": "f1eb174b7604f1e31aa1dc3d4cd8f15e1cda246d",
+    "runtimeSourceContentSha256": "40dda2f25eaca05f35362264085cd148bedb69e3fa9f074191a5361d26f6cc22",
+    "runtimeSourceScope": "Ordered tracked src, public/reel-runtime and renderer worker files excluding .test/.spec source files",
+    "note": "Full source digest captures the validated export snapshot; the only later src change corrects a component test fixture. Runtime bytes remain identical."
   },
   "unitSuite": {
     "files": 200,
@@ -466,7 +470,7 @@
     "checkedOn": "2026-10-21",
     "productionBuildRestarted": true,
     "scriptId": "cmvgf4agq001lu19kj12d1igp",
-    "visibleName": "M0 · m0-08 · current · en dense",
+    "visibleName": "M0 \u00b7 m0-08 \u00b7 current \u00b7 en dense",
     "preview": {
       "suppliedImageVisible": true,
       "chartValues": [18, 11],
@@ -529,5 +533,13 @@
     "Human repair-free and blind preference targets remain unmeasured.",
     "No new live acceptance is claimed for unconfigured paid providers."
   ],
-  "publicationGate": "Latest-head release PR and exact merged-main Quality/Security, including Linux/Windows clean installs, suites, builds and process cancellation, must pass before tagging. Published validation records final commit, tree and run IDs."
+  "publicationGate": "Latest-head release PR and exact merged-main Quality/Security, including Linux/Windows clean installs, suites, builds and process cancellation, must pass before tagging. Published validation records final commit, tree and run IDs.",
+  "testHarnessCorrection": {
+    "file": "src/components/production/factory-panel.test.tsx",
+    "reason": "Wait for fetched master option rather than the always-present label; flush query notifications in React act and restore test globals",
+    "assertionsUnchanged": true,
+    "failedQualityRun": 39577245413,
+    "independentFocusedRuns": 10,
+    "fullLocalSuiteAfterCorrectionPassed": true
+  }
 }

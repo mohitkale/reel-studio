@@ -1,6 +1,10 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  notifyManager,
+} from "@tanstack/react-query";
 import { expect, it, vi } from "vitest";
 import { filmSnapshot } from "../../../tests/fixtures/film-plan";
 const mocks = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
@@ -11,7 +15,14 @@ vi.mock("@/lib/api-client", () => ({
   apiDelete: vi.fn(),
 }));
 import { FactoryPanel } from "./factory-panel";
+
 it("retains a run key after a lost response and requires review by default", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  // Query notifications must commit through act before DOM assertions. Do not
+  // hold one act scope open while polling for the update it is batching.
+  notifyManager.setNotifyFunction((callback) => {
+    act(callback);
+  });
   mocks.get.mockImplementation(async (url: string) =>
     url === "/api/factory"
       ? {
@@ -51,11 +62,12 @@ it("retains a run key after a lost response and requires review by default", asy
         </QueryClientProvider>,
       ),
     );
-    await act(async () => {
-      await vi.waitFor(() =>
-        expect(container.textContent).toContain("Saved master"),
-      );
-    });
+    // The label exists before the query resolves; wait for the actual option.
+    await vi.waitFor(() =>
+      expect(
+        container.querySelector('option[value="master"]')?.textContent,
+      ).toContain("Saved master"),
+    );
     await act(async () => {
       const select = container.querySelector<HTMLSelectElement>(
         '[aria-label="Factory master"]',
@@ -63,19 +75,13 @@ it("retains a run key after a lost response and requires review by default", asy
       select.value = "master";
       select.dispatchEvent(new Event("change", { bubbles: true }));
     });
-    await act(async () => {
-      await vi.waitFor(() => expect(button().disabled).toBe(false));
-    });
+    await vi.waitFor(() => expect(button().disabled).toBe(false));
     await act(async () => button().click());
-    await act(async () => {
-      await vi.waitFor(() =>
-        expect(container.textContent).toContain("Response lost"),
-      );
-    });
+    await vi.waitFor(() =>
+      expect(container.textContent).toContain("Response lost"),
+    );
     await act(async () => button().click());
-    await act(async () => {
-      await vi.waitFor(() => expect(mocks.post).toHaveBeenCalledTimes(2));
-    });
+    await vi.waitFor(() => expect(mocks.post).toHaveBeenCalledTimes(2));
     const first = mocks.post.mock.calls[0][1],
       second = mocks.post.mock.calls[1][1];
     expect(second.idempotencyKey).toBe(first.idempotencyKey);
@@ -85,5 +91,7 @@ it("retains a run key after a lost response and requires review by default", asy
     await act(async () => root.unmount());
     client.clear();
     container.remove();
+    notifyManager.setNotifyFunction((callback) => callback());
+    vi.unstubAllGlobals();
   }
 });
