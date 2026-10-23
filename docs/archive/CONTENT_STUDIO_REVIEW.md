@@ -70,3 +70,6 @@ asset. No new dependencies or provider/model downloads are required.
 
 No paid generation, new model downloads, microphone permission, release or merge
 is part of this review fixture.
+
+Synthetic UI evidence: [voiceover workspace](../assets/content-studio-voiceover.png)
+and [phone editor](../assets/content-studio-mobile.png).
