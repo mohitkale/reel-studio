@@ -1,4 +1,5 @@
 "use client";
+import { SpeechPresets } from "@/components/studio/speech-presets";
 
 import * as React from "react";
 import { Loader2, Music2, Plus, Trash2, Upload } from "lucide-react";
@@ -87,6 +88,15 @@ export function PodcastFinishingControls({ podcast }: { podcast: PodcastDTO }) {
         </p>
       </div>
 
+      <SpeechPresets
+        pronunciations={rules}
+        onApply={(preset) => {
+          setRules(preset.pronunciations);
+          toast.info(
+            "Rules loaded; save pronunciation rules to apply them to this episode.",
+          );
+        }}
+      />
       <div className="grid gap-3 md:grid-cols-2">
         {(
           [

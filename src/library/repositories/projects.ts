@@ -1,4 +1,8 @@
-import { parseJsonColumn, brandOverridesSchema } from "@/library/schemas";
+import {
+  parseJsonColumn,
+  brandOverridesSchema,
+  sceneConfigSchema,
+} from "@/library/schemas";
 import { collectSequenceSubjects } from "@/production/sequence-subjects";
 import { randomUUID } from "node:crypto";
 
@@ -58,7 +62,14 @@ export async function listProjects(): Promise<ProjectDTO[]> {
     include: {
       scripts: {
         orderBy: { createdAt: "asc" },
-        include: { _count: { select: { scenes: true } } },
+        include: {
+          _count: { select: { scenes: true, takes: true } },
+          scenes: {
+            take: 1,
+            orderBy: { order: "asc" },
+            select: { text: true, layoutJson: true },
+          },
+        },
       },
     },
   });
@@ -66,6 +77,23 @@ export async function listProjects(): Promise<ProjectDTO[]> {
   return projects.map((p) => ({
     id: p.id,
     name: p.name,
+    archivedAt: p.archivedAt?.toISOString() ?? null,
+    series: p.series,
+    outputType:
+      parseJsonColumn(p.scripts[0]?.brandOverrides, brandOverridesSchema, {})
+        .creationOutputType ?? "video",
+    thumbnailUrl:
+      p.scripts[0]?.coverUrl ??
+      (() => {
+        const background = parseJsonColumn(
+          p.scripts[0]?.scenes[0]?.layoutJson,
+          sceneConfigSchema,
+          {},
+        ).background;
+        return background?.type === "image" ? background.url : null;
+      })(),
+    openingText: p.scripts[0]?.scenes[0]?.text.slice(0, 160) ?? "",
+    status: p.scripts.some((s) => s._count.takes > 0) ? "ready" : "draft",
     createdAt: p.createdAt.toISOString(),
     scriptCount: p.scripts.length,
     sceneCount: p.scripts.reduce((sum, s) => sum + s._count.scenes, 0),
@@ -97,7 +125,16 @@ export async function createProject(
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  await prisma.project.delete({ where: { id } });
+  await prisma.$transaction(async (tx) => {
+    const scripts = await tx.script.findMany({
+      where: { projectId: id },
+      select: { id: true },
+    });
+    await tx.sceneEdit.deleteMany({
+      where: { scriptId: { in: scripts.map((script) => script.id) } },
+    });
+    await tx.project.delete({ where: { id } });
+  });
 }
 
 export async function assignBrandKit(
@@ -178,17 +215,22 @@ export async function createProjectFromPlan(
   const defaultKit = await getDefaultBrandKit();
   // Automatic themes replace only the untouched starter palette. A selected
   // or customized brand remains authoritative, including on later kit changes.
-  const starterKit = !defaultKit || (
-    defaultKit.name === CORAL_HARBOR_NAME &&
-    (!defaultKit.handle || defaultKit.handle === "@yourbrand") &&
-    (!defaultKit.fonts || defaultKit.fonts === "{}") &&
-    Object.entries(CORAL_HARBOR_PALETTE).every(([key, value]) =>
-      resolveBrandTokens(defaultKit)[key as keyof typeof CORAL_HARBOR_PALETTE] === value,
-    )
-  );
+  const starterKit =
+    !defaultKit ||
+    (defaultKit.name === CORAL_HARBOR_NAME &&
+      (!defaultKit.handle || defaultKit.handle === "@yourbrand") &&
+      (!defaultKit.fonts || defaultKit.fonts === "{}") &&
+      Object.entries(CORAL_HARBOR_PALETTE).every(
+        ([key, value]) =>
+          resolveBrandTokens(defaultKit)[
+            key as keyof typeof CORAL_HARBOR_PALETTE
+          ] === value,
+      ));
   const brandKitId =
     production?.brandKitId === undefined
-      ? (production?.visualTheme && starterKit ? null : (defaultKit?.id ?? null))
+      ? production?.visualTheme && starterKit
+        ? null
+        : (defaultKit?.id ?? null)
       : production.brandKitId;
   const styleId = visualStyle?.styleId ?? plan.styleId ?? DEFAULT_STYLE_ID;
   const energy = visualStyle?.energy ?? plan.energy ?? DEFAULT_ENERGY_ID;
@@ -197,22 +239,41 @@ export async function createProjectFromPlan(
     (production?.preset && !production.motions
       ? {
           version: "1.0.0",
-          seed: sourcePlanSeed(JSON.stringify({ preset: production.preset, scenes: plan.scenes })),
+          seed: sourcePlanSeed(
+            JSON.stringify({ preset: production.preset, scenes: plan.scenes }),
+          ),
           ambition: production.visualAmbition ?? "expressive",
-          system: defaultMotionSystem(production.visualTheme?.id, production.preset.id),
+          system: defaultMotionSystem(
+            production.visualTheme?.id,
+            production.preset.id,
+          ),
           adaptiveRecipes: true,
           sequenceDirection: true,
         }
       : undefined);
-  if(motionPlan?.sequenceDirection && !production?.motions)
-    motionPlan.subjectRegistry=collectSequenceSubjects(directedScenes,motionPlan.subjectRegistry);
+  if (motionPlan?.sequenceDirection && !production?.motions)
+    motionPlan.subjectRegistry = collectSequenceSubjects(
+      directedScenes,
+      motionPlan.subjectRegistry,
+    );
   const motions =
     production?.motions ??
     (motionPlan
       ? planMotionSequence(
           directedScenes.map((scene, order) => ({
             role: production?.roles?.[order],
-            layout: {width,height,duration:Math.max(3,Math.min(120,(scene.spokenText??scene.text).split(/\s+/).length/2.5+1))},
+            layout: {
+              width,
+              height,
+              duration: Math.max(
+                3,
+                Math.min(
+                  120,
+                  (scene.spokenText ?? scene.text).split(/\s+/).length / 2.5 +
+                    1,
+                ),
+              ),
+            },
             energy,
             text: scene.text,
             spokenText: scene.spokenText,
@@ -238,7 +299,9 @@ export async function createProjectFromPlan(
           width,
           height,
           brandOverrides: JSON.stringify({
-            ...(production?.visualTheme ? { visualTheme: production.visualTheme } : {}),
+            ...(production?.visualTheme
+              ? { visualTheme: production.visualTheme }
+              : {}),
             styleId,
             energy,
             ...(motionPlan ? { motionPlan } : {}),
@@ -347,6 +410,22 @@ export async function ensureSampleSeed(): Promise<void> {
           },
         },
       },
+    },
+  });
+}
+
+export async function organizeProject(
+  id: string,
+  data: { archived?: boolean; series?: string; name?: string },
+) {
+  await prisma.project.update({
+    where: { id },
+    data: {
+      ...(data.archived !== undefined
+        ? { archivedAt: data.archived ? new Date() : null }
+        : {}),
+      ...(data.series !== undefined ? { series: data.series } : {}),
+      ...(data.name !== undefined ? { name: data.name } : {}),
     },
   });
 }

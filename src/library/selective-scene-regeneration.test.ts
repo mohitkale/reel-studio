@@ -121,80 +121,90 @@ describe("selective scene regeneration", () => {
     expect(config.items).toEqual(generated.items);
   });
 
-  it("keeps the selected voice clip and uploaded asset references in the database", async () => {
-    const directory = mkdtempSync(path.join(tmpdir(), "reel-selective-ai-"));
-    const filename = path.join(directory, "selective.db");
-    const sqlite = new DatabaseSync(filename);
-    sqlite.exec(
-      readFileSync(
-        "prisma/migrations/20260910000100_baseline/migration.sql",
-        "utf8",
-      ),
-    );
-    sqlite.close();
-    const previous = process.env.DATABASE_URL;
-    process.env.DATABASE_URL = `file:${filename}`;
-    const client = createPrismaClient();
-    try {
-      const project = await client.project.create({
-        data: { name: "Selective AI" },
-      });
-      const script = await client.script.create({
-        data: { projectId: project.id, name: "Keep valid work" },
-      });
-      const storedScene = await client.scene.create({
-        data: {
-          scriptId: script.id,
-          order: 0,
-          templateId: "kinetic",
-          text: "Original display copy",
-          spokenText: "Original narration",
-          assetRefs: JSON.stringify(["asset-1"]),
-        },
-      });
-      const clip = await client.sceneVoiceClip.create({
-        data: {
-          scriptId: script.id,
-          sceneId: storedScene.id,
-          providerId: "kokoro",
-          voiceId: "af_heart",
-          text: "Original narration",
-          textHash: "unchanged-hash",
-          audioPath: "voice/clip.wav",
-          durationFrames: 90,
-        },
-      });
-      await client.scene.update({
-        where: { id: storedScene.id },
-        data: { selectedVoiceClipId: clip.id },
-      });
-
-      await client.scene.update({
-        where: { id: storedScene.id },
-        data: mergeGeneratedScene(
-          scene({
-            id: storedScene.id,
-            scriptId: script.id,
-            selectedVoiceClipId: clip.id,
-          }),
-          generated,
+  it(
+    "keeps the selected voice clip and uploaded asset references in the database",
+    async () => {
+      const directory = mkdtempSync(path.join(tmpdir(), "reel-selective-ai-"));
+      const filename = path.join(directory, "selective.db");
+      const sqlite = new DatabaseSync(filename);
+      sqlite.exec(
+        readFileSync(
+          "prisma/migrations/20260910000100_baseline/migration.sql",
+          "utf8",
         ),
-      });
-      const updated = await client.scene.findUniqueOrThrow({
-        where: { id: storedScene.id },
-      });
+      );
+      sqlite.exec(
+        readFileSync(
+          "prisma/migrations/20261022000100_studio_organization/migration.sql",
+          "utf8",
+        ),
+      );
+      sqlite.close();
+      const previous = process.env.DATABASE_URL;
+      process.env.DATABASE_URL = `file:${filename}`;
+      const client = createPrismaClient();
+      try {
+        const project = await client.project.create({
+          data: { name: "Selective AI" },
+        });
+        const script = await client.script.create({
+          data: { projectId: project.id, name: "Keep valid work" },
+        });
+        const storedScene = await client.scene.create({
+          data: {
+            scriptId: script.id,
+            order: 0,
+            templateId: "kinetic",
+            text: "Original display copy",
+            spokenText: "Original narration",
+            assetRefs: JSON.stringify(["asset-1"]),
+          },
+        });
+        const clip = await client.sceneVoiceClip.create({
+          data: {
+            scriptId: script.id,
+            sceneId: storedScene.id,
+            providerId: "kokoro",
+            voiceId: "af_heart",
+            text: "Original narration",
+            textHash: "unchanged-hash",
+            audioPath: "voice/clip.wav",
+            durationFrames: 90,
+          },
+        });
+        await client.scene.update({
+          where: { id: storedScene.id },
+          data: { selectedVoiceClipId: clip.id },
+        });
 
-      expect(updated.id).toBe(storedScene.id);
-      expect(updated.selectedVoiceClipId).toBe(clip.id);
-      expect(JSON.parse(updated.assetRefs!)).toEqual(["asset-1"]);
-      expect(await client.sceneVoiceClip.count()).toBe(1);
-    } finally {
-      await client.$disconnect();
-      if (previous === undefined) delete process.env.DATABASE_URL;
-      else process.env.DATABASE_URL = previous;
-      rmSync(directory, { recursive: true, force: true });
-    }
-  }, process.platform === "win32" ? 30_000 : 5_000);
+        await client.scene.update({
+          where: { id: storedScene.id },
+          data: mergeGeneratedScene(
+            scene({
+              id: storedScene.id,
+              scriptId: script.id,
+              selectedVoiceClipId: clip.id,
+            }),
+            generated,
+          ),
+        });
+        const updated = await client.scene.findUniqueOrThrow({
+          where: { id: storedScene.id },
+        });
+
+        expect(updated.id).toBe(storedScene.id);
+        expect(updated.selectedVoiceClipId).toBe(clip.id);
+        expect(JSON.parse(updated.assetRefs!)).toEqual(["asset-1"]);
+        expect(await client.sceneVoiceClip.count()).toBe(1);
+      } finally {
+        await client.$disconnect();
+        if (previous === undefined) delete process.env.DATABASE_URL;
+        else process.env.DATABASE_URL = previous;
+        rmSync(directory, { recursive: true, force: true });
+      }
+    },
+    process.platform === "win32" ? 30_000 : 5_000,
+  );
 });
 
 describe("chapter regeneration scopes", () => {

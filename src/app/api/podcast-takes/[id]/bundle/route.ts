@@ -1,0 +1,28 @@
+import { Readable } from "node:stream";
+import { authorizeRequest } from "@/server/auth";
+import { errorResponse } from "@/server/api-helpers";
+import { podcastBundleEntries } from "@/library/podcast-bundle";
+import { createProductionBundleStream } from "@/library/production-bundle";
+export const runtime = "nodejs";
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    authorizeRequest(req, "artifacts:read");
+    const { id } = await params;
+    const entries = await podcastBundleEntries(id);
+    return new Response(
+      Readable.toWeb(createProductionBundleStream(entries)) as ReadableStream,
+      {
+        headers: {
+          "Content-Type": "application/gzip",
+          "Content-Disposition": "attachment; filename=podcast-episode.tar.gz",
+          "Cache-Control": "private, no-store",
+        },
+      },
+    );
+  } catch (error) {
+    return errorResponse(error);
+  }
+}

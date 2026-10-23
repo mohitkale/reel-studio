@@ -34,6 +34,18 @@ export const navItems: NavItem[] = [
     description: "Voice-only multi-speaker podcasts",
   },
   {
+    title: "Voiceovers",
+    href: "/voiceovers",
+    icon: AudioLines,
+    description: "Audio projects and narration",
+  },
+  {
+    title: "Factory",
+    href: "/factory",
+    icon: ListVideo,
+    description: "Masters, review and derived outputs",
+  },
+  {
     title: "Editor",
     href: "/editor",
     icon: Clapperboard,

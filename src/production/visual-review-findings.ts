@@ -92,6 +92,27 @@ export function reviewVisualInputs(
     const end =
       timeline[index + 1]?.startFrame ?? beat.startFrame + beat.durationFrames;
     const seconds = (end - beat.startFrame) / fps;
+    if (
+      scene.chart &&
+      !scene.hideText &&
+      (scene.chart.series.length > 1 ||
+        scene.chart.labels.length > 6 ||
+        scene.chart.series.some((series) =>
+          series.values.some((value) => value < 0),
+        ))
+    ) {
+      const pages =
+        Math.ceil(scene.chart.labels.length / 5) *
+        Math.ceil(scene.chart.series.length / 3);
+      if (seconds / pages < 3)
+        findings.push(
+          ...finding(
+            scene.id,
+            "reading-time",
+            `This chart has ${pages} data page${pages === 1 ? "" : "s"} at ${(seconds / pages).toFixed(1)} seconds each. Allow at least 3 seconds per page or split the chart into more scenes.`,
+          ),
+        );
+    }
     const graphic = resolveSemanticGraphic(scene, semanticStorySource(scenes));
     const visibleCopy = [
       scene.text,

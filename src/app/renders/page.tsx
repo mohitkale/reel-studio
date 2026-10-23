@@ -1,5 +1,6 @@
 "use client";
-import {FactoryPanel} from "@/components/production/factory-panel";
+import { QueryError } from "@/components/ui/query-error";
+import { FactoryPanel } from "@/components/production/factory-panel";
 
 import * as React from "react";
 import {
@@ -513,7 +514,14 @@ function RenderCard({ render: initial }: { render: RenderDTO }) {
 }
 
 export default function RendersPage() {
-  const { data: renders, isLoading } = useRenders();
+  const {
+    data: renders,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useRenders();
 
   return (
     <div className="space-y-6">
@@ -522,11 +530,26 @@ export default function RendersPage() {
         description="Track render jobs and download finished MP4 videos."
       />
 
-      <details className="rounded-xl border p-4"><summary className="cursor-pointer text-sm font-medium">Content factory</summary><div className="mt-4"><FactoryPanel/></div></details>
+      <details className="rounded-xl border p-4">
+        <summary className="cursor-pointer text-sm font-medium">
+          Content factory
+        </summary>
+        <div className="mt-4">
+          <FactoryPanel />
+        </div>
+      </details>
       <ProductionBatchList />
       <ProductionJobList />
 
-      {isLoading ? (
+      {isError && (
+        <QueryError
+          title="Could not load renders"
+          error={error}
+          retry={refetch}
+          pending={isFetching}
+        />
+      )}
+      {isError && !renders ? null : isLoading ? (
         <div className={LISTING_GRID_6_CARDS}>
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-36 rounded-xl" />

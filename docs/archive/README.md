@@ -1,8 +1,9 @@
 # Historical archive
 
-These briefs, plans, audits, and measurements predate published v0.4.0 behavior.
+The original briefs, plans, audits, and measurements below predate v0.4.0.
+Later implementation records are explicitly dated/scoped.
 They retain review context; they are not current instructions, an active roadmap,
-or a list of unfinished milestones. All 15 review milestones are merged.
+or a list of unfinished milestones. The original 15 review milestones are merged.
 
 Stable [v0.4.0](https://github.com/mohitkale/reel-studio/releases/tag/v0.4.0) was
 published 2026-10-03 at `2081ac3edd9eab1f4dc2068c37d1f1deec06c4f1`.
@@ -28,3 +29,6 @@ Earlier [PR task ledgers](../production/archive/README.md) and JSON evidence
 retain their paths for release-check compatibility. Keep retained catalog
 revisions, upgrade fixtures, and component notices even when their names refer
 to older versions.
+
+Later record: [Content studio implementation review](CONTENT_STUDIO_REVIEW.md)
+documents the feature branch scope and validation for maintainer review.

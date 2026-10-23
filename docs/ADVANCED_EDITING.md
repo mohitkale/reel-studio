@@ -55,3 +55,20 @@ Use optional intro/outro bumpers, explicit turn pauses, pronunciation substituti
 and selective turn regeneration. Takes retain immutable finishing choices.
 Download WAV/MP3, transcript, and chapters, then create an audiogram from a
 contiguous transcript-grounded excerpt using the original take audio.
+
+## Manual text timing and data
+
+The scene inspector accepts multiple named chart series, row labels, units and
+source attribution. Multiple series, negative values and long series use a paged table with up to five rows
+and three series per page, preserving every supplied value and unit. Visual
+review flags pages shorter than three seconds; split dense data into more scenes
+or extend narration before publishing. Single-series charts retain their selected
+compatible visual treatment.
+
+Impact, Editorial and Stack text treatments expose **Text entrance timing**:
+0.15–1.5 seconds per line, with linear, smooth or snappy easing. Preview and export
+read the same saved settings. Reveal duration is bounded by available scene time;
+the control does not retime narration, scene boundaries or ambient animation.
+Click a scene in the preview to select it for inspection. Safe-zone guides remain
+inside the video frame. Narrow screens place the preview before scene navigation
+and provide Scenes, Script & design, and Audio tabs.

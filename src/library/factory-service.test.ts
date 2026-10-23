@@ -190,6 +190,17 @@ it("migrates, pins profiles/packs and resumes immutable factory variants without
       auth: { origin: "web" as const, token: null },
       serverBaseUrl: "http://127.0.0.1:3010",
     };
+    await expect(
+      submitFactoryRun({
+        ...args,
+        request: {
+          ...request,
+          idempotencyKey: "factory-budget-check",
+          maxOutputSeconds: 1,
+        },
+      }),
+    ).rejects.toThrow("budget");
+    expect(await prisma.factoryRun.count()).toBe(0);
     let run = await submitFactoryRun(args);
     expect(run.batch?.state).toBe("awaiting_approval");
     expect(run.variants).toHaveLength(2);

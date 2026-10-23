@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { deleteScene, updateScene } from "@/library/repositories/scenes";
+import {
+  deleteScene,
+  updateSceneWithHistory,
+} from "@/library/repositories/scenes";
 import { assembleVoiceTake } from "@/library/scene-voice-service";
 import { authorize } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
@@ -73,7 +76,7 @@ export async function PATCH(
     authorize(req);
     const { id } = await ctx.params;
     const body = parseClientInput(patchSchema, await readRequestJson(req));
-    const scene = await updateScene(id, body);
+    const scene = await updateSceneWithHistory(id, body);
 
     let take = null;
     if (

@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   StopCircle,
 } from "lucide-react";
+import { QueryError } from "@/components/ui/query-error";
 import { toast } from "sonner";
 
 import {
@@ -27,10 +28,25 @@ export function ProductionJobList() {
   const retry = useRetryProductionJob();
 
   if (query.isLoading) return <Skeleton className="h-24 rounded-xl" />;
+  if (query.isError && !query.data)
+    return (
+      <QueryError
+        title="Could not load production queue"
+        error={query.error}
+        retry={query.refetch}
+      />
+    );
   if (!query.data?.jobs.length) return null;
 
   return (
     <section className="space-y-3">
+      {query.isError && (
+        <QueryError
+          title="Queue refresh failed; showing saved status"
+          error={query.error}
+          retry={query.refetch}
+        />
+      )}
       <div>
         <h2 className="text-sm font-semibold">Automated production</h2>
         <p className="text-muted-foreground text-xs">

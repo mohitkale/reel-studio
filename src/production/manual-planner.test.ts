@@ -7,6 +7,20 @@ import {
 } from "@/production/manual-planner";
 
 describe("deterministic production planning", () => {
+  it("keeps explicit voiceover paragraph boundaries", () => {
+    const result = createDeterministicProductionPlan({
+      name: "Paragraphs",
+      text: "First idea.\n\nSecond idea.",
+      outputType: "voiceover",
+      presetId: "editorial-explainer",
+      videoEngine: "hyperframes",
+      hasVisualAsset: false,
+    });
+    expect(result.plan.scenes.map((s) => s.spokenText ?? s.text)).toEqual([
+      "First idea.",
+      "Second idea.",
+    ]);
+  });
   it("preserves all supplied narration while splitting long copy into bounded scenes", () => {
     const source = Array.from(
       { length: 80 },

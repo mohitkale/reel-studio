@@ -149,3 +149,52 @@ release includes a verified 210-second chapter cancellation/retry fixture. See
 
 See [the verified creation and editing walkthrough](CREATION_UX.md) for current
 desktop/mobile screenshots and the prompt-to-download acceptance evidence.
+
+## Content studio workspaces
+
+The Projects page starts with Video, Podcast, Voiceover and Repurpose. Video
+provides Automatic (Quick Produce), Assisted (AI draft) and Manual paths. Search
+saved projects, filter drafts or projects with narration, assign a series, and
+archive completed work. Archived projects remain recoverable through the Archived
+filter. Cards show the saved cover, opening image or opening scene copy.
+
+**Voiceovers** opens a dedicated paragraph editor. Blank-line paragraphs in supplied
+content remain separate, with long passages split into bounded scenes (up to 20).
+Save each paragraph explicitly, generate one complete take or individual clips,
+and compare a second take. **Add visuals** opens the same project in the video
+editor. Speaking rate is available for Cartesia, VoiceForge and server Kokoro;
+other providers retain their supported defaults. Voice favorites are local to the
+browser and provider.
+
+Shared speech presets store named voices and pronunciation dictionaries in the
+app database. Saving voice settings preserves a dictionary already saved under
+that name. Applying pronunciation rules in the voiceover workspace first shows a
+preview; apply them to individual paragraphs to change spoken text. In podcasts,
+load the rules and save them in finishing controls. Existing audio takes do not
+change. Batch voiceovers accept up to ten saved scripts, with a voice per script;
+prepare each language's wording yourself and choose a matching voice. Batches
+wait for approval in **Factory** before synthesis.
+
+**Undo scene edit / Redo** restores up to 100 saved manual scene edits across
+reloads. It covers copy, spoken text, layout, charts, motion and clip selection.
+It refuses to overwrite a scene changed by another operation. It does not restore
+deleted scenes or reorder operations; AI revisions and frozen production masters
+remain separate checkpoints.
+
+## Waveform editing and recordings
+
+Open a saved voiceover or podcast take's **Waveform & transcript** editor to decode
+its actual audio locally (up to 128 MiB and 30 minutes). Keep a selection or remove
+an interval to split around it, adjust speaker levels, and audition rumble
+filtering plus gentle compression. Download the edited WAV and a JSON edit
+manifest. The original take stays intact. The current edit plan is saved in this
+browser; undo/redo history lasts for the open editing session. Cut transcript
+segments are marked `textNeedsReview` in the manifest and require text correction
+before publishing captions.
+
+Podcasts also accept audio files or microphone recordings up to 15 minutes.
+Microphone access starts only after the Record action; stopping saves a new take.
+The browser converts imports to mono 44.1 kHz PCM. Imported audio does not invent
+transcript timing from the episode script. **Episode package** downloads saved
+audio, transcript, chapters, show notes and a manifest together. Current episode
+titles, descriptions and speaker names are distinguished from saved take timing.

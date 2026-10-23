@@ -1,4 +1,5 @@
 "use client";
+import { GenerationSummary } from "@/components/studio/generation-summary";
 
 import * as React from "react";
 import Link from "next/link";
@@ -57,7 +58,8 @@ const EXAMPLE_BRIEFS = [
 
 export function CreateWithAIDialog({
   trigger,
-}: { trigger?: React.ReactElement } = {}) {
+  initialQuickProduce = DEFAULT_QUICK_PRODUCE_ENABLED,
+}: { trigger?: React.ReactElement; initialQuickProduce?: boolean } = {}) {
   const router = useRouter();
   const { data: providers } = useAIProviders();
   const generate = useGenerateProject();
@@ -84,9 +86,7 @@ export function CreateWithAIDialog({
     React.useState<VisualAmbition>("expressive");
   const [mediaPreference, setMediaPreference] =
     React.useState<MediaPreference>("auto");
-  const [quickProduce, setQuickProduce] = React.useState(
-    DEFAULT_QUICK_PRODUCE_ENABLED,
-  );
+  const [quickProduce, setQuickProduce] = React.useState(initialQuickProduce);
   const [quickPlanner, setQuickPlanner] = React.useState<
     "deterministic" | AIProviderId | undefined
   >();
@@ -527,6 +527,15 @@ export function CreateWithAIDialog({
           </p>
         )}
 
+        <GenerationSummary
+          providerId={quickProduce ? effectiveQuickPlanner : effectiveProvider}
+          text={brief}
+          scope={
+            quickProduce
+              ? "Plan and produce from this brief"
+              : "Create a script draft"
+          }
+        />
         <DialogFooter className="bg-card sticky -bottom-6 -mx-6 border-t px-6 pt-3 pb-6">
           <DialogClose asChild>
             <Button variant="ghost">Cancel</Button>

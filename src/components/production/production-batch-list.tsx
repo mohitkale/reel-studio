@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   StopCircle,
 } from "lucide-react";
+import { QueryError } from "@/components/ui/query-error";
 import { toast } from "sonner";
 
 import {
@@ -27,10 +28,25 @@ export function ProductionBatchList() {
   const retry = useRetryProductionBatch();
 
   if (query.isLoading) return <Skeleton className="h-24 rounded-xl" />;
+  if (query.isError && !query.data)
+    return (
+      <QueryError
+        title="Could not load production queue"
+        error={query.error}
+        retry={query.refetch}
+      />
+    );
   if (!query.data?.batches.length) return null;
 
   return (
     <section className="space-y-3">
+      {query.isError && (
+        <QueryError
+          title="Queue refresh failed; showing saved status"
+          error={query.error}
+          retry={query.refetch}
+        />
+      )}
       <div>
         <h2 className="text-sm font-semibold">Production batches</h2>
         <p className="text-muted-foreground text-xs">
@@ -94,6 +110,7 @@ export function ProductionBatchList() {
                     onClick={() =>
                       approve.mutate(batch.id, {
                         onSuccess: () => toast.success("Batch approved"),
+                        onError: (error) => toast.error(error.message),
                       })
                     }
                   >
@@ -107,7 +124,11 @@ export function ProductionBatchList() {
                     size="sm"
                     variant="outline"
                     disabled={cancel.isPending}
-                    onClick={() => cancel.mutate(batch.id)}
+                    onClick={() =>
+                      cancel.mutate(batch.id, {
+                        onError: (error) => toast.error(error.message),
+                      })
+                    }
                   >
                     <StopCircle className="size-3.5" /> Cancel batch
                   </Button>
@@ -119,7 +140,11 @@ export function ProductionBatchList() {
                     size="sm"
                     variant="outline"
                     disabled={retry.isPending}
-                    onClick={() => retry.mutate(batch.id)}
+                    onClick={() =>
+                      retry.mutate(batch.id, {
+                        onError: (error) => toast.error(error.message),
+                      })
+                    }
                   >
                     <ArchiveRestore className="size-3.5" /> Retry incomplete
                   </Button>

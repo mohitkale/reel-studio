@@ -87,6 +87,7 @@ export const audioProductionJobInputSchema = z.object({
     .optional(),
   voiceId: z.string().min(1).optional(),
   modelId: z.string().min(1).optional(),
+  speed: z.number().finite().min(0.7).max(1.35).optional(),
   placeholder: z.boolean().default(false),
   label: z.string().min(1).max(120).optional(),
 });

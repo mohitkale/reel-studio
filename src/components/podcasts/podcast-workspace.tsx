@@ -1,4 +1,6 @@
 "use client";
+import { PodcastAudioImport } from "@/components/studio/audio-import";
+import { AudioWorkbench } from "@/components/studio/audio-workbench";
 
 import * as React from "react";
 import Link from "next/link";
@@ -488,12 +490,12 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
     updateVoices.isPending;
 
   return (
-    <div className="flex h-[calc(100dvh-5.5rem)] w-full flex-col gap-3 overflow-hidden px-1 pb-2 sm:px-2">
+    <div className="flex min-h-[calc(100dvh-8rem)] w-full min-w-0 flex-col gap-3 px-1 pb-2 sm:px-2 lg:h-[calc(100dvh-8rem)] lg:overflow-hidden">
       <PageHeader
         title={podcast.title}
         description={`${podcast.characters.length} voices · ${podcast.turns.length} turns · ${podcast.takes.length} takes`}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <HintTooltip label="Synthesize all turns, then stitch in order">
               <Button
                 type="button"
@@ -887,7 +889,25 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
           value="audio"
           className="mt-0 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto data-[state=inactive]:hidden"
         >
+          <PodcastAudioImport podcastId={podcast.id} />
           <PodcastFinishingControls podcast={podcast} />
+          {podcast.takes[0] && (
+            <AudioWorkbench
+              key={podcast.takes[0].id}
+              id={podcast.takes[0].id}
+              title={podcast.title}
+              url={podcast.takes[0].audioUrl}
+              segments={podcast.takes[0].timeline.map((beat) => ({
+                id: beat.turnId,
+                text: beat.text,
+                start: beat.startFrame / podcast.takes[0].fps,
+                end:
+                  (beat.startFrame + beat.durationFrames) /
+                  podcast.takes[0].fps,
+                speaker: beat.characterKey ?? "Speaker",
+              }))}
+            />
+          )}
           <section className="border-border bg-card flex flex-wrap items-center gap-3 rounded-xl border p-3 shadow-sm">
             <Button
               type="button"
@@ -1032,6 +1052,11 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                         </Badge>
                       ))}
                     </div>
+                    <Button asChild variant="outline">
+                      <a href={`/api/podcast-takes/${take.id}/bundle`} download>
+                        Download episode package
+                      </a>
+                    </Button>
                     <PodcastAudiogramControls take={take} />
                   </li>
                 );

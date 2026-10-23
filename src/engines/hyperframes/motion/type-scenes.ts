@@ -104,6 +104,7 @@ export function buildTypeMotionScene(args: {
     style="--accent:${escapeHtml(tokens.accent)};--accent-2:${escapeHtml(tokens.accentSecondary)}">
       <div class="fx-stage tm-stage ${stacked ? "tm-stack-stage" : impact ? "tm-impact-stage" : "tm-editorial-stage"}"
         data-motion-scene="${escapeHtml(scene.id)}" data-recipe="${motion.recipeId}"
+        ${motion.textReveal ? `data-text-reveal-duration="${motion.textReveal.durationSeconds}" data-text-reveal-ease="${motion.textReveal.ease}"` : ""}
         ${motion.typeEntrance ? `data-type-entrance="${motion.typeEntrance}"` : ""}>${content}</div>
     </section>`;
 }

@@ -39,7 +39,9 @@ function getClient(): PrismaClient {
       existing.stockMediaResponseCache == null ||
       existing.stockMediaQuotaState == null ||
       existing.stockMediaMaterialization == null ||
-      existing.factoryRun == null
+      existing.factoryRun == null ||
+      existing.sceneEdit == null ||
+      existing.studioPreset == null
     ) {
       void existing.$disconnect().catch(() => undefined);
       const fresh = createClient();

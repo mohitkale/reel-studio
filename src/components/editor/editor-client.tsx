@@ -1,4 +1,5 @@
 "use client";
+import { EditHistory } from "./edit-history";
 import { sequenceConfigFor } from "@/video/sequence-direction";
 
 import { SubjectRegistryDialog } from "./subject-registry-dialog";
@@ -111,6 +112,7 @@ export function EditorClient({
 
   const addScene = useAddScene(scriptId);
   const updateScene = useUpdateScene(scriptId);
+  const [historyRevision, setHistoryRevision] = React.useState(0);
   const deleteScene = useDeleteScene(scriptId);
   const reorder = useReorderScenes(scriptId);
   const createRender = useCreateRender();
@@ -148,6 +150,8 @@ export function EditorClient({
   const [previewQuality, setPreviewQuality] = React.useState<
     "standard" | "draft"
   >("standard");
+  const [workspaceTab, setWorkspaceTab] = React.useState("scenes");
+  const [safeZones, setSafeZones] = React.useState(false);
   const [aiOpen, setAiOpen] = React.useState(false);
   const [jsonOpen, setJsonOpen] = React.useState(false);
   // Snapshot of scenes taken before an AI enhance — cleared after render or undo
@@ -290,7 +294,9 @@ export function EditorClient({
           script?.captionTracks,
           takeUsable ? selectedTake?.id : null,
           fps,
-          script?.scenes.some((scene) => Boolean(scene.direction?.graphic?.presentation)) ?? false,
+          script?.scenes.some((scene) =>
+            Boolean(scene.direction?.graphic?.presentation),
+          ) ?? false,
         ),
         timeline,
         fps,
@@ -460,16 +466,21 @@ export function EditorClient({
             },
           );
         },
-        onError: (error) => toast.error("Failed to queue render", {
-          description: error.message,
-        }),
+        onError: (error) =>
+          toast.error("Failed to queue render", {
+            description: error.message,
+          }),
       },
     );
   }
 
   return (
     <div className="space-y-6">
-      <QuickProduceStatus jobId={productionJobId} scriptId={scriptId} showPreview={false} />
+      <QuickProduceStatus
+        jobId={productionJobId}
+        scriptId={scriptId}
+        showPreview={false}
+      />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link
@@ -488,7 +499,6 @@ export function EditorClient({
               <h2 className="text-lg leading-tight font-semibold">
                 {script.name}
               </h2>
-
             </div>
             <p className="text-muted-foreground text-xs">
               {scenes.length} scenes · {script.fps} fps
@@ -496,7 +506,12 @@ export function EditorClient({
             </p>
           </div>
         </div>
-        <Button disabled={createRender.isPending || !scenes.length} onClick={() => queueRender()}><Video className="size-4" /> Export MP4</Button>
+        <Button
+          disabled={createRender.isPending || !scenes.length}
+          onClick={() => queueRender()}
+        >
+          <Video className="size-4" /> Export MP4
+        </Button>
         {activeRender ? (
           <HintTooltip
             label={`${activeRender.label}: ${activeRender.status} — open Renders page`}
@@ -506,7 +521,9 @@ export function EditorClient({
               href="/renders"
               className="text-muted-foreground hover:text-foreground flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs"
             >
-              {activeRenderIsLive && <Loader2 className="size-3.5 shrink-0 animate-spin" />}
+              {activeRenderIsLive && (
+                <Loader2 className="size-3.5 shrink-0 animate-spin" />
+              )}
               <span className="min-w-0">
                 {activeRender.status === "done"
                   ? "MP4 ready — view and download"
@@ -525,393 +542,632 @@ export function EditorClient({
             </Link>
           </HintTooltip>
         ) : null}
-          {script.visualTheme ? <span className="text-muted-foreground text-xs">Theme · {script.visualTheme.name}</span> : null}
-          {script.productionPreset ? (
-            <MotionDirectionMenu
-              selectedId={effectiveSceneId ?? undefined}
-              chapters={script.chapterPlan}
+        {script.visualTheme ? (
+          <span className="text-muted-foreground text-xs">
+            Theme · {script.visualTheme.name}
+          </span>
+        ) : null}
+        {script.productionPreset ? (
+          <MotionDirectionMenu
+            selectedId={effectiveSceneId ?? undefined}
+            chapters={script.chapterPlan}
+            scriptId={scriptId}
+            ambition={script.motionPlan?.ambition ?? "expressive"}
+            system={script.motionPlan?.system}
+            chapterMotifs={script.motionPlan?.chapterMotifs}
+            adaptiveRecipes={script.motionPlan?.adaptiveRecipes}
+            sequenceDirection={script.motionPlan?.sequenceDirection}
+            hasChapters={Boolean(script.chapterPlan)}
+            scenes={scenes.map((scene) => ({
+              ...scene,
+              hideText: scene.hideText ?? script.hideText,
+              hasVisualContent: Boolean(scene.visual),
+            }))}
+            onSelectScene={selectScene}
+          />
+        ) : null}
+        {script.productionPreset && (
+          <SubjectRegistryDialog
+            scriptId={scriptId}
+            subjects={script.motionPlan?.subjectRegistry}
+          />
+        )}
+        <VisualReviewDialog
+          scriptId={scriptId}
+          scenes={scenes}
+          selectedSceneId={effectiveSceneId}
+          voiceTakeId={effectiveTakeId ?? undefined}
+          sourceKey={JSON.stringify([script, effectiveTakeId])}
+          onSelectScene={selectScene}
+        />
+        <details className="w-full rounded-lg border p-3">
+          <summary className="cursor-pointer text-sm font-medium">
+            Customize video
+          </summary>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <FilmPlanDialog
               scriptId={scriptId}
-              ambition={script.motionPlan?.ambition ?? "expressive"}
-              system={script.motionPlan?.system}
-              chapterMotifs={script.motionPlan?.chapterMotifs}
-              adaptiveRecipes={script.motionPlan?.adaptiveRecipes}
-              sequenceDirection={script.motionPlan?.sequenceDirection}
-              hasChapters={Boolean(script.chapterPlan)}
-              scenes={scenes.map((scene) => ({
-                ...scene,
-                hideText: scene.hideText ?? script.hideText,
-                hasVisualContent: Boolean(scene.visual),
-              }))}
+              voiceTakeId={effectiveTakeId ?? undefined}
+            />
+            <HintTooltip
+              label="Brand kit: colors and @handle on every scene. Star a kit on Brand Kits to make it the default for new projects."
+              side="bottom"
+            >
+              <div className="w-44">
+                <Combobox
+                  value={script.brandKitId ?? ""}
+                  onChange={(v) =>
+                    assignBrandKit.mutate({
+                      projectId: script.projectId,
+                      brandKitId: v || null,
+                    })
+                  }
+                  options={[
+                    {
+                      value: "",
+                      label: brandKits.find((k) => k.isDefault)
+                        ? `Default (${brandKits.find((k) => k.isDefault)!.name})`
+                        : "Default kit",
+                    },
+                    ...brandKits.map((k) => ({ value: k.id, label: k.name })),
+                  ]}
+                  placeholder="Default kit"
+                  searchPlaceholder="Search kits…"
+                />
+              </div>
+            </HintTooltip>
+            <HintTooltip
+              label="Style: the overall look of this video (Bold Hook, Clean Story, Teach Me, Soft Brand)."
+              side="bottom"
+            >
+              <div className="w-36">
+                <Combobox
+                  value={script.styleId}
+                  onChange={(v) =>
+                    setVisualStyle.mutate({ styleId: v as StyleId })
+                  }
+                  options={STYLE_META.map((s) => ({
+                    value: s.id,
+                    label: s.label,
+                  }))}
+                  placeholder="Style"
+                  searchPlaceholder="Search styles…"
+                />
+              </div>
+            </HintTooltip>
+            <HintTooltip
+              label="Energy: how fast and punchy cuts and text feel (Calm, Normal, High)."
+              side="bottom"
+            >
+              <div className="w-28">
+                <Combobox
+                  value={script.energy}
+                  onChange={(v) =>
+                    setVisualStyle.mutate({ energy: v as EnergyId })
+                  }
+                  options={ENERGY_META.map((e) => ({
+                    value: e.id,
+                    label: e.label,
+                  }))}
+                  placeholder="Energy"
+                  searchPlaceholder="Search…"
+                />
+              </div>
+            </HintTooltip>
+            <FactoryDialog
+              scriptId={script.id}
+              voiceTakeId={effectiveTakeId ?? undefined}
+            />
+            <ChapterDialog
+              script={script}
+              timeline={timeline}
+              fps={fps}
+              takeId={effectiveTakeId}
+              selectedSceneId={effectiveSceneId ?? undefined}
               onSelectScene={selectScene}
             />
-          ) : null}
-          {script.productionPreset && <SubjectRegistryDialog scriptId={scriptId} subjects={script.motionPlan?.subjectRegistry}/>}
-          <VisualReviewDialog
-            scriptId={scriptId}
-            scenes={scenes}
-            selectedSceneId={effectiveSceneId}
-            voiceTakeId={effectiveTakeId ?? undefined}
-            sourceKey={JSON.stringify([script, effectiveTakeId])}
-            onSelectScene={selectScene}
-          />
-        <details className="w-full rounded-lg border p-3">
-          <summary className="cursor-pointer text-sm font-medium">Customize video</summary>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <FilmPlanDialog scriptId={scriptId} voiceTakeId={effectiveTakeId ?? undefined} />
-          <HintTooltip
-            label="Brand kit: colors and @handle on every scene. Star a kit on Brand Kits to make it the default for new projects."
-            side="bottom"
-          >
-            <div className="w-44">
-              <Combobox
-                value={script.brandKitId ?? ""}
-                onChange={(v) =>
-                  assignBrandKit.mutate({
-                    projectId: script.projectId,
-                    brandKitId: v || null,
-                  })
-                }
-                options={[
-                  {
-                    value: "",
-                    label: brandKits.find((k) => k.isDefault)
-                      ? `Default (${brandKits.find((k) => k.isDefault)!.name})`
-                      : "Default kit",
-                  },
-                  ...brandKits.map((k) => ({ value: k.id, label: k.name })),
-                ]}
-                placeholder="Default kit"
-                searchPlaceholder="Search kits…"
-              />
-            </div>
-          </HintTooltip>
-          <HintTooltip
-            label="Style: the overall look of this video (Bold Hook, Clean Story, Teach Me, Soft Brand)."
-            side="bottom"
-          >
-            <div className="w-36">
-              <Combobox
-                value={script.styleId}
-                onChange={(v) =>
-                  setVisualStyle.mutate({ styleId: v as StyleId })
-                }
-                options={STYLE_META.map((s) => ({
-                  value: s.id,
-                  label: s.label,
-                }))}
-                placeholder="Style"
-                searchPlaceholder="Search styles…"
-              />
-            </div>
-          </HintTooltip>
-          <HintTooltip
-            label="Energy: how fast and punchy cuts and text feel (Calm, Normal, High)."
-            side="bottom"
-          >
-            <div className="w-28">
-              <Combobox
-                value={script.energy}
-                onChange={(v) =>
-                  setVisualStyle.mutate({ energy: v as EnergyId })
-                }
-                options={ENERGY_META.map((e) => ({
-                  value: e.id,
-                  label: e.label,
-                }))}
-                placeholder="Energy"
-                searchPlaceholder="Search…"
-              />
-            </div>
-          </HintTooltip>
-          <FactoryDialog scriptId={script.id} voiceTakeId={effectiveTakeId??undefined}/>
-          <ChapterDialog
-            script={script}
-            timeline={timeline}
-            fps={fps}
-            takeId={effectiveTakeId}
-            selectedSceneId={effectiveSceneId ?? undefined}
-            onSelectScene={selectScene}
-          />
-          {undoSnapshot && (
+            {undoSnapshot && (
+              <HintTooltip
+                label="Restore scenes to how they were before the last AI change"
+                side="bottom"
+              >
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={undoScript.isPending}
+                  onClick={() =>
+                    undoScript.mutate(
+                      undoSnapshot.map((s) => ({
+                        id: s.id,
+                        templateId: s.templateId,
+                        text: s.text,
+                        spokenText: s.spokenText,
+                        emphasis: s.emphasis,
+                        visual: s.visual ?? null,
+                        background: s.background ?? null,
+                        items: s.items,
+                        mood: s.mood,
+                        musicMood: s.musicMood,
+                        chart: s.chart,
+                        role: s.role,
+                        motion: s.motion,
+                        direction: s.direction,
+                        assetRefs: s.assetRefs,
+                        locks: s.locks,
+                        hideText: s.hideText,
+                        selectedVoiceClipId: s.selectedVoiceClipId,
+                      })),
+                      {
+                        onSuccess: () => {
+                          setUndoSnapshot(null);
+                          toast.success("Scenes restored", {
+                            description:
+                              "Rolled back to the version before AI changes.",
+                          });
+                        },
+                        onError: () => toast.error("Undo failed"),
+                      },
+                    )
+                  }
+                >
+                  {undoScript.isPending ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Undo2 className="size-3.5" />
+                  )}
+                  Undo AI
+                </Button>
+              </HintTooltip>
+            )}
+            <CoverControl scriptId={scriptId} coverUrl={script.coverUrl} />
             <HintTooltip
-              label="Restore scenes to how they were before the last AI change"
+              label="One-click: attach bundled BGM + SFX, then generate voiceover if missing"
               side="bottom"
             >
               <Button
                 size="sm"
-                variant="ghost"
-                disabled={undoScript.isPending}
-                onClick={() =>
-                  undoScript.mutate(
-                    undoSnapshot.map((s) => ({
-                      id: s.id,
-                      templateId: s.templateId,
-                      text: s.text,
-                      spokenText: s.spokenText,
-                      emphasis: s.emphasis,
-                      visual: s.visual ?? null,
-                      background: s.background ?? null,
-                      items: s.items,
-                      mood: s.mood,
-                      musicMood: s.musicMood,
-                      chart: s.chart,
-                      role: s.role,
-                      motion: s.motion,
-                      direction: s.direction,
-                      assetRefs: s.assetRefs,
-                      locks: s.locks,
-                      hideText: s.hideText,
-                      selectedVoiceClipId: s.selectedVoiceClipId,
-                    })),
+                variant="default"
+                disabled={produceReel.isPending || scenes.length === 0}
+                onClick={() => {
+                  setProduceLabel("Soundtrack…");
+                  produceReel.mutate(
                     {
-                      onSuccess: () => {
-                        setUndoSnapshot(null);
-                        toast.success("Scenes restored", {
-                          description:
-                            "Rolled back to the version before AI changes.",
-                        });
+                      onProgress: (p) => {
+                        if (p.status === "queued")
+                          setProduceLabel("Voice queued…");
+                        else if (p.status === "synthesizing") {
+                          setProduceLabel(
+                            `Voice ${p.scene}/${p.sceneCount || "…"}`,
+                          );
+                        } else if (p.status === "stitching") {
+                          setProduceLabel("Stitching…");
+                        }
                       },
-                      onError: () => toast.error("Undo failed"),
                     },
+                    {
+                      onSuccess: (data) => {
+                        setProduceLabel(null);
+                        const bits = [];
+                        if (data.result.musicAttached) bits.push("BGM");
+                        if (data.result.sfxAttached) bits.push("SFX");
+                        if (
+                          data.result.voiceJobId ||
+                          data.result.hadVoiceAlready
+                        ) {
+                          bits.push("VO");
+                        }
+                        toast.success("Reel produced", {
+                          description:
+                            bits.length > 0
+                              ? `Ready: ${bits.join(" · ")}`
+                              : "Soundtrack already in place.",
+                        });
+                        setPreviewMode("reel");
+                      },
+                      onError: (e) => {
+                        setProduceLabel(null);
+                        toast.error(
+                          e instanceof Error ? e.message : "Produce failed",
+                        );
+                      },
+                    },
+                  );
+                }}
+              >
+                {produceReel.isPending ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Clapperboard className="size-3.5" />
+                )}
+                {produceReel.isPending
+                  ? produceLabel || "Producing…"
+                  : "Produce reel"}
+              </Button>
+            </HintTooltip>
+            <MusicControl
+              scriptId={scriptId}
+              musicUrl={script.musicUrl}
+              musicVolume={script.musicVolume}
+              sfxEnabled={script.sfxEnabled}
+              sfxCueCount={sfxCues.length}
+              scenes={scenes}
+            />
+            <HintTooltip
+              label={
+                script.hideText
+                  ? "On-screen text is hidden on all scenes (per-scene overrides still apply)"
+                  : "Hide on-screen text on all scenes — show background only"
+              }
+              side="bottom"
+            >
+              <Button
+                size="sm"
+                variant={script.hideText ? "default" : "outline"}
+                onClick={() => setHideText.mutate(!script.hideText)}
+              >
+                {script.hideText ? (
+                  <EyeOff className="size-3.5" />
+                ) : (
+                  <Eye className="size-3.5" />
+                )}
+                {script.hideText ? "Text hidden" : "Show text"}
+              </Button>
+            </HintTooltip>
+            <HintTooltip
+              label={
+                script.hideProgressBar
+                  ? "Progress bar is hidden on all scenes"
+                  : "Show or hide the thin progress bar at the top of each scene"
+              }
+              side="bottom"
+            >
+              <Button
+                size="sm"
+                variant={script.hideProgressBar ? "default" : "outline"}
+                onClick={() =>
+                  setHideProgressBar.mutate(!script.hideProgressBar)
+                }
+              >
+                <BarChart2 className="size-3.5" />
+                {script.hideProgressBar ? "Progress hidden" : "Show progress"}
+              </Button>
+            </HintTooltip>
+            <HintTooltip
+              label={
+                previewQuality === "draft"
+                  ? "Draft preview: lighter effects for smoother scrubbing. Final render is unaffected."
+                  : "Switch to a lighter draft preview for smoother scrubbing on slower machines"
+              }
+              side="bottom"
+            >
+              <Button
+                size="sm"
+                variant={previewQuality === "draft" ? "default" : "outline"}
+                onClick={() =>
+                  setPreviewQuality((q) =>
+                    q === "draft" ? "standard" : "draft",
                   )
                 }
               >
-                {undoScript.isPending ? (
-                  <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                  <Undo2 className="size-3.5" />
-                )}
-                Undo AI
+                <Gauge className="size-3.5" />
+                {previewQuality === "draft" ? "Draft preview" : "Full preview"}
               </Button>
             </HintTooltip>
-          )}
-          <CoverControl scriptId={scriptId} coverUrl={script.coverUrl} />
-          <HintTooltip
-            label="One-click: attach bundled BGM + SFX, then generate voiceover if missing"
-            side="bottom"
-          >
-            <Button
-              size="sm"
-              variant="default"
-              disabled={produceReel.isPending || scenes.length === 0}
-              onClick={() => {
-                setProduceLabel("Soundtrack…");
-                produceReel.mutate(
-                  {
-                    onProgress: (p) => {
-                      if (p.status === "queued")
-                        setProduceLabel("Voice queued…");
-                      else if (p.status === "synthesizing") {
-                        setProduceLabel(
-                          `Voice ${p.scene}/${p.sceneCount || "…"}`,
-                        );
-                      } else if (p.status === "stitching") {
-                        setProduceLabel("Stitching…");
-                      }
-                    },
-                  },
-                  {
-                    onSuccess: (data) => {
-                      setProduceLabel(null);
-                      const bits = [];
-                      if (data.result.musicAttached) bits.push("BGM");
-                      if (data.result.sfxAttached) bits.push("SFX");
-                      if (
-                        data.result.voiceJobId ||
-                        data.result.hadVoiceAlready
-                      ) {
-                        bits.push("VO");
-                      }
-                      toast.success("Reel produced", {
-                        description:
-                          bits.length > 0
-                            ? `Ready: ${bits.join(" · ")}`
-                            : "Soundtrack already in place.",
-                      });
-                      setPreviewMode("reel");
-                    },
-                    onError: (e) => {
-                      setProduceLabel(null);
-                      toast.error(
-                        e instanceof Error ? e.message : "Produce failed",
-                      );
-                    },
-                  },
-                );
-              }}
-            >
-              {produceReel.isPending ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Clapperboard className="size-3.5" />
-              )}
-              {produceReel.isPending
-                ? produceLabel || "Producing…"
-                : "Produce reel"}
-            </Button>
-          </HintTooltip>
-          <MusicControl
-            scriptId={scriptId}
-            musicUrl={script.musicUrl}
-            musicVolume={script.musicVolume}
-            sfxEnabled={script.sfxEnabled}
-            sfxCueCount={sfxCues.length}
-            scenes={scenes}
-          />
-          <HintTooltip
-            label={
-              script.hideText
-                ? "On-screen text is hidden on all scenes (per-scene overrides still apply)"
-                : "Hide on-screen text on all scenes — show background only"
-            }
-            side="bottom"
-          >
-            <Button
-              size="sm"
-              variant={script.hideText ? "default" : "outline"}
-              onClick={() => setHideText.mutate(!script.hideText)}
-            >
-              {script.hideText ? (
-                <EyeOff className="size-3.5" />
-              ) : (
-                <Eye className="size-3.5" />
-              )}
-              {script.hideText ? "Text hidden" : "Show text"}
-            </Button>
-          </HintTooltip>
-          <HintTooltip
-            label={
-              script.hideProgressBar
-                ? "Progress bar is hidden on all scenes"
-                : "Show or hide the thin progress bar at the top of each scene"
-            }
-            side="bottom"
-          >
-            <Button
-              size="sm"
-              variant={script.hideProgressBar ? "default" : "outline"}
-              onClick={() => setHideProgressBar.mutate(!script.hideProgressBar)}
-            >
-              <BarChart2 className="size-3.5" />
-              {script.hideProgressBar ? "Progress hidden" : "Show progress"}
-            </Button>
-          </HintTooltip>
-          <HintTooltip
-            label={
-              previewQuality === "draft"
-                ? "Draft preview: lighter effects for smoother scrubbing. Final render is unaffected."
-                : "Switch to a lighter draft preview for smoother scrubbing on slower machines"
-            }
-            side="bottom"
-          >
-            <Button
-              size="sm"
-              variant={previewQuality === "draft" ? "default" : "outline"}
-              onClick={() =>
-                setPreviewQuality((q) => (q === "draft" ? "standard" : "draft"))
-              }
-            >
-              <Gauge className="size-3.5" />
-              {previewQuality === "draft" ? "Draft preview" : "Full preview"}
-            </Button>
-          </HintTooltip>
-          <HintTooltip
-            label="Edit scenes as JSON, load a sample, or copy a prompt for ChatGPT/Claude. Style and Energy stay in the editor toolbar."
-            side="bottom"
-          >
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setJsonOpen(true)}
-            >
-              <Braces className="size-3.5" />
-              JSON
-            </Button>
-          </HintTooltip>
-          <CaptionsMenu
-            scriptId={scriptId}
-            takeId={effectiveTakeId}
-            tracks={script.captionTracks ?? []}
-            fps={script.fps}
-            disabled={scenes.length === 0}
-          />
-          <HintTooltip
-            label="Rewrite or append scenes with AI storyboarding"
-            side="bottom"
-          >
-            <Button size="sm" variant="outline" onClick={() => setAiOpen(true)}>
-              <Sparkles className="size-3.5" />
-              AI
-            </Button>
-          </HintTooltip>
-          <div className="flex items-center">
             <HintTooltip
-              label="Export the reel as MP4 at standard quality"
+              label="Edit scenes as JSON, load a sample, or copy a prompt for ChatGPT/Claude. Style and Energy stay in the editor toolbar."
               side="bottom"
             >
               <Button
                 size="sm"
-                className="rounded-r-none"
-                disabled={createRender.isPending || scenes.length === 0}
-                onClick={() => queueRender()}
+                variant="outline"
+                onClick={() => setJsonOpen(true)}
               >
-                {createRender.isPending ? (
-                  <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                  <Video className="size-3.5" />
-                )}
-                Render
+                <Braces className="size-3.5" />
+                JSON
               </Button>
             </HintTooltip>
-            <DropdownMenu>
+            <CaptionsMenu
+              scriptId={scriptId}
+              takeId={effectiveTakeId}
+              tracks={script.captionTracks ?? []}
+              fps={script.fps}
+              disabled={scenes.length === 0}
+            />
+            <HintTooltip
+              label="Rewrite or append scenes with AI storyboarding"
+              side="bottom"
+            >
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setAiOpen(true)}
+              >
+                <Sparkles className="size-3.5" />
+                AI
+              </Button>
+            </HintTooltip>
+            <div className="flex items-center">
               <HintTooltip
-                label="Render options — draft, high quality, or other formats"
+                label="Export the reel as MP4 at standard quality"
                 side="bottom"
               >
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    size="sm"
-                    className="border-l-primary-foreground/20 rounded-l-none border-l px-1.5"
-                    disabled={createRender.isPending || scenes.length === 0}
-                    aria-label="Render in another format"
-                  >
-                    <ChevronDown className="size-3.5" />
-                  </Button>
-                </DropdownMenuTrigger>
+                <Button
+                  size="sm"
+                  className="rounded-r-none"
+                  disabled={createRender.isPending || scenes.length === 0}
+                  onClick={() => queueRender()}
+                >
+                  {createRender.isPending ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Video className="size-3.5" />
+                  )}
+                  Render
+                </Button>
               </HintTooltip>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Speed / quality</DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={() => queueRender(undefined, "draft")}
+              <DropdownMenu>
+                <HintTooltip
+                  label="Render options — draft, high quality, or other formats"
+                  side="bottom"
                 >
-                  <Zap className="size-3.5" />
-                  Quick draft (fastest, lower res)
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => queueRender(undefined, "high")}
-                >
-                  <Gem className="size-3.5" />
-                  High quality (slower, sharper)
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel>Repurpose to format</DropdownMenuLabel>
-                {ORIENTATIONS.map((o) => (
-                  <DropdownMenuItem key={o} onClick={() => queueRender(o)}>
-                    {ORIENTATION_LABELS[o]}
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm"
+                      className="border-l-primary-foreground/20 rounded-l-none border-l px-1.5"
+                      disabled={createRender.isPending || scenes.length === 0}
+                      aria-label="Render in another format"
+                    >
+                      <ChevronDown className="size-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </HintTooltip>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Speed / quality</DropdownMenuLabel>
+                  <DropdownMenuItem
+                    onClick={() => queueRender(undefined, "draft")}
+                  >
+                    <Zap className="size-3.5" />
+                    Quick draft (fastest, lower res)
                   </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => ORIENTATIONS.forEach((o) => queueRender(o))}
-                >
-                  All formats
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuItem
+                    onClick={() => queueRender(undefined, "high")}
+                  >
+                    <Gem className="size-3.5" />
+                    High quality (slower, sharper)
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Repurpose to format</DropdownMenuLabel>
+                  {ORIENTATIONS.map((o) => (
+                    <DropdownMenuItem key={o} onClick={() => queueRender(o)}>
+                      {ORIENTATION_LABELS[o]}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => ORIENTATIONS.forEach((o) => queueRender(o))}
+                  >
+                    All formats
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
-        </div>
         </details>
       </div>
+      {/* The center column (player) defines the row height; the side panels are
+          stretched to match it and scroll internally. Their content is absolutely
+          positioned so it never contributes to the grid row height. */}
+      <div className="grid min-w-0 items-stretch gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div className="order-2 lg:hidden">
+          <Tabs value={workspaceTab} onValueChange={setWorkspaceTab}>
+            <TabsList className="w-full">
+              <TabsTrigger value="scenes">Scenes</TabsTrigger>
+              <TabsTrigger value="design">Script & design</TabsTrigger>
+              <TabsTrigger value="audio">Audio</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+        <Card
+          className={`relative order-3 min-h-[24rem] min-w-0 overflow-hidden lg:order-none lg:block ${workspaceTab === "scenes" ? "" : "hidden"}`}
+        >
+          <div className="absolute inset-0 overflow-hidden p-3">
+            <SceneList
+              scenes={scenes}
+              selectedId={effectiveSceneId}
+              onSelect={selectScene}
+              onAdd={() => addScene.mutate("")}
+              onMove={handleMove}
+              onDelete={(id) => deleteScene.mutate(id)}
+              busy={sceneBusy}
+            />
+          </div>
+        </Card>
+
+        <Card
+          ref={previewCardRef}
+          className="order-first min-w-0 lg:order-none"
+        >
+          <CardContent className="p-4">
+            <Tabs
+              value={previewMode}
+              onValueChange={(v) => setPreviewMode(v as "scene" | "reel")}
+            >
+              <TabsList className="mb-3 w-full">
+                <TabsTrigger value="scene" className="flex-1">
+                  This scene
+                </TabsTrigger>
+                <TabsTrigger value="reel" className="flex-1">
+                  Full reel
+                </TabsTrigger>
+              </TabsList>
+
+              <label className="mb-2 flex items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  checked={safeZones}
+                  onChange={(event) => setSafeZones(event.target.checked)}
+                />
+                Show safe zones (preview only)
+              </label>
+              <div className="relative">
+                <TabsContent value="scene">
+                  {selectedReelScene ? (
+                    <EnginePlayer
+                      key={selectedReelScene.id}
+                      safeZones={safeZones}
+                      onSelectScene={(id) => {
+                        selectScene(id);
+                        setWorkspaceTab("design");
+                      }}
+                      videoEngine={videoEngine}
+                      scenes={[selectedReelScene]}
+                      storySource={semanticStorySource(scenes)}
+                      timeline={[
+                        {
+                          sceneId: selectedReelScene.id,
+                          startFrame: 0,
+                          durationFrames: sceneDuration,
+                        },
+                      ]}
+                      totalFrames={sceneDuration}
+                      fps={fps}
+                      width={script.width}
+                      height={script.height}
+                      loop
+                      tokens={script.brandTokens}
+                      hideProgressBar={script.hideProgressBar}
+                      previewQuality={previewQuality}
+                      styleId={script.styleId}
+                      energy={script.energy}
+                      preset={script.productionPreset}
+                      sequenceDirection={sequenceConfigFor(script.motionPlan)}
+                    />
+                  ) : (
+                    <EnginePlayer
+                      safeZones={safeZones}
+                      onSelectScene={(id) => {
+                        selectScene(id);
+                        setWorkspaceTab("design");
+                      }}
+                      videoEngine={videoEngine}
+                      scenes={[]}
+                      timeline={[]}
+                      totalFrames={1}
+                      fps={fps}
+                      width={script.width}
+                      height={script.height}
+                      tokens={script.brandTokens}
+                      styleId={script.styleId}
+                      energy={script.energy}
+                      preset={script.productionPreset}
+                      sequenceDirection={sequenceConfigFor(script.motionPlan)}
+                    />
+                  )}
+                  <p className="text-muted-foreground mt-3 text-center text-xs">
+                    Looping the selected scene. Template and text edits update
+                    live.
+                  </p>
+                </TabsContent>
+
+                <TabsContent value="reel">
+                  <EnginePlayer
+                    ref={playerRef}
+                    onReady={() => {
+                      if (!pendingAnimatic.current) return;
+                      pendingAnimatic.current = false;
+                      playerRef.current?.seekTo(0);
+                      playerRef.current?.play();
+                    }}
+                    safeZones={safeZones}
+                    onSelectScene={(id) => {
+                      selectScene(id);
+                      setWorkspaceTab("design");
+                    }}
+                    videoEngine={videoEngine}
+                    scenes={reelScenes}
+                    timeline={timeline}
+                    totalFrames={totalFrames + coverFr}
+                    fps={fps}
+                    width={script.width}
+                    height={script.height}
+                    audioUrl={audioUrl}
+                    musicUrl={script.musicUrl ?? undefined}
+                    musicVolume={script.musicVolume}
+                    sfxCues={sfxCues}
+                    spokenWords={resolveSpokenWordWindows(
+                      script.captionTracks,
+                      takeUsable ? selectedTake?.id : null,
+                      fps,
+                      scenes.some((scene) =>
+                        Boolean(scene.direction?.graphic?.presentation),
+                      ),
+                    )}
+                    captions={script.captionTracks?.find(
+                      (track) => track.enabled,
+                    )}
+                    loop={false}
+                    tokens={script.brandTokens}
+                    coverUrl={script.coverUrl ?? undefined}
+                    hideProgressBar={script.hideProgressBar}
+                    previewQuality={previewQuality}
+                    styleId={script.styleId}
+                    energy={script.energy}
+                    preset={script.productionPreset}
+                    sequenceDirection={sequenceConfigFor(script.motionPlan)}
+                  />
+                  <p className="text-muted-foreground mt-3 text-center text-xs">
+                    {takeUsable
+                      ? "Playing the selected take with synced captions."
+                      : "Estimated preview. Generate a take below for exact, audio-synced timing."}
+                  </p>
+                </TabsContent>
+              </div>
+            </Tabs>
+          </CardContent>
+        </Card>
+
+        <Card
+          className={`relative order-4 min-h-[24rem] min-w-0 overflow-hidden lg:order-none lg:block ${workspaceTab === "design" ? "" : "hidden"}`}
+        >
+          <div className="absolute inset-0 overflow-y-auto p-4">
+            {selectedScene ? (
+              <SceneInspector
+                tokens={script.brandTokens}
+                key={`${selectedScene.id}:${historyRevision}`}
+                scene={selectedScene}
+                storySource={semanticStorySource(scenes)}
+                hideTextDefault={script.hideText}
+                sceneIndex={scenes.findIndex((s) => s.id === effectiveSceneId)}
+                totalScenes={scenes.length}
+                onNavigate={(dir) => {
+                  const idx = scenes.findIndex(
+                    (s) => s.id === effectiveSceneId,
+                  );
+                  const next = scenes[idx + dir];
+                  if (next) selectScene(next.id);
+                }}
+                onUpdate={(vars) =>
+                  updateScene.mutate(vars, {
+                    onError: (error) =>
+                      toast.error("Could not save scene", {
+                        description: error.message,
+                      }),
+                  })
+                }
+                onDelete={(id) => deleteScene.mutate(id)}
+                saving={updateScene.isPending}
+                videoEngine={videoEngine}
+                orientation={orientationFromDims(script.width, script.height)}
+              />
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                Add a scene to start editing.
+              </p>
+            )}
+          </div>
+        </Card>
+      </div>
+
       <FilmContactSheet
         script={script}
         scenes={reelScenes}
@@ -934,168 +1190,23 @@ export function EditorClient({
           });
         }}
       />
-      <ChapterTimeline plan={script.chapterPlan} scenes={scenes} timeline={timeline} fps={fps} selectedId={effectiveSceneId} onSelect={selectScene} onMove={handleMove} busy={sceneBusy} measured={takeUsable} />
+      <EditHistory
+        scriptId={scriptId}
+        onRestored={() => setHistoryRevision((value) => value + 1)}
+      />
+      <ChapterTimeline
+        plan={script.chapterPlan}
+        scenes={scenes}
+        timeline={timeline}
+        fps={fps}
+        selectedId={effectiveSceneId}
+        onSelect={selectScene}
+        onMove={handleMove}
+        busy={sceneBusy}
+        measured={takeUsable}
+      />
 
-      {/* The center column (player) defines the row height; the side panels are
-          stretched to match it and scroll internally. Their content is absolutely
-          positioned so it never contributes to the grid row height. */}
-      <div className="grid items-stretch gap-4 lg:grid-cols-3">
-        <Card className="relative min-h-[24rem] overflow-hidden">
-          <div className="absolute inset-0 overflow-hidden p-3">
-            <SceneList
-              scenes={scenes}
-              selectedId={effectiveSceneId}
-              onSelect={selectScene}
-              onAdd={() => addScene.mutate("")}
-              onMove={handleMove}
-              onDelete={(id) => deleteScene.mutate(id)}
-              busy={sceneBusy}
-            />
-          </div>
-        </Card>
-
-        <Card ref={previewCardRef}>
-          <CardContent className="p-4">
-            <Tabs
-              value={previewMode}
-              onValueChange={(v) => setPreviewMode(v as "scene" | "reel")}
-            >
-              <TabsList className="mb-3 w-full">
-                <TabsTrigger value="scene" className="flex-1">
-                  This scene
-                </TabsTrigger>
-                <TabsTrigger value="reel" className="flex-1">
-                  Full reel
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="scene">
-                {selectedReelScene ? (
-                  <EnginePlayer
-                    key={selectedReelScene.id}
-                    videoEngine={videoEngine}
-                    scenes={[selectedReelScene]}
-                    storySource={semanticStorySource(scenes)}
-                    timeline={[
-                      {
-                        sceneId: selectedReelScene.id,
-                        startFrame: 0,
-                        durationFrames: sceneDuration,
-                      },
-                    ]}
-                    totalFrames={sceneDuration}
-                    fps={fps}
-                    width={script.width}
-                    height={script.height}
-                    loop
-                    tokens={script.brandTokens}
-                    hideProgressBar={script.hideProgressBar}
-                    previewQuality={previewQuality}
-                    styleId={script.styleId}
-                    energy={script.energy}
-                    preset={script.productionPreset}
-                    sequenceDirection={sequenceConfigFor(script.motionPlan)}
-                  />
-                ) : (
-                  <EnginePlayer
-                    videoEngine={videoEngine}
-                    scenes={[]}
-                    timeline={[]}
-                    totalFrames={1}
-                    fps={fps}
-                    width={script.width}
-                    height={script.height}
-                    tokens={script.brandTokens}
-                    styleId={script.styleId}
-                    energy={script.energy}
-                    preset={script.productionPreset}
-                    sequenceDirection={sequenceConfigFor(script.motionPlan)}
-                  />
-                )}
-                <p className="text-muted-foreground mt-3 text-center text-xs">
-                  Looping the selected scene. Template and text edits update
-                  live.
-                </p>
-              </TabsContent>
-
-              <TabsContent value="reel">
-                <EnginePlayer
-                  ref={playerRef}
-                  onReady={() => {
-                    if (!pendingAnimatic.current) return;
-                    pendingAnimatic.current = false;
-                    playerRef.current?.seekTo(0);
-                    playerRef.current?.play();
-                  }}
-                  videoEngine={videoEngine}
-                  scenes={reelScenes}
-                  timeline={timeline}
-                  totalFrames={totalFrames + coverFr}
-                  fps={fps}
-                  width={script.width}
-                  height={script.height}
-                  audioUrl={audioUrl}
-                  musicUrl={script.musicUrl ?? undefined}
-                  musicVolume={script.musicVolume}
-                  sfxCues={sfxCues}
-                  spokenWords={resolveSpokenWordWindows(script.captionTracks, takeUsable ? selectedTake?.id : null, fps, scenes.some(scene => Boolean(scene.direction?.graphic?.presentation)))}
-                  captions={script.captionTracks?.find(
-                    (track) => track.enabled,
-                  )}
-                  loop={false}
-                  tokens={script.brandTokens}
-                  coverUrl={script.coverUrl ?? undefined}
-                  hideProgressBar={script.hideProgressBar}
-                  previewQuality={previewQuality}
-                  styleId={script.styleId}
-                  energy={script.energy}
-                  preset={script.productionPreset}
-                  sequenceDirection={sequenceConfigFor(script.motionPlan)}
-                />
-                <p className="text-muted-foreground mt-3 text-center text-xs">
-                  {takeUsable
-                    ? "Playing the selected take with synced captions."
-                    : "Estimated preview. Generate a take below for exact, audio-synced timing."}
-                </p>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-
-        <Card className="relative min-h-[24rem] overflow-hidden">
-          <div className="absolute inset-0 overflow-y-auto p-4">
-            {selectedScene ? (
-              <SceneInspector
-                tokens={script.brandTokens}
-                key={selectedScene.id}
-                scene={selectedScene}
-                storySource={semanticStorySource(scenes)}
-                hideTextDefault={script.hideText}
-                sceneIndex={scenes.findIndex((s) => s.id === effectiveSceneId)}
-                totalScenes={scenes.length}
-                onNavigate={(dir) => {
-                  const idx = scenes.findIndex(
-                    (s) => s.id === effectiveSceneId,
-                  );
-                  const next = scenes[idx + dir];
-                  if (next) selectScene(next.id);
-                }}
-                onUpdate={(vars) => updateScene.mutate(vars)}
-                onDelete={(id) => deleteScene.mutate(id)}
-                saving={updateScene.isPending}
-                videoEngine={videoEngine}
-                orientation={orientationFromDims(script.width, script.height)}
-              />
-            ) : (
-              <p className="text-muted-foreground text-sm">
-                Add a scene to start editing.
-              </p>
-            )}
-          </div>
-        </Card>
-      </div>
-
-      <Card>
+      <Card className={workspaceTab === "audio" ? "" : "hidden lg:block"}>
         <CardContent className="p-4">
           <VoiceoverPanel
             scriptId={scriptId}

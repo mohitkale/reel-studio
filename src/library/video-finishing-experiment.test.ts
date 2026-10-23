@@ -4,7 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { finishVideoExperiment } from "./video-finishing-experiment";
 import { finishingExperimentSchema } from "@/production/video-benchmark";
 const execute = promisify(execFile);
@@ -88,14 +88,23 @@ it("preserves exact coverage and encoded audio, resets temporal history at cuts 
     expect(await fs.readFile(output)).toEqual(before);
     const canceled = path.join(root, "canceled.mp4");
     const controller = new AbortController();
-    const pending = finishVideoExperiment(
-      source,
-      canceled,
-      input,
-      controller.signal,
-    );
-    setTimeout(() => controller.abort(), 200);
-    await expect(pending).rejects.toThrow();
+    // Abort after the output reservation and scratch directory exist. A timer
+    // races successful completion on fast FFmpeg builds instead of testing cleanup.
+    const makeDirectory = fs.mkdtemp;
+    const scratch = vi
+      .spyOn(fs, "mkdtemp")
+      .mockImplementationOnce(async (...args) => {
+        const directory = await makeDirectory(...args);
+        controller.abort();
+        return directory;
+      });
+    try {
+      await expect(
+        finishVideoExperiment(source, canceled, input, controller.signal),
+      ).rejects.toThrow();
+    } finally {
+      scratch.mockRestore();
+    }
     expect(await fs.readdir(root)).toEqual(
       expect.arrayContaining(["source.mp4", "finished.mp4"]),
     );

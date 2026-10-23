@@ -41,6 +41,8 @@ interface HyperFramesPlayerProps {
   sequenceDirection?: ReelProps["sequenceDirection"];
   autoPlay?: boolean;
   onReady?(): void;
+  onSelectScene?(id: string): void;
+  safeZones?: boolean;
   loop?: boolean;
   tokens?: BrandTokens;
   coverUrl?: string;
@@ -111,6 +113,8 @@ export const HyperFramesPlayer = React.forwardRef<
     sequenceDirection,
     autoPlay,
     onReady,
+    onSelectScene,
+    safeZones,
     previewQuality,
     loop = true,
     tokens,
@@ -124,6 +128,10 @@ export const HyperFramesPlayer = React.forwardRef<
 ) {
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
   const shellRef = React.useRef<HTMLDivElement>(null);
+  const selectionRef = React.useRef({ onSelectScene, scenes });
+  React.useEffect(() => {
+    selectionRef.current = { onSelectScene, scenes };
+  }, [onSelectScene, scenes]);
   const frameRef = React.useRef(0);
   const timeRef = React.useRef(0);
   const playingRef = React.useRef(false);
@@ -361,6 +369,12 @@ export const HyperFramesPlayer = React.forwardRef<
         )}
         style={fullscreen ? undefined : { aspectRatio }}
       >
+        {safeZones && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-[8%] inset-y-[12%] z-10 border-2 border-dashed border-amber-400"
+          />
+        )}
         <iframe
           ref={iframeRef}
           title="HyperFrames preview"
@@ -368,6 +382,22 @@ export const HyperFramesPlayer = React.forwardRef<
           sandbox="allow-scripts allow-same-origin"
           className="h-full w-full border-0 bg-black"
           onLoad={() => {
+            if (onSelectScene) {
+              iframeRef.current?.contentDocument?.addEventListener(
+                "click",
+                (event) => {
+                  const target = event.target as Element | null;
+                  const id = target
+                    ?.closest?.("[data-scene-id]")
+                    ?.getAttribute("data-scene-id");
+                  if (
+                    id &&
+                    selectionRef.current.scenes.some((scene) => scene.id === id)
+                  )
+                    selectionRef.current.onSelectScene?.(id);
+                },
+              );
+            }
             setReady(true);
             const first = timeline[0];
             const posterTime = first

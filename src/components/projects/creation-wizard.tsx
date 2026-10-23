@@ -83,9 +83,11 @@ function ChoiceCard({
 
 export function CreationWizard({
   initialPresetId = "editorial-explainer",
+  initialOutputType = "video",
   trigger,
 }: {
   initialPresetId?: ProductionPresetId;
+  initialOutputType?: OutputType;
   trigger?: React.ReactElement;
 } = {}) {
   const router = useRouter();
@@ -94,7 +96,8 @@ export function CreationWizard({
   const { data: brandKits = [] } = useBrandKits();
   const [open, setOpen] = React.useState(false);
   const [step, setStep] = React.useState(0);
-  const [outputType, setOutputType] = React.useState<OutputType>("video");
+  const [outputType, setOutputType] =
+    React.useState<OutputType>(initialOutputType);
   const [structure, setStructure] = React.useState<"single" | "chapters">(
     "single",
   );
@@ -126,7 +129,7 @@ export function CreationWizard({
 
   function reset() {
     setStep(0);
-    setOutputType("video");
+    setOutputType(initialOutputType);
     setStructure("single");
     setSourceKind("text");
     setName("");
@@ -183,7 +186,11 @@ export function CreationWizard({
           result.warnings[0] ??
           "Your content is already arranged into editable scenes.",
       });
-      router.push(`/editor/${result.scriptId}`);
+      router.push(
+        outputType === "voiceover"
+          ? `/voiceovers/${result.scriptId}`
+          : `/editor/${result.scriptId}`,
+      );
     } catch (error) {
       await Promise.allSettled(
         uploaded.map((asset) =>
@@ -270,10 +277,10 @@ export function CreationWizard({
                 }}
               >
                 <FileAudio className="text-primary mb-3 size-6" />
-                <p className="font-medium">Voiceover-first video</p>
+                <p className="font-medium">Voiceover</p>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  Preserve the full narration and prepare visual scenes around
-                  it.
+                  Preserve the full narration, edit paragraphs and compare audio
+                  takes. Add visuals later.
                 </p>
               </ChoiceCard>
               <ChoiceCard
@@ -296,13 +303,21 @@ export function CreationWizard({
           {step === 0 ? (
             <div className="space-y-5">
               <p className="bg-muted/30 rounded-lg border p-3 text-sm">
-                Ready to use:{" "}
-                {
-                  PRODUCTION_PRESETS.find((preset) => preset.id === presetId)
-                    ?.name
-                }{" "}
-                · {ORIENTATION_LABELS[orientation]} · Default brand kit. Review
-                your scenes, then add narration and export in the editor.
+                {outputType === "voiceover" ? (
+                  "Ready to use: Voiceover studio. Preserve your complete script, then select voices and review paragraph takes."
+                ) : (
+                  <>
+                    Ready to use:{" "}
+                    {
+                      PRODUCTION_PRESETS.find(
+                        (preset) => preset.id === presetId,
+                      )?.name
+                    }{" "}
+                    · {ORIENTATION_LABELS[orientation]} · Default brand kit.
+                    Review your scenes, then add narration and export in the
+                    editor.
+                  </>
+                )}
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <ChoiceCard

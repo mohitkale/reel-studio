@@ -84,6 +84,7 @@ export function useGenerateAllSceneClips(scriptId: string) {
       providerId?: ProviderId;
       voiceId?: string;
       modelId?: string;
+      speed?: number;
       label?: string;
       onProgress?: (progress: VoiceGenerationProgress) => void;
     }) =>
@@ -112,6 +113,7 @@ export function useGenerateSceneClip(scriptId: string) {
       providerId?: ProviderId;
       voiceId?: string;
       modelId?: string;
+      speed?: number;
       label?: string;
       onProgress?: (progress: VoiceGenerationProgress) => void;
     }) =>

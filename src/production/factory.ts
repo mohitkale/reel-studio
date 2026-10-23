@@ -73,6 +73,12 @@ export const factoryRunRequestSchema = z
     variants: z.array(factoryVariantSchema).min(1).max(FACTORY_LIMITS.variants),
     quality: z.enum(["draft", "standard", "high"]).optional(),
     runMode: z.enum(["automatic", "approval"]).default("approval"),
+    maxOutputSeconds: z
+      .number()
+      .int()
+      .min(1)
+      .max(FACTORY_LIMITS.runSeconds)
+      .optional(),
   })
   .strict()
   .refine(

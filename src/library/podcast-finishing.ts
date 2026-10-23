@@ -1,30 +1,10 @@
 import { parseWav, pcmToWav } from "@/lib/wav";
-import type {
-  PodcastFinishingSnapshot,
-  PodcastPronunciation,
-} from "@/library/podcast-schemas";
+import type { PodcastFinishingSnapshot } from "@/library/podcast-schemas";
 
 const BUMPER_GAIN = 0.32;
 const BUMPER_FADE_SECONDS = 0.75;
 
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-/** Apply ordered pronunciation rules only to provider-bound spoken text. */
-export function applyPodcastPronunciations(
-  text: string,
-  rules: PodcastPronunciation[],
-): string {
-  return rules.reduce(
-    (value, rule) =>
-      value.replace(
-        new RegExp(escapeRegExp(rule.find), rule.caseSensitive ? "g" : "gi"),
-        () => rule.replaceWith,
-      ),
-    text,
-  );
-}
+export { applyPronunciations as applyPodcastPronunciations } from "@/lib/pronunciation";
 
 function bumperPcm(wav: Buffer): { pcm: Buffer; audioFrames: number } {
   const info = parseWav(wav);

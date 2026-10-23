@@ -224,9 +224,9 @@ export async function submitFactoryRun(args: {
           403,
         );
       seconds += frames / derived.snapshot.script.fps;
-      if (seconds > FACTORY_LIMITS.runSeconds)
+      if (seconds > (request.maxOutputSeconds ?? FACTORY_LIMITS.runSeconds))
         throw new ProviderError(
-          "A factory run may schedule at most 30 output minutes",
+          `Factory output exceeds the ${request.maxOutputSeconds ?? FACTORY_LIMITS.runSeconds}-second budget. Reduce formats or cutdown length.`,
           400,
         );
       derived.snapshot.factory = {

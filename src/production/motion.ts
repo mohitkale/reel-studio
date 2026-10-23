@@ -134,6 +134,13 @@ export const motionDirectionSchema = z.object({
   version: z.literal(MOTION_RECIPE_VERSION),
   system: z.enum(["editorial", "precision", "poster"]).optional(),
   typeEntrance: z.enum(["sweep", "rise"]).optional(),
+  textReveal: z
+    .object({
+      durationSeconds: z.number().min(0.15).max(1.5),
+      ease: z.enum(["linear", "smooth", "snappy"]),
+    })
+    .strict()
+    .optional(),
   sequenceVersion: z.literal(1).optional(),
   decision: z
     .object({

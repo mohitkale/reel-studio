@@ -1,4 +1,5 @@
 "use client";
+import { ChartDataEditor } from "./chart-data-editor";
 
 import * as React from "react";
 import { AdaptiveRecipePicker } from "./adaptive-recipe-catalog";
@@ -444,7 +445,14 @@ function ChecklistEditor({
     items.length ? items : [""],
   );
 
-  const maximum = adaptive === "comparison" ? 4 : adaptive === "process" ? 6 : comparison ? 2 : undefined;
+  const maximum =
+    adaptive === "comparison"
+      ? 4
+      : adaptive === "process"
+        ? 6
+        : comparison
+          ? 2
+          : undefined;
 
   function commit(next: string[]) {
     setDraft(next);
@@ -478,10 +486,10 @@ function ChecklistEditor({
         {adaptive
           ? `Supply 2–${maximum} ${adaptive === "process" ? "ordered steps" : "alternatives"}, up to 96 characters each. Existing identities follow exact labels or saved aliases.`
           : comparison
-          ? "Supply two labels, up to 60 characters each. Their order stays the same in both comparison layouts."
-          : diagram
-            ? "Add 2–5 short ideas. Path follows their order; Orbit places the first idea at the center."
-            : "Keep each item short. Cascading list supports 2–5 items; Tile grid supports 2–4."}
+            ? "Supply two labels, up to 60 characters each. Their order stays the same in both comparison layouts."
+            : diagram
+              ? "Add 2–5 short ideas. Path follows their order; Orbit places the first idea at the center."
+              : "Keep each item short. Cascading list supports 2–5 items; Tile grid supports 2–4."}
       </p>
       <div className="grid gap-1.5">
         {draft.map((item, i) => (
@@ -548,167 +556,6 @@ function ChecklistEditor({
         <Plus className="size-3.5" />
         Add item
       </Button>
-    </div>
-  );
-}
-
-function ChartDataEditor({
-  chart,
-  onSave,
-  onClear,
-}: {
-  chart?: SceneChartData;
-  onSave: (chart: SceneChartData) => void;
-  onClear: () => void;
-}) {
-  const [label, setLabel] = React.useState(chart?.series[0]?.label ?? "");
-  const [unit, setUnit] = React.useState(chart?.series[0]?.unit ?? "");
-  const [source, setSource] = React.useState(chart?.sourceAttribution ?? "");
-  const [rows, setRows] = React.useState(
-    chart?.labels.map((name, index) => ({
-      label: name,
-      value: String(chart.series[0]?.values[index] ?? ""),
-    })) ?? [{ label: "", value: "" }],
-  );
-  const [error, setError] = React.useState<string | null>(null);
-  const multipleSeries = Boolean(chart && chart.series.length > 1);
-
-  function save() {
-    const cleanRows = rows.map((row) => ({
-      label: row.label.trim(),
-      value: row.value.trim(),
-    }));
-    if (
-      !label.trim() ||
-      label.trim().length > 30 ||
-      unit.length > 12 ||
-      source.length > 120 ||
-      cleanRows.length < 1 ||
-      cleanRows.length > 6 ||
-      cleanRows.some(
-        (row) =>
-          !row.label ||
-          row.label.length > 24 ||
-          !/^\d+(?:\.\d+)?$/.test(row.value) ||
-          !Number.isFinite(Number(row.value)),
-      )
-    ) {
-      setError(
-        "Add a short series name and 1–6 rows with short labels and nonnegative numbers. Keep units and source brief.",
-      );
-      return;
-    }
-    setError(null);
-    onSave({
-      labels: cleanRows.map((row) => row.label),
-      series: [
-        {
-          label: label.trim(),
-          values: cleanRows.map((row) => Number(row.value)),
-          ...(unit.trim() ? { unit: unit.trim() } : {}),
-        },
-      ],
-      ...(source.trim() ? { sourceAttribution: source.trim() } : {}),
-    });
-  }
-
-  if (multipleSeries) {
-    return (
-      <p className="text-muted-foreground text-xs">
-        This chart has multiple series. Use the scene JSON editor to preserve
-        all values when changing it.
-      </p>
-    );
-  }
-
-  return (
-    <div className="grid gap-3">
-      <p className="text-muted-foreground text-xs">
-        Enter supplied values. The video keeps your labels, units, and source.
-      </p>
-      <div className="grid grid-cols-2 gap-2">
-        <Input
-          aria-label="Series name"
-          placeholder="Series name"
-          value={label}
-          onChange={(event) => setLabel(event.target.value)}
-        />
-        <Input
-          aria-label="Unit"
-          placeholder="Unit, e.g. %"
-          value={unit}
-          onChange={(event) => setUnit(event.target.value)}
-        />
-      </div>
-      {rows.map((row, index) => (
-        <div key={index} className="grid grid-cols-[1fr_110px_32px] gap-2">
-          <Input
-            aria-label={`Label ${index + 1}`}
-            placeholder="Label"
-            value={row.label}
-            onChange={(event) =>
-              setRows((current) =>
-                current.map((item, i) =>
-                  i === index ? { ...item, label: event.target.value } : item,
-                ),
-              )
-            }
-          />
-          <Input
-            aria-label={`Value ${index + 1}`}
-            inputMode="decimal"
-            placeholder="Value"
-            value={row.value}
-            onChange={(event) =>
-              setRows((current) =>
-                current.map((item, i) =>
-                  i === index ? { ...item, value: event.target.value } : item,
-                ),
-              )
-            }
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label={`Remove row ${index + 1}`}
-            disabled={rows.length === 1}
-            onClick={() =>
-              setRows((current) => current.filter((_, i) => i !== index))
-            }
-          >
-            <X className="size-4" />
-          </Button>
-        </div>
-      ))}
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        disabled={rows.length >= 6}
-        onClick={() =>
-          setRows((current) => [...current, { label: "", value: "" }])
-        }
-      >
-        <Plus className="size-4" /> Add row
-      </Button>
-      <Input
-        aria-label="Data source"
-        placeholder="Source or attribution (optional)"
-        value={source}
-        onChange={(event) => setSource(event.target.value)}
-      />
-      {error && <p className="text-destructive text-xs">{error}</p>}
-      <div className="flex gap-2">
-        <Button type="button" size="sm" onClick={save}>
-          Save data
-        </Button>
-        {chart && (
-          <Button type="button" variant="ghost" size="sm" onClick={onClear}>
-            Clear data
-          </Button>
-        )}
-      </div>
     </div>
   );
 }
@@ -791,7 +638,14 @@ export function SceneInspector({
   );
   const motionOptions = [
     ...(sceneGraphic
-      ? [{ value: "illustrated", label: sceneGraphic.presentation ? `Auto · ${SHOWPIECES.find(piece => piece.id === sceneGraphic.presentation)?.name}` : "Content illustration" }]
+      ? [
+          {
+            value: "illustrated",
+            label: sceneGraphic.presentation
+              ? `Auto · ${SHOWPIECES.find((piece) => piece.id === sceneGraphic.presentation)?.name}`
+              : "Content illustration",
+          },
+        ]
       : []),
     { value: "preset", label: "Preset look" },
     ...MOTION_RECIPES.filter(
@@ -888,7 +742,9 @@ export function SceneInspector({
             <div>
               <Label>Regeneration and variation locks</Label>
               <p className="text-muted-foreground mt-1 text-xs">
-                Keep selected parts unchanged during regeneration. Whole scene also protects layout, motion and subject identity during variations.
+                Keep selected parts unchanged during regeneration. Whole scene
+                also protects layout, motion and subject identity during
+                variations.
               </p>
             </div>
             <Lock className="text-muted-foreground size-4" />
@@ -975,7 +831,9 @@ export function SceneInspector({
             <Combobox
               id="scene-motion"
               value={
-                sceneGraphic ? "illustrated" : (scene.motion?.recipeId ?? "preset")
+                sceneGraphic
+                  ? "illustrated"
+                  : (scene.motion?.recipeId ?? "preset")
               }
               onChange={(value) => {
                 if (value === "illustrated") return;
@@ -990,6 +848,85 @@ export function SceneInspector({
               options={motionOptions}
               searchPlaceholder="Search treatments…"
             />
+            {scene.motion &&
+              ["type-impact", "type-editorial", "type-stack"].includes(
+                scene.motion.recipeId,
+              ) && (
+                <fieldset
+                  className="grid gap-2 rounded border p-3"
+                  disabled={saving}
+                >
+                  <legend className="px-1 text-xs">Text entrance timing</legend>
+                  <label className="grid gap-1 text-xs">
+                    Reveal duration (seconds)
+                    <Input
+                      key={`${scene.id}:${scene.motion.textReveal?.durationSeconds}`}
+                      type="number"
+                      min={0.15}
+                      max={1.5}
+                      step={0.05}
+                      defaultValue={
+                        scene.motion.textReveal?.durationSeconds ?? 0.42
+                      }
+                      onBlur={(event) => {
+                        const durationSeconds = Number(event.target.value);
+                        if (
+                          !Number.isFinite(durationSeconds) ||
+                          durationSeconds < 0.15 ||
+                          durationSeconds > 1.5
+                        ) {
+                          event.target.value = String(
+                            scene.motion?.textReveal?.durationSeconds ?? 0.42,
+                          );
+                          return;
+                        }
+                        onUpdate({
+                          id: scene.id,
+                          motion: {
+                            ...scene.motion!,
+                            textReveal: {
+                              durationSeconds,
+                              ease: scene.motion?.textReveal?.ease ?? "snappy",
+                            },
+                          },
+                        });
+                      }}
+                    />
+                  </label>
+                  <label className="grid gap-1 text-xs">
+                    Easing
+                    <select
+                      className="bg-background rounded border p-2"
+                      value={scene.motion.textReveal?.ease ?? "snappy"}
+                      onChange={(event) =>
+                        onUpdate({
+                          id: scene.id,
+                          motion: {
+                            ...scene.motion!,
+                            textReveal: {
+                              durationSeconds:
+                                scene.motion?.textReveal?.durationSeconds ??
+                                0.42,
+                              ease: event.target.value as
+                                "linear" | "smooth" | "snappy",
+                            },
+                          },
+                        })
+                      }
+                    >
+                      <option value="snappy">Snappy — settles quickly</option>
+                      <option value="smooth">
+                        Smooth — accelerates and settles
+                      </option>
+                      <option value="linear">Linear — steady speed</option>
+                    </select>
+                  </label>
+                  <p className="text-muted-foreground text-xs">
+                    Shared by preview and export. Short scenes cap the reveal to
+                    their available time; narration timing stays unchanged.
+                  </p>
+                </fieldset>
+              )}
             <AdaptiveRecipePicker
               tokens={tokens}
               scene={{
@@ -1003,17 +940,51 @@ export function SceneInspector({
             {scene.motion?.decision && (
               <div className="bg-muted space-y-2 rounded p-3 text-xs">
                 <strong>Why this visual?</strong>
-                {scene.motion.decision.sourceKey === sequenceSourceKey({ ...scene, hasVisualContent: Boolean(scene.visual) }) ? (
+                {scene.motion.decision.sourceKey ===
+                sequenceSourceKey({
+                  ...scene,
+                  hasVisualContent: Boolean(scene.visual),
+                }) ? (
                   <>
-                    <p>{scene.motion.decision.reason.replace(scene.motion.recipeId, MOTION_RECIPES.find(recipe => recipe.id === scene.motion?.recipeId)?.name ?? scene.motion.recipeId)}</p>
-                    {scene.motion.decision.alternatives.map(alternative => (
-                      <Button key={alternative.recipeId} size="sm" variant="outline" disabled={scene.locks?.scene} title={alternative.reason}
-                        onClick={() => onUpdate({ id: scene.id, motion: { recipeId: alternative.recipeId, version: "1.0.0", system: scene.motion?.system } })}>
-                        Try {MOTION_RECIPES.find(recipe => recipe.id === alternative.recipeId)?.name ?? alternative.recipeId}
+                    <p>
+                      {scene.motion.decision.reason.replace(
+                        scene.motion.recipeId,
+                        MOTION_RECIPES.find(
+                          (recipe) => recipe.id === scene.motion?.recipeId,
+                        )?.name ?? scene.motion.recipeId,
+                      )}
+                    </p>
+                    {scene.motion.decision.alternatives.map((alternative) => (
+                      <Button
+                        key={alternative.recipeId}
+                        size="sm"
+                        variant="outline"
+                        disabled={scene.locks?.scene}
+                        title={alternative.reason}
+                        onClick={() =>
+                          onUpdate({
+                            id: scene.id,
+                            motion: {
+                              recipeId: alternative.recipeId,
+                              version: "1.0.0",
+                              system: scene.motion?.system,
+                            },
+                          })
+                        }
+                      >
+                        Try{" "}
+                        {MOTION_RECIPES.find(
+                          (recipe) => recipe.id === alternative.recipeId,
+                        )?.name ?? alternative.recipeId}
                       </Button>
                     ))}
                   </>
-                ) : <p>Content changed after this decision. Replan visual direction to refresh the explanation.</p>}
+                ) : (
+                  <p>
+                    Content changed after this decision. Replan visual direction
+                    to refresh the explanation.
+                  </p>
+                )}
               </div>
             )}
 
@@ -1023,19 +994,19 @@ export function SceneInspector({
                 : scene.direction?.graphic
                   ? `${semanticGraphicIssue(scene.direction.graphic, scene.text, scene.spokenText ?? undefined, storySource) ?? "This illustration cannot hide supplied media or data."} Replan visual direction or choose a treatment.`
                   : scene.motion
-                ? resolveMotionDirection(
-                    scene.motion,
-                    scene.text,
-                    scene.chart,
-                    Boolean(scene.visual),
-                    scene.items,
-                    scene.background,
-                  )
-                  ? MOTION_RECIPES.find(
-                      (recipe) => recipe.id === scene.motion?.recipeId,
-                    )?.description
-                  : `${motionFallbackReason(scene.motion, scene.text, scene.chart, Boolean(scene.visual), scene.items, scene.background)} The preset look renders until it fits or you choose another treatment.`
-                : "Uses this production preset's original scene design."}
+                    ? resolveMotionDirection(
+                        scene.motion,
+                        scene.text,
+                        scene.chart,
+                        Boolean(scene.visual),
+                        scene.items,
+                        scene.background,
+                      )
+                      ? MOTION_RECIPES.find(
+                          (recipe) => recipe.id === scene.motion?.recipeId,
+                        )?.description
+                      : `${motionFallbackReason(scene.motion, scene.text, scene.chart, Boolean(scene.visual), scene.items, scene.background)} The preset look renders until it fits or you choose another treatment.`
+                    : "Uses this production preset's original scene design."}
             </p>
           </div>
         )}
@@ -1088,7 +1059,13 @@ export function SceneInspector({
             items={scene.items ?? []}
             diagram={scene.role === "diagram"}
             comparison={isComparison}
-            adaptive={scene.motion?.recipeId === "adaptive-comparison" ? "comparison" : scene.motion?.recipeId === "adaptive-process" ? "process" : undefined}
+            adaptive={
+              scene.motion?.recipeId === "adaptive-comparison"
+                ? "comparison"
+                : scene.motion?.recipeId === "adaptive-process"
+                  ? "process"
+                  : undefined
+            }
             onChange={(items) => {
               const motion =
                 scene.role === "diagram" || scene.role === "comparison"
@@ -1123,16 +1100,16 @@ export function SceneInspector({
           background={scene.background}
           forceMuted={Boolean(
             !(scene.hideText ?? hideTextDefault) &&
-              scene.motion &&
-              isMediaMotionRecipe(scene.motion.recipeId) &&
-              resolveMotionDirection(
-                scene.motion,
-                scene.text,
-                scene.chart,
-                Boolean(scene.visual),
-                scene.items,
-                scene.background,
-              ),
+            scene.motion &&
+            isMediaMotionRecipe(scene.motion.recipeId) &&
+            resolveMotionDirection(
+              scene.motion,
+              scene.text,
+              scene.chart,
+              Boolean(scene.visual),
+              scene.items,
+              scene.background,
+            ),
           )}
           onChange={(bg) => {
             const mediaMotion = Boolean(

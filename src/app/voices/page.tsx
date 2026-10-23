@@ -1,4 +1,7 @@
 "use client";
+import * as React from "react";
+import { QueryError } from "@/components/ui/query-error";
+import { NativeSelect } from "@/components/ui/native-select";
 
 import Link from "next/link";
 import { AudioLines } from "lucide-react";
@@ -14,7 +17,9 @@ import { VoiceBrowser } from "@/components/voice/voice-browser";
 import { VoiceClonePanel } from "@/components/voice/voice-clone-panel";
 
 export default function VoicesPage() {
-  const { data, isLoading } = useProviders();
+  const { data, isLoading, isError, error, refetch, isFetching } =
+    useProviders();
+  const [selected, setSelected] = React.useState<string>();
 
   const providers = data?.providers ?? [];
   const defaultTab =
@@ -27,7 +32,15 @@ export default function VoicesPage() {
         description="Browse default and cloned voices for each provider, and preview them without spending credits."
       />
 
-      {isLoading || !data ? (
+      {isError && (
+        <QueryError
+          title="Could not load voice providers"
+          error={error}
+          retry={refetch}
+          pending={isFetching}
+        />
+      )}
+      {isError && !data ? null : isLoading || !data ? (
         <div className="space-y-3">
           <Skeleton className="h-9 w-64" />
           <Skeleton className="h-40 w-full" />
@@ -44,8 +57,26 @@ export default function VoicesPage() {
           }
         />
       ) : (
-        <Tabs defaultValue={defaultTab} className="space-y-4">
-          <TabsList>
+        <Tabs
+          value={selected ?? defaultTab}
+          onValueChange={setSelected}
+          className="min-w-0 space-y-4"
+        >
+          <label className="grid gap-2 text-sm md:hidden">
+            Voice provider
+            <NativeSelect
+              value={selected ?? defaultTab}
+              onChange={(event) => setSelected(event.target.value)}
+            >
+              {providers.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                  {p.configured ? "" : " — setup needed"}
+                </option>
+              ))}
+            </NativeSelect>
+          </label>
+          <TabsList className="hidden md:inline-flex">
             {providers.map((p) => (
               <TabsTrigger key={p.id} value={p.id}>
                 {p.label}

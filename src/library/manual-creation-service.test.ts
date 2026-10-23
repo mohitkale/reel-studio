@@ -135,6 +135,29 @@ describe("manual creation service", () => {
     expect(call[5].assetRefs.flat()).toContain("image-1");
   });
 
+  it("keeps voiceover creation local without automatic stock requests", async () => {
+    getAssets.mockResolvedValue([]);
+    const result = await createManualProject({
+      name: "Voiceover review",
+      outputType: "voiceover",
+      source: {
+        kind: "text",
+        text: "Start with a clear idea.\n\nGive each paragraph room to breathe.",
+      },
+      presetId: "editorial-explainer",
+      orientation: "portrait",
+      videoEngine: "hyperframes",
+      mediaPreference: "auto",
+    });
+    expect(resolveAutomaticSceneMediaBatch).not.toHaveBeenCalled();
+    expect(result.plan.scenes).toHaveLength(2);
+    expect(result.warnings.join(" ")).not.toContain("Automatic media");
+    expect(createProjectFromPlan.mock.calls[0][5].mediaPreferences).toEqual([
+      "none",
+      "none",
+    ]);
+  });
+
   it("extracts URL content before deterministic planning", async () => {
     getAssets.mockResolvedValue([]);
     ingestPublicArticle.mockResolvedValue({

@@ -1,4 +1,9 @@
 "use client";
+import { SpeechPresets } from "@/components/studio/speech-presets";
+import {
+  GenerationSummary,
+  narrationSummary,
+} from "@/components/studio/generation-summary";
 
 import * as React from "react";
 import Link from "next/link";
@@ -111,7 +116,7 @@ function VoiceModeToggle({
 }) {
   return (
     <div
-      className="inline-flex items-center rounded-lg border bg-muted/40 p-0.5"
+      className="bg-muted/40 inline-flex items-center rounded-lg border p-0.5"
       role="group"
       aria-label="Voice mode"
     >
@@ -173,7 +178,9 @@ export function VoiceoverPanel({
   hasScenes: boolean;
 }) {
   const { data: providersData } = useProviders();
-  const configured = (providersData?.providers ?? []).filter((p) => p.configured);
+  const configured = (providersData?.providers ?? []).filter(
+    (p) => p.configured,
+  );
 
   const [providerId, setProviderId] = React.useState<ProviderId | undefined>();
   const [voiceId, setVoiceId] = React.useState("");
@@ -189,7 +196,10 @@ export function VoiceoverPanel({
   const isKokoroProvider =
     effectiveProvider === "kokoro" || effectiveProvider === "kokoro-server";
 
-  const { data: voices, isLoading: voicesLoading } = useVoices(effectiveProvider, "");
+  const { data: voices, isLoading: voicesLoading } = useVoices(
+    effectiveProvider,
+    "",
+  );
   const { data: models } = useModels(effectiveProvider);
 
   const webSpeech = useWebSpeechPreview();
@@ -229,9 +239,7 @@ export function VoiceoverPanel({
     ...library.map((v) => ({
       value: v.id,
       label: v.name,
-      group: isKokoroProvider
-        ? kokoroLanguageLabel(v.language)
-        : "Library",
+      group: isKokoroProvider ? kokoroLanguageLabel(v.language) : "Library",
     })),
   ];
   const webVoiceOptions: ComboboxOption[] = webSpeech.voices.map((v) => ({
@@ -255,6 +263,10 @@ export function VoiceoverPanel({
 
   const setVoiceMode = useSetVoiceMode(scriptId);
   const generate = useGenerateTake(scriptId);
+  const [speed, setSpeed] = React.useState(1);
+  const supportsSpeed = ["kokoro-server", "cartesia", "voiceforge"].includes(
+    effectiveProvider ?? "",
+  );
   const kokoro = useKokoroGenerate(scriptId);
   const kokoroClips = useKokoroGenerateSceneClips(scriptId);
   const kokoroOneClip = useKokoroGenerateOneSceneClip(scriptId);
@@ -297,9 +309,16 @@ export function VoiceoverPanel({
   function buildLabel(placeholder: boolean): string | undefined {
     if (placeholder) return undefined;
     const voiceName = voices?.find((v) => v.id === effectiveVoice)?.name;
-    const providerLabel = configured.find((p) => p.id === effectiveProvider)?.label;
+    const providerLabel = configured.find(
+      (p) => p.id === effectiveProvider,
+    )?.label;
     const modelLabel = models?.find((m) => m.id === effectiveModel)?.label;
-    return [voiceName, providerLabel, modelLabel || effectiveModel || undefined]
+    return [
+      voiceName,
+      providerLabel,
+      modelLabel || effectiveModel || undefined,
+      supportsSpeed && speed !== 1 ? `${speed.toFixed(2)}×` : undefined,
+    ]
       .filter(Boolean)
       .join(" · ");
   }
@@ -412,8 +431,10 @@ export function VoiceoverPanel({
 
   function runPreview() {
     const text =
-      scenes.map((s) => resolveSpokenText(s)).filter(Boolean).join(". ") ||
-      "No scene text to preview.";
+      scenes
+        .map((s) => resolveSpokenText(s))
+        .filter(Boolean)
+        .join(". ") || "No scene text to preview.";
     webSpeech.preview(text, effectiveVoice || undefined);
   }
 
@@ -427,6 +448,7 @@ export function VoiceoverPanel({
             voiceId: effectiveVoice,
             modelId: effectiveModel || undefined,
             label: buildLabel(false),
+            speed: supportsSpeed ? speed : undefined,
             onProgress: setServerProgress,
           },
       {
@@ -462,6 +484,7 @@ export function VoiceoverPanel({
             voiceId: effectiveVoice,
             modelId: effectiveModel || undefined,
             label: buildLabel(false),
+            speed: supportsSpeed ? speed : undefined,
             onProgress: setServerProgress,
           },
       {
@@ -502,6 +525,7 @@ export function VoiceoverPanel({
             voiceId: effectiveVoice,
             modelId: effectiveModel || undefined,
             label: buildLabel(false),
+            speed: supportsSpeed ? speed : undefined,
             onProgress: setServerProgress,
           },
       {
@@ -532,7 +556,8 @@ export function VoiceoverPanel({
             toast.success("Clip selected · reel audio updated");
           } else {
             toast.info("Clip selected", {
-              description: "Generate remaining scenes to assemble the full reel.",
+              description:
+                "Generate remaining scenes to assemble the full reel.",
             });
           }
         },
@@ -564,7 +589,7 @@ export function VoiceoverPanel({
   const providerControls = (
     <>
       {configured.length === 0 ? (
-        <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+        <p className="text-muted-foreground rounded-lg border border-dashed p-3 text-sm">
           No provider configured. Add a key in{" "}
           <Link href="/settings" className="text-primary underline">
             Settings
@@ -597,9 +622,7 @@ export function VoiceoverPanel({
                   if (isVoiceforge) setVoiceId("");
                 }}
                 options={modelOptions}
-                placeholder={
-                  isVoiceforge ? "Select engine…" : "Select model…"
-                }
+                placeholder={isVoiceforge ? "Select engine…" : "Select model…"}
                 searchPlaceholder={
                   isVoiceforge ? "Search engines…" : "Search models…"
                 }
@@ -641,7 +664,7 @@ export function VoiceoverPanel({
             />
           ) : null}
           {isVoiceforge ? (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {voiceforgeEngineHelperText(effectiveModel)} Pick a cloned voice
               built with this engine — synthesis always uses that voice&apos;s
               engine.
@@ -667,9 +690,9 @@ export function VoiceoverPanel({
             <Square />
             Stop
           </Button>
-          <p className="text-xs text-muted-foreground">
-            Preview only — browser speech can&apos;t be rendered. Use Kokoro
-            or a provider to create a take.
+          <p className="text-muted-foreground text-xs">
+            Preview only — browser speech can&apos;t be rendered. Use Kokoro or
+            a provider to create a take.
           </p>
         </>
       ) : isKokoro ? (
@@ -678,11 +701,7 @@ export function VoiceoverPanel({
             onClick={runKokoroOneshot}
             disabled={!hasScenes || !effectiveVoice || kokoro.isPending}
           >
-            {kokoro.isPending ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              <Cpu />
-            )}
+            {kokoro.isPending ? <Loader2 className="animate-spin" /> : <Cpu />}
             Generate in browser
           </Button>
           {kokoro.isPending ? (
@@ -691,12 +710,12 @@ export function VoiceoverPanel({
                 <Square />
                 Cancel
               </Button>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {kokoroProgressLabel(kokoro.progress)}
               </p>
             </>
           ) : (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Free, runs on your device in the background. First run downloads
               the voice model (~80&nbsp;MB), then it&apos;s cached.
             </p>
@@ -716,7 +735,7 @@ export function VoiceoverPanel({
             Generate take
           </Button>
           {generate.isPending && serverProgress ? (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {serverProgressLabel(serverProgress, effectiveProvider)}
             </p>
           ) : null}
@@ -748,7 +767,7 @@ export function VoiceoverPanel({
             <Square />
             Stop
           </Button>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Preview only — switch to Kokoro or a provider to create scene clips.
           </p>
         </>
@@ -771,12 +790,12 @@ export function VoiceoverPanel({
                 <Square />
                 Cancel
               </Button>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 {kokoroProgressLabel(kokoroClips.progress)}
               </p>
             </>
           ) : (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Creates a clip per scene in parallel, then stitches the reel.
             </p>
           )}
@@ -785,7 +804,9 @@ export function VoiceoverPanel({
         <>
           <Button
             onClick={() => runGenerateAllClips(false)}
-            disabled={!hasScenes || !canGenerateReal || generateAllClips.isPending}
+            disabled={
+              !hasScenes || !canGenerateReal || generateAllClips.isPending
+            }
           >
             {generateAllClips.isPending ? (
               <Loader2 className="animate-spin" />
@@ -795,7 +816,7 @@ export function VoiceoverPanel({
             Generate all scenes
           </Button>
           {generateAllClips.isPending && serverProgress ? (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               {serverProgressLabel(serverProgress, effectiveProvider)}
             </p>
           ) : null}
@@ -810,7 +831,7 @@ export function VoiceoverPanel({
         Silent placeholders (no credits)
       </Button>
       <div className="flex items-center justify-between gap-2 pt-1">
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           {freshClipCount}/{scenes.length} scenes ready
         </p>
         <Button
@@ -819,9 +840,7 @@ export function VoiceoverPanel({
           onClick={handleAssemble}
           disabled={freshClipCount < scenes.length || assemble.isPending}
         >
-          {assemble.isPending ? (
-            <Loader2 className="animate-spin" />
-          ) : null}
+          {assemble.isPending ? <Loader2 className="animate-spin" /> : null}
           Assemble
         </Button>
       </div>
@@ -832,13 +851,13 @@ export function VoiceoverPanel({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">Takes</h3>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-muted-foreground text-xs">
           {takes.filter((t) => t.source !== "assembled").length} saved
         </span>
       </div>
 
       {takes.filter((t) => t.source !== "assembled").length === 0 ? (
-        <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+        <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
           No takes yet. Generate one to hear your script with synced timing.
         </p>
       ) : (
@@ -849,22 +868,25 @@ export function VoiceoverPanel({
               const active = take.id === selectedTakeId;
               const voiceName = resolveVoiceName(take);
               const modelLabel =
-                models?.find((m) => m.id === take.modelId)?.label ?? take.modelId;
+                models?.find((m) => m.id === take.modelId)?.label ??
+                take.modelId;
 
               return (
                 <li
                   key={take.id}
                   className={cn(
                     "rounded-lg border p-3",
-                    active ? "border-primary ring-1 ring-primary" : "",
+                    active ? "border-primary ring-primary ring-1" : "",
                   )}
                 >
                   <div className="flex items-start gap-2">
-                    <Mic className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <Mic className="text-muted-foreground mt-0.5 size-4 shrink-0" />
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-medium leading-snug">
-                          {take.isPlaceholder ? "Silent placeholder" : voiceName}
+                        <span className="text-sm leading-snug font-medium">
+                          {take.isPlaceholder
+                            ? "Silent placeholder"
+                            : voiceName}
                         </span>
                         {take.isPlaceholder ? (
                           <Badge variant="secondary">Placeholder</Badge>
@@ -872,12 +894,15 @@ export function VoiceoverPanel({
                           <Badge variant="success">{take.providerId}</Badge>
                         )}
                         {!take.isPlaceholder && modelLabel ? (
-                          <Badge variant="outline" className="text-xs font-normal">
+                          <Badge
+                            variant="outline"
+                            className="text-xs font-normal"
+                          >
                             {modelLabel}
                           </Badge>
                         ) : null}
                       </div>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
+                      <p className="text-muted-foreground mt-0.5 text-xs">
                         {formatTakeDate(take.createdAt)} &middot;{" "}
                         {(take.totalFrames / take.fps).toFixed(1)}s &middot;{" "}
                         {take.timeline.length} scenes
@@ -901,7 +926,7 @@ export function VoiceoverPanel({
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="size-8 text-muted-foreground hover:text-destructive"
+                        className="text-muted-foreground hover:text-destructive size-8"
                         aria-label="Delete take"
                         onClick={() =>
                           del.mutate(take.id, {
@@ -931,13 +956,13 @@ export function VoiceoverPanel({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-sm font-semibold">Scene clips</h3>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-muted-foreground text-xs">
           {freshClipCount}/{scenes.length} ready
         </span>
       </div>
 
       {scenes.length === 0 ? (
-        <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+        <p className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
           Add scenes first, then generate audio per scene.
         </p>
       ) : (
@@ -950,7 +975,9 @@ export function VoiceoverPanel({
         >
           <TabsList className="mb-2 flex h-auto w-full flex-wrap justify-start gap-1">
             {scenes.map((s, i) => {
-              const sel = voiceClips.find((c) => c.id === s.selectedVoiceClipId);
+              const sel = voiceClips.find(
+                (c) => c.id === s.selectedVoiceClipId,
+              );
               const spokenForTab = resolveSpokenText(s);
               const stale = sel && sel.text !== spokenForTab;
               const ready = sel && sel.text === spokenForTab;
@@ -976,13 +1003,16 @@ export function VoiceoverPanel({
             const selected = scene.selectedVoiceClipId;
             const selectedClip = clips.find((c) => c.id === selected);
             const spoken = resolveSpokenText(scene);
-            const stale =
-              selectedClip != null && selectedClip.text !== spoken;
+            const stale = selectedClip != null && selectedClip.text !== spoken;
 
             return (
-              <TabsContent key={scene.id} value={scene.id} className="space-y-3">
-                <div className="rounded-lg border bg-muted/20 p-3">
-                  <p className="text-xs font-medium text-muted-foreground">
+              <TabsContent
+                key={scene.id}
+                value={scene.id}
+                className="space-y-3"
+              >
+                <div className="bg-muted/20 rounded-lg border p-3">
+                  <p className="text-muted-foreground text-xs font-medium">
                     Scene {index + 1} · spoken text
                   </p>
                   {hasSpokenContent(scene) ? (
@@ -997,7 +1027,8 @@ export function VoiceoverPanel({
                   {stale ? (
                     <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-600">
                       <AlertTriangle className="size-3.5" />
-                      Selected clip is stale — text changed. Regenerate this scene.
+                      Selected clip is stale — text changed. Regenerate this
+                      scene.
                     </p>
                   ) : null}
                 </div>
@@ -1017,9 +1048,11 @@ export function VoiceoverPanel({
                           : generateOneClip.isPending
                       }
                     >
-                      {(hasSpokenContent(scene)
-                        ? kokoroOneClip.isPending
-                        : generateOneClip.isPending) ? (
+                      {(
+                        hasSpokenContent(scene)
+                          ? kokoroOneClip.isPending
+                          : generateOneClip.isPending
+                      ) ? (
                         <Loader2 className="animate-spin" />
                       ) : hasSpokenContent(scene) ? (
                         <Cpu />
@@ -1072,7 +1105,7 @@ export function VoiceoverPanel({
                 </div>
 
                 {clips.length === 0 ? (
-                  <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
+                  <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-center text-sm">
                     No clips for this scene yet.
                   </p>
                 ) : (
@@ -1085,11 +1118,11 @@ export function VoiceoverPanel({
                           key={clip.id}
                           className={cn(
                             "rounded-lg border p-3",
-                            active ? "border-primary ring-1 ring-primary" : "",
+                            active ? "border-primary ring-primary ring-1" : "",
                           )}
                         >
                           <div className="flex items-start gap-2">
-                            <Mic className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                            <Mic className="text-muted-foreground mt-0.5 size-4 shrink-0" />
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-2">
                                 <span className="text-sm font-medium">
@@ -1100,15 +1133,20 @@ export function VoiceoverPanel({
                                 {clip.isPlaceholder ? (
                                   <Badge variant="secondary">Placeholder</Badge>
                                 ) : (
-                                  <Badge variant="success">{clip.providerId}</Badge>
+                                  <Badge variant="success">
+                                    {clip.providerId}
+                                  </Badge>
                                 )}
                                 {clipStale ? (
-                                  <Badge variant="outline" className="text-amber-600">
+                                  <Badge
+                                    variant="outline"
+                                    className="text-amber-600"
+                                  >
                                     Stale
                                   </Badge>
                                 ) : null}
                               </div>
-                              <p className="mt-0.5 text-xs text-muted-foreground">
+                              <p className="text-muted-foreground mt-0.5 text-xs">
                                 {formatTakeDate(clip.createdAt)} &middot;{" "}
                                 {(clip.durationFrames / clip.fps).toFixed(1)}s
                               </p>
@@ -1127,7 +1165,7 @@ export function VoiceoverPanel({
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                className="size-8 text-muted-foreground hover:text-destructive"
+                                className="text-muted-foreground hover:text-destructive size-8"
                                 aria-label="Delete clip"
                                 onClick={() =>
                                   deleteClip.mutate(clip.id, {
@@ -1158,7 +1196,7 @@ export function VoiceoverPanel({
 
       {selectedTakeId &&
       takes.find((t) => t.id === selectedTakeId)?.source === "assembled" ? (
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           Assembled take is active for Full reel preview and Render.
         </p>
       ) : null}
@@ -1170,7 +1208,7 @@ export function VoiceoverPanel({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 className="text-sm font-semibold">Generate voiceover</h3>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {voiceMode === "oneshot"
               ? "One full take for the whole reel"
               : "Clips per scene — regenerate one without redoing the rest"}
@@ -1186,6 +1224,58 @@ export function VoiceoverPanel({
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <div className="space-y-3">
           {providerControls}
+          {supportsSpeed && (
+            <label className="grid gap-2 text-sm">
+              Speaking rate: {speed.toFixed(2)}×
+              <input
+                type="range"
+                min="0.7"
+                max="1.35"
+                step="0.05"
+                value={speed}
+                disabled={isBusy}
+                onChange={(e) => setSpeed(Number(e.target.value))}
+              />
+              <span className="text-muted-foreground text-xs">
+                Applies to new takes and paragraph clips.
+              </span>
+            </label>
+          )}
+          <SpeechPresets
+            voice={
+              effectiveProvider && effectiveVoice
+                ? {
+                    providerId: effectiveProvider,
+                    voiceId: effectiveVoice,
+                    modelId: effectiveModel,
+                  }
+                : undefined
+            }
+            onApply={(preset) => {
+              if (preset.voice) {
+                setProviderId(preset.voice.providerId);
+                setVoiceId(preset.voice.voiceId);
+                setModelId(preset.voice.modelId ?? "");
+                toast.success("Voice preset selected");
+              }
+            }}
+          />
+          <GenerationSummary
+            providerId={effectiveProvider}
+            text={narrationSummary(scenes)}
+            scope={
+              voiceMode === "oneshot"
+                ? "Full narration"
+                : "All paragraphs (Generate all)"
+            }
+          />
+          {voiceMode === "per_scene" && (
+            <GenerationSummary
+              providerId={effectiveProvider}
+              text={narrationSummary(scenes.filter((s) => s.id === tabValue))}
+              scope="Selected paragraph (Generate selected)"
+            />
+          )}
           {voiceMode === "oneshot" ? oneshotActions : perSceneActions}
         </div>
 

@@ -9,13 +9,7 @@ import { Button } from "@/components/ui/button";
 const PLAY_EVENT = "reel-voice-preview-play";
 
 /** Play/pause button for a voice sample. Uses previewUrl, so it spends no credits. */
-export function AudioPreview({
-  url,
-  label,
-}: {
-  url?: string;
-  label: string;
-}) {
+export function AudioPreview({ url, label }: { url?: string; label: string }) {
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const [state, setState] = React.useState<"idle" | "loading" | "playing">(
     "idle",
@@ -29,7 +23,10 @@ export function AudioPreview({
       }
     }
     window.addEventListener(PLAY_EVENT, onOtherPlay);
-    return () => window.removeEventListener(PLAY_EVENT, onOtherPlay);
+    return () => {
+      window.removeEventListener(PLAY_EVENT, onOtherPlay);
+      audioRef.current?.pause();
+    };
   }, [id]);
 
   if (!url) {
