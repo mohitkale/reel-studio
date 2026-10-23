@@ -607,3 +607,17 @@ model StudioPreset {
  documentJson String
  updatedAt DateTime @updatedAt
 }
+
+/// Server-saved non-destructive audio history, scoped to an immutable source take.
+model AudioEditSession {
+ id String @id @default(cuid())
+ kind String
+ takeId String
+ historyJson String
+ cursor Int
+ revision Int @default(1)
+ planHash String
+ derivedTakeId String?
+ updatedAt DateTime @updatedAt
+ @@unique([kind,takeId])
+}

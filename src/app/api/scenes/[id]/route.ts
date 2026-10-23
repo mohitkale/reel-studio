@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import {
-  deleteScene,
+  deleteSceneWithHistory,
   updateSceneWithHistory,
 } from "@/library/repositories/scenes";
 import { assembleVoiceTake } from "@/library/scene-voice-service";
@@ -105,7 +105,7 @@ export async function DELETE(
       throw new ProviderError("Deletion is not available via MCP", 403);
     }
     const { id } = await ctx.params;
-    await deleteScene(id);
+    await deleteSceneWithHistory(id);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return errorResponse(e);

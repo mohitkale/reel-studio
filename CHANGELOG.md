@@ -6,6 +6,34 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+### Added
+
+- Responsive creation hub and dedicated voiceover workspace, shared speech
+  presets, pronunciation previews, take comparison and reviewed voice batches.
+- Scene/create/delete/reorder and script-setting undo/redo across reloads,
+  including grouped editor AI changes and restored clip/stock relationships.
+- Saved waveform edit plans, cut/gain/cleanup controls and edited takes usable
+  in video and podcast exports without replacing source audio.
+- Local recording/import, optional Whisper transcripts, editable transcript
+  review, and episode packages with shared-audio preservation.
+- Reviewed manual or optional AI language versions in separate projects.
+- Editable multi-series chart grids, text entrance timing, safe-zone guides,
+  preview selection, series/archive filters and a central factory workspace.
+
+### Fixed
+
+- Asset deletion protects current content, frozen revisions/jobs/profiles,
+  finishing snapshots and saved history. Edited video takes preserve intentional
+  omissions; their timeline labels explain omitted scenes.
+- Microphone permission waits are explicit and cancelable; canceled or unmounted
+  requests release late streams. Audio plan revision conflicts retain saved work.
+
+### Upgrade
+
+- Three additive studio migrations since v0.6.0. Existing databases use the
+  backup-aware `npm run db:migrate`; dependency pins are unchanged. Local Whisper
+  remains optional and needs an explicitly supplied/downloaded model.
+
 ## 0.6.0
 
 ### Added

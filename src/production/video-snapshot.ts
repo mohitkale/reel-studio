@@ -42,7 +42,7 @@ export const videoTakeSnapshotSchema = z
     timeline: timelineSchema,
     audioUrl: z.string(),
     isPlaceholder: z.boolean(),
-    source: z.enum(["oneshot", "assembled"]),
+    source: z.enum(["oneshot", "assembled", "edited"]),
     createdAt: z.string(),
   })
   .strict();

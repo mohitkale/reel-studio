@@ -55,3 +55,39 @@ it("selects and reorders saved scene identities with disabled boundary actions",
     container.remove();
   }
 });
+
+it("labels omitted scenes without inventing zero-length narration timing", async () => {
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  const onSelect = vi.fn();
+  try {
+    await act(async () =>
+      root.render(
+        <SceneTimeline
+          scenes={[{ id: "omitted", text: "Source scene" }]}
+          timeline={[]}
+          fps={30}
+          selectedId={null}
+          onSelect={onSelect}
+          onMove={() => {}}
+          busy={false}
+          measured={true}
+        />,
+      ),
+    );
+    expect(container.textContent).toContain("Omitted from selected take");
+    expect(container.textContent).not.toContain("0.0s");
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>(
+          '[aria-label="Inspect omitted scene 1"]',
+        )!
+        .click(),
+    );
+    expect(onSelect).toHaveBeenCalledWith("omitted");
+  } finally {
+    await act(async () => root.unmount());
+    container.remove();
+  }
+});

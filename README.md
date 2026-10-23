@@ -91,6 +91,11 @@ goals, recap callbacks and bounded ten-minute exports. The
 [content factory](docs/FACTORY_WORKFLOWS.md) adds versioned series profiles, frozen
 aspect/cutdown variants and pinned recipe-pack archives. See [adaptive film contracts](docs/ADAPTIVE_CONTRACTS.md).
 
+Voiceovers and podcasts include database-saved audio edit plans and edited takes.
+Imported recordings can be transcribed with the existing local Whisper setup.
+Language versions support manual translation with no API calls and optional AI
+previews. See the [creator guide](docs/CREATOR_GUIDE.md).
+
 ![Projects with visible AI and local production creation paths](docs/assets/reel-studio-home.png)
 
 ## Local tools and optional providers

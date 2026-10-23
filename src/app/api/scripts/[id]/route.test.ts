@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("@/server/auth", () => ({ authorize: mocks.authorize }));
 vi.mock("@/library/repositories/scripts", () => ({
-  updateScript: mocks.update,
+  updateScriptWithHistory: mocks.update,
   getScript: mocks.get,
 }));
 import { PATCH } from "./route";

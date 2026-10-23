@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { apiGet, apiPost } from "@/lib/api-client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,15 +25,21 @@ function download(blob: Blob, name: string) {
 }
 export function AudioWorkbench({
   id,
+  kind = "voiceover",
+  onSaved,
   url,
   title,
   segments = [],
 }: {
   id: string;
+  kind?: "voiceover" | "podcast";
+  onSaved?(id: string): void;
   url: string;
   title: string;
   segments?: AudioSegment[];
 }) {
+  const qc = useQueryClient();
+  const [revision, setRevision] = useState(0);
   const [buffer, setBuffer] = useState<AudioBuffer | null>(null),
     [loading, setLoading] = useState(false),
     [error, setError] = useState("");
@@ -108,9 +116,24 @@ export function AudioWorkbench({
             initial = parsed.data;
         }
       } catch {}
-      setHistory([initial]);
-      setCursor(0);
+      const saved = await apiGet<{
+        session: {
+          revision: number;
+          history: AudioEditPlan[];
+          cursor: number;
+        } | null;
+      }>(`/api/audio-edits?kind=${kind}&takeId=${encodeURIComponent(id)}`);
+      if (saved.session) {
+        setRevision(saved.session.revision);
+        setHistory(saved.session.history);
+        setCursor(saved.session.cursor);
+      } else {
+        setHistory([initial]);
+        setCursor(0);
+        setRevision(0);
+      }
     } catch (e) {
+      setBuffer(null);
       setError(e instanceof Error ? e.message : "Could not decode audio");
     } finally {
       await context?.close();
@@ -218,6 +241,42 @@ export function AudioWorkbench({
       setRendering(false);
     }
   }
+  async function saveStudio(commit: boolean) {
+    if (!plan) return;
+    setRendering(true);
+    try {
+      const saved = await apiPost<{ revision: number }>("/api/audio-edits", {
+        action: "save",
+        kind,
+        takeId: id,
+        history,
+        cursor,
+        expectedRevision: revision,
+      });
+      setRevision(saved.revision);
+      if (commit) {
+        const result = await apiPost<{ takeId: string }>("/api/audio-edits", {
+          action: "commit",
+          kind,
+          takeId: id,
+          revision: saved.revision,
+        });
+        await Promise.all([
+          qc.invalidateQueries({ queryKey: ["script"] }),
+          qc.invalidateQueries({ queryKey: ["podcast"] }),
+          qc.invalidateQueries({ queryKey: ["projects"] }),
+        ]);
+        onSaved?.(result.takeId);
+        toast.success("Edited take saved — available for playback and export");
+      } else toast.success("Edit plan and undo history saved to the studio");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Could not save edits",
+      );
+    } finally {
+      setRendering(false);
+    }
+  }
   return (
     <section
       className="bg-card min-w-0 space-y-3 rounded-xl border p-4"
@@ -236,8 +295,8 @@ export function AudioWorkbench({
         )}
       </div>
       <p className="text-muted-foreground text-xs">
-        Edits are saved in this browser for this take. Audition or download an
-        edited copy; the original remains available.
+        Save your plan and undo history to the studio, then save an edited take
+        for playback and export. The original remains available.
       </p>
       {error && (
         <p role="alert" className="text-destructive text-sm">
@@ -245,7 +304,7 @@ export function AudioWorkbench({
         </p>
       )}
       {buffer && plan && (
-        <>
+        <fieldset disabled={rendering} className="min-w-0 space-y-3">
           <svg
             role="img"
             aria-label="Source audio waveform"
@@ -381,6 +440,19 @@ export function AudioWorkbench({
             Speech cleanup: rumble filter and gentle compression
           </label>
           <div className="flex flex-wrap gap-2">
+            <Button disabled={rendering} onClick={() => void saveStudio(false)}>
+              Save edit plan
+            </Button>
+            <Button disabled={rendering} onClick={() => void saveStudio(true)}>
+              Save as new take
+            </Button>
+            <Button
+              variant="outline"
+              disabled={loading || rendering}
+              onClick={() => void load()}
+            >
+              Reload saved plan
+            </Button>
             <Button disabled={rendering} onClick={() => void render(false)}>
               Audition edits
             </Button>
@@ -421,6 +493,10 @@ export function AudioWorkbench({
               Download edit manifest
             </Button>
           </div>
+          <p className="text-muted-foreground text-xs">
+            Studio revision {revision}. Review trimmed narration and captions
+            before exporting video from an edited take.
+          </p>
           {preview && (
             <audio
               ref={previewAudio}
@@ -441,8 +517,8 @@ export function AudioWorkbench({
                   <button
                     className="hover:bg-muted w-full rounded border p-3 text-left text-sm"
                     onClick={() => {
-                      setStart(s.start);
-                      setEnd(s.end);
+                      setStart(Math.min(s.start, buffer.duration));
+                      setEnd(Math.min(s.end, buffer.duration));
                       if (audio.current) audio.current.currentTime = s.start;
                     }}
                   >
@@ -455,7 +531,7 @@ export function AudioWorkbench({
               ))}
             </ol>
           </details>
-        </>
+        </fieldset>
       )}
     </section>
   );

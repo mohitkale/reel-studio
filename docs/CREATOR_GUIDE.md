@@ -172,14 +172,21 @@ that name. Applying pronunciation rules in the voiceover workspace first shows a
 preview; apply them to individual paragraphs to change spoken text. In podcasts,
 load the rules and save them in finishing controls. Existing audio takes do not
 change. Batch voiceovers accept up to ten saved scripts, with a voice per script;
-prepare each language's wording yourself and choose a matching voice. Batches
+choose a matching voice for each script. Batches
 wait for approval in **Factory** before synthesis.
 
-**Undo scene edit / Redo** restores up to 100 saved manual scene edits across
-reloads. It covers copy, spoken text, layout, charts, motion and clip selection.
-It refuses to overwrite a scene changed by another operation. It does not restore
-deleted scenes or reorder operations; AI revisions and frozen production masters
-remain separate checkpoints.
+**Create a language version** accepts manually translated on-screen and spoken
+copy, or an optional AI translation preview from a configured provider. Manual
+translation makes no provider call. Review every paragraph before saving a
+separate project; source changes reject stale proposals. The version retains
+series, design, motion and audio settings, with fresh scenes and no old takes or
+captions. Review text embedded in charts, images and other visuals separately.
+
+**Undo edit / Redo** restores up to 100 saved edits across reloads: scene fields,
+create/delete/reorder, script-wide settings and grouped AI rewrites/appends from
+the editor. Deleted scenes retain their selected clips and stock provenance.
+Conflicting newer work blocks restoration. Frozen masters remain separate
+checkpoints; provider generation and audio files are not undone.
 
 ## Waveform editing and recordings
 
@@ -187,14 +194,23 @@ Open a saved voiceover or podcast take's **Waveform & transcript** editor to dec
 its actual audio locally (up to 128 MiB and 30 minutes). Keep a selection or remove
 an interval to split around it, adjust speaker levels, and audition rumble
 filtering plus gentle compression. Download the edited WAV and a JSON edit
-manifest. The original take stays intact. The current edit plan is saved in this
-browser; undo/redo history lasts for the open editing session. Cut transcript
+manifest. **Save edit plan** stores its undo/redo history in the app database;
+**Reload saved plan** recovers it after reload or a concurrent-edit conflict.
+**Save as new take** creates independent edited audio usable by podcast exports
+or the video editor, preserving the source. Edited video takes intentionally omit
+fully removed scenes and reject later narration/order changes. Cut transcript
 segments are marked `textNeedsReview` in the manifest and require text correction
 before publishing captions.
 
 Podcasts also accept audio files or microphone recordings up to 15 minutes.
 Microphone access starts only after the Record action; stopping saves a new take.
 The browser converts imports to mono 44.1 kHz PCM. Imported audio does not invent
-transcript timing from the episode script. **Episode package** downloads saved
+transcript timing from the episode script. With an installed Whisper CLI and
+configured model, select **Transcribe locally** (or opt in during import) to make
+a transcript-bearing take. The approved multilingual small model supports local
+language detection. Review words and speaker labels; Whisper does not identify
+speakers. **Save reviewed transcript** creates another take sharing the same audio
+without duplicating it. Canceling transcription preserves an already imported take.
+**Episode package** downloads saved
 audio, transcript, chapters, show notes and a manifest together. Current episode
 titles, descriptions and speaker names are distinguished from saved take timing.

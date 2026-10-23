@@ -1,3 +1,5 @@
+import { storyboardSnapshot } from "@/library/structural-history";
+import { recordHistory } from "@/library/scene-history";
 import type { ChapterDirection, LongFormPolicy } from "@/production/long-form";
 import { randomUUID } from "node:crypto";
 import type { Prisma } from "@prisma/client";
@@ -21,6 +23,7 @@ import { resolvedStockAssetSchema } from "@/providers/stock/schemas";
 
 /** Append scenes, stock snapshots and the optional chapter boundary atomically. */
 export async function commitSceneAppend(input: {
+  recordHistory?: boolean;
   scriptId: string;
   expectedState: string;
   chapterTitle?: string;
@@ -47,6 +50,9 @@ export async function commitSceneAppend(input: {
       502,
     );
   return prisma.$transaction(async (tx) => {
+    const historyBefore = input.recordHistory
+      ? await storyboardSnapshot(tx, input.scriptId)
+      : null;
     assertSceneRewriteState(
       input.expectedState,
       await captureSceneRewriteState(input.scriptId, tx),
@@ -181,6 +187,14 @@ export async function commitSceneAppend(input: {
       });
     }
     if (input.signal?.aborted) throw new AIError("Generation canceled", 499);
+    if (historyBefore)
+      await recordHistory(
+        tx,
+        input.scriptId,
+        "@storyboard",
+        JSON.stringify(historyBefore),
+        JSON.stringify(await storyboardSnapshot(tx, input.scriptId)),
+      );
     return ids;
   });
 }

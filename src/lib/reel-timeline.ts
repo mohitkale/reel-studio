@@ -14,6 +14,7 @@ interface TimedBeat {
 }
 
 interface TakeTiming {
+  source?: string;
   timeline: TimedBeat[];
   totalFrames: number;
 }
@@ -58,6 +59,32 @@ export function resolveReelTimeline(
   const beats = take?.timeline ?? [];
   if (!take || beats.length === 0) return silent;
 
+  // Edited takes deliberately omit fully removed scenes. Verify the retained
+  // identities, original copy and order instead of silently appending visuals.
+  if (take.source === "edited") {
+    const indices = beats.map((beat) =>
+      scenes.findIndex(
+        (scene) =>
+          scene.id === beat.sceneId && norm(scene.text) === norm(beat.text),
+      ),
+    );
+    if (
+      indices.some(
+        (index, i) => index < 0 || (i > 0 && index <= indices[i - 1]),
+      )
+    )
+      return silent;
+    return {
+      timeline: beats.map((beat) => ({
+        sceneId: beat.sceneId,
+        startFrame: beat.startFrame,
+        durationFrames: beat.durationFrames,
+      })),
+      totalFrames: take.totalFrames,
+      takeUsable: true,
+    };
+  }
+
   // Leading scenes whose spoken text still matches the take, in order.
   let matched = 0;
   while (
@@ -81,7 +108,11 @@ export function resolveReelTimeline(
   }));
 
   if (matched === scenes.length) {
-    return { timeline: recorded, totalFrames: take.totalFrames, takeUsable: true };
+    return {
+      timeline: recorded,
+      totalFrames: take.totalFrames,
+      takeUsable: true,
+    };
   }
 
   // Extra scenes appended after the take: estimate timing for them, after the audio.

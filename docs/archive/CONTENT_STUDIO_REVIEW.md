@@ -1,7 +1,8 @@
 # Content studio implementation record (historical)
 
-Historical implementation record for `feature/content-creation-factory`, pending maintainer
-PR review. Current usage belongs in the [creator guide](../CREATOR_GUIDE.md),
+Historical implementation record for `feature/content-creation-factory` (PR #57,
+merged). The boundaries below describe that original milestone; follow-up completion
+is recorded in [studio completion](CONTENT_STUDIO_COMPLETION.md). Current usage belongs in the [creator guide](../CREATOR_GUIDE.md),
 [advanced editing](../ADVANCED_EDITING.md), and [factory guide](../FACTORY_WORKFLOWS.md).
 
 ## Delivered scope

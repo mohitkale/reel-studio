@@ -30,5 +30,6 @@ retain their paths for release-check compatibility. Keep retained catalog
 revisions, upgrade fixtures, and component notices even when their names refer
 to older versions.
 
-Later record: [Content studio implementation review](CONTENT_STUDIO_REVIEW.md)
-documents the feature branch scope and validation for maintainer review.
+Later records: [Content studio implementation review](CONTENT_STUDIO_REVIEW.md)
+and [studio completion](CONTENT_STUDIO_COMPLETION.md) document the delivered
+creator workflows and their validation.

@@ -2,7 +2,12 @@ import { describe, it, expect } from "vitest";
 
 import { resolveReelTimeline } from "./reel-timeline";
 
-const beat = (sceneId: string, startFrame: number, durationFrames: number, text: string) => ({
+const beat = (
+  sceneId: string,
+  startFrame: number,
+  durationFrames: number,
+  text: string,
+) => ({
   sceneId,
   startFrame,
   durationFrames,
@@ -84,4 +89,35 @@ describe("resolveReelTimeline", () => {
     ];
     expect(resolveReelTimeline(scenes, take, 30).takeUsable).toBe(false);
   });
+});
+
+it("uses edited audio with deliberately removed scenes and rejects changed copy/order", () => {
+  const scenes = [
+    { id: "a", text: "First" },
+    { id: "b", text: "Removed" },
+    { id: "c", text: "Last" },
+  ];
+  const edited = {
+    source: "edited",
+    totalFrames: 60,
+    timeline: [
+      { sceneId: "a", text: "First", startFrame: 0, durationFrames: 30 },
+      { sceneId: "c", text: "Last", startFrame: 30, durationFrames: 30 },
+    ],
+  };
+  expect(resolveReelTimeline(scenes, edited, 30)).toMatchObject({
+    takeUsable: true,
+    totalFrames: 60,
+    timeline: [{ sceneId: "a" }, { sceneId: "c" }],
+  });
+  expect(
+    resolveReelTimeline([...scenes].reverse(), edited, 30).takeUsable,
+  ).toBe(false);
+  expect(
+    resolveReelTimeline(
+      [{ id: "a", text: "Changed" }, ...scenes.slice(1)],
+      edited,
+      30,
+    ).takeUsable,
+  ).toBe(false);
 });

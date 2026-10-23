@@ -1,4 +1,5 @@
 "use client";
+import { LanguageVersions } from "@/components/studio/language-versions";
 import { EditHistory } from "./edit-history";
 import { sequenceConfigFor } from "@/video/sequence-direction";
 
@@ -406,6 +407,7 @@ export function EditorClient({
     setSelectedSceneId(id);
     const beat = timeline.find((b) => b.sceneId === id);
     if (beat) playerRef.current?.seekTo(beat.startFrame + coverFr);
+    else setPreviewMode("scene");
   }
 
   function handleMove(id: string, direction: -1 | 1) {
@@ -1194,6 +1196,7 @@ export function EditorClient({
         scriptId={scriptId}
         onRestored={() => setHistoryRevision((value) => value + 1)}
       />
+      <LanguageVersions scriptId={scriptId} />
       <ChapterTimeline
         plan={script.chapterPlan}
         scenes={scenes}

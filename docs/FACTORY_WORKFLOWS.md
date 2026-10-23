@@ -148,5 +148,7 @@ do not trigger AI calls. Voiceover batches are separate, explicitly approved
 provider jobs. Retry preserves completed variants.
 
 The asset library previews audio and video as playable media and shows current
-scene, script and podcast references with stored provenance. Frozen revisions may
-also reference an asset even when it is absent from current editable scenes.
+scene, script and podcast references with stored provenance. It also scans frozen
+revisions, jobs, profiles, podcast finishing snapshots and saved edit history,
+including embedded JSON fields. Referenced assets cannot be deleted; the server
+returns a conflict so saved content keeps its dependencies.

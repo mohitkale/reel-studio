@@ -233,6 +233,7 @@ export type AIScene = Omit<ParsedAIScene, "visual"> & {
 export type ScenePlan = z.infer<typeof scenePlanSchema>;
 
 export interface GeneratePlanInput {
+  translationLanguage?: string;
   chapterDirection?: ChapterWritingDirection;
   /** Bounded, app-selected visual context; never executable styling. */
   visualTheme?: string;
@@ -242,7 +243,8 @@ export interface GeneratePlanInput {
     | "rewrite"
     | "append"
     | "hook_variants"
-    | "chapter_outline";
+    | "chapter_outline"
+    | "translate";
   /** The one-line idea (mode "idea") or the full text/story (mode "story"). */
   brief: string;
   sceneCount?: number;
