@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import {
   parseJsonColumn,
   brandOverridesSchema,
@@ -177,6 +178,21 @@ export async function createProjectFromPlan(
   videoEngine: VideoEngineId = DEFAULT_VIDEO_ENGINE,
   visualStyle?: { styleId?: StyleId; energy?: EnergyId },
   production?: {
+    series?: string;
+    scriptSettings?: Pick<
+      Prisma.ScriptCreateWithoutProjectInput,
+      | "coverUrl"
+      | "musicUrl"
+      | "musicVolume"
+      | "sfxEnabled"
+      | "sfxJson"
+      | "hideText"
+      | "hideProgressBar"
+      | "fps"
+      | "width"
+      | "height"
+    >;
+    savedOverrides?: Record<string, unknown>;
     visualTheme?: VisualTheme;
     brandKitId?: string | null;
     preset?: { id: ProductionPresetId; version: string };
@@ -291,6 +307,7 @@ export async function createProjectFromPlan(
   const project = await prisma.project.create({
     data: {
       name: plan.projectName,
+      series: production?.series ?? "",
       videoEngine: engine,
       brandKitId,
       scripts: {
@@ -298,7 +315,9 @@ export async function createProjectFromPlan(
           name: plan.scriptName,
           width,
           height,
+          ...production?.scriptSettings,
           brandOverrides: JSON.stringify({
+            ...production?.savedOverrides,
             ...(production?.visualTheme
               ? { visualTheme: production.visualTheme }
               : {}),

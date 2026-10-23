@@ -1,4 +1,5 @@
 "use client";
+import { RecordingTranscript } from "@/components/studio/recording-transcript";
 import { PodcastAudioImport } from "@/components/studio/audio-import";
 import { AudioWorkbench } from "@/components/studio/audio-workbench";
 
@@ -893,6 +894,7 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
           <PodcastFinishingControls podcast={podcast} />
           {podcast.takes[0] && (
             <AudioWorkbench
+              kind="podcast"
               key={podcast.takes[0].id}
               id={podcast.takes[0].id}
               title={podcast.title}
@@ -1029,6 +1031,7 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                       </div>
                     </div>
                     <PodcastTakePlayer src={take.audioUrl} speed={speed} />
+                    <RecordingTranscript take={take} podcastId={podcast.id} />
                     <div className="flex flex-wrap gap-2 text-xs">
                       <Button asChild type="button" size="sm" variant="outline">
                         <a

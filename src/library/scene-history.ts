@@ -1,5 +1,11 @@
 import type { Prisma, PrismaClient, Scene } from "@prisma/client";
 import { z } from "zod";
+import {
+  restoreStructuralHistory,
+  restoreStoryboardHistory,
+  scriptHistorySchema,
+  scriptSettingsSnapshot,
+} from "./structural-history";
 import { prisma } from "@/library/db";
 import { ProviderError } from "@/providers/voice/types";
 
@@ -23,20 +29,29 @@ export async function recordSceneEdit(
 ) {
   const beforeJson = JSON.stringify(sceneEditSnapshot(before)),
     afterJson = JSON.stringify(sceneEditSnapshot(after));
+  await recordHistory(tx, before.scriptId, before.id, beforeJson, afterJson);
+}
+export async function recordHistory(
+  tx: Prisma.TransactionClient,
+  scriptId: string,
+  sceneId: string,
+  beforeJson: string,
+  afterJson: string,
+) {
   if (beforeJson === afterJson) return;
   await tx.sceneEdit.deleteMany({
-    where: { scriptId: before.scriptId, undone: true },
+    where: { scriptId, undone: true },
   });
   await tx.sceneEdit.create({
     data: {
-      scriptId: before.scriptId,
-      sceneId: before.id,
+      scriptId,
+      sceneId,
       beforeJson,
       afterJson,
     },
   });
   const excess = await tx.sceneEdit.findMany({
-    where: { scriptId: before.scriptId },
+    where: { scriptId },
     orderBy: { sequence: "desc" },
     skip: 100,
     select: { sequence: true },
@@ -65,6 +80,54 @@ export async function moveSceneHistory(
       orderBy: { sequence: action === "undo" ? "desc" : "asc" },
     });
     if (!entry) throw new ProviderError(`Nothing to ${action}`, 409);
+    const expectedJson = action === "undo" ? entry.afterJson : entry.beforeJson;
+    const restoreJson = action === "undo" ? entry.beforeJson : entry.afterJson;
+    const expectedDocument: unknown = JSON.parse(expectedJson),
+      restoreDocument: unknown = JSON.parse(restoreJson);
+    if (
+      expectedDocument &&
+      typeof expectedDocument === "object" &&
+      "historyKind" in expectedDocument
+    ) {
+      if (expectedDocument.historyKind === "structure")
+        await restoreStructuralHistory(
+          tx,
+          scriptId,
+          entry.sceneId,
+          expectedDocument,
+          restoreDocument,
+        );
+      else if (expectedDocument.historyKind === "storyboard")
+        await restoreStoryboardHistory(
+          tx,
+          scriptId,
+          expectedDocument,
+          restoreDocument,
+        );
+      else {
+        const before = scriptHistorySchema.parse(expectedDocument),
+          next = scriptHistorySchema.parse(restoreDocument);
+        const current = await tx.script.findUnique({ where: { id: scriptId } });
+        if (
+          !current ||
+          JSON.stringify(scriptSettingsSnapshot(current)) !==
+            JSON.stringify(before)
+        )
+          throw new ProviderError(
+            "Script settings changed since this edit. Reload before restoring history.",
+            409,
+          );
+        await tx.script.update({
+          where: { id: scriptId },
+          data: next.settings,
+        });
+      }
+      await tx.sceneEdit.update({
+        where: { sequence: entry.sequence },
+        data: { undone: action === "undo" },
+      });
+      return entry.sceneId;
+    }
     const current = await tx.scene.findUnique({ where: { id: entry.sceneId } });
     if (!current || current.scriptId !== scriptId)
       throw new ProviderError(

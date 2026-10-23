@@ -1,21 +1,29 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLocalTranscriptionStatus } from "@/hooks/script";
 import { toast } from "sonner";
 import { encodeAudioWav } from "@/lib/audio-edit-plan";
 import { Button } from "@/components/ui/button";
 export function PodcastAudioImport({ podcastId }: { podcastId: string }) {
+  const transcription = useLocalTranscriptionStatus();
+  const [autoTranscribe, setAutoTranscribe] = useState(false);
   const qc = useQueryClient(),
     recorder = useRef<MediaRecorder | null>(null),
     stream = useRef<MediaStream | null>(null),
     timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mounted = useRef(true);
+  const permissionAttempt = useRef(0);
+  const [requestingMic, setRequestingMic] = useState(false);
+  const cancel = useRef<AbortController | null>(null);
+  const [phase, setPhase] = useState("Importing…");
   const [busy, setBusy] = useState(false),
     [recording, setRecording] = useState(false);
   useEffect(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
+      cancel.current?.abort();
       if (timer.current) clearTimeout(timer.current);
       if (recorder.current?.state === "recording") {
         recorder.current.onstop = null;
@@ -26,6 +34,9 @@ export function PodcastAudioImport({ podcastId }: { podcastId: string }) {
   }, []);
   async function upload(blob: Blob) {
     setBusy(true);
+    setPhase("Importing…");
+    const controller = new AbortController();
+    cancel.current = controller;
     let context: AudioContext | undefined;
     try {
       if (blob.size > 96 * 1024 * 1024)
@@ -46,6 +57,7 @@ export function PodcastAudioImport({ podcastId }: { podcastId: string }) {
       const rendered = await offline.startRendering();
       const response = await fetch(`/api/podcasts/${podcastId}/import-audio`, {
         method: "POST",
+        signal: controller.signal,
         headers: { "Content-Type": "audio/wav" },
         body: encodeAudioWav([rendered.getChannelData(0)], 44100),
       });
@@ -53,28 +65,54 @@ export function PodcastAudioImport({ podcastId }: { podcastId: string }) {
         const result = await response.json();
         throw new Error(result.error ?? "Import failed");
       }
+      const saved = await response.json();
       await qc.invalidateQueries({ queryKey: ["podcast", podcastId] });
       toast.success("Recording imported");
+      if (autoTranscribe) {
+        setPhase("Transcribing locally…");
+        const result = await fetch(
+          `/api/podcast-takes/${saved.take.id}/transcribe`,
+          {
+            method: "POST",
+            signal: controller.signal,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "transcribe", language: "auto" }),
+          },
+        );
+        if (!result.ok)
+          throw new Error(
+            "Recording was saved. Local transcription failed; retry from the take's transcript controls.",
+          );
+        await qc.invalidateQueries({ queryKey: ["podcast", podcastId] });
+        toast.success("Local transcript saved — review before publishing");
+      }
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Could not import audio",
-      );
+      if (!controller.signal.aborted)
+        toast.error(
+          error instanceof Error ? error.message : "Could not import audio",
+        );
     } finally {
       await context?.close();
-      setBusy(false);
+      if (mounted.current) setBusy(false);
+      cancel.current = null;
     }
   }
   async function record() {
+    const attempt = ++permissionAttempt.current;
+    setRequestingMic(true);
+    setPhase("Waiting for microphone permission…");
     setBusy(true);
     try {
-      stream.current = await navigator.mediaDevices.getUserMedia({
+      const acquired = await navigator.mediaDevices.getUserMedia({
         audio: true,
       });
-      if (!mounted.current) {
-        stream.current.getTracks().forEach((t) => t.stop());
+      if (!mounted.current || attempt !== permissionAttempt.current) {
+        acquired.getTracks().forEach((t) => t.stop());
         return;
       }
-      const next = new MediaRecorder(stream.current);
+      stream.current = acquired;
+      setRequestingMic(false);
+      const next = new MediaRecorder(acquired);
       recorder.current = next;
       const chunks: Blob[] = [];
       let bytes = 0;
@@ -95,12 +133,17 @@ export function PodcastAudioImport({ podcastId }: { podcastId: string }) {
         if (next.state === "recording") next.stop();
       }, 890000);
     } catch (error) {
-      stream.current?.getTracks().forEach((t) => t.stop());
-      toast.error(
-        error instanceof Error ? error.message : "Microphone unavailable",
-      );
+      if (mounted.current && attempt === permissionAttempt.current) {
+        stream.current?.getTracks().forEach((t) => t.stop());
+        toast.error(
+          error instanceof Error ? error.message : "Microphone unavailable",
+        );
+      }
     } finally {
-      setBusy(false);
+      if (mounted.current && attempt === permissionAttempt.current) {
+        setRequestingMic(false);
+        setBusy(false);
+      }
     }
   }
   return (
@@ -132,12 +175,33 @@ export function PodcastAudioImport({ podcastId }: { podcastId: string }) {
           onClick={() => (recording ? recorder.current?.stop() : void record())}
         >
           {busy
-            ? "Importing…"
+            ? phase
             : recording
               ? "Stop and save recording"
               : "Record microphone"}
         </Button>
       </div>
+      {requestingMic && (
+        <Button
+          variant="outline"
+          onClick={() => {
+            permissionAttempt.current++;
+            setRequestingMic(false);
+            setBusy(false);
+          }}
+        >
+          Cancel microphone request
+        </Button>
+      )}
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={autoTranscribe}
+          disabled={busy || recording || !transcription.data?.available}
+          onChange={(e) => setAutoTranscribe(e.target.checked)}
+        />
+        Transcribe locally after import or recording
+      </label>
       {recording && (
         <p role="status" className="text-destructive text-sm">
           Recording microphone…

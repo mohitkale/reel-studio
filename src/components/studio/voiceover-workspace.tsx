@@ -1,4 +1,5 @@
 "use client";
+import { LanguageVersions } from "./language-versions";
 import { SpeechPresets } from "./speech-presets";
 import { applyPronunciations } from "@/lib/pronunciation";
 import type { StudioPreset } from "@/lib/studio-preset";
@@ -100,6 +101,7 @@ export function VoiceoverWorkspace({ scriptId }: { scriptId: string }) {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
         <section className="space-y-4">
           <EditHistory scriptId={scriptId} />
+          <LanguageVersions scriptId={scriptId} />
           <h2 className="font-semibold">Script</h2>
           <SpeechPresets
             pronunciations={rules}
@@ -191,6 +193,7 @@ export function VoiceoverWorkspace({ scriptId }: { scriptId: string }) {
             <AudioWorkbench
               key={take.id}
               id={take.id}
+              onSaved={setSelected}
               url={take.audioUrl}
               title={script.name}
               segments={take.timeline.map((beat) => ({

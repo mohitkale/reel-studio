@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { audioMasteringSchema } from "@/production/audio-mastering";
 
-import { getScript, updateScript } from "@/library/repositories/scripts";
+import {
+  getScript,
+  updateScriptWithHistory,
+} from "@/library/repositories/scripts";
 import { authorize, authorizeRead } from "@/server/auth";
 import { errorResponse, readRequestJson } from "@/server/api-helpers";
 
@@ -56,7 +59,7 @@ export async function PATCH(
         { error: "Invalid script edit", issues: body.error.issues },
         { status: 400 },
       );
-    await updateScript(id, body.data);
+    await updateScriptWithHistory(id, body.data);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return errorResponse(e);

@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { addScene, reorderScenes } from "@/library/repositories/scenes";
+import {
+  addSceneWithHistory,
+  reorderScenesWithHistory,
+} from "@/library/repositories/scenes";
 import { authorize } from "@/server/auth";
 import {
   errorResponse,
@@ -29,7 +32,7 @@ export async function POST(
       await readRequestJson(req, { allowEmpty: true }),
     );
     return NextResponse.json(
-      { scene: await addScene(id, body) },
+      { scene: await addSceneWithHistory(id, body) },
       { status: 201 },
     );
   } catch (e) {
@@ -50,7 +53,7 @@ export async function PATCH(
       reorderSchema,
       await readRequestJson(req),
     );
-    await reorderScenes(id, orderedIds);
+    await reorderScenesWithHistory(id, orderedIds);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return errorResponse(e);

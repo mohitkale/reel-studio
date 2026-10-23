@@ -1,3 +1,7 @@
+import type { Prisma } from "@prisma/client";
+import { recordHistory } from "@/library/scene-history";
+import { scriptSettingsSnapshot } from "@/library/structural-history";
+import { ProviderError } from "@/providers/voice/types";
 import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
 import type { ScriptDTO, VoiceMode } from "@/lib/dto";
 import { serverDefaultTokens } from "@/lib/brand-defaults";
@@ -162,6 +166,7 @@ export async function updateScript(
     factoryLineage?: import("@/lib/dto").ScriptDTO["factoryLineage"];
     chapterDraft?: import("@/production/chapter-draft").ChapterDraft;
   },
+  transaction?: Prisma.TransactionClient,
 ): Promise<void> {
   const patch: Record<string, unknown> = {
     ...(data.name !== undefined ? { name: data.name } : {}),
@@ -181,7 +186,7 @@ export async function updateScript(
     ...(data.voiceMode !== undefined ? { voiceMode: data.voiceMode } : {}),
   };
 
-  await prisma.$transaction(async (tx) => {
+  const apply = async (tx: Prisma.TransactionClient) => {
     if (
       data.styleId !== undefined ||
       data.energy !== undefined ||
@@ -220,6 +225,27 @@ export async function updateScript(
       where: { id },
       data: patch as Parameters<typeof prisma.script.update>[0]["data"],
     });
+  };
+  if (transaction) await apply(transaction);
+  else await prisma.$transaction(apply);
+}
+
+export async function updateScriptWithHistory(
+  id: string,
+  data: Parameters<typeof updateScript>[1],
+) {
+  return prisma.$transaction(async (tx) => {
+    const before = await tx.script.findUnique({ where: { id } });
+    if (!before) throw new ProviderError("Script not found", 404);
+    await updateScript(id, data, tx);
+    const after = await tx.script.findUniqueOrThrow({ where: { id } });
+    await recordHistory(
+      tx,
+      id,
+      "@script",
+      JSON.stringify(scriptSettingsSnapshot(before)),
+      JSON.stringify(scriptSettingsSnapshot(after)),
+    );
   });
 }
 

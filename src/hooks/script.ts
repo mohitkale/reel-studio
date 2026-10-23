@@ -196,7 +196,11 @@ export function useUpdateCaptionCue(scriptId: string) {
 
 function useScriptInvalidator(scriptId: string) {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: ["script", scriptId] });
+  return () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+      qc.invalidateQueries({ queryKey: ["scene-history", scriptId] }),
+    ]);
 }
 
 /** Set or clear the reel's cover image (baked as the opening frame at render). */
@@ -215,7 +219,11 @@ export function useSetScriptCover(scriptId: string) {
     onError: (_e, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(["script", scriptId], ctx.prev);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+        qc.invalidateQueries({ queryKey: ["scene-history", scriptId] }),
+      ]),
   });
 }
 
@@ -248,7 +256,11 @@ export function useSetScriptMusic(scriptId: string) {
     onError: (_e, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(["script", scriptId], ctx.prev);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+        qc.invalidateQueries({ queryKey: ["scene-history", scriptId] }),
+      ]),
   });
 }
 
@@ -266,7 +278,11 @@ export function useAutoSoundtrack(scriptId: string) {
     onSuccess: (data) => {
       qc.setQueryData(["script", scriptId], data.script);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+        qc.invalidateQueries({ queryKey: ["scene-history", scriptId] }),
+      ]),
   });
 }
 
@@ -281,7 +297,11 @@ export function useEditSfxCue(scriptId: string) {
         body,
       ),
     onSuccess: (data) => qc.setQueryData(["script", scriptId], data.script),
-    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+        qc.invalidateQueries({ queryKey: ["scene-history", scriptId] }),
+      ]),
   });
 }
 
@@ -303,7 +323,11 @@ export function useReplanMotionDirection(scriptId: string) {
         script: ScriptDTO;
       }>(`/api/scripts/${scriptId}/motion`, vars),
     onSuccess: (data) => qc.setQueryData(["script", scriptId], data.script),
-    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+        qc.invalidateQueries({ queryKey: ["scene-history", scriptId] }),
+      ]),
   });
 }
 
@@ -328,7 +352,11 @@ export function useSetScriptVisualStyle(scriptId: string) {
     onError: (_e, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(["script", scriptId], ctx.prev);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+        qc.invalidateQueries({ queryKey: ["scene-history", scriptId] }),
+      ]),
   });
 }
 
@@ -351,7 +379,11 @@ export function useSetScriptHideProgressBar(scriptId: string) {
     onError: (_e, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(["script", scriptId], ctx.prev);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+        qc.invalidateQueries({ queryKey: ["scene-history", scriptId] }),
+      ]),
   });
 }
 
@@ -371,7 +403,11 @@ export function useSetScriptHideText(scriptId: string) {
     onError: (_e, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(["script", scriptId], ctx.prev);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+        qc.invalidateQueries({ queryKey: ["scene-history", scriptId] }),
+      ]),
   });
 }
 
@@ -394,7 +430,11 @@ export function useSetVoiceMode(scriptId: string) {
     onError: (_e, _v, ctx) => {
       if (ctx?.prev) qc.setQueryData(["script", scriptId], ctx.prev);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+        qc.invalidateQueries({ queryKey: ["scene-history", scriptId] }),
+      ]),
   });
 }
 

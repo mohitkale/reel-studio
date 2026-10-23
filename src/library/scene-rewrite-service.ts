@@ -1,3 +1,5 @@
+import { storyboardSnapshot } from "@/library/structural-history";
+import { recordHistory as saveHistory } from "@/library/scene-history";
 import { createHash } from "node:crypto";
 import type { Prisma } from "@prisma/client";
 import type { SceneDTO } from "@/lib/dto";
@@ -37,6 +39,7 @@ export function assertSceneRewriteState(expected: string, actual: string) {
 
 /** Commit generated scenes and their stock metadata together, only on the same draft. */
 export async function commitSceneRewrite(input: {
+  recordHistory?: boolean;
   scriptId: string;
   expectedState: string;
   targets: SceneDTO[];
@@ -56,6 +59,9 @@ export async function commitSceneRewrite(input: {
       502,
     );
   await prisma.$transaction(async (tx) => {
+    const historyBefore = input.recordHistory
+      ? await storyboardSnapshot(tx, input.scriptId)
+      : null;
     assertSceneRewriteState(
       input.expectedState,
       await rewriteState(tx, input.scriptId),
@@ -86,5 +92,13 @@ export async function commitSceneRewrite(input: {
         update: data,
       });
     }
+    if (historyBefore)
+      await saveHistory(
+        tx,
+        input.scriptId,
+        "@storyboard",
+        JSON.stringify(historyBefore),
+        JSON.stringify(await storyboardSnapshot(tx, input.scriptId)),
+      );
   });
 }

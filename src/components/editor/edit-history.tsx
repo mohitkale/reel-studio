@@ -31,7 +31,7 @@ export function EditHistory({
   return (
     <div
       className="flex flex-wrap items-center gap-2"
-      aria-label="Saved scene edit history"
+      aria-label="Saved edit history"
     >
       <Button
         size="sm"
@@ -41,7 +41,7 @@ export function EditHistory({
         }
         onClick={() => mutation.mutate("undo")}
       >
-        Undo scene edit
+        Undo edit
       </Button>
       <Button
         size="sm"

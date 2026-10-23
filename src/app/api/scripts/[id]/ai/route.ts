@@ -199,6 +199,7 @@ export async function POST(
         targets.map((target) => target.background),
       );
       await commitSceneRewrite({
+        recordHistory: true,
         scriptId,
         expectedState: expectedStoryboardState!,
         targets,
@@ -231,6 +232,7 @@ export async function POST(
     }
 
     const { mediaDecisions } = await generateSceneAppend({
+      recordHistory: true,
       script,
       expectedState: expectedStoryboardState!,
       body,

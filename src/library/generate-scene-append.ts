@@ -50,6 +50,7 @@ function layoutJsonFor(
 
 /** Shared bounded append for Add scenes and reviewed topic chapters. */
 export async function generateSceneAppend(input: {
+  recordHistory?: boolean;
   script: ScriptDTO;
   expectedState: string;
   body: z.output<typeof aiEnhanceRequestSchema>;
@@ -179,6 +180,7 @@ export async function generateSceneAppend(input: {
       )
     : [];
   const appendedIds = await commitSceneAppend({
+    recordHistory: input.recordHistory,
     scriptId,
     expectedState: expectedState,
     chapterTitle: body.chapterTitle,

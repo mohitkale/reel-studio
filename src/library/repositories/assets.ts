@@ -1,3 +1,5 @@
+import { getAssetUsage } from "@/library/asset-usage";
+import { ProviderError } from "@/providers/voice/types";
 import type { AssetDTO } from "@/lib/dto";
 import { prisma } from "@/library/db";
 import { getAssetStore } from "@/library/storage";
@@ -69,6 +71,19 @@ export async function createAsset(
 export async function deleteAsset(id: string): Promise<void> {
   const asset = await prisma.asset.findUnique({ where: { id } });
   if (!asset) return;
+  const usage = await getAssetUsage(id);
+  if (
+    usage &&
+    usage.scenes.length +
+      usage.scripts.length +
+      usage.podcasts.length +
+      usage.frozenCount >
+      0
+  )
+    throw new ProviderError(
+      "This asset is referenced by saved content. Review Usage & source before deleting it.",
+      409,
+    );
   await prisma.asset.delete({ where: { id } });
   await getAssetStore()
     .delete(asset.path)

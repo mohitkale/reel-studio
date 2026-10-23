@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
-import { recordSceneEdit } from "@/library/scene-history";
+import { structureSnapshot } from "@/library/structural-history";
+import { recordHistory } from "@/library/scene-history";
 import type { SceneDTO, SceneBackground, SceneChartData } from "@/lib/dto";
 import { defaultTemplateIdForEngine } from "@/engines/registry";
 import { isVideoEngineId, DEFAULT_VIDEO_ENGINE } from "@/engines/types";
@@ -201,9 +202,15 @@ export async function updateSceneWithHistory(
   return prisma.$transaction(async (tx) => {
     const before = await tx.scene.findUnique({ where: { id } });
     if (!before) throw new ProviderError("Scene not found", 404);
+    const snapshot = await structureSnapshot(tx, before.scriptId, id);
     const result = await updateScene(id, data, tx);
-    const after = await tx.scene.findUniqueOrThrow({ where: { id } });
-    await recordSceneEdit(tx, before, after);
+    await recordHistory(
+      tx,
+      before.scriptId,
+      id,
+      JSON.stringify(snapshot),
+      JSON.stringify(await structureSnapshot(tx, before.scriptId, id)),
+    );
     return result;
   });
 }
@@ -225,4 +232,82 @@ export async function reorderScenes(
       }),
     ),
   );
+}
+
+/** Manual structural operations retain full deleted-scene relationships. */
+export async function addSceneWithHistory(
+  scriptId: string,
+  data: { text: string; templateId?: string; visual?: string },
+) {
+  return prisma.$transaction(async (tx) => {
+    const script = await tx.script.findUnique({
+      where: { id: scriptId },
+      select: { project: { select: { videoEngine: true } } },
+    });
+    if (!script) throw new ProviderError("Script not found", 404);
+    const before = await structureSnapshot(tx, scriptId);
+    const engine = isVideoEngineId(script.project.videoEngine)
+      ? script.project.videoEngine
+      : DEFAULT_VIDEO_ENGINE;
+    const scene = await tx.scene.create({
+      data: {
+        scriptId,
+        order: Math.max(-1, ...before.order.map((s) => s.order)) + 1,
+        ...data,
+        templateId: data.templateId ?? defaultTemplateIdForEngine(engine),
+      },
+    });
+    const after = await structureSnapshot(tx, scriptId, scene.id);
+    await recordHistory(
+      tx,
+      scriptId,
+      scene.id,
+      JSON.stringify(before),
+      JSON.stringify(after),
+    );
+    return toSceneDTO(scene);
+  });
+}
+export async function deleteSceneWithHistory(id: string) {
+  return prisma.$transaction(async (tx) => {
+    const scene = await tx.scene.findUnique({ where: { id } });
+    if (!scene) throw new ProviderError("Scene not found", 404);
+    const before = await structureSnapshot(tx, scene.scriptId, id);
+    await tx.scene.delete({ where: { id } });
+    const after = await structureSnapshot(tx, scene.scriptId, id);
+    await recordHistory(
+      tx,
+      scene.scriptId,
+      id,
+      JSON.stringify(before),
+      JSON.stringify(after),
+    );
+  });
+}
+export async function reorderScenesWithHistory(
+  scriptId: string,
+  ids: string[],
+) {
+  return prisma.$transaction(async (tx) => {
+    const before = await structureSnapshot(tx, scriptId);
+    if (
+      ids.length !== before.order.length ||
+      new Set(ids).size !== ids.length ||
+      ids.some((id) => !before.order.some((row) => row.id === id))
+    )
+      throw new ProviderError(
+        "Supply each scene in this script exactly once",
+        400,
+      );
+    for (const [order, id] of ids.entries())
+      await tx.scene.update({ where: { id }, data: { order } });
+    const after = await structureSnapshot(tx, scriptId);
+    await recordHistory(
+      tx,
+      scriptId,
+      "@order",
+      JSON.stringify(before),
+      JSON.stringify(after),
+    );
+  });
 }

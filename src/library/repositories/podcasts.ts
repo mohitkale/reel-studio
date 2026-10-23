@@ -605,6 +605,13 @@ export async function deletePodcastTake(id: string): Promise<void> {
   const take = await prisma.podcastTake.findUnique({ where: { id } });
   if (!take) return;
   await prisma.podcastTake.delete({ where: { id } });
-  await getAssetStore().delete(take.audioPath);
-  if (take.mp3Path) await getAssetStore().delete(take.mp3Path);
+  if (
+    !(await prisma.podcastTake.count({ where: { audioPath: take.audioPath } }))
+  )
+    await getAssetStore().delete(take.audioPath);
+  if (
+    take.mp3Path &&
+    !(await prisma.podcastTake.count({ where: { mp3Path: take.mp3Path } }))
+  )
+    await getAssetStore().delete(take.mp3Path);
 }

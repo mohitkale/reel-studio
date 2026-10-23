@@ -26,7 +26,7 @@ export interface BeatTimingDTO {
 }
 
 export type VoiceMode = "oneshot" | "per_scene";
-export type VoiceTakeSource = "oneshot" | "assembled";
+export type VoiceTakeSource = "oneshot" | "assembled" | "edited";
 
 export interface SceneDTO {
   id: string;

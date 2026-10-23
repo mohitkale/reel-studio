@@ -14,6 +14,8 @@ export function AssetUsage({ id }: { id: string }) {
         scenes: Array<{ id: string; scriptId: string; label: string }>;
         scripts: Array<{ id: string; name: string }>;
         podcasts: Array<{ id: string; title: string }>;
+        frozen: Array<{ kind: string; id: string; label: string }>;
+        frozenCount: number;
         provenance: Record<string, unknown> | null;
       }>(`/api/assets/${id}/usage`),
   });
@@ -62,8 +64,15 @@ export function AssetUsage({ id }: { id: string }) {
             </Link>
           ))}
           <p className="text-muted-foreground">
-            Frozen revisions may also reference this asset.
+            {data.frozenCount} frozen references. Deletion is blocked while any
+            current or frozen reference remains.
           </p>
+          {data.frozen.map((reference) => (
+            <p key={`${reference.kind}:${reference.id}`}>{reference.label}</p>
+          ))}
+          {data.frozenCount > data.frozen.length && (
+            <p>Showing the first {data.frozen.length} frozen references.</p>
+          )}
           {data.provenance ? (
             <pre className="max-h-40 overflow-auto break-words whitespace-pre-wrap">
               {JSON.stringify(data.provenance, null, 2)}

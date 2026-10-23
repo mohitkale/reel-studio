@@ -54,15 +54,16 @@ export function SceneTimeline({
             >
               <button
                 type="button"
-                aria-label={`Preview scene ${sceneOffset + index + 1}`}
+                aria-label={`${beat ? "Preview" : "Inspect omitted"} scene ${sceneOffset + index + 1}`}
                 aria-pressed={selectedId === scene.id}
                 onClick={() => onSelect(scene.id)}
                 className="focus-visible:outline-primary w-full text-left"
               >
                 <span className="text-muted-foreground block text-xs">
                   {sceneOffset + index + 1} ·{" "}
-                  {((beat?.startFrame ?? 0) / fps).toFixed(1)}s ·{" "}
-                  {seconds.toFixed(1)}s
+                  {beat
+                    ? `${(beat.startFrame / fps).toFixed(1)}s · ${seconds.toFixed(1)}s`
+                    : "Omitted from selected take"}
                 </span>
                 <span className="mt-1 block truncate text-sm">
                   {scene.text || "Empty scene"}

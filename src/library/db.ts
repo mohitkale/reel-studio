@@ -41,7 +41,8 @@ function getClient(): PrismaClient {
       existing.stockMediaMaterialization == null ||
       existing.factoryRun == null ||
       existing.sceneEdit == null ||
-      existing.studioPreset == null
+      existing.studioPreset == null ||
+      existing.audioEditSession == null
     ) {
       void existing.$disconnect().catch(() => undefined);
       const fresh = createClient();
