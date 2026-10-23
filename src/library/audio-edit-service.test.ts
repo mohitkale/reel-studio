@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { DatabaseSync } from "node:sqlite";
+import { backup, DatabaseSync } from "node:sqlite";
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -53,50 +53,57 @@ const plan = {
 beforeEach(async () => {
   directory = mkdtempSync(path.join(os.tmpdir(), "studio-audio-"));
   const filename = path.join(directory, "test.db"),
-    db = new DatabaseSync(filename);
-  for (const migration of readdirSync("prisma/migrations").sort())
-    if (migration.startsWith("20"))
-      db.exec(
-        readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),
-      );
-  db.close();
+    db = new DatabaseSync(":memory:");
+  // Exercise the same on-disk schema without syncing each DDL statement.
+  try {
+    for (const migration of readdirSync("prisma/migrations").sort())
+      if (migration.startsWith("20"))
+        db.exec(
+          readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),
+        );
+    await backup(db, filename);
+  } finally {
+    db.close();
+  }
   previous = process.env.DATABASE_URL;
   process.env.DATABASE_URL = `file:${filename}`;
   client = createPrismaClient();
-  const project = await client.project.create({ data: { name: "Test" } }),
-    script = await client.script.create({
-      data: { projectId: project.id, name: "Voice" },
-    }),
-    scene = await client.scene.create({
-      data: {
-        scriptId: script.id,
-        order: 0,
-        text: "Voice",
-        templateId: "hf-statement",
-      },
-    });
-  const pcm = Buffer.alloc(44100 * 2);
-  for (let i = 0; i < 44100; i++) pcm.writeInt16LE(10000, i * 2);
-  memory.set("source.wav", pcmToWav(pcm));
-  takeId = (
-    await client.voiceTake.create({
-      data: {
-        scriptId: script.id,
-        providerId: "kokoro-server",
-        voiceId: "af_heart",
-        totalFrames: 30,
-        timingJson: JSON.stringify([
-          {
-            sceneId: scene.id,
-            startFrame: 0,
-            durationFrames: 30,
-            text: "Voice",
-          },
-        ]),
-        audioPath: "source.wav",
-      },
-    })
-  ).id;
+  await client.$transaction(async (tx) => {
+    const project = await tx.project.create({ data: { name: "Test" } }),
+      script = await tx.script.create({
+        data: { projectId: project.id, name: "Voice" },
+      }),
+      scene = await tx.scene.create({
+        data: {
+          scriptId: script.id,
+          order: 0,
+          text: "Voice",
+          templateId: "hf-statement",
+        },
+      });
+    const pcm = Buffer.alloc(44100 * 2);
+    for (let i = 0; i < 44100; i++) pcm.writeInt16LE(10000, i * 2);
+    memory.set("source.wav", pcmToWav(pcm));
+    takeId = (
+      await tx.voiceTake.create({
+        data: {
+          scriptId: script.id,
+          providerId: "kokoro-server",
+          voiceId: "af_heart",
+          totalFrames: 30,
+          timingJson: JSON.stringify([
+            {
+              sceneId: scene.id,
+              startFrame: 0,
+              durationFrames: 30,
+              text: "Voice",
+            },
+          ]),
+          audioPath: "source.wav",
+        },
+      })
+    ).id;
+  });
 });
 afterEach(async () => {
   await client?.$disconnect();

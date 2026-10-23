@@ -67,3 +67,11 @@ transcript passages and text embedded in visual assets require human review.
   using the edited take, with an MP4-ready state in the browser. The final
   omitted-scene control opened a separate scene preview without changing the
   edited full-reel output; no browser errors were reported.
+
+- Initial Windows CI passed 1,019 tests but timed out while building two SQLite
+  fixtures. Those fixtures now apply the identical migrations in memory and
+  copy the complete schema to a real file once, then seed atomically. This uses
+  the existing polling-test approach; recovery/locking tests still run on disk,
+  with every assertion and deadline unchanged. Replacement platform CI is required.
+  The copied and direct schemas matched all 120 schema entries, integrity and
+  foreign-key checks passed, and all nine affected tests passed locally.

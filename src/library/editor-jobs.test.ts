@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { DatabaseSync } from "node:sqlite";
+import { backup, DatabaseSync } from "node:sqlite";
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 import { tmpdir } from "node:os";
@@ -37,34 +37,49 @@ import {
 let previous: string | undefined;
 // Hosted Windows SQLite setup can exceed the default hook budget under I/O load.
 // Keep assertion timeouts and non-Windows fixture budgets unchanged.
-beforeEach(async () => {
-  state.directory = mkdtempSync(path.join(tmpdir(), "reel-editor-jobs-"));
-  const filename = path.join(state.directory, "jobs.db");
-  const sqlite = new DatabaseSync(filename);
-  for (const dir of readdirSync("prisma/migrations").sort()) {
-    if (dir !== "migration_lock.toml")
-      sqlite.exec(
-        readFileSync(`prisma/migrations/${dir}/migration.sql`, "utf8"),
-      );
-  }
-  sqlite.close();
-  previous = process.env.DATABASE_URL;
-  process.env.DATABASE_URL = `file:${filename}`;
-  state.db = createPrismaClient();
-  await state.db.project.create({ data: { id: "project", name: "Fixture" } });
-  await state.db.script.create({
-    data: { id: "script", name: "Fixture", projectId: "project" },
-  });
-  await state.db.scene.create({
-    data: {
-      id: "scene",
-      scriptId: "script",
-      order: 0,
-      text: "Hello from the durable worker",
-      templateId: "hf-typewriter",
-    },
-  });
-}, process.platform === "win32" ? 30_000 : 10_000);
+beforeEach(
+  async () => {
+    state.directory = mkdtempSync(path.join(tmpdir(), "reel-editor-jobs-"));
+    const filename = path.join(state.directory, "jobs.db");
+    const sqlite = new DatabaseSync(":memory:");
+    // Keep real file-backed recovery, with one schema copy instead of per-DDL fsyncs.
+    try {
+      for (const dir of readdirSync("prisma/migrations").sort()) {
+        if (dir !== "migration_lock.toml")
+          sqlite.exec(
+            readFileSync(`prisma/migrations/${dir}/migration.sql`, "utf8"),
+          );
+      }
+      await backup(sqlite, filename);
+    } finally {
+      sqlite.close();
+    }
+    previous = process.env.DATABASE_URL;
+    process.env.DATABASE_URL = `file:${filename}`;
+    state.db = createPrismaClient();
+    await state.db.project.create({
+      data: {
+        id: "project",
+        name: "Fixture",
+        scripts: {
+          create: {
+            id: "script",
+            name: "Fixture",
+            scenes: {
+              create: {
+                id: "scene",
+                order: 0,
+                text: "Hello from the durable worker",
+                templateId: "hf-typewriter",
+              },
+            },
+          },
+        },
+      },
+    });
+  },
+  process.platform === "win32" ? 30_000 : 10_000,
+);
 afterEach(async () => {
   await state.db!.$disconnect();
   if (previous === undefined) delete process.env.DATABASE_URL;
