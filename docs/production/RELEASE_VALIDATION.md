@@ -46,6 +46,12 @@ No tag is published before those exact-commit gates pass.
   Remote model loading was disabled.
 - The unchanged phonemizer passes matching corresponding-source distribution
   checks. The complete source archive and notices accompany the release.
+- The initial release PR's Windows checks passed, but Linux stalled downloading
+  FFmpeg dependencies from the runner's Azure mirror, including on a fresh retry.
+  CI now prefers Ubuntu's official HTTPS archive with the existing mirror as
+  fallback and bounded network retries. A guard prevents local execution.
+  All platform jobs, tests, assertions, builds and deadlines remain required;
+  the updated release head must pass every gate again before merge.
 
 [Integrated acceptance](RELEASE_ACCEPTANCE_0.7.0.json),
 [fresh matrix](RELEASE_MATRIX_0.7.0.json),

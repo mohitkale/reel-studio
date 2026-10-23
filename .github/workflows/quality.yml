@@ -39,10 +39,9 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - if: runner.os == 'Linux'
-        run: sudo apt-get update
-      - if: runner.os == 'Linux'
-        run: sudo apt-get install --yes --no-install-recommends ffmpeg
+      - name: Install Linux FFmpeg with mirror fallback
+        if: runner.os == 'Linux'
+        run: bash scripts/install-ci-ffmpeg.sh
       - name: Install pinned Windows FFmpeg
         if: runner.os == 'Windows'
         shell: pwsh
@@ -88,9 +87,8 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - if: runner.os == 'Linux'
-        run: sudo apt-get update
-      - run: sudo apt-get install --yes --no-install-recommends ffmpeg
+      - name: Install Linux FFmpeg with mirror fallback
+        run: bash scripts/install-ci-ffmpeg.sh
       - run: npm ci
       - run: npm run release:matrix
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

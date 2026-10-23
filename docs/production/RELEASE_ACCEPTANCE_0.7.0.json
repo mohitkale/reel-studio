@@ -5,7 +5,7 @@
   "applicationSource": {
     "baseCommit": "85bcf7e3cbdf12ff40bb6cda3bbfdd50350eae7c",
     "contentSha256": "5620a98c022f04673ff4ef884f5dcb7e21e2bbdbbdfdc619faff74ef46089552",
-    "method": "SHA256 of ordered tracked src/public runtime/worker paths and individual SHA256 digests. Release preparation changes metadata/docs only; publication rechecks all accepted files."
+    "method": "SHA256 of ordered tracked src/public runtime/worker paths and individual SHA256 digests. Release preparation changes metadata/docs and CI dependency setup; application runtime is unchanged; publication rechecks all accepted files."
   },
   "unitSuite": {
     "files": 207,
@@ -510,8 +510,8 @@
     "paidProviderLiveTests": "Excluded by explicit maintainer request",
     "paidCalls": 0,
     "newModelsDuringReleasePreparation": 0,
-    "newSoftwareInstalled": false,
-    "cloudRenders": 0
+    "cloudRenders": 0,
+    "newSoftwareInstalledOnMaintainerMachine": false
   },
   "localChecks": {
     "typecheck": true,
@@ -529,5 +529,13 @@
     "Hindi speech/font portability and human blind-preference targets remain unmeasured.",
     "Performance measurements describe one workstation."
   ],
-  "publicationGate": "Latest-head release PR and exact merged/refreshed main Quality/Security, with Linux/Windows clean installs, full suites, builds and process cancellation, must pass before tagging. Published validation records the final commit/tree/run IDs."
+  "publicationGate": "Latest-head release PR and exact merged/refreshed main Quality/Security, with Linux/Windows clean installs, full suites, builds and process cancellation, must pass before tagging. Published validation records the final commit/tree/run IDs.",
+  "ciInfrastructure": {
+    "initialReleaseHead": "2c977a37ac5453f67442aec19f1da312740a5e28",
+    "initialQualityRun": 39959174370,
+    "reason": "Linux FFmpeg dependencies downloaded slowly and retried from the Azure Ubuntu mirror on two runners before application tests. Windows, security and cancellation checks passed.",
+    "change": "CI-only installer prefers the official Ubuntu HTTPS archive with the existing Azure mirror as fallback and bounded retries/timeouts. A guard rejects local execution.",
+    "requiredChecksUnchanged": true,
+    "updatedHeadRequiresAllChecksAgain": true
+  }
 }
