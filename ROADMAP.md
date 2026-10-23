@@ -1,6 +1,6 @@
 # Roadmap
 
-Current release: **[v0.6.0](https://github.com/mohitkale/reel-studio/releases/tag/v0.6.0)**.
+Current release: **[v0.7.0](https://github.com/mohitkale/reel-studio/releases/tag/v0.7.0)**.
 This roadmap separates released features from proposals; future items are not promises.
 
 ## Shipped
@@ -18,10 +18,10 @@ This roadmap separates released features from proposals; future items are not pr
 - Node 24 upgrades, Linux/Windows CI, safe database upgrades, bundled fonts/runtime,
   media hardening, and verified speech-engine source/licensing.
 
-Current main also includes a responsive creator hub, dedicated voiceovers,
+v0.7.0 also ships a responsive creator hub, dedicated voiceovers,
 waveform editing with saved takes/history, reviewed language versions, local
 recording/transcription, structured chart grids and frozen-asset protection.
-These studio improvements are accumulating for the next minor release.
+These studio improvements are included in the current release.
 
 See [CHANGELOG.md](CHANGELOG.md) for release history and
 [release validation](docs/production/RELEASE_VALIDATION.md) for release evidence.
@@ -39,7 +39,7 @@ provider/block registration already exists; broader plugin discovery and
 packaging remain possible future work.
 
 No next feature milestone is currently committed; these are proposals for a
-future release rather than prerequisites for v0.6.0.
+future release rather than prerequisites for v0.7.0.
 
 ## Longer-term exploration
 
