@@ -6,6 +6,8 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+## 0.7.0
+
 ### Added
 
 - Responsive creation hub and dedicated voiceover workspace, shared speech
@@ -22,6 +24,9 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- Linux CI prefers Ubuntu's HTTPS package archive with mirror fallback and
+  bounded download retries after the runner's Azure mirror stalled. All platform
+  checks, tests, builds and deadlines remain required.
 - Asset deletion protects current content, frozen revisions/jobs/profiles,
   finishing snapshots and saved history. Edited video takes preserve intentional
   omissions; their timeline labels explain omitted scenes.
@@ -33,6 +38,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 - Three additive studio migrations since v0.6.0. Existing databases use the
   backup-aware `npm run db:migrate`; dependency pins are unchanged. Local Whisper
   remains optional and needs an explicitly supplied/downloaded model.
+  See [upgrade and rollback](docs/RELEASE_0.7.0.md).
 
 ## 0.6.0
 

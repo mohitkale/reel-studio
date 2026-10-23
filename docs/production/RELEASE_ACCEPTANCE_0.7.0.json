@@ -1,0 +1,541 @@
+{
+  "version": 1,
+  "release": "0.7.0",
+  "verifiedOn": "2026-10-23",
+  "applicationSource": {
+    "baseCommit": "85bcf7e3cbdf12ff40bb6cda3bbfdd50350eae7c",
+    "contentSha256": "5620a98c022f04673ff4ef884f5dcb7e21e2bbdbbdfdc619faff74ef46089552",
+    "method": "SHA256 of ordered tracked src/public runtime/worker paths and individual SHA256 digests. Release preparation changes metadata/docs and CI dependency setup; application runtime is unchanged; publication rechecks all accepted files."
+  },
+  "unitSuite": {
+    "files": 207,
+    "tests": 1021,
+    "passed": true,
+    "maxWorkers": 2
+  },
+  "dependencies": {
+    "baseTag": "v0.6.0",
+    "baseCommit": "67d02de144178cb4ace193f23fddec5c3e8d6e40",
+    "dependencyPinsUnchanged": true,
+    "historicalMigrations": [
+      {
+        "file": "prisma/migrations/20260910000100_baseline/migration.sql",
+        "sha256": "5c1906cb5f6e3aa014670a0d96b718668fab83ee2bc657b2e1efe0556eccdf0b"
+      },
+      {
+        "file": "prisma/migrations/20260911000100_production_jobs/migration.sql",
+        "sha256": "e15ee1e4a362da177c4dccaf3b9aa7cad0f4548e4b95ea4587ec3285601a4d30"
+      },
+      {
+        "file": "prisma/migrations/20260912000100_caption_tracks/migration.sql",
+        "sha256": "6aa1a8e1c8e7c3b7a3db4ad203f0c7ea14f61fcfe5254ed8fccf6b6f94ecde57"
+      },
+      {
+        "file": "prisma/migrations/20260912000200_audio_production/migration.sql",
+        "sha256": "47f80abfa792c7f8a717871bec618ba827492f52408d368d86355ec51c2e6092"
+      },
+      {
+        "file": "prisma/migrations/20260912000300_podcast_production/migration.sql",
+        "sha256": "978975da366af709439b69482cb52aa58742d4fecf2a1bb6553edfa95075a4d3"
+      },
+      {
+        "file": "prisma/migrations/20260913000100_production_batches/migration.sql",
+        "sha256": "2846738b045db0aa246e26bb940a1fd96e43d609359ff263537e4ac3f2701b86"
+      },
+      {
+        "file": "prisma/migrations/20260914000100_podcast_finishing/migration.sql",
+        "sha256": "90ffcb3c6e33ddc6ace9af41440793df7bd818eba0e6aabb6022c7c7f623fd2c"
+      },
+      {
+        "file": "prisma/migrations/20260914000200_stock_media_schema/migration.sql",
+        "sha256": "e534fa930defb18aca2468b560e8038e8c91e21e03f883d22633ff2a426c60f1"
+      },
+      {
+        "file": "prisma/migrations/20260914000300_stock_media_services/migration.sql",
+        "sha256": "f3ef6a0a2890d064c7c1d96fb8bd7f36f2225ae04f08a488b9c3447a2466d08a"
+      },
+      {
+        "file": "prisma/migrations/20260915000100_caption_styles/migration.sql",
+        "sha256": "40de887dd888b894ef3db50d3c8767d710d53254316bbac7ada1795a92fce33b"
+      },
+      {
+        "file": "prisma/migrations/20260916000100_quick_produce_revisions/migration.sql",
+        "sha256": "22d88e81492ddaa8612d5b39dba96a7a58ee1d226ea3e14f99ac7d85aaaa8141"
+      },
+      {
+        "file": "prisma/migrations/20260930000100_caption_take_provenance/migration.sql",
+        "sha256": "7c67a19729365fe8a50aeda1eb9c179690b93aa6458003d1a8c2c391df448e91"
+      },
+      {
+        "file": "prisma/migrations/20261002000100_hyperframes_only/migration.sql",
+        "sha256": "f55ebe6d1ec458f541a69a782149b6ca8eaeb56845964d302e03af17da657132"
+      },
+      {
+        "file": "prisma/migrations/20261002000200_sqlite_render_lookup/migration.sql",
+        "sha256": "2e4e93346026cb7f00a7f8978c3ea5fe7a68918cf01299cd5eccd616c027b257"
+      },
+      {
+        "file": "prisma/migrations/20261017000100_factory_workflows/migration.sql",
+        "sha256": "33f842fab6bdd1a4711edf99e9010df3e5bc1c86d6e6e3d91de8645cf917adb0"
+      }
+    ],
+    "newMigrations": [
+      "prisma/migrations/20261022000100_studio_organization/migration.sql",
+      "prisma/migrations/20261022000200_studio_presets/migration.sql",
+      "prisma/migrations/20261023000100_audio_edit_sessions/migration.sql"
+    ],
+    "sourceContentSha256": "5620a98c022f04673ff4ef884f5dcb7e21e2bbdbbdfdc619faff74ef46089552"
+  },
+  "upgrade": {
+    "verifiedAt": "2026-10-23T12:49:13.097Z",
+    "publishedSource": {
+      "tag": "v0.3.0",
+      "commit": "3bd458296a0e5ad367f6c1122b064fddf6ff9c2f",
+      "schemaPath": "prisma/schema.prisma",
+      "sourceSchemaSha256": "67c8283791d65b581c4552a59f3390853671e253e32e8350dd819729048a57cb",
+      "sqlSha256": "5c1906cb5f6e3aa014670a0d96b718668fab83ee2bc657b2e1efe0556eccdf0b",
+      "conversion": "Installed Prisma 7.10.0 migrate diff --from-empty; removed only datasource url to adapt old syntax."
+    },
+    "published040": {
+      "tag": "v0.4.0",
+      "commit": "2081ac3edd9eab1f4dc2068c37d1f1deec06c4f1",
+      "schemaPath": "prisma/schema.prisma",
+      "sourceSchemaSha256": "34ac71873ac604f53c828fef087bcb8bc40bf69be5e34325b80fd49fdc3e4a62",
+      "migrations": {
+        "prisma/migrations/20260910000100_baseline/migration.sql": "5c1906cb5f6e3aa014670a0d96b718668fab83ee2bc657b2e1efe0556eccdf0b",
+        "prisma/migrations/20260911000100_production_jobs/migration.sql": "e15ee1e4a362da177c4dccaf3b9aa7cad0f4548e4b95ea4587ec3285601a4d30",
+        "prisma/migrations/20260912000100_caption_tracks/migration.sql": "6aa1a8e1c8e7c3b7a3db4ad203f0c7ea14f61fcfe5254ed8fccf6b6f94ecde57",
+        "prisma/migrations/20260912000200_audio_production/migration.sql": "47f80abfa792c7f8a717871bec618ba827492f52408d368d86355ec51c2e6092",
+        "prisma/migrations/20260912000300_podcast_production/migration.sql": "978975da366af709439b69482cb52aa58742d4fecf2a1bb6553edfa95075a4d3",
+        "prisma/migrations/20260913000100_production_batches/migration.sql": "2846738b045db0aa246e26bb940a1fd96e43d609359ff263537e4ac3f2701b86",
+        "prisma/migrations/20260914000100_podcast_finishing/migration.sql": "90ffcb3c6e33ddc6ace9af41440793df7bd818eba0e6aabb6022c7c7f623fd2c",
+        "prisma/migrations/20260914000200_stock_media_schema/migration.sql": "e534fa930defb18aca2468b560e8038e8c91e21e03f883d22633ff2a426c60f1",
+        "prisma/migrations/20260914000300_stock_media_services/migration.sql": "f3ef6a0a2890d064c7c1d96fb8bd7f36f2225ae04f08a488b9c3447a2466d08a",
+        "prisma/migrations/20260915000100_caption_styles/migration.sql": "40de887dd888b894ef3db50d3c8767d710d53254316bbac7ada1795a92fce33b",
+        "prisma/migrations/20260916000100_quick_produce_revisions/migration.sql": "22d88e81492ddaa8612d5b39dba96a7a58ee1d226ea3e14f99ac7d85aaaa8141",
+        "prisma/migrations/20260930000100_caption_take_provenance/migration.sql": "7c67a19729365fe8a50aeda1eb9c179690b93aa6458003d1a8c2c391df448e91",
+        "prisma/migrations/20261002000100_hyperframes_only/migration.sql": "f55ebe6d1ec458f541a69a782149b6ca8eaeb56845964d302e03af17da657132",
+        "prisma/migrations/20261002000200_sqlite_render_lookup/migration.sql": "2e4e93346026cb7f00a7f8978c3ea5fe7a68918cf01299cd5eccd616c027b257"
+      },
+      "fixture": "Published v0.3.0 fixture upgraded through byte-identical v0.4.0 migrations, then populated with caption tracks; no schema migration is introduced by v0.5.0."
+    },
+    "published040RowsPreserved": true,
+    "published040BackupRestore": true,
+    "targetVersion": "0.7.0",
+    "migrations": 18,
+    "backupRestore": true,
+    "copy": true,
+    "media": {
+      "image.svg": "681c2e0344aaee59f8a3f0b7d82ee9a2497a21a693579664eb8179a2fd284d25",
+      "historical.mp4": "6e27a04fe9419e61129b85b0b468235dea4b546c9d5510c7a80a45fb349af267",
+      "take.wav": "76d884aeb068036704cf27022000c5e91b739ac17d6b1ce27ba61ddda870d706"
+    },
+    "voiceTakes": true,
+    "historicalExports": true,
+    "legacyCaptionPayload": true,
+    "captionTracksAfterUpgrade": true,
+    "freshSetup": true
+  },
+  "published060Upgrade": {
+    "baseTag": "v0.6.0",
+    "publishedMigrations": 15,
+    "totalMigrations": 18,
+    "populatedTables": [
+      "FactoryProfile",
+      "FactoryPack",
+      "FactoryRun",
+      "FactoryVariant"
+    ],
+    "rowsPreserved": true,
+    "schemaMatchesFresh": true,
+    "integrity": true,
+    "foreignKeys": true,
+    "runnerBackupRestored": true
+  },
+  "videoMatrix": {
+    "report": "RELEASE_MATRIX_0.7.0.json",
+    "outputs": 18,
+    "fresh": true,
+    "durationSeconds": 199.5,
+    "elapsedSeconds": 676.8,
+    "decodedFramesInspected": 18,
+    "audio": "Silent visual matrix; actual cached speech checked separately",
+    "reference": {
+      "resumedFromExistingArtifacts": false,
+      "platform": "darwin",
+      "architecture": "x64",
+      "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+      "logicalCpus": 12,
+      "memoryGiB": 16,
+      "node": "v24.18.1",
+      "packageVersion": "0.7.0"
+    }
+  },
+  "longRender": {
+    "engine": "hyperframes",
+    "benchmarkId": null,
+    "quality": "draft",
+    "nativeCanvas": null,
+    "secondsPerVideoMinute": 64.49245378742857,
+    "secondsPerVideoMinuteOnRetry": 20.34528407,
+    "audioConsistency": {
+      "relativeRmsError": 0,
+      "comparedSamples": 20160000,
+      "firstEncodedHash": "SHA256=87b63a1afd41e83a42fd713a37d2447abcda51868b0f85de27263ef7aea531c2",
+      "retryEncodedHash": "SHA256=87b63a1afd41e83a42fd713a37d2447abcda51868b0f85de27263ef7aea531c2"
+    },
+    "scopedParity": [],
+    "review": {
+      "sceneFrames": [546, 1386, 2226, 3066, 3906, 4746],
+      "cutFrames": [834, 838, 839, 840, 841, 842, 846, 850]
+    },
+    "seconds": 210,
+    "fps": 24,
+    "frames": 5040,
+    "calibrationNarration": true,
+    "canceled": {
+      "events": [
+        {
+          "index": 0,
+          "reused": false
+        }
+      ],
+      "milliseconds": 41253.721758,
+      "sampledPeakProcessTreeRssBytes": 1626771456,
+      "memorySamples": 41,
+      "samplingError": null
+    },
+    "first": {
+      "events": [
+        {
+          "index": 0,
+          "reused": true
+        },
+        {
+          "index": 1,
+          "reused": false
+        },
+        {
+          "index": 2,
+          "reused": false
+        },
+        {
+          "index": 3,
+          "reused": false
+        },
+        {
+          "index": 4,
+          "reused": false
+        },
+        {
+          "index": 5,
+          "reused": false
+        },
+        {
+          "index": 6,
+          "reused": false
+        }
+      ],
+      "milliseconds": 225723.588256,
+      "sampledPeakProcessTreeRssBytes": 2077745152,
+      "memorySamples": 223,
+      "samplingError": null,
+      "metadata": {
+        "bytes": 11635811,
+        "width": 1280,
+        "height": 720,
+        "duration": 210,
+        "hasAudio": true,
+        "checksum": "sha256:e8026c3badcdcaa9019ab3352972fc3b13555df716bcfbb49208541739f76dde",
+        "audioMastering": {
+          "version": 1,
+          "mode": "balanced",
+          "status": "verified",
+          "target": {
+            "integratedLufs": -16,
+            "maxTruePeakDbtp": -1,
+            "loudnessRangeLu": 11
+          },
+          "before": {
+            "integratedLufs": -23.91,
+            "truePeakDbtp": -11.21,
+            "loudnessRangeLu": 8.1,
+            "thresholdLufs": -34.1
+          },
+          "after": {
+            "integratedLufs": -16.01,
+            "truePeakDbtp": -3.31,
+            "loudnessRangeLu": 8.1,
+            "thresholdLufs": -26.2
+          },
+          "outputSha256": "e8026c3badcdcaa9019ab3352972fc3b13555df716bcfbb49208541739f76dde"
+        }
+      },
+      "probes": [
+        {
+          "seconds": 16.5,
+          "dbfs": -18.749575195074478
+        },
+        {
+          "seconds": 207,
+          "dbfs": -22.908257317779487
+        },
+        {
+          "seconds": 29.9,
+          "dbfs": -13.379806959181849
+        },
+        {
+          "seconds": 59.9,
+          "dbfs": -13.331854967210983
+        },
+        {
+          "seconds": 89.9,
+          "dbfs": -13.388579291230236
+        },
+        {
+          "seconds": 119.9,
+          "dbfs": -13.367226158302843
+        },
+        {
+          "seconds": 149.9,
+          "dbfs": -12.05618241615234
+        },
+        {
+          "seconds": 179.9,
+          "dbfs": -12.053068246731542
+        }
+      ]
+    },
+    "retry": {
+      "events": [
+        {
+          "index": 0,
+          "reused": true
+        },
+        {
+          "index": 1,
+          "reused": true
+        },
+        {
+          "index": 2,
+          "reused": true
+        },
+        {
+          "index": 3,
+          "reused": true
+        },
+        {
+          "index": 4,
+          "reused": true
+        },
+        {
+          "index": 5,
+          "reused": true
+        },
+        {
+          "index": 6,
+          "reused": true
+        }
+      ],
+      "milliseconds": 71208.49424500001,
+      "sampledPeakProcessTreeRssBytes": 1025400832,
+      "memorySamples": 69,
+      "samplingError": null,
+      "metadata": {
+        "bytes": 11635811,
+        "width": 1280,
+        "height": 720,
+        "duration": 210,
+        "hasAudio": true,
+        "checksum": "sha256:e8026c3badcdcaa9019ab3352972fc3b13555df716bcfbb49208541739f76dde",
+        "audioMastering": {
+          "version": 1,
+          "mode": "balanced",
+          "status": "verified",
+          "target": {
+            "integratedLufs": -16,
+            "maxTruePeakDbtp": -1,
+            "loudnessRangeLu": 11
+          },
+          "before": {
+            "integratedLufs": -23.91,
+            "truePeakDbtp": -11.21,
+            "loudnessRangeLu": 8.1,
+            "thresholdLufs": -34.1
+          },
+          "after": {
+            "integratedLufs": -16.01,
+            "truePeakDbtp": -3.31,
+            "loudnessRangeLu": 8.1,
+            "thresholdLufs": -26.2
+          },
+          "outputSha256": "e8026c3badcdcaa9019ab3352972fc3b13555df716bcfbb49208541739f76dde"
+        }
+      },
+      "probes": [
+        {
+          "seconds": 16.5,
+          "dbfs": -18.749575195074478
+        },
+        {
+          "seconds": 207,
+          "dbfs": -22.908257317779487
+        },
+        {
+          "seconds": 29.9,
+          "dbfs": -13.379806959181849
+        },
+        {
+          "seconds": 59.9,
+          "dbfs": -13.331854967210983
+        },
+        {
+          "seconds": 89.9,
+          "dbfs": -13.388579291230236
+        },
+        {
+          "seconds": 119.9,
+          "dbfs": -13.367226158302843
+        },
+        {
+          "seconds": 149.9,
+          "dbfs": -12.05618241615234
+        },
+        {
+          "seconds": 179.9,
+          "dbfs": -12.053068246731542
+        }
+      ]
+    }
+  },
+  "podcast": {
+    "provider": "kokoro-server",
+    "voices": ["af_bella", "am_adam"],
+    "cachedTurns": 2,
+    "selectiveRegeneration": {
+      "cached": 1,
+      "generated": 1
+    },
+    "legacyMp3Export": true,
+    "wavAndMp3": true,
+    "audiogram": true,
+    "remoteModelsDisabled": true,
+    "newModelDownloads": 0,
+    "paidCalls": 0,
+    "decoded": {
+      "method": "Native-channel float PCM decode without mono downmix gain",
+      "passed": true,
+      "outputs": [
+        {
+          "file": "podcast.wav",
+          "durationSeconds": 10.724989,
+          "channels": 1,
+          "peak": 0.88519287109375,
+          "rms": 0.08322538586763173,
+          "nonfinite": 0,
+          "clipped": 0,
+          "nativeChannels": true
+        },
+        {
+          "file": "podcast.mp3",
+          "durationSeconds": 10.762417,
+          "channels": 1,
+          "peak": 0.858436107635498,
+          "rms": 0.08058849092625125,
+          "nonfinite": 0,
+          "clipped": 0,
+          "nativeChannels": true
+        },
+        {
+          "file": "podcast-audiogram.mp4",
+          "durationSeconds": 10.733333,
+          "channels": 2,
+          "peak": 0.8758578896522522,
+          "rms": 0.08276935466708389,
+          "nonfinite": 0,
+          "clipped": 0,
+          "nativeChannels": true
+        }
+      ]
+    },
+    "audiogramFrameInspected": true
+  },
+  "creatorAcceptance": {
+    "report": "../archive/CONTENT_STUDIO_COMPLETION.md",
+    "sameApplicationSource": true,
+    "examplesRetainedInActiveApp": true,
+    "realCachedKokoro": true,
+    "savedAudioPlanUndoSaveReloadRedo": true,
+    "sourceAudioChecksumUnchanged": true,
+    "editedTakeDurableEditorExport": {
+      "width": 1080,
+      "height": 1920,
+      "durationSeconds": 2.8,
+      "videoCodec": "h264",
+      "audioCodec": "aac",
+      "retainedScenes": 1
+    },
+    "manualSpanishVersionSavedReloaded": true,
+    "persistentSceneHistory": true,
+    "localWhisperTranscriptReview": true,
+    "reviewedTakeSharesOriginalAudio": true,
+    "episodePackageVerified": true,
+    "physicalMicrophoneTest": {
+      "explicitlyApproved": true,
+      "stopped": true,
+      "recordingPublished": false
+    },
+    "responsive": {
+      "desktopWidth": 1280,
+      "phoneWidth": 390,
+      "phoneHasHorizontalOverflow": false,
+      "translationMinimumWidthChecked": 300
+    },
+    "savedEditedTakePreviewRecheckedForRelease": true,
+    "whisper": {
+      "model": "multilingual small",
+      "earlierDownloadExplicitlyApproved": true,
+      "sha256": "1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b"
+    }
+  },
+  "phonemizer": {
+    "matchingCorrespondingSourceVerified": true,
+    "compatibilityCases": 26,
+    "englishVoices": 8,
+    "unchangedCompilerAndEngine": true,
+    "sourceCompilerRebuilt": false,
+    "provenance": "../../vendor/phonemizer/provenance.json"
+  },
+  "resourcePolicy": {
+    "paidProviderLiveTests": "Excluded by explicit maintainer request",
+    "paidCalls": 0,
+    "newModelsDuringReleasePreparation": 0,
+    "cloudRenders": 0,
+    "newSoftwareInstalledOnMaintainerMachine": false
+  },
+  "localChecks": {
+    "typecheck": true,
+    "lint": true,
+    "securityScan": true,
+    "productionBuild": true,
+    "releaseCheck": true,
+    "localDocumentLinks": 112
+  },
+  "limitations": [
+    "Whisper does not automatically identify speakers.",
+    "Partially cut transcripts, caption timing and text embedded in visual assets need review.",
+    "No paid-provider live acceptance is claimed.",
+    "Silent matrix fixtures do not assess speech quality.",
+    "Hindi speech/font portability and human blind-preference targets remain unmeasured.",
+    "Performance measurements describe one workstation."
+  ],
+  "publicationGate": "Latest-head release PR and exact merged/refreshed main Quality/Security, with Linux/Windows clean installs, full suites, builds and process cancellation, must pass before tagging. Published validation records the final commit/tree/run IDs.",
+  "ciInfrastructure": {
+    "initialReleaseHead": "2c977a37ac5453f67442aec19f1da312740a5e28",
+    "initialQualityRun": 39959174370,
+    "reason": "Linux FFmpeg dependencies downloaded slowly and retried from the Azure Ubuntu mirror on two runners before application tests. Windows, security and cancellation checks passed.",
+    "change": "CI-only installer prefers the official Ubuntu HTTPS archive with the existing Azure mirror as fallback and bounded retries/timeouts. A guard rejects local execution.",
+    "requiredChecksUnchanged": true,
+    "updatedHeadRequiresAllChecksAgain": true
+  }
+}
