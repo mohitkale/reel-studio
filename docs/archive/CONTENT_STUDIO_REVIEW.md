@@ -47,8 +47,11 @@ asset. No new dependencies or provider/model downloads are required.
 
 ## Validation evidence
 
-- Full unit/integration suite: 204 files, 1,004 tests passed.
+- Full unit/integration suite: 204 files, 1,006 tests passed in Linux CI; the
+  initial local full run passed 1,004 tests before the final focused regressions.
 - TypeScript, ESLint and secret scan passed; production build passed.
+- Release metadata/composition/gallery checks and bundled phonemizer verification
+  passed. The migration assertion now accounts for both additive migrations.
 - Final chart regressions passed (six focused tests); voiceover creation preserves
   paragraphs and avoids stock-provider requests (five focused service tests).
 - Both database migrations applied through the existing backup-aware migration
