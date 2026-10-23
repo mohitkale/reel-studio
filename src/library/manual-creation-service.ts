@@ -25,6 +25,8 @@ const VISUAL_ROLES = new Set([
 
 export async function createManualProject(input: ManualCreationInput) {
   const body = manualCreationSchema.parse(input);
+  const mediaPreference =
+    body.outputType === "voiceover" ? "none" : body.mediaPreference;
   const source =
     body.source.kind === "url"
       ? await ingestPublicArticle(body.source.url)
@@ -85,7 +87,7 @@ export async function createManualProject(input: ManualCreationInput) {
     scenes: enrichScenePlan(production.plan.scenes, body.videoEngine),
   };
   let mediaDecisions: AutomaticMediaDecision[] = [];
-  if (body.mediaPreference === "none") {
+  if (mediaPreference === "none") {
     mediaDecisions = uploadedBackgrounds.map((background) => ({
       state: background ? "explicit" : "disabled",
       attemptedProviders: [],
@@ -98,7 +100,7 @@ export async function createManualProject(input: ManualCreationInput) {
     mediaDecisions = await resolveAutomaticSceneMediaBatch(
       enrichedPlan.scenes,
       body.orientation,
-      enrichedPlan.scenes.map(() => body.mediaPreference),
+      enrichedPlan.scenes.map(() => mediaPreference),
       uploadedBackgrounds,
     );
   }
@@ -133,7 +135,7 @@ export async function createManualProject(input: ManualCreationInput) {
       roles: production.roles,
       chapterStarts: production.chapterStarts,
       assetRefs,
-      mediaPreferences: plan.scenes.map(() => body.mediaPreference),
+      mediaPreferences: plan.scenes.map(() => mediaPreference),
       stockSelections: mediaDecisions.map((decision) => decision.snapshot),
       voiceMode: body.voiceMode,
       outputType: body.outputType,
@@ -155,7 +157,7 @@ export async function createManualProject(input: ManualCreationInput) {
   );
   const automaticMediaUnavailable =
     requestedAutomaticMedia &&
-    body.mediaPreference !== "none" &&
+    mediaPreference !== "none" &&
     !mediaDecisions.some((decision) => decision.state === "selected");
 
   return {

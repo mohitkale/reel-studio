@@ -73,3 +73,23 @@ export async function saveFilmPlanDocument(
   const revision = await createProductionRevision(snapshot);
   return { revisionId: revision.id, sourceHash: snapshot.filmPlan!.sourceHash };
 }
+
+/** Compare a frozen source with today's editable script, keeping the same take. */
+export async function compareFilmPlanSource(
+  snapshot: import("@/production/video-snapshot").VideoSnapshot,
+): Promise<"current" | "changed" | "missing"> {
+  const script = await getScript(snapshot.script.id);
+  if (
+    !script ||
+    (snapshot.take &&
+      !script.takes.some((take) => take.id === snapshot.take!.id))
+  )
+    return "missing";
+  const current = await readFilmPlanDocument(snapshot.script.id, {
+    voiceTakeId: snapshot.take?.id,
+  });
+  return filmDigest(filmPlanSource(current.snapshot)) ===
+    filmDigest(filmPlanSource(snapshot))
+    ? "current"
+    : "changed";
+}

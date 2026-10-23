@@ -516,7 +516,11 @@ export function useUpdateScene(scriptId: string) {
         }
       }
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ["script", scriptId] }),
+        qc.invalidateQueries({ queryKey: ["scene-history", scriptId] }),
+      ]),
   });
 }
 
@@ -568,6 +572,7 @@ export function useGenerateTake(scriptId: string) {
       providerId?: ProviderId;
       voiceId?: string;
       modelId?: string;
+      speed?: number;
       label?: string;
       onProgress?: (progress: VoiceGenerationProgress) => void;
     }) =>
@@ -748,5 +753,21 @@ export function useDeleteTake(scriptId: string) {
   return useMutation({
     mutationFn: (id: string) => apiSend(`/api/takes/${id}`, "DELETE"),
     onSuccess: invalidate,
+  });
+}
+
+export function useOrganizeProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      ...data
+    }: {
+      id: string;
+      archived?: boolean;
+      series?: string;
+      name?: string;
+    }) => apiSend(`/api/projects/${id}`, "PATCH", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
   });
 }

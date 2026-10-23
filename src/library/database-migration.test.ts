@@ -101,6 +101,12 @@ describe("SQLite migration preparation", () => {
     db.exec(
       "INSERT INTO Project (id,name,updatedAt) VALUES ('legacy','Saved before upgrade','2026-08-06T10:00:00.000Z')",
     );
+    db.exec(
+      readFileSync(
+        "prisma/migrations/20261022000100_studio_organization/migration.sql",
+        "utf8",
+      ),
+    );
     db.close();
     process.env.DATABASE_URL = `file:${filename}`;
     const client = createPrismaClient();
@@ -156,6 +162,12 @@ describe("SQLite migration preparation", () => {
     db.exec(
       readFileSync(
         "prisma/migrations/20260930000100_caption_take_provenance/migration.sql",
+        "utf8",
+      ),
+    );
+    db.exec(
+      readFileSync(
+        "prisma/migrations/20261022000100_studio_organization/migration.sql",
         "utf8",
       ),
     );

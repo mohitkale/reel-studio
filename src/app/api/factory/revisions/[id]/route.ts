@@ -1,3 +1,4 @@
+import { compareFilmPlanSource } from "@/library/film-plan-service";
 import { NextResponse } from "next/server";
 import { authorizeRequest } from "@/server/auth";
 import { errorResponse } from "@/server/api-helpers";
@@ -19,6 +20,9 @@ export async function GET(
     if (!frozenRevisionMatches(row, snapshot))
       throw new Error("Revision integrity check failed");
     return NextResponse.json({
+      ...(new URL(req.url).searchParams.get("compareSource") === "1"
+        ? { sourceStatus: await compareFilmPlanSource(snapshot) }
+        : {}),
       revisionId: row.id,
       revisionHash: row.revisionHash,
       document: { kind: "reel-studio-film-plan", version: 1, snapshot },

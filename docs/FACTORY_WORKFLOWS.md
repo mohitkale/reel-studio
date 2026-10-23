@@ -131,3 +131,22 @@ Run `npm run db:migrate` for existing databases; the migration script makes a
 consistent backup first. Stop app/worker connections if SQLite reports a migration
 lock, then retry. Read [M6 acceptance evidence](production/ADAPTIVE_M6_VALIDATION.md)
 for actual exports, recovery, compatibility and limitations.
+
+## Factory workspace and safeguards
+
+Open **Factory** from navigation to see saved masters, variants, approval queues,
+individual jobs and output packages. Selecting a master compares it with its
+editable source using the same narration take. **Check source again** refreshes
+that comparison; a changed source does not silently change a frozen output.
+Freeze a new master when you want the updated edit.
+
+Set **Maximum combined output minutes** before submitting. The server rejects
+runs whose variants exceed that budget; the absolute ceiling remains 30 minutes
+and six variants. REST callers may supply `maxOutputSeconds` (1–1800); omission
+retains the 1800-second ceiling. These factory variants reuse saved narration and
+do not trigger AI calls. Voiceover batches are separate, explicitly approved
+provider jobs. Retry preserves completed variants.
+
+The asset library previews audio and video as playable media and shows current
+scene, script and podcast references with stored provenance. Frozen revisions may
+also reference an asset even when it is absent from current editable scenes.

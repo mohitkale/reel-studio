@@ -40,7 +40,7 @@ export function Sidebar() {
           <div className="flex flex-col leading-tight">
             <span className="text-sm font-semibold">Reel Studio</span>
             <span className="text-muted-foreground text-[11px]">
-              AI short-form video
+              Content creation studio
             </span>
           </div>
         )}
@@ -48,7 +48,7 @@ export function Sidebar() {
 
       <nav
         className={cn(
-          "flex flex-1 flex-col gap-1 p-3",
+          "flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-3",
           collapsed && "items-center px-2",
         )}
       >
@@ -60,6 +60,7 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
+              aria-label={item.title}
               className={cn(
                 "group flex items-center gap-3 rounded-md text-sm font-medium transition-colors",
                 "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",

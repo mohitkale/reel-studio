@@ -79,6 +79,7 @@ export async function getScripts(
       );
       const scenes = sceneDTOs.get(script.id)!;
       const dto: ScriptDTO = {
+        outputType: overrides.creationOutputType ?? "video",
         id: script.id,
         projectId: script.projectId,
         name: script.name,
@@ -104,10 +105,14 @@ export async function getScripts(
         brandTokens:
           overrides.frozenBrandTokens ??
           applyVisualTheme(
-            brandKit ? resolveBrandTokens(brandKit) : { ...serverDefaultTokens },
+            brandKit
+              ? resolveBrandTokens(brandKit)
+              : { ...serverDefaultTokens },
             script.project.brandKitId ? undefined : overrides.visualTheme,
           ),
-        visualTheme: script.project.brandKitId ? undefined : overrides.visualTheme,
+        visualTheme: script.project.brandKitId
+          ? undefined
+          : overrides.visualTheme,
         coverUrl: script.coverUrl,
         musicUrl: script.musicUrl,
         musicVolume: script.musicVolume,

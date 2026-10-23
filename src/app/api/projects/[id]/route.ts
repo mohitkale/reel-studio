@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { deleteProject, assignBrandKit } from "@/library/repositories/projects";
+import {
+  deleteProject,
+  assignBrandKit,
+  organizeProject,
+} from "@/library/repositories/projects";
 import { authorize } from "@/server/auth";
 import { ProviderError } from "@/providers/voice/types";
 import {
@@ -14,6 +18,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const patchSchema = z.object({
+  archived: z.boolean().optional(),
+  series: z.string().trim().max(80).optional(),
+  name: z.string().trim().min(1).max(120).optional(),
   brandKitId: z.string().nullable().optional(),
 });
 
@@ -28,6 +35,12 @@ export async function PATCH(
     if (body.brandKitId !== undefined) {
       await assignBrandKit(id, body.brandKitId);
     }
+    if (
+      body.archived !== undefined ||
+      body.series !== undefined ||
+      body.name !== undefined
+    )
+      await organizeProject(id, body);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return errorResponse(e);

@@ -1,3 +1,4 @@
+import { MULTI_SERIES_TIMELINE_BOOT } from "../motion/multi-series-scene";
 import { ADAPTIVE_BOOT } from "../motion/adaptive-blocks";
 import { SEQUENCE_HANDOFF_BOOT } from "../motion/sequence-handoff";
 import { DESIGN_MOTION_BOOT } from "../motion/design-blocks";
@@ -1124,6 +1125,7 @@ export function buildGsapMotionBootScript(
         return Math.max(0.001, sceneDuration - start) / (repeatThroughScene(period, start) + 1);
       };
       var tl = gsap.timeline({ paused: true, defaults: { force3D: false } });
+      ${MULTI_SERIES_TIMELINE_BOOT}
       (storyTracks[recipe] || []).forEach(function(track) {
         var element = stage.querySelector(".sm-" + track.part);
         if (element) tl.fromTo(element, { opacity:0, x:track.x, y:track.y, scaleX:track.scaleX === undefined ? 1 : track.scaleX, scaleY:track.scaleY === undefined ? 1 : track.scaleY }, { opacity:1, x:0, y:0, scaleX:1, scaleY:1, force3D:false, duration:track.duration, ease:"power2.out" }, track.at);
@@ -1266,10 +1268,13 @@ ${SEMANTIC_GRAPHIC_BOOT}
         else tl.fromTo(kicker, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }, 0.1);
       }
 
+      var revealDuration = Math.min(1.5, Math.max(.15, Number(stage.getAttribute('data-text-reveal-duration')) || .42));
+      var lineRevealDuration = function(start) { return stage.hasAttribute('data-text-reveal-duration') ? Math.min(revealDuration, Math.max(.01, sceneDuration - start)) : .42; };
+      var revealEase = {linear:'none', smooth:'power2.inOut', snappy:'power3.out'}[stage.getAttribute('data-text-reveal-ease')] || 'power3.out';
       // Line reveals — clipped, never overlapping
       (stage.hasAttribute('data-design-block') ? [] : lines).forEach(function (inner, i) {
-        if (motif) tl.fromTo(inner, { x: motif.x, y: motif.y, opacity: 0 }, { x: 0, y: 0, opacity: 1, force3D: false, duration: 0.42, ease: 'power3.out' }, events.reveal + i * 0.1);
-        else tl.fromTo(inner, { y: '110%' }, { y: '0%', duration: 0.42, ease: 'power3.out' }, (recipe.startsWith('type-') ? events.reveal : 0.22) + i * 0.1);
+        if (motif) tl.fromTo(inner, { x: motif.x, y: motif.y, opacity: 0 }, { x: 0, y: 0, opacity: 1, force3D: false, duration: lineRevealDuration(events.reveal + i * .1), ease: revealEase }, events.reveal + i * 0.1);
+        else tl.fromTo(inner, { y: '110%' }, { y: '0%', duration: lineRevealDuration((recipe.startsWith('type-') ? events.reveal : .22) + i * .1), ease: revealEase }, (recipe.startsWith('type-') ? events.reveal : 0.22) + i * 0.1);
       });
 
       if (rule) tl.fromTo(rule, { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: 'power3.out' }, Math.max(0.55, 0.22 + lines.length * 0.1));

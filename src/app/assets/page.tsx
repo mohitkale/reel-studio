@@ -1,4 +1,7 @@
 "use client";
+import { AssetUsage } from "@/components/assets/asset-usage";
+import { Input } from "@/components/ui/input";
+import { QueryError } from "@/components/ui/query-error";
 
 import * as React from "react";
 import { Library, Upload, Trash2, Copy, ImageIcon } from "lucide-react";
@@ -14,7 +17,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
-const ACCEPT = ".jpg,.jpeg,.png,.gif,.webp,.svg,.json";
+const ACCEPT =
+  ".jpg,.jpeg,.png,.gif,.webp,.json,.mp4,.webm,.mov,.mp3,.wav,.ogg,.aac,.m4a";
 
 function LottiePreview({ url }: { url: string }) {
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -50,19 +54,27 @@ function LottiePreview({ url }: { url: string }) {
     };
   }, [url]);
 
-  return <div ref={containerRef} className="h-full w-full" aria-hidden="true" />;
+  return (
+    <div ref={containerRef} className="h-full w-full" aria-hidden="true" />
+  );
 }
 
-function AssetCard({ asset, onDelete }: { asset: AssetDTO; onDelete: () => void }) {
+function AssetCard({
+  asset,
+  onDelete,
+}: {
+  asset: AssetDTO;
+  onDelete: () => void;
+}) {
   function copyUrl() {
-    navigator.clipboard.writeText(window.location.origin + asset.url).then(() =>
-      toast.success("URL copied"),
-    );
+    navigator.clipboard
+      .writeText(window.location.origin + asset.url)
+      .then(() => toast.success("URL copied"));
   }
 
   return (
-    <div className="group relative overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md">
-      <div className="relative aspect-square w-full overflow-hidden bg-muted/30">
+    <div className="group bg-card relative overflow-hidden rounded-xl border transition-shadow hover:shadow-md">
+      <div className="bg-muted/30 relative aspect-square w-full overflow-hidden">
         {asset.type === "image" ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -70,29 +82,53 @@ function AssetCard({ asset, onDelete }: { asset: AssetDTO; onDelete: () => void 
             alt={asset.name ?? "Asset"}
             className="h-full w-full object-contain p-2"
           />
+        ) : asset.type === "audio" ? (
+          <audio
+            controls
+            src={asset.url}
+            className="absolute inset-x-2 bottom-2 w-[calc(100%-1rem)]"
+            aria-label={asset.name ?? "Audio asset"}
+          />
+        ) : asset.type === "video" ? (
+          <video controls src={asset.url} className="h-full w-full" />
         ) : (
           <LottiePreview url={asset.url} />
         )}
-        <div className="absolute inset-0 flex items-end justify-end gap-1 bg-black/60 p-2 opacity-0 transition-opacity group-hover:opacity-100">
-          <Button size="icon" variant="outline" className="size-7" onClick={copyUrl} aria-label="Copy URL">
+        <div className="absolute top-0 right-0 flex items-start justify-end gap-1 bg-black/60 p-2 opacity-100 transition-opacity md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100">
+          <Button
+            size="icon"
+            variant="outline"
+            className="size-7"
+            onClick={copyUrl}
+            aria-label="Copy URL"
+          >
             <Copy className="size-3.5" />
           </Button>
-          <Button size="icon" variant="destructive" className="size-7" onClick={onDelete} aria-label="Delete asset">
+          <Button
+            size="icon"
+            variant="destructive"
+            className="size-7"
+            onClick={onDelete}
+            aria-label="Delete asset"
+          >
             <Trash2 className="size-3.5" />
           </Button>
         </div>
       </div>
       <div className="px-2 py-1.5">
-        <p className="truncate text-xs font-medium">{asset.name ?? "Untitled"}</p>
+        <p className="truncate text-xs font-medium">
+          {asset.name ?? "Untitled"}
+        </p>
         <Badge variant="secondary" className="mt-0.5 text-[10px]">
           {asset.type}
         </Badge>
+        <AssetUsage id={asset.id} />
       </div>
     </div>
   );
 }
 
-type Filter = "all" | "image" | "lottie";
+type Filter = "all" | "image" | "lottie" | "audio" | "video";
 
 export default function AssetsPage() {
   const [filter, setFilter] = React.useState<Filter>("all");
@@ -100,7 +136,17 @@ export default function AssetsPage() {
   const [deleteTarget, setDeleteTarget] = React.useState<AssetDTO | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const { data: assets = [], isLoading } = useAssets(filter === "all" ? undefined : filter);
+  const [search, setSearch] = React.useState("");
+  const {
+    data: allAssets = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useAssets(filter === "all" ? undefined : filter);
+  const assets = allAssets.filter((asset) =>
+    (asset.name ?? "").toLocaleLowerCase().includes(search.toLocaleLowerCase()),
+  );
   const upload = useUploadAsset();
   const deleteAsset = useDeleteAsset();
 
@@ -154,26 +200,46 @@ export default function AssetsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Assets"
-        description="Upload images and Lottie JSON for use in scenes. Copy a URL to paste into a scene's visual field."
+        description="Search images, footage, audio and animations. Inspect where each asset is used."
         actions={uploadButton}
       />
 
+      <Input
+        aria-label="Search assets"
+        placeholder="Search assets…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+      {isError && (
+        <QueryError
+          title="Could not load assets"
+          error={error}
+          retry={refetch}
+        />
+      )}
       <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
         <TabsList>
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="image">Images</TabsTrigger>
           <TabsTrigger value="lottie">Lottie</TabsTrigger>
+          <TabsTrigger value="audio">Audio</TabsTrigger>
+          <TabsTrigger value="video">Video</TabsTrigger>
         </TabsList>
       </Tabs>
 
       <div
         className="min-h-48 rounded-xl"
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={onDrop}
-        style={{ outline: isDragging ? "2px dashed hsl(var(--accent))" : undefined }}
+        style={{
+          outline: isDragging ? "2px dashed hsl(var(--accent))" : undefined,
+        }}
       >
-        {isLoading ? (
+        {isError && !allAssets.length ? null : isLoading ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className="aspect-square w-full rounded-xl" />
@@ -185,7 +251,10 @@ export default function AssetsPage() {
             title="No assets yet"
             description="Upload images or Lottie JSON files. Drag and drop anywhere on this page, or click Upload above."
             action={
-              <Button onClick={() => fileInputRef.current?.click()} disabled={upload.isPending}>
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={upload.isPending}
+              >
                 <Upload className="size-3.5" />
                 Upload your first asset
               </Button>
@@ -202,7 +271,7 @@ export default function AssetsPage() {
             ))}
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex aspect-square w-full items-center justify-center rounded-xl border-2 border-dashed text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+              className="text-muted-foreground hover:border-accent hover:text-accent flex aspect-square w-full items-center justify-center rounded-xl border-2 border-dashed transition-colors"
             >
               <div className="text-center">
                 <ImageIcon className="mx-auto mb-1 size-6" />
@@ -215,7 +284,9 @@ export default function AssetsPage() {
 
       <ConfirmDialog
         open={!!deleteTarget}
-        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
         title="Delete asset?"
         description={`"${deleteTarget?.name ?? "This asset"}" will be permanently removed.`}
         onConfirm={() => {

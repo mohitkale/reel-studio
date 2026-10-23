@@ -186,3 +186,34 @@ it("honors explicit local planner, format, and preset selections in Quick Produc
     quickProduce: { planner: "deterministic" },
   });
 });
+
+it("opens voiceover drafts in their audio workspace", async () => {
+  mocks.create.mockResolvedValue({ scriptId: "voice-script", warnings: [] });
+  await mount(<CreationWizard initialOutputType="voiceover" />);
+  await enter("#production-copy", "First paragraph.\n\nSecond paragraph.");
+  await act(async () => button("Build draft").click());
+  expect(mocks.create).toHaveBeenCalledWith(
+    expect.objectContaining({ outputType: "voiceover" }),
+  );
+  expect(mocks.push).toHaveBeenCalledWith("/voiceovers/voice-script");
+});
+it("lets a voiceover entry switch explicitly to video", async () => {
+  mocks.create.mockResolvedValue({ scriptId: "video-script", warnings: [] });
+  await mount(<CreationWizard initialOutputType="voiceover" />);
+  await enter(
+    "#production-copy",
+    "A complete supplied script to turn into video.",
+  );
+  await act(async () => button("Customize options").click());
+  const choice = Array.from(container.querySelectorAll("button")).find((node) =>
+    node.textContent?.includes("Polished video"),
+  )!;
+  await act(async () => choice.click());
+  await act(async () => button("Continue").click());
+  await act(async () => button("Continue").click());
+  await act(async () => button("Build draft").click());
+  expect(mocks.create).toHaveBeenCalledWith(
+    expect.objectContaining({ outputType: "video" }),
+  );
+  expect(mocks.push).toHaveBeenCalledWith("/editor/video-script");
+});

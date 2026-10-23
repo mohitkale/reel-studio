@@ -1,17 +1,19 @@
 "use client";
+import { QueryError } from "@/components/ui/query-error";
 
+import { CreationHub } from "@/components/studio/creation-hub";
 import { CreationReadiness } from "@/components/projects/creation-readiness";
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Plus,
   Clapperboard,
   Trash2,
   FileVideo,
-  Sparkles,
-  FileText,
-  ArrowRight,
+  Archive,
+  ArchiveRestore,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,6 +21,7 @@ import {
   useProjects,
   useCreateProject,
   useDeleteProject,
+  useOrganizeProject,
 } from "@/hooks/script";
 import {
   LISTING_GRID_6_CARDS,
@@ -42,8 +45,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/shell/page-header";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { CreateWithAIDialog } from "@/components/projects/create-with-ai-dialog";
-import { CreationWizard } from "@/components/projects/creation-wizard";
 import { ViewModeToggle } from "@/components/ui/view-mode-toggle";
 import {
   Dialog,
@@ -144,8 +145,27 @@ function NewProjectDialog() {
 }
 
 export default function ProjectsPage() {
-  const { data: projects, isLoading } = useProjects();
+  const {
+    data: projects,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useProjects();
   const del = useDeleteProject();
+  const organize = useOrganizeProject();
+  const [search, setSearch] = React.useState("");
+  const [status, setStatus] = React.useState("active");
+  const [series, setSeries] = React.useState("");
+  const filtered = projects?.filter(
+    (p) =>
+      (status === "archived" ? Boolean(p.archivedAt) : !p.archivedAt) &&
+      (status !== "ready" || p.status === "ready") &&
+      (status !== "draft" || p.status !== "ready") &&
+      (!series || p.series === series) &&
+      p.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
+  );
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const [view, setView] = React.useState<ListingViewMode>("grid");
 
@@ -153,72 +173,7 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-8">
-      <section aria-labelledby="create-heading" className="space-y-5">
-        <div>
-          <h1
-            id="create-heading"
-            className="text-3xl font-semibold tracking-tight"
-          >
-            Turn your ideas into videos
-          </h1>
-          <p className="text-muted-foreground mt-2 max-w-2xl text-sm">
-            Start with an idea or your own content. Reel Studio arranges the
-            scenes, applies a visual preset, and prepares an editable video.
-          </p>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <CreateWithAIDialog
-            trigger={
-              <button
-                type="button"
-                className="bg-primary/5 hover:bg-primary/10 focus-visible:ring-ring border-primary/40 flex h-full flex-col items-start rounded-2xl border p-6 text-left transition-colors focus-visible:ring-2"
-              >
-                <div className="mb-4 flex w-full items-center justify-between gap-3">
-                  <Sparkles className="text-primary size-7" />
-                  <Badge>Recommended</Badge>
-                </div>
-                <h2 className="text-xl font-semibold">Create with AI</h2>
-                <p className="text-muted-foreground mt-2 text-sm">
-                  Describe an idea. AI writes the script and plans varied scenes
-                  with styling and relevant media.
-                </p>
-                <span className="text-muted-foreground mt-3 text-xs">
-                  Uses your configured AI provider · Presets ready to use
-                </span>
-                <span className="text-primary mt-5 flex items-center gap-2 text-sm font-medium">
-                  Start with an idea <ArrowRight className="size-4" />
-                </span>
-              </button>
-            }
-          />
-          <CreationWizard
-            trigger={
-              <button
-                type="button"
-                className="bg-card hover:bg-muted/40 focus-visible:ring-ring flex h-full flex-col items-start rounded-2xl border p-6 text-left transition-colors focus-visible:ring-2"
-              >
-                <FileText className="text-primary mb-4 size-7" />
-                <h2 className="text-xl font-semibold">Create production</h2>
-                <p className="text-muted-foreground mt-2 text-sm">
-                  Bring a script, article, or notes and optional uploads. Build
-                  styled scenes locally, ready for narration and export.
-                </p>
-                <span className="text-muted-foreground mt-3 text-xs">
-                  No AI key needed · Your content, arranged into scenes
-                </span>
-                <span className="text-primary mt-5 flex items-center gap-2 text-sm font-medium">
-                  Start with your content <ArrowRight className="size-4" />
-                </span>
-              </button>
-            }
-          />
-        </div>
-        <p className="text-muted-foreground text-xs">
-          1. Add content · 2. Create your draft · 3. Review, add narration, and
-          export. Want a finished MP4 automatically? Enable Quick Produce in
-          Create with AI.
-        </p>
-      </section>
+      <CreationHub />
       <details className="rounded-xl border p-3">
         <summary className="cursor-pointer text-sm font-medium">
           Check creation readiness
@@ -238,7 +193,47 @@ export default function ProjectsPage() {
         }
       />
 
-      {isLoading ? (
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Input
+          aria-label="Search projects"
+          placeholder="Search projects…"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+        <NativeSelect
+          aria-label="Project status"
+          value={status}
+          onChange={(event) => setStatus(event.target.value)}
+        >
+          <option value="active">Active projects</option>
+          <option value="draft">Drafts</option>
+          <option value="ready">With narration</option>
+          <option value="archived">Archived</option>
+        </NativeSelect>
+        <NativeSelect
+          aria-label="Series"
+          value={series}
+          onChange={(event) => setSeries(event.target.value)}
+        >
+          <option value="">All series</option>
+          {[...new Set(projects?.map((p) => p.series).filter(Boolean))].map(
+            (value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ),
+          )}
+        </NativeSelect>
+      </div>
+      {isError && (
+        <QueryError
+          title="Could not load projects"
+          error={error}
+          retry={refetch}
+          pending={isFetching}
+        />
+      )}
+      {isError && !projects ? null : isLoading ? (
         view === "list" ? (
           <div className="space-y-2">
             <Skeleton className="h-16" />
@@ -252,15 +247,15 @@ export default function ProjectsPage() {
             ))}
           </div>
         )
-      ) : !projects?.length ? (
+      ) : !filtered?.length ? (
         <EmptyState
           icon={Clapperboard}
-          title="No projects yet"
+          title={projects?.length ? "No matching projects" : "No projects yet"}
           description="Choose Create with AI for an idea, or Create production for a script, article, or uploads."
         />
       ) : view === "list" ? (
         <div className="space-y-2">
-          {projects.map((p) => (
+          {filtered.map((p) => (
             <Card key={p.id} className="overflow-hidden">
               <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center">
                 <div className="from-primary/15 to-secondary text-primary flex h-14 w-full shrink-0 items-center justify-center rounded-md bg-gradient-to-br sm:w-24">
@@ -283,11 +278,33 @@ export default function ProjectsPage() {
                   <Button asChild size="sm" disabled={!p.firstScriptId}>
                     <Link
                       href={
-                        p.firstScriptId ? `/editor/${p.firstScriptId}` : "#"
+                        p.firstScriptId
+                          ? `/${p.outputType === "voiceover" ? "voiceovers" : "editor"}/${p.firstScriptId}`
+                          : "#"
                       }
                     >
-                      Open editor
+                      Open studio
                     </Link>
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={
+                      p.archivedAt ? `Restore ${p.name}` : `Archive ${p.name}`
+                    }
+                    disabled={organize.isPending}
+                    onClick={() =>
+                      organize.mutate(
+                        { id: p.id, archived: !p.archivedAt },
+                        { onError: (error) => toast.error(error.message) },
+                      )
+                    }
+                  >
+                    {p.archivedAt ? (
+                      <ArchiveRestore className="size-4" />
+                    ) : (
+                      <Archive className="size-4" />
+                    )}
                   </Button>
                   <Button
                     size="icon"
@@ -305,13 +322,45 @@ export default function ProjectsPage() {
         </div>
       ) : (
         <div className={LISTING_GRID_6_CARDS}>
-          {projects.map((p) => (
+          {filtered.map((p) => (
             <Card key={p.id} className="group flex flex-col">
               <CardContent className="flex flex-1 flex-col gap-3 p-4">
                 <div className="from-primary/15 to-secondary text-primary relative flex aspect-video items-center justify-center rounded-lg bg-gradient-to-br">
-                  <FileVideo className="size-7" />
+                  {p.thumbnailUrl ? (
+                    <Image
+                      fill
+                      unoptimized
+                      sizes="(min-width: 1280px) 16vw, (min-width: 640px) 33vw, 100vw"
+                      src={p.thumbnailUrl}
+                      alt=""
+                      className="absolute inset-0 h-full w-full rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="px-4 text-center text-sm font-semibold">
+                      <span className="mb-2 block text-[10px] font-normal tracking-wider uppercase">
+                        {p.openingText ? "Opening scene" : "Blank project"}
+                      </span>
+                      <span className="line-clamp-4">
+                        {p.openingText || p.name}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1">
+                  <Input
+                    aria-label={`Series for ${p.name}`}
+                    placeholder="Add to series…"
+                    defaultValue={p.series ?? ""}
+                    maxLength={80}
+                    onBlur={(event) => {
+                      if (event.target.value.trim() !== (p.series ?? ""))
+                        organize.mutate(
+                          { id: p.id, series: event.target.value.trim() },
+                          { onError: (error) => toast.error(error.message) },
+                        );
+                    }}
+                    className="mb-2 h-8 text-xs"
+                  />
                   <h3 className="line-clamp-2 text-sm leading-tight font-medium">
                     {p.name}
                   </h3>
@@ -336,11 +385,33 @@ export default function ProjectsPage() {
                   >
                     <Link
                       href={
-                        p.firstScriptId ? `/editor/${p.firstScriptId}` : "#"
+                        p.firstScriptId
+                          ? `/${p.outputType === "voiceover" ? "voiceovers" : "editor"}/${p.firstScriptId}`
+                          : "#"
                       }
                     >
                       Open
                     </Link>
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={
+                      p.archivedAt ? `Restore ${p.name}` : `Archive ${p.name}`
+                    }
+                    disabled={organize.isPending}
+                    onClick={() =>
+                      organize.mutate(
+                        { id: p.id, archived: !p.archivedAt },
+                        { onError: (error) => toast.error(error.message) },
+                      )
+                    }
+                  >
+                    {p.archivedAt ? (
+                      <ArchiveRestore className="size-4" />
+                    ) : (
+                      <Archive className="size-4" />
+                    )}
                   </Button>
                   <Button
                     size="icon"

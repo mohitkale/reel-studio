@@ -29,7 +29,7 @@ export function Topbar() {
   const { collapsed, toggle } = useSidebar();
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur">
+    <header className="bg-background/80 sticky top-0 z-30 flex h-14 items-center gap-3 border-b px-4 backdrop-blur">
       {/* Desktop: collapse/expand the sidebar to reclaim screen width. */}
       <HintTooltip
         label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -49,16 +49,21 @@ export function Topbar() {
 
       <Dialog.Root open={mobileOpen} onOpenChange={setMobileOpen}>
         <Dialog.Trigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            aria-label="Open menu"
+          >
             <Menu />
           </Button>
         </Dialog.Trigger>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50 data-[state=open]:animate-in data-[state=open]:fade-in-0 md:hidden" />
-          <Dialog.Content className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r bg-sidebar p-3 shadow-xl data-[state=open]:animate-in data-[state=open]:slide-in-from-left md:hidden">
+          <Dialog.Overlay className="data-[state=open]:animate-in data-[state=open]:fade-in-0 fixed inset-0 z-40 bg-black/50 md:hidden" />
+          <Dialog.Content className="bg-sidebar data-[state=open]:animate-in data-[state=open]:slide-in-from-left fixed inset-y-0 left-0 z-50 flex w-64 max-w-[90vw] flex-col overflow-y-auto border-r p-3 shadow-xl md:hidden">
             <Dialog.Title className="sr-only">Navigation</Dialog.Title>
             <div className="mb-2 flex items-center gap-2 px-2 py-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-lg">
                 <Film className="size-4.5" />
               </div>
               <span className="text-sm font-semibold">Reel Studio</span>
@@ -75,6 +80,7 @@ export function Topbar() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
                       "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
                       active

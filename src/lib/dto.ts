@@ -101,6 +101,7 @@ export interface VoiceTakeDTO {
 }
 
 export interface ScriptDTO {
+  outputType?: "video" | "voiceover";
   visualTheme?: import("@/production/creative-direction").VisualTheme;
   id: string;
   projectId: string;
@@ -172,6 +173,12 @@ export interface CaptionTrackDTO {
 }
 
 export interface ProjectDTO {
+  archivedAt?: string | null;
+  series?: string;
+  outputType?: "video" | "voiceover";
+  thumbnailUrl?: string | null;
+  openingText?: string;
+  status?: "draft" | "ready";
   id: string;
   name: string;
   createdAt: string;

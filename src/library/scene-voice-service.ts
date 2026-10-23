@@ -54,6 +54,7 @@ export interface GenerateSceneClipInput {
   providerId?: ProviderId;
   voiceId?: string;
   modelId?: string;
+  speed?: number;
   label?: string;
   /** When true (default), select this clip on the scene after create. */
   select?: boolean;
@@ -67,6 +68,7 @@ export interface GenerateAllSceneClipsInput {
   providerId?: ProviderId;
   voiceId?: string;
   modelId?: string;
+  speed?: number;
   label?: string;
   onProgress?: (progress: SceneClipProgress) => void;
   /** When true (default), assemble after all clips are selected. */
@@ -93,6 +95,7 @@ async function persistClipFromWav(opts: {
   providerId: string;
   voiceId: string;
   modelId?: string;
+  speed?: number;
   label?: string;
   isPlaceholder?: boolean;
   select?: boolean;
@@ -183,7 +186,8 @@ export async function generateSceneClip(
       providerId: input.providerId,
       voiceId: input.voiceId,
       modelId: input.modelId,
-      text: spoken,
+      text:
+        input.speed === undefined ? spoken : `${spoken}\0speed=${input.speed}`,
     };
     let cached = await getCachedBeatAudio(cacheParts);
     if (!cached) {
@@ -193,6 +197,7 @@ export async function generateSceneClip(
         voiceId: input.voiceId,
         modelId: input.modelId,
         text: spoken,
+        speed: input.speed,
       });
       assertProductionActive();
       cached = result;
@@ -318,7 +323,10 @@ export async function generateAllSceneClips(
         providerId: input.providerId!,
         voiceId: input.voiceId!,
         modelId: input.modelId,
-        text: spoken,
+        text:
+          input.speed === undefined
+            ? spoken
+            : `${spoken}\0speed=${input.speed}`,
       };
       let cached = await getCachedBeatAudio(cacheParts);
       if (!cached) {
@@ -335,6 +343,7 @@ export async function generateAllSceneClips(
           voiceId: input.voiceId!,
           modelId: input.modelId,
           text: spoken,
+          speed: input.speed,
         });
         assertProductionActive();
         cached = result;
@@ -530,6 +539,7 @@ export async function createSceneClipFromUpload(input: {
   providerId: string;
   voiceId: string;
   modelId?: string;
+  speed?: number;
   label?: string;
   wav: Buffer;
   select?: boolean;
@@ -622,6 +632,7 @@ export async function createAllSceneClipsFromUpload(input: {
   providerId: string;
   voiceId: string;
   modelId?: string;
+  speed?: number;
   label?: string;
   beats: UploadedSceneClip[];
 }): Promise<AssembleResult> {

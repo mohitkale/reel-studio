@@ -1,4 +1,5 @@
 "use client";
+import { QueryError } from "@/components/ui/query-error";
 
 import * as React from "react";
 import Link from "next/link";
@@ -134,7 +135,14 @@ function NewPodcastDialog() {
 }
 
 export default function PodcastsPage() {
-  const { data: podcasts, isLoading } = usePodcasts();
+  const {
+    data: podcasts,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = usePodcasts();
   const del = useDeletePodcast();
   const [view, setView] = React.useState<ListingViewMode>("grid");
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
@@ -153,7 +161,15 @@ export default function PodcastsPage() {
         }
       />
 
-      {isLoading ? (
+      {isError && (
+        <QueryError
+          title="Could not load podcasts"
+          error={error}
+          retry={refetch}
+          pending={isFetching}
+        />
+      )}
+      {isError && !podcasts ? null : isLoading ? (
         <div className={view === "grid" ? LISTING_GRID_6_CARDS : "space-y-2"}>
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-36 w-full rounded-xl" />

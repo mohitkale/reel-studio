@@ -13,7 +13,11 @@ import {
   type ProductionPresetId,
 } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
-import { aiSceneSchema, scenePlanSchema, type ScenePlan } from "@/providers/ai/types";
+import {
+  aiSceneSchema,
+  scenePlanSchema,
+  type ScenePlan,
+} from "@/providers/ai/types";
 import { proposeChapterPlan } from "@/production/chapters";
 import { estimateTimeline } from "@/lib/preview-timeline";
 import { PRODUCTION_LIMITS } from "@/production/limits";
@@ -63,7 +67,8 @@ function sentencePieces(text: string): string[] {
     .split(/\n{2,}/)
     .filter(Boolean);
   return paragraphs.flatMap((paragraph) => {
-    if (["chart", "list", "comparison"].includes(analyzeBeat(paragraph).kind)) return [paragraph];
+    if (["chart", "list", "comparison"].includes(analyzeBeat(paragraph).kind))
+      return [paragraph];
     const segments = Array.from(
       new Intl.Segmenter(undefined, { granularity: "sentence" }).segment(
         paragraph,
@@ -150,7 +155,8 @@ function wordCount(text: string): number {
 }
 
 function splitForShortScenes(piece: string, maxWords = 28): string[] {
-  if (analyzeBeat(piece).kind !== "prose" && piece.length <= 240) return [piece];
+  if (analyzeBeat(piece).kind !== "prose" && piece.length <= 240)
+    return [piece];
   const words = piece.split(/\s+/).filter(Boolean);
   if (words.length <= maxWords) return [piece];
   const chunks: string[] = [];
@@ -264,9 +270,19 @@ export function createDeterministicProductionPlan(args: {
   const preset = getProductionPreset(args.presetId);
   if (!preset) throw new Error(`Unknown production preset: ${args.presetId}`);
   const segments =
-    args.structure === "chapters" || args.outputType === "voiceover"
-      ? segmentSourceText(args.text, args.structure === "chapters" ? 240 : 20)
-      : segmentPolishedVideoText(args.text);
+    args.outputType === "voiceover" && args.structure !== "chapters"
+      ? capSceneCount(
+          args.text
+            .replace(/\r\n?/g, "\n")
+            .split(/\n\s*\n/)
+            .map((p) => p.trim())
+            .filter(Boolean)
+            .flatMap((p) => segmentSourceText(p)),
+          20,
+        )
+      : args.structure === "chapters" || args.outputType === "voiceover"
+        ? segmentSourceText(args.text, args.structure === "chapters" ? 240 : 20)
+        : segmentPolishedVideoText(args.text);
   const sourceScenes = segments.map((text, index) => ({
     id: String(index),
     text,
@@ -294,18 +310,22 @@ export function createDeterministicProductionPlan(args: {
   const scenes = segments.map((narration, index) => {
     const display = displayCopy(narration);
     shortened ||= display.shortened;
-    const directed = directScene(aiSceneSchema.parse({
-      templateId:
-        getPresetTemplateId({
-          presetId: args.presetId,
-          engineId: args.videoEngine,
-          role: roles[index]!,
-        }) ?? defaultTemplateIdForEngine(args.videoEngine),
-      text: display.text,
-      spokenText: narration === display.text ? undefined : narration,
-      emphasis: [],
-      musicMood: preset.defaults.musicMood,
-    }), roles[index]!, args.hasVisualAsset);
+    const directed = directScene(
+      aiSceneSchema.parse({
+        templateId:
+          getPresetTemplateId({
+            presetId: args.presetId,
+            engineId: args.videoEngine,
+            role: roles[index]!,
+          }) ?? defaultTemplateIdForEngine(args.videoEngine),
+        text: display.text,
+        spokenText: narration === display.text ? undefined : narration,
+        emphasis: [],
+        musicMood: preset.defaults.musicMood,
+      }),
+      roles[index]!,
+      args.hasVisualAsset,
+    );
     roles[index] = directed.role;
     return directed.scene;
   });

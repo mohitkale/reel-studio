@@ -11,6 +11,8 @@ datasource db {
 }
 
 model Project {
+  archivedAt DateTime?
+  series String @default("")
   id          String    @id @default(cuid())
   name        String
   /// Video composition engine: "remotion" | "hyperframes"
@@ -584,4 +586,24 @@ model FactoryPack {
   createdAt    DateTime @default(now())
 
   @@unique([key, version])
+}
+
+/// Bounded non-destructive scene edit history. Independent of render revisions.
+model SceneEdit {
+ sequence Int @id @default(autoincrement())
+ scriptId String
+ sceneId String
+ beforeJson String
+ afterJson String
+ undone Boolean @default(false)
+ createdAt DateTime @default(now())
+ @@index([scriptId, sequence])
+}
+
+/// User-authored speech defaults. Applying a preset is explicit and preserves saved takes.
+model StudioPreset {
+ id String @id @default(cuid())
+ name String @unique
+ documentJson String
+ updatedAt DateTime @updatedAt
 }

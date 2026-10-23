@@ -1,3 +1,4 @@
+import { buildMultiSeriesScene } from "./motion/multi-series-scene";
 import { buildAdaptiveScene, ADAPTIVE_STYLES } from "./motion/adaptive-blocks";
 import { resolveSequenceContinuity } from "@/production/sequence-continuity";
 import { buildSequenceHandoffs } from "./motion/sequence-handoff";
@@ -1087,6 +1088,7 @@ export function buildHyperframesCompositionHtml(
       transitionClass,
     };
     const authoredMotionScene =
+      buildMultiSeriesScene(motionArgs) ??
       buildRegisteredMotionScene(motionArgs) ??
       buildStoryMotionScene(motionArgs) ??
       buildMediaMotionScene(motionArgs) ??
@@ -1281,8 +1283,8 @@ export function buildHyperframesCompositionHtml(
   // Preview-only paint savings. Producer output always retains the authored look.
   const previewStyles =
     props.previewQuality === "draft" && !opts.producerMode
-    ? "#root[data-grain]::before{display:none!important}#root .scene .content{filter:none!important}"
-    : "";
+      ? "#root[data-grain]::before{display:none!important}#root .scene .content{filter:none!important}"
+      : "";
 
   const html = `<!DOCTYPE html>
 <html lang="en">

@@ -46,6 +46,7 @@ export function FactoryPanel({
       queryFn: () => apiGet<Data>("/api/factory"),
       refetchInterval: 5000,
     });
+  const [budgetMinutes, setBudgetMinutes] = React.useState(30);
   const [master, setMaster] = React.useState(""),
     [profile, setProfile] = React.useState(""),
     [selected, setSelected] = React.useState<Orientation[]>([
@@ -67,8 +68,11 @@ export function FactoryPanel({
   const source = useQuery({
     queryKey: ["factory-revision", master],
     queryFn: () =>
-      apiGet<{ document: { snapshot: VideoSnapshot } }>(
-        `/api/factory/revisions/${encodeURIComponent(master)}`,
+      apiGet<{
+        document: { snapshot: VideoSnapshot };
+        sourceStatus: "current" | "changed" | "missing";
+      }>(
+        `/api/factory/revisions/${encodeURIComponent(master)}?compareSource=1`,
       ),
     enabled: Boolean(master),
   });
@@ -117,6 +121,7 @@ export function FactoryPanel({
         variants,
         quality,
         runMode: mode,
+        maxOutputSeconds: Math.round(budgetMinutes * 60),
       },
       json = JSON.stringify(body);
     if (submission.current?.json !== json)
@@ -179,6 +184,28 @@ export function FactoryPanel({
             : "Estimated timing, no narration"}
           . Master edits after capture do not change this revision.
         </p>
+      )}
+      {snapshot && (
+        <div
+          className="flex flex-wrap items-center gap-2 rounded border p-3 text-xs"
+          role="status"
+        >
+          <span>
+            {source.data?.sourceStatus === "changed"
+              ? "Source changed since this master was frozen. New runs still use the saved version; freeze a new master to include edits."
+              : source.data?.sourceStatus === "missing"
+                ? "Original source or narration is no longer available. This saved master remains independent."
+                : "Saved master matches its source at the last check."}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={source.isFetching}
+            onClick={() => void source.refetch()}
+          >
+            Check source again
+          </Button>
+        </div>
       )}
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="grid gap-1 text-xs">
@@ -296,6 +323,21 @@ export function FactoryPanel({
           </div>
         </div>
       )}
+      <label className="grid max-w-sm gap-1 text-xs">
+        Maximum combined output minutes
+        <Input
+          type="number"
+          min={1}
+          max={30}
+          step={1}
+          value={budgetMinutes}
+          onChange={(e) => setBudgetMinutes(Number(e.target.value))}
+        />
+        <span className="text-muted-foreground">
+          Server-enforced across all variants, up to 30 minutes and 6 outputs.
+          This run reuses saved narration and makes no AI calls.
+        </span>
+      </label>
       <div className="flex flex-wrap items-center gap-3">
         <label className="flex gap-2 text-xs">
           <input
@@ -310,6 +352,9 @@ export function FactoryPanel({
         <Button
           disabled={
             busy ||
+            !Number.isInteger(budgetMinutes) ||
+            budgetMinutes < 1 ||
+            budgetMinutes > 30 ||
             !snapshot ||
             (!selected.length && !cut) ||
             (cut &&

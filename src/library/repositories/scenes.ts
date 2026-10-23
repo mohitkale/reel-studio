@@ -1,9 +1,15 @@
+import type { Prisma } from "@prisma/client";
+import { recordSceneEdit } from "@/library/scene-history";
 import type { SceneDTO, SceneBackground, SceneChartData } from "@/lib/dto";
 import { defaultTemplateIdForEngine } from "@/engines/registry";
 import { isVideoEngineId, DEFAULT_VIDEO_ENGINE } from "@/engines/types";
 import { prisma } from "@/library/db";
 import { ProviderError } from "@/providers/voice/types";
-import { sceneConfigSchema, parseJsonColumn, brandOverridesSchema } from "../schemas";
+import {
+  sceneConfigSchema,
+  parseJsonColumn,
+  brandOverridesSchema,
+} from "../schemas";
 import type { SceneLocks } from "../schemas";
 import type { MotionDirection } from "@/production/motion";
 import type { MediaPreference } from "@/lib/media-preference";
@@ -64,7 +70,9 @@ export async function updateScene(
     /** null restores this scene's original preset/template treatment. */
     motion?: MotionDirection | null;
   },
+  transaction?: Prisma.TransactionClient,
 ): Promise<SceneDTO> {
+  const db = transaction ?? prisma;
   // Structured scene options live together in the layoutJson config
   // blob; merge so updating one never clobbers the others.
   let layoutJson: string | undefined;
@@ -80,9 +88,12 @@ export async function updateScene(
     data.motion !== undefined ||
     data.templateId !== undefined
   ) {
-    const current = await prisma.scene.findUnique({
+    const current = await db.scene.findUnique({
       where: { id },
-      select: { layoutJson: true, script: { select: { brandOverrides: true } } },
+      select: {
+        layoutJson: true,
+        script: { select: { brandOverrides: true } },
+      },
     });
     const config = parseJsonColumn(current?.layoutJson, sceneConfigSchema, {});
     if (data.background !== undefined) {
@@ -125,7 +136,9 @@ export async function updateScene(
     // Freeze participation when a creator locks an already directed scene.
     // Older locked scenes are never opted in by the automatic replanner.
     const sequenceEnabled = parseJsonColumn(
-      current?.script?.brandOverrides, brandOverridesSchema, {},
+      current?.script?.brandOverrides,
+      brandOverridesSchema,
+      {},
     ).motionPlan?.sequenceDirection;
     if ((data.motion || data.locks?.scene) && config.motion && sequenceEnabled)
       config.motion = { ...config.motion, sequenceVersion: 1 };
@@ -137,7 +150,7 @@ export async function updateScene(
     data.selectedVoiceClipId !== undefined &&
     data.selectedVoiceClipId !== null
   ) {
-    const clip = await prisma.sceneVoiceClip.findUnique({
+    const clip = await db.sceneVoiceClip.findUnique({
       where: { id: data.selectedVoiceClipId },
       select: { sceneId: true },
     });
@@ -146,7 +159,7 @@ export async function updateScene(
     }
   }
 
-  const update = prisma.scene.update({
+  const update = db.scene.update({
     where: { id },
     data: {
       text: data.text,
@@ -163,15 +176,36 @@ export async function updateScene(
           : undefined,
     },
   });
-  const scene = clearStockSelection
-    ? (
-        await prisma.$transaction([
-          update,
-          prisma.stockMediaSelection.deleteMany({ where: { sceneId: id } }),
-        ])
-      )[0]
-    : await update;
+  const scene = transaction
+    ? await update
+    : clearStockSelection
+      ? (
+          await prisma.$transaction([
+            update,
+            prisma.stockMediaSelection.deleteMany({ where: { sceneId: id } }),
+          ])
+        )[0]
+      : await update;
+  if (transaction && clearStockSelection)
+    await transaction.stockMediaSelection.deleteMany({
+      where: { sceneId: id },
+    });
   return toSceneDTO(scene);
+}
+
+/** Save manual edits and their undo snapshot together, so failures cannot lose history. */
+export async function updateSceneWithHistory(
+  id: string,
+  data: Parameters<typeof updateScene>[1],
+) {
+  return prisma.$transaction(async (tx) => {
+    const before = await tx.scene.findUnique({ where: { id } });
+    if (!before) throw new ProviderError("Scene not found", 404);
+    const result = await updateScene(id, data, tx);
+    const after = await tx.scene.findUniqueOrThrow({ where: { id } });
+    await recordSceneEdit(tx, before, after);
+    return result;
+  });
 }
 
 export async function deleteScene(id: string): Promise<void> {

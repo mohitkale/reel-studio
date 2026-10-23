@@ -16,6 +16,8 @@ The first video needs **no AI key or voice-model download**.
 
 _Native motion examples from v0.5.0's verified feature exports. [Watch with sound](https://github.com/mohitkale/reel-studio/releases/download/v0.5.0/reel-studio-0.5.0-story-motion.mp4). [Demo provenance](docs/DEMO_CAPTURE.md)._
 
+Use dedicated **Voiceovers** and **Factory** workspaces, organize projects by series, and finish saved audio with local waveform edits. See the [creator guide](docs/CREATOR_GUIDE.md#content-studio-workspaces).
+
 [Get started](#quick-start) · [Creator guide](docs/CREATOR_GUIDE.md) · [Documentation](docs/README.md) · [Contribute](CONTRIBUTING.md)
 
 ## What you can make

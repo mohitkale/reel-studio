@@ -32,6 +32,8 @@ interface EnginePlayerProps {
   sequenceDirection?: ReelProps["sequenceDirection"];
   autoPlay?: boolean;
   onReady?(): void;
+  onSelectScene?(id: string): void;
+  safeZones?: boolean;
   loop?: boolean;
   tokens?: BrandTokens;
   coverUrl?: string;

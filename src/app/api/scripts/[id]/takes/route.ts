@@ -33,6 +33,7 @@ const generateSchema = z
     providerId: z.enum(PROVIDER_IDS).optional(),
     voiceId: z.string().optional(),
     modelId: z.string().optional(),
+    speed: z.number().finite().min(0.7).max(1.35).optional(),
     label: z.string().max(120).optional(),
   })
   .default({});
