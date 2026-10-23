@@ -193,6 +193,9 @@ export async function createProjectFromPlan(
       | "height"
     >;
     savedOverrides?: Record<string, unknown>;
+    sceneOverrides?: Array<
+      Pick<Prisma.SceneCreateWithoutScriptInput, "layoutJson" | "hideText">
+    >;
     visualTheme?: VisualTheme;
     brandKitId?: string | null;
     preset?: { id: ProductionPresetId; version: string };
@@ -369,6 +372,7 @@ export async function createProjectFromPlan(
                 layoutJson: Object.keys(config).length
                   ? JSON.stringify(config)
                   : null,
+                ...production?.sceneOverrides?.[order],
                 assetRefs: production?.assetRefs?.[order]?.length
                   ? JSON.stringify(production.assetRefs[order])
                   : null,

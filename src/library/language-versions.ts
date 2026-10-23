@@ -1,3 +1,4 @@
+import { resolvedStockAssetSchema } from "@/providers/stock/schemas";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/library/db";
@@ -24,10 +25,37 @@ export const translationRequestSchema = z.object({
 export async function languageSource(scriptId: string) {
   const script = await getScript(scriptId);
   if (!script) throw new ProviderError("Script not found", 404);
+  const savedScenes = await prisma.scene.findMany({
+    where: { scriptId },
+    select: {
+      id: true,
+      layoutJson: true,
+      hideText: true,
+      stockMediaSelection: {
+        select: { snapshotJson: true, localAssetId: true },
+      },
+    },
+  });
+  const byId = new Map(savedScenes.map((scene) => [scene.id, scene]));
+  const rawScenes = script.scenes.map((scene) => {
+    const saved = byId.get(scene.id);
+    if (!saved)
+      throw new ProviderError(
+        "Source changed while loading. Reopen language versions.",
+        409,
+      );
+    return saved;
+  });
+  if (savedScenes.length !== script.scenes.length)
+    throw new ProviderError(
+      "Source changed while loading. Reopen language versions.",
+      409,
+    );
   const sourceHash = createHash("sha256")
     .update(
       JSON.stringify({
         scenes: script.scenes,
+        rawScenes,
         tokens: script.brandTokens,
         style: script.styleId,
         energy: script.energy,
@@ -48,6 +76,7 @@ export async function languageSource(scriptId: string) {
     .digest("hex");
   return {
     script,
+    rawScenes,
     sourceHash,
     paragraphs: script.scenes.map((s) => ({
       sceneId: s.id,
@@ -169,6 +198,30 @@ export async function saveLanguageVersion(
     { styleId: source.script.styleId, energy: source.script.energy },
     {
       series: project.series,
+      sceneOverrides: source.rawScenes.map((scene) => ({
+        layoutJson: scene.layoutJson,
+        hideText: scene.hideText,
+      })),
+      stockSelections: source.rawScenes.map((scene, index) => {
+        if (!scene.stockMediaSelection) {
+          if (source.script.scenes[index].background?.stock)
+            throw new ProviderError(
+              "Source stock metadata needs review before creating a language version",
+              409,
+            );
+          return undefined;
+        }
+        try {
+          return resolvedStockAssetSchema.parse(
+            JSON.parse(scene.stockMediaSelection.snapshotJson),
+          );
+        } catch {
+          throw new ProviderError(
+            "Source stock metadata needs review before creating a language version",
+            409,
+          );
+        }
+      }),
       scriptSettings: {
         coverUrl: source.script.coverUrl,
         musicUrl: source.script.musicUrl,

@@ -75,3 +75,8 @@ transcript passages and text embedded in visual assets require human review.
   with every assertion and deadline unchanged. Replacement platform CI is required.
   The copied and direct schemas matched all 120 schema entries, integrity and
   foreign-key checks passed, and all nine affected tests passed locally.
+
+- Final translation provenance regression coverage preserves complete per-scene
+  design/visibility overrides and validated stock attribution/hash snapshots.
+  Stock metadata participates in the source hash; a missing required snapshot
+  rejects the clone before creating a project.

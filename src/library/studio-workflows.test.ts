@@ -61,6 +61,68 @@ it("preserves manual language versions, protects frozen assets and shares review
         },
       },
     });
+    const photo = await prisma.asset.create({
+      data: { type: "image", path: "photo.svg" },
+    });
+    const firstScene = await prisma.scene.findFirstOrThrow({
+      where: { scriptId: script.id, order: 0 },
+    });
+    const visualSettings = JSON.stringify({
+      background: { type: "image", url: "/media/photo.svg", stock: true },
+      items: ["Retained visual copy"],
+    });
+    await prisma.scene.update({
+      where: { id: firstScene.id },
+      data: {
+        layoutJson: visualSettings,
+        hideText: false,
+        assetRefs: JSON.stringify([photo.id]),
+      },
+    });
+    const rendition = {
+      id: "full",
+      url: "https://images.pexels.com/photos/42/photo42.jpg",
+      width: 1080,
+      height: 1920,
+      mimeType: "image/jpeg",
+    };
+    const stockSnapshot = {
+      schemaVersion: 1,
+      resolvedAt: "2026-10-23T00:00:00Z",
+      localAssetId: photo.id,
+      contentHash: "b".repeat(64),
+      selectedRendition: rendition,
+      sourceRevision: {
+        capturedAt: "2026-10-23T00:00:00Z",
+        termsUrl: "https://www.pexels.com/license/",
+      },
+      usageEvent: { state: "not-required" },
+      providerSnapshot: {
+        providerId: "pexels",
+        providerAssetId: "42",
+        kind: "image",
+        creator: "Fixture creator",
+        sourcePageUrl: "https://www.pexels.com/photo/42/",
+        previewUrl: rendition.url,
+        width: 1080,
+        height: 1920,
+        orientation: "portrait",
+        mimeType: "image/jpeg",
+        renderRenditions: [rendition],
+        attribution: { text: "Photo by Fixture creator", required: true },
+        acquisitionPolicy: "download",
+      },
+    };
+    await prisma.stockMediaSelection.create({
+      data: {
+        sceneId: firstScene.id,
+        providerId: "pexels",
+        providerAssetId: "42",
+        kind: "image",
+        localAssetId: photo.id,
+        snapshotJson: JSON.stringify(stockSnapshot),
+      },
+    });
     const { languageSource, saveLanguageVersion, translateLanguageVersion } =
       await import("./language-versions");
     const source = await languageSource(script.id);
@@ -77,7 +139,13 @@ it("preserves manual language versions, protects frozen assets and shares review
     expect(mocks.generate).not.toHaveBeenCalled();
     const version = await prisma.script.findUniqueOrThrow({
       where: { id: created.scriptId },
-      include: { scenes: { orderBy: { order: "asc" } }, project: true },
+      include: {
+        scenes: {
+          orderBy: { order: "asc" },
+          include: { stockMediaSelection: true },
+        },
+        project: true,
+      },
     });
     expect(version).toMatchObject({
       musicUrl: "/media/bed.wav",
@@ -89,6 +157,15 @@ it("preserves manual language versions, protects frozen assets and shares review
       "Ideas claras",
       "Revisa primero",
     ]);
+    expect(version.scenes[0]).toMatchObject({
+      layoutJson: visualSettings,
+      hideText: false,
+      assetRefs: JSON.stringify([photo.id]),
+    });
+    expect(
+      JSON.parse(version.scenes[0].stockMediaSelection!.snapshotJson),
+    ).toEqual(stockSnapshot);
+    expect(version.scenes[0].stockMediaSelection!.localAssetId).toBe(photo.id);
     expect(JSON.parse(version.brandOverrides!)).toMatchObject({
       translationSource: { scriptId: script.id, language: "Spanish" },
     });
@@ -101,6 +178,22 @@ it("preserves manual language versions, protects frozen assets and shares review
         paragraphs: proposal.paragraphs.slice(1),
       }),
     ).rejects.toThrow("every source paragraph");
+    await prisma.stockMediaSelection.update({
+      where: { sceneId: firstScene.id },
+      data: {
+        snapshotJson: JSON.stringify({
+          ...stockSnapshot,
+          contentHash: "a".repeat(64),
+        }),
+      },
+    });
+    await expect(saveLanguageVersion(script.id, proposal)).rejects.toThrow(
+      "Source changed",
+    );
+    await prisma.stockMediaSelection.update({
+      where: { sceneId: firstScene.id },
+      data: { snapshotJson: JSON.stringify(stockSnapshot) },
+    });
     mocks.generate.mockResolvedValueOnce({ scenes: [{ text: "Uno" }] });
     await expect(
       translateLanguageVersion(script.id, {
@@ -131,6 +224,19 @@ it("preserves manual language versions, protects frozen assets and shares review
     await expect(saveLanguageVersion(script.id, proposal)).rejects.toThrow(
       "Source changed",
     );
+
+    await prisma.stockMediaSelection.delete({
+      where: { sceneId: firstScene.id },
+    });
+    const missingStock = await languageSource(script.id),
+      projectCount = await prisma.project.count();
+    await expect(
+      saveLanguageVersion(script.id, {
+        ...proposal,
+        sourceHash: missingStock.sourceHash,
+      }),
+    ).rejects.toThrow("stock metadata needs review");
+    expect(await prisma.project.count()).toBe(projectCount);
 
     const asset = await prisma.asset.create({
       data: { type: "audio", path: "bed.wav" },
