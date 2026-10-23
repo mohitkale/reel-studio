@@ -1,6 +1,66 @@
 # Release validation
 
-## v0.6.0 release candidate — 2026-10-21
+## v0.7.0 release candidate — 2026-10-23
+
+The creator studio shipped through PRs #57–58. Release preparation changes
+metadata and documentation; accepted application source and dependency pins are
+unchanged. The published validation asset identifies the final commit/tree and
+successful latest-head release PR and exact merged-main Quality/Security runs.
+No tag is published before those exact-commit gates pass.
+
+- The full local suite passed **207 files / 1,021 tests**. Platform suites cover
+  the same tests on Linux and Windows,
+  with clean locked installs, typecheck, lint, secret/component/license checks,
+  production builds and process cancellation. The release commit requires these
+  gates again before publication.
+- Fresh matrix: **18 H.264 exports**, six presets × three canvases,
+  **199.5 seconds** total, rendered in **676.8 seconds** on the reference Mac.
+  All eighteen decoded frames were inspected; these visual fixtures are silent.
+  [Portrait](../assets/release-0.7.0/matrix-portrait.jpg),
+  [landscape](../assets/release-0.7.0/matrix-landscape.jpg), and
+  [square](../assets/release-0.7.0/matrix-square.jpg) show presets in catalog order.
+- Populated published v0.3.0/v0.4.0 upgrades, paired media, backup restoration
+  and isolated fresh setup pass through all eighteen migrations. A direct
+  published v0.6.0 upgrade preserves factory profiles, packs, runs and variants;
+  runner backup/restore, integrity, foreign keys and fresh-schema parity pass.
+  Its fifteen published migrations and dependency pins are byte-identical.
+- Creator acceptance on the unchanged application source covers real cached
+  Kokoro narration, saved audio plan undo/save/reload/redo, edited takes and a
+  normal durable editor export: H.264/AAC, 1080×1920, 2.8 seconds, one retained
+  scene. The original WAV checksum is unchanged. Preview/export frames and
+  decoded non-silent, unclipped audio were inspected.
+- Browser checks cover a saved manual Spanish project, persistent scene history,
+  local Whisper transcript review, shared-audio reviewed takes, a valid episode
+  package and an explicitly approved short microphone recording. The 390-pixel
+  phone editor has no horizontal overflow; the translated workspace is usable
+  at 300 pixels. The saved edited-take preview was rechecked for this release.
+  [Desktop](../assets/studio-completion-preview.png) and
+  [phone](../assets/studio-completion-mobile.png).
+- Fresh recovery: **210 seconds / 5,040 frames** at 24 FPS. Intentional
+  interruption preserves committed work; the final retry reuses all seven sections.
+  Completed MP4 and decoded audio hashes match, with zero relative RMS error.
+  This fixture uses labelled calibration narration, separate from actual speech.
+- Fresh offline Kokoro checks cover two voices, turn reuse, selective regeneration,
+  legacy MP3 repair, WAV/MP3 and a completed audiogram. Native-channel float PCM
+  is finite, audible and unclipped; an exported audiogram frame was inspected.
+  Remote model loading was disabled.
+- The unchanged phonemizer passes matching corresponding-source distribution
+  checks. The complete source archive and notices accompany the release.
+
+[Integrated acceptance](RELEASE_ACCEPTANCE_0.7.0.json),
+[fresh matrix](RELEASE_MATRIX_0.7.0.json),
+[creator acceptance](../archive/CONTENT_STUDIO_COMPLETION.md), and
+[upgrade/rollback](../RELEASE_0.7.0.md).
+
+Paid-provider live tests are excluded at the maintainer's request. No paid calls,
+software installations, new models or cloud renders are used during release
+preparation. Creator acceptance reused cached Kokoro and one earlier explicitly
+approved multilingual Whisper small download. Whisper does not infer speaker
+identity. Partially cut transcripts, caption timing and embedded visual text need
+review. Hindi speech/font portability and human blind-preference targets remain
+unmeasured; workstation timings are observations, not universal guarantees.
+
+## Historical v0.6.0 release acceptance — 2026-10-21
 
 M1–M6 were delivered through merged PRs #48–53. M0 was subsequently executed
 retrospectively against actual published v0.5.0 source, with identical frozen

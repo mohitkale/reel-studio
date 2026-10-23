@@ -6,6 +6,8 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+## 0.7.0
+
 ### Added
 
 - Responsive creation hub and dedicated voiceover workspace, shared speech
@@ -33,6 +35,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 - Three additive studio migrations since v0.6.0. Existing databases use the
   backup-aware `npm run db:migrate`; dependency pins are unchanged. Local Whisper
   remains optional and needs an explicitly supplied/downloaded model.
+  See [upgrade and rollback](docs/RELEASE_0.7.0.md).
 
 ## 0.6.0
 
