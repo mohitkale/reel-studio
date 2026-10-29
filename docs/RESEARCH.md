@@ -17,7 +17,7 @@ The research allowlist is independent of model discovery and the writer model.
 | Other Gemini models               | No            | No          | Yes              | No             |
 | OpenAI GPT-4.1 Mini, GPT-4.1      | Yes           | No          | Yes              | No             |
 | Other OpenAI models               | No            | No          | Yes              | No             |
-| Ollama, LM Studio, llama.cpp      | No            | No          | Yes              | No             |
+| Ollama, LM Studio, llama.cpp      | No            | No          | Yes              | Yes            |
 
 Supported Gemini combinations use the Developer API `v1beta/models:generateContent`
 endpoint. Model support was checked against Google's [Search grounding](https://ai.google.dev/gemini-api/docs/google-search),
@@ -147,3 +147,42 @@ All responses are JSON with `no-store` and `nosniff`. Never execute source text
 or inject returned provider attribution HTML into the app DOM. Consumers must
 retain visible source citations and Google's required attribution when displaying
 native research, using an appropriately isolated renderer for provider HTML.
+
+## Local writers and shared research
+
+`POST /api/research/evidence/:id/plan` consumes a saved evidence revision with
+one explicitly selected Ollama, LM Studio or llama.cpp writer. It returns a scene
+plan plus the evidence ID/revision, separate researcher/writer selections,
+citations, attribution, usage and a cloud/local disclosure. It does not create a
+project or refresh research; creation integration is separate work.
+
+Example body for saved OpenAI evidence:
+
+```json
+{
+  "writer": { "providerId": "ollama", "modelId": "your-installed-model" },
+  "research": {
+    "mode": "shared",
+    "providerId": "openai",
+    "modelId": "gpt-4.1-mini"
+  },
+  "mode": "idea",
+  "brief": "Explain the supported product capabilities",
+  "budget": { "maxLocalCalls": 1, "deadlineMs": 30000 }
+}
+```
+
+The shared researcher/model must match the frozen evidence. Use
+`research: { "mode": "supplied" }` for supplied-source evidence with no cloud
+search. Native evidence cannot be silently relabeled as supplied. New research
+requires a configured, explicitly selected cloud backend; consuming saved
+research does not require another cloud call or a still-present cloud key.
+
+Only the selected local server is contacted. Missing/offline models fail without
+cloud fallback or installation. Exactly one local generation is permitted;
+structured-output repair is disabled for this bounded path. Read-only local model
+discovery may precede generation. Source context excludes provider HTML and raw
+metadata, preserves provenance/gaps and is limited to 24,000 characters; larger
+packs fail explicitly rather than silently losing source text. Named automation
+tokens need studio write scope and the local writer in their provider allowlist;
+no cloud paid-request slot is consumed by local writing.

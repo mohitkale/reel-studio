@@ -146,13 +146,16 @@ export function createLocalCompatibleProvider(
         providerId: id,
         providerLabel: LOCAL_AI_DEFINITIONS[id].label,
         modelId,
-        repair: (repair) =>
-          complete(store, id, {
-            ...repair,
-            modelId,
-            jsonSchema,
-            signal: input.signal,
-          }),
+        repair:
+          input.allowStructuredRepair === false
+            ? undefined
+            : (repair) =>
+                complete(store, id, {
+                  ...repair,
+                  modelId,
+                  jsonSchema,
+                  signal: input.signal,
+                }),
       });
       return scenePlanSchema.parse(raw);
     },

@@ -20,6 +20,8 @@ import { GET as status } from "@/app/api/research/jobs/[id]/route";
 import { POST as cancel } from "@/app/api/research/jobs/[id]/cancel/route";
 import { GET as evidence } from "@/app/api/research/evidence/[id]/route";
 import { GET as capabilities } from "@/app/api/research/capabilities/route";
+import { POST as planEvidence } from "@/app/api/research/evidence/[id]/plan/route";
+import { planWithResearchEvidence } from "@/library/research-writer";
 import { researchRepository } from "./research-api";
 import { createPrismaClient } from "@/library/prisma-client";
 import { researchWithGemini } from "@/providers/research/gemini";
@@ -47,6 +49,9 @@ vi.mock("@/providers/research/openai", async (original) => ({
 vi.mock("./secrets", async (original) => ({
   ...(await original<typeof import("./secrets")>()),
   reserveNamedMcpPaidRequest: vi.fn(),
+}));
+vi.mock("@/library/research-writer", () => ({
+  planWithResearchEvidence: vi.fn(),
 }));
 vi.setConfig({ testTimeout: 15_000 });
 const directory = mkdtempSync(path.join(tmpdir(), "reel-research-api-"));
@@ -140,6 +145,21 @@ beforeEach(async () => {
   vi.stubEnv("MCP_API_TOKEN", "");
   vi.stubEnv("MCP_NAMED_TOKENS", "[]");
   vi.mocked(reserveNamedMcpPaidRequest).mockResolvedValue(true);
+  vi.mocked(planWithResearchEvidence).mockResolvedValue({
+    plan: { projectName: "Draft", scriptName: "Draft", scenes: [] },
+    evidenceId: "fixture",
+    evidenceRevision: 1,
+    research: { mode: "supplied" },
+    writer: { providerId: "ollama", modelId: "fixture-model" },
+    attribution: evidenceFixture().attribution,
+    citations: [],
+    usage: {
+      localWriterCalls: 1,
+      newProviderCalls: 0,
+      newSearchChargeUnits: 0,
+    },
+    disclosure: "Supplied evidence",
+  });
   vi.mocked(researchWithOpenAI).mockImplementation(async (input) => {
     await input.onProviderCall();
     return normalizeOpenAIResearch(openaiGrounded, input.request);
@@ -203,7 +223,51 @@ describe("authenticated research APIs", () => {
     (r: Request) => cancel(r, context()),
     (r: Request) => evidence(r, context()),
     (r: Request) => capabilities(r),
+    (r: Request) => planEvidence(r, context()),
   ];
+  it("enforces local-writer provider policy without spending cloud quota", async () => {
+    const created = await create(req("POST", body()));
+    const { job } = await created.json();
+    await runScheduled();
+    const saved = await researchRepository.getJob(job.id);
+    const request = {
+      writer: { providerId: "ollama", modelId: "fixture-model" },
+      research: { mode: "supplied" },
+      brief: "Explain this product",
+      budget: { maxLocalCalls: 1 },
+    };
+    expect(
+      (
+        await planEvidence(
+          req("POST", request, token({ scopes: ["studio:read"] })),
+          context(saved!.evidenceId!),
+        )
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await planEvidence(
+          req("POST", request, token({ allowedProviders: [] })),
+          context(saved!.evidenceId!),
+        )
+      ).status,
+    ).toBe(403);
+    const allowed = token({
+      allowedProviders: ["ollama"],
+      paidProviders: [],
+      paidRequestLimit: 0,
+    });
+    expect(
+      (
+        await planEvidence(
+          req("POST", request, allowed),
+          context(saved!.evidenceId!),
+        )
+      ).status,
+    ).toBe(200);
+    expect(planWithResearchEvidence).toHaveBeenCalledOnce();
+    expect(reserveNamedMcpPaidRequest).not.toHaveBeenCalled();
+  });
   it.each(endpoints)(
     "authorizes every handler before database or provider IO",
     async (call) => {

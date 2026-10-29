@@ -72,7 +72,7 @@ describe("evidence contracts", () => {
     for (const provider of ["openai", "ollama", "lm-studio", "llama-cpp"])
       expect(researchCapability(provider, "discovered-model")).toMatchObject({
         nativeSearch: false,
-        sharedBackend: false,
+        sharedBackend: provider !== "openai",
         suppliedSources: true,
       });
     expect(researchCapability("gemini", "gemini-3.8-flash").nativeSearch).toBe(

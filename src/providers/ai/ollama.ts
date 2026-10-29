@@ -183,13 +183,16 @@ export function createOllamaProvider(
         providerId: "ollama",
         providerLabel: "Ollama",
         modelId,
-        repair: (repair) =>
-          complete(store, {
-            ...repair,
-            modelId,
-            jsonSchema,
-            signal: input.signal,
-          }),
+        repair:
+          input.allowStructuredRepair === false
+            ? undefined
+            : (repair) =>
+                complete(store, {
+                  ...repair,
+                  modelId,
+                  jsonSchema,
+                  signal: input.signal,
+                }),
       });
       return scenePlanSchema.parse(raw);
     },

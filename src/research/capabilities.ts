@@ -41,8 +41,7 @@ export function researchCapability(providerId: string, modelId: string) {
       "lm-studio",
       "llama-cpp",
     ].includes(providerId),
-    // M2 will wire explicit shared research backends for local writers.
-    sharedBackend: false,
+    sharedBackend: ["ollama", "lm-studio", "llama-cpp"].includes(providerId),
     searchChargeUnit: geminiSearch
       ? "grounded_prompt"
       : openaiSearch

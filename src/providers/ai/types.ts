@@ -17,6 +17,7 @@ import type {
 } from "./podcast-clip-suggestions";
 import { LOCAL_AI_PROVIDER_IDS, type LocalAIProviderId } from "./local-types";
 import { templateIdForCapabilityId } from "@/engines/capabilities";
+import type { EvidencePack } from "@/research/contracts";
 
 /**
  * AI "director" contract. Mirrors the voice provider factory: the app talks only
@@ -233,6 +234,10 @@ export type AIScene = Omit<ParsedAIScene, "visual"> & {
 export type ScenePlan = z.infer<typeof scenePlanSchema>;
 
 export interface GeneratePlanInput {
+  /** Frozen, validated source context for explicit idea/story evidence planning. */
+  evidence?: EvidencePack;
+  /** False when the caller permits exactly one local generation invocation. */
+  allowStructuredRepair?: boolean;
   translationLanguage?: string;
   chapterDirection?: ChapterWritingDirection;
   /** Bounded, app-selected visual context; never executable styling. */

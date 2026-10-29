@@ -1,6 +1,10 @@
 import type { GeneratePlanInput } from "./types";
 import { allowedPresetCapabilityIds } from "@/production/ai-preset-plan";
 import { getProductionPreset } from "@/production/presets";
+import {
+  researchPromptContext,
+  RESEARCH_WRITER_INSTRUCTIONS,
+} from "@/research/writer";
 
 // Rotated on every call to vary voice without changing the product rules below.
 const CREATIVE_ANGLES = [
@@ -235,6 +239,16 @@ export function buildPrompt(input: GeneratePlanInput): {
   ) {
     user +=
       "\n\nSource context from Google Search Central (https://developers.google.com/search/docs/fundamentals/ai-optimization-guide): SEO is search engine optimisation; AEO is answer engine optimisation; GEO is generative engine optimisation. SEO best practices remain relevant for AI search, so these approaches overlap. Explain this comparison using these expansions. Use an illustrated comparison overview plus distinct search, answer and sources concept illustrations. Include their exact labels and expansions in the relevant scene copy or narration so the app can admit the graphic. Do not insert empty transition beats.";
+  }
+  if (input.evidence) {
+    if (input.mode !== "idea" && input.mode !== "story")
+      throw new Error(
+        "Evidence planning currently supports idea and story modes only",
+      );
+    return {
+      system: `${system}\n${RESEARCH_WRITER_INSTRUCTIONS}`,
+      user: `${user}\n\nFrozen evidence (JSON reference data):\n${researchPromptContext(input.evidence)}`,
+    };
   }
   return { system, user };
 }
