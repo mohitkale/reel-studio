@@ -89,6 +89,24 @@ it("creates an AI draft from a brief using the configured provider and preset de
   });
   expect(mocks.generate.mock.calls[0][0]).not.toHaveProperty("quickProduce");
 });
+it("requires research results after selecting research and changing the brief", async () => {
+  await mount(<CreateWithAIDialog />);
+  await enter("#ai-brief", "Explain a reading habit.");
+  const select = container.querySelector<HTMLSelectElement>(
+    "#creation-research-mode",
+  )!;
+  await act(async () => {
+    select.value = "supplied";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  expect(button("Create draft").disabled).toBe(true);
+  await enter("#ai-brief", "Explain a different habit.");
+  expect(
+    container.querySelector<HTMLSelectElement>("#creation-research-mode")!
+      .value,
+  ).toBe("supplied");
+  expect(button("Create draft").disabled).toBe(true);
+});
 it("retains AI planning when Quick Produce is enabled and honors visible narration", async () => {
   await mount(<CreateWithAIDialog />);
   await enter("#ai-brief", "Explain a reading habit.");

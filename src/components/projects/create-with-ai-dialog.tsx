@@ -1,5 +1,7 @@
 "use client";
 import { GenerationSummary } from "@/components/studio/generation-summary";
+import { ResearchSelection } from "./research-selection";
+import type { EvidencePack } from "@/research/contracts";
 
 import * as React from "react";
 import Link from "next/link";
@@ -91,6 +93,11 @@ export function CreateWithAIDialog({
     "deterministic" | AIProviderId | undefined
   >();
   const [narration, setNarration] = React.useState(false);
+  const [evidence, setEvidence] = React.useState<EvidencePack | null>(null);
+  const [researchMode, setResearchMode] = React.useState<
+    "off" | "supplied" | "web"
+  >("off");
+  const researchRequired = researchMode !== "off";
 
   const configured = (providers ?? []).filter((p) => p.configured);
   const effectiveProvider = providerId ?? configured[0]?.id;
@@ -98,13 +105,17 @@ export function CreateWithAIDialog({
   const effectiveQuickPlanner =
     quickPlanner ?? effectiveProvider ?? "deterministic";
   const validBrief = brief.trim().length >= 3 && brief.trim().length <= 8000;
+  const readyEvidence = evidence?.query === brief.trim() ? evidence : null;
 
   function submit() {
     const trimmed = brief.trim();
     if (
       !validBrief ||
       generate.isPending ||
-      (!quickProduce && !effectiveProvider)
+      (!quickProduce && !effectiveProvider) ||
+      (researchRequired &&
+        (!readyEvidence ||
+          (quickProduce && effectiveQuickPlanner === "deterministic")))
     )
       return;
     const planner = quickProduce ? effectiveQuickPlanner : effectiveProvider;
@@ -123,6 +134,7 @@ export function CreateWithAIDialog({
         mediaPreference,
         visualAmbition,
         brandKitId: brandKitId || null,
+        evidenceId: researchRequired ? readyEvidence?.id : undefined,
         ...(quickProduce
           ? {
               idempotencyKey: `quick-produce:${crypto.randomUUID()}`,
@@ -248,7 +260,10 @@ export function CreateWithAIDialog({
                 maxLength={8000}
                 autoFocus
                 value={brief}
-                onChange={(e) => setBrief(e.target.value)}
+                onChange={(e) => {
+                  setBrief(e.target.value);
+                  setEvidence(null);
+                }}
                 placeholder={
                   mode === "idea"
                     ? "e.g. 3 quick tips for writing better prompts"
@@ -270,6 +285,22 @@ export function CreateWithAIDialog({
                 </div>
               ) : null}
             </div>
+
+            <ResearchSelection
+              key={brief}
+              brief={brief}
+              onEvidence={setEvidence}
+              mode={researchMode}
+              onModeChange={setResearchMode}
+            />
+            {researchRequired &&
+              quickProduce &&
+              effectiveQuickPlanner === "deterministic" && (
+                <p className="text-muted-foreground text-sm">
+                  Select an AI planner to create from research. The
+                  supplied-text arrangement does not use research.
+                </p>
+              )}
 
             <div className="grid items-start gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
@@ -545,6 +576,10 @@ export function CreateWithAIDialog({
             disabled={
               !validBrief ||
               (!quickProduce && !effectiveProvider) ||
+              (researchRequired &&
+                (!readyEvidence ||
+                  (quickProduce &&
+                    effectiveQuickPlanner === "deterministic"))) ||
               generate.isPending
             }
           >

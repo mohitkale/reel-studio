@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { serverDefaultTokens } from "@/lib/brand-defaults";
 import { videoRevisionHash } from "@/library/production-revision";
 import { videoSnapshotSchema } from "@/production/video-snapshot";
+import { evidenceFixture } from "@/research/fixtures";
 
 const snapshot = videoSnapshotSchema.parse({
   version: 1,
@@ -43,6 +44,18 @@ const snapshot = videoSnapshotSchema.parse({
 });
 
 describe("production revisions", () => {
+  it("retains the complete evidence revision and includes it in the immutable hash", () => {
+    const evidence = evidenceFixture();
+    const captured = videoSnapshotSchema.parse({
+      ...snapshot,
+      script: { ...snapshot.script, researchEvidence: evidence },
+    });
+    expect(captured.script.researchEvidence).toEqual(evidence);
+    const changed = structuredClone(captured);
+    changed.script.researchEvidence!.sources[0]!.excerpts[0]!.text =
+      "Changed source";
+    expect(videoRevisionHash(changed)).not.toBe(videoRevisionHash(captured));
+  });
   it("hashes identical snapshots deterministically and detects edits", () => {
     expect(videoRevisionHash(structuredClone(snapshot))).toBe(
       videoRevisionHash(snapshot),

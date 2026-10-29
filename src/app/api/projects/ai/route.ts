@@ -18,7 +18,7 @@ import { autoAttachBundledMusic } from "@/library/soundtrack-service";
 import { ensureSfxCues } from "@/library/sfx-service";
 import { orientationSchema, DEFAULT_ORIENTATION } from "@/lib/orientation";
 import { VIDEO_ENGINE_IDS, DEFAULT_VIDEO_ENGINE } from "@/engines/types";
-import { authorizeProviderRequest } from "@/server/auth";
+import { authorizeProviderRequest, authorizeRead } from "@/server/auth";
 import {
   errorResponse,
   parseClientInput,
@@ -40,6 +40,12 @@ import { executeProductionJob } from "@/library/production-job-executor";
 import { directorBudgetSchema } from "@/video/shot-direction";
 import { resolveCreativeDirection } from "@/production/creative-direction";
 import { getBrandKit } from "@/library/repositories/brandkits";
+import { ResearchRepository } from "@/library/repositories/research";
+import { researchPromptContext } from "@/research/writer";
+import {
+  creationEvidenceSources,
+  unsupportedCreationNumbers,
+} from "@/research/creation-grounding";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -70,6 +76,7 @@ const bodySchema = z.object({
   quickProduce: quickProduceOptionsSchema.optional(),
   idempotencyKey: z.string().min(8).max(240).optional(),
   directorBudget: directorBudgetSchema.optional(),
+  evidenceId: z.string().trim().min(1).max(160).optional(),
 });
 
 /** POST /api/projects/ai - generate a scene plan from a brief and create the project. */
@@ -105,7 +112,26 @@ export async function POST(req: Request) {
         "This director budget allows no paid planner calls.",
         400,
       );
+    if (body.evidenceId) authorizeRead(req);
+    const evidence = body.evidenceId
+      ? await new ResearchRepository().getEvidence(body.evidenceId)
+      : null;
+    if (body.evidenceId && !evidence)
+      throw new AIError("Evidence revision not found", 404);
+    if (evidence && planner === "deterministic")
+      throw new AIError("Choose an AI writer to use research evidence", 400);
+    if (evidence) {
+      try {
+        researchPromptContext(evidence);
+      } catch (error) {
+        throw new AIError(
+          error instanceof Error ? error.message : "Evidence cannot be used",
+          400,
+        );
+      }
+    }
     const auth = await authorizeProviderRequest(req, providerIds);
+    const evidenceSources = evidence ? creationEvidenceSources(evidence) : [];
 
     const orientation = body.orientation ?? DEFAULT_ORIENTATION;
     const mediaPreference =
@@ -166,9 +192,19 @@ export async function POST(req: Request) {
         productionPresetId: presetId,
         visualTheme: creative.theme.name,
         mediaPreference,
+        evidence: evidence ?? undefined,
+        allowStructuredRepair: evidence ? false : undefined,
         signal: req.signal,
       });
     }
+    if (
+      evidence &&
+      unsupportedCreationNumbers(raw, [body.brief, ...evidenceSources]).length
+    )
+      throw new AIError(
+        "The generated draft contains numbers not supported by the supplied brief or undisputed evidence. Review the sources and try again.",
+        422,
+      );
     const enriched = {
       ...raw,
       scenes: enrichScenePlan(raw.scenes, videoEngine),
@@ -199,6 +235,7 @@ export async function POST(req: Request) {
         hasVisualAsset: backgrounds.some(Boolean),
         sceneHasVisual: backgrounds.map(Boolean),
         source: body.brief,
+        evidenceSources,
       },
     );
 
@@ -221,6 +258,7 @@ export async function POST(req: Request) {
         stockSelections: mediaDecisions.map((decision) => decision.snapshot),
         outputType: "video",
         creationSource: { kind: "text" },
+        savedOverrides: evidence ? { researchEvidence: evidence } : undefined,
       },
     );
     const persisted = await getScript(created.scriptId);

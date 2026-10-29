@@ -127,6 +127,7 @@ export async function getScripts(
         styleId: normalizeStyleId(overrides.styleId),
         energy: normalizeEnergyId(overrides.energy),
         productionPreset: overrides.productionPreset,
+        researchEvidence: overrides.researchEvidence,
         motionPlan: overrides.motionPlan,
         musicMap:
           overrides.musicMap?.sourceUrl === script.musicUrl

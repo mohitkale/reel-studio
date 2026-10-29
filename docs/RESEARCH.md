@@ -85,8 +85,10 @@ The smoke makes one call; it does not assert that a provider will always search.
 
 ## Authenticated API
 
-These foundations expose research and inspection separately from project creation.
-Creation UI, Quick Produce evidence integration and MCP tools are separate work.
+The creation dialog can research supplied text, a public URL, or the web before
+planning a draft or Quick Produce. It requires an AI writer when research is
+selected. The saved evidence revision is included in the project and frozen
+production snapshots. Web research is an explicit, separately budgeted call.
 The existing same-origin/loopback policy applies; strict mode requires bearer
 authentication. Named tokens need `studio:write` for submission/cancellation and
 `studio:read` for capability, status and evidence inspection. Cloud research also
@@ -154,7 +156,9 @@ native research, using an appropriately isolated renderer for provider HTML.
 one explicitly selected Ollama, LM Studio or llama.cpp writer. It returns a scene
 plan plus the evidence ID/revision, separate researcher/writer selections,
 citations, attribution, usage and a cloud/local disclosure. It does not create a
-project or refresh research; creation integration is separate work.
+project or refresh research. To create a project with a saved revision, pass
+its `evidenceId` to `POST /api/projects/ai`; this consumes the frozen evidence
+without running research again.
 
 Example body for saved OpenAI evidence:
 

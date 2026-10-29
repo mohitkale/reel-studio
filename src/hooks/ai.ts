@@ -136,6 +136,7 @@ export function useGenerateProject() {
       };
       idempotencyKey?: string;
       directorBudget?: { maxPaidCalls: 0 | 1 };
+      evidenceId?: string;
     }) =>
       apiPost<{
         projectId: string;

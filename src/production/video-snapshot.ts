@@ -80,6 +80,7 @@ export const videoScriptSnapshotSchema = z.object({
   styleId: z.enum(["bold-hook", "clean-story", "teach-me", "soft-brand"]),
   energy: z.enum(["calm", "normal", "high"]),
   productionPreset: brandOverridesSchema.shape.productionPreset,
+  researchEvidence: brandOverridesSchema.shape.researchEvidence,
   visualTheme: brandOverridesSchema.shape.visualTheme,
   motionPlan: brandOverridesSchema.shape.motionPlan,
   musicMap: brandOverridesSchema.shape.musicMap,

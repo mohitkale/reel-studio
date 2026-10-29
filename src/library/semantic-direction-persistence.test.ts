@@ -7,6 +7,7 @@ import path from "node:path";
 import { semanticGraphicsFixture } from "../../tests/fixtures/semantic-graphics";
 import { scenePlanSchema } from "@/providers/ai/types";
 import { VISUAL_THEMES } from "@/production/creative-direction";
+import { evidenceFixture } from "@/research/fixtures";
 
 it("automatically persists whole-story subjects on creation and restores the exact frozen illustrations", async () => {
   const directory = mkdtempSync(
@@ -52,6 +53,7 @@ it("automatically persists whole-story subjects on creation and restores the exa
       {
         preset: { id: "editorial-explainer", version: "1.0.0" },
         visualTheme: VISUAL_THEMES.paper,
+        savedOverrides: { researchEvidence: evidenceFixture() },
         roles: fixture.scenes.map(() => "explanation"),
       },
     );
@@ -89,6 +91,7 @@ it("automatically persists whole-story subjects on creation and restores the exa
       await captureVideoSnapshot(created.scriptId),
     );
     const copy = (await getScript(restored.scriptId))!;
+    expect(copy.researchEvidence).toEqual(evidenceFixture());
     expect(
       parseSfxState(copy.sfxJson).cues.map((cue) => cue.showpieceEvent),
     ).toEqual(
