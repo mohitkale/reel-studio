@@ -279,7 +279,8 @@ export function normalizeGeminiResearch(
       searchQueries: metadata?.webSearchQueries ?? [],
       providerMetadata: JSON.stringify({
         groundingMetadata: original.candidates?.[0]?.groundingMetadata ?? null,
-        urlContextMetadata: original.candidates?.[0]?.urlContextMetadata ?? null,
+        urlContextMetadata:
+          original.candidates?.[0]?.urlContextMetadata ?? null,
         usageMetadata: original.usageMetadata ?? null,
       }),
     },

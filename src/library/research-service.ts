@@ -91,7 +91,7 @@ export async function runResearchJob(
               request.budget.maxSearchChargeUnits < 1
             )
               throw new Error("Research provider budget exhausted");
-          calls++;
+            calls++;
             await options.authorizeProvider?.();
             controller.signal.throwIfAborted();
             const usage: ResearchUsage = {

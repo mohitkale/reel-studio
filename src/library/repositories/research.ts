@@ -38,6 +38,29 @@ export class ResearchRepository {
     return this.db.researchJob.findUnique({ where: { id } });
   }
 
+  async reconnect(request: ResearchRequest) {
+    const prior = await this.db.researchSubmission.findUnique({
+      where: { idempotencyKey: request.idempotencyKey },
+      include: { job: true },
+    });
+    if (prior && prior.fingerprint !== researchKeys(request).fingerprint)
+      throw new ResearchError(
+        "Idempotency key already belongs to a different research request",
+        409,
+      );
+    return prior?.job ?? null;
+  }
+
+  cached(request: ResearchRequest, now = new Date()) {
+    return this.db.evidenceRevision.findFirst({
+      where: {
+        cacheKey: researchKeys(request).cacheKey,
+        expiresAt: { gt: now },
+      },
+      orderBy: { revision: "desc" },
+    });
+  }
+
   async getEvidence(id: string): Promise<EvidencePack | null> {
     const row = await this.db.evidenceRevision.findUnique({ where: { id } });
     return row ? evidencePackSchema.parse(JSON.parse(row.packJson)) : null;
@@ -163,12 +186,18 @@ export class ResearchRepository {
         revision: (latest?.revision ?? 0) + 1,
         createdAt: now.toISOString(),
       });
+      const packJson = JSON.stringify(pack);
+      if (Buffer.byteLength(packJson) > 900_000)
+        throw new ResearchError(
+          "Evidence exceeds its inspection size limit",
+          502,
+        );
       await tx.evidenceRevision.create({
         data: {
           id: pack.id,
           cacheKey: job.cacheKey,
           revision: pack.revision,
-          packJson: JSON.stringify(pack),
+          packJson,
           expiresAt: new Date(now.getTime() + 6 * 60 * 60 * 1000),
         },
       });

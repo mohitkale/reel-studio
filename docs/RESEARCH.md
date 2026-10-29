@@ -70,3 +70,68 @@ Normal tests use offline fixtures. For an explicitly authorized paid smoke only,
 set `REEL_LIVE_RESEARCH=1` and `REEL_LIVE_GEMINI_KEY` in the environment, then run
 `npm run test:unit -- src/providers/research/gemini.test.ts --maxWorkers=2`.
 The smoke makes one call; it does not assert that a provider will always search.
+
+## Authenticated API
+
+These foundations expose research and inspection separately from project creation.
+Creation UI, Quick Produce evidence integration and MCP tools are separate work.
+The existing same-origin/loopback policy applies; strict mode requires bearer
+authentication. Named tokens need `studio:write` for submission/cancellation and
+`studio:read` for capability, status and evidence inspection. Cloud research also
+requires Gemini in both provider allowlists and an available paid-request slot.
+That slot is reserved only by the winning worker immediately before its call.
+There is no additional approval gate and no implicit provider fallback.
+
+| Method and path                      | Result                                                                       |
+| ------------------------------------ | ---------------------------------------------------------------------------- |
+| `GET /api/research/capabilities`     | Curated support, configuration flag and limits; no keys                      |
+| `POST /api/research/jobs`            | Submit or reconnect by idempotency key; 202 pending / 200 cached or complete |
+| `GET /api/research/jobs/:id`         | Status, timestamps, redacted error, usage, evidence ID; no outbound research |
+| `POST /api/research/jobs/:id/cancel` | Cancel queued/running work; completed evidence stays immutable               |
+| `GET /api/research/evidence/:id`     | Frozen evidence pack including source excerpts and attribution               |
+
+Example web-research body (one provider call plus one grounded-prompt allowance):
+
+```json
+{
+  "idempotencyKey": "research-example-001",
+  "mode": "web",
+  "providerId": "gemini",
+  "modelId": "gemini-2.5-flash",
+  "query": "What does the latest official Node.js LTS policy say?",
+  "urls": ["https://nodejs.org/en/about/previous-releases"],
+  "budget": {
+    "maxProviderCalls": 1,
+    "maxSearchChargeUnits": 1,
+    "deadlineMs": 30000,
+    "maxOutputTokens": 2048
+  }
+}
+```
+
+For offline capture use `mode: "supplied"`, omit provider/model, and include
+`sources: [{ "title": "Brief", "text": "At least 20 characters of source text" }]`.
+Optional `urls` use the existing public article importer with DNS pinning,
+redirect revalidation, standard ports and bounded text/byte limits. Pasted text
+does not trigger network access. Supplied capture retains excerpts without
+inventing claims or synthesizing facts. Failed URLs remain explicit gaps.
+
+The web server executes new queued jobs after sending the response. Re-POST the
+same request/key after a server restart to resume queued work. Status/evidence
+GETs never start paid work. Running jobs interrupted past their deadline fail
+without replay. Cancellation propagates to sockets, DNS waits and body readers.
+Read-only status polling can expire overdue jobs. This foundation does not yet
+add research to the standalone production worker.
+
+Request bodies are limited to 256 KB, at most five pasted sources (40,000
+characters each) and five URLs. Provider responses are limited to 1 MB; evidence
+publication is bounded to 900 KB so inspection responses fit within 1 MB. Jobs
+have a maximum 45-second deadline and 4096 output tokens. URL context's retrieved
+input tokens are billed by Gemini; these call/output limits are not a currency
+spending cap. Original usage may be uncertain after cancellation or provider
+failure. Review it before explicitly refreshing with a new idempotency key.
+
+All responses are JSON with `no-store` and `nosniff`. Never execute source text
+or inject returned provider attribution HTML into the app DOM. Consumers must
+retain visible source citations and Google's required attribution when displaying
+native research, using an appropriately isolated renderer for provider HTML.

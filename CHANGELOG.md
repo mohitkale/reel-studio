@@ -6,6 +6,16 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+### Added
+
+- Authenticated research APIs with versioned evidence/source contracts, immutable
+  revisions, six-hour caching, durable idempotency, cancellation and deadlines.
+- Optional Gemini Search/URL grounding with preserved citations and attribution,
+  explicit researcher models, separate call/search allowances and offline fixtures.
+- Supplied-text/public-article evidence capture with no cloud calls, hardened URL
+  fetching, bounded responses and redacted errors. Video-creation integration is
+  separate from these research foundations.
+
 ## 0.7.0
 
 ### Added
