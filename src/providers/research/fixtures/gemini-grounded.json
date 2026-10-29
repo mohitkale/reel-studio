@@ -1,0 +1,37 @@
+{
+  "candidates": [
+    {
+      "content": { "parts": [{ "text": "The editor works locally." }] },
+      "finishReason": "STOP",
+      "groundingMetadata": {
+        "groundingChunks": [
+          {
+            "web": {
+              "uri": "https://example.com/product",
+              "title": "Product overview"
+            }
+          }
+        ],
+        "groundingSupports": [
+          {
+            "segment": {
+              "startIndex": 0,
+              "endIndex": 25,
+              "text": "The editor works locally."
+            },
+            "groundingChunkIndices": [0]
+          }
+        ],
+        "webSearchQueries": ["editor local workflow"],
+        "searchEntryPoint": {
+          "renderedContent": "<div>Required Google Search suggestions</div>"
+        }
+      }
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 100,
+    "candidatesTokenCount": 20,
+    "totalTokenCount": 120
+  }
+}

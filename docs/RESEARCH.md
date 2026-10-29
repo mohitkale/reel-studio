@@ -49,3 +49,24 @@ Deadline-expired work fails without automatic replay. An explicit new refresh
 is needed to retry. Cancellation stops the running request and prevents late
 evidence publication. Cached jobs report zero new usage; the original evidence
 retains the usage that produced it. Partial/empty results retain explicit gaps.
+
+## Gemini setup and validation
+
+Set `GEMINI_API_KEY` in Settings or the local environment. Research uses the same
+key as scene generation but a separately selected model (default:
+`gemini-2.5-flash`). The adapter issues one bounded POST with Google Search and,
+when URLs are supplied, URL context. It does not retry paid POSTs or request scene
+JSON. Public URL validation precedes the provider request. Unknown models and
+missing credentials fail before a call is reserved.
+
+The evidence includes original grounding/URL metadata, the provider's search
+suggestion HTML, search queries and reported token counts. Citation offsets are
+validated as UTF-8 byte offsets against the original text part. Unsupported,
+empty, ungrounded and partial results expose gaps. Successful URL retrieval
+alone does not create a supported claim. Conflicts are not independently inferred
+or verified by this adapter; that limitation is included in each result.
+
+Normal tests use offline fixtures. For an explicitly authorized paid smoke only,
+set `REEL_LIVE_RESEARCH=1` and `REEL_LIVE_GEMINI_KEY` in the environment, then run
+`npm run test:unit -- src/providers/research/gemini.test.ts --maxWorkers=2`.
+The smoke makes one call; it does not assert that a provider will always search.
