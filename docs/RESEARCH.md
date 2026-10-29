@@ -15,18 +15,30 @@ The research allowlist is independent of model discovery and the writer model.
 | --------------------------------- | ------------- | ----------- | ---------------- | -------------- |
 | Gemini 2.5 Flash, Flash-Lite, Pro | Yes           | Yes         | Yes              | No             |
 | Other Gemini models               | No            | No          | Yes              | No             |
-| OpenAI                            | No            | No          | Yes              | No             |
-| Ollama, LM Studio, llama.cpp      | No            | No          | Yes              | No             |
+| OpenAI GPT-4.1 Mini, GPT-4.1      | Yes           | No          | Yes              | No             |
+| Other OpenAI models               | No            | No          | Yes              | No             |
+| Ollama, LM Studio, llama.cpp      | No            | No          | Yes              | Yes            |
 
 Supported Gemini combinations use the Developer API `v1beta/models:generateContent`
 endpoint. Model support was checked against Google's [Search grounding](https://ai.google.dev/gemini-api/docs/google-search),
 [URL context](https://ai.google.dev/gemini-api/docs/url-context), and
 [REST reference](https://ai.google.dev/api/generate-content) on 2026-10-29.
-Only Gemini 2.5 is enabled: search is billed per grounded prompt; newer models
+Within Gemini, only version 2.5 is enabled: search is billed per grounded prompt; newer models
 bill per query without a hard query-count cap in this adapter. Model listing is
 not evidence of tool compatibility. There is no automatic provider fallback.
 
-Budgets distinguish provider calls from search charge units (`grounded_prompt`),
+OpenAI research uses `OPENAI_API_KEY` and `v1/responses` with `web_search`, separately from the existing
+Chat Completions writer. Its allowlist is GPT-4.1 Mini (research default) and
+GPT-4.1, checked against the official [web-search guide](https://developers.openai.com/api/docs/guides/tools-web-search)
+and [Responses reference](https://developers.openai.com/api/reference/cli/resources/beta/subresources/responses/methods/create)
+on 2026-10-29. One provider call and one `web_search_call` charge allowance are
+required; `max_tool_calls: 1` bounds hosted tool use. Returned citations, consulted
+sources and token usage are normalized into the same evidence contract. Missing
+source lists/citations remain explicit gaps. Visible, clickable source citations
+are required when displaying OpenAI research. URL-context requests require Gemini
+or supplied-source capture. No live paid calls are part of normal validation.
+
+Budgets distinguish provider calls from search charge units (`grounded_prompt` or `web_search_call`),
 observed search queries and tokens. No budget implies no paid calls. Preserve
 required citations and search-suggestion attribution whenever displaying native
 research. Provider HTML and all retrieved text are untrusted data, never app
@@ -78,7 +90,7 @@ Creation UI, Quick Produce evidence integration and MCP tools are separate work.
 The existing same-origin/loopback policy applies; strict mode requires bearer
 authentication. Named tokens need `studio:write` for submission/cancellation and
 `studio:read` for capability, status and evidence inspection. Cloud research also
-requires Gemini in both provider allowlists and an available paid-request slot.
+requires the selected researcher in both provider allowlists and an available paid-request slot.
 That slot is reserved only by the winning worker immediately before its call.
 There is no additional approval gate and no implicit provider fallback.
 
@@ -135,3 +147,59 @@ All responses are JSON with `no-store` and `nosniff`. Never execute source text
 or inject returned provider attribution HTML into the app DOM. Consumers must
 retain visible source citations and Google's required attribution when displaying
 native research, using an appropriately isolated renderer for provider HTML.
+
+## Local writers and shared research
+
+`POST /api/research/evidence/:id/plan` consumes a saved evidence revision with
+one explicitly selected Ollama, LM Studio or llama.cpp writer. It returns a scene
+plan plus the evidence ID/revision, separate researcher/writer selections,
+citations, attribution, usage and a cloud/local disclosure. It does not create a
+project or refresh research; creation integration is separate work.
+
+Example body for saved OpenAI evidence:
+
+```json
+{
+  "writer": { "providerId": "ollama", "modelId": "your-installed-model" },
+  "research": {
+    "mode": "shared",
+    "providerId": "openai",
+    "modelId": "gpt-4.1-mini"
+  },
+  "mode": "idea",
+  "brief": "Explain the supported product capabilities",
+  "budget": { "maxLocalCalls": 1, "deadlineMs": 30000 }
+}
+```
+
+The shared researcher/model must match the frozen evidence. Use
+`research: { "mode": "supplied" }` for supplied-source evidence with no cloud
+search. Native evidence cannot be silently relabeled as supplied. New research
+requires a configured, explicitly selected cloud backend; consuming saved
+research does not require another cloud call or a still-present cloud key.
+
+Only the selected local server is contacted. Missing/offline models fail without
+cloud fallback or installation. Exactly one local generation is permitted;
+structured-output repair is disabled for this bounded path. Read-only local model
+discovery may precede generation. Source context excludes provider HTML and raw
+metadata, preserves provenance/gaps and is limited to 24,000 characters; larger
+packs fail explicitly rather than silently losing source text. Named automation
+tokens need studio write scope and the local writer in their provider allowlist;
+no cloud paid-request slot is consumed by local writing.
+
+## Readiness in Settings
+
+**Settings → Research and writer readiness** shows separate researcher and writer
+models, native search versus shared local evidence, sources-only mode, missing
+credentials and usage bounds. Selecting a writer never changes the selected
+researcher. The checker defaults to sources only and requires an explicit Gemini
+or OpenAI selection for web research. Its selections check configuration only;
+they do not save a creation request or make paid/network provider calls.
+
+Key presence is not a live availability check. Local model discovery is not proof
+of search support. The curated research allowlist, writer model, selected mode
+and configured keys determine the displayed readiness. Missing keys link the
+choice back to provider configuration or sources-only operation. Key/config
+changes refresh the capability view. Unsupported research models are rejected
+with an actionable error before provider IO, while existing generation models
+remain available for writing.

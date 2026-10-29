@@ -20,7 +20,7 @@ export const researchUsageSchema = z.object({
   providerCalls: z.number().int().min(0).max(1),
   // A reserved grounded prompt is a charge allowance, not a count of queries.
   searchChargeUnits: z.number().int().min(0).max(1),
-  searchChargeUnit: z.literal("grounded_prompt"),
+  searchChargeUnit: z.enum(["grounded_prompt", "web_search_call"]),
   searchQueries: z.number().int().nonnegative().nullable(),
   inputTokens: z.number().int().nonnegative().nullable(),
   outputTokens: z.number().int().nonnegative().nullable(),
@@ -164,7 +164,7 @@ export const researchRequestSchema = z
     idempotencyKey: z.string().trim().min(8).max(160),
     query: z.string().trim().min(3).max(8000),
     mode: z.enum(["web", "supplied"]),
-    providerId: z.literal("gemini").optional(),
+    providerId: z.enum(["gemini", "openai"]).optional(),
     modelId: z.string().trim().min(1).max(160).optional(),
     urls: z.array(researchUrlSchema).max(5).default([]),
     sources: z
@@ -225,7 +225,7 @@ export const researchRequestSchema = z
       ctx.addIssue({
         code: "custom",
         message:
-          "Web research requires separate provider-call and grounded-prompt allowances",
+          "Web research requires separate provider-call and search-tool charge allowances",
       });
   });
 export type ResearchRequest = z.infer<typeof researchRequestSchema>;

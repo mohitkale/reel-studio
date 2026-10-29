@@ -60,6 +60,7 @@ export function useSaveAIKey() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["ai-providers"] });
       qc.invalidateQueries({ queryKey: ["ai-models"] });
+      qc.invalidateQueries({ queryKey: ["research-capabilities"] });
     },
   });
 }
@@ -86,6 +87,7 @@ export function useSaveLocalAIConfig() {
       queryClient.invalidateQueries({ queryKey: ["local-ai-providers"] });
       queryClient.invalidateQueries({ queryKey: ["ai-providers"] });
       queryClient.invalidateQueries({ queryKey: ["ai-models"] });
+      queryClient.invalidateQueries({ queryKey: ["research-capabilities"] });
     },
   });
 }
