@@ -15,7 +15,8 @@ The research allowlist is independent of model discovery and the writer model.
 | --------------------------------- | ------------- | ----------- | ---------------- | -------------- |
 | Gemini 2.5 Flash, Flash-Lite, Pro | Yes           | Yes         | Yes              | No             |
 | Other Gemini models               | No            | No          | Yes              | No             |
-| OpenAI                            | No            | No          | Yes              | No             |
+| OpenAI GPT-4.1 Mini, GPT-4.1      | Yes           | No          | Yes              | No             |
+| Other OpenAI models               | No            | No          | Yes              | No             |
 | Ollama, LM Studio, llama.cpp      | No            | No          | Yes              | No             |
 
 Supported Gemini combinations use the Developer API `v1beta/models:generateContent`
@@ -25,6 +26,17 @@ endpoint. Model support was checked against Google's [Search grounding](https://
 Only Gemini 2.5 is enabled: search is billed per grounded prompt; newer models
 bill per query without a hard query-count cap in this adapter. Model listing is
 not evidence of tool compatibility. There is no automatic provider fallback.
+
+OpenAI research uses `OPENAI_API_KEY` and `v1/responses` with `web_search`, separately from the existing
+Chat Completions writer. Its allowlist is GPT-4.1 Mini (research default) and
+GPT-4.1, checked against the official [web-search guide](https://developers.openai.com/api/docs/guides/tools-web-search)
+and [Responses reference](https://developers.openai.com/api/reference/cli/resources/beta/subresources/responses/methods/create)
+on 2026-10-29. One provider call and one `web_search_call` charge allowance are
+required; `max_tool_calls: 1` bounds hosted tool use. Returned citations, consulted
+sources and token usage are normalized into the same evidence contract. Missing
+source lists/citations remain explicit gaps. Visible, clickable source citations
+are required when displaying OpenAI research. URL-context requests require Gemini
+or supplied-source capture. No live paid calls are part of normal validation.
 
 Budgets distinguish provider calls from search charge units (`grounded_prompt`),
 observed search queries and tokens. No budget implies no paid calls. Preserve

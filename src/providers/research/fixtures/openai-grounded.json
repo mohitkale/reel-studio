@@ -1,0 +1,39 @@
+{
+  "id": "resp_fixture",
+  "status": "completed",
+  "output": [
+    {
+      "type": "web_search_call",
+      "id": "ws_fixture",
+      "status": "completed",
+      "action": {
+        "type": "search",
+        "queries": ["local editor capabilities"],
+        "sources": [
+          { "type": "url", "url": "https://example.com/product" },
+          { "type": "url", "url": "https://example.com/help" }
+        ]
+      }
+    },
+    {
+      "type": "message",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "The editor works locally.",
+          "annotations": [
+            {
+              "type": "url_citation",
+              "start_index": 0,
+              "end_index": 25,
+              "url": "https://example.com/product",
+              "title": "Product overview"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "usage": { "input_tokens": 100, "output_tokens": 25, "total_tokens": 125 }
+}

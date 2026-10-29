@@ -23,6 +23,11 @@ import { GET as capabilities } from "@/app/api/research/capabilities/route";
 import { researchRepository } from "./research-api";
 import { createPrismaClient } from "@/library/prisma-client";
 import { researchWithGemini } from "@/providers/research/gemini";
+import {
+  normalizeOpenAIResearch,
+  researchWithOpenAI,
+} from "@/providers/research/openai";
+import openaiGrounded from "@/providers/research/fixtures/openai-grounded.json";
 import { reserveNamedMcpPaidRequest } from "./secrets";
 import { evidenceFixture } from "@/research/fixtures";
 import type { McpNamedTokenRecord } from "@/production/mcp-access";
@@ -34,6 +39,10 @@ vi.mock("next/server", async (original) => ({
 vi.mock("@/providers/research/gemini", async (original) => ({
   ...(await original<typeof import("@/providers/research/gemini")>()),
   researchWithGemini: vi.fn(),
+}));
+vi.mock("@/providers/research/openai", async (original) => ({
+  ...(await original<typeof import("@/providers/research/openai")>()),
+  researchWithOpenAI: vi.fn(),
 }));
 vi.mock("./secrets", async (original) => ({
   ...(await original<typeof import("./secrets")>()),
@@ -127,9 +136,14 @@ beforeEach(async () => {
   vi.stubEnv("REEL_STRICT_AUTH", "");
   vi.stubEnv("REEL_ALLOWED_HOSTS", "");
   vi.stubEnv("GEMINI_API_KEY", "fixture-key");
+  vi.stubEnv("OPENAI_API_KEY", "fixture-key");
   vi.stubEnv("MCP_API_TOKEN", "");
   vi.stubEnv("MCP_NAMED_TOKENS", "[]");
   vi.mocked(reserveNamedMcpPaidRequest).mockResolvedValue(true);
+  vi.mocked(researchWithOpenAI).mockImplementation(async (input) => {
+    await input.onProviderCall();
+    return normalizeOpenAIResearch(openaiGrounded, input.request);
+  });
   vi.mocked(researchWithGemini).mockImplementation(async (input) => {
     await input.onProviderCall();
     const pack = evidenceFixture();
@@ -158,6 +172,31 @@ afterAll(async () => {
 });
 
 describe("authenticated research APIs", () => {
+  it("uses only the explicitly selected OpenAI backend and its token allowance", async () => {
+    const headers = token({
+      allowedProviders: ["openai"],
+      paidProviders: ["openai"],
+    });
+    const response = await create(
+      req(
+        "POST",
+        { ...cloudBody("openai-api-request"), providerId: "openai" },
+        headers,
+      ),
+    );
+    expect(response.status).toBe(202);
+    const { job } = await response.json();
+    await runScheduled();
+    const saved = await researchRepository.getJob(job.id);
+    expect(saved?.state).toBe("succeeded");
+    expect(JSON.parse(saved!.usageJson)).toMatchObject({
+      providerCalls: 1,
+      searchChargeUnit: "web_search_call",
+    });
+    expect(researchWithOpenAI).toHaveBeenCalledOnce();
+    expect(researchWithGemini).not.toHaveBeenCalled();
+    expect(reserveNamedMcpPaidRequest).toHaveBeenCalledOnce();
+  });
   const endpoints = [
     (r: Request) => create(r),
     (r: Request) => status(r, context()),

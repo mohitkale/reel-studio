@@ -8,7 +8,10 @@ import {
   type ResearchRequest,
   type ResearchUsage,
 } from "@/research/contracts";
-import { GEMINI_RESEARCH_DEFAULT_MODEL } from "@/research/capabilities";
+import {
+  defaultResearchModel,
+  researchCapability,
+} from "@/research/capabilities";
 
 export interface ResearchAdapterInput {
   request: ResearchRequest;
@@ -40,7 +43,7 @@ export function normalizeResearchRequest(input: unknown) {
     ...request,
     modelId:
       request.mode === "web"
-        ? (request.modelId ?? GEMINI_RESEARCH_DEFAULT_MODEL)
+        ? (request.modelId ?? defaultResearchModel(request.providerId))
         : undefined,
   };
 }
@@ -51,7 +54,7 @@ export async function runResearchJob(
   adapter: ResearchAdapter,
   options: {
     repository?: ResearchRepository;
-    authorizeProvider?: () => Promise<void>;
+    authorizeProvider?: (providerId: "gemini" | "openai") => Promise<void>;
   } = {},
 ) {
   const repository = options.repository ?? new ResearchRepository();
@@ -87,17 +90,23 @@ export async function runResearchJob(
             if (
               calls ||
               request.mode !== "web" ||
+              !request.providerId ||
               request.budget.maxProviderCalls < 1 ||
               request.budget.maxSearchChargeUnits < 1
             )
               throw new Error("Research provider budget exhausted");
             calls++;
-            await options.authorizeProvider?.();
+            await options.authorizeProvider?.(request.providerId);
             controller.signal.throwIfAborted();
             const usage: ResearchUsage = {
               ...EMPTY_RESEARCH_USAGE,
               providerCalls: 1,
               searchChargeUnits: 1,
+              searchChargeUnit:
+                researchCapability(
+                  request.providerId ?? "",
+                  request.modelId ?? "",
+                ).searchChargeUnit ?? "grounded_prompt",
               searchQueries: null,
               inputTokens: null,
               outputTokens: null,

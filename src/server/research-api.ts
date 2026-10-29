@@ -28,6 +28,10 @@ import { ClientInputError, errorResponse } from "@/server/api-helpers";
 import { ProviderError } from "@/providers/voice/types";
 import type { ResearchRequest } from "@/research/contracts";
 import { RequestBodyError } from "@/server/request-body";
+import {
+  assertOpenAIResearchReady,
+  researchWithOpenAI,
+} from "@/providers/research/openai";
 
 export const researchIdSchema = z.object({ id: z.string().min(1).max(160) });
 export const researchRepository = new ResearchRepository();
@@ -73,9 +77,12 @@ export async function submitResearch(
   if (!request.refresh && (await researchRepository.cached(request)))
     return researchRepository.submit(request);
   if (request.mode === "web") {
-    assertGeminiResearchReady(request);
+    if (request.providerId === "openai") assertOpenAIResearchReady(request);
+    else assertGeminiResearchReady(request);
     if (auth.origin === "mcp" && auth.token.kind === "named") {
-      const decision = providerPolicyDecision(auth.token.record, ["gemini"]);
+      const decision = providerPolicyDecision(auth.token.record, [
+        request.providerId!,
+      ]);
       if (!decision.allowed)
         throw new ProviderError(
           decision.reason ?? "Research provider is not permitted",
@@ -99,12 +106,14 @@ export async function submitResearch(
 export function executeResearchJob(id: string, req: Request) {
   const adapter = (input: ResearchAdapterInput) =>
     input.request.mode === "web"
-      ? researchWithGemini(input)
+      ? input.request.providerId === "openai"
+        ? researchWithOpenAI(input)
+        : researchWithGemini(input)
       : researchSuppliedSources(input);
   return runResearchJob(id, adapter, {
     repository: researchRepository,
-    authorizeProvider: async () => {
-      await authorizeProviderRequest(req, ["gemini"]);
+    authorizeProvider: async (providerId) => {
+      await authorizeProviderRequest(req, [providerId]);
     },
   });
 }

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { abortable, fetchWithDeadline } from "@/lib/deadline-fetch";
+import { fetchWithDeadline } from "@/lib/deadline-fetch";
 import { assertPublicArticleUrl } from "@/production/source-ingestion";
 import {
   evidencePackSchema,
@@ -15,14 +15,9 @@ import {
 } from "@/research/capabilities";
 import type { ResearchAdapterInput } from "@/library/research-service";
 
-export class ResearchProviderError extends Error {
-  constructor(
-    message: string,
-    readonly status = 502,
-  ) {
-    super(message);
-  }
-}
+export { ResearchProviderError } from "./types";
+import { ResearchProviderError } from "./types";
+import { readResearchJson } from "./http";
 
 const groundingSchema = z
   .object({
@@ -125,6 +120,7 @@ export function assertGeminiResearchReady(request: ResearchRequest) {
   const capability = researchCapability(request.providerId ?? "", model);
   if (
     request.mode !== "web" ||
+    request.providerId !== "gemini" ||
     !capability.nativeSearch ||
     (request.urls.length && !capability.urlContext)
   )
@@ -296,44 +292,6 @@ export function normalizeGeminiResearch(
       accounting: response.usageMetadata ? "reported" : "reserved",
     },
   });
-}
-
-async function readResearchJson(
-  response: Response,
-  signal: AbortSignal,
-): Promise<unknown> {
-  const maximum = 1_000_000;
-  if (Number(response.headers.get("content-length")) > maximum) {
-    await response.body?.cancel();
-    throw new ResearchProviderError(
-      "Gemini research response exceeded its size limit",
-    );
-  }
-  if (!response.body)
-    throw new ResearchProviderError("Gemini returned an empty response");
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  let complete = false;
-  try {
-    while (true) {
-      const chunk = await abortable(reader.read(), signal);
-      if (chunk.done) {
-        complete = true;
-        break;
-      }
-      size += chunk.value.byteLength;
-      if (size > maximum)
-        throw new ResearchProviderError(
-          "Gemini research response exceeded its size limit",
-        );
-      chunks.push(chunk.value);
-    }
-    return JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown;
-  } finally {
-    if (complete) reader.releaseLock();
-    else void reader.cancel().catch(() => {});
-  }
 }
 
 /** A single POST, no retries, no scene JSON schema and no automatic cloud fallback. */
