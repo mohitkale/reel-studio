@@ -8,6 +8,8 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { schemaSignature } from "./migrate-database.mjs";
 
+const EXPECTED_MIGRATIONS = 19;
+
 const root = process.cwd(),
   evidence = path.resolve(
     process.argv
@@ -132,7 +134,7 @@ assert.equal(
       "SELECT count(*) AS count FROM _prisma_migrations WHERE finished_at IS NOT NULL",
     )
     .get().count,
-  19,
+  EXPECTED_MIGRATIONS,
 );
 upgraded.exec(
   `INSERT INTO CaptionTrack (id,scriptId,label,language,timingSource,enabled,updatedAt) VALUES ('captions','script','Saved captions','en','imported',1,CURRENT_TIMESTAMP); INSERT INTO CaptionCue (id,trackId,"order",startFrame,endFrame,text,updatedAt) VALUES ('cue','captions',0,0,30,'Saved subtitle',CURRENT_TIMESTAMP);`,
@@ -170,7 +172,7 @@ for (const [file, hash] of Object.entries(published040.migrations))
 // database. Later milestones are additive only; compare its remaining schema against the
 // checksummed historical migrations before exercising the real upgrade.
 again.exec(
-  `DROP TABLE AudioEditSession; DROP TABLE SceneEdit; DROP TABLE StudioPreset; ALTER TABLE Project DROP COLUMN archivedAt; ALTER TABLE Project DROP COLUMN series; DROP TABLE FactoryVariant; DROP TABLE FactoryRun; DROP TABLE FactoryProfile; DROP TABLE FactoryPack; DELETE FROM _prisma_migrations WHERE migration_name >= '20261017000100_factory_workflows';`,
+  `DROP TABLE ResearchSubmission; DROP TABLE ResearchJob; DROP TABLE EvidenceRevision; DROP TABLE AudioEditSession; DROP TABLE SceneEdit; DROP TABLE StudioPreset; ALTER TABLE Project DROP COLUMN archivedAt; ALTER TABLE Project DROP COLUMN series; DROP TABLE FactoryVariant; DROP TABLE FactoryRun; DROP TABLE FactoryProfile; DROP TABLE FactoryPack; DELETE FROM _prisma_migrations WHERE migration_name >= '20261017000100_factory_workflows';`,
 );
 const expected040 = new DatabaseSync(":memory:");
 for (const filename of Object.keys(published040.migrations))
@@ -229,7 +231,7 @@ assert.equal(
       "SELECT count(*) AS count FROM _prisma_migrations WHERE finished_at IS NOT NULL",
     )
     .get().count,
-  18,
+  EXPECTED_MIGRATIONS,
 );
 assert.equal(
   upgraded040.prepare("SELECT count(*) AS count FROM FactoryRun").get().count,
@@ -320,7 +322,7 @@ assert.equal(
       "SELECT count(*) AS count FROM _prisma_migrations WHERE finished_at IS NOT NULL",
     )
     .get().count,
-  18,
+  EXPECTED_MIGRATIONS,
 );
 freshDb.close();
 await fs.writeFile(
@@ -334,7 +336,7 @@ await fs.writeFile(
       published040BackupRestore: true,
       targetVersion: JSON.parse(await fs.readFile("package.json", "utf8"))
         .version,
-      migrations: 19,
+      migrations: EXPECTED_MIGRATIONS,
       backupRestore: true,
       copy: true,
       media: hashes,
