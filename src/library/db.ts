@@ -42,7 +42,10 @@ function getClient(): PrismaClient {
       existing.factoryRun == null ||
       existing.sceneEdit == null ||
       existing.studioPreset == null ||
-      existing.audioEditSession == null
+      existing.audioEditSession == null ||
+      existing.researchJob == null ||
+      existing.evidenceRevision == null ||
+      existing.researchSubmission == null
     ) {
       void existing.$disconnect().catch(() => undefined);
       const fresh = createClient();

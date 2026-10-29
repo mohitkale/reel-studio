@@ -3,6 +3,7 @@ import { lookup } from "node:dns/promises";
 import { isIP, type LookupFunction } from "node:net";
 import http from "node:http";
 import https from "node:https";
+import { abortable } from "@/lib/deadline-fetch";
 
 const MAX_SOURCE_BYTES = 1_000_000;
 const MAX_FETCHED_SOURCE_CHARS = 50_000;
@@ -10,7 +11,7 @@ const MAX_REDIRECTS = 4;
 
 type Address = { address: string; family: number };
 type ResolveHost = (hostname: string) => Promise<Address[]>;
-type FetchPage = (url: string) => Promise<Response>;
+type FetchPage = (url: string, signal?: AbortSignal) => Promise<Response>;
 
 export interface IngestedArticle {
   url: string;
@@ -87,6 +88,7 @@ export function createPublicLookup(resolveHost: ResolveHost): LookupFunction {
 async function requestPublicPage(
   value: string,
   resolveHost: ResolveHost,
+  signal?: AbortSignal,
 ): Promise<Response> {
   const url = new URL(value);
   const transport = url.protocol === "https:" ? https : http;
@@ -95,6 +97,7 @@ async function requestPublicPage(
       url,
       {
         method: "GET",
+        signal,
         headers: {
           Accept: "text/html,text/plain;q=0.9",
           "Accept-Encoding": "identity",
@@ -141,7 +144,9 @@ async function requestPublicPage(
 export async function assertPublicArticleUrl(
   value: string,
   resolveHost: ResolveHost = defaultResolveHost,
+  signal?: AbortSignal,
 ): Promise<URL> {
+  signal?.throwIfAborted();
   const url = new URL(value);
   if (url.protocol !== "http:" && url.protocol !== "https:") {
     throw new Error("Article URLs must use HTTP or HTTPS");
@@ -168,7 +173,7 @@ export async function assertPublicArticleUrl(
   const literalFamily = isIP(hostname);
   const addresses = literalFamily
     ? [{ address: hostname, family: literalFamily }]
-    : await resolveHost(hostname);
+    : await abortable(resolveHost(hostname), signal);
   if (
     !addresses.length ||
     addresses.some(({ address }) => !isPublicAddress(address))
@@ -347,47 +352,75 @@ function htmlToText(html: string): { title?: string; text: string } {
   return { title, text };
 }
 
-async function readBoundedBody(response: Response): Promise<string> {
+async function readBoundedBody(
+  response: Response,
+  signal?: AbortSignal,
+): Promise<string> {
   const declared = Number(response.headers.get("content-length") ?? "0");
   if (declared > MAX_SOURCE_BYTES) {
+    void response.body?.cancel().catch(() => {});
     throw new Error("Article is too large to import");
   }
   if (!response.body) return "";
   const reader = response.body.getReader();
   const chunks: Uint8Array[] = [];
   let size = 0;
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.byteLength;
-    if (size > MAX_SOURCE_BYTES) {
-      await reader.cancel();
-      throw new Error("Article is too large to import");
+  let complete = false;
+  try {
+    while (true) {
+      const { done, value } = await abortable(reader.read(), signal);
+      if (done) {
+        complete = true;
+        break;
+      }
+      size += value.byteLength;
+      if (size > MAX_SOURCE_BYTES) {
+        await reader.cancel();
+        throw new Error("Article is too large to import");
+      }
+      chunks.push(value);
     }
-    chunks.push(value);
+    const bytes = new Uint8Array(size);
+    let offset = 0;
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    return new TextDecoder().decode(bytes);
+  } finally {
+    if (complete) reader.releaseLock();
+    else void reader.cancel().catch(() => {});
   }
-  const bytes = new Uint8Array(size);
-  let offset = 0;
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return new TextDecoder().decode(bytes);
 }
 
 /** Fetch public article text with bounded redirects and response size. */
 export async function ingestPublicArticle(
   input: string,
-  dependencies: { resolveHost?: ResolveHost; fetchPage?: FetchPage } = {},
+  dependencies: {
+    resolveHost?: ResolveHost;
+    fetchPage?: FetchPage;
+    signal?: AbortSignal;
+  } = {},
 ): Promise<IngestedArticle> {
   const resolveHost = dependencies.resolveHost ?? defaultResolveHost;
   const fetchPage =
-    dependencies.fetchPage ?? ((url) => requestPublicPage(url, resolveHost));
+    dependencies.fetchPage ??
+    ((url, signal) => requestPublicPage(url, resolveHost, signal));
+  const signal = dependencies.signal;
 
-  let current = await assertPublicArticleUrl(input, resolveHost);
+  let current = await assertPublicArticleUrl(input, resolveHost, signal);
   for (let redirect = 0; redirect <= MAX_REDIRECTS; redirect += 1) {
-    const response = await fetchPage(current.href);
+    signal?.throwIfAborted();
+    const pendingPage = fetchPage(current.href, signal);
+    void pendingPage.then(
+      (response) => {
+        if (signal?.aborted) void response.body?.cancel().catch(() => {});
+      },
+      () => {},
+    );
+    const response = await abortable(pendingPage, signal);
     if (response.status >= 300 && response.status < 400) {
+      void response.body?.cancel().catch(() => {});
       const location = response.headers.get("location");
       if (!location || redirect === MAX_REDIRECTS) {
         throw new Error("Article redirected too many times");
@@ -395,10 +428,12 @@ export async function ingestPublicArticle(
       current = await assertPublicArticleUrl(
         new URL(location, current).href,
         resolveHost,
+        signal,
       );
       continue;
     }
     if (!response.ok) {
+      void response.body?.cancel().catch(() => {});
       throw new Error(`Article could not be fetched (HTTP ${response.status})`);
     }
     const contentType =
@@ -407,9 +442,10 @@ export async function ingestPublicArticle(
       !contentType.includes("text/html") &&
       !contentType.includes("text/plain")
     ) {
+      void response.body?.cancel().catch(() => {});
       throw new Error("URL must return an HTML article or plain text");
     }
-    const body = await readBoundedBody(response);
+    const body = await readBoundedBody(response, signal);
     const extracted = contentType.includes("text/html")
       ? htmlToText(body)
       : { text: body.trim(), title: undefined };

@@ -302,6 +302,47 @@ model ProviderSetting {
   defaultModel String?
 }
 
+/// Durable research work is separate from scene generation and render jobs.
+model ResearchJob {
+  id           String   @id @default(cuid())
+  cacheKey     String
+  activeKey    String?  @unique
+  requestJson  String
+  state        String   @default("queued")
+  usageJson    String
+  error        String?
+  deadlineAt   DateTime
+  createdAt    DateTime @default(now())
+  finishedAt   DateTime?
+  evidenceId   String?
+  evidence     EvidenceRevision? @relation(fields: [evidenceId], references: [id])
+  submissions  ResearchSubmission[]
+
+  @@index([state, deadlineAt])
+}
+
+/// Multiple reconnect/idempotency keys can refer to one concurrent research job.
+model ResearchSubmission {
+  idempotencyKey String @id
+  fingerprint    String
+  jobId          String
+  job            ResearchJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+/// Append-only evidence snapshots. Refresh creates a new revision.
+model EvidenceRevision {
+  id        String   @id
+  cacheKey  String
+  revision  Int
+  packJson  String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  jobs      ResearchJob[]
+
+  @@unique([cacheKey, revision])
+  @@index([cacheKey, expiresAt])
+}
+
 model ProductionJob {
   id                   String    @id @default(cuid())
   kind                 String
