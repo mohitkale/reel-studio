@@ -27,6 +27,7 @@ import { StockProviderCard } from "@/components/stock/stock-provider-card";
 import { MusicProviderCard } from "@/components/music/music-provider-card";
 import { McpTokenCard } from "@/components/mcp/mcp-token-card";
 import { cn } from "@/lib/utils";
+import { ResearchReadinessCard } from "@/components/ai/research-readiness-card";
 
 const themeOptions = [
   { value: "light", label: "Light", icon: Sun },
@@ -100,6 +101,8 @@ export default function SettingsPage() {
           </p>
         </CardContent>
       </Card>
+
+      <ResearchReadinessCard />
 
       <Card>
         <CardHeader>

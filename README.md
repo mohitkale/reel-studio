@@ -114,7 +114,8 @@ license-gated. [Provider and asset terms](docs/LICENSING.md) apply.
 
 The authenticated [research API](docs/RESEARCH.md) captures supplied sources or
 uses optional Gemini or OpenAI web research in separate, bounded jobs. It retains
-immutable evidence, citations and usage for inspection. Run `npm run db:migrate`
+immutable evidence, citations and usage for inspection. Settings includes a
+research/writer readiness checker; local writers can reuse saved evidence. Run `npm run db:migrate`
 after upgrading. Evidence integration with video creation is separate work.
 
 ## Explore and contribute

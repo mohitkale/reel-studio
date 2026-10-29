@@ -23,7 +23,7 @@ Supported Gemini combinations use the Developer API `v1beta/models:generateConte
 endpoint. Model support was checked against Google's [Search grounding](https://ai.google.dev/gemini-api/docs/google-search),
 [URL context](https://ai.google.dev/gemini-api/docs/url-context), and
 [REST reference](https://ai.google.dev/api/generate-content) on 2026-10-29.
-Only Gemini 2.5 is enabled: search is billed per grounded prompt; newer models
+Within Gemini, only version 2.5 is enabled: search is billed per grounded prompt; newer models
 bill per query without a hard query-count cap in this adapter. Model listing is
 not evidence of tool compatibility. There is no automatic provider fallback.
 
@@ -38,7 +38,7 @@ source lists/citations remain explicit gaps. Visible, clickable source citations
 are required when displaying OpenAI research. URL-context requests require Gemini
 or supplied-source capture. No live paid calls are part of normal validation.
 
-Budgets distinguish provider calls from search charge units (`grounded_prompt`),
+Budgets distinguish provider calls from search charge units (`grounded_prompt` or `web_search_call`),
 observed search queries and tokens. No budget implies no paid calls. Preserve
 required citations and search-suggestion attribution whenever displaying native
 research. Provider HTML and all retrieved text are untrusted data, never app
@@ -90,7 +90,7 @@ Creation UI, Quick Produce evidence integration and MCP tools are separate work.
 The existing same-origin/loopback policy applies; strict mode requires bearer
 authentication. Named tokens need `studio:write` for submission/cancellation and
 `studio:read` for capability, status and evidence inspection. Cloud research also
-requires Gemini in both provider allowlists and an available paid-request slot.
+requires the selected researcher in both provider allowlists and an available paid-request slot.
 That slot is reserved only by the winning worker immediately before its call.
 There is no additional approval gate and no implicit provider fallback.
 
@@ -186,3 +186,20 @@ metadata, preserves provenance/gaps and is limited to 24,000 characters; larger
 packs fail explicitly rather than silently losing source text. Named automation
 tokens need studio write scope and the local writer in their provider allowlist;
 no cloud paid-request slot is consumed by local writing.
+
+## Readiness in Settings
+
+**Settings → Research and writer readiness** shows separate researcher and writer
+models, native search versus shared local evidence, sources-only mode, missing
+credentials and usage bounds. Selecting a writer never changes the selected
+researcher. The checker defaults to sources only and requires an explicit Gemini
+or OpenAI selection for web research. Its selections check configuration only;
+they do not save a creation request or make paid/network provider calls.
+
+Key presence is not a live availability check. Local model discovery is not proof
+of search support. The curated research allowlist, writer model, selected mode
+and configured keys determine the displayed readiness. Missing keys link the
+choice back to provider configuration or sources-only operation. Key/config
+changes refresh the capability view. Unsupported research models are rejected
+with an actionable error before provider IO, while existing generation models
+remain available for writing.

@@ -8,6 +8,9 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- OpenAI Responses web research with bounded hosted search, shared frozen evidence
+  for Ollama/LM Studio/llama.cpp writers, and separate researcher/writer readiness
+  in Settings. Sources-only local writing requires no cloud key or search call.
 - Authenticated research APIs with versioned evidence/source contracts, immutable
   revisions, six-hour caching, durable idempotency, cancellation and deadlines.
 - Optional Gemini Search/URL grounding with preserved citations and attribution,
