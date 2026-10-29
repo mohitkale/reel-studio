@@ -21,6 +21,7 @@ current setup instructions or a pending to-do list.
 
 - [Contributing](../CONTRIBUTING.md) and [AI guidelines](../AI_GUIDELINES.md): checks, PRs, attribution, and release cadence.
 - [Architecture](ARCHITECTURE.md) and [runtime/recovery](RUNTIME.md).
+- [Research and evidence](RESEARCH.md): capabilities, provenance and usage boundaries.
 - [Production contracts](production/CONTRACTS.md): shared REST/MCP/revision contracts.
 - [Template authoring](TEMPLATE_AUTHORING.md) and [provider/block extensions](EXTENSIONS.md).
 - [Sequence direction and identities](SEQUENCE_DIRECTION.md): bounded planning, explanations, aliases and supported cross-scene card motion.
