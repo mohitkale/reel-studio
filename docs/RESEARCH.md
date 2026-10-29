@@ -31,3 +31,21 @@ observed search queries and tokens. No budget implies no paid calls. Preserve
 required citations and search-suggestion attribution whenever displaying native
 research. Provider HTML and all retrieved text are untrusted data, never app
 instructions or HTML to inject into the application DOM.
+
+## Persistence and recovery
+
+Run `npm run db:migrate` after upgrading, with the production worker stopped.
+The additive migration preserves existing projects. Evidence revisions are
+append-only through the repository; a refresh produces a new revision. Cache
+entries expire after six hours. Their keys include the evidence version, query,
+mode, sources, researcher/model and output limit. Refresh requires a new
+idempotency key; reusing a key always reconnects to its original job, even after
+expiry or failure. Reusing a key with changed inputs returns a conflict.
+
+Identical concurrent requests share a durable job. A database claim permits only
+one execution. Provider usage is reserved before outbound IO; failed, canceled
+or interrupted calls retain that allowance because billing may be uncertain.
+Deadline-expired work fails without automatic replay. An explicit new refresh
+is needed to retry. Cancellation stops the running request and prevents late
+evidence publication. Cached jobs report zero new usage; the original evidence
+retains the usage that produced it. Partial/empty results retain explicit gaps.
