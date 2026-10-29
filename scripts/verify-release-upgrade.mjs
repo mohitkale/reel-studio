@@ -132,7 +132,7 @@ assert.equal(
       "SELECT count(*) AS count FROM _prisma_migrations WHERE finished_at IS NOT NULL",
     )
     .get().count,
-  18,
+  19,
 );
 upgraded.exec(
   `INSERT INTO CaptionTrack (id,scriptId,label,language,timingSource,enabled,updatedAt) VALUES ('captions','script','Saved captions','en','imported',1,CURRENT_TIMESTAMP); INSERT INTO CaptionCue (id,trackId,"order",startFrame,endFrame,text,updatedAt) VALUES ('cue','captions',0,0,30,'Saved subtitle',CURRENT_TIMESTAMP);`,
@@ -334,7 +334,7 @@ await fs.writeFile(
       published040BackupRestore: true,
       targetVersion: JSON.parse(await fs.readFile("package.json", "utf8"))
         .version,
-      migrations: 18,
+      migrations: 19,
       backupRestore: true,
       copy: true,
       media: hashes,
