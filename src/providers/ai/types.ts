@@ -18,6 +18,7 @@ import type {
 import { LOCAL_AI_PROVIDER_IDS, type LocalAIProviderId } from "./local-types";
 import { templateIdForCapabilityId } from "@/engines/capabilities";
 import type { EvidencePack } from "@/research/contracts";
+import { evidenceReferenceSchema } from "@/research/contracts";
 
 /**
  * AI "director" contract. Mirrors the voice provider factory: the app talks only
@@ -113,6 +114,7 @@ export function planTemplateIdsForEngine(
 }
 
 const aiSceneTemplateSchema = z.object({
+  evidenceRefs: z.array(evidenceReferenceSchema).max(20).optional(),
   direction: shotDirectionSchema.optional(),
   text: z.string().min(1),
   /**
@@ -234,6 +236,7 @@ export type AIScene = Omit<ParsedAIScene, "visual"> & {
 export type ScenePlan = z.infer<typeof scenePlanSchema>;
 
 export interface GeneratePlanInput {
+  creativeBrief?: import("@/production/editorial").CreativeBrief;
   /** Frozen, validated source context for explicit idea/story evidence planning. */
   evidence?: EvidencePack;
   /** False when the caller permits exactly one local generation invocation. */
@@ -249,6 +252,7 @@ export interface GeneratePlanInput {
     | "append"
     | "hook_variants"
     | "chapter_outline"
+    | "editorial_script"
     | "translate";
   /** The one-line idea (mode "idea") or the full text/story (mode "story"). */
   brief: string;

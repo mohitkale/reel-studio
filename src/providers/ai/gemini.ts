@@ -61,7 +61,8 @@ function buildResponseSchema(input: GeneratePlanInput) {
         items: {
           type: "object",
           properties: {
-            direction: SHOT_DIRECTION_JSON_SCHEMA,
+            evidenceRefs: { type: "array", items: { type: "object", additionalProperties: false, properties: { sourceId: { type: "string" }, excerptId: { type: "string" } }, required: ["sourceId", "excerptId"] } },
+              direction: SHOT_DIRECTION_JSON_SCHEMA,
             chart: CHART_JSON_SCHEMA,
             text: { type: "string" },
             spokenText: { type: "string" },

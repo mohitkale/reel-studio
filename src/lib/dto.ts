@@ -101,6 +101,7 @@ export interface VoiceTakeDTO {
 }
 
 export interface ScriptDTO {
+  editorialWorkflow?: import("@/production/editorial").EditorialWorkflow;
   researchEvidence?: import("@/research/contracts").EvidencePack;
   creationSettings?: import("@/research/creation-settings").CreationSettings;
   outputType?: "video" | "voiceover";

@@ -146,3 +146,17 @@ export function useGenerateProject() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
   });
 }
+
+export function useGenerateEditorialProject() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (
+      input: import("@/production/editorial").EditorialCreationRequest,
+    ) =>
+      apiPost<{ projectId: string; scriptId: string }>(
+        "/api/projects/editorial",
+        input,
+      ),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["projects"] }),
+  });
+}

@@ -32,6 +32,7 @@ export function buildOpenAIVideoPlanJsonSchema(input: GeneratePlanInput) {
             type: "object",
             additionalProperties: false,
             properties: {
+              evidenceRefs: { type: "array", items: { type: "object", additionalProperties: false, properties: { sourceId: { type: "string" }, excerptId: { type: "string" } }, required: ["sourceId", "excerptId"] } },
               direction: SHOT_DIRECTION_JSON_SCHEMA,
               chart: CHART_JSON_SCHEMA,
               text: { type: "string" },

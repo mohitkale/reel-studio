@@ -10,6 +10,7 @@ vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
 
 const mocks = vi.hoisted(() => ({
   generate: vi.fn(),
+  editorial: vi.fn(),
   create: vi.fn(),
   push: vi.fn(),
 }));
@@ -19,6 +20,10 @@ vi.mock("@/hooks/ai", () => ({
     data: [{ id: "gemini", label: "Gemini", configured: true }],
   }),
   useGenerateProject: () => ({ mutate: mocks.generate, isPending: false }),
+  useGenerateEditorialProject: () => ({
+    mutate: mocks.editorial,
+    isPending: false,
+  }),
 }));
 vi.mock("@/hooks/script", () => ({
   useCreateManualProduction: () => ({
@@ -151,9 +156,7 @@ it("retains AI planning when Quick Produce is enabled and honors visible narrati
   await mount(<CreateWithAIDialog />);
   await enter("#ai-brief", "Explain a reading habit.");
   await act(async () =>
-    container
-      .querySelector<HTMLInputElement>('input[type="checkbox"]')!
-      .click(),
+    container.querySelector<HTMLInputElement>("#ai-quick-produce")!.click(),
   );
   expect(container.textContent).toContain("Add local narration");
   await act(async () => button("Create and produce").click());
@@ -162,9 +165,7 @@ it("retains AI planning when Quick Produce is enabled and honors visible narrati
     voice: { enabled: false },
   });
   await act(async () =>
-    container
-      .querySelectorAll<HTMLInputElement>('input[type="checkbox"]')[1]!
-      .click(),
+    container.querySelector<HTMLInputElement>("#ai-narration")!.click(),
   );
   await act(async () => button("Create and produce").click());
   expect(mocks.generate.mock.calls[1][0].quickProduce.voice.enabled).toBe(true);
@@ -221,9 +222,7 @@ it("honors explicit local planner, format, and preset selections in Quick Produc
     "A finished script. A useful example. One next step.",
   );
   await act(async () =>
-    container
-      .querySelector<HTMLInputElement>('input[type="checkbox"]')!
-      .click(),
+    container.querySelector<HTMLInputElement>("#ai-quick-produce")!.click(),
   );
   for (const [id, value] of [
     ["ai-provider", "deterministic"],
@@ -274,4 +273,28 @@ it("lets a voiceover entry switch explicitly to video", async () => {
     expect.objectContaining({ outputType: "video" }),
   );
   expect(mocks.push).toHaveBeenCalledWith("/editor/video-script");
+});
+
+it("writes an editorial draft with a creative brief and reuses its retry key", async () => {
+  await mount(<CreateWithAIDialog />);
+  await enter("#ai-brief", "Explain the supplied local workflow.");
+  const label = Array.from(container.querySelectorAll("label")).find((node) =>
+    node.textContent?.includes("Review editorial script"),
+  )!;
+  await act(async () => label.querySelector("input")!.click());
+  await act(async () => button("Write editorial script").click());
+  await act(async () => button("Write editorial script").click());
+  expect(mocks.generate).not.toHaveBeenCalled();
+  expect(mocks.editorial.mock.calls[0][0]).toMatchObject({
+    brief: "Explain the supplied local workflow.",
+    creativeBrief: {
+      intent: "explainer",
+      audience: "General audience",
+      targetSeconds: 45,
+    },
+    budget: { maxProviderCalls: 1, deadlineMs: 30000 },
+  });
+  expect(mocks.editorial.mock.calls[1][0].idempotencyKey).toBe(
+    mocks.editorial.mock.calls[0][0].idempotencyKey,
+  );
 });

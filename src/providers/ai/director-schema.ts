@@ -105,6 +105,7 @@ export function strictOutputSchema(
 }
 
 const optional = new Set([
+  "evidenceRefs",
   "direction",
   "graphic",
   "detail",

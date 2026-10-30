@@ -1,4 +1,5 @@
 "use client";
+import { EditorialScriptPanel } from "./editorial-script-panel";
 import { LanguageVersions } from "@/components/studio/language-versions";
 import { EditHistory } from "./edit-history";
 import { sequenceConfigFor } from "@/video/sequence-direction";
@@ -478,6 +479,7 @@ export function EditorClient({
 
   return (
     <div className="space-y-6">
+      {script.editorialWorkflow && <EditorialScriptPanel scriptId={scriptId} initial={script.editorialWorkflow} evidence={script.researchEvidence} />}
       <QuickProduceStatus
         jobId={productionJobId}
         scriptId={scriptId}

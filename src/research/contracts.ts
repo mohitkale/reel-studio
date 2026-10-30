@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const id = z.string().trim().min(1).max(160);
 const text = z.string().trim().min(1).max(8000);
+export const evidenceReferenceSchema = z.object({ sourceId: id, excerptId: id }).strict();
 
 /** URL syntax only. Network access must additionally use the hardened fetcher. */
 export const researchUrlSchema = z
