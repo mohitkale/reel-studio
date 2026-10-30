@@ -346,7 +346,7 @@ function timedVideoLayer(
   if (scene.background?.type !== "video" || !scene.background.url) return "";
   const dur = Math.max(0.05, durationSec);
   return `<video id="scene-${escapeHtml(scene.id)}-stock-video" class="bg-video clip" src="${escapeHtml(scene.background.url)}"
-                 data-start="${absoluteStart.toFixed(3)}" data-duration="${dur.toFixed(3)}" data-media-start="0"
+                 data-start="${absoluteStart.toFixed(3)}" data-duration="${dur.toFixed(3)}" data-media-start="${scene.background.startSeconds??0}"
                  data-track-index="0" muted playsinline preload="auto"></video>`;
 }
 

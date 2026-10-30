@@ -32,7 +32,7 @@ function roleContent(scene: ReelScene, tokens: BrandTokens): string {
     .slice(0, 4);
 
   if (role === "screenshot-demo") {
-    return `<div class="pl-role-label fx-kicker">LIVE PRODUCT</div>
+    return `<div class="pl-role-label fx-kicker">${scene.background?.stock ? "ILLUSTRATIVE MEDIA" : scene.background?.type === "video" ? "SUPPLIED VIDEO" : "SUPPLIED IMAGE"}</div>
       <div class="pl-device fx-phone">
         <div class="pl-browser-bar"><i></i><i></i><i></i></div>
         <div class="pl-media">${mediaHtml(scene)}</div>

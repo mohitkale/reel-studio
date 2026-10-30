@@ -81,6 +81,7 @@ export const videoScriptSnapshotSchema = z.object({
   energy: z.enum(["calm", "normal", "high"]),
   productionPreset: brandOverridesSchema.shape.productionPreset,
   researchEvidence: brandOverridesSchema.shape.researchEvidence,
+  productProof: brandOverridesSchema.shape.productProof,
   creationSettings: brandOverridesSchema.shape.creationSettings,
   editorialWorkflow: brandOverridesSchema.shape.editorialWorkflow,
   editorialStoryboard: brandOverridesSchema.shape.editorialStoryboard,

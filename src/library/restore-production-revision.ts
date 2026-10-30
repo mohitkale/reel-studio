@@ -1,3 +1,8 @@
+import {
+  brandOverridesSchema,
+  sceneConfigSchema,
+  parseJsonColumn,
+} from "@/library/schemas";
 import { randomUUID } from "node:crypto";
 import { getAssetStore } from "@/library/storage";
 import { sanitizeKey } from "@/library/storage/local-disk";
@@ -96,6 +101,9 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
       preset: snapshot.script.productionPreset,
       motionPlan: snapshot.script.motionPlan,
       motions: snapshot.script.scenes.map((scene) => scene.motion),
+      sceneOverrides: snapshot.script.scenes.map((scene) => ({
+        layoutJson: JSON.stringify(sceneConfigSchema.parse(scene)),
+      })),
       sceneLocks: snapshot.script.scenes.map((scene) => scene.locks),
       roles: snapshot.script.scenes.map((scene) => scene.role ?? "explanation"),
       assetRefs: snapshot.script.scenes.map((scene) => scene.assetRefs ?? []),
@@ -134,6 +142,38 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
     const sceneMap = new Map(
       snapshot.script.scenes.map((scene, index) => [scene.id, newIds[index]]),
     );
+    const restoredSettings = await prisma.script.findUniqueOrThrow({
+      where: { id: created.scriptId },
+      select: { brandOverrides: true },
+    });
+    const restoredOverrides = parseJsonColumn(
+      restoredSettings.brandOverrides,
+      brandOverridesSchema,
+      {},
+    );
+    if (snapshot.script.productProof)
+      restoredOverrides.productProof = {
+        ...snapshot.script.productProof,
+        features: snapshot.script.productProof.features.map((feature) => ({
+          ...feature,
+          sceneIds: feature.sceneIds.map((id) => {
+            const restoredId = sceneMap.get(id);
+            if (!restoredId)
+              throw new Error("Proof mapping references a missing scene");
+            return restoredId;
+          }),
+        })),
+      };
+    if (restoredOverrides.editorialStoryboard)
+      restoredOverrides.editorialStoryboard = {
+        ...restoredOverrides.editorialStoryboard,
+        state: "canceled",
+        appliedHash: undefined,
+        shots: restoredOverrides.editorialStoryboard.shots.map((shot) => ({
+          ...shot,
+          sceneId: sceneMap.get(shot.sceneId) ?? shot.sceneId,
+        })),
+      };
     const sfx = parseSfxState(snapshot.script.sfxJson);
     const restoredSfx =
       snapshot.script.sfxJson === null
@@ -149,6 +189,7 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
       prisma.script.update({
         where: { id: created.scriptId },
         data: {
+          brandOverrides: JSON.stringify(restoredOverrides),
           fps: snapshot.script.fps,
           width: snapshot.script.width,
           height: snapshot.script.height,

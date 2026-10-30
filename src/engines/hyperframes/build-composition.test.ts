@@ -30,7 +30,9 @@ describe("buildHyperframesCompositionHtml", () => {
             background: { type: "image", url: "/media/audit.png" },
             chart: {
               labels: ["Draft", "Reviewed"],
-              series: [{ label: "Review time", values: [18, 11], unit: " min" }],
+              series: [
+                { label: "Review time", values: [18, 11], unit: " min" },
+              ],
               sourceAttribution: "Supplied audit",
             },
           },
@@ -810,3 +812,35 @@ it("limits draft paint reductions to preview and keeps producer output identical
     ),
   ).toBe(buildHyperframesCompositionHtml(props, { producerMode: true }));
 });
+it.each(ORIENTATIONS)(
+  "keeps supplied recording cues and contained product media in %s",
+  (orientation) => {
+    const html = buildHyperframesCompositionHtml({
+      preset: { id: "product-launch", version: "1.0.0" },
+      scenes: [
+        {
+          id: "proof",
+          templateId: "hf-opener",
+          role: "screenshot-demo",
+          text: "Review the supplied screen.",
+          emphasis: [],
+          motion: { recipeId: "media-device", version: "1.0.0" },
+          background: {
+            type: "video",
+            url: "/media/proof.mp4",
+            startSeconds: 2.5,
+            muted: true,
+          },
+        },
+      ],
+      timeline: [{ sceneId: "proof", startFrame: 0, durationFrames: 150 }],
+      ...dimsFor(orientation),
+      fps: 30,
+      tokens: defaultBrandTokens,
+    });
+    expect(html).toContain('data-media-start="2.5"');
+    expect(html).toContain("object-fit: contain");
+    expect(html).toContain("SUPPLIED VIDEO");
+    expect(html).not.toContain("LIVE PRODUCT");
+  },
+);

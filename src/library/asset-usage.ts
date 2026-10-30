@@ -6,6 +6,7 @@ import {
   parseJsonColumn,
   assetRefsSchema,
   sceneConfigSchema,
+  brandOverridesSchema,
 } from "@/library/schemas";
 export async function getAssetUsage(id: string, client: PrismaClient = prisma) {
   const asset = await client.asset.findUnique({ where: { id } });
@@ -23,8 +24,20 @@ export async function getAssetUsage(id: string, client: PrismaClient = prisma) {
     },
   });
   const scripts = await client.script.findMany({
-    where: { OR: [{ musicUrl: url }, { coverUrl: url }] },
-    select: { id: true, name: true },
+    where: {
+      OR: [
+        { musicUrl: url },
+        { coverUrl: url },
+        { brandOverrides: { contains: id } },
+      ],
+    },
+    select: {
+      id: true,
+      name: true,
+      musicUrl: true,
+      coverUrl: true,
+      brandOverrides: true,
+    },
   });
   const podcasts = await client.podcast.findMany({
     where: { OR: [{ introMusicAssetId: id }, { outroMusicAssetId: id }] },
@@ -168,7 +181,20 @@ export async function getAssetUsage(id: string, client: PrismaClient = prisma) {
         scriptId: scene.scriptId,
         label: scene.text.slice(0, 100),
       })),
-    scripts,
+    scripts: scripts
+      .filter(
+        (script) =>
+          script.musicUrl === url ||
+          script.coverUrl === url ||
+          parseJsonColumn(
+            script.brandOverrides,
+            brandOverridesSchema,
+            {},
+          ).productProof?.features.some((feature) =>
+            feature.assets.some((artifact) => artifact.assetId === id),
+          ),
+      )
+      .map((script) => ({ id: script.id, name: script.name })),
     podcasts,
   };
 }

@@ -65,6 +65,9 @@ export interface SceneDTO {
   /** Image asset URLs resolved server-side for carousel preview and export. */
   carouselImages?: string[];
   locks?: { copy: boolean; assets: boolean; scene: boolean };
+  proof?: import("zod").infer<
+    typeof import("@/production/product-proof").sceneProofSchema
+  >;
 }
 
 export interface SceneVoiceClipDTO {
@@ -102,6 +105,7 @@ export interface VoiceTakeDTO {
 
 export interface ScriptDTO {
   editorialStoryboard?: import("@/production/editorial-storyboard").EditorialStoryboard;
+  productProof?: import("@/production/product-proof").ProductProof;
   editorialWorkflow?: import("@/production/editorial").EditorialWorkflow;
   researchEvidence?: import("@/research/contracts").EvidencePack;
   creationSettings?: import("@/research/creation-settings").CreationSettings;

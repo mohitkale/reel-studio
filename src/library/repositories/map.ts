@@ -72,6 +72,13 @@ export function toSceneDTO(scene: Scene): SceneDTO {
     direction: config.direction,
     assetRefs: parseJsonColumn(scene.assetRefs, assetRefsSchema, []),
     locks: config.locks,
+    proof:
+      config.proof &&
+      (config.proof.sourceStatus === "missing"
+        ? !background?.url
+        : config.proof.sourceUrl === background?.url)
+        ? config.proof
+        : undefined,
   };
 }
 
