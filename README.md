@@ -20,6 +20,8 @@ Use dedicated **Voiceovers** and **Factory** workspaces, organize projects by se
 
 [Get started](#quick-start) · [Creator guide](docs/CREATOR_GUIDE.md) · [Documentation](docs/README.md) · [Contribute](CONTRIBUTING.md)
 
+Source-linked writing and targeted editing: see the [editorial guide](docs/EDITORIAL.md) for creative briefs, cached storyboards and guarded revisions.
+
 ## What you can make
 
 - **Videos:** six visual presets, 29 motion treatments and nine

@@ -129,6 +129,8 @@ export async function getScripts(
         productionPreset: overrides.productionPreset,
         researchEvidence: overrides.researchEvidence,
         creationSettings: overrides.creationSettings,
+        editorialWorkflow: overrides.editorialWorkflow,
+        editorialStoryboard: overrides.editorialStoryboard,
         motionPlan: overrides.motionPlan,
         musicMap:
           overrides.musicMap?.sourceUrl === script.musicUrl

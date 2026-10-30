@@ -1,4 +1,6 @@
 "use client";
+import { EditorialReviewPanel } from "./editorial-review-panel";
+import { EditorialScriptPanel } from "./editorial-script-panel";
 import { LanguageVersions } from "@/components/studio/language-versions";
 import { EditHistory } from "./edit-history";
 import { sequenceConfigFor } from "@/video/sequence-direction";
@@ -478,6 +480,37 @@ export function EditorClient({
 
   return (
     <div className="space-y-6">
+      {script.editorialWorkflow && (
+        <EditorialScriptPanel
+          scriptId={scriptId}
+          initial={script.editorialWorkflow}
+          evidence={script.researchEvidence}
+          storyboard={script.editorialStoryboard}
+        />
+      )}
+      <EditorialReviewPanel script={script} onSelect={selectScene} />
+      <FilmContactSheet
+        script={script}
+        scenes={reelScenes}
+        timeline={timeline}
+        fps={fps}
+        measured={takeUsable}
+        onSelect={selectScene}
+        onAnimatic={() => {
+          pendingAnimatic.current = true;
+          setPreviewMode("reel");
+          setPreviewQuality("draft");
+          if (previewMode === "reel" && previewQuality === "draft") {
+            pendingAnimatic.current = false;
+            playerRef.current?.seekTo(0);
+            playerRef.current?.play();
+          }
+          previewCardRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }}
+      />
       <QuickProduceStatus
         jobId={productionJobId}
         scriptId={scriptId}
@@ -1170,28 +1203,6 @@ export function EditorClient({
         </Card>
       </div>
 
-      <FilmContactSheet
-        script={script}
-        scenes={reelScenes}
-        timeline={timeline}
-        fps={fps}
-        measured={takeUsable}
-        onSelect={selectScene}
-        onAnimatic={() => {
-          pendingAnimatic.current = true;
-          setPreviewMode("reel");
-          setPreviewQuality("draft");
-          if (previewMode === "reel" && previewQuality === "draft") {
-            pendingAnimatic.current = false;
-            playerRef.current?.seekTo(0);
-            playerRef.current?.play();
-          }
-          previewCardRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }}
-      />
       <EditHistory
         scriptId={scriptId}
         onRestored={() => setHistoryRevision((value) => value + 1)}

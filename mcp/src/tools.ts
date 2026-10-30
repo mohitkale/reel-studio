@@ -1,3 +1,4 @@
+import { registerEditorialTools } from "./editorial-tools.js";
 import { registerResearchTools } from "./research-tools.js";
 import { projectCreationRequestSchema } from "@/research/creation-request";
 import {factoryProfileRequestSchema,factoryRunRequestSchema} from "@/production/factory";
@@ -92,6 +93,7 @@ const backgroundShape = z.object({
 
 export function registerTools(server: McpServer): void {
   registerResearchTools(server);
+  registerEditorialTools(server);
   server.registerTool("get_film_plan", {
     description: "Read a versioned film plan and its captured scene/brand/media source. Optionally read a saved revision. Does not generate content or render.",
     inputSchema: { scriptId: z.string().min(1), voiceTakeId: z.string().min(1).optional(), revisionId: z.string().min(1).optional() },

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { evidenceReferenceSchema } from "@/research/contracts";
 
 import { productionChartDataSchema } from "@/production/spec";
 import { shotDirectionSchema } from "@/video/shot-direction";
@@ -14,6 +15,7 @@ import { podcastAiCharacterSchema, podcastAiTurnSchema } from "./podcast-types";
 
 const strictSceneSchema = z
   .object({
+    evidenceRefs: z.array(evidenceReferenceSchema).max(20).optional(),
     direction: shotDirectionSchema.optional(),
     text: z.string().min(1),
     spokenText: z.string().optional(),

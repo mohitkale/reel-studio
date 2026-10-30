@@ -28,7 +28,7 @@ export function FilmContactSheet({
   onSelect(id: string): void;
   onAnimatic(): void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(Boolean(script.editorialWorkflow));
   const [page, setPage] = useState(0);
   const sequence = useMemo(
     () =>
@@ -61,6 +61,7 @@ export function FilmContactSheet({
   return (
     <details
       className="bg-card rounded-xl border p-3"
+      open={open}
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary className="cursor-pointer text-sm font-semibold">

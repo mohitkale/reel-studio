@@ -1,3 +1,5 @@
+import { editorialProposalSchema } from "@/production/editorial-review";
+import { editorialStoryboardSchema } from "@/production/editorial-storyboard";
 import { factoryLineageSchema } from "@/production/factory-lineage";
 import { frameWordsSchema } from "@/lib/speech-words";
 import { z } from "zod";
@@ -10,6 +12,7 @@ import { shotDirectionSchema } from "@/video/shot-direction";
 import { musicMapSchema } from "@/production/music-map";
 import { evidencePackSchema } from "@/research/contracts";
 import { creationSettingsSchema } from "@/research/creation-settings";
+import { editorialWorkflowSchema } from "@/production/editorial";
 
 import { assertSafeMediaUrl } from "@/lib/media-url-safety";
 import { productionChartDataSchema } from "@/production/spec";
@@ -93,6 +96,9 @@ export const brandOverridesSchema = z
     factoryLineage: factoryLineageSchema.optional(),
     researchEvidence: evidencePackSchema.optional(),
     creationSettings: creationSettingsSchema.optional(),
+    editorialWorkflow: editorialWorkflowSchema.optional(),
+    editorialStoryboard: editorialStoryboardSchema.optional(),
+    editorialProposal: editorialProposalSchema.optional(),
     frozenBrandTokens: z
       .object({
         background: z.string(),

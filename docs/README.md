@@ -29,6 +29,7 @@ current setup instructions or a pending to-do list.
 - [Adaptive film contracts](ADAPTIVE_CONTRACTS.md): versioned recipes, compatibility plans, and JSON checkpoints.
 - [Motion spec](MOTION_SPEC.md), [motion treatments and visual families](MOTION_LIBRARY.md), and [director pipeline](DIRECTOR_PIPELINE.md).
 - [Export fidelity](EXPORT_FIDELITY.md), [bounded IO](IO_RECOVERY.md), and [voice timing](VOICE_RESILIENCE.md).
+- [Editorial pipeline](EDITORIAL.md): creative briefs, source-linked writing and stage budgets.
 - [Creation UX](CREATION_UX.md) and [demo capture](DEMO_CAPTURE.md).
 - [Release validation](production/RELEASE_VALIDATION.md): checks and published evidence.
 
