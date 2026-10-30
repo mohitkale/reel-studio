@@ -15,6 +15,36 @@ import {
 import { ORIENTATIONS, dimsFor } from "@/lib/orientation";
 
 describe("buildHyperframesCompositionHtml", () => {
+  it("does not invent a brand mark when closing copy has no supplied visual", () => {
+    const render = (visual?: string) =>
+      buildHyperframesCompositionHtml({
+        preset: { id: "cinematic-brand", version: "1.0.0" },
+        scenes: [
+          {
+            id: "closing",
+            templateId: "hf-statement",
+            role: "logo",
+            text: "Make room for the next thought.",
+            emphasis: [],
+            ...(visual ? { visual } : {}),
+          },
+        ],
+        timeline: [{ sceneId: "closing", startFrame: 0, durationFrames: 180 }],
+        ...dimsFor("portrait"),
+        fps: 30,
+        tokens: defaultBrandTokens,
+      });
+    const missing = new DOMParser().parseFromString(render(), "text/html");
+    expect(missing.querySelector(".cb-mark")).toBeNull();
+    expect(missing.querySelector(".cb-label")?.textContent).toBe(
+      "Closing message",
+    );
+    expect(missing.querySelector(".cb-logo-copy")?.textContent).toBe(
+      "Make room for the next thought.",
+    );
+    const supplied = new DOMParser().parseFromString(render("HB"), "text/html");
+    expect(supplied.querySelector(".cb-mark")?.textContent).toBe("HB");
+  });
   it.each(ORIENTATIONS)(
     "retains supplied chart media and values in the %s preset fallback",
     (orientation) => {

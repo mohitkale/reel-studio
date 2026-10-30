@@ -16,8 +16,24 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 - Optional Gemini Search/URL grounding with preserved citations and attribution,
   explicit researcher models, separate call/search allowances and offline fixtures.
 - Supplied-text/public-article evidence capture with no cloud calls, hardened URL
-  fetching, bounded responses and redacted errors. Video-creation integration is
-  separate from these research foundations.
+  fetching, bounded responses and redacted errors.
+- Saved research evidence in creation/remix/results, linked excerpts and numeric
+  admission checks shared by REST and MCP.
+- Source-linked editorial writing before local storyboard compilation, creative
+  briefs, durable call budgets and guarded scene-specific copy/visual revisions.
+- Subject/crop/resolution/continuity ranking for automatic media, saved reasons
+  and alternatives, plus separately budgeted optional vision scoring.
+- Supplied screenshot/recording proof mapped to features and recurring subjects,
+  contained device frames, checked recording cues and copy-preserving replacement.
+- Five-brief offline editorial/MCP benchmark, active-app verified exports and
+  checksummed human review records; live writers remain explicitly opt-in.
+
+### Fixed
+
+- Markdown cleanup preserves paired technical identifiers such as `input_image`
+  and `image_url`, including repeated internal underscores.
+- Cinematic Brand closings without a supplied visual no longer insert a default
+  `RS` mark; closing copy remains visible.
 
 ## 0.7.0
 

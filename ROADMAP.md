@@ -28,6 +28,11 @@ See [CHANGELOG.md](CHANGELOG.md) for release history and
 
 ## Next candidates
 
+The research/editorial/visual-quality feature batch is unreleased until the
+applicable release gates pass;
+see the [benchmark and acceptance record](docs/EDITORIAL_BENCHMARK.md). The current
+stable version remains v0.7.0.
+
 - More distinct, curated motion treatments with readable three-format fixtures.
 - Clearer optional transcription/model setup and diagnostics.
 - Faster warm renders and better resource feedback on modest computers.

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DatabaseSync } from "node:sqlite";
+import { backup, DatabaseSync } from "node:sqlite";
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -22,7 +22,7 @@ describe("stock-media service repository", () => {
   it("persists cache, monotonic quota, and materialization records", async () => {
     const directory = mkdtempSync(path.join(tmpdir(), "reel-stock-service-"));
     const filename = path.join(directory, "service.db");
-    const db = new DatabaseSync(filename);
+    const db = new DatabaseSync(":memory:");
     try {
       for (const migration of readdirSync("prisma/migrations")
         .filter((name) => !name.endsWith(".toml"))
@@ -31,6 +31,7 @@ describe("stock-media service repository", () => {
           readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),
         );
       }
+      await backup(db, filename);
     } finally {
       db.close();
     }

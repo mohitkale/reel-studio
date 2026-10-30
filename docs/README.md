@@ -31,6 +31,7 @@ current setup instructions or a pending to-do list.
 - [Export fidelity](EXPORT_FIDELITY.md), [bounded IO](IO_RECOVERY.md), and [voice timing](VOICE_RESILIENCE.md).
 - [Media relevance](MEDIA_RELEVANCE.md): ranked stock choices, saved reasons and optional vision budgets.
 - [Editorial pipeline](EDITORIAL.md): creative briefs, source-linked writing and stage budgets.
+- [Editorial benchmark](EDITORIAL_BENCHMARK.md): five frozen briefs, offline/MCP comparisons and human export review.
 - [Creation UX](CREATION_UX.md) and [demo capture](DEMO_CAPTURE.md).
 - [Release validation](production/RELEASE_VALIDATION.md): checks and published evidence.
 

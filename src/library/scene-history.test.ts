@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { DatabaseSync } from "node:sqlite";
+import { backup, DatabaseSync } from "node:sqlite";
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -26,14 +26,22 @@ describe("persistent scene history", () => {
   beforeEach(async () => {
     directory = mkdtempSync(path.join(tmpdir(), "reel-history-"));
     const filename = path.join(directory, "history.db");
-    const db = new DatabaseSync(filename);
-    for (const migration of readdirSync("prisma/migrations").sort()) {
-      if (migration.startsWith("20"))
-        db.exec(
-          readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),
-        );
+    const db = new DatabaseSync(":memory:");
+    try {
+      for (const migration of readdirSync("prisma/migrations").sort()) {
+        if (migration.startsWith("20"))
+          db.exec(
+            readFileSync(
+              `prisma/migrations/${migration}/migration.sql`,
+              "utf8",
+            ),
+          );
+      }
+      // Keep the real on-disk integration test without fsync per schema statement.
+      await backup(db, filename);
+    } finally {
+      db.close();
     }
-    db.close();
     previous = process.env.DATABASE_URL;
     process.env.DATABASE_URL = `file:${filename}`;
     client = createPrismaClient();
