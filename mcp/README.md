@@ -356,3 +356,9 @@ with `get_factory_run` / `get_factory_revision`, and cancel or resume through
 `control_factory_run`. Saved review policy and scoped automatic-render rules
 remain active; approval stays in the studio. Download output bundles with the
 existing batch tools. See [factory contracts and limits](../docs/FACTORY_WORKFLOWS.md).
+
+Editorial creation and revision tools share the REST stage contracts. See the
+[editorial guide](../docs/EDITORIAL.md) for creative briefs, call budgets, cached
+storyboards, scope locks and guarded apply/undo. Start with
+`create_editorial_project`, inspect `get_editorial_script`, then preview the
+storyboard or a scoped revision before applying its current source hash.

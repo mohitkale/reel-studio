@@ -44,3 +44,36 @@ revisions retain the approved writing and compiled provenance.
 revision and explicit zero-call budget), `apply` and `cancel` (expected source
 hash). Retrying an unchanged compile reuses its cache. This is a local compiler;
 it does not fetch assets or spend a second model call to make layout choices.
+
+## Review and scoped revisions
+
+The contact sheet and animatic appear before the scene editor. Editorial review
+flags unlinked or unsupported numeric claims, repeated narration, possible filler
+and a potentially missing payoff. These checks are heuristics, not semantic fact
+verification or publication approval.
+
+Choose one scene, then **Make specific**, **Shorten**, **Replace visual**, or
+**Keep copy / change direction**. Copy can be supplied locally; AI copy requires
+checking the explicit one-call option and available budget. Supply concrete facts
+for specificity. The selected saved writer/model and evidence are reused; repair
+calls are disabled. Reserved failed/canceled calls remain counted, including after
+reconnect. No other scenes, research or writing are regenerated.
+
+Review the before/after diff, then apply. Changing any scene, settings or writing
+invalidates the proposal. Whole-scene, copy and asset locks protect their scopes;
+protected writing beats must also be unlocked. Visual edits preserve copy and voice
+selection. Replaced stock selection metadata is retained in the proposal for undo.
+Undo is guarded by the applied state and refuses to overwrite later edits.
+
+`GET /api/scripts/:id/editorial/review` returns findings, source hash and durable
+proposal. POST accepts preview with a unique key and explicit zero/one-call budget,
+then apply/cancel/undo with the proposal ID and expected hash. Model failures are
+redacted. Cancel/deadline prevent late results from publishing. MCP exposes the
+same contracts through `create_editorial_project`, `get_editorial_script`,
+`control_editorial_script`, `control_editorial_storyboard`, `get_editorial_review`
+and `control_editorial_revision`; API scopes and quotas remain authoritative.
+
+For offline acceptance with an already running local app:
+`node --import tsx scripts/verify-editorial-pipeline.ts`. This opt-in command writes
+a named synthetic example and verified MP4 into the active app without paid
+calls or model downloads. The normal test suite uses isolated fixture databases.

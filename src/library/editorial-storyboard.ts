@@ -19,6 +19,7 @@ import {
 } from "@/production/presets";
 import { scenePlanSchema, AIError } from "@/providers/ai/types";
 import { creationEvidenceSources } from "@/research/creation-grounding";
+import { analyzeBeat } from "@/production/director";
 import { enrichSemanticSequence } from "@/production/semantic-direction";
 import { storyboardSnapshot } from "./structural-history";
 import { recordHistory } from "./scene-history";
@@ -42,13 +43,22 @@ export async function editorialStoryboardState(
     brandOverridesSchema,
     {},
   );
-  const { editorialStoryboard: _cache, ...settings } = overrides;
+  const {
+    editorialStoryboard: _cache,
+    editorialProposal: _proposal,
+    ...settings
+  } = overrides;
   void _cache;
+  void _proposal;
   return {
     row,
     overrides,
     sourceHash: hash({
       ...row,
+      stock: await tx.stockMediaSelection.findMany({
+        where: { sceneId: { in: row.scenes.map((s) => s.id) } },
+        orderBy: { sceneId: "asc" },
+      }),
       brandOverrides: settings,
       createdAt: undefined,
       updatedAt: undefined,
@@ -233,6 +243,7 @@ export async function controlEditorialStoryboard(
       scriptName: draft.title,
       scenes: draft.beats.map((beat) => ({
         templateId: "hf-statement",
+        chart: analyzeBeat(beat.headline).chart,
         text: beat.headline,
         spokenText: beat.narration,
         emphasis: [],
@@ -258,6 +269,11 @@ export async function controlEditorialStoryboard(
       ...compiled.plan,
       scenes: directed.map((scene, index) => ({
         ...scene,
+        ...(workflow.request.creativeBrief.intent === "data" &&
+        !scene.chart &&
+        !scene.visual
+          ? { templateId: "hf-statement" }
+          : {}),
         text: draft.beats[index].headline,
         spokenText: draft.beats[index].narration,
         emphasis: [],

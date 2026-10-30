@@ -238,3 +238,30 @@ it("invalidates edited scripts and stale previews while honoring copy and scene 
   ).rejects.toMatchObject({ status: 409 });
   expect(m.generate).toHaveBeenCalledOnce();
 });
+it.each([true, false])(
+  "admits approved screen-copy charts only from literal supplied rows (%s)",
+  async (supported) => {
+    const fixture = plan();
+    fixture.scenes[0].text = "Draft: 42%\nReview: 68%";
+    fixture.scenes[0].spokenText =
+      "Compare the supplied values; this is a synthetic example.";
+    fixture.scenes[0].evidenceRefs = [];
+    m.generate.mockResolvedValueOnce(fixture);
+    const input = request();
+    input.creativeBrief.intent = "data";
+    input.brief = supported
+      ? "Draft: 42%\nReview: 68%"
+      : "Values include 42% and 68%, with no labeled dataset.";
+    const created = await startEditorialWriting(input);
+    await runEditorialWriting(created.scriptId, m.authorize);
+    const cache = await controlEditorialStoryboard(created.scriptId, {
+      action: "compile",
+      expectedRevision: 1,
+      budget: { maxProviderCalls: 0 },
+    });
+    if (supported)
+      expect(cache.plan.scenes[0].chart?.series[0].values).toEqual([42, 68]);
+    else expect(cache.plan.scenes[0].chart).toBeUndefined();
+    expect(cache.plan.scenes[0].spokenText).toBe(fixture.scenes[0].spokenText);
+  },
+);

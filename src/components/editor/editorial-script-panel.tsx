@@ -17,10 +17,12 @@ export function EditorialScriptPanel({
   scriptId,
   initial,
   evidence,
+  storyboard,
 }: {
   scriptId: string;
   initial: EditorialWorkflow;
   evidence?: EvidencePack;
+  storyboard?: EditorialStoryboard;
 }) {
   const client = useQueryClient();
   const query = useQuery({
@@ -29,7 +31,7 @@ export function EditorialScriptPanel({
       apiGet<{ workflow: EditorialWorkflow; storyboard?: EditorialStoryboard }>(
         `/api/scripts/${scriptId}/editorial`,
       ),
-    initialData: { workflow: initial },
+    initialData: { workflow: initial, storyboard },
     refetchInterval: (query) =>
       ["queued", "running"].includes(query.state.data?.workflow.state ?? "")
         ? 1000
@@ -155,7 +157,30 @@ function DraftEditor({
           >
             {index + 1}. {beat.purpose}
           </label>
+          <label
+            className="block text-xs"
+            htmlFor={`editorial-headline-${beat.id}`}
+          >
+            Screen copy
+          </label>
           <Textarea
+            id={`editorial-headline-${beat.id}`}
+            value={beat.headline}
+            maxLength={1000}
+            disabled={initial.beats[index]?.locked}
+            onChange={(event) =>
+              setDraft({
+                ...draft,
+                beats: draft.beats.map((item) =>
+                  item.id === beat.id
+                    ? { ...item, headline: event.target.value }
+                    : item,
+                ),
+              })
+            }
+          />
+          <Textarea
+            maxLength={4000}
             id={`editorial-${beat.id}`}
             rows={3}
             value={beat.narration}

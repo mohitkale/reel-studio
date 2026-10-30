@@ -65,7 +65,9 @@ export function admitEditorialScript(
         arc[
           Math.min(
             arc.length - 1,
-            Math.floor((index * arc.length) / plan.scenes.length),
+            index === plan.scenes.length - 1 && plan.scenes.length > 1
+              ? arc.length - 1
+              : Math.floor((index * arc.length) / plan.scenes.length),
           )
         ]!,
       headline: scene.text,
@@ -299,8 +301,30 @@ export async function controlEditorialWriting(
       ),
       gaps: [
         ...(evidence?.gaps ?? []).slice(0, 99),
+        ...input.draft.beats
+          .filter((beat) => !beat.references.length)
+          .map(
+            (beat) =>
+              `Beat ${beat.id} has no linked excerpt. Review its claims against the supplied text.`,
+          ),
+        ...(evidence?.conflicts.length
+          ? [
+              "Evidence contains unresolved conflicts; review before publishing.",
+            ]
+          : []),
+        ...(Math.abs(
+          input.draft.beats.reduce(
+            (sum, beat) => sum + estimateSpeechSeconds(beat.narration),
+            0,
+          ) - current.request.creativeBrief.targetSeconds,
+        ) >
+        current.request.creativeBrief.targetSeconds * 0.25
+          ? [
+              "Estimated narration differs materially from the requested duration. Do not pad missing evidence.",
+            ]
+          : []),
         "Manually edited script: recheck references, figures and uncertainty before publication.",
-      ],
+      ].slice(0, 100),
     };
     return { ...current, draft, revision: current.revision + 1 };
   });
