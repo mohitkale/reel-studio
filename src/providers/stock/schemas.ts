@@ -1,3 +1,4 @@
+import { mediaSelectionRankingSchema } from "@/production/media-ranking-contract";
 import { z } from "zod";
 
 import { orientationSchema } from "@/lib/orientation";
@@ -90,6 +91,9 @@ export const stockMediaCandidateSchema = z
     previewUrl: stockMediaExternalUrlSchema,
     sourcePageUrl: stockMediaExternalUrlSchema,
     creator: z.string().trim().min(1).max(240),
+    description: z.string().trim().max(1000).optional(),
+    tags: z.array(z.string().trim().min(1).max(80)).max(30).optional(),
+    styleTags: z.array(z.string().trim().min(1).max(40)).max(8).optional(),
     creatorUrl: stockMediaExternalUrlSchema.optional(),
     width: z.number().int().positive().max(32768),
     height: z.number().int().positive().max(32768),
@@ -227,6 +231,7 @@ export const resolvedStockAssetSchema = z
     resolvedAt: z.string().datetime({ offset: true }),
     localAssetId: z.string().trim().min(1).max(160).optional(),
     compliantRemoteUrl: stockMediaExternalUrlSchema.optional(),
+    ranking: mediaSelectionRankingSchema.optional(),
     providerSnapshot: stockMediaCandidateSchema,
     sourceRevision: stockMediaSourceRevisionSchema,
     contentHash: z

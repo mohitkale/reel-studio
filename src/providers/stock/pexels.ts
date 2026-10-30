@@ -27,6 +27,7 @@ const nonnegativeIntegerSchema = z
   .max(Number.MAX_SAFE_INTEGER);
 
 const pexelsPhotoSchema = z.object({
+  alt: z.string().max(1000).optional(),
   id: positiveIntegerSchema,
   width: positiveIntegerSchema,
   height: positiveIntegerSchema,
@@ -175,6 +176,7 @@ function photoCandidate(
     previewUrl: photo.src.medium,
     sourcePageUrl: photo.url,
     creator: photo.photographer,
+    description: photo.alt,
     creatorUrl: photo.photographer_url,
     width: photo.width,
     height: photo.height,

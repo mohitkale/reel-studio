@@ -67,6 +67,7 @@ model Script {
   takes               VoiceTake[]
   voiceClips          SceneVoiceClip[]
   renders             Render[]
+  mediaRankingJobs    MediaRankingJob[]
   captionTracks       CaptionTrack[]
   productionRevisions ProductionRevision[]
 
@@ -661,4 +662,26 @@ model AudioEditSession {
  derivedTakeId String?
  updatedAt DateTime @updatedAt
  @@unique([kind,takeId])
+}
+
+/// Explicit optional vision scoring; retained request keys prevent paid replay.
+model MediaRankingJob {
+  id               String   @id
+  idempotencyKey   String   @unique
+  fingerprint      String
+  scriptId         String
+  script           Script   @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  sceneId          String
+  state            String   @default("queued")
+  sourceHash       String
+  requestJson      String
+  candidatesJson   String?
+  assessmentsJson  String?
+  callsUsed        Int      @default(0)
+  deadlineAt       DateTime
+  error            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([scriptId, createdAt])
 }

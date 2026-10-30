@@ -258,3 +258,18 @@ describe("automatic stock-media selection", () => {
     });
   });
 });
+
+it("keeps supplied product proof ahead of stock without searching or materializing alternatives", async () => {
+  const registry = { search: vi.fn() } as unknown as StockMediaProviderRegistry;
+  const materialize = vi.fn();
+  const proof = { type: "image" as const, url: "/media/supplied-product.png" };
+  const result = await resolveAutomaticSceneMedia(
+    { text: "A supplied product feature", backgroundQuery: "software UI" },
+    "portrait",
+    "auto",
+    { explicitBackground: proof, dependencies: { registry, materialize } },
+  );
+  expect(result).toMatchObject({ state: "explicit", background: proof });
+  expect(registry.search).not.toHaveBeenCalled();
+  expect(materialize).not.toHaveBeenCalled();
+});

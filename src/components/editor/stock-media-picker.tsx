@@ -1,6 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { rankStockCandidates } from "@/production/media-ranking";
+import type { MediaVisionJob } from "@/production/media-vision";
+import { StockVisionScorer } from "./stock-vision-scorer";
 import { ExternalLink, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -52,6 +55,7 @@ export function StockMediaPicker({
   onApplied: (background: SceneBackground | null) => void;
 }) {
   const [open, setOpen] = React.useState(false);
+  const [visionJob, setVisionJob] = React.useState<MediaVisionJob>();
   const [query, setQuery] = React.useState("");
   const [providerId, setProviderId] = React.useState("unsplash");
   const [kind, setKind] = React.useState<StockMediaKind>("image");
@@ -105,6 +109,11 @@ export function StockMediaPicker({
         providerAssetId: candidate.providerAssetId,
         search: searchRequest,
         imageEffect,
+        rankingJobId: visionJob?.request.candidateIds.includes(
+          candidate.providerAssetId,
+        )
+          ? visionJob.id
+          : undefined,
       });
       onApplied(result.scene.background ?? null);
       if (result.usageWarning) {
@@ -131,6 +140,12 @@ export function StockMediaPicker({
   }
 
   const selected = selectionQuery.data?.snapshot.providerSnapshot;
+  const ranked = rankStockCandidates(search.data?.items ?? [], {
+    query: searchRequest?.query ?? query,
+    orientation: searchRequest?.orientation ?? orientation,
+    vision: visionJob?.assessments,
+  });
+  const savedRanking = selectionQuery.data?.snapshot.ranking;
   const actionError = search.error ?? select.error ?? clear.error;
 
   return (
@@ -155,6 +170,20 @@ export function StockMediaPicker({
             <span className="text-muted-foreground">No stock selection</span>
           )}
         </div>
+        {savedRanking && (
+          <details className="max-w-md text-xs">
+            <summary className="cursor-pointer">
+              Saved selection reasons · {savedRanking.method}
+            </summary>
+            {savedRanking.selected.reasons.map((reason) => (
+              <p key={reason}>{reason}</p>
+            ))}
+            <p>
+              {savedRanking.alternatives.length} alternatives saved from the
+              same bounded search.
+            </p>
+          </details>
+        )}
         <div className="flex shrink-0 gap-1.5">
           {selected ? (
             <Button
@@ -295,8 +324,23 @@ export function StockMediaPicker({
                 </p>
               ) : null}
 
+              {searchRequest && (search.data?.items.length ?? 0) > 0 && (
+                <StockVisionScorer
+                  scriptId={scriptId}
+                  sceneId={sceneId}
+                  providerId={effectiveProviderId}
+                  search={searchRequest}
+                  candidates={search.data!.items}
+                  onResult={setVisionJob}
+                />
+              )}
+              <p className="text-muted-foreground text-xs">
+                Ranked by available subject metadata, crop, resolution and known
+                style. Unknown text space remains visible; these scores are
+                estimates, not proof.
+              </p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {search.data?.items.map((candidate) => (
+                {ranked.map(({ candidate, summary }, index) => (
                   <article
                     key={`${candidate.providerId}:${candidate.providerAssetId}`}
                     className="overflow-hidden rounded-lg border"
@@ -316,12 +360,23 @@ export function StockMediaPicker({
                       <img
                         className="aspect-video w-full object-cover"
                         src={candidate.previewUrl}
-                        alt=""
+                        alt={candidate.description ?? "Stock preview"}
                         loading="lazy"
                       />
                     )}
                     <div className="grid gap-2 p-3">
                       <div className="text-xs">
+                        <p className="font-medium">
+                          Rank {index + 1} · Fit {summary.score}
+                        </p>
+                        <details>
+                          <summary className="cursor-pointer">
+                            Why this rank
+                          </summary>
+                          {summary.reasons.map((reason) => (
+                            <p key={reason}>{reason}</p>
+                          ))}
+                        </details>
                         <p className="line-clamp-2 font-medium">
                           {candidate.attribution.text}
                         </p>
