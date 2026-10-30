@@ -111,6 +111,12 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
         ...(snapshot.script.researchEvidence
           ? { researchEvidence: snapshot.script.researchEvidence }
           : {}),
+        ...(snapshot.script.editorialWorkflow
+          ? { editorialWorkflow: snapshot.script.editorialWorkflow }
+          : {}),
+        ...(snapshot.script.editorialStoryboard
+          ? { editorialStoryboard: snapshot.script.editorialStoryboard }
+          : {}),
         ...(snapshot.script.creationSettings
           ? { creationSettings: snapshot.script.creationSettings }
           : {}),

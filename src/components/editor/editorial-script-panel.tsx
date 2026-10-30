@@ -8,6 +8,8 @@ import type {
 } from "@/production/editorial";
 import type { EvidencePack } from "@/research/contracts";
 import { EvidenceReview } from "@/components/projects/evidence-review";
+import { EditorialStoryboardPanel } from "./editorial-storyboard-panel";
+import type { EditorialStoryboard } from "@/production/editorial-storyboard";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -24,7 +26,7 @@ export function EditorialScriptPanel({
   const query = useQuery({
     queryKey: ["editorial", scriptId],
     queryFn: () =>
-      apiGet<{ workflow: EditorialWorkflow }>(
+      apiGet<{ workflow: EditorialWorkflow; storyboard?: EditorialStoryboard }>(
         `/api/scripts/${scriptId}/editorial`,
       ),
     initialData: { workflow: initial },
@@ -61,7 +63,9 @@ export function EditorialScriptPanel({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold">Review the script</h2>
         <span role="status">
-          Writing: {workflow.state} · {workflow.callsUsed}/1 calls
+          Writing: {workflow.state} ·{" "}
+          {workflow.callsUsed + workflow.revisionCallsUsed}/
+          {workflow.request.budget.maxProviderCalls} total calls
         </span>
       </div>
       <p className="text-muted-foreground text-sm">
@@ -109,6 +113,13 @@ export function EditorialScriptPanel({
               draft,
             })
           }
+        />
+      )}
+      {workflow.state === "ready" && workflow.draft && (
+        <EditorialStoryboardPanel
+          scriptId={scriptId}
+          revision={workflow.revision}
+          storyboard={query.data.storyboard}
         />
       )}
       {evidence && (

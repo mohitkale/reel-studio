@@ -126,6 +126,7 @@ export async function startEditorialWriting(input: unknown) {
       request,
       state: "queued",
       callsUsed: 0,
+      revisionCallsUsed: 0,
       deadlineAt: new Date(
         Date.now() + request.budget.deadlineMs,
       ).toISOString(),

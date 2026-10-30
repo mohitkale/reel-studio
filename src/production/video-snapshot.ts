@@ -82,6 +82,8 @@ export const videoScriptSnapshotSchema = z.object({
   productionPreset: brandOverridesSchema.shape.productionPreset,
   researchEvidence: brandOverridesSchema.shape.researchEvidence,
   creationSettings: brandOverridesSchema.shape.creationSettings,
+  editorialWorkflow: brandOverridesSchema.shape.editorialWorkflow,
+  editorialStoryboard: brandOverridesSchema.shape.editorialStoryboard,
   visualTheme: brandOverridesSchema.shape.visualTheme,
   motionPlan: brandOverridesSchema.shape.motionPlan,
   musicMap: brandOverridesSchema.shape.musicMap,

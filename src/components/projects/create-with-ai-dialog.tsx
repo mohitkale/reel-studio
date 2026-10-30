@@ -82,6 +82,7 @@ export function CreateWithAIDialog({
   const { data: providers } = useAIProviders();
   const generate = useGenerateProject();
   const editorial = useGenerateEditorialProject();
+  const [editorialCallBudget, setEditorialCallBudget] = React.useState(1);
   const [reviewScript, setReviewScript] = React.useState(false);
   const [creativeBrief, setCreativeBrief] = React.useState<CreativeBrief>({
     intent: "explainer",
@@ -202,7 +203,7 @@ export function CreateWithAIDialog({
         evidenceId: researchRequired ? readyEvidence?.id : undefined,
         orientation,
         brandKitId: brandKitId || null,
-        budget: { maxProviderCalls: 1 as const, deadlineMs: 30_000 },
+        budget: { maxProviderCalls: editorialCallBudget, deadlineMs: 30_000 },
       };
       const content = JSON.stringify(input);
       if (editorialRequestKey.current?.content !== content)
@@ -476,6 +477,24 @@ export function CreateWithAIDialog({
                       />
                     </label>
                   ))}
+                  <label className="text-sm">
+                    Total writer call budget (writing + optional revisions)
+                    <NativeSelect
+                      aria-label="Editorial call budget"
+                      value={String(editorialCallBudget)}
+                      onChange={(event) =>
+                        setEditorialCallBudget(Number(event.target.value))
+                      }
+                    >
+                      <option value="1">1 — initial writing only</option>
+                      <option value="2">
+                        2 — writing + one explicit revision
+                      </option>
+                      <option value="3">
+                        3 — writing + two explicit revisions
+                      </option>
+                    </NativeSelect>
+                  </label>
                   <label className="text-sm">
                     Target seconds
                     <input

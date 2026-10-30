@@ -1,3 +1,4 @@
+import { editorialStoryboardSchema } from "@/production/editorial-storyboard";
 import { factoryLineageSchema } from "@/production/factory-lineage";
 import { frameWordsSchema } from "@/lib/speech-words";
 import { z } from "zod";
@@ -95,6 +96,7 @@ export const brandOverridesSchema = z
     researchEvidence: evidencePackSchema.optional(),
     creationSettings: creationSettingsSchema.optional(),
     editorialWorkflow: editorialWorkflowSchema.optional(),
+    editorialStoryboard: editorialStoryboardSchema.optional(),
     frozenBrandTokens: z
       .object({
         background: z.string(),

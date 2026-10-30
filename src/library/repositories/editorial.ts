@@ -80,6 +80,7 @@ export async function readEditorialRecord(scriptId: string) {
         projectId: row.projectId,
         scriptId: row.id,
         workflow: workflow.data,
+        storyboard: overrides.editorialStoryboard,
         evidence: overrides.researchEvidence ?? null,
       }
     : null;

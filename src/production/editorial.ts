@@ -70,7 +70,7 @@ export const editorialCreationRequestSchema = z
     brandKitId: z.string().min(1).max(160).nullable().default(null),
     budget: z
       .object({
-        maxProviderCalls: z.literal(1),
+        maxProviderCalls: z.number().int().min(1).max(3),
         deadlineMs: z.number().int().min(1000).max(45_000).default(30_000),
       })
       .strict(),
@@ -87,6 +87,7 @@ export const editorialWorkflowSchema = z
     request: editorialCreationRequestSchema,
     state: z.enum(["queued", "running", "ready", "failed", "canceled"]),
     callsUsed: z.number().int().min(0).max(1),
+    revisionCallsUsed: z.number().int().min(0).max(2).default(0),
     deadlineAt: z.iso.datetime(),
     revision: z.number().int().nonnegative(),
     draft: editorialScriptSchema.optional(),

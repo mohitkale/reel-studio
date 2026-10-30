@@ -74,7 +74,7 @@ export async function GET(
           )
         : record.workflow;
     return NextResponse.json(
-      { workflow },
+      { workflow, storyboard: record.storyboard },
       { headers: { "cache-control": "no-store" } },
     );
   } catch (error) {
