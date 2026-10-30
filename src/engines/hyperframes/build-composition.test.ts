@@ -15,6 +15,36 @@ import {
 import { ORIENTATIONS, dimsFor } from "@/lib/orientation";
 
 describe("buildHyperframesCompositionHtml", () => {
+  it("does not invent a brand mark when closing copy has no supplied visual", () => {
+    const render = (visual?: string) =>
+      buildHyperframesCompositionHtml({
+        preset: { id: "cinematic-brand", version: "1.0.0" },
+        scenes: [
+          {
+            id: "closing",
+            templateId: "hf-statement",
+            role: "logo",
+            text: "Make room for the next thought.",
+            emphasis: [],
+            ...(visual ? { visual } : {}),
+          },
+        ],
+        timeline: [{ sceneId: "closing", startFrame: 0, durationFrames: 180 }],
+        ...dimsFor("portrait"),
+        fps: 30,
+        tokens: defaultBrandTokens,
+      });
+    const missing = new DOMParser().parseFromString(render(), "text/html");
+    expect(missing.querySelector(".cb-mark")).toBeNull();
+    expect(missing.querySelector(".cb-label")?.textContent).toBe(
+      "Closing message",
+    );
+    expect(missing.querySelector(".cb-logo-copy")?.textContent).toBe(
+      "Make room for the next thought.",
+    );
+    const supplied = new DOMParser().parseFromString(render("HB"), "text/html");
+    expect(supplied.querySelector(".cb-mark")?.textContent).toBe("HB");
+  });
   it.each(ORIENTATIONS)(
     "retains supplied chart media and values in the %s preset fallback",
     (orientation) => {
@@ -30,7 +60,9 @@ describe("buildHyperframesCompositionHtml", () => {
             background: { type: "image", url: "/media/audit.png" },
             chart: {
               labels: ["Draft", "Reviewed"],
-              series: [{ label: "Review time", values: [18, 11], unit: " min" }],
+              series: [
+                { label: "Review time", values: [18, 11], unit: " min" },
+              ],
               sourceAttribution: "Supplied audit",
             },
           },
@@ -810,3 +842,35 @@ it("limits draft paint reductions to preview and keeps producer output identical
     ),
   ).toBe(buildHyperframesCompositionHtml(props, { producerMode: true }));
 });
+it.each(ORIENTATIONS)(
+  "keeps supplied recording cues and contained product media in %s",
+  (orientation) => {
+    const html = buildHyperframesCompositionHtml({
+      preset: { id: "product-launch", version: "1.0.0" },
+      scenes: [
+        {
+          id: "proof",
+          templateId: "hf-opener",
+          role: "screenshot-demo",
+          text: "Review the supplied screen.",
+          emphasis: [],
+          motion: { recipeId: "media-device", version: "1.0.0" },
+          background: {
+            type: "video",
+            url: "/media/proof.mp4",
+            startSeconds: 2.5,
+            muted: true,
+          },
+        },
+      ],
+      timeline: [{ sceneId: "proof", startFrame: 0, durationFrames: 150 }],
+      ...dimsFor(orientation),
+      fps: 30,
+      tokens: defaultBrandTokens,
+    });
+    expect(html).toContain('data-media-start="2.5"');
+    expect(html).toContain("object-fit: contain");
+    expect(html).toContain("SUPPLIED VIDEO");
+    expect(html).not.toContain("LIVE PRODUCT");
+  },
+);

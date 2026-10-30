@@ -1,3 +1,7 @@
+import {
+  productProofSchema,
+  sceneProofSchema,
+} from "@/production/product-proof";
 import { editorialProposalSchema } from "@/production/editorial-review";
 import { editorialStoryboardSchema } from "@/production/editorial-storyboard";
 import { factoryLineageSchema } from "@/production/factory-lineage";
@@ -96,6 +100,7 @@ export const brandOverridesSchema = z
     factoryLineage: factoryLineageSchema.optional(),
     researchEvidence: evidencePackSchema.optional(),
     creationSettings: creationSettingsSchema.optional(),
+    productProof: productProofSchema.optional(),
     editorialWorkflow: editorialWorkflowSchema.optional(),
     editorialStoryboard: editorialStoryboardSchema.optional(),
     editorialProposal: editorialProposalSchema.optional(),
@@ -155,6 +160,7 @@ export const sceneBackgroundSchema = z.object({
       }
     }),
   effect: panEffectSchema.optional(),
+  startSeconds: z.number().finite().min(0).max(3600).optional(),
   muted: z.boolean().optional(),
   stock: z.boolean().optional(),
 });
@@ -186,6 +192,7 @@ export const DEFAULT_SCENE_LOCKS: SceneLocks = {
 
 /** Per-scene config stored in the Scene.layoutJson column. */
 export const sceneConfigSchema = z.object({
+  proof: sceneProofSchema.optional(),
   direction: shotDirectionSchema.optional(),
   /** Explicit, versioned visual direction. Absent means the legacy preset renderer. */
   motion: motionDirectionSchema.optional(),

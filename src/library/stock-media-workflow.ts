@@ -1,3 +1,8 @@
+import { rankingForSelection } from "./media-ranking-selection";
+import {
+  rankStockCandidates,
+  selectionRanking,
+} from "@/production/media-ranking";
 import { z } from "zod";
 
 import type { SceneBackground, SceneDTO } from "@/lib/dto";
@@ -45,6 +50,7 @@ export const selectSceneStockMediaSchema = z
     providerAssetId: z.string().trim().min(1).max(2048),
     search: stockMediaSearchRequestSchema,
     imageEffect: imageEffectSchema.optional(),
+    rankingJobId: z.string().min(1).max(160).optional(),
   })
   .strict();
 
@@ -157,6 +163,29 @@ export async function selectSceneStockMedia(
       input.providerId,
     );
   }
+  const vision = input.rankingJobId
+    ? await rankingForSelection(
+        sceneId,
+        input.rankingJobId,
+        input.providerId,
+        input.search,
+        result.items,
+        input.providerAssetId,
+      )
+    : undefined;
+  const ranked = rankStockCandidates(result.items, {
+    query: input.search.query,
+    orientation: input.search.orientation ?? "portrait",
+  });
+  const ranking =
+    vision?.ranking ??
+    selectionRanking(
+      ranked,
+      ranked.findIndex(
+        (item) => item.candidate.providerAssetId === candidate.providerAssetId,
+      ),
+      input.search.query,
+    );
   const selected = selectRendition(candidate);
   const resolution = await deps.registry.resolve(
     input.providerId,
@@ -182,7 +211,13 @@ export async function selectSceneStockMedia(
     input.imageEffect ?? "ken-burns",
     deps,
   );
-  let applied = await deps.apply(sceneId, snapshot, background);
+  const rankedSnapshot = { ...snapshot, ranking };
+  let applied = vision
+    ? await deps.apply(sceneId, rankedSnapshot, background, {
+        rankingJobId: input.rankingJobId,
+        expectedSourceHash: vision.sourceHash,
+      })
+    : await deps.apply(sceneId, rankedSnapshot, background);
   let usageWarning: string | undefined;
   if (snapshot.usageEvent.state === "pending") {
     try {

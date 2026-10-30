@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { getScript } from "./repositories/scripts";
 import { backup, DatabaseSync } from "node:sqlite";
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -238,6 +239,11 @@ it("keeps copy and paid writing for visual/direction edits, rejects locks and st
     proposalId: visual.id,
     expectedHash: visual.sourceHash,
   });
+  const selected = (await getScript(scriptId))!.scenes.find(
+    (scene) => scene.id === scenes[0].id,
+  )!;
+  expect(selected.background?.type).toBe("image");
+  expect(selected.locks?.copy).toBe(true);
   await m.db!.scene.update({
     where: { id: scenes[1].id },
     data: { text: "A later edit" },

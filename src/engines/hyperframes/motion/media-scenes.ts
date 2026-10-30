@@ -53,7 +53,7 @@ export function buildMediaMotionScene(args: {
         .replace(/"/g, "&quot;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
-    const video = `<video id="scene-${escape(scene.id)}-motion-video" class="motion-video${device ? "" : " cb-media"}" src="${escape(scene.background.url)}" data-start="${args.absoluteStart.toFixed(3)}" data-duration="${args.duration.toFixed(3)}" data-media-start="0" data-track-index="0" muted playsinline preload="auto"></video>`;
+    const video = `<video id="scene-${escape(scene.id)}-motion-video" class="motion-video${device ? "" : " cb-media"}" src="${escape(scene.background.url)}" data-start="${args.absoluteStart.toFixed(3)}" data-duration="${args.duration.toFixed(3)}" data-media-start="${scene.background.startSeconds ?? 0}" data-track-index="0" muted playsinline preload="auto"></video>`;
     // The producer discovers timed media at any depth. Animate the enclosing
     // device/stage; the producer owns source-frame decoding and playback.
     html = device

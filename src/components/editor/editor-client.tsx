@@ -1,4 +1,5 @@
 "use client";
+import { ProductProofPanel } from "./product-proof-panel";
 import { EditorialReviewPanel } from "./editorial-review-panel";
 import { EditorialScriptPanel } from "./editorial-script-panel";
 import { LanguageVersions } from "@/components/studio/language-versions";
@@ -489,6 +490,7 @@ export function EditorClient({
         />
       )}
       <EditorialReviewPanel script={script} onSelect={selectScene} />
+      <ProductProofPanel script={script} />
       <FilmContactSheet
         script={script}
         scenes={reelScenes}

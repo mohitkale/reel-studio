@@ -1,3 +1,5 @@
+import { AIError } from "@/providers/ai/types";
+import { mediaRankingSource } from "./media-ranking-jobs";
 import type { StockMediaSelection } from "@prisma/client";
 
 import type { SceneBackground, SceneDTO } from "@/lib/dto";
@@ -76,6 +78,7 @@ export async function applyStockMediaSelection(
   sceneId: string,
   input: ResolvedStockAsset,
   background: SceneBackground,
+  options?: { rankingJobId?: string; expectedSourceHash?: string },
 ): Promise<{ scene: SceneDTO; selection: StockMediaSelectionDTO }> {
   const snapshot = resolvedStockAssetSchema.parse(input);
   const provider = snapshot.providerSnapshot;
@@ -83,74 +86,81 @@ export async function applyStockMediaSelection(
     throw new Error("Stock background kind must match the provider selection");
   }
 
-  const current = await prisma.scene.findUnique({
-    where: { id: sceneId },
-    select: { layoutJson: true },
-  });
-  if (!current) throw new Error("Scene not found");
-  const config = parseJsonColumn(current.layoutJson, sceneConfigSchema, {});
-  config.background = background;
-  config.mediaPreference = provider.kind;
-
-  if (snapshot.localAssetId) {
-    const asset = await prisma.asset.findUnique({
-      where: { id: snapshot.localAssetId },
-      select: { type: true },
-    });
-    if (!asset || asset.type !== provider.kind) {
-      throw new Error(
-        `Local stock asset must reference an existing ${provider.kind} asset`,
-      );
+  return prisma.$transaction(async (tx) => {
+    const current = await tx.scene.findUnique({ where: { id: sceneId } });
+    if (!current) throw new AIError("Scene not found", 404);
+    const config = parseJsonColumn(current.layoutJson, sceneConfigSchema, {});
+    if (config.locks?.scene || config.locks?.assets)
+      throw new AIError("The scene's visual scope is protected", 409);
+    if (options?.rankingJobId) {
+      const job = await tx.mediaRankingJob.findFirst({
+        where: {
+          id: options.rankingJobId,
+          scriptId: current.scriptId,
+          sceneId,
+          state: "ready",
+        },
+      });
+      if (
+        !job ||
+        job.sourceHash !== options.expectedSourceHash ||
+        (await mediaRankingSource(current.scriptId, tx)).sourceHash !==
+          job.sourceHash
+      )
+        throw new AIError(
+          "The film changed since scoring; review current candidates",
+          409,
+        );
     }
-  }
-
-  const [scene, selection] = await prisma.$transaction([
-    prisma.scene.update({
+    if (snapshot.localAssetId) {
+      const asset = await tx.asset.findUnique({
+        where: { id: snapshot.localAssetId },
+        select: { type: true },
+      });
+      if (!asset || asset.type !== provider.kind)
+        throw new Error(
+          `Local stock asset must reference an existing ${provider.kind} asset`,
+        );
+    }
+    config.background = background;
+    config.mediaPreference = provider.kind;
+    const scene = await tx.scene.update({
       where: { id: sceneId },
       data: { layoutJson: JSON.stringify(config) },
-    }),
-    prisma.stockMediaSelection.upsert({
+    });
+    const data = {
+      providerId: provider.providerId,
+      providerAssetId: provider.providerAssetId,
+      kind: provider.kind,
+      snapshotJson: JSON.stringify(snapshot),
+      localAssetId: snapshot.localAssetId ?? null,
+    };
+    const selection = await tx.stockMediaSelection.upsert({
       where: { sceneId },
-      create: {
-        sceneId,
-        providerId: provider.providerId,
-        providerAssetId: provider.providerAssetId,
-        kind: provider.kind,
-        snapshotJson: JSON.stringify(snapshot),
-        localAssetId: snapshot.localAssetId ?? null,
-      },
-      update: {
-        providerId: provider.providerId,
-        providerAssetId: provider.providerAssetId,
-        kind: provider.kind,
-        snapshotJson: JSON.stringify(snapshot),
-        localAssetId: snapshot.localAssetId ?? null,
-      },
-    }),
-  ]);
-  return { scene: toSceneDTO(scene), selection: toDTO(selection) };
+      create: { sceneId, ...data },
+      update: data,
+    });
+    return { scene: toSceneDTO(scene), selection: toDTO(selection) };
+  });
 }
 
 /** Clear the visible background and selection metadata without deleting cached media. */
 export async function clearSceneStockMedia(sceneId: string): Promise<SceneDTO> {
-  const current = await prisma.scene.findUnique({
-    where: { id: sceneId },
-    select: { layoutJson: true },
-  });
-  if (!current) throw new Error("Scene not found");
-  const config = parseJsonColumn(current.layoutJson, sceneConfigSchema, {});
-  delete config.background;
-  config.mediaPreference = "none";
-  const [scene] = await prisma.$transaction([
-    prisma.scene.update({
+  return prisma.$transaction(async (tx) => {
+    const current = await tx.scene.findUnique({ where: { id: sceneId } });
+    if (!current) throw new AIError("Scene not found", 404);
+    const config = parseJsonColumn(current.layoutJson, sceneConfigSchema, {});
+    if (config.locks?.scene || config.locks?.assets)
+      throw new AIError("The scene's visual scope is protected", 409);
+    delete config.background;
+    config.mediaPreference = "none";
+    const scene = await tx.scene.update({
       where: { id: sceneId },
-      data: {
-        layoutJson: Object.keys(config).length ? JSON.stringify(config) : null,
-      },
-    }),
-    prisma.stockMediaSelection.deleteMany({ where: { sceneId } }),
-  ]);
-  return toSceneDTO(scene);
+      data: { layoutJson: JSON.stringify(config) },
+    });
+    await tx.stockMediaSelection.deleteMany({ where: { sceneId } });
+    return toSceneDTO(scene);
+  });
 }
 
 export async function clearStockMediaSelection(sceneId: string): Promise<void> {

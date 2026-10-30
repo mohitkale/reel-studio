@@ -37,6 +37,8 @@ const CACHE_TTL_SECONDS = 3_600;
 
 const photoSchema = z
   .object({
+    description:z.string().max(1000).nullable().optional(),
+    alt_description:z.string().max(1000).nullable().optional(),
     id: z.string().trim().min(1).max(2048),
     width: z.number().int().positive().max(32768),
     height: z.number().int().positive().max(32768),
@@ -185,6 +187,7 @@ function candidateFromPhoto(photo: UnsplashPhoto): StockMediaCandidate {
     previewUrl,
     sourcePageUrl: appendReferral(photo.links.html),
     creator: photo.user.name,
+    description: photo.alt_description??photo.description??undefined,
     creatorUrl: appendReferral(photo.user.links.html),
     width,
     height,

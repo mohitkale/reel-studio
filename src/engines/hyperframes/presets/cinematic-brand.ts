@@ -28,7 +28,7 @@ function content(scene: ReelScene): string {
   if (role === "feature" && items.length)
     return `${label}<h2 class="cb-title fx-line"><span class="fx-line-inner">${copy}</span></h2><div class="cb-features">${items.map((item) => `<div class="cb-feature fx-check-item">${escapeHtml(item)}</div>`).join("")}</div>`;
   if (role === "logo")
-    return `${label}<div class="cb-mark fx-logo-mark">${escapeHtml(scene.visual?.slice(0, 2) || "RS")}</div><h2 class="cb-logo-copy fx-line"><span class="fx-line-inner">${copy}</span></h2>`;
+    return `${scene.visual ? label : '<div class="cb-label fx-kicker">Closing message</div>'}${scene.visual ? `<div class="cb-mark fx-logo-mark">${escapeHtml(scene.visual.slice(0, 2))}</div>` : ""}<h2 class="cb-logo-copy fx-line"><span class="fx-line-inner">${copy}</span></h2>`;
   return `${label}<h2 class="cb-hero fx-line"><span class="fx-line-inner">${copy}</span></h2>`;
 }
 

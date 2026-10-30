@@ -22,6 +22,11 @@ Use dedicated **Voiceovers** and **Factory** workspaces, organize projects by se
 
 Source-linked writing and targeted editing: see the [editorial guide](docs/EDITORIAL.md) for creative briefs, cached storyboards and guarded revisions.
 
+Supplied product proof and ranked stock choices have visible reasons and separate
+optional vision budgets. See [media relevance](docs/MEDIA_RELEVANCE.md) and the
+[offline editorial benchmark](docs/EDITORIAL_BENCHMARK.md) for verified examples
+and human export review.
+
 ## What you can make
 
 - **Videos:** six visual presets, 29 motion treatments and nine

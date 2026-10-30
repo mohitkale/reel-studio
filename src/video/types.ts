@@ -39,6 +39,8 @@ export interface SceneBackground {
   stock?: boolean;
   /** Image only. */
   effect?: PanEffect;
+  /** Explicit cue into a supplied recording, in seconds. */
+  startSeconds?: number;
   /** Video only — defaults to true and is always true for stock media. */
   muted?: boolean;
 }

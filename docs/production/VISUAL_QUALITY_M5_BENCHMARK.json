@@ -1,0 +1,1048 @@
+{
+  "version": "editorial-visual-v1",
+  "runId": "003d42e1-b828-4713-bf67-83c2dca6eae4",
+  "createdAt": "2026-10-30T12:28:22.830Z",
+  "execution": "offline-writer-fixtures",
+  "sourcePolicy": "Frozen supplied snapshots, external/unverified; no fresh search",
+  "brandPolicy": "Explicit null brand kit in all modes; identical resolved default brand tokens required",
+  "mcpPath": "Shared-library writing seed; real SDK tool transport → authenticated HTTP for status, compile, apply and review",
+  "paidWriterCallsReserved": 0,
+  "fixtureWriterInvocations": 18,
+  "researchCalls": 0,
+  "visionCalls": 0,
+  "voiceCalls": 0,
+  "currencyCost": 0,
+  "status": "complete",
+  "rows": [
+    {
+      "brief": "product",
+      "mode": "baseline",
+      "state": "exported",
+      "manualRepairOperations": 0,
+      "sourceTitle": "Repository editorial and supplied-proof contracts",
+      "projectId": "cmvuy7gtz0000ay9kjxneu22o",
+      "scriptId": "cmvuy7gu00001ay9k8orfph64",
+      "copyChecksum": "cd33007a09bac5836a5a073f68c21f48722e9d20d86f6eb7b0add2b8101584cc",
+      "brandChecksum": "08a116fcc8e15d6c638d1ce8516af43949667d82a10dc12d75fd77c6b6a5f9e2",
+      "brandTokens": {
+        "background": "#0D256F",
+        "backgroundAccent": "#1A3490",
+        "foreground": "#FFFFFF",
+        "muted": "#F6ECDB",
+        "accent": "#FF5900",
+        "accentSecondary": "#FFA000",
+        "accentForeground": "#FFFFFF",
+        "handle": "@mohitkale",
+        "fontFamily": "'DM Sans', 'Segoe UI', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+        "radius": 20
+      },
+      "metrics": {
+        "scenes": 2,
+        "linkedSceneFraction": 0,
+        "unsupportedNumericTokens": [],
+        "specificityKeywordFraction": 1,
+        "repeatedNarrations": 0,
+        "estimatedNarrationSeconds": 9.2,
+        "suppliedProofScenes": 0,
+        "semanticVisualRelevance": null,
+        "humanNarrativeQuality": null,
+        "humanRepairEdits": null
+      },
+      "findings": ["unsupported-claim", "unsupported-claim", "missing-payoff"],
+      "creationMs": 111,
+      "actualWriterCalls": 0,
+      "fixtureWriterInvocations": 1,
+      "jobId": "cmvuy7gx90006ay9k4c07321p",
+      "output": {
+        "path": "media/renders/render-cmvuy7gwa0004ay9k3urj0jo5.mp4",
+        "checksum": "sha256:289ae8eb6648f5531abd911fdfb8334514a012298e43d9dc5bef556063a04d13"
+      },
+      "media": {
+        "streams": [
+          {
+            "width": 1080,
+            "height": 1920,
+            "r_frame_rate": "30/1",
+            "nb_frames": "285"
+          }
+        ],
+        "format": {
+          "duration": 9.5
+        }
+      },
+      "renderMs": 25615,
+      "agentFrameReview": "Both decoded scene frames inspected by Codex for visible complete captions/containment. Human quality ratings remain pending.",
+      "sourceRunId": "003d42e1-b828-4713-bf67-83c2dca6eae4"
+    },
+    {
+      "brief": "product",
+      "mode": "researched-app",
+      "state": "exported",
+      "manualRepairOperations": 0,
+      "sourceTitle": "Repository editorial and supplied-proof contracts",
+      "projectId": "editorial-project-0d6e27cbbf3f32851ae2145d7728fda5c7e6e681235b9414433e71d87917542e",
+      "scriptId": "editorial-script-0d6e27cbbf3f32851ae2145d7728fda5c7e6e681235b9414433e71d87917542e",
+      "copyChecksum": "cd33007a09bac5836a5a073f68c21f48722e9d20d86f6eb7b0add2b8101584cc",
+      "brandChecksum": "08a116fcc8e15d6c638d1ce8516af43949667d82a10dc12d75fd77c6b6a5f9e2",
+      "brandTokens": {
+        "background": "#0D256F",
+        "backgroundAccent": "#1A3490",
+        "foreground": "#FFFFFF",
+        "muted": "#F6ECDB",
+        "accent": "#FF5900",
+        "accentSecondary": "#FFA000",
+        "accentForeground": "#FFFFFF",
+        "handle": "@mohitkale",
+        "fontFamily": "'DM Sans', 'Segoe UI', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+        "radius": 20
+      },
+      "metrics": {
+        "scenes": 2,
+        "linkedSceneFraction": 1,
+        "unsupportedNumericTokens": [],
+        "specificityKeywordFraction": 1,
+        "repeatedNarrations": 0,
+        "estimatedNarrationSeconds": 9.2,
+        "suppliedProofScenes": 0,
+        "semanticVisualRelevance": null,
+        "humanNarrativeQuality": null,
+        "humanRepairEdits": null
+      },
+      "findings": [],
+      "creationMs": 110,
+      "actualWriterCalls": 0,
+      "fixtureWriterInvocations": 1,
+      "jobId": "cmvuy80qe000qay9ky2fy3bqb",
+      "output": {
+        "path": "media/renders/render-cmvuy80q6000oay9k3te0sesb.mp4",
+        "checksum": "sha256:13aad39bad4da52b2ae17c092fc8a406cb731b74b596bdb45dd43d7f6e6becef"
+      },
+      "media": {
+        "streams": [
+          {
+            "width": 1080,
+            "height": 1920,
+            "r_frame_rate": "30/1",
+            "nb_frames": "285"
+          }
+        ],
+        "format": {
+          "duration": 9.5
+        }
+      },
+      "renderMs": 53090,
+      "agentFrameReview": "Both decoded scene frames inspected by Codex for visible complete captions/containment. Human quality ratings remain pending.",
+      "sourceRunId": "003d42e1-b828-4713-bf67-83c2dca6eae4"
+    },
+    {
+      "brief": "product",
+      "mode": "researched-mcp",
+      "state": "exported",
+      "manualRepairOperations": 0,
+      "sourceTitle": "Repository editorial and supplied-proof contracts",
+      "projectId": "editorial-project-369420d5864040799e62fa6d53d645d3c990a5edb23973c3143c979d48147add",
+      "scriptId": "editorial-script-369420d5864040799e62fa6d53d645d3c990a5edb23973c3143c979d48147add",
+      "copyChecksum": "cd33007a09bac5836a5a073f68c21f48722e9d20d86f6eb7b0add2b8101584cc",
+      "brandChecksum": "08a116fcc8e15d6c638d1ce8516af43949667d82a10dc12d75fd77c6b6a5f9e2",
+      "brandTokens": {
+        "background": "#0D256F",
+        "backgroundAccent": "#1A3490",
+        "foreground": "#FFFFFF",
+        "muted": "#F6ECDB",
+        "accent": "#FF5900",
+        "accentSecondary": "#FFA000",
+        "accentForeground": "#FFFFFF",
+        "handle": "@mohitkale",
+        "fontFamily": "'DM Sans', 'Segoe UI', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+        "radius": 20
+      },
+      "metrics": {
+        "scenes": 2,
+        "linkedSceneFraction": 1,
+        "unsupportedNumericTokens": [],
+        "specificityKeywordFraction": 1,
+        "repeatedNarrations": 0,
+        "estimatedNarrationSeconds": 9.2,
+        "suppliedProofScenes": 0,
+        "semanticVisualRelevance": null,
+        "humanNarrativeQuality": null,
+        "humanRepairEdits": null
+      },
+      "findings": [],
+      "creationMs": 1453,
+      "actualWriterCalls": 0,
+      "fixtureWriterInvocations": 1,
+      "jobId": "cmvuy96tj001aay9k8g5aulgq",
+      "output": {
+        "path": "media/renders/render-cmvuy96te0018ay9k870pmkje.mp4",
+        "checksum": "sha256:13aad39bad4da52b2ae17c092fc8a406cb731b74b596bdb45dd43d7f6e6becef"
+      },
+      "media": {
+        "streams": [
+          {
+            "width": 1080,
+            "height": 1920,
+            "r_frame_rate": "30/1",
+            "nb_frames": "285"
+          }
+        ],
+        "format": {
+          "duration": 9.5
+        }
+      },
+      "renderMs": 52165,
+      "agentFrameReview": "Both decoded scene frames inspected by Codex for visible complete captions/containment. Human quality ratings remain pending.",
+      "sourceRunId": "003d42e1-b828-4713-bf67-83c2dca6eae4"
+    },
+    {
+      "brief": "technical",
+      "mode": "baseline",
+      "state": "exported",
+      "manualRepairOperations": 0,
+      "sourceTitle": "Repository editorial job contract",
+      "projectId": "cmvuyab2e001say9kbcpgmx8m",
+      "scriptId": "cmvuyab2e001tay9kovlk7jw0",
+      "copyChecksum": "63122968161eba70665b90ff8375e30460f8cb8194c41f9ba72de8d8999070e9",
+      "brandChecksum": "08a116fcc8e15d6c638d1ce8516af43949667d82a10dc12d75fd77c6b6a5f9e2",
+      "brandTokens": {
+        "background": "#0D256F",
+        "backgroundAccent": "#1A3490",
+        "foreground": "#FFFFFF",
+        "muted": "#F6ECDB",
+        "accent": "#FF5900",
+        "accentSecondary": "#FFA000",
+        "accentForeground": "#FFFFFF",
+        "handle": "@mohitkale",
+        "fontFamily": "'DM Sans', 'Segoe UI', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+        "radius": 20
+      },
+      "metrics": {
+        "scenes": 2,
+        "linkedSceneFraction": 0,
+        "unsupportedNumericTokens": [],
+        "specificityKeywordFraction": 1,
+        "repeatedNarrations": 0,
+        "estimatedNarrationSeconds": 10.8,
+        "suppliedProofScenes": 0,
+        "semanticVisualRelevance": null,
+        "humanNarrativeQuality": null,
+        "humanRepairEdits": null
+      },
+      "findings": ["unsupported-claim", "unsupported-claim", "missing-payoff"],
+      "creationMs": 21,
+      "actualWriterCalls": 0,
+      "fixtureWriterInvocations": 1,
+      "jobId": "cmvuyab3h001yay9kb6s78tl1",
+      "output": {
+        "path": "media/renders/render-cmvuyab34001way9koljj940y.mp4",
+        "checksum": "sha256:541f9a1d81bb2f818a5d808e132645aafc98e08721c7dd4bb2920ba49fb9d578"
+      },
+      "media": {
+        "streams": [
+          {
+            "width": 1080,
+            "height": 1920,
+            "r_frame_rate": "30/1",
+            "nb_frames": "333"
+          }
+        ],
+        "format": {
+          "duration": 11.1
+        }
+      },
+      "renderMs": 21522,
+      "agentFrameReview": "Both decoded scene frames inspected by Codex for visible complete captions/containment. Human quality ratings remain pending.",
+      "sourceRunId": "003d42e1-b828-4713-bf67-83c2dca6eae4"
+    },
+    {
+      "brief": "technical",
+      "mode": "researched-app",
+      "state": "exported",
+      "manualRepairOperations": 0,
+      "sourceTitle": "Repository editorial job contract",
+      "projectId": "editorial-project-a51a919f08e6cdc0c213e964fa572dadf7f1e47e9565bc90667d0a62aba7760f",
+      "scriptId": "editorial-script-a51a919f08e6cdc0c213e964fa572dadf7f1e47e9565bc90667d0a62aba7760f",
+      "copyChecksum": "63122968161eba70665b90ff8375e30460f8cb8194c41f9ba72de8d8999070e9",
+      "brandChecksum": "08a116fcc8e15d6c638d1ce8516af43949667d82a10dc12d75fd77c6b6a5f9e2",
+      "brandTokens": {
+        "background": "#0D256F",
+        "backgroundAccent": "#1A3490",
+        "foreground": "#FFFFFF",
+        "muted": "#F6ECDB",
+        "accent": "#FF5900",
+        "accentSecondary": "#FFA000",
+        "accentForeground": "#FFFFFF",
+        "handle": "@mohitkale",
+        "fontFamily": "'DM Sans', 'Segoe UI', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+        "radius": 20
+      },
+      "metrics": {
+        "scenes": 2,
+        "linkedSceneFraction": 1,
+        "unsupportedNumericTokens": [],
+        "specificityKeywordFraction": 1,
+        "repeatedNarrations": 0,
+        "estimatedNarrationSeconds": 10.8,
+        "suppliedProofScenes": 0,
+        "semanticVisualRelevance": null,
+        "humanNarrativeQuality": null,
+        "humanRepairEdits": null
+      },
+      "findings": [],
+      "creationMs": 47,
+      "actualWriterCalls": 0,
+      "fixtureWriterInvocations": 1,
+      "jobId": "cmvuyarqf002iay9k3fhfbqad",
+      "output": {
+        "path": "media/renders/render-cmvuyarq8002gay9k5m7r2tod.mp4",
+        "checksum": "sha256:c0c89185885a853387b4ab44bcaa09c8d723d49c56ecb7069b8e1bbef9e9a60f"
+      },
+      "media": {
+        "streams": [
+          {
+            "width": 1080,
+            "height": 1920,
+            "r_frame_rate": "30/1",
+            "nb_frames": "333"
+          }
+        ],
+        "format": {
+          "duration": 11.1
+        }
+      },
+      "renderMs": 38485,
+      "agentFrameReview": "Both decoded scene frames inspected by Codex for visible complete captions/containment. Human quality ratings remain pending.",
+      "sourceRunId": "003d42e1-b828-4713-bf67-83c2dca6eae4"
+    },
+    {
+      "brief": "technical",
+      "mode": "researched-mcp",
+      "state": "exported",
+      "manualRepairOperations": 0,
+      "sourceTitle": "Repository editorial job contract",
+      "projectId": "editorial-project-f1d5981ff9a6c664a7725c5c1cd05f8cb8aa78f290f384353efcfa563ecbf757",
+      "scriptId": "editorial-script-f1d5981ff9a6c664a7725c5c1cd05f8cb8aa78f290f384353efcfa563ecbf757",
+      "copyChecksum": "63122968161eba70665b90ff8375e30460f8cb8194c41f9ba72de8d8999070e9",
+      "brandChecksum": "08a116fcc8e15d6c638d1ce8516af43949667d82a10dc12d75fd77c6b6a5f9e2",
+      "brandTokens": {
+        "background": "#0D256F",
+        "backgroundAccent": "#1A3490",
+        "foreground": "#FFFFFF",
+        "muted": "#F6ECDB",
+        "accent": "#FF5900",
+        "accentSecondary": "#FFA000",
+        "accentForeground": "#FFFFFF",
+        "handle": "@mohitkale",
+        "fontFamily": "'DM Sans', 'Segoe UI', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+        "radius": 20
+      },
+      "metrics": {
+        "scenes": 2,
+        "linkedSceneFraction": 1,
+        "unsupportedNumericTokens": [],
+        "specificityKeywordFraction": 1,
+        "repeatedNarrations": 0,
+        "estimatedNarrationSeconds": 10.8,
+        "suppliedProofScenes": 0,
+        "semanticVisualRelevance": null,
+        "humanNarrativeQuality": null,
+        "humanRepairEdits": null
+      },
+      "findings": [],
+      "creationMs": 83,
+      "actualWriterCalls": 0,
+      "fixtureWriterInvocations": 1,
+      "jobId": "cmvuyblhs0032ay9kmf911vxl",
+      "output": {
+        "path": "media/renders/render-cmvuyblhm0030ay9kiqvq621t.mp4",
+        "checksum": "sha256:c0c89185885a853387b4ab44bcaa09c8d723d49c56ecb7069b8e1bbef9e9a60f"
+      },
+      "media": {
+        "streams": [
+          {
+            "width": 1080,
+            "height": 1920,
+            "r_frame_rate": "30/1",
+            "nb_frames": "333"
+          }
+        ],
+        "format": {
+          "duration": 11.1
+        }
+      },
+      "renderMs": 38977,
+      "agentFrameReview": "Both decoded scene frames inspected by Codex for visible complete captions/containment. Human quality ratings remain pending.",
+      "sourceRunId": "003d42e1-b828-4713-bf67-83c2dca6eae4"
+    },
+    {
+      "brief": "current-topic",
+      "mode": "baseline",
+      "state": "exported",
+      "manualRepairOperations": 0,
+      "sourceTitle": "OpenAI image-input guidance, snapshot checked 30 October 2026",
+      "projectId": "cmvvangkd0000en9kcmf7u35e",
+      "scriptId": "cmvvangkf0001en9k7oyo8apy",
+      "copyChecksum": "f1b1b0763472f6bbb59b28541f7004f007c9960b2feed7a076f8a0b8e71f5a7e",
+      "brandChecksum": "08a116fcc8e15d6c638d1ce8516af43949667d82a10dc12d75fd77c6b6a5f9e2",
+      "brandTokens": {
+        "background": "#0D256F",
+        "backgroundAccent": "#1A3490",
+        "foreground": "#FFFFFF",
+        "muted": "#F6ECDB",
+        "accent": "#FF5900",
+        "accentSecondary": "#FFA000",
+        "accentForeground": "#FFFFFF",
+        "handle": "@mohitkale",
+        "fontFamily": "'DM Sans', 'Segoe UI', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+        "radius": 20
+      },
+      "metrics": {
+        "scenes": 2,
+        "linkedSceneFraction": 0,
+        "unsupportedNumericTokens": [],
+        "specificityKeywordFraction": 1,
+        "repeatedNarrations": 0,
+        "estimatedNarrationSeconds": 8.399999999999999,
+        "suppliedProofScenes": 0,
+        "semanticVisualRelevance": null,
+        "humanNarrativeQuality": null,
+        "humanRepairEdits": null
+      },
+      "findings": ["unsupported-claim", "unsupported-claim", "missing-payoff"],
+      "creationMs": 93,
+      "actualWriterCalls": 0,
+      "fixtureWriterInvocations": 1,
+      "jobId": "cmvvangn50006en9k3iubul2z",
+      "output": {
+        "path": "media/renders/render-cmvvangmf0004en9krayi729n.mp4",
+        "checksum": "sha256:904c8660ccb0832d5f5bb04a9dc8911ce296a42e7dbf17f0d9fece6fda191860"
+      },
+      "media": {
+        "streams": [
+          {
+            "width": 1080,
+            "height": 1920,
+            "r_frame_rate": "30/1",
+            "nb_frames": "261"
+          }
+        ],
+        "format": {
+          "duration": 8.7
+        }
+      },
+      "renderMs": 17193,
+      "agentFrameReview": "Both decoded scene frames inspected by Codex for visible complete captions/containment. Human quality ratings remain pending.",
+      "sourceRunId": "5aff3eb1-37e2-4468-882a-0bc9b2402f22",
+      "supersededOutputs": [
+        {
+          "scriptId": "cmvuycfk9003lay9k9ibs1hon",
+          "projectId": "cmvuycfk9003kay9kkh1b4ucl",
+          "jobId": "cmvuycfkx003qay9k0l5whtnj",
+          "output": {
+            "path": "media/renders/render-cmvuycfkq003oay9khpclizye.mp4",
+            "checksum": "sha256:904c8660ccb0832d5f5bb04a9dc8911ce296a42e7dbf17f0d9fece6fda191860"
+          },
+          "renderMs": 16169,
+          "metrics": {
+            "scenes": 2,
+            "linkedSceneFraction": 0,
+            "unsupportedNumericTokens": [],
+            "specificityKeywordFraction": 0.75,
+            "repeatedNarrations": 0,
+            "estimatedNarrationSeconds": 8.399999999999999,
+            "suppliedProofScenes": 0,
+            "semanticVisualRelevance": null,
+            "humanNarrativeQuality": null,
+            "humanRepairEdits": null
+          },
+          "reason": "Paired API identifier underscores were stripped by Markdown cleanup. Recreated from the same brief after the fix."
+        }
+      ]
+    },
+    {
+      "brief": "current-topic",
+      "mode": "researched-app",
+      "state": "exported",
+      "manualRepairOperations": 0,
+      "sourceTitle": "OpenAI image-input guidance, snapshot checked 30 October 2026",
+      "projectId": "editorial-project-5bb8668acfe0a2727eba80fb78528e645923b295a0006732a5968509a3753428",
+      "scriptId": "editorial-script-5bb8668acfe0a2727eba80fb78528e645923b295a0006732a5968509a3753428",
+      "copyChecksum": "f1b1b0763472f6bbb59b28541f7004f007c9960b2feed7a076f8a0b8e71f5a7e",
+      "brandChecksum": "08a116fcc8e15d6c638d1ce8516af43949667d82a10dc12d75fd77c6b6a5f9e2",
+      "brandTokens": {
+        "background": "#0D256F",
+        "backgroundAccent": "#1A3490",
+        "foreground": "#FFFFFF",
+        "muted": "#F6ECDB",
+        "accent": "#FF5900",
+        "accentSecondary": "#FFA000",
+        "accentForeground": "#FFFFFF",
+        "handle": "@mohitkale",
+        "fontFamily": "'DM Sans', 'Segoe UI', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+        "radius": 20
+      },
+      "metrics": {
+        "scenes": 2,
+        "linkedSceneFraction": 1,
+        "unsupportedNumericTokens": [],
+        "specificityKeywordFraction": 1,
+        "repeatedNarrations": 0,
+        "estimatedNarrationSeconds": 8.399999999999999,
+        "suppliedProofScenes": 0,
+        "semanticVisualRelevance": null,
+        "humanNarrativeQuality": null,
+        "humanRepairEdits": null
+      },
+      "findings": [],
+      "creationMs": 84,
+      "actualWriterCalls": 0,
+      "fixtureWriterInvocations": 1,
+      "jobId": "cmvvanty2000qen9k1c3frte9",
+      "output": {
+        "path": "media/renders/render-cmvvantxu000oen9kto3oulo1.mp4",
+        "checksum": "sha256:d6e1002c44e925174ce4eefc7f4d2712a0cb1072ca35e67a59af093aae3b252b"
+      },
+      "media": {
+        "streams": [
+          {
+            "width": 1080,
+            "height": 1920,
+            "r_frame_rate": "30/1",
+            "nb_frames": "261"
+          }
+        ],
+        "format": {
+          "duration": 8.7
+        }
+      },
+      "renderMs": 30283,
+      "agentFrameReview": "Both decoded scene frames inspected by Codex for visible complete captions/containment. Human quality ratings remain pending.",
+      "sourceRunId": "5aff3eb1-37e2-4468-882a-0bc9b2402f22",
+      "supersededOutputs": [
+        {
+          "scriptId": "editorial-script-5af67809dc3be929d085339165e7c83c954b7ed31f99a4e0b4b3cb98adcdf2da",
+          "projectId": "editorial-project-5af67809dc3be929d085339165e7c83c954b7ed31f99a4e0b4b3cb98adcdf2da",
+          "jobId": "cmvuycs3c004aay9kscti6zf2",
+          "output": {
+            "path": "media/renders/render-cmvuycs350048ay9kxvru0hvb.mp4",
+            "checksum": "sha256:d6e1002c44e925174ce4eefc7f4d2712a0cb1072ca35e67a59af093aae3b252b"
+          },
+          "renderMs": 30663,
+          "metrics": {
+            "scenes": 2,
+            "linkedSceneFraction": 1,
+            "unsupportedNumericTokens": [],
+            "specificityKeywordFraction": 0.75,
+            "repeatedNarrations": 0,
+            "estimatedNarrationSeconds": 8.399999999999999,
+            "suppliedProofScenes": 0,
+            "semanticVisualRelevance": null,
+            "humanNarrativeQuality": null,
+            "humanRepairEdits": null
+          },
+          "reason": "Paired API identifier underscores were stripped by Markdown cleanup. Recreated from the same brief after the fix."
+        }
+      ]
+    },
+    {
+      "brief": "current-topic",
+      "mode": "researched-mcp",
+      "state": "exported",
+      "manualRepairOperations": 0,
+      "sourceTitle": "OpenAI image-input guidance, snapshot checked 30 October 2026",
+      "projectId": "editorial-project-c890f59098b4b7994e6eb5b0e49e101768b3553ada747f5631aaa6e6bef467f5",
+      "scriptId": "editorial-script-c890f59098b4b7994e6eb5b0e49e101768b3553ada747f5631aaa6e6bef467f5",
+      "copyChecksum": "f1b1b0763472f6bbb59b28541f7004f007c9960b2feed7a076f8a0b8e71f5a7e",
+      "brandChecksum": "08a116fcc8e15d6c638d1ce8516af43949667d82a10dc12d75fd77c6b6a5f9e2",
+      "brandTokens": {
+        "background": "#0D256F",
+        "backgroundAccent": "#1A3490",
+        "foreground": "#FFFFFF",
+        "muted": "#F6ECDB",
+        "accent": "#FF5900",
+        "accentSecondary": "#FFA000",
+        "accentForeground": "#FFFFFF",
+        "handle": "@mohitkale",
+        "fontFamily": "'DM Sans', 'Segoe UI', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+        "radius": 20
+      },
+      "metrics": {
+        "scenes": 2,
+        "linkedSceneFraction": 1,
+        "unsupportedNumericTokens": [],
+        "specificityKeywordFraction": 1,
+        "repeatedNarrations": 0,
+        "estimatedNarrationSeconds": 8.399999999999999,
+        "suppliedProofScenes": 0,
+        "semanticVisualRelevance": null,
+        "humanNarrativeQuality": null,
+        "humanRepairEdits": null
+      },
+      "findings": [],
+      "creationMs": 575,
+      "actualWriterCalls": 0,
+      "fixtureWriterInvocations": 1,
+      "jobId": "cmvvaohr7001aen9kpsmrl1rt",
+      "output": {
+        "path": "media/renders/render-cmvvaohr10018en9kr4a3u191.mp4",
+        "checksum": "sha256:d6e1002c44e925174ce4eefc7f4d2712a0cb1072ca35e67a59af093aae3b252b"
+      },
+      "media": {
+        "streams": [
+          {
+            "width": 1080,
+            "height": 1920,
+            "r_frame_rate": "30/1",
+            "nb_frames": "261"
+          }
+        ],
+        "format": {
+          "duration": 8.7
+        }
+      },
+      "renderMs": 30541,
+      "agentFrameReview": "Both decoded scene frames inspected by Codex for visible complete captions/containment. Human quality ratings remain pending.",
+      "sourceRunId": "5aff3eb1-37e2-4468-882a-0bc9b2402f22",
+      "supersededOutputs": [
+        {
+          "scriptId": "editorial-script-43160f8abb5a54e59574b860fb18e4576b249486e2cca345b56e67694a4a7160",
+          "projectId": "editorial-project-43160f8abb5a54e59574b860fb18e4576b249486e2cca345b56e67694a4a7160",
+          "jobId": "cmvuydfth004uay9kifwr1t7n",
+          "output": {
+            "path": "media/renders/render-cmvuydfta004say9k8w7c27f7.mp4",
+            "checksum": "sha256:d6e1002c44e925174ce4eefc7f4d2712a0cb1072ca35e67a59af093aae3b252b"
+          },
+          "renderMs": 30574,
+          "metrics": {
+            "scenes": 2,
+            "linkedSceneFraction": 1,
+            "unsupportedNumericTokens": [],
+            "specificityKeywordFraction": 0.75,
+            "repeatedNarrations": 0,
+            "estimatedNarrationSeconds": 8.399999999999999,
+            "suppliedProofScenes": 0,
+            "semanticVisualRelevance": null,
+            "humanNarrativeQuality": null,
+            "humanRepairEdits": null
+          },
+          "reason": "Paired API identifier underscores were stripped by Markdown cleanup. Recreated from the same brief after the fix."
+        }
+      ]
+    },
+    {
+      "brief": "brand",
+      "mode": "baseline",
+      "state": "exported",
+      "manualRepairOperations": 0,
+      "sourceTitle": "Synthetic Harbor brand brief",
+      "projectId": "cmvuye3ep005cay9ka1ox0g74",
+      "scriptId": "cmvuye3ep005day9kqvscvqip",
+      "copyChecksum": "90520c053d02a5b33b468a02220e7fa6f9fbdd695bc544aa70295379be2343c0",
+      "brandChecksum": "08a116fcc8e15d6c638d1ce8516af43949667d82a10dc12d75fd77c6b6a5f9e2",
+      "brandTokens": {
+        "background": "#0D256F",
+        "backgroundAccent": "#1A3490",
+        "foreground": "#FFFFFF",
+        "muted": "#F6ECDB",
+        "accent": "#FF5900",
+        "accentSecondary": "#FFA000",
+        "accentForeground": "#FFFFFF",
+        "handle": "@mohitkale",
+        "fontFamily": "'DM Sans', 'Segoe UI', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+        "radius": 20
+      },
+      "metrics": {
+        "scenes": 2,
+        "linkedSceneFraction": 0,
+        "unsupportedNumericTokens": [],
+        "specificityKeywordFraction": 1,
+        "repeatedNarrations": 0,
+        "estimatedNarrationSeconds": 11.2,
+        "suppliedProofScenes": 0,
+        "semanticVisualRelevance": null,
+        "humanNarrativeQuality": null,
+        "humanRepairEdits": null
+      },
+      "findings": ["unsupported-claim", "unsupported-claim", "missing-payoff"],
+      "creationMs": 17,
+      "actualWriterCalls": 0,
+      "fixtureWriterInvocations": 1,
+      "jobId": "cmvuye3fd005iay9ke56mars6",
+      "output": {
+        "path": "media/renders/render-cmvuye3f5005gay9keuf7qeyh.mp4",
+        "checksum": "sha256:0006d080068483cf685bd756ec991c2f7ccd1bb96b26922fc4f503ca422c70da"
+      },
+      "media": {
+        "streams": [
+          {
+            "width": 1080,
+            "height": 1920,
+            "r_frame_rate": "30/1",
+            "nb_frames": "345"
+          }
+        ],
+        "format": {
+          "duration": 11.5
+        }
+      },
+      "renderMs": 19322,
+      "agentFrameReview": "Both decoded scene frames inspected by Codex for visible complete captions/containment. Human quality ratings remain pending.",
+      "sourceRunId": "003d42e1-b828-4713-bf67-83c2dca6eae4"
+    },
+    {
+      "brief": "brand",
+      "mode": "researched-app",
+      "state": "exported",
+      "manualRepairOperations": 0,
+      "sourceTitle": "Synthetic Harbor brand brief",
+      "projectId": "editorial-project-5d91710e29d726b0ac058616190f50f8afa1b2867ab6f6f3ef124ad41fa0897e",
+      "scriptId": "editorial-script-5d91710e29d726b0ac058616190f50f8afa1b2867ab6f6f3ef124ad41fa0897e",
+      "copyChecksum": "90520c053d02a5b33b468a02220e7fa6f9fbdd695bc544aa70295379be2343c0",
+      "brandChecksum": "08a116fcc8e15d6c638d1ce8516af43949667d82a10dc12d75fd77c6b6a5f9e2",
+      "brandTokens": {
+        "background": "#0D256F",
+        "backgroundAccent": "#1A3490",
+        "foreground": "#FFFFFF",
+        "muted": "#F6ECDB",
+        "accent": "#FF5900",
+        "accentSecondary": "#FFA000",
+        "accentForeground": "#FFFFFF",
+        "handle": "@mohitkale",
+        "fontFamily": "'DM Sans', 'Segoe UI', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+        "radius": 20
+      },
+      "metrics": {
+        "scenes": 2,
+        "linkedSceneFraction": 1,
+        "unsupportedNumericTokens": [],
+        "specificityKeywordFraction": 1,
+        "repeatedNarrations": 0,
+        "estimatedNarrationSeconds": 11.2,
+        "suppliedProofScenes": 0,
+        "semanticVisualRelevance": null,
+        "humanNarrativeQuality": null,
+        "humanRepairEdits": null
+      },
+      "findings": [],
+      "creationMs": 45,
+      "actualWriterCalls": 0,
+      "fixtureWriterInvocations": 1,
+      "jobId": "cmvvafhkn00027h9kxg7ea4vo",
+      "output": {
+        "path": "media/renders/render-cmvvafhju00007h9kx5w47lxi.mp4",
+        "checksum": "sha256:7ac712ca918375cd0fda37814b2d0ed59d9787566f1ef1cc9539783f8306e1db"
+      },
+      "media": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "width": 1080,
+            "height": 1920,
+            "r_frame_rate": "30/1",
+            "nb_frames": "345"
+          }
+        ],
+        "format": {
+          "duration": 11.5
+        }
+      },
+      "renderMs": 38666,
+      "agentFrameReview": "Both decoded scene frames inspected by Codex for visible complete captions/containment. Human quality ratings remain pending.",
+      "supersededOutputs": [
+        {
+          "jobId": "cmvuyeidb0062ay9ksc2xhdev",
+          "output": {
+            "path": "media/renders/render-cmvuyeid50060ay9kv9s19olu.mp4",
+            "checksum": "sha256:258039c97eecd7905eea83f556c3fad40a022ac73968bb3894e828bba11b73f8"
+          },
+          "renderMs": 37894,
+          "reason": "Inspection found an unsupplied RS mark; remove default mark and regenerate without changing copy."
+        }
+      ],
+      "sourceRunId": "003d42e1-b828-4713-bf67-83c2dca6eae4"
+    },
+    {
+      "brief": "brand",
+      "mode": "researched-mcp",
+      "state": "exported",
+      "manualRepairOperations": 0,
+      "sourceTitle": "Synthetic Harbor brand brief",
+      "projectId": "editorial-project-4cdd2aeabd83162ca09431dbe5d337c1e6e0af2abe3c31ef5123e7ae84256d21",
+      "scriptId": "editorial-script-4cdd2aeabd83162ca09431dbe5d337c1e6e0af2abe3c31ef5123e7ae84256d21",
+      "copyChecksum": "90520c053d02a5b33b468a02220e7fa6f9fbdd695bc544aa70295379be2343c0",
+      "brandChecksum": "08a116fcc8e15d6c638d1ce8516af43949667d82a10dc12d75fd77c6b6a5f9e2",
+      "brandTokens": {
+        "background": "#0D256F",
+        "backgroundAccent": "#1A3490",
+        "foreground": "#FFFFFF",
+        "muted": "#F6ECDB",
+        "accent": "#FF5900",
+        "accentSecondary": "#FFA000",
+        "accentForeground": "#FFFFFF",
+        "handle": "@mohitkale",
+        "fontFamily": "'DM Sans', 'Segoe UI', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+        "radius": 20
+      },
+      "metrics": {
+        "scenes": 2,
+        "linkedSceneFraction": 1,
+        "unsupportedNumericTokens": [],
+        "specificityKeywordFraction": 1,
+        "repeatedNarrations": 0,
+        "estimatedNarrationSeconds": 11.2,
+        "suppliedProofScenes": 0,
+        "semanticVisualRelevance": null,
+        "humanNarrativeQuality": null,
+        "humanRepairEdits": null
+      },
+      "findings": [],
+      "creationMs": 89,
+      "actualWriterCalls": 0,
+      "fixtureWriterInvocations": 1,
+      "jobId": "cmvvagbbp000m7h9kbc8vnztp",
+      "output": {
+        "path": "media/renders/render-cmvvagbbk000k7h9k7wxgq725.mp4",
+        "checksum": "sha256:7ac712ca918375cd0fda37814b2d0ed59d9787566f1ef1cc9539783f8306e1db"
+      },
+      "media": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "width": 1080,
+            "height": 1920,
+            "r_frame_rate": "30/1",
+            "nb_frames": "345"
+          }
+        ],
+        "format": {
+          "duration": 11.5
+        }
+      },
+      "renderMs": 41610,
+      "agentFrameReview": "Both decoded scene frames inspected by Codex for visible complete captions/containment. Human quality ratings remain pending.",
+      "supersededOutputs": [
+        {
+          "jobId": "cmvuyfboz006may9kdeek0dzj",
+          "output": {
+            "path": "media/renders/render-cmvuyfbos006kay9ka5aibpli.mp4",
+            "checksum": "sha256:258039c97eecd7905eea83f556c3fad40a022ac73968bb3894e828bba11b73f8"
+          },
+          "renderMs": 37913,
+          "reason": "Inspection found an unsupplied RS mark; remove default mark and regenerate without changing copy."
+        }
+      ],
+      "sourceRunId": "003d42e1-b828-4713-bf67-83c2dca6eae4"
+    },
+    {
+      "brief": "data",
+      "mode": "baseline",
+      "state": "exported",
+      "manualRepairOperations": 0,
+      "sourceTitle": "Synthetic review dataset",
+      "projectId": "cmvuyg4y00074ay9kuiwhxanr",
+      "scriptId": "cmvuyg4y00075ay9kgevnaajf",
+      "copyChecksum": "59485938d213b20e3cb201c7c3c278ac6d842ef58a01a9d025dd43ba1b6167ac",
+      "brandChecksum": "08a116fcc8e15d6c638d1ce8516af43949667d82a10dc12d75fd77c6b6a5f9e2",
+      "brandTokens": {
+        "background": "#0D256F",
+        "backgroundAccent": "#1A3490",
+        "foreground": "#FFFFFF",
+        "muted": "#F6ECDB",
+        "accent": "#FF5900",
+        "accentSecondary": "#FFA000",
+        "accentForeground": "#FFFFFF",
+        "handle": "@mohitkale",
+        "fontFamily": "'DM Sans', 'Segoe UI', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+        "radius": 20
+      },
+      "metrics": {
+        "scenes": 2,
+        "linkedSceneFraction": 0,
+        "unsupportedNumericTokens": [],
+        "specificityKeywordFraction": 1,
+        "repeatedNarrations": 0,
+        "estimatedNarrationSeconds": 10.4,
+        "suppliedProofScenes": 0,
+        "semanticVisualRelevance": null,
+        "humanNarrativeQuality": null,
+        "humanRepairEdits": null
+      },
+      "findings": [
+        "unsupported-claim",
+        "unsupported-claim",
+        "unsupported-claim",
+        "missing-payoff"
+      ],
+      "creationMs": 11,
+      "actualWriterCalls": 0,
+      "fixtureWriterInvocations": 1,
+      "jobId": "cmvuyg4yl007aay9kwt9q7erl",
+      "output": {
+        "path": "media/renders/render-cmvuyg4ye0078ay9k13qivmad.mp4",
+        "checksum": "sha256:d474d63a1bfd16e5a1089d9eda10e3ff34c0efba00cde233e19308f1809ea575"
+      },
+      "media": {
+        "streams": [
+          {
+            "width": 1080,
+            "height": 1920,
+            "r_frame_rate": "30/1",
+            "nb_frames": "321"
+          }
+        ],
+        "format": {
+          "duration": 10.7
+        }
+      },
+      "renderMs": 18480,
+      "agentFrameReview": "Both decoded scene frames inspected by Codex for visible complete captions/containment. Human quality ratings remain pending.",
+      "sourceRunId": "003d42e1-b828-4713-bf67-83c2dca6eae4"
+    },
+    {
+      "brief": "data",
+      "mode": "researched-app",
+      "state": "exported",
+      "manualRepairOperations": 0,
+      "sourceTitle": "Synthetic review dataset",
+      "projectId": "editorial-project-d40d647ece6301ec15f9002584eb583124abd8d262d31d73fb81c626b30fc663",
+      "scriptId": "editorial-script-d40d647ece6301ec15f9002584eb583124abd8d262d31d73fb81c626b30fc663",
+      "copyChecksum": "59485938d213b20e3cb201c7c3c278ac6d842ef58a01a9d025dd43ba1b6167ac",
+      "brandChecksum": "08a116fcc8e15d6c638d1ce8516af43949667d82a10dc12d75fd77c6b6a5f9e2",
+      "brandTokens": {
+        "background": "#0D256F",
+        "backgroundAccent": "#1A3490",
+        "foreground": "#FFFFFF",
+        "muted": "#F6ECDB",
+        "accent": "#FF5900",
+        "accentSecondary": "#FFA000",
+        "accentForeground": "#FFFFFF",
+        "handle": "@mohitkale",
+        "fontFamily": "'DM Sans', 'Segoe UI', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+        "radius": 20
+      },
+      "metrics": {
+        "scenes": 2,
+        "linkedSceneFraction": 1,
+        "unsupportedNumericTokens": [],
+        "specificityKeywordFraction": 1,
+        "repeatedNarrations": 0,
+        "estimatedNarrationSeconds": 10.4,
+        "suppliedProofScenes": 0,
+        "semanticVisualRelevance": null,
+        "humanNarrativeQuality": null,
+        "humanRepairEdits": null
+      },
+      "findings": [],
+      "creationMs": 41,
+      "actualWriterCalls": 0,
+      "fixtureWriterInvocations": 1,
+      "jobId": "cmvuygj97007uay9k6s957o1v",
+      "output": {
+        "path": "media/renders/render-cmvuygj90007say9kebsla9rr.mp4",
+        "checksum": "sha256:29c3988300820a21ad826d1470c68d7a7500d378e7f5cc0c2e91c71be7adfff9"
+      },
+      "media": {
+        "streams": [
+          {
+            "width": 1080,
+            "height": 1920,
+            "r_frame_rate": "30/1",
+            "nb_frames": "321"
+          }
+        ],
+        "format": {
+          "duration": 10.7
+        }
+      },
+      "renderMs": 41646,
+      "agentFrameReview": "Both decoded scene frames inspected by Codex for visible complete captions/containment. Human quality ratings remain pending.",
+      "sourceRunId": "003d42e1-b828-4713-bf67-83c2dca6eae4"
+    },
+    {
+      "brief": "data",
+      "mode": "researched-mcp",
+      "state": "exported",
+      "manualRepairOperations": 0,
+      "sourceTitle": "Synthetic review dataset",
+      "projectId": "editorial-project-249631a5ccab22b120ac4c59753d8d6e75214e3707c09643240d1d386e015537",
+      "scriptId": "editorial-script-249631a5ccab22b120ac4c59753d8d6e75214e3707c09643240d1d386e015537",
+      "copyChecksum": "59485938d213b20e3cb201c7c3c278ac6d842ef58a01a9d025dd43ba1b6167ac",
+      "brandChecksum": "08a116fcc8e15d6c638d1ce8516af43949667d82a10dc12d75fd77c6b6a5f9e2",
+      "brandTokens": {
+        "background": "#0D256F",
+        "backgroundAccent": "#1A3490",
+        "foreground": "#FFFFFF",
+        "muted": "#F6ECDB",
+        "accent": "#FF5900",
+        "accentSecondary": "#FFA000",
+        "accentForeground": "#FFFFFF",
+        "handle": "@mohitkale",
+        "fontFamily": "'DM Sans', 'Segoe UI', Inter, ui-sans-serif, system-ui, -apple-system, sans-serif",
+        "radius": 20
+      },
+      "metrics": {
+        "scenes": 2,
+        "linkedSceneFraction": 1,
+        "unsupportedNumericTokens": [],
+        "specificityKeywordFraction": 1,
+        "repeatedNarrations": 0,
+        "estimatedNarrationSeconds": 10.4,
+        "suppliedProofScenes": 0,
+        "semanticVisualRelevance": null,
+        "humanNarrativeQuality": null,
+        "humanRepairEdits": null
+      },
+      "findings": [],
+      "creationMs": 98,
+      "actualWriterCalls": 0,
+      "fixtureWriterInvocations": 1,
+      "jobId": "cmvuyhfgw008eay9kvquzlwmy",
+      "output": {
+        "path": "media/renders/render-cmvuyhfgp008cay9krxblikra.mp4",
+        "checksum": "sha256:29c3988300820a21ad826d1470c68d7a7500d378e7f5cc0c2e91c71be7adfff9"
+      },
+      "media": {
+        "streams": [
+          {
+            "width": 1080,
+            "height": 1920,
+            "r_frame_rate": "30/1",
+            "nb_frames": "321"
+          }
+        ],
+        "format": {
+          "duration": 10.7
+        }
+      },
+      "renderMs": 44448,
+      "agentFrameReview": "Both decoded scene frames inspected by Codex for visible complete captions/containment. Human quality ratings remain pending.",
+      "sourceRunId": "003d42e1-b828-4713-bf67-83c2dca6eae4"
+    }
+  ],
+  "humanExportReview": "pending",
+  "implementationCorrections": [
+    "Cinematic Brand closing scenes without a supplied visual now omit the invented RS mark and show Closing message. Existing supplied marks remain intact. Two affected exports regenerated; writing/copy/brand tokens unchanged.",
+    "Paired technical underscores now retain exact API identifiers. Only three current-topic cases recreated; previous examples/exports retained as superseded."
+  ],
+  "acceptedFixtureWriterInvocations": 15,
+  "sourceRuns": [
+    {
+      "runId": "003d42e1-b828-4713-bf67-83c2dca6eae4",
+      "fixtureWriterInvocations": 15
+    },
+    {
+      "runId": "5aff3eb1-37e2-4468-882a-0bc9b2402f22",
+      "fixtureWriterInvocations": 3,
+      "scope": "Only current-topic cases refreshed after identifier-preservation fix"
+    }
+  ],
+  "agentReview": {
+    "reviewer": "Codex",
+    "method": "Both sampled frames per accepted export inspected; product result playback and frozen excerpts checked. Exact current-topic API identifiers verified in frozen snapshots.",
+    "acceptedExports": 15,
+    "decodedFrames": 30,
+    "reviewedAt": "2026-10-30T18:18:57.954Z"
+  }
+}

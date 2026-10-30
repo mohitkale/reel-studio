@@ -547,7 +547,7 @@ async function localRevision(
           ? {
               type: "image",
               url: getAssetStore().url(asset.path),
-              effect: "none",
+              effect: "ken-burns",
             }
           : undefined,
         items: undefined,

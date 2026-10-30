@@ -21,6 +21,7 @@ export interface SelectStockMediaInput {
   providerAssetId: string;
   search: StockMediaSearchRequest;
   imageEffect?: NonNullable<SceneBackground["effect"]>;
+  rankingJobId?: string;
 }
 
 export function useStockMediaProviders() {

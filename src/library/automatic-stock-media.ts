@@ -1,4 +1,11 @@
-import { createHash } from "node:crypto";
+import {
+  rankStockCandidates,
+  selectionRanking,
+  candidateStyleTags,
+  stockCandidateKey,
+  stockPreviewKey,
+} from "@/production/media-ranking";
+import type { MediaVisionAssessment } from "@/production/media-ranking-contract";
 
 import type { SceneBackground } from "@/lib/dto";
 import { getAsset } from "@/library/repositories/assets";
@@ -49,6 +56,8 @@ export interface AutomaticMediaDecision {
 }
 
 export interface AutomaticMediaSceneIntent {
+  text?: string;
+  spokenText?: string;
   backgroundQuery?: string;
   mediaKind?: StockMediaKind;
   effect?: SceneBackground["effect"];
@@ -87,12 +96,8 @@ export function deterministicStockCandidate(
   items: StockMediaCandidate[],
   seed: string,
 ): StockMediaCandidate | undefined {
-  if (!items.length) return undefined;
-  const value = Number.parseInt(
-    createHash("sha256").update(seed).digest("hex").slice(0, 8),
-    16,
-  );
-  return items[value % items.length];
+  return rankStockCandidates(items, { query: seed, orientation: "portrait" })[0]
+    ?.candidate;
 }
 
 function rendition(candidate: StockMediaCandidate) {
@@ -130,6 +135,9 @@ export async function resolveAutomaticSceneMedia(
   options: {
     explicitBackground?: SceneBackground;
     seed?: string;
+    usedKeys?: string[];
+    filmStyleTags?: string[];
+    vision?: MediaVisionAssessment[];
     dependencies?: Partial<Dependencies>;
   } = {},
 ): Promise<AutomaticMediaDecision> {
@@ -187,10 +195,18 @@ export async function resolveAutomaticSceneMedia(
           orientation,
           perPage: Math.min(12, provider.capabilities.maxPageSize),
         });
-        const candidate = deterministicStockCandidate(
+        const ranked = rankStockCandidates(
           search.items.filter((item) => item.acquisitionPolicy !== "hotlink"),
-          `${options.seed ?? query}:${providerId}:${kind}:${orientation}`,
+          {
+            query,
+            orientation,
+            sceneText: intent.spokenText ?? intent.text,
+            usedKeys: options.usedKeys,
+            filmStyleTags: options.filmStyleTags,
+            vision: options.vision,
+          },
         );
+        const candidate = ranked[0]?.candidate;
         if (!candidate) continue;
         const selected = rendition(candidate);
         const resolved = await deps.registry.resolve(
@@ -214,7 +230,15 @@ export async function resolveAutomaticSceneMedia(
             kind === preferredKind
               ? `${provider.label} ${kind} selected`
               : `${provider.label} ${kind} selected as automatic fallback`,
-          snapshot,
+          snapshot: {
+            ...snapshot,
+            ranking: selectionRanking(
+              ranked,
+              0,
+              query,
+              Boolean(options.vision?.length),
+            ),
+          },
           background: await background(snapshot, intent.effect, deps),
         };
       } catch {
@@ -239,6 +263,8 @@ export async function resolveAutomaticSceneMediaBatch(
   explicitBackgrounds: Array<SceneBackground | undefined> = [],
 ): Promise<AutomaticMediaDecision[]> {
   const decisions: AutomaticMediaDecision[] = [];
+  const usedKeys: string[] = [];
+  const filmStyleTags: string[] = [];
   for (const [index, scene] of scenes.entries()) {
     decisions.push(
       await resolveAutomaticSceneMedia(
@@ -247,10 +273,17 @@ export async function resolveAutomaticSceneMediaBatch(
         preferences[index] ?? "auto",
         {
           explicitBackground: explicitBackgrounds[index],
+          usedKeys,
+          filmStyleTags,
           seed: `${index}:${scene.backgroundQuery ?? ""}`,
         },
       ),
     );
+    const chosen = decisions.at(-1)?.snapshot?.providerSnapshot;
+    if (chosen) {
+      usedKeys.push(stockCandidateKey(chosen), stockPreviewKey(chosen));
+      filmStyleTags.push(...candidateStyleTags(chosen));
+    }
   }
   return decisions;
 }

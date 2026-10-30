@@ -34,6 +34,7 @@ const nonnegativeIntegerSchema = z
   .max(Number.MAX_SAFE_INTEGER);
 
 const pixabayImageSchema = z.object({
+  tags: z.string().max(4000).optional(),
   id: positiveIntegerSchema,
   pageURL: stockMediaExternalUrlSchema,
   previewURL: stockMediaExternalUrlSchema,
@@ -73,6 +74,7 @@ const pixabayVideoFileSchema = z
   });
 
 const pixabayVideoSchema = z.object({
+  tags: z.string().max(4000).optional(),
   id: positiveIntegerSchema,
   pageURL: stockMediaExternalUrlSchema,
   duration: z.number().finite().positive().max(86_400),
@@ -226,6 +228,7 @@ function imageCandidate(image: PixabayImage): StockMediaCandidate {
     kind: "image",
     previewUrl: image.previewURL,
     sourcePageUrl: image.pageURL,
+    tags: image.tags?.split(",").map(tag=>tag.trim()).filter(Boolean).slice(0,30).map(tag=>tag.slice(0,80)),
     creator,
     creatorUrl: creatorUrl(image.user, image.user_id),
     width: image.imageWidth,
@@ -276,6 +279,7 @@ function videoCandidate(video: PixabayVideo): StockMediaCandidate | null {
     kind: "video",
     previewUrl: preview,
     sourcePageUrl: video.pageURL,
+    tags: video.tags?.split(",").map(tag=>tag.trim()).filter(Boolean).slice(0,30).map(tag=>tag.slice(0,80)),
     creator,
     creatorUrl: creatorUrl(video.user, video.user_id),
     width: largest.width,

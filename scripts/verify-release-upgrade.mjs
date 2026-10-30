@@ -8,7 +8,7 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { schemaSignature } from "./migrate-database.mjs";
 
-const EXPECTED_MIGRATIONS = 19;
+const EXPECTED_MIGRATIONS = 20;
 
 const root = process.cwd(),
   evidence = path.resolve(
@@ -172,7 +172,7 @@ for (const [file, hash] of Object.entries(published040.migrations))
 // database. Later milestones are additive only; compare its remaining schema against the
 // checksummed historical migrations before exercising the real upgrade.
 again.exec(
-  `DROP TABLE ResearchSubmission; DROP TABLE ResearchJob; DROP TABLE EvidenceRevision; DROP TABLE AudioEditSession; DROP TABLE SceneEdit; DROP TABLE StudioPreset; ALTER TABLE Project DROP COLUMN archivedAt; ALTER TABLE Project DROP COLUMN series; DROP TABLE FactoryVariant; DROP TABLE FactoryRun; DROP TABLE FactoryProfile; DROP TABLE FactoryPack; DELETE FROM _prisma_migrations WHERE migration_name >= '20261017000100_factory_workflows';`,
+  `DROP TABLE MediaRankingJob; DROP TABLE ResearchSubmission; DROP TABLE ResearchJob; DROP TABLE EvidenceRevision; DROP TABLE AudioEditSession; DROP TABLE SceneEdit; DROP TABLE StudioPreset; ALTER TABLE Project DROP COLUMN archivedAt; ALTER TABLE Project DROP COLUMN series; DROP TABLE FactoryVariant; DROP TABLE FactoryRun; DROP TABLE FactoryProfile; DROP TABLE FactoryPack; DELETE FROM _prisma_migrations WHERE migration_name >= '20261017000100_factory_workflows';`,
 );
 const expected040 = new DatabaseSync(":memory:");
 for (const filename of Object.keys(published040.migrations))

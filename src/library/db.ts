@@ -45,7 +45,8 @@ function getClient(): PrismaClient {
       existing.audioEditSession == null ||
       existing.researchJob == null ||
       existing.evidenceRevision == null ||
-      existing.researchSubmission == null
+      existing.researchSubmission == null ||
+      existing.mediaRankingJob == null
     ) {
       void existing.$disconnect().catch(() => undefined);
       const fresh = createClient();
