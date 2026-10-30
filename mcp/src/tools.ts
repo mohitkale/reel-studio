@@ -1,3 +1,5 @@
+import { registerResearchTools } from "./research-tools.js";
+import { projectCreationRequestSchema } from "@/research/creation-request";
 import {factoryProfileRequestSchema,factoryRunRequestSchema} from "@/production/factory";
 import { subjectRegistrySchema } from "../../src/video/sequence-direction.js";
 import { cutSuggestionRequestSchema } from "@/production/cut-suggestions";
@@ -7,9 +9,6 @@ import { randomUUID } from "node:crypto";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
-import { AI_PROVIDER_IDS } from "@/providers/ai/types";
-import { mediaPreferenceSchema } from "@/lib/media-preference";
-import { productionPresetIdSchema } from "@/production/presets";
 import { motionSystemSchema } from "@/production/motion-systems";
 import { visualAmbitionSchema } from "@/production/motion-plan";
 import { sfxCueEditRequestSchema } from "@/lib/sfx-cue-edit";
@@ -67,7 +66,6 @@ function guard<A>(fn: (args: A) => Promise<ToolResult>) {
 }
 
 const orientation = z.enum(["portrait", "landscape", "square"]);
-const scriptStyle = z.enum(["short", "detailed"]);
 /** Whole-reel Style look (Coral Harbor / Style+Energy system). */
 const styleId = z.enum(["bold-hook", "clean-story", "teach-me", "soft-brand"]);
 const energy = z.enum(["calm", "normal", "high"]);
@@ -93,6 +91,7 @@ const backgroundShape = z.object({
 });
 
 export function registerTools(server: McpServer): void {
+  registerResearchTools(server);
   server.registerTool("get_film_plan", {
     description: "Read a versioned film plan and its captured scene/brand/media source. Optionally read a saved revision. Does not generate content or render.",
     inputSchema: { scriptId: z.string().min(1), voiceTakeId: z.string().min(1).optional(), revisionId: z.string().min(1).optional() },
@@ -284,38 +283,8 @@ export function registerTools(server: McpServer): void {
     "ai_create_project",
     {
       description:
-        "Generate a full scene plan from a brief and create a new project. Requires an AI key configured in the website. For large storyboards, create a smaller plan then extend with ai_generate_scenes (append) or add_scene. Pass videoEngine='hyperframes' to use HyperFrames-native templates. scriptStyle='detailed' writes short on-screen text plus longer spokenText for voiceover.",
-      inputSchema: {
-        providerId: z.enum(AI_PROVIDER_IDS).optional(),
-        modelId: z.string().optional(),
-        mode: z.enum(["idea", "story"]),
-        brief: z.string().trim().min(3).max(8000),
-        sceneCount: z.number().int().min(3).max(20).optional(),
-        orientation: orientation.optional(),
-        scriptStyle: scriptStyle
-          .optional()
-          .describe(
-            "'short' = punchy on-screen ~14-18 words/scene; voice uses the same text (default). 'detailed' = short on-screen text + longer spokenText (~30-55 words) for narration.",
-          ),
-        styleId: z
-          .enum(["auto", "bold-hook", "clean-story", "teach-me", "soft-brand"])
-          .optional()
-          .describe(
-            "Whole-reel Style look. 'auto' lets the AI choose; omit defaults to bold-hook.",
-          ),
-        energy: z
-          .enum(["auto", "calm", "normal", "high"])
-          .optional()
-          .describe(
-            "Whole-reel Energy (motion intensity). 'auto' lets the AI choose; omit defaults to normal.",
-          ),
-        videoEngine,
-        productionPresetId: productionPresetIdSchema.optional(),
-        visualAmbition: visualAmbitionSchema.optional(),
-        mediaPreference: mediaPreferenceSchema.optional(),
-        quickProduce: quickProduceOptionsSchema.optional(),
-        idempotencyKey: z.string().min(8).max(240).optional(),
-      },
+        "Generate a full scene plan from a brief and create a new project. Uses an explicitly selected configured cloud or local writer. Pass evidenceId to reuse a frozen research revision without refreshing; use start_research_job first for new research. For large storyboards, create a smaller plan then extend with ai_generate_scenes (append) or add_scene. Pass videoEngine='hyperframes' to use HyperFrames-native templates. scriptStyle='detailed' writes short on-screen text plus longer spokenText for voiceover.",
+      inputSchema: projectCreationRequestSchema.shape,
     },
     guard(async (args) => ok(await apiPost("/api/projects/ai", args))),
   );

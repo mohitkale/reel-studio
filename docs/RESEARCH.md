@@ -219,3 +219,26 @@ choice back to provider configuration or sources-only operation. Key/config
 changes refresh the capability view. Unsupported research models are rejected
 with an actionable error before provider IO, while existing generation models
 remain available for writing.
+
+## MCP research and external packs
+
+The MCP server uses the same authenticated REST routes and budgets as the UI.
+`get_research_capabilities`, `start_research_job`, `get_research_job`,
+`cancel_research_job`, `get_research_evidence`, and `plan_from_research_evidence`
+cover the research lifecycle. Pass `evidenceId` to `ai_create_project` to create
+with a frozen revision, including Quick Produce. Changing the writer never
+silently changes or refreshes the researcher.
+
+`POST /api/research/evidence` and `import_research_evidence` accept a complete
+version-1 pack. All source/excerpt/claim/conflict references must validate.
+Imports always become `external_unverified`; supplied provider labels, accounting
+and executable attribution are discarded. Source dates remain caller-supplied
+and visibly unverified. Content-identical imports reuse one immutable revision.
+Importing or reading a pack does not fetch its URLs or spend a provider allowance.
+
+For offline acceptance with a running app on port 3020, run
+`node --import tsx scripts/verify-research-creation.ts`. It saves a clearly named
+synthetic example and real export in the active app, with no model download or
+paid call. Finish existing queued/running work first. The fixture deliberately
+uses an unavailable `offline-fixture` writer label for remix, so a reviewer must
+select a real configured writer explicitly before generating a new version.

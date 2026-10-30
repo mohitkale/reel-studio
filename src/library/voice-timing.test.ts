@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { DatabaseSync } from "node:sqlite";
+import { backup, DatabaseSync } from "node:sqlite";
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 import { tmpdir } from "node:os";
@@ -64,28 +64,41 @@ beforeEach(async () => {
   }));
   state.directory = mkdtempSync(path.join(tmpdir(), "reel-editor-jobs-"));
   const filename = path.join(state.directory, "jobs.db");
-  const sqlite = new DatabaseSync(filename);
-  for (const dir of readdirSync("prisma/migrations").sort()) {
-    if (dir !== "migration_lock.toml")
-      sqlite.exec(
-        readFileSync(`prisma/migrations/${dir}/migration.sql`, "utf8"),
-      );
+  // Timing/reconnect assertions use a real file. Stage the same migrations in
+  // memory and copy once, avoiding per-DDL Windows disk syncs in every hook.
+  const sqlite = new DatabaseSync(":memory:");
+  try {
+    for (const dir of readdirSync("prisma/migrations").sort()) {
+      if (dir !== "migration_lock.toml")
+        sqlite.exec(
+          readFileSync(`prisma/migrations/${dir}/migration.sql`, "utf8"),
+        );
+    }
+    await backup(sqlite, filename);
+  } finally {
+    sqlite.close();
   }
-  sqlite.close();
   previous = process.env.DATABASE_URL;
   process.env.DATABASE_URL = `file:${filename}`;
   state.db = createPrismaClient();
-  await state.db.project.create({ data: { id: "project", name: "Fixture" } });
-  await state.db.script.create({
-    data: { id: "script", name: "Fixture", projectId: "project" },
-  });
-  await state.db.scene.create({
+  await state.db.project.create({
     data: {
-      id: "scene",
-      scriptId: "script",
-      order: 0,
-      text: "Hello from the durable worker",
-      templateId: "hf-typewriter",
+      id: "project",
+      name: "Fixture",
+      scripts: {
+        create: {
+          id: "script",
+          name: "Fixture",
+          scenes: {
+            create: {
+              id: "scene",
+              order: 0,
+              text: "Hello from the durable worker",
+              templateId: "hf-typewriter",
+            },
+          },
+        },
+      },
     },
   });
 }, 20_000);

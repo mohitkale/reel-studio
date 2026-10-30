@@ -62,6 +62,14 @@ touches the database directly. By design it can do everything an editor can
   `get_production_job_events`, `cancel_production_job`, `retry_production_job`,
   `download_production_artifact`, `produce_batch`, `get_production_batch`,
   `cancel_production_batch`, `retry_production_batch`, `download_production_batch`
+- **Research:** `get_research_capabilities`, `start_research_job`,
+  `get_research_job`, `cancel_research_job`, `get_research_evidence`,
+  `import_research_evidence`, `plan_from_research_evidence`.
+  Use explicit supplied/web mode and separate provider/search budgets. Reconnect
+  with the same key; only explicit refresh can incur another research charge.
+  Pass `evidenceId` to `ai_create_project` to reuse a revision. Imported packs
+  validate all references and remain external/unverified. See the
+  [research guide](../docs/RESEARCH.md) for scopes and provenance.
 
 ### Audio podcasts
 

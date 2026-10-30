@@ -7,7 +7,11 @@ const { authorizeProviderRequest, authorizeRead, getAIProvider, getEvidence } =
     getAIProvider: vi.fn(),
     getEvidence: vi.fn(),
   }));
-vi.mock("@/server/auth", () => ({ authorizeProviderRequest, authorizeRead }));
+vi.mock("@/server/auth", () => ({
+  authorizeProviderRequest,
+  authorizeRead,
+  authorizeRequest: vi.fn(),
+}));
 vi.mock("@/library/repositories/research", () => ({
   ResearchRepository: class {
     getEvidence = getEvidence;
