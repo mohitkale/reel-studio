@@ -89,6 +89,18 @@ The creation dialog can research supplied text, a public URL, or the web before
 planning a draft or Quick Produce. It requires an AI writer when research is
 selected. The saved evidence revision is included in the project and frozen
 production snapshots. Web research is an explicit, separately budgeted call.
+Source review shows citations, retrieval/publication dates, excerpts, claims,
+conflicts and gaps. Google's suggestions are rendered in a sandboxed frame with
+scripts and network subresources blocked. Review is also available on results.
+Remix keeps the saved writer/model, evidence revision, brand, format, media and
+voice settings; changing copy reuses that evidence until an explicit refresh.
+The researcher/model is retained independently of the writer.
+
+If a research submission loses its connection, restore the same brief and mode
+and choose **Reconnect to previous research**. The original request and key are
+kept in this tab's session storage, so reconnect cannot replay a paid call.
+**Refresh research** creates a new explicit request and can incur a new charge.
+Source text stored for reconnect is cleared with the browser tab/session.
 The existing same-origin/loopback policy applies; strict mode requires bearer
 authentication. Named tokens need `studio:write` for submission/cancellation and
 `studio:read` for capability, status and evidence inspection. Cloud research also

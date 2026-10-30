@@ -4,7 +4,11 @@ import { visualAmbitionSchema } from "@/production/motion-plan";
 import { after, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getAIProvider, isAIProviderId } from "@/providers/ai/registry";
+import {
+  getAIProvider,
+  isAIProviderId,
+  listAIProviderStatuses,
+} from "@/providers/ai/registry";
 import { AIError, AI_PROVIDER_IDS, SCRIPT_STYLES } from "@/providers/ai/types";
 import { createProjectFromPlan } from "@/library/repositories/projects";
 import {
@@ -157,6 +161,7 @@ export async function POST(req: Request) {
           ? "auto"
           : preset.defaults.energy;
     let raw;
+    let writerModelId: string | undefined;
     if (planner === "deterministic") {
       raw = createDeterministicProductionPlan({
         name:
@@ -179,11 +184,16 @@ export async function POST(req: Request) {
           planner,
         );
       }
+      writerModelId =
+        body.quickProduce?.plannerModelId ??
+        body.modelId ??
+        (await listAIProviderStatuses()).find((status) => status.id === planner)
+          ?.defaultModel;
       raw = await provider.generatePlan({
         mode: body.mode,
         brief: body.brief,
         sceneCount: body.sceneCount,
-        modelId: body.quickProduce?.plannerModelId ?? body.modelId,
+        modelId: writerModelId,
         orientation,
         scriptStyle: body.scriptStyle,
         videoEngine,
@@ -258,7 +268,26 @@ export async function POST(req: Request) {
         stockSelections: mediaDecisions.map((decision) => decision.snapshot),
         outputType: "video",
         creationSource: { kind: "text" },
-        savedOverrides: evidence ? { researchEvidence: evidence } : undefined,
+        savedOverrides: {
+          ...(evidence ? { researchEvidence: evidence } : {}),
+          creationSettings: {
+            brief: body.brief,
+            mode: body.mode,
+            ...(planner !== "deterministic" && writerModelId
+              ? { writer: { providerId: planner, modelId: writerModelId } }
+              : {}),
+            orientation,
+            sceneCount: body.sceneCount,
+            styleId: visualStyle.styleId,
+            energy: visualStyle.energy,
+            visualAmbition: body.visualAmbition,
+            scriptStyle: body.scriptStyle,
+            brandKitId: body.brandKitId,
+            mediaPreference,
+            productionPresetId: presetId,
+            quickProduce: body.quickProduce,
+          },
+        },
       },
     );
     const persisted = await getScript(created.scriptId);

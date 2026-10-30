@@ -2,11 +2,17 @@
 
 import * as React from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
-import type { EvidencePack } from "@/research/contracts";
+import { researchRequestSchema, type EvidencePack } from "@/research/contracts";
+import { EvidenceReview } from "./evidence-review";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  GEMINI_RESEARCH_MODELS,
+  OPENAI_RESEARCH_MODELS,
+  defaultResearchModel,
+} from "@/research/capabilities";
 
 type Job = {
   id: string;
@@ -14,6 +20,7 @@ type Job = {
   evidenceId: string | null;
   error: string | null;
 };
+const RECONNECT_KEY = "reel-creation-research-request";
 
 /** Research is explicit: submitting web mode reserves one provider call and one search charge. */
 export function ResearchSelection({
@@ -21,16 +28,26 @@ export function ResearchSelection({
   onEvidence,
   mode,
   onModeChange,
+  initialEvidence,
 }: {
   brief: string;
   onEvidence: (evidence: EvidencePack | null) => void;
   mode: "off" | "supplied" | "web";
   onModeChange: (mode: "off" | "supplied" | "web") => void;
+  initialEvidence?: EvidencePack;
 }) {
-  const [provider, setProvider] = React.useState<"gemini" | "openai">("gemini");
+  const [provider, setProvider] = React.useState<"gemini" | "openai">(
+    initialEvidence?.provenance.providerId === "openai" ? "openai" : "gemini",
+  );
+  const [model, setModel] = React.useState(
+    initialEvidence?.provenance.modelId ??
+      defaultResearchModel(initialEvidence?.provenance.providerId ?? undefined),
+  );
   const [source, setSource] = React.useState("");
   const [job, setJob] = React.useState<Job | null>(null);
-  const [evidence, setEvidence] = React.useState<EvidencePack | null>(null);
+  const [evidence, setEvidence] = React.useState<EvidencePack | null>(
+    initialEvidence ?? null,
+  );
   const [error, setError] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const generation = React.useRef(0);
@@ -44,29 +61,39 @@ export function ResearchSelection({
 
   React.useEffect(() => {
     if (!job || !["queued", "running"].includes(job.state)) return;
+    let live = true;
+    const current = generation.current;
     const timer = setTimeout(() => {
       void apiGet<{ job: Job }>(
         `/api/research/jobs/${encodeURIComponent(job.id)}`,
       )
-        .then(({ job: next }) => setJob(next))
-        .catch((err: Error) => setError(err.message));
+        .then(({ job: next }) => {
+          if (live && current === generation.current) setJob(next);
+        })
+        .catch((err: Error) => {
+          if (live && current === generation.current) setError(err.message);
+        });
     }, 1000);
-    return () => clearTimeout(timer);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
   }, [job]);
   React.useEffect(() => {
     if (!job?.evidenceId || job.state !== "succeeded") return;
     let live = true;
+    const current = generation.current;
     void apiGet<{ evidence: EvidencePack }>(
       `/api/research/evidence/${encodeURIComponent(job.evidenceId)}`,
     )
       .then(({ evidence: pack }) => {
-        if (live) {
+        if (live && current === generation.current) {
           setEvidence(pack);
           onEvidence(pack);
         }
       })
       .catch((err: Error) => {
-        if (live) setError(err.message);
+        if (live && current === generation.current) setError(err.message);
       });
     return () => {
       live = false;
@@ -74,18 +101,21 @@ export function ResearchSelection({
   }, [job?.evidenceId, job?.state, onEvidence]);
 
   async function start() {
+    const refreshing = Boolean(evidence);
     setBusy(true);
     clear();
     const current = generation.current;
     try {
       const url = /^https?:\/\/\S+$/i.test(source.trim());
-      const input = {
+      const input = researchRequestSchema.parse({
         idempotencyKey: `creation-research:${crypto.randomUUID()}`,
         query: brief.trim(),
         mode,
+        refresh: refreshing,
         ...(mode === "web"
           ? {
               providerId: provider,
+              modelId: model,
               budget: {
                 maxProviderCalls: 1,
                 maxSearchChargeUnits: 1,
@@ -99,12 +129,42 @@ export function ResearchSelection({
                 ? []
                 : [{ title: "Supplied source", text: source.trim() }],
             }),
-      };
+      });
+      try {
+        sessionStorage.setItem(RECONNECT_KEY, JSON.stringify(input));
+      } catch {
+        /* Research still works when browser storage is disabled. */
+      }
       const response = await apiPost<{ job: Job }>("/api/research/jobs", input);
       if (generation.current === current) setJob(response.job);
     } catch (err) {
       if (generation.current === current)
         setError(err instanceof Error ? err.message : "Research failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function reconnect() {
+    const current = generation.current;
+    try {
+      const saved = researchRequestSchema.parse(
+        JSON.parse(sessionStorage.getItem(RECONNECT_KEY) ?? "null"),
+      );
+      if (saved.query !== brief.trim() || saved.mode !== mode)
+        throw new Error(
+          "No saved research request matches this brief and mode in this tab.",
+        );
+      setBusy(true);
+      const response = await apiPost<{ job: Job }>("/api/research/jobs", saved);
+      if (current === generation.current) {
+        setError("");
+        setJob(response.job);
+      }
+    } catch {
+      if (current === generation.current)
+        setError(
+          "Unable to reconnect. Restore the same brief and research mode in this tab, or start a new request explicitly.",
+        );
     } finally {
       setBusy(false);
     }
@@ -143,10 +203,35 @@ export function ResearchSelection({
             onChange={(event) => {
               clear();
               setProvider(event.target.value as typeof provider);
+              setModel(defaultResearchModel(event.target.value));
             }}
           >
             <option value="gemini">Gemini</option>
             <option value="openai">OpenAI</option>
+          </NativeSelect>
+          <NativeSelect
+            aria-label="Research model"
+            value={model}
+            onChange={(event) => {
+              clear();
+              setModel(event.target.value);
+            }}
+          >
+            {!(
+              provider === "gemini"
+                ? GEMINI_RESEARCH_MODELS
+                : OPENAI_RESEARCH_MODELS
+            ).some((id) => id === model) && (
+              <option value={model}>{model} (unavailable)</option>
+            )}
+            {(provider === "gemini"
+              ? GEMINI_RESEARCH_MODELS
+              : OPENAI_RESEARCH_MODELS
+            ).map((id) => (
+              <option key={id} value={id}>
+                {id}
+              </option>
+            ))}
           </NativeSelect>
           <p className="text-muted-foreground text-xs">
             Web research can use one paid provider call and one search charge.
@@ -166,7 +251,17 @@ export function ResearchSelection({
           }
           onClick={() => void start()}
         >
-          Research sources
+          {evidence ? "Refresh research" : "Research sources"}
+        </Button>
+      )}
+      {mode !== "off" && !job && (
+        <Button
+          type="button"
+          variant="outline"
+          disabled={busy}
+          onClick={() => void reconnect()}
+        >
+          Reconnect to previous research
         </Button>
       )}
       {job && (
@@ -192,54 +287,7 @@ export function ResearchSelection({
           Reconnect to research
         </Button>
       )}
-      {evidence && (
-        <div className="space-y-1 text-sm">
-          <p>
-            Evidence revision {evidence.revision}. Citations show provenance,
-            not guaranteed truth.
-          </p>
-          {evidence.attribution.searchSuggestionHtml && (
-            <iframe
-              title="Google Search suggestions"
-              sandbox="allow-popups allow-popups-to-escape-sandbox"
-              referrerPolicy="no-referrer"
-              className="w-full border-0"
-              srcDoc={`<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">${evidence.attribution.searchSuggestionHtml}`}
-            />
-          )}
-          <ul>
-            {evidence.sources.map((item) => (
-              <li key={item.id}>
-                {item.url ? (
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline"
-                  >
-                    {item.title}
-                  </a>
-                ) : (
-                  item.title
-                )}{" "}
-                — retrieved {item.retrievedAt.slice(0, 10)}
-                {item.publishedAt
-                  ? `; published ${item.publishedAt.slice(0, 10)}`
-                  : ""}
-              </li>
-            ))}
-          </ul>
-          {evidence.claims.map((claim) => (
-            <p key={claim.id}>{claim.text}</p>
-          ))}
-          {evidence.conflicts.map((conflict) => (
-            <p key={conflict.id}>Conflict: {conflict.description}</p>
-          ))}
-          {evidence.gaps.map((gap) => (
-            <p key={gap}>Gap: {gap}</p>
-          ))}
-        </div>
-      )}
+      {evidence && <EvidenceReview evidence={evidence} />}
     </div>
   );
 }

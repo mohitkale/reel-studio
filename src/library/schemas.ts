@@ -9,6 +9,7 @@ import { visualThemeSchema } from "@/production/creative-direction";
 import { shotDirectionSchema } from "@/video/shot-direction";
 import { musicMapSchema } from "@/production/music-map";
 import { evidencePackSchema } from "@/research/contracts";
+import { creationSettingsSchema } from "@/research/creation-settings";
 
 import { assertSafeMediaUrl } from "@/lib/media-url-safety";
 import { productionChartDataSchema } from "@/production/spec";
@@ -91,6 +92,7 @@ export const brandOverridesSchema = z
     chapterDraft: chapterDraftSchema.optional(),
     factoryLineage: factoryLineageSchema.optional(),
     researchEvidence: evidencePackSchema.optional(),
+    creationSettings: creationSettingsSchema.optional(),
     frozenBrandTokens: z
       .object({
         background: z.string(),
