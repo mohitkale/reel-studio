@@ -1,6 +1,6 @@
 # Roadmap
 
-Current release: **[v0.7.0](https://github.com/mohitkale/reel-studio/releases/tag/v0.7.0)**.
+Current release: **[v0.8.0](https://github.com/mohitkale/reel-studio/releases/tag/v0.8.0)**.
 This roadmap separates released features from proposals; future items are not promises.
 
 ## Shipped
@@ -28,10 +28,9 @@ See [CHANGELOG.md](CHANGELOG.md) for release history and
 
 ## Next candidates
 
-The research/editorial/visual-quality feature batch is unreleased until the
-applicable release gates pass;
-see the [benchmark and acceptance record](docs/EDITORIAL_BENCHMARK.md). The current
-stable version remains v0.7.0.
+v0.8.0 adds the research/editorial/visual-quality feature batch. See the
+[benchmark and acceptance record](docs/EDITORIAL_BENCHMARK.md) and
+[release validation](docs/production/RELEASE_VALIDATION.md).
 
 - More distinct, curated motion treatments with readable three-format fixtures.
 - Clearer optional transcription/model setup and diagnostics.
@@ -44,7 +43,7 @@ provider/block registration already exists; broader plugin discovery and
 packaging remain possible future work.
 
 No next feature milestone is currently committed; these are proposals for a
-future release rather than prerequisites for v0.7.0.
+future release rather than prerequisites for v0.8.0.
 
 ## Longer-term exploration
 
