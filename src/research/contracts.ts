@@ -119,7 +119,10 @@ export const evidencePackSchema = z
     pack.sources.forEach((source) => {
       unique(source.id);
       source.excerpts.forEach((excerpt) => unique(excerpt.id));
-      if (source.provenance !== "user_supplied" && !source.url)
+      if (
+        ["provider_citation", "fetched_page"].includes(source.provenance) &&
+        !source.url
+      )
         ctx.addIssue({
           code: "custom",
           message: "Retrieved sources require a URL",

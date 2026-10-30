@@ -107,6 +107,14 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
       ),
       outputType: "video",
       creationSource: { kind: "text" },
+      savedOverrides: {
+        ...(snapshot.script.researchEvidence
+          ? { researchEvidence: snapshot.script.researchEvidence }
+          : {}),
+        ...(snapshot.script.creationSettings
+          ? { creationSettings: snapshot.script.creationSettings }
+          : {}),
+      },
     },
   );
   const ownedAudio: string[] = [];

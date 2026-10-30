@@ -94,6 +94,8 @@ export function applyPresetToAIPlan(
     continuation?: boolean;
     /** Actual user source, used to admit numeric displays from AI output. */
     source?: string;
+    /** Independent source excerpts, kept separate to avoid combining datasets. */
+    evidenceSources?: string[];
   } = {},
 ): { plan: ScenePlan; roles: ProductionSceneRole[] } {
   const roles = resolvePresetRoles(presetId, plan.scenes.length, options);
@@ -137,7 +139,15 @@ export function applyPresetToAIPlan(
         );
         let rejectedData = false;
         if (options.source !== undefined) {
-          const grounded = groundSceneData(directed.scene, options.source);
+          const candidates = [
+            options.source,
+            ...(options.evidenceSources ?? []),
+          ].map((source) => groundSceneData(directed.scene, source));
+          const grounded = {
+            ...candidates[0]!,
+            chart: candidates.find((candidate) => candidate.chart)?.chart,
+            visual: candidates.find((candidate) => candidate.visual)?.visual,
+          };
           if (
             (directed.scene.chart && !grounded.chart) ||
             (directed.scene.visual &&

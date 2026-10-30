@@ -18,6 +18,32 @@ const plan = scenePlanSchema.parse({
 });
 
 describe("AI production preset planning", () => {
+  it("admits a chart from one evidence excerpt without combining unrelated sources", () => {
+    const researched = scenePlanSchema.parse({
+      ...plan,
+      scenes: [
+        {
+          templateId: "hf-data-chart",
+          text: "Compare results.",
+          emphasis: [],
+          chart: {
+            labels: ["Draft", "Release"],
+            series: [{ label: "Supplied values", values: [42, 91], unit: "%" }],
+          },
+        },
+      ],
+    });
+    const apply = (evidenceSources: string[]) =>
+      applyPresetToAIPlan(researched, "data-story", "hyperframes", {
+        source: "Compare results",
+        evidenceSources,
+      }).plan.scenes[0].chart;
+    expect(apply(["Draft: 42%\nRelease: 91%"])).toEqual(
+      researched.scenes[0].chart,
+    );
+    expect(apply(["Draft: 42%", "Release: 91%"])).toBeUndefined();
+    expect(apply(["Draft: 42%\nRelease: 90%"])).toBeUndefined();
+  });
   it("shows a requested literal dataset even when AI returned only prose, without inventing missing values", () => {
     const source =
       "Show the results in a chart.\nDraft: 42%\nReview: 68%\nRelease: 91%";

@@ -1,5 +1,8 @@
 "use client";
 import { GenerationSummary } from "@/components/studio/generation-summary";
+import { ResearchSelection } from "./research-selection";
+import type { EvidencePack } from "@/research/contracts";
+import type { CreationSettings } from "@/research/creation-settings";
 
 import * as React from "react";
 import Link from "next/link";
@@ -59,38 +62,89 @@ const EXAMPLE_BRIEFS = [
 export function CreateWithAIDialog({
   trigger,
   initialQuickProduce = DEFAULT_QUICK_PRODUCE_ENABLED,
-}: { trigger?: React.ReactElement; initialQuickProduce?: boolean } = {}) {
+  initialSettings,
+  initialEvidence,
+}: {
+  trigger?: React.ReactElement;
+  initialQuickProduce?: boolean;
+  initialSettings?: CreationSettings;
+  initialEvidence?: EvidencePack;
+} = {}) {
   const router = useRouter();
   const { data: providers } = useAIProviders();
   const generate = useGenerateProject();
   const { data: brandKits = [] } = useBrandKits();
-  const [brandKitId, setBrandKitId] = React.useState("");
+  const [brandKitId, setBrandKitId] = React.useState(
+    initialSettings?.brandKitId ?? "",
+  );
 
   const [open, setOpen] = React.useState(false);
-  const [mode, setMode] = React.useState<"idea" | "story">("idea");
-  const [brief, setBrief] = React.useState("");
-  const [providerId, setProviderId] = React.useState<
-    AIProviderId | undefined
-  >();
-  const [sceneCount, setSceneCount] = React.useState<string>("auto");
-  const [orientation, setOrientation] =
-    React.useState<Orientation>(DEFAULT_ORIENTATION);
-  const [scriptStyle, setScriptStyle] = React.useState<ScriptStyle>("short");
+  const [mode, setMode] = React.useState<"idea" | "story">(
+    initialSettings?.mode ?? "idea",
+  );
+  const [brief, setBrief] = React.useState(initialSettings?.brief ?? "");
+  const [providerId, setProviderId] = React.useState<AIProviderId | undefined>(
+    initialSettings?.writer?.providerId,
+  );
+  const [writerModelId, setWriterModelId] = React.useState(
+    initialSettings?.writer?.modelId ?? "",
+  );
+  const [sceneCount, setSceneCount] = React.useState<string>(
+    initialSettings?.sceneCount?.toString() ?? "auto",
+  );
+  const [orientation, setOrientation] = React.useState<Orientation>(
+    initialSettings?.orientation ?? DEFAULT_ORIENTATION,
+  );
+  const [scriptStyle, setScriptStyle] = React.useState<ScriptStyle>(
+    initialSettings?.scriptStyle ?? "short",
+  );
   const videoEngine = DEFAULT_VIDEO_ENGINE;
-  const [styleId, setStyleId] = React.useState<StylePick>("auto");
-  const [energy, setEnergy] = React.useState<EnergyPick>("auto");
+  const [styleId, setStyleId] = React.useState<StylePick>(
+    initialSettings?.styleId ?? "auto",
+  );
+  const [energy, setEnergy] = React.useState<EnergyPick>(
+    initialSettings?.energy ?? "auto",
+  );
   const [productionPresetId, setProductionPresetId] = React.useState<
     ProductionPresetId | "auto"
-  >("auto");
-  const [visualAmbition, setVisualAmbition] =
-    React.useState<VisualAmbition>("expressive");
-  const [mediaPreference, setMediaPreference] =
-    React.useState<MediaPreference>("auto");
-  const [quickProduce, setQuickProduce] = React.useState(initialQuickProduce);
+  >(initialSettings?.productionPresetId ?? "auto");
+  const [visualAmbition, setVisualAmbition] = React.useState<VisualAmbition>(
+    initialSettings?.visualAmbition ?? "expressive",
+  );
+  const [mediaPreference, setMediaPreference] = React.useState<MediaPreference>(
+    initialSettings?.mediaPreference ?? "auto",
+  );
+  const [quickProduce, setQuickProduce] = React.useState(
+    initialSettings
+      ? Boolean(initialSettings.quickProduce)
+      : initialQuickProduce,
+  );
   const [quickPlanner, setQuickPlanner] = React.useState<
     "deterministic" | AIProviderId | undefined
-  >();
-  const [narration, setNarration] = React.useState(false);
+  >(initialSettings?.quickProduce?.planner);
+  const [narration, setNarration] = React.useState(
+    initialSettings?.quickProduce?.voice.enabled ?? false,
+  );
+  const [evidence, setEvidence] = React.useState<EvidencePack | null>(
+    initialEvidence ?? null,
+  );
+  const [reuseEvidence, setReuseEvidence] = React.useState(
+    Boolean(initialEvidence),
+  );
+  const updateEvidence = React.useCallback((value: EvidencePack | null) => {
+    setEvidence(value);
+    setReuseEvidence(false);
+  }, []);
+  const [researchMode, setResearchMode] = React.useState<
+    "off" | "supplied" | "web"
+  >(
+    initialEvidence
+      ? initialEvidence.provenance.kind === "native_search"
+        ? "web"
+        : "supplied"
+      : "off",
+  );
+  const researchRequired = researchMode !== "off";
 
   const configured = (providers ?? []).filter((p) => p.configured);
   const effectiveProvider = providerId ?? configured[0]?.id;
@@ -98,19 +152,27 @@ export function CreateWithAIDialog({
   const effectiveQuickPlanner =
     quickPlanner ?? effectiveProvider ?? "deterministic";
   const validBrief = brief.trim().length >= 3 && brief.trim().length <= 8000;
+  const readyEvidence =
+    evidence && (reuseEvidence || evidence.query === brief.trim())
+      ? evidence
+      : null;
 
   function submit() {
     const trimmed = brief.trim();
     if (
       !validBrief ||
       generate.isPending ||
-      (!quickProduce && !effectiveProvider)
+      (!quickProduce && !effectiveProvider) ||
+      (researchRequired &&
+        (!readyEvidence ||
+          (quickProduce && effectiveQuickPlanner === "deterministic")))
     )
       return;
     const planner = quickProduce ? effectiveQuickPlanner : effectiveProvider;
     generate.mutate(
       {
         providerId: planner === "deterministic" ? undefined : planner,
+        modelId: writerModelId.trim() || undefined,
         mode,
         brief: trimmed,
         sceneCount: sceneCount === "auto" ? undefined : Number(sceneCount),
@@ -123,17 +185,23 @@ export function CreateWithAIDialog({
         mediaPreference,
         visualAmbition,
         brandKitId: brandKitId || null,
+        evidenceId: researchRequired ? readyEvidence?.id : undefined,
         ...(quickProduce
           ? {
               idempotencyKey: `quick-produce:${crypto.randomUUID()}`,
               quickProduce: {
                 enabled: true as const,
                 planner: effectiveQuickPlanner,
+                plannerModelId: writerModelId.trim() || undefined,
                 mediaPreference,
                 voice: {
+                  ...(initialSettings?.quickProduce?.voice ?? {}),
                   enabled: narration,
-                  providerId: "kokoro-server" as const,
-                  voiceId: "af_heart",
+                  providerId:
+                    initialSettings?.quickProduce?.voice.providerId ??
+                    "kokoro-server",
+                  voiceId:
+                    initialSettings?.quickProduce?.voice.voiceId ?? "af_heart",
                 },
               },
             }
@@ -248,7 +316,10 @@ export function CreateWithAIDialog({
                 maxLength={8000}
                 autoFocus
                 value={brief}
-                onChange={(e) => setBrief(e.target.value)}
+                onChange={(e) => {
+                  setBrief(e.target.value);
+                  if (!reuseEvidence) setEvidence(null);
+                }}
                 placeholder={
                   mode === "idea"
                     ? "e.g. 3 quick tips for writing better prompts"
@@ -270,6 +341,23 @@ export function CreateWithAIDialog({
                 </div>
               ) : null}
             </div>
+
+            <ResearchSelection
+              key={brief}
+              brief={brief}
+              onEvidence={updateEvidence}
+              mode={researchMode}
+              onModeChange={setResearchMode}
+              initialEvidence={readyEvidence ?? undefined}
+            />
+            {researchRequired &&
+              quickProduce &&
+              effectiveQuickPlanner === "deterministic" && (
+                <p className="text-muted-foreground text-sm">
+                  Select an AI planner to create from research. The
+                  supplied-text arrangement does not use research.
+                </p>
+              )}
 
             <div className="grid items-start gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
@@ -326,25 +414,63 @@ export function CreateWithAIDialog({
                       ? effectiveQuickPlanner
                       : (effectiveProvider ?? "")
                   }
-                  onChange={(event) =>
-                    quickProduce
-                      ? setQuickPlanner(
+                  onChange={(event) => {
+                    setWriterModelId("");
+                    if (quickProduce) setQuickPlanner(
                           event.target.value as "deterministic" | AIProviderId,
-                        )
-                      : setProviderId(event.target.value as AIProviderId)
-                  }
+                        );
+                    else setProviderId(event.target.value as AIProviderId);
+                  }}
                 >
                   {quickProduce && (
                     <option value="deterministic">
                       Deterministic (no AI key)
                     </option>
                   )}
+                  {(quickProduce ? effectiveQuickPlanner : effectiveProvider) &&
+                    (quickProduce
+                      ? effectiveQuickPlanner
+                      : effectiveProvider) !== "deterministic" &&
+                    !configured.some(
+                      (provider) =>
+                        provider.id ===
+                        (quickProduce
+                          ? effectiveQuickPlanner
+                          : effectiveProvider),
+                    ) && (
+                      <option
+                        value={
+                          quickProduce
+                            ? effectiveQuickPlanner
+                            : effectiveProvider
+                        }
+                      >
+                        {quickProduce
+                          ? effectiveQuickPlanner
+                          : effectiveProvider}{" "}
+                        (not configured)
+                      </option>
+                    )}
                   {configured.map((provider) => (
                     <option key={provider.id} value={provider.id}>
                       {provider.label}
                     </option>
                   ))}
                 </NativeSelect>
+                {(quickProduce ? effectiveQuickPlanner : effectiveProvider) !==
+                  "deterministic" && (
+                  <>
+                    <Label htmlFor="ai-writer-model">Writer model</Label>
+                    <input
+                      id="ai-writer-model"
+                      className="bg-background rounded-md border px-3 py-2 text-sm"
+                      value={writerModelId}
+                      onChange={(event) => setWriterModelId(event.target.value)}
+                      placeholder="Configured default"
+                      maxLength={160}
+                    />
+                  </>
+                )}
               </div>
             </div>
             {quickProduce && effectiveQuickPlanner === "deterministic" && (
@@ -513,9 +639,10 @@ export function CreateWithAIDialog({
                   Add local narration
                 </span>
                 <span className="text-muted-foreground mt-1 block text-xs">
-                  Uses Kokoro voice af_heart. Set up local voice in Settings
-                  first; the first synthesis may download the model. Leave off
-                  for a silent video.
+                  {initialSettings?.quickProduce?.voice
+                    ? `Keeps ${initialSettings.quickProduce.voice.providerId} voice ${initialSettings.quickProduce.voice.voiceId}.`
+                    : "Uses Kokoro voice af_heart. Set up local voice in Settings first."}{" "}
+                  Leave off for a silent video.
                 </span>
               </span>
             </label>
@@ -545,6 +672,10 @@ export function CreateWithAIDialog({
             disabled={
               !validBrief ||
               (!quickProduce && !effectiveProvider) ||
+              (researchRequired &&
+                (!readyEvidence ||
+                  (quickProduce &&
+                    effectiveQuickPlanner === "deterministic"))) ||
               generate.isPending
             }
           >

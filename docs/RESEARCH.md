@@ -85,8 +85,22 @@ The smoke makes one call; it does not assert that a provider will always search.
 
 ## Authenticated API
 
-These foundations expose research and inspection separately from project creation.
-Creation UI, Quick Produce evidence integration and MCP tools are separate work.
+The creation dialog can research supplied text, a public URL, or the web before
+planning a draft or Quick Produce. It requires an AI writer when research is
+selected. The saved evidence revision is included in the project and frozen
+production snapshots. Web research is an explicit, separately budgeted call.
+Source review shows citations, retrieval/publication dates, excerpts, claims,
+conflicts and gaps. Google's suggestions are rendered in a sandboxed frame with
+scripts and network subresources blocked. Review is also available on results.
+Remix keeps the saved writer/model, evidence revision, brand, format, media and
+voice settings; changing copy reuses that evidence until an explicit refresh.
+The researcher/model is retained independently of the writer.
+
+If a research submission loses its connection, restore the same brief and mode
+and choose **Reconnect to previous research**. The original request and key are
+kept in this tab's session storage, so reconnect cannot replay a paid call.
+**Refresh research** creates a new explicit request and can incur a new charge.
+Source text stored for reconnect is cleared with the browser tab/session.
 The existing same-origin/loopback policy applies; strict mode requires bearer
 authentication. Named tokens need `studio:write` for submission/cancellation and
 `studio:read` for capability, status and evidence inspection. Cloud research also
@@ -154,7 +168,9 @@ native research, using an appropriately isolated renderer for provider HTML.
 one explicitly selected Ollama, LM Studio or llama.cpp writer. It returns a scene
 plan plus the evidence ID/revision, separate researcher/writer selections,
 citations, attribution, usage and a cloud/local disclosure. It does not create a
-project or refresh research; creation integration is separate work.
+project or refresh research. To create a project with a saved revision, pass
+its `evidenceId` to `POST /api/projects/ai`; this consumes the frozen evidence
+without running research again.
 
 Example body for saved OpenAI evidence:
 
@@ -203,3 +219,26 @@ choice back to provider configuration or sources-only operation. Key/config
 changes refresh the capability view. Unsupported research models are rejected
 with an actionable error before provider IO, while existing generation models
 remain available for writing.
+
+## MCP research and external packs
+
+The MCP server uses the same authenticated REST routes and budgets as the UI.
+`get_research_capabilities`, `start_research_job`, `get_research_job`,
+`cancel_research_job`, `get_research_evidence`, and `plan_from_research_evidence`
+cover the research lifecycle. Pass `evidenceId` to `ai_create_project` to create
+with a frozen revision, including Quick Produce. Changing the writer never
+silently changes or refreshes the researcher.
+
+`POST /api/research/evidence` and `import_research_evidence` accept a complete
+version-1 pack. All source/excerpt/claim/conflict references must validate.
+Imports always become `external_unverified`; supplied provider labels, accounting
+and executable attribution are discarded. Source dates remain caller-supplied
+and visibly unverified. Content-identical imports reuse one immutable revision.
+Importing or reading a pack does not fetch its URLs or spend a provider allowance.
+
+For offline acceptance with a running app on port 3020, run
+`node --import tsx scripts/verify-research-creation.ts`. It saves a clearly named
+synthetic example and real export in the active app, with no model download or
+paid call. Finish existing queued/running work first. The fixture deliberately
+uses an unavailable `offline-fixture` writer label for remix, so a reviewer must
+select a real configured writer explicitly before generating a new version.

@@ -21,6 +21,7 @@ import { POST as cancel } from "@/app/api/research/jobs/[id]/cancel/route";
 import { GET as evidence } from "@/app/api/research/evidence/[id]/route";
 import { GET as capabilities } from "@/app/api/research/capabilities/route";
 import { POST as planEvidence } from "@/app/api/research/evidence/[id]/plan/route";
+import { POST as importEvidence } from "@/app/api/research/evidence/route";
 import { planWithResearchEvidence } from "@/library/research-writer";
 import { researchRepository } from "./research-api";
 import { createPrismaClient } from "@/library/prisma-client";
@@ -192,6 +193,45 @@ afterAll(async () => {
 });
 
 describe("authenticated research APIs", () => {
+  it("imports the same validated external pack for web and MCP while stripping forged trust and usage", async () => {
+    const pack = evidenceFixture();
+    pack.attribution.providerMetadata = "Caller-controlled metadata";
+    pack.usage.providerCalls = 1;
+    const web = await importEvidence(req("POST", pack));
+    expect(web.status).toBe(201);
+    const first = (await web.json()).evidence;
+    const mcp = await importEvidence(
+      req(
+        "POST",
+        pack,
+        token({ paidRequestLimit: 0, paidProviders: [], allowedProviders: [] }),
+      ),
+    );
+    expect(mcp.status).toBe(201);
+    expect((await mcp.json()).evidence).toEqual(first);
+    expect(first.provenance.kind).toBe("external_unverified");
+    expect(first.sources[0]).toMatchObject({
+      provenance: "external_unverified",
+      url: null,
+    });
+    expect(first.usage.providerCalls).toBe(0);
+    expect(first.attribution.providerMetadata).toBeNull();
+    expect(await client.evidenceRevision.count()).toBe(1);
+    expect(reserveNamedMcpPaidRequest).not.toHaveBeenCalled();
+  });
+  it("rejects external mapping errors and missing scopes before importing", async () => {
+    const pack = evidenceFixture();
+    expect(
+      (
+        await importEvidence(
+          req("POST", pack, token({ scopes: ["studio:read"] })),
+        )
+      ).status,
+    ).toBe(403);
+    pack.claims[0]!.references[0]!.excerptId = "missing";
+    expect((await importEvidence(req("POST", pack))).status).toBe(400);
+    expect(await client.evidenceRevision.count()).toBe(0);
+  });
   it("uses only the explicitly selected OpenAI backend and its token allowance", async () => {
     const headers = token({
       allowedProviders: ["openai"],

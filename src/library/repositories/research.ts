@@ -66,6 +66,37 @@ export class ResearchRepository {
     return row ? evidencePackSchema.parse(JSON.parse(row.packJson)) : null;
   }
 
+  async importExternal(cacheKey: string, pack: EvidencePack) {
+    const existing = await this.db.evidenceRevision.findUnique({
+      where: { cacheKey_revision: { cacheKey, revision: 1 } },
+    });
+    if (existing)
+      return evidencePackSchema.parse(JSON.parse(existing.packJson));
+    try {
+      await this.db.evidenceRevision.create({
+        data: {
+          id: pack.id,
+          cacheKey,
+          revision: 1,
+          packJson: JSON.stringify(pack),
+          expiresAt: new Date(pack.createdAt),
+        },
+      });
+      return pack;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        const prior = await this.db.evidenceRevision.findUnique({
+          where: { cacheKey_revision: { cacheKey, revision: 1 } },
+        });
+        if (prior) return evidencePackSchema.parse(JSON.parse(prior.packJson));
+      }
+      throw error;
+    }
+  }
+
   /** Expired in-flight work is terminal: never automatically replay paid IO. */
   async expire(now = new Date()) {
     await this.db.researchJob.updateMany({

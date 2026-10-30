@@ -123,19 +123,10 @@ export function useGenerateProject() {
       visualAmbition?: VisualAmbition;
       brandKitId?: string | null;
       mediaPreference?: MediaPreference;
-      quickProduce?: {
-        enabled: true;
-        planner: "deterministic" | AIProviderId;
-        plannerModelId?: string;
-        mediaPreference: MediaPreference;
-        voice: {
-          enabled: boolean;
-          providerId: "kokoro-server";
-          voiceId: string;
-        };
-      };
+      quickProduce?: import("@/production/quick-produce").QuickProduceOptions;
       idempotencyKey?: string;
       directorBudget?: { maxPaidCalls: 0 | 1 };
+      evidenceId?: string;
     }) =>
       apiPost<{
         projectId: string;

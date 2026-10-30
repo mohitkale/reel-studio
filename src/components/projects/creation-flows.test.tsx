@@ -4,6 +4,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { CreateWithAIDialog } from "./create-with-ai-dialog";
 import { CreationWizard } from "./creation-wizard";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { evidenceFixture } from "@/research/fixtures";
 
 vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
 
@@ -88,6 +89,63 @@ it("creates an AI draft from a brief using the configured provider and preset de
     brandKitId: null,
   });
   expect(mocks.generate.mock.calls[0][0]).not.toHaveProperty("quickProduce");
+});
+it("requires research results after selecting research and changing the brief", async () => {
+  await mount(<CreateWithAIDialog />);
+  await enter("#ai-brief", "Explain a reading habit.");
+  const select = container.querySelector<HTMLSelectElement>(
+    "#creation-research-mode",
+  )!;
+  await act(async () => {
+    select.value = "supplied";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  expect(button("Create draft").disabled).toBe(true);
+  await enter("#ai-brief", "Explain a different habit.");
+  expect(
+    container.querySelector<HTMLSelectElement>("#creation-research-mode")!
+      .value,
+  ).toBe("supplied");
+  expect(button("Create draft").disabled).toBe(true);
+});
+it("remixes using the saved evidence and writer settings without new research", async () => {
+  await mount(
+    <CreateWithAIDialog
+      initialEvidence={evidenceFixture()}
+      initialSettings={{
+        brief: "A supplied product brief",
+        mode: "idea",
+        writer: { providerId: "gemini", modelId: "saved-writer" },
+        orientation: "square",
+        brandKitId: null,
+        mediaPreference: "none",
+        productionPresetId: "editorial-explainer",
+        quickProduce: {
+          enabled: true,
+          planner: "gemini",
+          plannerModelId: "saved-writer",
+          mediaPreference: "none",
+          voice: {
+            enabled: true,
+            providerId: "kokoro-server",
+            voiceId: "saved-voice",
+          },
+        },
+      }}
+    />,
+  );
+  await enter("#ai-brief", "A different angle on the supplied product");
+  await act(async () => button("Create and produce").click());
+  expect(mocks.generate.mock.calls[0][0]).toMatchObject({
+    evidenceId: "evidence-1",
+    modelId: "saved-writer",
+    orientation: "square",
+    mediaPreference: "none",
+    quickProduce: {
+      plannerModelId: "saved-writer",
+      voice: { enabled: true, voiceId: "saved-voice" },
+    },
+  });
 });
 it("retains AI planning when Quick Produce is enabled and honors visible narration", async () => {
   await mount(<CreateWithAIDialog />);

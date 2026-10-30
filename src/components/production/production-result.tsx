@@ -5,25 +5,47 @@ import { useProductionJob } from "@/hooks/production-jobs";
 import { useScript } from "@/hooks/script";
 import { QuickProduceStatus } from "./quick-produce-status";
 import { PromptCreator } from "@/components/projects/prompt-creator";
+import { CreateWithAIDialog } from "@/components/projects/create-with-ai-dialog";
+import { EvidenceReview } from "@/components/projects/evidence-review";
 import { Button } from "@/components/ui/button";
 
 function Remix({ scriptId }: { scriptId: string }) {
   const script = useScript(scriptId);
   if (!script.data) return null;
   return (
-    <details className="rounded-xl border p-4">
-      <summary className="cursor-pointer text-sm font-medium">
-        Remix this video
-      </summary>
-      <div className="mt-4">
-        <PromptCreator
-          initialBrief={script.data.scenes
-            .map((scene) => scene.spokenText ?? scene.text)
-            .join("\n\n")}
-          initialPresetId={script.data.productionPreset?.id}
-        />
-      </div>
-    </details>
+    <div className="space-y-4">
+      {script.data.researchEvidence && (
+        <details className="rounded-xl border p-4">
+          <summary className="cursor-pointer text-sm font-medium">
+            Review sources
+          </summary>
+          <div className="mt-4">
+            <EvidenceReview evidence={script.data.researchEvidence} />
+          </div>
+        </details>
+      )}
+      <details className="rounded-xl border p-4">
+        <summary className="cursor-pointer text-sm font-medium">
+          Remix this video
+        </summary>
+        <div className="mt-4">
+          {script.data.creationSettings ? (
+            <CreateWithAIDialog
+              initialSettings={script.data.creationSettings}
+              initialEvidence={script.data.researchEvidence}
+              trigger={<Button>Remix with saved settings</Button>}
+            />
+          ) : (
+            <PromptCreator
+              initialBrief={script.data.scenes
+                .map((scene) => scene.spokenText ?? scene.text)
+                .join("\n\n")}
+              initialPresetId={script.data.productionPreset?.id}
+            />
+          )}
+        </div>
+      </details>
+    </div>
   );
 }
 export function ProductionResult({ jobId }: { jobId: string }) {

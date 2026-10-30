@@ -150,8 +150,8 @@ export function PromptCreator({
         </Button>
       </div>
       <p className="text-muted-foreground mt-3 text-xs">
-        No AI key required. Uses your supplied text with animated backgrounds.
-        Narration is off by default.
+        Supplied-text arrangement. No AI key required. Uses your supplied text
+        with animated backgrounds. Narration is off by default.
       </p>
       <div className="mt-4 text-sm">
         <label className="mt-2 flex items-center gap-2">

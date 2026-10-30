@@ -1,11 +1,14 @@
 import { randomUUID } from "node:crypto";
-import { visualAmbitionSchema } from "@/production/motion-plan";
 
 import { after, NextResponse } from "next/server";
-import { z } from "zod";
+import { projectCreationRequestSchema } from "@/research/creation-request";
 
-import { getAIProvider, isAIProviderId } from "@/providers/ai/registry";
-import { AIError, AI_PROVIDER_IDS, SCRIPT_STYLES } from "@/providers/ai/types";
+import {
+  getAIProvider,
+  isAIProviderId,
+  listAIProviderStatuses,
+} from "@/providers/ai/registry";
+import { AIError } from "@/providers/ai/types";
 import { createProjectFromPlan } from "@/library/repositories/projects";
 import {
   enrichScenePlan,
@@ -16,66 +19,47 @@ import { reportStockMediaSelectionUsage } from "@/library/stock-media-usage";
 import { getScript } from "@/library/repositories/scripts";
 import { autoAttachBundledMusic } from "@/library/soundtrack-service";
 import { ensureSfxCues } from "@/library/sfx-service";
-import { orientationSchema, DEFAULT_ORIENTATION } from "@/lib/orientation";
-import { VIDEO_ENGINE_IDS, DEFAULT_VIDEO_ENGINE } from "@/engines/types";
-import { authorizeProviderRequest } from "@/server/auth";
+import { DEFAULT_ORIENTATION } from "@/lib/orientation";
+import { DEFAULT_VIDEO_ENGINE } from "@/engines/types";
+import {
+  authorizeProviderRequest,
+  authorizeRead,
+  authorizeRequest,
+} from "@/server/auth";
 import {
   errorResponse,
   parseClientInput,
   readRequestJson,
 } from "@/server/api-helpers";
-import {
-  getProductionPreset,
-  productionPresetIdSchema,
-} from "@/production/presets";
+import { getProductionPreset } from "@/production/presets";
 import { applyPresetToAIPlan } from "@/production/ai-preset-plan";
-import { mediaPreferenceSchema } from "@/lib/media-preference";
-import { quickProduceOptionsSchema } from "@/production/quick-produce";
 import { createDeterministicProductionPlan } from "@/production/manual-planner";
 import { submitProduction } from "@/library/production-service";
 import { getProductionJobByIdempotencyKey } from "@/library/repositories/production-jobs";
 import { productionJobViewWithRevision } from "@/library/production-job-view";
 import { runProductionWorkerOnce } from "@/library/production-worker";
 import { executeProductionJob } from "@/library/production-job-executor";
-import { directorBudgetSchema } from "@/video/shot-direction";
 import { resolveCreativeDirection } from "@/production/creative-direction";
 import { getBrandKit } from "@/library/repositories/brandkits";
+import { ResearchRepository } from "@/library/repositories/research";
+import { researchPromptContext } from "@/research/writer";
+import {
+  creationEvidenceSources,
+  unsupportedCreationNumbers,
+} from "@/research/creation-grounding";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const bodySchema = z.object({
-  providerId: z.enum(AI_PROVIDER_IDS).optional(),
-  modelId: z.string().optional(),
-  mode: z.enum(["idea", "story"]),
-  brief: z.string().trim().min(3).max(8000),
-  sceneCount: z.number().int().min(3).max(20).optional(),
-  orientation: orientationSchema.optional(),
-  scriptStyle: z.enum(SCRIPT_STYLES).optional(),
-  videoEngine: z.enum(VIDEO_ENGINE_IDS).optional(),
-  /** "auto" lets the AI choose; otherwise lock Style for the whole reel. */
-  styleId: z
-    .enum(["auto", "bold-hook", "clean-story", "teach-me", "soft-brand"])
-    .optional(),
-  /** "auto" lets the AI choose; otherwise lock Energy. */
-  energy: z.enum(["auto", "calm", "normal", "high"]).optional(),
-  visualAmbition: visualAmbitionSchema.default("expressive"),
-  /** Automatic colour direction unless a brand is explicitly selected. */
-  brandKitId: z.string().trim().min(1).max(120).nullable().default(null),
-  productionPresetId: productionPresetIdSchema
-    .or(z.literal("auto"))
-    .default("auto"),
-  mediaPreference: mediaPreferenceSchema.default("auto"),
-  quickProduce: quickProduceOptionsSchema.optional(),
-  idempotencyKey: z.string().min(8).max(240).optional(),
-  directorBudget: directorBudgetSchema.optional(),
-});
-
 /** POST /api/projects/ai - generate a scene plan from a brief and create the project. */
 export async function POST(req: Request) {
   try {
-    const body = parseClientInput(bodySchema, await readRequestJson(req));
+    authorizeRequest(req, "studio:write");
+    const body = parseClientInput(
+      projectCreationRequestSchema,
+      await readRequestJson(req),
+    );
     if (body.brandKitId && !(await getBrandKit(body.brandKitId)))
       throw new AIError("The selected brand kit no longer exists.", 404);
     if (body.quickProduce && body.idempotencyKey) {
@@ -105,7 +89,26 @@ export async function POST(req: Request) {
         "This director budget allows no paid planner calls.",
         400,
       );
+    if (body.evidenceId) authorizeRead(req);
+    const evidence = body.evidenceId
+      ? await new ResearchRepository().getEvidence(body.evidenceId)
+      : null;
+    if (body.evidenceId && !evidence)
+      throw new AIError("Evidence revision not found", 404);
+    if (evidence && planner === "deterministic")
+      throw new AIError("Choose an AI writer to use research evidence", 400);
+    if (evidence) {
+      try {
+        researchPromptContext(evidence);
+      } catch (error) {
+        throw new AIError(
+          error instanceof Error ? error.message : "Evidence cannot be used",
+          400,
+        );
+      }
+    }
     const auth = await authorizeProviderRequest(req, providerIds);
+    const evidenceSources = evidence ? creationEvidenceSources(evidence) : [];
 
     const orientation = body.orientation ?? DEFAULT_ORIENTATION;
     const mediaPreference =
@@ -131,6 +134,7 @@ export async function POST(req: Request) {
           ? "auto"
           : preset.defaults.energy;
     let raw;
+    let writerModelId: string | undefined;
     if (planner === "deterministic") {
       raw = createDeterministicProductionPlan({
         name:
@@ -153,11 +157,16 @@ export async function POST(req: Request) {
           planner,
         );
       }
+      writerModelId =
+        body.quickProduce?.plannerModelId ??
+        body.modelId ??
+        (await listAIProviderStatuses()).find((status) => status.id === planner)
+          ?.defaultModel;
       raw = await provider.generatePlan({
         mode: body.mode,
         brief: body.brief,
         sceneCount: body.sceneCount,
-        modelId: body.quickProduce?.plannerModelId ?? body.modelId,
+        modelId: writerModelId,
         orientation,
         scriptStyle: body.scriptStyle,
         videoEngine,
@@ -166,9 +175,19 @@ export async function POST(req: Request) {
         productionPresetId: presetId,
         visualTheme: creative.theme.name,
         mediaPreference,
+        evidence: evidence ?? undefined,
+        allowStructuredRepair: evidence ? false : undefined,
         signal: req.signal,
       });
     }
+    if (
+      evidence &&
+      unsupportedCreationNumbers(raw, [body.brief, ...evidenceSources]).length
+    )
+      throw new AIError(
+        "The generated draft contains numbers not supported by the supplied brief or undisputed evidence. Review the sources and try again.",
+        422,
+      );
     const enriched = {
       ...raw,
       scenes: enrichScenePlan(raw.scenes, videoEngine),
@@ -199,6 +218,7 @@ export async function POST(req: Request) {
         hasVisualAsset: backgrounds.some(Boolean),
         sceneHasVisual: backgrounds.map(Boolean),
         source: body.brief,
+        evidenceSources,
       },
     );
 
@@ -221,6 +241,26 @@ export async function POST(req: Request) {
         stockSelections: mediaDecisions.map((decision) => decision.snapshot),
         outputType: "video",
         creationSource: { kind: "text" },
+        savedOverrides: {
+          ...(evidence ? { researchEvidence: evidence } : {}),
+          creationSettings: {
+            brief: body.brief,
+            mode: body.mode,
+            ...(planner !== "deterministic" && writerModelId
+              ? { writer: { providerId: planner, modelId: writerModelId } }
+              : {}),
+            orientation,
+            sceneCount: body.sceneCount,
+            styleId: visualStyle.styleId,
+            energy: visualStyle.energy,
+            visualAmbition: body.visualAmbition,
+            scriptStyle: body.scriptStyle,
+            brandKitId: body.brandKitId,
+            mediaPreference,
+            productionPresetId: presetId,
+            quickProduce: body.quickProduce,
+          },
+        },
       },
     );
     const persisted = await getScript(created.scriptId);
