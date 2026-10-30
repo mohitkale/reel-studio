@@ -6,6 +6,8 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+## 0.8.0
+
 ### Added
 
 - OpenAI Responses web research with bounded hosted search, shared frozen evidence
@@ -34,6 +36,12 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   and `image_url`, including repeated internal underscores.
 - Cinematic Brand closings without a supplied visual no longer insert a default
   `RS` mark; closing copy remains visible.
+
+### Upgrade
+
+- Two additive research/media-ranking migrations since v0.7.0, with unchanged
+  dependency pins. Stop the app, retain a paired database/media backup and use the
+  backup-aware setup runner. See [upgrade and rollback](docs/RELEASE_0.8.0.md).
 
 ## 0.7.0
 
