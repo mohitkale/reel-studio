@@ -1,6 +1,62 @@
 # Release validation
 
-## v0.7.0 release candidate — 2026-10-23
+## v0.8.0 release candidate — 2026-10-31
+
+Research/editorial/visual milestones M1–M5 ship through merged PRs #77–81.
+Release preparation changes metadata, validation and guides; accepted application
+runtime and dependency pins are unchanged from `6052b28239810e0178ccbb3694069d6ebe835c76`.
+The published validation asset must bind the exact release commit/tree to successful
+latest-head PR and merged-main Quality/Security, reviewed exports and asset hashes.
+
+- Fresh full local suite: **233 files / 1,161 passed**, with one intentionally
+  skipped paid-provider test. Typecheck, lint, secret scan, release contracts and
+  an isolated clean-source production build passed using existing pinned tools.
+  The normal app stayed available for review. Release PR/main CI additionally
+  require clean locked installs and the full platform checks on their exact heads.
+- Fresh matrix: **18 H.264 exports**, six presets × three canvases, **199.5 seconds**
+  total, rendered in **526.9 seconds** on the reference Mac. Eighteen decoded
+  frames inspected: [portrait](../assets/release-0.8.0/matrix-portrait.jpg),
+  [landscape](../assets/release-0.8.0/matrix-landscape.jpg) and
+  [square](../assets/release-0.8.0/matrix-square.jpg). These visual fixtures are silent.
+- Fresh recovery: **210 seconds / 5,040 frames** at 24 FPS. Intentional cancellation
+  preserves committed work; retry reuses all seven sections. Video payload hashes
+  match exactly. Decoded audio relative RMS error is **1.17%**, within the unchanged
+  **2%** gate; encoded audio/container bytes differ. This uses labelled calibration
+  narration and does not establish speech quality.
+- Fresh cached local Kokoro: two voices, reusable turns, selective regeneration,
+  legacy MP3 repair, WAV/MP3 and an actual audiogram export. Remote model loading
+  and external fetches were disabled. Native-channel float PCM is non-silent,
+  finite and unclipped; the [audiogram frame](../assets/release-0.8.0/audiogram.png)
+  was inspected.
+- Populated published v0.3.0/v0.4.0 upgrades, paired media, backup restoration and
+  isolated fresh setup pass through **20 migrations**. A direct published v0.7.0
+  upgrade preserves populated project/script/scene/take, studio preset, scene
+  history, audio-editing and factory records. All 18 historical migrations and
+  dependency/engine pins are unchanged; schema parity, integrity and foreign-key
+  checks pass. Only two additive migrations are new.
+- The unchanged speech engine passes compatibility and matching corresponding-source
+  distribution checks. Its complete source archive/notices must accompany publication.
+- Fresh v0.8.0 production-browser checks use the isolated build with the active
+  app's original data root: [saved result playback and exact frozen source terms](../assets/release-0.8.0/browser-result.png),
+  plus [supplied-proof preview](../assets/release-0.8.0/browser-proof.png) with saved
+  recurring subjects, 10-second recording cue, retained copy/narration and an
+  unverified-artifact warning. No apply or provider call was made.
+- [M5 acceptance](VISUAL_QUALITY_M5_VALIDATION.md) retains fifteen active-app benchmark
+  exports plus supplied-proof examples in three formats. Human review is recorded
+  in the [checksummed review record](VISUAL_QUALITY_M5_HUMAN_REVIEW.json); agent frame
+  inspection does not fill human ratings. All fifteen reviews must be accepted
+  before publication under the [benchmark gate](../EDITORIAL_BENCHMARK.md#human-export-review-and-release-acceptance).
+
+[Integrated candidate acceptance](RELEASE_ACCEPTANCE_0.8.0.json),
+[fresh matrix](RELEASE_MATRIX_0.8.0.json), and
+[upgrade/rollback](../RELEASE_0.8.0.md).
+The final local and platform check results are recorded in the acceptance/validation
+assets. No tag is published before the exact-commit gates and required human reviews
+pass. No paid calls, new software/model downloads or cloud renders are used.
+Live-model quality, source freshness, Hindi speech/font portability and human
+blind-preference targets remain outside these offline measurements.
+
+## Historical v0.7.0 release acceptance — 2026-10-23
 
 The creator studio shipped through PRs #57–58. Release preparation changes
 metadata and documentation; accepted application source and dependency pins are

@@ -22,7 +22,7 @@ import {
   PRODUCTION_PRESETS,
 } from "../src/production/presets";
 
-const EXPECTED_VERSION = "0.7.0";
+const EXPECTED_VERSION = "0.8.0";
 const root = process.cwd();
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -128,9 +128,9 @@ function checkReleaseMetadata() {
     "CHANGELOG.md",
     "docs/CREATOR_GUIDE.md",
     "docs/WALKTHROUGHS.md",
-    "docs/production/RELEASE_MATRIX_0.7.0.json",
-    "docs/production/RELEASE_ACCEPTANCE_0.7.0.json",
-    "docs/RELEASE_0.7.0.md",
+    "docs/production/RELEASE_MATRIX_0.8.0.json",
+    "docs/production/RELEASE_ACCEPTANCE_0.8.0.json",
+    "docs/RELEASE_0.8.0.md",
     "tests/fixtures/release-v040/provenance.json",
     "docs/production/LOCAL_FIRST_PR2_RENDER_MATRIX.json",
     "docs/production/RELEASE_VALIDATION.md",
@@ -143,7 +143,7 @@ function checkReleaseMetadata() {
     );
   }
 
-  const matrix = readJson("docs/production/RELEASE_MATRIX_0.7.0.json");
+  const matrix = readJson("docs/production/RELEASE_MATRIX_0.8.0.json");
   const environment = matrix.environment as {
     packageVersion?: string;
     resumedFromExistingArtifacts?: boolean;

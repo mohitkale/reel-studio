@@ -1,0 +1,648 @@
+{
+  "version": 1,
+  "release": "0.8.0",
+  "verifiedOn": "2026-10-31",
+  "stage": "release-candidate",
+  "applicationSource": {
+    "baseCommit": "6052b28239810e0178ccbb3694069d6ebe835c76",
+    "contentSha256": "7277a52270d9c21a4254927a32362742a2d423c73f3250ebb2576a1aa6a63ee3",
+    "method": "Ordered tracked src/public runtime/isolated worker paths and SHA256 digests; release preparation changes metadata/docs/validation only. Recheck before tagging."
+  },
+  "unitSuite": {
+    "files": 233,
+    "tests": 1161,
+    "skippedPaidTests": 1,
+    "passed": true,
+    "maxWorkers": 2
+  },
+  "dependencies": {
+    "baseTag": "v0.7.0",
+    "baseCommit": "1f26d7395d6e25fc850c818df543198b3f763e9d",
+    "applicationBaseCommit": "6052b28239810e0178ccbb3694069d6ebe835c76",
+    "dependencyPinsUnchanged": true,
+    "enginesUnchanged": true,
+    "newMigrations": [
+      "prisma/migrations/20261029000100_research_evidence/migration.sql",
+      "prisma/migrations/20261030000100_media_ranking_jobs/migration.sql"
+    ],
+    "sourceContentSha256": "7277a52270d9c21a4254927a32362742a2d423c73f3250ebb2576a1aa6a63ee3",
+    "sourceMethod": "SHA256 of ordered tracked src/public runtime/isolated worker paths and individual SHA256 digests. Compare again before publishing.",
+    "historicalMigrations": [
+      {
+        "file": "prisma/migrations/20260910000100_baseline/migration.sql",
+        "sha256": "5c1906cb5f6e3aa014670a0d96b718668fab83ee2bc657b2e1efe0556eccdf0b"
+      },
+      {
+        "file": "prisma/migrations/20260911000100_production_jobs/migration.sql",
+        "sha256": "e15ee1e4a362da177c4dccaf3b9aa7cad0f4548e4b95ea4587ec3285601a4d30"
+      },
+      {
+        "file": "prisma/migrations/20260912000100_caption_tracks/migration.sql",
+        "sha256": "6aa1a8e1c8e7c3b7a3db4ad203f0c7ea14f61fcfe5254ed8fccf6b6f94ecde57"
+      },
+      {
+        "file": "prisma/migrations/20260912000200_audio_production/migration.sql",
+        "sha256": "47f80abfa792c7f8a717871bec618ba827492f52408d368d86355ec51c2e6092"
+      },
+      {
+        "file": "prisma/migrations/20260912000300_podcast_production/migration.sql",
+        "sha256": "978975da366af709439b69482cb52aa58742d4fecf2a1bb6553edfa95075a4d3"
+      },
+      {
+        "file": "prisma/migrations/20260913000100_production_batches/migration.sql",
+        "sha256": "2846738b045db0aa246e26bb940a1fd96e43d609359ff263537e4ac3f2701b86"
+      },
+      {
+        "file": "prisma/migrations/20260914000100_podcast_finishing/migration.sql",
+        "sha256": "90ffcb3c6e33ddc6ace9af41440793df7bd818eba0e6aabb6022c7c7f623fd2c"
+      },
+      {
+        "file": "prisma/migrations/20260914000200_stock_media_schema/migration.sql",
+        "sha256": "e534fa930defb18aca2468b560e8038e8c91e21e03f883d22633ff2a426c60f1"
+      },
+      {
+        "file": "prisma/migrations/20260914000300_stock_media_services/migration.sql",
+        "sha256": "f3ef6a0a2890d064c7c1d96fb8bd7f36f2225ae04f08a488b9c3447a2466d08a"
+      },
+      {
+        "file": "prisma/migrations/20260915000100_caption_styles/migration.sql",
+        "sha256": "40de887dd888b894ef3db50d3c8767d710d53254316bbac7ada1795a92fce33b"
+      },
+      {
+        "file": "prisma/migrations/20260916000100_quick_produce_revisions/migration.sql",
+        "sha256": "22d88e81492ddaa8612d5b39dba96a7a58ee1d226ea3e14f99ac7d85aaaa8141"
+      },
+      {
+        "file": "prisma/migrations/20260930000100_caption_take_provenance/migration.sql",
+        "sha256": "7c67a19729365fe8a50aeda1eb9c179690b93aa6458003d1a8c2c391df448e91"
+      },
+      {
+        "file": "prisma/migrations/20261002000100_hyperframes_only/migration.sql",
+        "sha256": "f55ebe6d1ec458f541a69a782149b6ca8eaeb56845964d302e03af17da657132"
+      },
+      {
+        "file": "prisma/migrations/20261002000200_sqlite_render_lookup/migration.sql",
+        "sha256": "2e4e93346026cb7f00a7f8978c3ea5fe7a68918cf01299cd5eccd616c027b257"
+      },
+      {
+        "file": "prisma/migrations/20261017000100_factory_workflows/migration.sql",
+        "sha256": "33f842fab6bdd1a4711edf99e9010df3e5bc1c86d6e6e3d91de8645cf917adb0"
+      },
+      {
+        "file": "prisma/migrations/20261022000100_studio_organization/migration.sql",
+        "sha256": "ae220d2a03f8faaa0872ca096048f447e647cce9e73112172cb6848da023c561"
+      },
+      {
+        "file": "prisma/migrations/20261022000200_studio_presets/migration.sql",
+        "sha256": "26c46fc2994938924db6bf7e24c120b13ab729936b34a9fb7d1d88e4da26b84b"
+      },
+      {
+        "file": "prisma/migrations/20261023000100_audio_edit_sessions/migration.sql",
+        "sha256": "cb0fbd2b780ce11a21f074927b28b815f5cd10b6abc204b563d4cf807732e5fb"
+      }
+    ]
+  },
+  "upgrade": {
+    "verifiedAt": "2026-10-30T18:54:23.066Z",
+    "publishedSource": {
+      "tag": "v0.3.0",
+      "commit": "3bd458296a0e5ad367f6c1122b064fddf6ff9c2f",
+      "schemaPath": "prisma/schema.prisma",
+      "sourceSchemaSha256": "67c8283791d65b581c4552a59f3390853671e253e32e8350dd819729048a57cb",
+      "sqlSha256": "5c1906cb5f6e3aa014670a0d96b718668fab83ee2bc657b2e1efe0556eccdf0b",
+      "conversion": "Installed Prisma 7.10.0 migrate diff --from-empty; removed only datasource url to adapt old syntax."
+    },
+    "published040": {
+      "tag": "v0.4.0",
+      "commit": "2081ac3edd9eab1f4dc2068c37d1f1deec06c4f1",
+      "schemaPath": "prisma/schema.prisma",
+      "sourceSchemaSha256": "34ac71873ac604f53c828fef087bcb8bc40bf69be5e34325b80fd49fdc3e4a62",
+      "migrations": {
+        "prisma/migrations/20260910000100_baseline/migration.sql": "5c1906cb5f6e3aa014670a0d96b718668fab83ee2bc657b2e1efe0556eccdf0b",
+        "prisma/migrations/20260911000100_production_jobs/migration.sql": "e15ee1e4a362da177c4dccaf3b9aa7cad0f4548e4b95ea4587ec3285601a4d30",
+        "prisma/migrations/20260912000100_caption_tracks/migration.sql": "6aa1a8e1c8e7c3b7a3db4ad203f0c7ea14f61fcfe5254ed8fccf6b6f94ecde57",
+        "prisma/migrations/20260912000200_audio_production/migration.sql": "47f80abfa792c7f8a717871bec618ba827492f52408d368d86355ec51c2e6092",
+        "prisma/migrations/20260912000300_podcast_production/migration.sql": "978975da366af709439b69482cb52aa58742d4fecf2a1bb6553edfa95075a4d3",
+        "prisma/migrations/20260913000100_production_batches/migration.sql": "2846738b045db0aa246e26bb940a1fd96e43d609359ff263537e4ac3f2701b86",
+        "prisma/migrations/20260914000100_podcast_finishing/migration.sql": "90ffcb3c6e33ddc6ace9af41440793df7bd818eba0e6aabb6022c7c7f623fd2c",
+        "prisma/migrations/20260914000200_stock_media_schema/migration.sql": "e534fa930defb18aca2468b560e8038e8c91e21e03f883d22633ff2a426c60f1",
+        "prisma/migrations/20260914000300_stock_media_services/migration.sql": "f3ef6a0a2890d064c7c1d96fb8bd7f36f2225ae04f08a488b9c3447a2466d08a",
+        "prisma/migrations/20260915000100_caption_styles/migration.sql": "40de887dd888b894ef3db50d3c8767d710d53254316bbac7ada1795a92fce33b",
+        "prisma/migrations/20260916000100_quick_produce_revisions/migration.sql": "22d88e81492ddaa8612d5b39dba96a7a58ee1d226ea3e14f99ac7d85aaaa8141",
+        "prisma/migrations/20260930000100_caption_take_provenance/migration.sql": "7c67a19729365fe8a50aeda1eb9c179690b93aa6458003d1a8c2c391df448e91",
+        "prisma/migrations/20261002000100_hyperframes_only/migration.sql": "f55ebe6d1ec458f541a69a782149b6ca8eaeb56845964d302e03af17da657132",
+        "prisma/migrations/20261002000200_sqlite_render_lookup/migration.sql": "2e4e93346026cb7f00a7f8978c3ea5fe7a68918cf01299cd5eccd616c027b257"
+      },
+      "fixture": "Published v0.3.0 fixture upgraded through byte-identical v0.4.0 migrations, then populated with caption tracks; no schema migration is introduced by v0.5.0."
+    },
+    "published040RowsPreserved": true,
+    "published040BackupRestore": true,
+    "targetVersion": "0.8.0",
+    "migrations": 20,
+    "backupRestore": true,
+    "copy": true,
+    "media": {
+      "image.svg": "681c2e0344aaee59f8a3f0b7d82ee9a2497a21a693579664eb8179a2fd284d25",
+      "historical.mp4": "6e27a04fe9419e61129b85b0b468235dea4b546c9d5510c7a80a45fb349af267",
+      "take.wav": "76d884aeb068036704cf27022000c5e91b739ac17d6b1ce27ba61ddda870d706"
+    },
+    "voiceTakes": true,
+    "historicalExports": true,
+    "legacyCaptionPayload": true,
+    "captionTracksAfterUpgrade": true,
+    "freshSetup": true
+  },
+  "published070Upgrade": {
+    "baseTag": "v0.7.0",
+    "publishedMigrations": 18,
+    "targetMigrations": 20,
+    "historicalMigrations": [
+      {
+        "file": "prisma/migrations/20260910000100_baseline/migration.sql",
+        "sha256": "5c1906cb5f6e3aa014670a0d96b718668fab83ee2bc657b2e1efe0556eccdf0b"
+      },
+      {
+        "file": "prisma/migrations/20260911000100_production_jobs/migration.sql",
+        "sha256": "e15ee1e4a362da177c4dccaf3b9aa7cad0f4548e4b95ea4587ec3285601a4d30"
+      },
+      {
+        "file": "prisma/migrations/20260912000100_caption_tracks/migration.sql",
+        "sha256": "6aa1a8e1c8e7c3b7a3db4ad203f0c7ea14f61fcfe5254ed8fccf6b6f94ecde57"
+      },
+      {
+        "file": "prisma/migrations/20260912000200_audio_production/migration.sql",
+        "sha256": "47f80abfa792c7f8a717871bec618ba827492f52408d368d86355ec51c2e6092"
+      },
+      {
+        "file": "prisma/migrations/20260912000300_podcast_production/migration.sql",
+        "sha256": "978975da366af709439b69482cb52aa58742d4fecf2a1bb6553edfa95075a4d3"
+      },
+      {
+        "file": "prisma/migrations/20260913000100_production_batches/migration.sql",
+        "sha256": "2846738b045db0aa246e26bb940a1fd96e43d609359ff263537e4ac3f2701b86"
+      },
+      {
+        "file": "prisma/migrations/20260914000100_podcast_finishing/migration.sql",
+        "sha256": "90ffcb3c6e33ddc6ace9af41440793df7bd818eba0e6aabb6022c7c7f623fd2c"
+      },
+      {
+        "file": "prisma/migrations/20260914000200_stock_media_schema/migration.sql",
+        "sha256": "e534fa930defb18aca2468b560e8038e8c91e21e03f883d22633ff2a426c60f1"
+      },
+      {
+        "file": "prisma/migrations/20260914000300_stock_media_services/migration.sql",
+        "sha256": "f3ef6a0a2890d064c7c1d96fb8bd7f36f2225ae04f08a488b9c3447a2466d08a"
+      },
+      {
+        "file": "prisma/migrations/20260915000100_caption_styles/migration.sql",
+        "sha256": "40de887dd888b894ef3db50d3c8767d710d53254316bbac7ada1795a92fce33b"
+      },
+      {
+        "file": "prisma/migrations/20260916000100_quick_produce_revisions/migration.sql",
+        "sha256": "22d88e81492ddaa8612d5b39dba96a7a58ee1d226ea3e14f99ac7d85aaaa8141"
+      },
+      {
+        "file": "prisma/migrations/20260930000100_caption_take_provenance/migration.sql",
+        "sha256": "7c67a19729365fe8a50aeda1eb9c179690b93aa6458003d1a8c2c391df448e91"
+      },
+      {
+        "file": "prisma/migrations/20261002000100_hyperframes_only/migration.sql",
+        "sha256": "f55ebe6d1ec458f541a69a782149b6ca8eaeb56845964d302e03af17da657132"
+      },
+      {
+        "file": "prisma/migrations/20261002000200_sqlite_render_lookup/migration.sql",
+        "sha256": "2e4e93346026cb7f00a7f8978c3ea5fe7a68918cf01299cd5eccd616c027b257"
+      },
+      {
+        "file": "prisma/migrations/20261017000100_factory_workflows/migration.sql",
+        "sha256": "33f842fab6bdd1a4711edf99e9010df3e5bc1c86d6e6e3d91de8645cf917adb0"
+      },
+      {
+        "file": "prisma/migrations/20261022000100_studio_organization/migration.sql",
+        "sha256": "ae220d2a03f8faaa0872ca096048f447e647cce9e73112172cb6848da023c561"
+      },
+      {
+        "file": "prisma/migrations/20261022000200_studio_presets/migration.sql",
+        "sha256": "26c46fc2994938924db6bf7e24c120b13ab729936b34a9fb7d1d88e4da26b84b"
+      },
+      {
+        "file": "prisma/migrations/20261023000100_audio_edit_sessions/migration.sql",
+        "sha256": "cb0fbd2b780ce11a21f074927b28b815f5cd10b6abc204b563d4cf807732e5fb"
+      }
+    ],
+    "populatedTables": [
+      "AudioEditSession",
+      "FactoryPack",
+      "FactoryProfile",
+      "FactoryRun",
+      "FactoryVariant",
+      "Project",
+      "Scene",
+      "SceneEdit",
+      "Script",
+      "StudioPreset",
+      "VoiceTake"
+    ],
+    "legacyRowsPreserved": true,
+    "schemaMatchesFresh": true,
+    "integrity": true,
+    "foreignKeys": true,
+    "runnerBackupRestored": true,
+    "newResearchAndRankingTablesUsable": true
+  },
+  "videoMatrix": {
+    "report": "RELEASE_MATRIX_0.8.0.json",
+    "outputs": 18,
+    "fresh": true,
+    "durationSeconds": 199.5,
+    "elapsedSeconds": 526.9,
+    "decodedFramesInspectedByAgent": 18,
+    "reference": {
+      "resumedFromExistingArtifacts": false,
+      "platform": "darwin",
+      "architecture": "x64",
+      "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+      "logicalCpus": 12,
+      "memoryGiB": 16,
+      "node": "v24.18.1",
+      "packageVersion": "0.8.0"
+    }
+  },
+  "longRender": {
+    "engine": "hyperframes",
+    "benchmarkId": null,
+    "quality": "draft",
+    "nativeCanvas": null,
+    "secondsPerVideoMinute": 72.40094612085714,
+    "secondsPerVideoMinuteOnRetry": 20.175427362571437,
+    "audioConsistency": {
+      "relativeRmsError": 0.01168967948913278,
+      "comparedSamples": 20160000,
+      "firstEncodedHash": "SHA256=131b1e75e60cc26c480e0a4983bc2825acadd633601ecd3887204303ab253f06",
+      "retryEncodedHash": "SHA256=87b63a1afd41e83a42fd713a37d2447abcda51868b0f85de27263ef7aea531c2"
+    },
+    "scopedParity": [],
+    "review": {
+      "sceneFrames": [546, 1386, 2226, 3066, 3906, 4746],
+      "cutFrames": [834, 838, 839, 840, 841, 842, 846, 850]
+    },
+    "seconds": 210,
+    "fps": 24,
+    "frames": 5040,
+    "calibrationNarration": true,
+    "canceled": {
+      "events": [
+        {
+          "index": 0,
+          "reused": false
+        }
+      ],
+      "milliseconds": 49575.462415,
+      "sampledPeakProcessTreeRssBytes": 1691013120,
+      "memorySamples": 49,
+      "samplingError": null
+    },
+    "first": {
+      "events": [
+        {
+          "index": 0,
+          "reused": true
+        },
+        {
+          "index": 1,
+          "reused": false
+        },
+        {
+          "index": 2,
+          "reused": false
+        },
+        {
+          "index": 3,
+          "reused": false
+        },
+        {
+          "index": 4,
+          "reused": false
+        },
+        {
+          "index": 5,
+          "reused": false
+        },
+        {
+          "index": 6,
+          "reused": false
+        }
+      ],
+      "milliseconds": 253403.311423,
+      "sampledPeakProcessTreeRssBytes": 2112544768,
+      "memorySamples": 251,
+      "samplingError": null,
+      "metadata": {
+        "bytes": 11633898,
+        "width": 1280,
+        "height": 720,
+        "duration": 210,
+        "hasAudio": true,
+        "checksum": "sha256:0b4e96d6498aec29eedb7ea076ec5b2e9e72555d6c387be94a49752ea19e1419",
+        "audioMastering": {
+          "version": 1,
+          "mode": "balanced",
+          "status": "verified",
+          "target": {
+            "integratedLufs": -16,
+            "maxTruePeakDbtp": -1,
+            "loudnessRangeLu": 11
+          },
+          "before": {
+            "integratedLufs": -23.91,
+            "truePeakDbtp": -11.21,
+            "loudnessRangeLu": 8.1,
+            "thresholdLufs": -34.1
+          },
+          "after": {
+            "integratedLufs": -16.01,
+            "truePeakDbtp": -3.31,
+            "loudnessRangeLu": 8.1,
+            "thresholdLufs": -26.2
+          },
+          "outputSha256": "0b4e96d6498aec29eedb7ea076ec5b2e9e72555d6c387be94a49752ea19e1419"
+        }
+      },
+      "probes": [
+        {
+          "seconds": 16.5,
+          "dbfs": -18.7495810011241
+        },
+        {
+          "seconds": 207,
+          "dbfs": -22.908257317779487
+        },
+        {
+          "seconds": 29.9,
+          "dbfs": -13.36737365680559
+        },
+        {
+          "seconds": 59.9,
+          "dbfs": -13.335975706865906
+        },
+        {
+          "seconds": 89.9,
+          "dbfs": -13.38810665551637
+        },
+        {
+          "seconds": 119.9,
+          "dbfs": -13.367226117593363
+        },
+        {
+          "seconds": 149.9,
+          "dbfs": -12.05619364966526
+        },
+        {
+          "seconds": 179.9,
+          "dbfs": -12.05306826771875
+        }
+      ]
+    },
+    "retry": {
+      "events": [
+        {
+          "index": 0,
+          "reused": true
+        },
+        {
+          "index": 1,
+          "reused": true
+        },
+        {
+          "index": 2,
+          "reused": true
+        },
+        {
+          "index": 3,
+          "reused": true
+        },
+        {
+          "index": 4,
+          "reused": true
+        },
+        {
+          "index": 5,
+          "reused": true
+        },
+        {
+          "index": 6,
+          "reused": true
+        }
+      ],
+      "milliseconds": 70613.99576900003,
+      "sampledPeakProcessTreeRssBytes": 1071955968,
+      "memorySamples": 68,
+      "samplingError": null,
+      "metadata": {
+        "bytes": 11635811,
+        "width": 1280,
+        "height": 720,
+        "duration": 210,
+        "hasAudio": true,
+        "checksum": "sha256:e8026c3badcdcaa9019ab3352972fc3b13555df716bcfbb49208541739f76dde",
+        "audioMastering": {
+          "version": 1,
+          "mode": "balanced",
+          "status": "verified",
+          "target": {
+            "integratedLufs": -16,
+            "maxTruePeakDbtp": -1,
+            "loudnessRangeLu": 11
+          },
+          "before": {
+            "integratedLufs": -23.91,
+            "truePeakDbtp": -11.21,
+            "loudnessRangeLu": 8.1,
+            "thresholdLufs": -34.1
+          },
+          "after": {
+            "integratedLufs": -16.01,
+            "truePeakDbtp": -3.31,
+            "loudnessRangeLu": 8.1,
+            "thresholdLufs": -26.2
+          },
+          "outputSha256": "e8026c3badcdcaa9019ab3352972fc3b13555df716bcfbb49208541739f76dde"
+        }
+      },
+      "probes": [
+        {
+          "seconds": 16.5,
+          "dbfs": -18.749575195074478
+        },
+        {
+          "seconds": 207,
+          "dbfs": -22.908257317779487
+        },
+        {
+          "seconds": 29.9,
+          "dbfs": -13.379806959181849
+        },
+        {
+          "seconds": 59.9,
+          "dbfs": -13.331854967210983
+        },
+        {
+          "seconds": 89.9,
+          "dbfs": -13.388579291230236
+        },
+        {
+          "seconds": 119.9,
+          "dbfs": -13.367226158302843
+        },
+        {
+          "seconds": 149.9,
+          "dbfs": -12.05618241615234
+        },
+        {
+          "seconds": 179.9,
+          "dbfs": -12.053068246731542
+        }
+      ]
+    },
+    "videoPayloadHash": "SHA256=183986e18dc60fce171ea668d8f9e23fd38528c77f9308d9c8f54e68ffab2513",
+    "videoPayloadIdentical": true,
+    "containerBytesIdentical": false,
+    "audioToleranceUnchanged": 0.02
+  },
+  "podcast": {
+    "provider": "kokoro-server",
+    "voices": ["af_bella", "am_adam"],
+    "cachedTurns": 2,
+    "selectiveRegeneration": {
+      "cached": 1,
+      "generated": 1
+    },
+    "legacyMp3Export": true,
+    "wavAndMp3": true,
+    "audiogram": true,
+    "remoteModelsDisabled": true,
+    "externalFetchesBlocked": true,
+    "newModelDownloads": 0,
+    "paidCalls": 0,
+    "decoded": {
+      "method": "Native-channel float PCM decode without mono downmix gain",
+      "passed": true,
+      "outputs": [
+        {
+          "file": "podcast.wav",
+          "durationSeconds": 10.724989,
+          "channels": 1,
+          "peak": 0.88519287109375,
+          "rms": 0.08322538586763173,
+          "nonfinite": 0,
+          "clipped": 0,
+          "nativeChannels": true
+        },
+        {
+          "file": "podcast.mp3",
+          "durationSeconds": 10.762417,
+          "channels": 1,
+          "peak": 0.858436107635498,
+          "rms": 0.08058849092625125,
+          "nonfinite": 0,
+          "clipped": 0,
+          "nativeChannels": true
+        },
+        {
+          "file": "podcast-audiogram.mp4",
+          "durationSeconds": 10.733333,
+          "channels": 2,
+          "peak": 0.8758578896522522,
+          "rms": 0.08276935466708389,
+          "nonfinite": 0,
+          "clipped": 0,
+          "nativeChannels": true
+        }
+      ]
+    },
+    "audiogramFrameInspectedByAgent": true
+  },
+  "creatorBrowser": {
+    "release": "0.8.0",
+    "cleanSourceProductionBuild": true,
+    "activeAppDataRootPreserved": true,
+    "normalReviewAppUndisturbed": true,
+    "result": {
+      "jobId": "cmvvaohr7001aen9kpsmrl1rt",
+      "played": true,
+      "durationSeconds": 8.7,
+      "width": 1080,
+      "height": 1920,
+      "frozenSourcesVisible": true,
+      "unverifiedLabelsVisible": true,
+      "exactIdentifiers": ["input_image", "image_url"]
+    },
+    "suppliedProof": {
+      "scriptId": "cmvux7oqf00025z9kehjsg8r7",
+      "savedMappingsLoaded": true,
+      "recurringSubject": "Reel Studio",
+      "recordingStartSeconds": 10,
+      "previewCopyRetained": true,
+      "previewNarrationRetained": true,
+      "suppliedUnverifiedWarning": true,
+      "providerCalls": 0,
+      "applyPerformed": false
+    },
+    "screenshots": ["browser-result.png", "browser-proof.png"]
+  },
+  "editorialBenchmark": {
+    "report": "VISUAL_QUALITY_M5_BENCHMARK.json",
+    "acceptedExports": 15,
+    "activeAppExamplesRetained": true,
+    "threeFormatSuppliedProof": true,
+    "humanReview": {
+      "record": "VISUAL_QUALITY_M5_HUMAN_REVIEW.json",
+      "runId": "003d42e1-b828-4713-bf67-83c2dca6eae4",
+      "status": "pending",
+      "accepted": 0,
+      "total": 15
+    }
+  },
+  "build": {
+    "applicationBaseCommit": "6052b28239810e0178ccbb3694069d6ebe835c76",
+    "packageVersion": "0.8.0",
+    "passed": true,
+    "cleanSourceArchive": true,
+    "isolatedFreshDatabase": true,
+    "installedPinnedDependenciesReused": true,
+    "productionAppUndisturbed": true
+  },
+  "phonemizer": {
+    "matchingCorrespondingSourceVerified": true,
+    "compatibilityPassed": true,
+    "unchangedCompilerAndEngine": true,
+    "sourceCompilerRebuilt": false,
+    "provenance": "../../vendor/phonemizer/provenance.json"
+  },
+  "resourcePolicy": {
+    "paidProviderLiveTests": "Excluded; no new paid authorization inferred",
+    "paidCalls": 0,
+    "newModels": 0,
+    "newSoftwareInstalled": false,
+    "cloudRenders": 0
+  },
+  "localChecks": {
+    "unitSuite": true,
+    "typecheck": true,
+    "lint": true,
+    "securityScan": true,
+    "phonemizerCompatibility": true,
+    "correspondingSourceDistribution": true,
+    "releaseCheck": true,
+    "productionBuild": true
+  },
+  "limitations": [
+    "Citations and supplied artifacts are unverified provenance, not guaranteed truth.",
+    "No live model-quality or source-freshness claim.",
+    "Silent matrix fixtures do not assess narrated pacing.",
+    "Encoded recovery audio/container bytes differ; relative decoded audio RMS error is within the unchanged 2% gate.",
+    "Hindi speech/font portability and blind human preference remain unmeasured.",
+    "Workstation timings are observations, not universal guarantees."
+  ],
+  "publicationGate": "Require fifteen complete human benchmark reviews bound to current MP4 bytes; latest-head release PR and exact merged/refreshed main Quality/Security; clean main; source parity; corresponding source and asset checksums. No tag before all gates pass."
+}

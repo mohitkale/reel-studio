@@ -50,7 +50,8 @@ describe the current contracts and their limits.
 - Initial PR Windows CI exposed setup timeouts in two older SQLite integrations.
   Their schema is now staged in memory and backed up once before exercising the
   same real on-disk repositories. All assertions, deadlines and platform jobs are
-  unchanged; replacement latest-head CI is required before merge.
+  unchanged. Replacement latest-head Linux/Windows CI passed **233 files / 1,161
+  tests**, with one intentional paid skip; merged-main Quality/Security also passed.
 
 ## Five-brief benchmark
 
@@ -97,7 +98,7 @@ Current-topic accepted projects use `5aff3eb1`; other accepted cases use `003d42
 Local creation/export times are observations from these fixtures and include no
 provider latency. Neither speed nor quality improvement is claimed for live models.
 
-## Release assessment
+## Release assessment at milestone completion
 
 Stable remains **v0.7.0**. The research/editorial/visual feature batch is a coherent
 user-visible addition and warrants a future **minor release**. Publication is
@@ -106,6 +107,9 @@ still needs the applicable fresh full render/audio/recovery matrix, platform CI,
 upgrade and component-distribution gates described in [release validation](RELEASE_VALIDATION.md).
 These checks are not satisfied by an older release report. No tag, version bump or
 release publication is implied by milestone completion.
+
+Subsequent v0.8.0 release validation is tracked in
+[the release record](RELEASE_VALIDATION.md#v080-release-candidate--2026-10-31).
 
 Offline fixtures demonstrate contracts and control-path parity. They do not prove
 live model quality, semantic factuality, source freshness, narrated pacing or human
