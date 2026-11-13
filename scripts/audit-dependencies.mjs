@@ -38,6 +38,6 @@ await Promise.all(Array.from({ length: 4 }, async () => {
     });
   }
 }));
-await mkdir("docs/production", { recursive: true });
-await writeFile("docs/production/dependencies.json", JSON.stringify({ capturedAt: new Date().toISOString(), node: process.version, packages }, null, 2) + "\n");
+await mkdir("docs/archive/release-evidence", { recursive: true });
+await writeFile("docs/archive/release-evidence/dependencies.json", JSON.stringify({ capturedAt: new Date().toISOString(), node: process.version, packages }, null, 2) + "\n");
 console.log(`Recorded ${packages.length} stable dependency targets.`);

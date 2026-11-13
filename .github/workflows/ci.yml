@@ -41,6 +41,8 @@ jobs:
         run: npm ci ${{ steps.changes.outputs.code == 'false' && '--ignore-scripts' || '' }}
       - name: Secret scan
         run: npm run security:scan
+      - name: Check documentation links
+        run: npm run docs:links
       - name: Check formatting of changed Markdown and YAML
         run: |
           files=()

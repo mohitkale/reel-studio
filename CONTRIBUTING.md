@@ -19,7 +19,7 @@ npm run dev
 ```
 
 Open `http://localhost:3000`. Setup preserves existing configuration and uses
-versioned database migrations. See [setup](docs/SETUP.md) for Docker, runtime
+versioned database migrations. See [setup](docs/archive/guides/SETUP.md) for Docker, runtime
 checks, and troubleshooting. Never use `db:push` to upgrade an existing database.
 
 ## Branches and PRs
@@ -59,12 +59,12 @@ write access push to a fork and open the PR from there.
 
 ## Verify in proportion to the change
 
-| Change                                            | Local checks                                                                                                              |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Documentation only                                | Markdown formatting, links/anchors, commands and screenshots; secret scan                                                 |
-| Ordinary code change                              | Affected behavior tests, typecheck, relevant lint, secret scan                                                            |
-| Rendering, security, jobs, database, dependencies | Broader tests plus relevant real export, browser, migration, or cancellation checks                                       |
-| Release                                           | Full install/upgrade/platform/browser/render/license gates in [release validation](docs/production/RELEASE_VALIDATION.md) |
+| Change                                            | Local checks                                                                                                                            |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Documentation only                                | Markdown formatting, links/anchors, commands and screenshots; secret scan                                                               |
+| Ordinary code change                              | Affected behavior tests, typecheck, relevant lint, secret scan                                                                          |
+| Rendering, security, jobs, database, dependencies | Broader tests plus relevant real export, browser, migration, or cancellation checks                                                     |
+| Release                                           | Full install/upgrade/platform/browser/render/license gates in [release validation](docs/archive/release-evidence/RELEASE_VALIDATION.md) |
 
 ```bash
 # Fast unit tests: no database, filesystem, FFmpeg or child processes
@@ -103,9 +103,8 @@ manual. See [agent rules](AGENTS.md#before-pushing).
 - Engine-neutral scene/timing/motion contracts: `src/video/`.
 - AI, voice, and stock providers: `src/providers/`.
 
-HyperFrames is the sole video engine. Read [architecture](docs/ARCHITECTURE.md),
-[template authoring](docs/TEMPLATE_AUTHORING.md), and
-[provider/block registration](docs/EXTENSIONS.md) before extending them.
+HyperFrames is the sole video engine. Read [architecture](docs/ARCHITECTURE.md)
+and [contributing scenes](docs/CONTRIBUTING_SCENES.md) before extending it.
 Do not reintroduce removed Remotion folders or accept executable AI compositions.
 
 ## Security and licenses

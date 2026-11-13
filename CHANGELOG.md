@@ -41,7 +41,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 - Two additive research/media-ranking migrations since v0.7.0, with unchanged
   dependency pins. Stop the app, retain a paired database/media backup and use the
-  backup-aware setup runner. See [upgrade and rollback](docs/RELEASE_0.8.0.md).
+  backup-aware setup runner. See [upgrade and rollback](docs/archive/releases/RELEASE_0.8.0.md).
 
 ## 0.7.0
 
@@ -75,7 +75,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 - Three additive studio migrations since v0.6.0. Existing databases use the
   backup-aware `npm run db:migrate`; dependency pins are unchanged. Local Whisper
   remains optional and needs an explicitly supplied/downloaded model.
-  See [upgrade and rollback](docs/RELEASE_0.7.0.md).
+  See [upgrade and rollback](docs/archive/releases/RELEASE_0.7.0.md).
 
 ## 0.6.0
 
@@ -101,7 +101,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ### Upgrade
 
 - One additive factory-workflow migration; no dependency or model changes.
-  See [upgrade and rollback](docs/RELEASE_0.6.0.md).
+  See [upgrade and rollback](docs/archive/releases/RELEASE_0.6.0.md).
 
 ## 0.5.0
 
@@ -230,8 +230,8 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 - Component licenses remain distinct: MIT application, Apache HyperFrames,
   GPL eSpeak phonemizer, custom GSAP and optional model/media terms.
 
-See [upgrade/release notes](docs/RELEASE_0.4.0.md),
-[current evidence](docs/production/RELEASE_VALIDATION.md) and
+See [upgrade/release notes](docs/archive/releases/RELEASE_0.4.0.md),
+[current evidence](docs/archive/release-evidence/RELEASE_VALIDATION.md) and
 [component licenses](docs/LICENSING.md).
 
 ## Historical 0.4 preparation — 2026-09-13
@@ -269,7 +269,7 @@ The dual-engine descriptions below record that earlier implementation.
 - Blocked public-page ingestion from loopback, local, and private network destinations after every redirect
 - Enforced production scopes and paid-provider limits across both current and compatibility API routes
 
-See [the upgrade notes](docs/archive/production/UPGRADES.md) and [release validation](docs/production/RELEASE_VALIDATION.md).
+See [the upgrade notes](docs/archive/production/UPGRADES.md) and [release validation](docs/archive/release-evidence/RELEASE_VALIDATION.md).
 
 ## 0.3.0 - 2026-08-06
 

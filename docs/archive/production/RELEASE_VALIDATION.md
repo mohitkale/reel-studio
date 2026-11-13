@@ -9,7 +9,7 @@ M15 validates the integrated M1–M14 implementation on 2026-10-03. The release
 PR must pass all latest-head Linux/Windows checks before merge; publication uses
 that exact merged commit after refreshing local `main`.
 
-[Machine-readable integrated evidence](../../production/RELEASE_ACCEPTANCE_0.4.0.json) preserves
+[Machine-readable integrated evidence](../release-evidence/RELEASE_ACCEPTANCE_0.4.0.json) preserves
 the fixture checks, output hashes and measured retry results.
 
 ## Current acceptance evidence
@@ -24,7 +24,7 @@ the fixture checks, output hashes and measured retry results.
 | Phonemizer             | Pinned source build on ephemeral Actions runner; committed provenance/notices and complete source archive; 26 phoneme cases/eight voices match in Node and offline browser                     |
 | Final quality          | 841-test full local suite plus final affected regressions, typecheck, lint, secret scan, release contract and production build; Linux/Windows latest-head CI is the merge gate                 |
 
-[Current render matrix](../../production/RELEASE_MATRIX_0.4.0.json) was generated at
+[Current render matrix](../release-evidence/RELEASE_MATRIX_0.4.0.json) was generated at
 2026-10-03T10:28:30Z without resuming old artifacts. Actual exported frames were
 inspected; this found and fixed clipped kinetic titles/outros before the final
 matrix. The long fixture found unsupported monospace aliases, now normalized to
@@ -48,7 +48,7 @@ Voice integration uses a real loopback HTTP protocol fixture that returns labele
 calibration audio. It proves durable jobs, download and muxing, **not live-model
 acoustic quality**. No paid calls or model downloads were used. Optional provider,
 GSAP, fonts, FFmpeg and model terms remain distinct; see [licensing](../../LICENSING.md)
-and [current audit reachability](../../PORTABILITY_HARDENING.md#dependency-advisory-snapshot-2026-10-03).
+and [current audit reachability](../guides/PORTABILITY_HARDENING.md#dependency-advisory-snapshot-2026-10-03).
 
 Reproduce on the documented workstation runtime:
 
@@ -105,7 +105,7 @@ The Gate 5 rerun on September 16, 2026 uses the commands below plus
 `npm run test:production-worker` and `npm run test:render`. A credential-free
 isolated sample export supplies the real H.264/AAC proof without requiring a
 Kokoro model download. Exact results and artifact paths are recorded in
-[`LOCAL_FIRST_PR8_TASKS.md`](../../production/archive/LOCAL_FIRST_PR8_TASKS.md).
+[`LOCAL_FIRST_PR8_TASKS.md`](../release-evidence/archive/LOCAL_FIRST_PR8_TASKS.md).
 
 Gate 5 result: **passed on September 16, 2026**. Typecheck, zero-warning lint,
 386 unit tests, secret scan, production build, release contract, fresh/populated
@@ -141,9 +141,9 @@ square canvases. It checks dimensions and decodability, writes MP4s under
 `.artifacts/render-regression/`, and records the selected brief and its SHA-256
 hash with hardware, elapsed time, duration, and file size in
 `.artifacts/release-matrix/report.json`. The original 0.4 report remains in
-[`September matrix`](../../production/archive/RELEASE_MATRIX_0.4.0_SEPTEMBER.json); the corrected
+[`September matrix`](../release-evidence/archive/RELEASE_MATRIX_0.4.0_SEPTEMBER.json); the corrected
 three-brief evidence is preserved in
-[`LOCAL_FIRST_PR2_RENDER_MATRIX.json`](../../production/LOCAL_FIRST_PR2_RENDER_MATRIX.json).
+[`LOCAL_FIRST_PR2_RENDER_MATRIX.json`](../release-evidence/LOCAL_FIRST_PR2_RENDER_MATRIX.json).
 
 ## Acceptance matrix
 
@@ -198,7 +198,7 @@ allowance are present. An uncertain paid request is not retried automatically.
 Launch validation covers short-form videos up to three minutes and podcasts up
 to ten minutes. Arbitrary prompts may still require custom design or supplied
 media; the release promises repeatable production from the supported presets and
-inputs described in [the walkthroughs](../../WALKTHROUGHS.md).
+inputs described in [the walkthroughs](../guides/WALKTHROUGHS.md).
 
 ## Motion graphics and bounded chapter production
 

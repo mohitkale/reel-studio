@@ -7,6 +7,6 @@ SHA-256 checksums. Keep preview and isolated render copies identical.
 The six font families are OFL-1.1; their complete notices accompany these files.
 GSAP 3.15.0 retains its upstream copyright/license header and uses the custom
 [GSAP Standard License](https://gsap.com/community/standard-license/).
-See [runtime documentation](../../docs/EXPORT_FIDELITY.md) and
+See [runtime documentation](../../docs/archive/guides/EXPORT_FIDELITY.md) and
 [licensing](../../docs/LICENSING.md). These assets are not relicensed by the
 application's MIT license.

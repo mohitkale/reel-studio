@@ -1,49 +1,32 @@
 # Documentation
 
-Reel Studio **v0.8.0** uses HyperFrames for preview, export, and audiograms.
-Start with the guides below. Completed milestone plans are historical, not the
-current setup instructions or a pending to-do list.
+Reel Studio is a local-first content factory for short videos and podcasts.
+Start here.
 
-## Use Reel Studio
+## Use it
 
-- [Setup and troubleshooting](SETUP.md): Node, browser, FFmpeg, Docker, and upgrades.
-- [Feature inventory](FEATURES.md): every capability, where it lives and how it is reached; guarded by `npm run test:parity`.
-- [Creator guide](CREATOR_GUIDE.md): presets, narration, captions, podcasts, and batches.
-- [Walkthroughs](WALKTHROUGHS.md): reproducible text-to-video and podcast flows.
-- [Advanced editing](ADVANCED_EDITING.md): motion review, sound, chapters, and longer exports.
-- [Lesson direction](LONG_FORM_DIRECTION.md): chapter goals, recaps, continuity and bounded ten-minute exports.
-- [Content factory](FACTORY_WORKFLOWS.md): series profiles, frozen aspect/cutdown variants, pack archives and resumable batches.
-- [Local-first behavior](LOCAL_FIRST.md): local data and optional outbound provider calls.
-- [Voice providers](VOICE_PROVIDERS.md): browser, local server, and cloud capabilities.
-- [Upgrade to v0.8.0](RELEASE_0.8.0.md): backups, saved studio edits, and rollback.
-- [MCP guide](../mcp/README.md): scoped agent automation and examples.
+- [Getting started](GETTING_STARTED.md): requirements, install, configuration, upgrades.
+- [Creating videos](CREATING_VIDEOS.md): paths, presets, voice, captions, limits.
+- [Podcasts and audio](PODCASTS.md): dialogue, finishing, recordings, audiograms.
+- [MCP](MCP.md): drive Reel Studio from a coding agent.
+- [Storyboard](STORYBOARD.md): the JSON an agent writes (placeholder until v0.10).
+- [Scenes and themes](SCENES_AND_THEMES.md): presets, families, treatments, rendering.
+- [Troubleshooting](TROUBLESHOOTING.md): doctor, recovery, limits.
 
-## Develop and operate
+## Build on it
 
-- [Contributing](../CONTRIBUTING.md) and [agent rules](../AGENTS.md): checks, PRs and attribution.
-- [Architecture](ARCHITECTURE.md) and [runtime/recovery](RUNTIME.md).
-- [Research and evidence](RESEARCH.md): capabilities, provenance and usage boundaries.
-- [Production contracts](production/CONTRACTS.md): shared REST/MCP/revision contracts.
-- [Template authoring](TEMPLATE_AUTHORING.md) and [provider/block extensions](EXTENSIONS.md).
-- [Sequence direction and identities](SEQUENCE_DIRECTION.md): bounded planning, explanations, aliases and supported cross-scene card motion.
-- [Adaptive recipes](ADAPTIVE_RECIPES.md): six content-aware layouts, catalog previews, local planning and fallbacks.
-- [Adaptive film contracts](ADAPTIVE_CONTRACTS.md): versioned recipes, compatibility plans, and JSON checkpoints.
-- [Motion spec](MOTION_SPEC.md), [motion treatments and visual families](MOTION_LIBRARY.md), and [director pipeline](DIRECTOR_PIPELINE.md).
-- [Export fidelity](EXPORT_FIDELITY.md), [bounded IO](IO_RECOVERY.md), and [voice timing](VOICE_RESILIENCE.md).
-- [Media relevance](MEDIA_RELEVANCE.md): ranked stock choices, saved reasons and optional vision budgets.
-- [Editorial pipeline](EDITORIAL.md): creative briefs, source-linked writing and stage budgets.
-- [Editorial benchmark](EDITORIAL_BENCHMARK.md): five frozen briefs, offline/MCP comparisons and human export review.
-- [Creation UX](CREATION_UX.md) and [demo capture](DEMO_CAPTURE.md).
-- [Release validation](production/RELEASE_VALIDATION.md): checks and published evidence.
+- [Architecture](ARCHITECTURE.md): boundaries, jobs, recovery, safety bounds.
+- [Contributing scenes](CONTRIBUTING_SCENES.md): add a template, treatment or provider.
+- [Feature inventory](FEATURES.md): every page, route and tool, guarded by `npm run test:parity`.
+- [Licensing](LICENSING.md): third-party terms and notices.
+- [Contributing](../CONTRIBUTING.md) and [agent rules](../AGENTS.md): branches, checks, PRs.
+- [Security](../SECURITY.md).
 
-## Policies and history
+## Plans and history
 
-- [Adaptive baseline and rubric](production/ADAPTIVE_BASELINE.md): twelve paired historical/current films, decoded frames and recorded limitations.
-- [Adaptive content factory upgrade plan](ADAPTIVE_CONTENT_FACTORY_PLAN.md): M1 contracts, M2 recipes, M3 sequence direction, M4 creation workflow, M5 lesson direction and M6 factory workflows with phased acceptance gates.
-- [Security](../SECURITY.md), [hardening and advisory snapshot](PORTABILITY_HARDENING.md), and [licensing](LICENSING.md).
-- [Changelog](../CHANGELOG.md), [roadmap](../ROADMAP.md), and [contributors](../CONTRIBUTORS.md).
-- [Historical archive](archive/README.md): earlier briefs, audits, numbered plans, and measurements.
+The roadmap lives in GitHub: [milestones](https://github.com/mohitkale/reel-studio/milestones)
+and the [roadmap issue](https://github.com/mohitkale/reel-studio/issues/140).
 
-Keep one canonical guide per topic. Update the owning guide when behavior changes;
-archive completed plans and retain checksummed release evidence without turning
-current guides into task transcripts.
+Earlier guides, release notes, validation records and planning documents are kept for
+reference under [archive](archive/README.md). They describe past behavior and are
+not current instructions.

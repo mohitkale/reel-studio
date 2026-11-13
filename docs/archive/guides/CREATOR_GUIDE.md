@@ -1,0 +1,218 @@
+# Creator guide
+
+> **Archived reference.** Superseded by [Creating videos](../../CREATING_VIDEOS.md); kept for detail. It describes earlier behavior and may use internal vocabulary.
+
+Start on **Projects** with the path that matches your content:
+
+1. Choose **Create with AI** to turn an idea into a script and varied scenes, or
+   **Create production** to arrange your own script/article and optional uploads.
+2. Add your content. AI uses Automatic direction to match the topic; choose a
+   specific preset or customize style and format when you have a look in mind.
+3. Select **Create draft** (AI) or **Build draft** (local content).
+4. Review the scenes in the editor, generate or upload narration if desired,
+   then select **Export MP4**.
+
+AI creation uses your configured provider. If none is configured, open Settings
+or use Create production, which works without an AI key. The local planner
+arranges supplied content rather than expanding an instruction into new copy.
+Use AI when you want a topic explained or an idea developed.
+
+AI drafts choose a content-matched colour palette automatically. For branded
+work, select a saved kit under **Customize style and media → Colour palette**.
+The default kit does not override Automatic colours. Lunar and seasonal stories
+can use animated phases, a seasonal wheel and orbital rhythms, with a shared
+celestial atmosphere across compatible text beats. These are illustrations,
+not calculated moon dates or astronomical forecasts.
+
+Create production starts with content and lets you build immediately. Its
+optional customization steps expose full-source voiceover, chaptered output,
+visual presets, brand kits, media, and one-take/per-scene narration workflows.
+The editor's **Customize video** section contains detailed finishing controls.
+It opens with **Full reel** so you can review the complete sequence. **Visual
+direction** and **Visual review** are beside **Export MP4**. Choose Expressive
+for varied type reveals, Clean for quieter reading layouts, or Showcase for
+more impact beats. Replanning preserves copy, narration, media and locked scenes;
+an explicit transition such as “a shift from X to Y” can stage those two supplied
+labels as a comparison. **Visual direction → Visual family** changes the
+composition vocabulary: Editorial, Graphic or Precision. The family is selected
+automatically for new drafts, and recent layout repeats are discouraged. Browse
+**Templates → Motion treatments** for live examples; choose a compatible
+**Motion treatment** in the scene inspector and lock a scene to preserve it.
+See [motion presets](MOTION_LIBRARY.md) for the seven additional compositions and
+input requirements. Select **This scene** for detailed scene work.
+
+For an unattended MP4, enable **Quick Produce** in Create with AI. The visible
+**Add local narration** checkbox uses Kokoro voice `af_heart`; leave it off for a
+silent video. Initial voice synthesis may download the model. The result page
+shows saved progress, playback, verified downloads, **Edit video**, and **Remix**.
+Blank projects are available beside the library for manual scene setup.
+
+## Quick Produce or review first
+
+**Quick Produce** appears in Create with AI and is off by default. Leave it off
+when you want to review scenes, media, voice, and captions before rendering.
+Enable it when the chosen planner and defaults are ready to run unattended.
+
+An enabled request still creates an ordinary editable project. Reel Studio also
+freezes the submitted revision and runs that snapshot through the durable job
+stages. Refreshing or restarting reconnects to the saved progress. Edits made
+after submission cannot alter the in-flight or completed output; the editor
+shows a conflict and lets you reopen the completed revision as a new project or
+produce the current revision separately.
+
+The credential-free choice is deterministic planning with stock media set to
+None and server-side Kokoro (or voice disabled). Ollama, LM Studio, and llama.cpp are local
+optional planners. Gemini, OpenAI, stock search, and paid voice providers are
+used only when explicitly selected and configured.
+
+## Choose the right preset
+
+| Preset              | Best input                                              | Useful supplied assets                       |
+| ------------------- | ------------------------------------------------------- | -------------------------------------------- |
+| Product Launch      | Problem, product promise, features, proof, CTA          | Product screenshots or a screen recording    |
+| Editorial Explainer | Headline, explanation, steps, quote, summary            | Diagrams, portraits, or source illustrations |
+| Creator Punch       | Strong hook, short tips, payoff, CTA                    | Talking-head footage, screenshots, or b-roll |
+| Data Story          | Labeled values, units, comparisons, takeaway            | CSV-derived values or a source graphic       |
+| Developer Demo      | Code, diff, terminal output, browser proof              | Browser screenshots and exact code excerpts  |
+| Cinematic Brand     | Brand idea, product story, attributed quote, logo close | High-resolution photography or video         |
+
+The director admits numerical displays from supplied source values. Supply
+labeled data for a chart and attribution for a quote. Review claims and
+attribution in optional AI-generated narration before publishing. Automatic
+planning chooses a non-data layout when no values are available.
+
+## Voice, captions, and podcasts
+
+- Use one full take for continuous narration, or scene clips when you expect to
+  revise individual lines. Unchanged scene clips are reused.
+- Import SRT/VTT captions, use provider timing, or start with clearly labeled
+  estimated timing. Optional whisper.cpp alignment stays local.
+- Choose a caption appearance preset or adjust font, placement, colors, box,
+  outline, shadow, wrapping, and highlighting. The preview uses the same style
+  snapshot and safe-area measurements as export.
+- Start podcasts as solo narration, a two-host discussion, or an interview. Add
+  optional six-second intro/outro audio, per-turn pauses, and pronunciation
+  substitutions before generating a take. Saved takes retain an immutable
+  snapshot of those finishing choices.
+- Regenerate selected turns, then export WAV, MP3, transcript, and chapters.
+- Select a contiguous podcast excerpt manually, use local timestamp-grounded
+  suggestions with no AI key, or explicitly ask a configured AI provider for
+  ranges. Displayed quotes always come from the saved take transcript. Produce a
+  portrait, landscape, or square audiogram with the original take audio.
+
+## Format variants and batch work
+
+The Renders page and MCP support durable batches of up to ten input rows. Video
+and audiogram rows default to portrait, landscape, and square outputs. Each
+format reflows the source scene layout for its canvas; it does not crop another
+render. Successful child outputs remain available when another row fails.
+
+Named MCP tokens can be limited by scope, providers, duration, batch size,
+automatic rendering, and paid requests. Use a token with automatic rendering
+only for a trusted local automation. See [the MCP guide](../../MCP.md).
+
+## First production checklist
+
+Run the setup once, then check the local runtime:
+
+```bash
+npm run setup
+npm run doctor
+npm run dev
+```
+
+Open **Gallery** for shipped examples and preset entry points. Open
+**Diagnostics** before a campaign batch. To prove rendering without a cloud key,
+run:
+
+```bash
+npm run sample:export
+```
+
+The sample uses bundled content and placeholder speech, then writes a verified
+local MP4 that appears under **Renders**. Use real local Kokoro or a configured
+voice provider for material you intend to publish.
+
+## A reliable launch workflow
+
+1. Save the source brief, exact claims, media, and brand kit.
+2. Create one master draft and lock approved copy and assets.
+3. Generate voice and captions before final visual timing.
+4. Preview openings, transitions, captions, safe areas, and the ending in the
+   target canvas.
+5. Render each format independently and listen to the complete audio mix.
+6. Download verified artifacts and subtitles. Keep the source project so later
+   revisions can reuse unchanged work.
+
+Ordinary video exports are limited to three minutes; valid chaptered videos
+support up to five minutes. Podcasts support up to ten minutes. The v0.4.0
+release includes a verified 210-second chapter cancellation/retry fixture. See
+[advanced editing](ADVANCED_EDITING.md) for chapter limits and finishing controls.
+
+See [the verified creation and editing walkthrough](CREATION_UX.md) for current
+desktop/mobile screenshots and the prompt-to-download acceptance evidence.
+
+## Content studio workspaces
+
+The Projects page starts with Video, Podcast, Voiceover and Repurpose. Video
+provides Automatic (Quick Produce), Assisted (AI draft) and Manual paths. Search
+saved projects, filter drafts or projects with narration, assign a series, and
+archive completed work. Archived projects remain recoverable through the Archived
+filter. Cards show the saved cover, opening image or opening scene copy.
+
+**Voiceovers** opens a dedicated paragraph editor. Blank-line paragraphs in supplied
+content remain separate, with long passages split into bounded scenes (up to 20).
+Save each paragraph explicitly, generate one complete take or individual clips,
+and compare a second take. **Add visuals** opens the same project in the video
+editor. Speaking rate is available for Cartesia, VoiceForge and server Kokoro;
+other providers retain their supported defaults. Voice favorites are local to the
+browser and provider.
+
+Shared speech presets store named voices and pronunciation dictionaries in the
+app database. Saving voice settings preserves a dictionary already saved under
+that name. Applying pronunciation rules in the voiceover workspace first shows a
+preview; apply them to individual paragraphs to change spoken text. In podcasts,
+load the rules and save them in finishing controls. Existing audio takes do not
+change. Batch voiceovers accept up to ten saved scripts, with a voice per script;
+choose a matching voice for each script. Batches
+wait for approval in **Factory** before synthesis.
+
+**Create a language version** accepts manually translated on-screen and spoken
+copy, or an optional AI translation preview from a configured provider. Manual
+translation makes no provider call. Review every paragraph before saving a
+separate project; source changes reject stale proposals. The version retains
+series, design, motion and audio settings, with fresh scenes and no old takes or
+captions. Review text embedded in charts, images and other visuals separately.
+
+**Undo edit / Redo** restores up to 100 saved edits across reloads: scene fields,
+create/delete/reorder, script-wide settings and grouped AI rewrites/appends from
+the editor. Deleted scenes retain their selected clips and stock provenance.
+Conflicting newer work blocks restoration. Frozen masters remain separate
+checkpoints; provider generation and audio files are not undone.
+
+## Waveform editing and recordings
+
+Open a saved voiceover or podcast take's **Waveform & transcript** editor to decode
+its actual audio locally (up to 128 MiB and 30 minutes). Keep a selection or remove
+an interval to split around it, adjust speaker levels, and audition rumble
+filtering plus gentle compression. Download the edited WAV and a JSON edit
+manifest. **Save edit plan** stores its undo/redo history in the app database;
+**Reload saved plan** recovers it after reload or a concurrent-edit conflict.
+**Save as new take** creates independent edited audio usable by podcast exports
+or the video editor, preserving the source. Edited video takes intentionally omit
+fully removed scenes and reject later narration/order changes. Cut transcript
+segments are marked `textNeedsReview` in the manifest and require text correction
+before publishing captions.
+
+Podcasts also accept audio files or microphone recordings up to 15 minutes.
+Microphone access starts only after the Record action; stopping saves a new take.
+The browser converts imports to mono 44.1 kHz PCM. Imported audio does not invent
+transcript timing from the episode script. With an installed Whisper CLI and
+configured model, select **Transcribe locally** (or opt in during import) to make
+a transcript-bearing take. The approved multilingual small model supports local
+language detection. Review words and speaker labels; Whisper does not identify
+speakers. **Save reviewed transcript** creates another take sharing the same audio
+without duplicating it. Canceling transcription preserves an already imported take.
+**Episode package** downloads saved
+audio, transcript, chapters, show notes and a manifest together. Current episode
+titles, descriptions and speaker names are distinguished from saved take timing.
