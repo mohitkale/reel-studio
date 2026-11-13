@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "title": "Hello, Reel Studio",
+  "format": "9:16",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "One JSON in, one video out",
+      "narration": "Write the story once. Reel Studio does the rest on your own machine."
+    },
+    {
+      "type": "cta",
+      "headline": "Try it yourself",
+      "narration": "Post a storyboard to the API and watch the video appear."
+    }
+  ]
+}

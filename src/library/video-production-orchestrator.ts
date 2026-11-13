@@ -35,6 +35,8 @@ import { videoProductionJobInputSchema } from "@/production/jobs";
 import { runRenderNow } from "@/library/render-service";
 import { prisma } from "@/library/db";
 import { generateTakeFromVideoSnapshot } from "@/library/take-service";
+import { buildAutoCaptionTrack } from "@/library/auto-captions";
+import { contactSheetTimes, renderContactSheet } from "@/library/contact-sheet";
 import {
   addProductionJobOutput,
   upsertProductionJobStep,
@@ -57,6 +59,7 @@ type Dependencies = {
   step: typeof upsertProductionJobStep;
   output: typeof addProductionJobOutput;
   synthesize?: typeof generateTakeFromVideoSnapshot;
+  contactSheet?: typeof renderContactSheet;
 };
 
 export async function verifyProductionMp4(
@@ -398,9 +401,32 @@ export async function executeVideoProductionJob(
       compositionHash: z.string(),
       composition: preparedVideoCompositionSchema,
     });
+    // Storyboard jobs ask for captions of the narration. They are derived from
+    // the finished take, so a retry yields the same track.
+    const autoCaptions =
+      input.captions === "auto" &&
+      audio.take &&
+      !media.snapshot.script.captionTracks?.some((track) => track.enabled)
+        ? buildAutoCaptionTrack({
+            scriptId: media.snapshot.script.id,
+            take: audio.take,
+            presetId: media.snapshot.script.productionPreset?.id,
+          })
+        : null;
     const snapshotWithAudio = {
       ...media.snapshot,
       take: audio.take,
+      ...(autoCaptions
+        ? {
+            script: {
+              ...media.snapshot.script,
+              captionTracks: [
+                ...(media.snapshot.script.captionTracks ?? []),
+                autoCaptions,
+              ],
+            },
+          }
+        : {}),
     };
     const prepared = await stage(
       "prepare_composition",
@@ -479,6 +505,32 @@ export async function executeVideoProductionJob(
       async () => false,
     );
     await active();
+    let contactSheetPath: string | undefined;
+    if (input.storyboard && prepared.timing.timeline.length > 0) {
+      // Best effort: a missing contact sheet never fails a finished video.
+      try {
+        contactSheetPath =
+          artifact.path.replace(/\.mp4$/i, "") + ".contact-sheet.jpg";
+        await (dependencies.contactSheet ?? renderContactSheet)({
+          videoPath: artifact.path,
+          outPath: contactSheetPath,
+          times: contactSheetTimes(
+            prepared.timing.timeline,
+            prepared.snapshot.script.fps,
+            Number(
+              metadata.duration ??
+                prepared.timing.totalFrames / prepared.snapshot.script.fps,
+            ),
+          ),
+          columns: composition.props.width > composition.props.height ? 3 : 4,
+          tileWidth:
+            composition.props.width > composition.props.height ? 400 : 270,
+          signal: productionSignal(),
+        });
+      } catch {
+        contactSheetPath = undefined;
+      }
+    }
     await dependencies.output(job.id, {
       kind: "video",
       leaseOwner: job.leaseOwner,
@@ -488,6 +540,18 @@ export async function executeVideoProductionJob(
         typeof metadata.checksum === "string" ? metadata.checksum : undefined,
       metadata: {
         ...metadata,
+        ...(input.storyboard
+          ? {
+              storyboard: input.storyboard,
+              captions: autoCaptions ? "auto" : (input.captions ?? null),
+              contactSheet: contactSheetPath
+                ? path.relative(
+                    path.join(process.cwd(), "media"),
+                    contactSheetPath,
+                  )
+                : null,
+            }
+          : {}),
         stockMedia: stockMediaOutputMetadata(prepared.snapshot),
         revision: input.productionRevisionId
           ? {

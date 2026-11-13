@@ -87,6 +87,38 @@ Over HTTP: `POST /api/storyboards/lint` with the storyboard, or
 read-only and always answers 200 with `ok`. Twenty recorded model replies in
 `src/storyboard/fixtures/model-outputs/` are linted in the unit tests.
 
+## Producing a video
+
+```bash
+curl -X POST "http://localhost:3000/api/storyboards" \
+  -H "Content-Type: application/json" \
+  -d @examples/storyboards/calm-morning-45s.json
+```
+
+One call lints and repairs the storyboard, creates the editable project, picks
+the look, synthesizes narration with the local voice, aligns captions, attaches
+music and queues a single durable job. The answer has `jobId` and `projectId`;
+poll `GET /api/production-jobs/<jobId>`. When the job succeeds its video output
+carries the duration, the lint report (`storyboard.fixes` and `storyboard.warnings`)
+and `contactSheet`, a JPEG with one frame per scene. Open the project in the editor
+afterwards to change anything by hand.
+
+- Options are query parameters or a wrapper body `{ "storyboard": {...}, "dryRun": true }`:
+  `quality` (`draft`, `standard`, `high`), `dryRun`, `force`.
+- `dryRun` returns the resolved plan (scene treatments, orientation, voice, music,
+  captions, estimated length, what is not applied yet) and creates nothing.
+- Posting the same storyboard with the same options returns the existing job
+  (`reused: true`). Add `force` to produce again.
+- A storyboard with errors that cannot be repaired answers `422` with the same
+  `errors` as the linter, each with `expected` and `example`.
+- Podcast storyboards are not produced here yet.
+
+The code path is `produceFromStoryboard` in `src/library/storyboard-production.ts`;
+MCP and the CLI will call the same function. Scene types map to today's treatments
+(`hook` to the opener, `chart` to the data chart, `media` to B-roll, and so on). Fields the
+renderer cannot show yet (`body` on most scenes, `icon`, `theme`, `voice.speed`, `media.path`,
+and a code scene's formatting) are listed in the plan's `warnings` instead of being dropped silently.
+
 ## What is decided locally
 
 Layout, motion treatments, colour, transitions, caption style, music choice and

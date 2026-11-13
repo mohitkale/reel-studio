@@ -120,6 +120,8 @@ async function resolveRequest(
         orientation: request.orientation,
         quality: request.quality,
         serverBaseUrl,
+        ...(request.captions ? { captions: request.captions } : {}),
+        ...(request.storyboard ? { storyboard: request.storyboard } : {}),
       },
     };
   }

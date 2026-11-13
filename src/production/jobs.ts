@@ -44,6 +44,13 @@ export const enqueueProductionJobSchema = z.object({
 });
 export type EnqueueProductionJob = z.input<typeof enqueueProductionJobSchema>;
 
+export const storyboardJobMetaSchema = z.object({
+  hash: z.string().length(64),
+  title: z.string(),
+  fixes: z.array(z.string()).max(200).default([]),
+  warnings: z.array(z.string()).max(200).default([]),
+});
+
 export const videoProductionJobInputSchema = z.object({
   renderId: z.string().min(1),
   snapshot: videoSnapshotSchema.optional(),
@@ -53,6 +60,9 @@ export const videoProductionJobInputSchema = z.object({
   quality: z.enum(["draft", "standard", "high"]).default("standard"),
   serverBaseUrl: z.url().default("http://localhost:3000"),
   quickProduce: quickProduceOptionsSchema.optional(),
+  /** Storyboard jobs: automatic captions and what the linter and planner reported. */
+  captions: z.enum(["auto", "off"]).optional(),
+  storyboard: storyboardJobMetaSchema.optional(),
   productionRevisionId: z.string().min(1).optional(),
   revisionHash: z.string().length(64).optional(),
   // Freeze submission policy; generated voice must not bypass token limits.
