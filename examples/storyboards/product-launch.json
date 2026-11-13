@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "title": "Meet Brim: the bottle that stays cold",
+  "format": "9:16",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Your water is warm by noon",
+      "narration": "Be honest, your water is warm by lunchtime. Again. We built Brim to fix exactly that."
+    },
+    {
+      "type": "statement",
+      "headline": "Double-wall steel, vacuum sealed",
+      "narration": "Brim is double-wall stainless steel with a vacuum seal, so ice stays frozen through a long afternoon.",
+      "emphasis": ["vacuum"]
+    },
+    {
+      "type": "list",
+      "headline": "Built for real days",
+      "narration": "It fits a cup holder. The lid opens one-handed. And it goes in the dishwasher without a fuss.",
+      "items": [
+        "Fits any cup holder",
+        "One-handed lid",
+        "Dishwasher safe",
+        "Leak-proof seal"
+      ]
+    },
+    {
+      "type": "media",
+      "headline": "Made to be carried",
+      "narration": "Throw it in a gym bag, a backpack, or the car door. It is made for the way you actually move.",
+      "media": {
+        "query": "person walking with a steel water bottle in a city"
+      }
+    },
+    {
+      "type": "cta",
+      "headline": "Pre-order Brim today",
+      "narration": "Pre-orders open this Friday. Tap the link to grab yours before the first batch sells out.",
+      "body": "Pre-orders open Friday"
+    }
+  ]
+}

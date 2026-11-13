@@ -24,6 +24,7 @@ import { autoAttachBundledMusic } from "@/library/soundtrack-service";
 import { ensureSfxCues } from "@/library/sfx-service";
 import { reportStockMediaSelectionUsage } from "@/library/stock-media-usage";
 import { MUSIC_LIBRARY } from "@/lib/music-library";
+import { buildStoryboardSource } from "@/library/project-storyboard";
 import type { SceneBackground } from "@/video/types";
 import {
   planFromStoryboard,
@@ -38,6 +39,8 @@ export interface ProduceFromStoryboardOptions {
   dryRun?: boolean;
   /** Produce again even when the same storyboard and options already ran. */
   force?: boolean;
+  /** Create the editable project only: no narration, no render, no job. */
+  createOnly?: boolean;
   minSeconds?: number;
   maxSeconds?: number;
   auth: RequestAuthorization;
@@ -71,7 +74,7 @@ export interface StoryboardPreview {
 
 export interface StoryboardProduction {
   dryRun: false;
-  jobId: string;
+  jobId: string | null;
   projectId: string;
   scriptId: string | null;
   state: string;
@@ -152,7 +155,7 @@ export async function produceFromStoryboard(
   }
 
   const key = `storyboard:${hash}`;
-  if (!options.force) {
+  if (!options.force && !options.createOnly) {
     const existing = await getProductionJobByIdempotencyKey(key);
     if (existing?.productionRevision) {
       return {
@@ -239,6 +242,9 @@ export async function produceFromStoryboard(
     "hyperframes",
     { styleId: finalPlan.styleId, energy: finalPlan.energy },
     {
+      savedOverrides: {
+        storyboardSource: buildStoryboardSource(storyboard, finalPlan.scenes),
+      },
       mediaPreferences: finalPlan.scenes.map(() => mediaPreference),
       stockSelections: decisions.map((decision) => decision.snapshot),
       outputType: "video",
@@ -257,6 +263,22 @@ export async function produceFromStoryboard(
     if (track) await updateScript(created.scriptId, { musicUrl: track.url });
   }
   await ensureSfxCues(created.scriptId);
+
+  if (options.createOnly) {
+    return {
+      dryRun: false,
+      jobId: null,
+      projectId: created.projectId,
+      scriptId: created.scriptId,
+      state: "draft",
+      reused: false,
+      hash,
+      fixes,
+      warnings,
+      planWarnings: plan.warnings,
+      estimatedSeconds: plan.estimatedSeconds,
+    };
+  }
 
   const job = await submitProduction({
     request: {

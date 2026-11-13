@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "title": "How noise-cancelling headphones work",
+  "format": "16:9",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "How do headphones erase sound?",
+      "narration": "Put on noise-cancelling headphones and a plane engine just fades away. It feels like magic, but it is physics."
+    },
+    {
+      "type": "statement",
+      "headline": "Microphones listen first",
+      "narration": "Tiny microphones on the outside of each ear cup constantly listen to the noise around you."
+    },
+    {
+      "type": "statement",
+      "headline": "Then they flip the wave",
+      "narration": "A chip builds a mirror image of that sound, a wave that is exactly upside down, and plays it through the speaker."
+    },
+    {
+      "type": "stat",
+      "headline": "Two waves cancel out",
+      "narration": "When a wave meets its mirror image, they add up to almost nothing. Engineers call this destructive interference.",
+      "stat": {
+        "value": "≈ 0",
+        "label": "what two mirror waves add up to"
+      }
+    },
+    {
+      "type": "list",
+      "headline": "Where it works best",
+      "narration": "It is best at steady, low sounds. Sudden or high sounds are harder to predict, so padding still does some of the work.",
+      "items": [
+        "Engine hum",
+        "Air conditioning",
+        "Traffic rumble",
+        "Not sudden voices"
+      ]
+    },
+    {
+      "type": "cta",
+      "headline": "Next time, listen closely",
+      "narration": "Next time you fly, notice how the engine hum disappears. That silence is a wave cancelling itself."
+    }
+  ]
+}

@@ -26,6 +26,7 @@ const optionsSchema = z
     quality: z.enum(["draft", "standard", "high"]).optional(),
     dryRun: flag.optional(),
     force: flag.optional(),
+    createOnly: flag.optional(),
     minSeconds: z.coerce.number().positive().max(3600).optional(),
     maxSeconds: z.coerce.number().positive().max(3600).optional(),
   })
@@ -38,6 +39,7 @@ const optionsSchema = z
  * may also be query parameters (`?dryRun=1&quality=draft`), so a storyboard file
  * can be posted as is. `dryRun` returns the resolved plan and creates nothing.
  * The same storyboard and options return the existing job unless `force` is set.
+ * `createOnly` makes the editable project and returns without a job (editor import).
  */
 export async function POST(req: Request) {
   try {
@@ -71,7 +73,7 @@ export async function POST(req: Request) {
       },
     );
     if (result.dryRun) return NextResponse.json(result);
-    if (result.state === "queued" && !result.reused) {
+    if (result.state === "queued" && !result.reused && result.jobId) {
       after(() =>
         runProductionWorkerOnce({
           workerId: `web-storyboard:${randomUUID()}`,

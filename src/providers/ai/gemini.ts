@@ -1,4 +1,6 @@
 import { aiFetch } from "./http";
+import { geminiStoryboardSchema } from "./storyboard-schema";
+import type { StructuredCompletionInput } from "./types";
 import { buildPrompt } from "./prompt";
 import { buildPodcastPrompt } from "./podcast-prompt";
 import {
@@ -238,6 +240,38 @@ export function createGeminiProvider(): AIProvider {
         throw new AIError("Gemini returned invalid JSON", 502, "gemini");
       }
       return scenePlanSchema.parse(parsed);
+    },
+
+    async completeStructured(input: StructuredCompletionInput): Promise<string> {
+      const model = input.modelId || GEMINI_DEFAULT_MODEL;
+      const res = await aiFetch(
+        `${API_BASE}/models/${model}:generateContent`,
+        {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: input.system }] },
+            contents: [{ role: "user", parts: [{ text: input.user }] }],
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseJsonSchema: geminiStoryboardSchema(),
+              temperature: input.temperature ?? 0.7,
+            },
+          }),
+          signal: input.signal,
+        },
+        "gemini",
+      );
+      const json = (await res.json()) as {
+        candidates?: { content?: { parts?: { text?: string }[] } }[];
+      };
+      const text =
+        json.candidates?.[0]?.content?.parts
+          ?.map((p) => p.text ?? "")
+          .join("") ?? "";
+      if (!text)
+        throw new AIError("Gemini returned an empty response", 502, "gemini");
+      return text;
     },
 
     async generatePodcastPlan(

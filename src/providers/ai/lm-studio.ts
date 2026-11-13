@@ -1,3 +1,5 @@
+import { strictStoryboardSchema } from "./storyboard-schema";
+import type { StructuredCompletionInput } from "./types";
 import {
   LOCAL_AI_DEFINITIONS,
   type CompatibleLocalAIProviderId,
@@ -158,6 +160,17 @@ export function createLocalCompatibleProvider(
                 }),
       });
       return scenePlanSchema.parse(raw);
+    },
+
+    async completeStructured(input: StructuredCompletionInput): Promise<string> {
+      const modelId = await selectedModel(store, id, input.modelId);
+      return complete(store, id, {
+        system: input.system,
+        user: input.user,
+        modelId,
+        jsonSchema: strictStoryboardSchema(),
+        signal: input.signal,
+      });
     },
 
     async generatePodcastPlan(

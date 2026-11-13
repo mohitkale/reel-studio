@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "title": "Debounce a search box in six lines",
+  "format": "16:9",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Stop searching on every keystroke",
+      "narration": "Every keystroke fires a request, and your server pays for each one. Debouncing fixes that in a few lines."
+    },
+    {
+      "type": "code",
+      "headline": "The whole function",
+      "narration": "Wrap your handler. Each new call cancels the previous timer, so only the last one runs after the pause.",
+      "code": {
+        "language": "typescript",
+        "text": "function debounce<T extends unknown[]>(\n  fn: (...args: T) => void,\n  wait = 300,\n) {\n  let timer: ReturnType<typeof setTimeout>;\n  return (...args: T) => {\n    clearTimeout(timer);\n    timer = setTimeout(() => fn(...args), wait);\n  };\n}"
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "Use it on the input",
+      "narration": "Pass your search function through debounce, then attach the result to the input event."
+    },
+    {
+      "type": "list",
+      "headline": "Pick the wait carefully",
+      "narration": "Three hundred milliseconds is a good default. Shorter feels instant, longer feels laggy.",
+      "items": [
+        "150 ms: very responsive",
+        "300 ms: balanced default",
+        "500 ms: noticeably slow"
+      ]
+    },
+    {
+      "type": "cta",
+      "headline": "Ship it today",
+      "narration": "Replace one raw input handler with a debounced one and watch your request count drop."
+    }
+  ]
+}

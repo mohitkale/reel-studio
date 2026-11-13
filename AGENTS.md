@@ -36,6 +36,7 @@ Reel Studio is a local-first content factory for short videos and podcasts. **An
 - `main` is the only long-lived branch. Branch from fresh `main` as `feature|fix|chore|docs/<issue>-<slug>`; never name branches after a tool or agent; never push to `main`.
 - The PR body starts with `Closes #<issue>` and ticks each **Done when** line with real evidence (command output, measurement, link). Say plainly what is not done.
 - Wait for the `gate` check, squash-merge, delete the branch, `git pull --ff-only` on `main`, then start the next issue. Add the `ci:full` label when behavior could differ on Windows or the change touches `prisma/`, `scripts/`, `src/library/`, `src/server/`, `vendor/`, workflows or package manifests.
+- Batching (maintainer decision, 2026-11-13): finish a whole milestone on one branch, one commit per issue, then open one PR that starts with a `Closes #<n>` line per issue, ticks every issue's **Done when** lines, and runs the long checks (full tests, real renders, CI) once. Stop early only to ask the maintainer a question. Small unrelated fixes still get their own PR.
 - Fix failed checks on the same branch. Respect required reviews; report blockers instead of working around them.
 
 ## Before pushing

@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "title": "Better pour-over coffee at home",
+  "format": "9:16",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Great coffee needs no gadgets",
+      "narration": "You do not need a fancy machine for great coffee. You need a scale, a kettle and about three minutes."
+    },
+    {
+      "type": "stat",
+      "headline": "One gram to sixteen",
+      "narration": "Start with a ratio of one gram of coffee to sixteen grams of water. For one big mug, that is about twenty-two grams of coffee.",
+      "stat": {
+        "value": "1:16",
+        "label": "coffee to water"
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "Water just off the boil",
+      "narration": "Let the kettle rest for half a minute after boiling. Water around ninety-five degrees avoids a bitter cup."
+    },
+    {
+      "type": "statement",
+      "headline": "Bloom for thirty seconds",
+      "narration": "Pour just enough water to wet all the grounds and wait thirty seconds. The bubbles are gas escaping, which helps even extraction."
+    },
+    {
+      "type": "list",
+      "headline": "Pour in slow circles",
+      "narration": "Pour in slow circles, keep the water level steady, and aim to finish around three minutes in total.",
+      "items": [
+        "Wet the grounds",
+        "Wait thirty seconds",
+        "Pour in circles",
+        "Finish by three minutes"
+      ]
+    },
+    {
+      "type": "cta",
+      "headline": "Taste, then adjust",
+      "narration": "Too bitter, grind coarser. Too sour, grind finer. Change one thing at a time and write it down."
+    }
+  ]
+}

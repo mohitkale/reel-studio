@@ -87,12 +87,36 @@ Over HTTP: `POST /api/storyboards/lint` with the storyboard, or
 read-only and always answers 200 with `ok`. Twenty recorded model replies in
 `src/storyboard/fixtures/model-outputs/` are linted in the unit tests.
 
+## Writing one with a model
+
+The only AI step is writing this JSON. One prompt, published at
+[prompts/storyboard-writer.md](prompts/storyboard-writer.md), works in any chat
+app: paste it, then your brief. Inside Reel Studio every provider (Gemini, OpenAI,
+Ollama, LM Studio, llama.cpp) gets the same prompt through its native structured
+output with the schema, then the reply goes through the linter. One retry at most,
+fed with the linter's errors (on a cloud provider that is a second paid call; pass
+`"retry": false` to avoid it). `POST /api/storyboards/write` with
+`{ "providerId": "gemini", "brief": { "topic": "..." } }` returns the linted
+storyboard and writes nothing; post it to `POST /api/storyboards` to produce the video.
+
+**Research.** With Gemini or OpenAI, `research` defaults to `auto`: one web-grounded
+research call runs first, its facts and real URLs go into the brief, and the cited
+pages land in `storyboard.sources`. Only URLs the provider returned as grounding (or
+that you supplied in `brief.researchNotes`) can appear there; the writer cannot add
+others. The result is cached by topic for 24 hours (`.data/storyboard-research-cache.json`),
+so repeating a topic costs nothing. That is one extra paid request on a cloud
+provider; set `"research": "off"`, or `"fromSourceText": true` when your topic is your
+own text, to skip it. Local models and an unconfigured provider skip research and the
+response carries the note _Written without web research_. If the search fails the
+storyboard is still written, with a note saying why. An agent using MCP does its own
+research and passes the facts in `brief.researchNotes`.
+
 ## Producing a video
 
 ```bash
 curl -X POST "http://localhost:3000/api/storyboards" \
   -H "Content-Type: application/json" \
-  -d @examples/storyboards/calm-morning-45s.json
+  -d @examples/storyboards/product-launch.json
 ```
 
 One call lints and repairs the storyboard, creates the editable project, picks
@@ -118,6 +142,34 @@ MCP and the CLI will call the same function. Scene types map to today's treatmen
 (`hook` to the opener, `chart` to the data chart, `media` to B-roll, and so on). Fields the
 renderer cannot show yet (`body` on most scenes, `icon`, `theme`, `voice.speed`, `media.path`,
 and a code scene's formatting) are listed in the plan's `warnings` instead of being dropped silently.
+
+## Export and import
+
+Every project can be exported as a storyboard: `GET /api/scripts/<id>/storyboard`
+(add `?download=1` for a file), or **Storyboard → Export storyboard JSON** in the
+editor. **Import storyboard JSON** makes a new editable project from a document or a
+pasted chat reply (`POST /api/storyboards?createOnly=1`); nothing is rendered and the
+open project is untouched.
+
+Projects made from a storyboard remember its extra details (a stat's label, a quote's
+headline, a code scene's language, `icon`, `durationHint`, theme, sources) and write
+them back as long as that scene's copy is unchanged; edits made in the editor always
+win. Older projects export from the scene model alone, mapping legacy templates onto
+the nine scene types; anything that cannot be carried over exactly is listed in `notes`
+(for example a template with no v1 equivalent becomes a `statement`). Normalised, a
+storyboard survives storyboard → project → storyboard unchanged; the one thing that does
+not is a `code` scene's formatting beyond its text, which the renderer shows as a bold
+statement today.
+
+## The golden set
+
+`examples/storyboards/` holds twelve hand-written storyboards (a product launch,
+explainer, listicle, data story, how-to, news recap, motivation, developer demo,
+comparison, myth versus fact, story and a podcast episode) in all three formats.
+`npm run examples:check` validates and lints them (zero fixes and warnings; it also
+runs in the unit tests). `npm run examples:render` renders the eleven videos through
+`POST /api/storyboards` into `media/examples/` with a contact sheet each; start the app
+first.
 
 ## What is decided locally
 

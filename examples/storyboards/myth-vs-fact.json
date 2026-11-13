@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "title": "Three health myths, busted",
+  "format": "9:16",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Myth or fact?",
+      "narration": "You have heard all three of these. Let us check what the evidence actually says."
+    },
+    {
+      "type": "stat",
+      "headline": "Myth: we use ten percent of our brain",
+      "narration": "Brain scans show activity across the whole brain over a day. There is no dormant ninety percent.",
+      "stat": {
+        "value": "10%",
+        "label": "of the brain we supposedly use"
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "Myth: cracking knuckles gives arthritis",
+      "narration": "Studies that looked for a link have not found one. The popping is gas bubbles in the joint fluid."
+    },
+    {
+      "type": "statement",
+      "headline": "Myth: sugar makes kids hyper",
+      "narration": "Controlled trials found no effect on behaviour. Parents often expect it, and that expectation changes what they see."
+    },
+    {
+      "type": "cta",
+      "headline": "Share with a skeptic",
+      "narration": "Know someone who still believes one of these? Send them this and follow for more myth checks."
+    }
+  ]
+}

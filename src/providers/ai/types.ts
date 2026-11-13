@@ -292,12 +292,25 @@ export interface AIModel {
   label: string;
 }
 
+export interface StructuredCompletionInput {
+  system: string;
+  user: string;
+  modelId?: string;
+  temperature?: number;
+  signal?: AbortSignal;
+}
+
 export interface AIProvider {
   id: AIProviderId;
   label: string;
   isConfigured(): boolean;
   listModels(): Promise<AIModel[]>;
   generatePlan(input: GeneratePlanInput): Promise<ScenePlan>;
+  /**
+   * One structured-output completion with the provider's native JSON schema
+   * support. Used by the storyboard writer; returns the raw reply text.
+   */
+  completeStructured?(input: StructuredCompletionInput): Promise<string>;
   generatePodcastPlan(input: GeneratePodcastPlanInput): Promise<PodcastPlan>;
   generatePodcastClipSuggestions(
     input: GeneratePodcastClipSuggestionsInput,

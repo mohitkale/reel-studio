@@ -90,6 +90,7 @@ import {
 import { VoiceoverPanel } from "@/components/editor/voiceover-panel";
 import { AIEnhanceDialog } from "@/components/editor/ai-enhance-dialog";
 import { ScenesJsonDialog } from "@/components/editor/scenes-json-dialog";
+import { StoryboardMenu } from "@/components/editor/storyboard-menu";
 import { FilmPlanDialog } from "@/components/editor/film-plan-dialog";
 import { CoverControl } from "@/components/editor/cover-control";
 import { MusicControl } from "@/components/editor/music-control";
@@ -902,6 +903,14 @@ export function EditorClient({
                 <Braces className="size-3.5" />
                 JSON
               </Button>
+            </HintTooltip>
+            <HintTooltip
+              label="Export this project as a Storyboard v1 JSON file, or import one as a new project"
+              side="bottom"
+            >
+              <span>
+                <StoryboardMenu scriptId={scriptId} />
+              </span>
             </HintTooltip>
             <CaptionsMenu
               scriptId={scriptId}

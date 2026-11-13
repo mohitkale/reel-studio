@@ -1,32 +1,47 @@
 /**
- * Writes schemas/storyboard.v1.json from the Zod schema.
+ * Writes the generated storyboard files from the Zod schema and the writer prompt:
+ *   schemas/storyboard.v1.json          the published JSON Schema
+ *   docs/prompts/storyboard-writer.md   the prompt for pasting into any chat app
  *
- *   npm run storyboard:schema            write the file
- *   npm run storyboard:schema -- --check fail if the checked-in file is stale
+ *   npm run storyboard:schema            write the files
+ *   npm run storyboard:schema -- --check fail if a checked-in file is stale
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
+import { storyboardWriterPromptDocument } from "../src/providers/ai/storyboard-doc";
 import { storyboardJsonSchema } from "../src/storyboard/schema";
 
-const target = path.resolve(
-  import.meta.dirname,
-  "..",
-  "schemas",
-  "storyboard.v1.json",
-);
-const text = `${JSON.stringify(storyboardJsonSchema(), null, 2)}\n`;
+const root = path.resolve(import.meta.dirname, "..");
+const files: Array<[string, string]> = [
+  [
+    path.join(root, "schemas", "storyboard.v1.json"),
+    `${JSON.stringify(storyboardJsonSchema(), null, 2)}\n`,
+  ],
+  [
+    path.join(root, "docs", "prompts", "storyboard-writer.md"),
+    storyboardWriterPromptDocument(),
+  ],
+];
 
-if (process.argv.includes("--check")) {
-  if (!existsSync(target) || readFileSync(target, "utf8") !== text) {
-    console.error(
-      "schemas/storyboard.v1.json is stale. Run `npm run storyboard:schema` and commit the result.",
-    );
-    process.exit(1);
+const check = process.argv.includes("--check");
+let stale = false;
+for (const [target, text] of files) {
+  const relative = path.relative(root, target);
+  if (check) {
+    if (!existsSync(target) || readFileSync(target, "utf8") !== text) {
+      console.error(
+        `${relative} is stale. Run \`npm run storyboard:schema\` and commit the result.`,
+      );
+      stale = true;
+    }
+  } else {
+    mkdirSync(path.dirname(target), { recursive: true });
+    writeFileSync(target, text);
+    console.log(`Wrote ${relative}`);
   }
-  console.log("schemas/storyboard.v1.json is up to date.");
-} else {
-  mkdirSync(path.dirname(target), { recursive: true });
-  writeFileSync(target, text);
-  console.log(`Wrote ${path.relative(process.cwd(), target)}`);
+}
+if (check) {
+  if (stale) process.exit(1);
+  console.log("Generated storyboard files are up to date.");
 }

@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "title": "Start before you feel ready",
+  "format": "9:16",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "You will never feel ready",
+      "narration": "Waiting to feel ready is the most polite way to never start."
+    },
+    {
+      "type": "quote",
+      "headline": "A line worth keeping",
+      "narration": "Martin Luther King Junior wrote something that applies far beyond its time.",
+      "quote": {
+        "text": "Darkness cannot drive out darkness; only light can do that.",
+        "attribution": "Martin Luther King Jr., Strength to Love (1963)"
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "Small light beats big plans",
+      "narration": "You do not need a perfect plan. You need one small action today that adds a little light."
+    },
+    {
+      "type": "cta",
+      "headline": "Do the first ten minutes",
+      "narration": "Close this video and give your project ten honest minutes right now."
+    }
+  ]
+}
