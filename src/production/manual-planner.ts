@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { fitDisplayCopy } from "@/production/display-copy";
+import { cutAtBoundary } from "@/storyboard";
 import { visualAmbitionSchema } from "@/production/motion-plan";
 
 import { VIDEO_ENGINE_IDS, type VideoEngineId } from "@/engines/types";
@@ -246,17 +248,7 @@ export function segmentPolishedVideoText(text: string): string[] {
   );
 }
 
-function displayCopy(narration: string): { text: string; shortened: boolean } {
-  const words = narration.split(/\s+/).filter(Boolean);
-  if (words.length <= 18 && Array.from(narration).length <= 150) {
-    return { text: narration, shortened: false };
-  }
-  const text = words
-    .slice(0, 18)
-    .join(" ")
-    .replace(/[,:;–—-]+$/, "");
-  return { text: `${text}…`, shortened: true };
-}
+const displayCopy = fitDisplayCopy;
 
 export function createDeterministicProductionPlan(args: {
   name: string;
@@ -295,9 +287,10 @@ export function createDeterministicProductionPlan(args: {
           30,
         ).chapters.map((chapter) => ({
           firstSceneIndex: Number(chapter.firstSceneId),
-          title: displayCopy(
-            segments[Number(chapter.firstSceneId)]!,
-          ).text.slice(0, 120),
+          title: cutAtBoundary(
+            displayCopy(segments[Number(chapter.firstSceneId)]!).text,
+            120,
+          ),
         }))
       : undefined;
   const roles = resolvePresetRoles(args.presetId, segments.length, {

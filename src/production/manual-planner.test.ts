@@ -100,13 +100,16 @@ describe("deterministic production planning", () => {
       hasVisualAsset: true,
     });
 
-    expect(result.plan.scenes[0]?.text.endsWith("…")).toBe(true);
+    // Text is fitted, not cut: with no complete sentence or clause that fits,
+    // the whole line stays and the layout sizes it.
+    expect(result.plan.scenes[0]?.text.endsWith("…")).toBe(false);
+    expect(result.plan.scenes[0]?.text).toBe(sentence);
     expect(
       result.plan.scenes
         .map((scene) => scene.spokenText ?? scene.text)
         .join(" "),
     ).toBe(source);
-    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings).toHaveLength(0);
     expect(result.roles).toContain("screenshot-demo");
     expect(
       result.plan.scenes.every((scene) => scene.templateId.startsWith("hf-")),

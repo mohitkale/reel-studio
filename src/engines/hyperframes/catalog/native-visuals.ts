@@ -29,29 +29,154 @@ function emphasize(text: string, emphasis: string[]): string {
   return html;
 }
 
-/** Pack copy into short display lines so type never wraps mid-animation. */
-function packLines(
+const UNIT =
+  /^(?:%|x|k|m|b|mb|gb|kb|kg|km|mph|ms|seconds?|minutes?|hours?|days?|weeks?|months?|years?|times|percent|per)$/i;
+
+/** Words that must stay on one line: a number with its unit, and short emphasis phrases. */
+function glueLinks(words: string[], emphasis: string[]): boolean[] {
+  // glue[i] true means word i stays with word i + 1.
+  const glue = words.map(() => false);
+  for (let i = 0; i < words.length - 1; i++) {
+    if (
+      /\d/.test(words[i]!) &&
+      UNIT.test(words[i + 1]!.replace(/[.,;:!?]+$/, ""))
+    )
+      glue[i] = true;
+  }
+  for (const phrase of emphasis) {
+    const parts = phrase.trim().split(/\s+/).filter(Boolean);
+    if (parts.length < 2 || parts.length > 3) continue;
+    const norm = (w: string) =>
+      w.toLowerCase().replace(/[^\p{L}\p{N}%$]/gu, "");
+    for (let i = 0; i + parts.length <= words.length; i++) {
+      if (parts.every((part, k) => norm(words[i + k]!) === norm(part))) {
+        for (let k = 0; k < parts.length - 1; k++) glue[i + k] = true;
+      }
+    }
+  }
+  return glue;
+}
+
+/**
+ * Pack copy into short display lines so type never wraps mid-animation.
+ * The line count is the greedy minimum; the words are then spread to make
+ * the lines as even as possible, so the last line is never a lone word when
+ * the copy has four words or more. A number stays with its unit and a short
+ * emphasized phrase stays together.
+ */
+function packLinesWithin(
   text: string,
-  maxChars = 18,
-  maxWordsPerLine = 99,
+  maxChars: number,
+  maxWordsPerLine: number,
+  emphasis: string[],
 ): string[] {
   const words = text.replace(/\n+/g, " ").trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return [];
-  const lines: string[] = [];
-  let cur = "";
-  let curWords = 0;
-  for (const w of words) {
-    const next = cur ? `${cur} ${w}` : w;
-    if (cur && (next.length > maxChars || curWords >= maxWordsPerLine)) {
-      lines.push(cur);
-      cur = w;
-      curWords = 1;
-    } else {
-      cur = next;
-      curWords += 1;
+  const glue = glueLinks(words, emphasis);
+  const tokens: string[][] = [];
+  for (let i = 0; i < words.length; i++) {
+    if (i > 0 && glue[i - 1]) tokens[tokens.length - 1]!.push(words[i]!);
+    else tokens.push([words[i]!]);
+  }
+  const lenOf = (from: number, to: number) =>
+    tokens
+      .slice(from, to)
+      .reduce((n, t, k) => n + t.join(" ").length + (k > 0 ? 1 : 0), 0);
+  const wordsOf = (from: number, to: number) =>
+    tokens.slice(from, to).reduce((n, t) => n + t.length, 0);
+  const allowed = (from: number, to: number) =>
+    to - from === 1 ||
+    (lenOf(from, to) <= maxChars && wordsOf(from, to) <= maxWordsPerLine);
+
+  // Greedy minimum number of lines.
+  let count = 1;
+  let start = 0;
+  for (let end = 1; end <= tokens.length; end++) {
+    if (!allowed(start, end)) {
+      count += 1;
+      start = end - 1;
     }
   }
-  if (cur) lines.push(cur);
+  const render = (from: number, to: number) =>
+    tokens
+      .slice(from, to)
+      .map((t) => t.join(" "))
+      .join(" ");
+  if (count === 1) return [render(0, tokens.length)];
+
+  // Even out exactly `count` lines: minimise squared distance from the mean
+  // length, with a heavy penalty for a one-word line in longer copy.
+  const total = lenOf(0, tokens.length);
+  const target = total / count;
+  const n = tokens.length;
+  const best: number[][] = Array.from({ length: count + 1 }, () =>
+    Array<number>(n + 1).fill(Infinity),
+  );
+  const cut: number[][] = Array.from({ length: count + 1 }, () =>
+    Array<number>(n + 1).fill(0),
+  );
+  best[0]![0] = 0;
+  for (let k = 1; k <= count; k++) {
+    for (let end = k; end <= n; end++) {
+      for (let from = k - 1; from < end; from++) {
+        if (best[k - 1]![from] === Infinity || !allowed(from, end)) continue;
+        const len = lenOf(from, end);
+        const lone =
+          wordsOf(from, end) === 1 && words.length >= 4
+            ? end === n
+              ? 400
+              : 40
+            : 0;
+        const cost = best[k - 1]![from]! + (target - len) ** 2 + lone;
+        if (cost < best[k]![end]!) {
+          best[k]![end] = cost;
+          cut[k]![end] = from;
+        }
+      }
+    }
+  }
+  if (best[count]![n] === Infinity) {
+    // Cannot happen for a greedy-feasible count; keep the greedy result.
+    const lines: string[] = [];
+    let from = 0;
+    for (let end = 1; end <= n; end++) {
+      if (!allowed(from, end)) {
+        lines.push(render(from, end - 1));
+        from = end - 1;
+      }
+    }
+    lines.push(render(from, n));
+    return lines;
+  }
+  const lines: string[] = [];
+  let end = n;
+  for (let k = count; k >= 1; k--) {
+    const from = cut[k]![end]!;
+    lines.unshift(render(from, end));
+    end = from;
+  }
+  return lines;
+}
+
+export function packLines(
+  text: string,
+  maxChars = 18,
+  maxWordsPerLine = 99,
+  emphasis: string[] = [],
+): string[] {
+  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+  let lines: string[] = [];
+  // If the strict limits leave a lone last word, relax them a little: the
+  // runtime fit then shrinks the type if the wider line needs it.
+  for (const [chars, words] of [
+    [maxChars, maxWordsPerLine],
+    [Math.ceil(maxChars * 1.35), maxWordsPerLine + 1],
+    [Math.ceil(maxChars * 1.8), maxWordsPerLine + 1],
+  ] as const) {
+    lines = packLinesWithin(text, chars, words, emphasis);
+    const last = lines.at(-1)?.split(/\s+/).length ?? 0;
+    if (lines.length < 2 || wordCount < 4 || last >= 2) break;
+  }
   return lines;
 }
 
@@ -62,7 +187,7 @@ function lineStackHtml(
   lineClass = "fx-line",
   maxWordsPerLine = 99,
 ): string {
-  return packLines(text, maxChars, maxWordsPerLine)
+  return packLines(text, maxChars, maxWordsPerLine, emphasis)
     .map(
       (line, i) =>
         `<div class="${lineClass}" data-li="${i}"><span class="fx-line-inner" data-layout-allow-overflow>${emphasize(line, emphasis)}</span></div>`,

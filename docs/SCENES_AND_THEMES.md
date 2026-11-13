@@ -49,7 +49,8 @@ never see engine internals.
 
 Judge visual work by exported frames, not code. `npm run test:export-fidelity`
 checks seeks, fonts, long copy and portrait/landscape exports with an installed
-Chromium and FFmpeg; `npm run test:motion-spec` covers the motion contract.
+Chromium and FFmpeg; `npm run test:motion-spec` covers the motion contract, and `npm run test:copy-fit`
+renders 30 headlines in three formats and fails on cut text, overflow or a lone last word.
 Attach a contact sheet of real frames to any visual PR.
 
 Writing a new template or treatment: [Contributing scenes](CONTRIBUTING_SCENES.md).
