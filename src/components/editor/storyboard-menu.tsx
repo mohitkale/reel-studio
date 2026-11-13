@@ -41,7 +41,12 @@ export function StoryboardMenu({ scriptId }: { scriptId: string }) {
           json.errors?.[0]?.message ?? json.error ?? "Could not export",
         );
       }
-      window.location.assign(`/api/scripts/${scriptId}/storyboard?download=1`);
+      const link = document.createElement("a");
+      link.href = `/api/scripts/${scriptId}/storyboard?download=1`;
+      link.download = "";
+      document.body.append(link);
+      link.click();
+      link.remove();
       if (json.notes?.length) {
         toast.message("Exported with notes", {
           description: json.notes.slice(0, 3).join(" · "),
