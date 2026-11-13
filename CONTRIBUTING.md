@@ -88,11 +88,11 @@ You do not need the entire suite after every edit. Keep external providers mocke
 unless live usage is explicitly authorized. Real exports are required for visual
 changes; string/snapshot tests alone cannot prove readability or motion.
 
-**Current CI:** every PR update and push to `main` runs full Linux/Windows
-Quality checks and Security scanning, including documentation-only PRs. Local
-scope does not bypass those configured gates. Full video matrices are manual;
-phonemizer source rebuilds are limited to relevant paths or manual requests.
-See [verification and release policy](AI_GUIDELINES.md#verification-policy).
+**CI:** every PR runs a fast Linux gate (secret scan, typecheck, lint, unit
+tests; documentation-only PRs skip the code steps). The full Linux and Windows
+gate with integration tests and a build runs on `main`, nightly, and on PRs
+that touch risky paths or carry the `ci:full` label. Full video matrices are
+manual. See [verification policy](AI_GUIDELINES.md#verification-policy).
 
 ## Architecture and extensions
 

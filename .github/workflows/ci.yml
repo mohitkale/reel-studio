@@ -1,0 +1,59 @@
+name: CI
+# Fast gate for every pull request. One job named `gate` always reports, so it
+# can be a required check. The slower Linux/Windows matrix lives in quality.yml.
+on:
+  pull_request:
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ONNXRUNTIME_NODE_INSTALL_CUDA: skip # CPU Kokoro does not use CUDA
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Classify changed files
+        id: changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh pr diff "$PR" --repo "$GITHUB_REPOSITORY" --name-only > changed.txt
+          if grep -qvE '(\.md$|^docs/|^LICENSE$|^\.github/ISSUE_TEMPLATE/|^\.github/pull_request_template\.md$)' changed.txt; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Changed files:"; cat changed.txt
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install dependencies
+        run: npm ci ${{ steps.changes.outputs.code == 'false' && '--ignore-scripts' || '' }}
+      - name: Secret scan
+        run: npm run security:scan
+      - name: Check formatting of changed Markdown and YAML
+        run: |
+          files=()
+          while read -r file; do
+            if [ -f "$file" ]; then files+=("$file"); fi
+          done < <(grep -E '\.(md|ya?ml)$' changed.txt || true)
+          if [ "${#files[@]}" -gt 0 ]; then npx prettier --check "${files[@]}"; fi
+      - name: Typecheck
+        if: steps.changes.outputs.code == 'true'
+        run: npm run typecheck
+      - name: Lint
+        if: steps.changes.outputs.code == 'true'
+        run: npm run lint
+      - name: Unit tests
+        if: steps.changes.outputs.code == 'true'
+        run: npm run test:unit
