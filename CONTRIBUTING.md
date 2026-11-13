@@ -22,18 +22,27 @@ Open `http://localhost:3000`. Setup preserves existing configuration and uses
 versioned database migrations. See [setup](docs/SETUP.md) for Docker, runtime
 checks, and troubleshooting. Never use `db:push` to upgrade an existing database.
 
-## Make a focused PR
+## Branches and PRs
 
-1. Create a branch: `git switch -c feature/your-change`.
-2. Follow [AI_GUIDELINES.md](AI_GUIDELINES.md) and existing architecture.
-3. Add or adjust meaningful checks for behavior that changed.
-4. Update the owning guide when setup, behavior, or APIs change.
-5. Run the relevant local checks below, inspect your diff, and scan for secrets.
-6. Push to your fork and open a PR with the problem, resulting behavior, and validation.
+`main` is the only long-lived branch and is always releasable.
 
-Maintainers merge after required checks pass on the latest PR commit. Agent-led
-milestones follow the complete branch → PR → CI → merge → refreshed-main cycle
-in [AI_GUIDELINES.md](AI_GUIDELINES.md#milestone-pr-workflow).
+- Branch from fresh `main` and name the branch after its issue:
+  `feature/<issue>-<slug>`, `fix/<issue>-<slug>`, `chore/<issue>-<slug>` or
+  `docs/<issue>-<slug>`. Do not use tool or agent names as prefixes.
+- One issue, one branch, one PR. Start the PR body with `Closes #<issue>` and
+  tick each **Done when** line from the issue with its evidence.
+- PRs are squash-merged and the branch is deleted automatically on merge.
+  Never push to `main` directly.
+- Releases are tags on `main` (`vX.Y.Z`). There are no release branches unless
+  a patch must skip unreleased work.
+- Work is planned in [GitHub milestones](https://github.com/mohitkale/reel-studio/milestones).
+  Take the lowest-numbered open `agent-ready` issue in the earliest open
+  milestone whose dependencies are closed.
+
+Before opening the PR: add or adjust checks for behavior that changed, update
+the owning guide when setup, behavior, or APIs change, run the relevant local
+checks below, inspect your diff, and scan for secrets. Contributors without
+write access push to a fork and open the PR from there.
 
 ## Verify in proportion to the change
 
