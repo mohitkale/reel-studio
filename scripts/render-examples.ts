@@ -60,97 +60,104 @@ async function poll(jobId: string): Promise<JobView> {
   }
 }
 
-const { reports, problems } = checkExamples();
-if (problems.length > 0) {
-  console.error("Fix the examples first (npm run examples:check):");
-  for (const p of problems) console.error(`  - ${p}`);
-  process.exit(1);
-}
-await mkdir(outDir, { recursive: true });
-
-const summary: Array<{
-  name: string;
-  seconds: number;
-  duration?: number;
-  ok: boolean;
-}> = [];
-for (const report of reports) {
-  if (only && report.name !== only) continue;
-  if (report.kind === "podcast") {
-    console.log(
-      `- ${report.name}: audio episode, not rendered by this command`,
-    );
-    continue;
+async function main(): Promise<void> {
+  const { reports, problems } = checkExamples();
+  if (problems.length > 0) {
+    console.error("Fix the examples first (npm run examples:check):");
+    for (const p of problems) console.error(`  - ${p}`);
+    process.exit(1);
   }
-  const started = Date.now();
-  console.log(
-    `→ ${report.name} (${report.format}, ~${Math.round(report.seconds)} s)`,
-  );
-  const body = await readFile(
-    path.join(EXAMPLES_DIR, `${report.name}.json`),
-    "utf8",
-  );
-  const query = new URLSearchParams({
-    quality,
-    ...(force ? { force: "1" } : {}),
-  });
-  const post = await fetch(`${base}/api/storyboards?${query}`, {
-    method: "POST",
-    headers,
-    body,
-  });
-  const queued = (await post.json()) as { jobId?: string; error?: string };
-  if (!queued.jobId)
-    throw new Error(`${report.name}: ${queued.error ?? post.status}`);
-  const job = await poll(queued.jobId);
-  const video = job.outputs.find((o) => o.kind === "video");
-  if (job.state !== "succeeded" || !video) {
-    console.error(`  ✗ ${job.state}: ${job.error ?? "no video output"}`);
+  await mkdir(outDir, { recursive: true });
+
+  const summary: Array<{
+    name: string;
+    seconds: number;
+    duration?: number;
+    ok: boolean;
+  }> = [];
+  for (const report of reports) {
+    if (only && report.name !== only) continue;
+    if (report.kind === "podcast") {
+      console.log(
+        `- ${report.name}: audio episode, not rendered by this command`,
+      );
+      continue;
+    }
+    const started = Date.now();
+    console.log(
+      `→ ${report.name} (${report.format}, ~${Math.round(report.seconds)} s)`,
+    );
+    const body = await readFile(
+      path.join(EXAMPLES_DIR, `${report.name}.json`),
+      "utf8",
+    );
+    const query = new URLSearchParams({
+      quality,
+      ...(force ? { force: "1" } : {}),
+    });
+    const post = await fetch(`${base}/api/storyboards?${query}`, {
+      method: "POST",
+      headers,
+      body,
+    });
+    const queued = (await post.json()) as { jobId?: string; error?: string };
+    if (!queued.jobId)
+      throw new Error(`${report.name}: ${queued.error ?? post.status}`);
+    const job = await poll(queued.jobId);
+    const video = job.outputs.find((o) => o.kind === "video");
+    if (job.state !== "succeeded" || !video) {
+      console.error(`  ✗ ${job.state}: ${job.error ?? "no video output"}`);
+      summary.push({
+        name: report.name,
+        seconds: (Date.now() - started) / 1000,
+        ok: false,
+      });
+      continue;
+    }
+    const metadata =
+      video.metadata ??
+      (JSON.parse(video.metadataJson ?? "{}") as Record<string, unknown>);
+    const mp4 = await fetch(
+      `${base}/api/production-jobs/${queued.jobId}/artifacts/${video.id}`,
+      { headers },
+    );
+    await writeFile(
+      path.join(outDir, `${report.name}.mp4`),
+      Buffer.from(await mp4.arrayBuffer()),
+    );
+    if (typeof metadata.contactSheet === "string") {
+      const sheet = await fetch(`${base}/media/${metadata.contactSheet}`, {
+        headers,
+      });
+      if (sheet.ok)
+        await writeFile(
+          path.join(outDir, `${report.name}.contact-sheet.jpg`),
+          Buffer.from(await sheet.arrayBuffer()),
+        );
+    }
+    const seconds = (Date.now() - started) / 1000;
     summary.push({
       name: report.name,
-      seconds: (Date.now() - started) / 1000,
-      ok: false,
+      seconds,
+      duration: Number(metadata.duration),
+      ok: true,
     });
-    continue;
+    console.log(
+      `  ✓ ${Number(metadata.duration).toFixed(1)} s video in ${Math.round(seconds)} s wall time`,
+    );
   }
-  const metadata =
-    video.metadata ??
-    (JSON.parse(video.metadataJson ?? "{}") as Record<string, unknown>);
-  const mp4 = await fetch(
-    `${base}/api/production-jobs/${queued.jobId}/artifacts/${video.id}`,
-    { headers },
-  );
   await writeFile(
-    path.join(outDir, `${report.name}.mp4`),
-    Buffer.from(await mp4.arrayBuffer()),
+    path.join(outDir, "report.json"),
+    JSON.stringify({ base, quality, summary }, null, 2),
   );
-  if (typeof metadata.contactSheet === "string") {
-    const sheet = await fetch(`${base}/media/${metadata.contactSheet}`, {
-      headers,
-    });
-    if (sheet.ok)
-      await writeFile(
-        path.join(outDir, `${report.name}.contact-sheet.jpg`),
-        Buffer.from(await sheet.arrayBuffer()),
-      );
-  }
-  const seconds = (Date.now() - started) / 1000;
-  summary.push({
-    name: report.name,
-    seconds,
-    duration: Number(metadata.duration),
-    ok: true,
-  });
+  const failed = summary.filter((s) => !s.ok);
   console.log(
-    `  ✓ ${Number(metadata.duration).toFixed(1)} s video in ${Math.round(seconds)} s wall time`,
+    `\n${summary.length - failed.length} of ${summary.length} rendered into ${path.relative(process.cwd(), outDir)}/`,
   );
+  if (failed.length) process.exit(1);
 }
-await writeFile(
-  path.join(outDir, "report.json"),
-  JSON.stringify({ base, quality, summary }, null, 2),
-);
-const failed = summary.filter((s) => !s.ok);
-console.log(
-  `\n${summary.length - failed.length} of ${summary.length} rendered into ${path.relative(process.cwd(), outDir)}/`,
-);
-if (failed.length) process.exit(1);
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

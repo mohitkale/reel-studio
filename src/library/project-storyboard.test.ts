@@ -196,6 +196,27 @@ describe("projects without a sidecar", () => {
     expect(result.notes.length).toBeGreaterThanOrEqual(2);
   });
 
+  it("turns a chart scene with no usable data into a statement, with a note", () => {
+    const result = scriptToStoryboard(
+      script([
+        scene("hf-data-chart", "Revenue by month"),
+        scene("hf-data-chart", "Too wide", {
+          chart: {
+            labels: ["a", "b", "c", "d", "e", "f", "g"],
+            series: [{ label: "s", values: [1, 2, 3, 4, 5, 6, 7] }],
+          },
+        }),
+      ]),
+    );
+    expect(result.errors).toEqual([]);
+    const types =
+      result.storyboard!.kind === "video"
+        ? result.storyboard!.scenes.map((s) => s.type)
+        : [];
+    expect(types).toEqual(["statement", "statement"]);
+    expect(result.notes.filter((n) => n.includes("chart")).length).toBe(2);
+  });
+
   it("exports a valid storyboard for every preset sample scene set", () => {
     const fixtures = path.resolve(__dirname, "..", "..", "tests", "fixtures");
     for (const file of readdirSync(fixtures).filter((f) =>

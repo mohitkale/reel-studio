@@ -126,7 +126,22 @@ function sceneToStoryboard(
   if (extras?.body) out.body = extras.body;
   else if (type === "cta" && scene.visual) out.body = scene.visual;
   if (type === "list" && scene.items?.length) out.items = scene.items;
-  if (type === "chart" && scene.chart) {
+  if (type === "chart") {
+    const chart = scene.chart;
+    const fits =
+      chart &&
+      chart.labels.length >= L.chartLabels.min &&
+      chart.labels.length <= L.chartLabels.max &&
+      chart.series.length <= L.chartSeries.max &&
+      chart.series.every((s) => s.values.length === chart.labels.length);
+    if (!fits) {
+      out.type = "statement";
+      notes.push(
+        `scene ${index + 1}: a chart without usable data (2 to 6 labels, up to 3 series) is exported as a statement`,
+      );
+    }
+  }
+  if (out.type === "chart" && scene.chart) {
     out.chart = {
       labels: scene.chart.labels,
       series: scene.chart.series.map((s) => ({
