@@ -1,33 +1,28 @@
-## Summary
+Closes #
 
-<!-- What does this PR change and why? -->
+## What changed
 
-## Checklist
+<!-- What this PR changes and why, in a few lines. -->
 
-- [ ] Local checks match the scope in `AI_GUIDELINES.md` (list commands/results below)
-- [ ] Affected behavior checks; broader unit suite when warranted
-- [ ] Typecheck and relevant lint for code changes
-- [ ] Actual exported frames / browser or recovery evidence when relevant
-- [ ] `npm run security:scan`
-- [ ] No secrets, API keys, or private media committed
-- [ ] Component terms/notices remain accurate, including GPL corresponding source when distributed
-- [ ] Docs updated if commands, env, or setup changed
-- [ ] Agent co-author trailers retained when applicable
+## Done when
 
-## Validation
+<!-- Copy the "Done when" list from the issue and tick each line with its evidence
+(a command result, a measurement, a link). Say plainly what is not done. -->
 
-<!-- Commands/results, or explain why a check is irrelevant. Docs-only work does
-not need a full local suite; current configured CI still runs before merge. -->
+- [ ]
 
-## Release assessment
+## Screenshots or contact sheet
 
-<!-- Accumulate for the next coherent release, or identify a feature/patch release
-and its verified gates. Do not publish a release for every PR. -->
+<!-- Required when UI or exported video changed. Use real exported frames and
+synthetic demo content only. -->
 
-## Screenshots / demos
+## Checks
 
-<!-- If UI or output changed, attach synthetic demo screenshots only. -->
+<!-- The commands you ran and their results. -->
 
-## Notes for reviewers
-
-<!-- Breaking changes, migration steps, follow-ups. -->
+- [ ] Tests for the behavior that changed (`npm run test:unit`, `npm run test:int`)
+- [ ] `npm run typecheck` and `npm run lint` for code changes
+- [ ] `npm run security:scan`; no secrets, keys or private media
+- [ ] Docs updated if commands, settings or setup changed
+- [ ] Licence notices still accurate for anything added
+- [ ] No existing feature removed or hidden (or the title says so and links the decision)
