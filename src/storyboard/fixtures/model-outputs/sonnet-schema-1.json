@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "title": "Three habits for faster code reviews",
+  "kind": "video",
+  "format": "16:9",
+  "music": "auto",
+  "captions": "auto",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Slow reviews are a habit problem",
+      "narration": "Your pull request has been sitting for two days. The code is fine. The review process is what's slow. Three small habits can fix that.",
+      "emphasis": ["habit"],
+      "icon": "clock"
+    },
+    {
+      "type": "statement",
+      "headline": "Habit one: keep changes small",
+      "narration": "Reviewers put off big diffs because they take real focus. A change someone can read in ten minutes gets reviewed between meetings, not next week.",
+      "body": "Aim for one idea per pull request, and split refactors from behavior changes.",
+      "emphasis": ["small"]
+    },
+    {
+      "type": "statement",
+      "headline": "Habit two: review yourself first",
+      "narration": "Read your own diff before anyone else does. You'll catch the stray debug line, the unclear name, the missing test. Every nit you fix is a round trip you save.",
+      "body": "Open the diff in the review tool, not your editor, and read it like a stranger would.",
+      "emphasis": ["yourself"]
+    },
+    {
+      "type": "list",
+      "headline": "Habit three: write a useful description",
+      "narration": "Tell the reviewer what to expect before they open a single file. Context up front means fewer questions in the comments and faster approvals.",
+      "items": [
+        "What changed, in one sentence",
+        "Why it changed",
+        "How you tested it",
+        "Where to look first"
+      ],
+      "emphasis": ["description"]
+    },
+    {
+      "type": "code",
+      "headline": "A description template you can reuse",
+      "narration": "Here's a template. Paste it into your repository's pull request settings so everyone starts from the same shape.",
+      "code": {
+        "language": "markdown",
+        "text": "## What\nOne sentence on the change.\n\n## Why\nThe problem this solves.\n\n## Testing\nHow I verified it.\n\n## Review notes\nStart with src/api/handler.ts"
+      }
+    },
+    {
+      "type": "cta",
+      "headline": "Try one habit this week",
+      "narration": "Pick one of the three and use it on your next pull request. Small diffs, a self-review, a clear description. Your teammates will notice the difference.",
+      "body": "Faster reviews are a team skill, and you can start today.",
+      "emphasis": ["one habit"]
+    }
+  ]
+}

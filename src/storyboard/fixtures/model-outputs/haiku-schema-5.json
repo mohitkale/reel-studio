@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "title": "Quill launch announcement",
+  "kind": "video",
+  "format": "16:9",
+  "music": "auto",
+  "captions": "auto",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Meet Quill, the notes app that keeps up",
+      "narration": "Quill is a new note-taking app for people who think faster than they type.",
+      "emphasis": ["Quill"],
+      "durationHint": 5
+    },
+    {
+      "type": "media",
+      "headline": "Capture ideas in seconds",
+      "narration": "Open Quill, start typing, and your thought is saved before it slips away. Your notes sync across all your devices.",
+      "media": {
+        "query": "person typing notes on a laptop at a desk"
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "Find anything instantly",
+      "narration": "Search across every note and voice memo in one box. Quill ranks results by what you actually open most.",
+      "icon": "search"
+    },
+    {
+      "type": "list",
+      "headline": "Built for how you work",
+      "narration": "Quill works offline, keeps your notes private, and connects to the calendar you already use.",
+      "items": [
+        "Works offline",
+        "Private by default",
+        "Syncs with your calendar",
+        "Exports to any format"
+      ]
+    },
+    {
+      "type": "cta",
+      "headline": "Download Quill today",
+      "narration": "Get Quill today and write your next idea down before it slips away.",
+      "emphasis": ["Quill"],
+      "durationHint": 5
+    }
+  ]
+}

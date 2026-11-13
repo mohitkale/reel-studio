@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "title": "What is a black hole?",
+  "kind": "video",
+  "format": "1:1",
+  "music": "auto",
+  "captions": "auto",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "What is a black hole?",
+      "narration": "Imagine a place where gravity is so strong that nothing can escape, not even light. That place is called a black hole.",
+      "emphasis": ["black hole"]
+    },
+    {
+      "type": "statement",
+      "headline": "Born from giant stars",
+      "narration": "Many black holes form when a very big star runs out of fuel and collapses in on itself.",
+      "icon": "star"
+    },
+    {
+      "type": "statement",
+      "headline": "Gravity gets squeezed",
+      "narration": "The collapse packs all of that star's stuff into a tiny space. The stronger the squeeze, the stronger the pull."
+    },
+    {
+      "type": "statement",
+      "headline": "The point of no return",
+      "narration": "Around a black hole is an edge called the event horizon. Once something crosses it, there is no way back out.",
+      "emphasis": ["event horizon"]
+    },
+    {
+      "type": "statement",
+      "headline": "Seeing the invisible",
+      "narration": "Black holes are dark, so scientists spot them by how they tug on nearby stars and gas. That gas glows as it swirls inward.",
+      "icon": "eye"
+    },
+    {
+      "type": "statement",
+      "headline": "Not a space vacuum",
+      "narration": "A black hole only pulls things in when they get very close. A planet far away can orbit one safely, just like the Earth orbits the Sun.",
+      "body": "Distance matters more than you might think."
+    },
+    {
+      "type": "cta",
+      "headline": "Keep asking questions",
+      "narration": "The universe is full of mysteries, and black holes are some of the most amazing. Keep looking up and wondering why.",
+      "emphasis": ["wondering"]
+    }
+  ]
+}

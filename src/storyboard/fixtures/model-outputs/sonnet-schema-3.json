@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "title": "Why we procrastinate",
+  "kind": "podcast",
+  "music": "auto",
+  "speakers": [
+    { "id": "maya", "name": "Maya" },
+    { "id": "theo", "name": "Theo" }
+  ],
+  "turns": [
+    {
+      "speaker": "maya",
+      "text": "Welcome back. Today's topic is one I've been putting off for weeks: why we procrastinate. Theo, I assume you have a theory."
+    },
+    {
+      "speaker": "theo",
+      "text": "I have several, and I should have prepared them earlier. Honestly, the popular idea is that procrastinators are lazy. Most researchers disagree. They see it as a problem of managing emotions, not managing time."
+    },
+    {
+      "speaker": "maya",
+      "text": "Wait, emotions? I always thought it was a scheduling issue. Just use a calendar."
+    },
+    {
+      "speaker": "theo",
+      "text": "That's the trap. When a task makes you feel anxious, bored, or unsure, avoiding it gives you instant relief. Your brain learns that dodging the task feels good, so you do it again."
+    },
+    {
+      "speaker": "maya",
+      "text": "So I'm not avoiding the report, I'm avoiding the feeling the report gives me. That's annoyingly accurate."
+    },
+    {
+      "speaker": "theo",
+      "text": "Exactly. And there's a second piece. We tend to favor our present self over our future self. The reward now, a snack or a video, beats a benefit that lands next week. Future you can deal with it."
+    },
+    {
+      "speaker": "maya",
+      "text": "Future me is always the one who suffers. Okay, so what actually helps? Please don't say willpower."
+    },
+    {
+      "speaker": "theo",
+      "text": "Never. Shrink the first step until it's almost silly. Open the document and write one sentence. Starting is usually the hardest part, and the feeling often eases once you're moving. Be kind to yourself, too. Self-criticism tends to make avoidance worse."
+    }
+  ]
+}

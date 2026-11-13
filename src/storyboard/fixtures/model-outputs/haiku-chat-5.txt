@@ -1,0 +1,47 @@
+```json
+{
+  "title": "The History of the Bicycle",
+  "format": "9:16",
+  "duration_seconds": 45,
+  "voice": { "style": "lively, storytelling", "speed": 1.0 },
+  "music": { "mood": "vintage upbeat", "volume": 0.2 },
+  "captions": { "enabled": true, "style": "bold-bottom" },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "The bicycle started with no pedals",
+      "narration": "The first bicycle had no pedals at all. Riders pushed themselves along with their feet."
+    },
+    {
+      "type": "statement",
+      "headline": "1817: the running machine",
+      "narration": "German inventor Karl Drais built the draisine in 1817. It had two wheels, a wooden frame and a steering handle."
+    },
+    {
+      "type": "list",
+      "headline": "Four big leaps",
+      "narration": "Pedals arrived in the 1860s. The high wheeler followed in the 1870s. Then the safety bicycle in 1885. Then pneumatic tires in 1888.",
+      "items": ["1860s: pedals added", "1870s: the high wheeler", "1885: the safety bicycle", "1888: pneumatic tires"]
+    },
+    {
+      "type": "media",
+      "headline": "Vintage bicycle through the decades",
+      "narration": "Each step made riding faster, steadier and more comfortable for everyday people.",
+      "media": { "kind": "image-sequence", "source": "placeholder-vintage-bicycles" }
+    },
+    {
+      "type": "quote",
+      "headline": "A machine for everyone",
+      "narration": "The bicycle went from a rich person's toy to a tool for millions.",
+      "quote": "The bicycle did more for women's freedom than almost anything else.",
+      "attribution": "Susan B. Anthony, 1896"
+    },
+    {
+      "type": "cta",
+      "headline": "Go ride something",
+      "narration": "Take a bike out this week and feel the same balance riders felt over a century ago.",
+      "action": "Take a ride this weekend"
+    }
+  ]
+}
+```

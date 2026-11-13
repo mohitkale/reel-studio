@@ -62,6 +62,31 @@ with an `id`, a `name` and an optional `voiceId`) and `turns` (1 to 80, each wit
 `speaker` id and up to 600 characters of `text`). `title`, `music` and `sources`
 work as for video.
 
+## Linting and auto-repair
+
+Models drift: a code fence around the JSON, `"vertical"` for a format, a stat
+written on the scene instead of inside `stat`. `lintStoryboard(reply, options)`
+(`src/storyboard/lint.ts`) accepts a reply string or an object and returns
+`{ storyboard, fixes, warnings, errors }`.
+
+- **fixes** are repairs already applied to the returned storyboard: extra text
+  around the JSON, trailing commas, trimmed whitespace, filled defaults, unknown
+  fields dropped (including internal ids), near-miss values mapped (`bullet-list`
+  to `list`, `vertical` to `9:16`), loose shapes gathered (`value`/`label` into
+  `stat`), an overlong headline moved into `body` and shortened at a clause
+  boundary, counts clamped.
+- **warnings** mean the storyboard is valid but weak: headline equal to narration,
+  three of one scene type in a row, no hook first, no closing scene, narration under
+  3 or over 40 words, a stat without a number, estimated length outside the range you
+  asked for (`minSeconds`, `maxSeconds`).
+- **errors** appear only when nothing safe can be repaired. Each has `path`,
+  `message`, `expected` and `example`, so a model can fix it in one retry.
+
+Over HTTP: `POST /api/storyboards/lint` with the storyboard, or
+`{ "storyboard": <object or reply text>, "options": { "minSeconds": 45 } }`. It is
+read-only and always answers 200 with `ok`. Twenty recorded model replies in
+`src/storyboard/fixtures/model-outputs/` are linted in the unit tests.
+
 ## What is decided locally
 
 Layout, motion treatments, colour, transitions, caption style, music choice and

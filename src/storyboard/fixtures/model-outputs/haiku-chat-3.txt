@@ -1,0 +1,40 @@
+```json
+{
+  "title": "How Tides Work",
+  "format": "1:1",
+  "duration_seconds": 30,
+  "voice": { "style": "calm, curious", "speed": 1.0 },
+  "music": { "mood": "ambient ocean", "volume": 0.15 },
+  "captions": { "enabled": true, "style": "bold-bottom" },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Why does the sea rise and fall?",
+      "narration": "Twice a day, the ocean creeps up the beach and then pulls back. The moon is the main reason."
+    },
+    {
+      "type": "statement",
+      "headline": "The moon pulls the water",
+      "narration": "The moon's gravity pulls on Earth's oceans, bulging the water toward it. A second bulge forms on the far side."
+    },
+    {
+      "type": "stat",
+      "headline": "Tide timing",
+      "narration": "Because of that, high tides come about every twelve hours and twenty-five minutes.",
+      "value": "12h 25m",
+      "label": "between high tides"
+    },
+    {
+      "type": "statement",
+      "headline": "The sun helps too",
+      "narration": "The sun adds its own pull. When the sun and moon line up, tides become stronger."
+    },
+    {
+      "type": "cta",
+      "headline": "Check your local tide chart",
+      "narration": "Look up tide times for your coast and see the pattern for yourself.",
+      "action": "Find your local tide times"
+    }
+  ]
+}
+```
