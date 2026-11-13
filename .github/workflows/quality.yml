@@ -68,7 +68,9 @@ jobs:
       - name: Run unit tests
         run: npm run test:unit
       - name: Run integration tests
-        run: npm run test:int -- --maxWorkers=2
+        # Windows SQLite fixtures compete for disk under parallel workers and
+        # exceed their own deadlines; keep every deadline and use one worker.
+        run: npm run test:int -- --maxWorkers=${{ runner.os == 'Windows' && 1 || 2 }}
       - run: npm run security:scan
       - run: node scripts/dependency-inventory.mjs > dependency-inventory.json
       - run: npm run test:phonemizer
