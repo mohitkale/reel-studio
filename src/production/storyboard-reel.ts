@@ -10,10 +10,8 @@ import { resolveReelTimeline } from "@/lib/reel-timeline";
 import { resolveSpokenText } from "@/lib/spoken-text";
 import { buildAutoCaptionTrack } from "@/library/auto-captions";
 import { enrichScenePlan } from "@/library/enrich-scene-plan";
-import { planProjectMotion } from "@/production/project-motion";
 import { getProductionPreset } from "@/production/presets";
 import { resolveProductionLayout } from "@/production/layout";
-import { enrichSemanticSequence } from "@/production/semantic-direction";
 import { planFromStoryboard } from "@/production/storyboard-plan";
 import type { Storyboard } from "@/storyboard";
 import type { ReelProps, ReelScene } from "@/video/types";
@@ -38,22 +36,11 @@ export function storyboardToReelProps(storyboard: Storyboard): StoryboardReel {
     ...plan.scenePlan,
     scenes: enrichScenePlan(plan.scenePlan.scenes, "hyperframes"),
   };
-  const directed = enrichSemanticSequence(enriched.scenes);
+  // Mirrors produceFromStoryboard: no preset and no motion plan, so the native
+  // scene renderers show everything the storyboard supplies.
+  const directed = enriched.scenes;
   const styleId = preset.defaults.styleId;
   const energy = preset.defaults.energy;
-  const { motions } = planProjectMotion({
-    plan: enriched,
-    directedScenes: directed,
-    production: {
-      preset: { id: preset.id, version: preset.version },
-      roles: plan.roles,
-      visualAmbition: "expressive",
-    },
-    width,
-    height,
-    energy,
-    backgrounds: [],
-  });
 
   const scenes: ReelScene[] = directed.map((scene, order) => ({
     id: `scene-${order}`,
@@ -64,8 +51,6 @@ export function storyboardToReelProps(storyboard: Storyboard): StoryboardReel {
     visual: scene.visual,
     items: scene.items,
     chart: scene.chart,
-    role: scene.direction?.graphic ? scene.direction.role : plan.roles[order],
-    motion: motions[order],
     direction: scene.direction,
     mood: scene.mood,
     order,
@@ -120,7 +105,6 @@ export function storyboardToReelProps(storyboard: Storyboard): StoryboardReel {
     styleId,
     energy,
     layout: resolveProductionLayout({ width, height }),
-    preset: { id: preset.id, version: preset.version },
     captions: track
       ? {
           enabled: true,

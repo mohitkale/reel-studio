@@ -1,3 +1,4 @@
+import { PRODUCTION_SCENE_ROLES } from "@/production/roles";
 import { MULTI_SERIES_TIMELINE_BOOT } from "../motion/multi-series-scene";
 import { ADAPTIVE_BOOT } from "../motion/adaptive-blocks";
 import { SEQUENCE_HANDOFF_BOOT } from "../motion/sequence-handoff";
@@ -444,7 +445,8 @@ function recipeForTemplate(templateId: string, mood?: SceneMood): string {
 }
 
 function chipHtml(speaker: string, accent: string, ink: string): string {
-  if (!speaker) return "";
+  // Scene roles are internal vocabulary ("summary", "cta"); never put them on screen.
+  if (!speaker || (PRODUCTION_SCENE_ROLES as readonly string[]).includes(speaker.trim().toLowerCase())) return "";
   return `<p class="fx-chip" style="--chip:${accent};color:${ink}">${escapeHtml(speaker)}</p>`;
 }
 
@@ -709,10 +711,13 @@ export function buildCinematicClassicVisual(args: {
         </div>`;
       break;
     case "hf-list": {
-      const items = linesToItems(scene.text);
+      // Supplied items win; the scene text then becomes the title above them.
+      const hasItems = (scene.items?.length ?? 0) > 0;
+      const items = hasItems ? scene.items! : linesToItems(scene.text);
       body = `
         <div class="fx-dialogue fx-dlg-list">
           ${chip}
+          ${hasItems ? `<p class="fx-list-title" style="color:${pal.ink}">${escapeHtml(scene.text)}</p>` : ""}
           <ul class="fx-check-list">
             ${items
               .map(
@@ -1073,11 +1078,12 @@ export const NATIVE_CATALOG_STYLES = `
     font-size: clamp(88px, 14cqw, 150px); line-height: 0.7; margin-bottom: 6px;
     opacity: 0; transform: translateY(16px);
   }
-  .fx-check-list { list-style: none; display: grid; gap: 16px; width: min(920px, 96%); text-align: left; }
+  .fx-list-title { font-weight: 800; letter-spacing: -0.02em; line-height: 1.12; font-size: calc(var(--frame-h, 1920px) * 0.05); margin: 0 0 calc(var(--frame-h, 1920px) * 0.02); text-align: left; width: min(var(--content-max-width, 920px), 96%); }
+  .fx-check-list { list-style: none; display: grid; gap: calc(var(--frame-h, 1920px) * 0.012); width: min(var(--content-max-width, 920px), 96%); text-align: left; }
   .fx-check-item {
     display: flex; gap: 18px; align-items: flex-start;
-    font-size: clamp(26px, 3.8cqw, 40px); font-weight: 700; line-height: 1.25;
-    padding: 18px 20px; border-radius: 18px;
+    font-size: calc(var(--frame-h, 1920px) * 0.034); font-weight: 700; line-height: 1.25;
+    padding: 0.5em 0.6em; border-radius: 0.5em;
     background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
     opacity: 0; transform: translateY(28px);
   }

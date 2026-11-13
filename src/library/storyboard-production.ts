@@ -248,9 +248,8 @@ export async function produceFromStoryboard(
       energy: finalPlan.energy ?? preset.defaults.energy,
     },
     {
-      preset: { id: preset.id, version: preset.version },
-      roles: plan.roles,
-      visualAmbition: "expressive",
+      // No preset: the preset scene renderers show one hero line and drop list
+      // items, stat labels and chart data, which a storyboard supplies.
       savedOverrides: {
         storyboardSource: buildStoryboardSource(storyboard, finalPlan.scenes),
       },

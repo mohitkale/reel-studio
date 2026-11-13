@@ -196,9 +196,11 @@ export function resolveAdaptiveLayout(
           : "ledger";
     area.height -= h * 0.13;
   }
+  // Type scales with the frame height, so a short headline fills its region in
+  // every format instead of sitting at a fixed pixel size.
   const headMax =
-    (id === "adaptive-concept" ? 96 : id === "adaptive-editorial" ? 72 : 56) *
-    scale;
+    height *
+    (id === "adaptive-concept" ? 0.115 : id === "adaptive-editorial" ? 0.085 : 0.065);
   const headFont = fitAdaptiveText(
     scene.text,
     head.width,
@@ -232,7 +234,7 @@ export function resolveAdaptiveLayout(
               text,
               cellW - pad * 2,
               cellH - pad * 2,
-              (variant === "metric" ? 100 : 60) * scale,
+              (variant === "metric" ? 150 : 90) * scale,
               24 * scale,
             );
       if (scene.chart && fontSize) {
