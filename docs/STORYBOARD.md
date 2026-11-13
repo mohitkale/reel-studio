@@ -87,6 +87,18 @@ Over HTTP: `POST /api/storyboards/lint` with the storyboard, or
 read-only and always answers 200 with `ok`. Twenty recorded model replies in
 `src/storyboard/fixtures/model-outputs/` are linted in the unit tests.
 
+## Writing one with a model
+
+The only AI step is writing this JSON. One prompt, published at
+[prompts/storyboard-writer.md](prompts/storyboard-writer.md), works in any chat
+app: paste it, then your brief. Inside Reel Studio every provider (Gemini, OpenAI,
+Ollama, LM Studio, llama.cpp) gets the same prompt through its native structured
+output with the schema, then the reply goes through the linter. One retry at most,
+fed with the linter's errors (on a cloud provider that is a second paid call; pass
+`"retry": false` to avoid it). `POST /api/storyboards/write` with
+`{ "providerId": "gemini", "brief": { "topic": "..." } }` returns the linted
+storyboard and writes nothing; post it to `POST /api/storyboards` to produce the video.
+
 ## Producing a video
 
 ```bash

@@ -8,3 +8,4 @@ package-lock.json
 
 vendor/phonemizer/engine.js
 src/storyboard/fixtures/model-outputs
+docs/prompts/storyboard-writer.md

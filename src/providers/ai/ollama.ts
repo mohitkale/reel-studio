@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { strictStoryboardSchema } from "./storyboard-schema";
+import type { StructuredCompletionInput } from "./types";
 
 import { buildPrompt } from "./prompt";
 import { buildPodcastPrompt } from "./podcast-prompt";
@@ -195,6 +197,17 @@ export function createOllamaProvider(
                 }),
       });
       return scenePlanSchema.parse(raw);
+    },
+
+    async completeStructured(input: StructuredCompletionInput): Promise<string> {
+      const modelId = await selectedModel(store, input.modelId);
+      return complete(store, {
+        system: input.system,
+        user: input.user,
+        modelId,
+        jsonSchema: strictStoryboardSchema(),
+        signal: input.signal,
+      });
     },
 
     async generatePodcastPlan(
