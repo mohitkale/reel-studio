@@ -61,7 +61,7 @@ Judge them by actual exported frames, never by string or snapshot tests. Attach 
 ## Docs and releases
 
 - Update the owning guide and `README.md` when setup, scripts, env vars or behavior change; keep one canonical guide per topic (`docs/README.md`).
-- Releases are `vX.Y.Z` tags on a verified `main` commit; notes come from merged PR titles. No per-milestone validation documents or acceptance JSON.
+- Releases are `vX.Y.Z` tags on a verified `main` commit, cut with `npm run release` (see `CONTRIBUTING.md`); notes come from merged PR titles. Copy the issue's `area:*` label onto the PR so they group. No per-milestone validation documents or acceptance JSON.
 
 ## Attribution
 
