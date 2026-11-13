@@ -47,6 +47,7 @@
     "test:export-fidelity": "node --import tsx scripts/verify-export-fidelity.mjs",
     "gen:sfx": "node scripts/generate-sfx.mjs",
     "test:unit": "vitest run --project unit",
+    "storyboard:schema": "tsx scripts/generate-storyboard-schema.ts",
     "test:parity": "tsx scripts/verify-feature-parity.ts",
     "docs:links": "node scripts/check-doc-links.mjs",
     "test:render": "tsx scripts/render-regression.ts",

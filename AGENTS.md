@@ -21,6 +21,7 @@ Reel Studio is a local-first content factory for short videos and podcasts. **An
 - `src/app`, `src/server`: pages and API routes. `src/library`: repositories, storage, render orchestration.
 - `src/engines/hyperframes`: templates and HTML builders. `src/providers`: voice and AI providers. `src/production`: shared schemas and workers.
 - `src/video`: engine-neutral scene, timing and design contracts; no framework imports.
+- `src/storyboard`: Storyboard v1, the one public contract an LLM writes (`schemas/storyboard.v1.json` is generated; `npm run storyboard:schema`).
 - MP4 export runs only through `src/library/hyperframes-render.ts` and `scripts/hyperframes-render-worker.mjs`.
 - Strict TypeScript, no unjustified `any`, Zod for API input and external IO. Keep diffs small; no unrelated reformatting or renames.
 
