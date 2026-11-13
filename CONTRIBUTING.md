@@ -117,16 +117,34 @@ Do not reintroduce removed Remotion folders or accept executable AI compositions
 - Contributions use the application's MIT license; third-party terms stay distinct.
   See [licensing](docs/LICENSING.md).
 
-## Attribution and releases
+## Releases (pre-1.0)
+
+- One release per closed milestone. A patch release is fine for a user-facing fix.
+  Documentation, refactors and small maintenance wait for the next release.
+- Cut a release with one command, one PR merge and one tag:
+
+  ```bash
+  npm run release -- minor --dry-run   # preview the version bump and changelog
+  npm run release -- minor             # bump, changelog, open the release PR
+  npm run release -- tag               # after the PR merged: tag main and push
+  ```
+
+  The changelog section is built from merged PR titles grouped by the PR's
+  `area:*` label, so copy the issue's `area:*` label onto the PR. Add the
+  `breaking` label to a PR that changes the storyboard or an API incompatibly.
+
+- Pushing the tag starts `.github/workflows/release.yml`: full gate on Linux and
+  Windows, the render smoke test, the phonemizer corresponding-source build, then
+  the GitHub release with notes and the source archive attached. No manual upload.
+- Upgrade notes appear only when a database migration or a breaking storyboard
+  change ships; the script adds them for migrations. No per-release validation
+  documents or acceptance JSON. `npm run db:migrate` backups and
+  `npm run test:release-upgrade` stay.
+- Publishing to npm and announcements need the maintainer's explicit go-ahead.
 
 Add yourself to [CONTRIBUTORS.md](CONTRIBUTORS.md) with your merged contribution.
 Credit only the people and agents involved. Preserve author/co-author metadata
 when merging; do not rewrite released history to add attribution.
-
-Maintainers assess a release after a coherent batch of changes, usually 3–5
-user-facing PRs, or sooner for a significant bug/security fix. Documentation-only
-maintenance joins the next release. Release notes come from merged PR titles; see
-[agent rules](AGENTS.md#docs-and-releases).
 
 For an issue, include reproduction steps, expected/actual behavior, OS, Node
 version, and redacted logs or screenshots. Feature requests should explain a
