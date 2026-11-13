@@ -3,6 +3,7 @@ import { z } from "zod";
 import { orientationSchema } from "@/lib/orientation";
 import { PROVIDER_IDS } from "@/providers/voice/types";
 import { quickProduceOptionsSchema } from "@/production/quick-produce";
+import { storyboardJobMetaSchema } from "@/production/jobs";
 
 export const productionQualitySchema = z.enum(["draft", "standard", "high"]);
 export const productionRunModeSchema = z.enum(["automatic", "approval"]);
@@ -24,6 +25,8 @@ export const produceContentRequestSchema = z.discriminatedUnion("kind", [
     orientation: orientationSchema.optional(),
     quality: productionQualitySchema.default("standard"),
     quickProduce: quickProduceOptionsSchema.optional(),
+    captions: z.enum(["auto", "off"]).optional(),
+    storyboard: storyboardJobMetaSchema.optional(),
   }),
   z.object({
     ...common,

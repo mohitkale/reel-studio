@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "title": "A calmer morning",
+  "format": "9:16",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Mornings do not have to be loud",
+      "narration": "Most chaotic mornings are decided the night before. Here is how to flip that around."
+    },
+    {
+      "type": "list",
+      "headline": "Five calm-morning habits",
+      "narration": "Wake fifteen minutes early, drink water before coffee, lay your clothes out tonight, keep one hour screen free, and breathe before you leave.",
+      "items": [
+        "Wake 15 minutes early",
+        "Water before coffee",
+        "Clothes ready tonight",
+        "One screen-free hour",
+        "Breathe at the door"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Prepare the night before",
+      "narration": "Bags packed, lunch made, clothes out. Every decision you remove tonight is a decision you do not rush tomorrow."
+    },
+    {
+      "type": "media",
+      "headline": "Protect the first hour",
+      "narration": "Give yourself an hour with no inbox and no feed. Let the light, the quiet and a warm drink set the tone.",
+      "media": { "query": "sunlight in a quiet kitchen with tea" }
+    },
+    {
+      "type": "statement",
+      "headline": "Slow is smooth",
+      "narration": "A calm start is not a luxury. It is a few small choices repeated until they feel normal."
+    },
+    {
+      "type": "cta",
+      "headline": "Try one tomorrow",
+      "narration": "Pick a single habit, keep it for a week, and follow for more simple routines."
+    }
+  ],
+  "music": "auto",
+  "captions": "auto"
+}
