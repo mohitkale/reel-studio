@@ -13,6 +13,8 @@ upstream terms before commercial or enterprise use — they can change.
 | Bundled ambient music under `public/music/`             | **CC0 / public domain** — see [`public/music/README.md`](../public/music/README.md) |
 | Contributions                                           | Accepted under the MIT License (see [`CONTRIBUTING.md`](../CONTRIBUTING.md))        |
 
+The scope note that used to follow the `LICENSE` text now lives in [`NOTICE.md`](../NOTICE.md).
+
 The MIT License covers **our** code only. It does **not** relicense dependencies,
 cloud APIs, stock/music providers, or VoiceForge model weights.
 
