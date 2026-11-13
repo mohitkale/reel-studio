@@ -46,12 +46,12 @@ Keep changes minimal, high-quality, and consistent with existing architecture.
 Choose local checks by the behavior and risk of the change. Do not rerun the
 entire suite after every small edit or repeat passing checks without a new reason.
 
-| Change                                            | Local verification                                                                                         | PR gate                                 |
-| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| Documentation only                                | Markdown formatting, local links/anchors, command accuracy, current screenshots, secret scan               | Configured checks on latest head        |
-| Ordinary code                                     | Affected behavior tests, typecheck, relevant lint, secret scan                                             | Full configured Quality/Security checks |
-| Rendering, security, jobs, database, dependencies | Broader tests and relevant actual exports/browser/migration/cancellation scenarios                         | Linux/Windows checks and builds         |
-| Release                                           | Clean install/upgrade, full checks, browser workflows, actual render matrix, recovery, licenses and assets | Verified exact release commit           |
+| Change                                            | Local verification                                                                                         | PR gate                              |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| Documentation only                                | Markdown formatting, local links/anchors, command accuracy, current screenshots, secret scan               | Fast gate on latest head             |
+| Ordinary code                                     | Affected behavior tests, typecheck, relevant lint, secret scan                                             | Fast gate; full gate for risky paths |
+| Rendering, security, jobs, database, dependencies | Broader tests and relevant actual exports/browser/migration/cancellation scenarios                         | Linux/Windows checks and builds      |
+| Release                                           | Clean install/upgrade, full checks, browser workflows, actual render matrix, recovery, licenses and assets | Verified exact release commit        |
 
 Use `npm run test:unit` for fast unit tests and
 `npm run test:int -- --maxWorkers=2` for `*.int.test.ts` integration tests
@@ -60,12 +60,16 @@ meaningful regression coverage; avoid tests that simply mirror implementation.
 Visual changes require actual exported frames and preview/export inspection.
 Keep paid providers and new model downloads opt-in; use fixtures where possible.
 
-Current Quality/Security workflows still run full checks on every PR update and
-push to `main`, including docs. The expensive render matrix is manual, and the
-phonemizer source build is path-filtered/manual. This policy does not skip or
-weaken existing required CI. Any workflow optimization needs its own reviewed
-change that preserves required-check behavior. Do not rerun the source compiler
-for unrelated changes. Avoid simultaneous heavy test/render workloads locally.
+CI has two tiers. Every PR runs the fast `gate` job in `ci.yml` (Linux:
+secret scan, formatting of changed Markdown/YAML, typecheck, lint, unit tests;
+documentation-only PRs skip the code steps). The full `Quality` workflow (Linux
+and Windows, integration tests, build, release checks) runs on every push to
+`main`, nightly, on manual dispatch, and on PRs that touch risky paths
+(`prisma/`, `scripts/`, `src/library/`, `src/server/`, `vendor/`, workflows,
+package manifests) or carry the `ci:full` label. Add that label when a change
+could behave differently on Windows. The render matrix is manual and the
+phonemizer source build is path-filtered. Stale runs are cancelled. Avoid
+simultaneous heavy test/render workloads locally.
 
 See [release validation](docs/production/RELEASE_VALIDATION.md) for release gates.
 
