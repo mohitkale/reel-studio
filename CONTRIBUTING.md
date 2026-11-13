@@ -92,7 +92,7 @@ changes; string/snapshot tests alone cannot prove readability or motion.
 tests; documentation-only PRs skip the code steps). The full Linux and Windows
 gate with integration tests and a build runs on `main`, nightly, and on PRs
 that touch risky paths or carry the `ci:full` label. Full video matrices are
-manual. See [verification policy](AI_GUIDELINES.md#verification-policy).
+manual. See [agent rules](AGENTS.md#before-pushing).
 
 ## Architecture and extensions
 
@@ -126,8 +126,8 @@ when merging; do not rewrite released history to add attribution.
 
 Maintainers assess a release after a coherent batch of changes, usually 3–5
 user-facing PRs, or sooner for a significant bug/security fix. Documentation-only
-maintenance joins the next release. Details and standing maintainer authorization
-are in [release policy](AI_GUIDELINES.md#release-policy).
+maintenance joins the next release. Release notes come from merged PR titles; see
+[agent rules](AGENTS.md#docs-and-releases).
 
 For an issue, include reproduction steps, expected/actual behavior, OS, Node
 version, and redacted logs or screenshots. Feature requests should explain a

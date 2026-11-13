@@ -469,7 +469,7 @@ release gates before publication; no release was published.
 
 ## Before the next release
 
-Follow [release policy](../../AI_GUIDELINES.md#release-policy). Release a coherent
+Follow [release rules](../../AGENTS.md#docs-and-releases). Release a coherent
 batch of user-visible changes or a significant fix; docs-only maintenance joins
 the next release. Preserve licensing and compatibility gates.
 
