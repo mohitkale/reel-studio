@@ -14,7 +14,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Product
 
-Reel Studio is a local-first content factory for short videos and podcasts. **An LLM may only write the storyboard JSON.** Voice (Kokoro), scenes, motion (HyperFrames), captions, audio and MP4 export stay local and deterministic. Automation is the default, manual editing stays available, and no existing feature is removed or hidden without a maintainer decision recorded in an issue (inventory: `docs/FEATURES.md`, once it exists). A PR that removes or hides a row there says so in its title and links the decision.
+Reel Studio is a local-first content factory for short videos and podcasts. **An LLM may only write the storyboard JSON.** Voice (Kokoro), scenes, motion (HyperFrames), captions, audio and MP4 export stay local and deterministic. Automation is the default, manual editing stays available, and no existing feature is removed or hidden without a maintainer decision recorded in an issue (inventory: `docs/FEATURES.md`, guarded by `npm run test:parity`). A PR that removes or hides a row there says so in its title and links the decision; a new page, route or MCP tool adds a row.
 
 ## Architecture boundaries
 
@@ -45,6 +45,7 @@ Run what matches the change, not everything every time:
 - Code: `npm run typecheck`, `npm run lint`, `npm run test:unit` (or a file path), `npm run security:scan`.
 - Integration (`*.int.test.ts`: SQLite, filesystem, FFmpeg, workers): `npm run test:int -- --maxWorkers=2`.
 - Rendering, security, jobs, database, dependencies: also run the real export, browser, migration or cancellation scenario.
+- Adding or changing a page, route or MCP tool: update `docs/FEATURES.md`, run `npm run test:parity`.
 - Add regression tests for changed behavior; keep paid providers and model downloads opt-in, use fixtures.
 
 ## Visual changes

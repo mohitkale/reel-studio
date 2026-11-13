@@ -46,6 +46,7 @@
     "test:export-fidelity": "node --import tsx scripts/verify-export-fidelity.mjs",
     "gen:sfx": "node scripts/generate-sfx.mjs",
     "test:unit": "vitest run --project unit",
+    "test:parity": "tsx scripts/verify-feature-parity.ts",
     "test:render": "tsx scripts/render-regression.ts",
     "test:stock-video-render": "tsx scripts/stock-video-render-regression.ts",
     "test:render:product-launch": "tsx scripts/render-regression.ts --product-launch",

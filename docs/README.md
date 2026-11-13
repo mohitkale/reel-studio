@@ -7,6 +7,7 @@ current setup instructions or a pending to-do list.
 ## Use Reel Studio
 
 - [Setup and troubleshooting](SETUP.md): Node, browser, FFmpeg, Docker, and upgrades.
+- [Feature inventory](FEATURES.md): every capability, where it lives and how it is reached; guarded by `npm run test:parity`.
 - [Creator guide](CREATOR_GUIDE.md): presets, narration, captions, podcasts, and batches.
 - [Walkthroughs](WALKTHROUGHS.md): reproducible text-to-video and podcast flows.
 - [Advanced editing](ADVANCED_EDITING.md): motion review, sound, chapters, and longer exports.

@@ -108,6 +108,8 @@ jobs:
       - run: npm run lint
       - name: Run unit tests
         run: npm run test:unit
+      - name: Feature parity (docs/FEATURES.md matches routes, pages and MCP tools)
+        run: npm run test:parity
       - name: Run integration tests
         # Windows SQLite fixtures compete for disk under parallel workers and
         # exceed their own deadlines; keep every deadline and use one worker.
