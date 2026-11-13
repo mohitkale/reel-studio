@@ -19,7 +19,7 @@ current setup instructions or a pending to-do list.
 
 ## Develop and operate
 
-- [Contributing](../CONTRIBUTING.md) and [AI guidelines](../AI_GUIDELINES.md): checks, PRs, attribution, and release cadence.
+- [Contributing](../CONTRIBUTING.md) and [agent rules](../AGENTS.md): checks, PRs and attribution.
 - [Architecture](ARCHITECTURE.md) and [runtime/recovery](RUNTIME.md).
 - [Research and evidence](RESEARCH.md): capabilities, provenance and usage boundaries.
 - [Production contracts](production/CONTRACTS.md): shared REST/MCP/revision contracts.

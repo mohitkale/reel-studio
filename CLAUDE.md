@@ -1,2 +1,1 @@
 @AGENTS.md
-@AI_GUIDELINES.md
