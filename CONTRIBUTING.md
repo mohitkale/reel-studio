@@ -45,15 +45,22 @@ in [AI_GUIDELINES.md](AI_GUIDELINES.md#milestone-pr-workflow).
 | Release                                           | Full install/upgrade/platform/browser/render/license gates in [release validation](docs/production/RELEASE_VALIDATION.md) |
 
 ```bash
-# Focus a test run on the behavior you changed
-npm run test:unit -- tests/your-feature.test.ts --maxWorkers=2
+# Fast unit tests: no database, filesystem, FFmpeg or child processes
+npm run test:unit
+npm run test:unit -- src/video/motion-spec.test.ts
+
+# Integration tests (*.int.test.ts): SQLite, filesystem, FFmpeg, workers
+npm run test:int -- --maxWorkers=2
+npm run test:int -- src/library/production-jobs.int.test.ts
+
 npm run typecheck
 npm run lint
 npm run security:scan
-
-# Broad local unit/integration gate when the change warrants it
-npm run test:unit -- --maxWorkers=2
 ```
+
+A test that opens a database, writes files, or starts a process is an
+integration test and is named `*.int.test.ts`. Unit tests run in the Node
+environment; start a file with `// @vitest-environment jsdom` when it needs a DOM.
 
 You do not need the entire suite after every edit. Keep external providers mocked
 unless live usage is explicitly authorized. Real exports are required for visual
