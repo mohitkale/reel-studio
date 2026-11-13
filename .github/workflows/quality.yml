@@ -137,6 +137,9 @@ jobs:
         run: bash scripts/install-ci-ffmpeg.sh
       - run: npm ci
       - run: npm run release:matrix
+      - name: Frame lint over the golden examples (report only)
+        continue-on-error: true
+        run: npm run examples:lint-frames
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
@@ -144,6 +147,7 @@ jobs:
           path: |
             .artifacts/render-regression
             .artifacts/release-matrix
+            .artifacts/frame-lint
   report-failure:
     needs: [process-cancellation, checks]
     if: failure() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

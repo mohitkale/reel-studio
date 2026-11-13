@@ -4,7 +4,6 @@ import {
   brandOverridesSchema,
   sceneConfigSchema,
 } from "@/library/schemas";
-import { collectSequenceSubjects } from "@/production/sequence-subjects";
 import { randomUUID } from "node:crypto";
 
 import type { ProjectDTO } from "@/lib/dto";
@@ -13,7 +12,6 @@ import type { SceneBackground } from "@/video/types";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
 import {
-  planMotionSequence,
   type MotionPlanSettings,
   type VisualAmbition,
 } from "@/production/motion-plan";
@@ -37,7 +35,7 @@ import {
   isVideoEngineId,
 } from "@/engines/types";
 import { defaultTemplateIdForEngine } from "@/engines/registry";
-import { sourcePlanSeed } from "@/production/director";
+import { planProjectMotion } from "@/production/project-motion";
 import { prisma } from "@/library/db";
 import type { SceneLocks } from "@/library/schemas";
 import {
@@ -48,7 +46,6 @@ import {
 import { getDefaultBrandKit } from "./brandkits";
 import { resolveBrandTokens } from "./brandkits";
 import { CORAL_HARBOR_NAME, CORAL_HARBOR_PALETTE } from "@/lib/brand-defaults";
-import { defaultMotionSystem } from "@/production/motion-systems";
 import { enrichSemanticSequence } from "@/production/semantic-direction";
 import type { VisualTheme } from "@/production/creative-direction";
 import { chapterPlanFromStarts } from "@/production/chapters";
@@ -253,60 +250,15 @@ export async function createProjectFromPlan(
       : production.brandKitId;
   const styleId = visualStyle?.styleId ?? plan.styleId ?? DEFAULT_STYLE_ID;
   const energy = visualStyle?.energy ?? plan.energy ?? DEFAULT_ENERGY_ID;
-  const motionPlan: MotionPlanSettings | undefined =
-    production?.motionPlan ??
-    (production?.preset && !production.motions
-      ? {
-          version: "1.0.0",
-          seed: sourcePlanSeed(
-            JSON.stringify({ preset: production.preset, scenes: plan.scenes }),
-          ),
-          ambition: production.visualAmbition ?? "expressive",
-          system: defaultMotionSystem(
-            production.visualTheme?.id,
-            production.preset.id,
-          ),
-          adaptiveRecipes: true,
-          sequenceDirection: true,
-        }
-      : undefined);
-  if (motionPlan?.sequenceDirection && !production?.motions)
-    motionPlan.subjectRegistry = collectSequenceSubjects(
-      directedScenes,
-      motionPlan.subjectRegistry,
-    );
-  const motions =
-    production?.motions ??
-    (motionPlan
-      ? planMotionSequence(
-          directedScenes.map((scene, order) => ({
-            role: production?.roles?.[order],
-            layout: {
-              width,
-              height,
-              duration: Math.max(
-                3,
-                Math.min(
-                  120,
-                  (scene.spokenText ?? scene.text).split(/\s+/).length / 2.5 +
-                    1,
-                ),
-              ),
-            },
-            energy,
-            text: scene.text,
-            spokenText: scene.spokenText,
-            direction: scene.direction,
-            chart: scene.chart,
-            items: scene.items,
-            background: backgrounds[order],
-            hasVisualContent: Boolean(scene.visual),
-            current: scene.direction?.motion,
-            locked: Boolean(production?.sceneLocks?.[order]?.scene),
-          })),
-          motionPlan,
-        )
-      : []);
+  const { motionPlan, motions } = planProjectMotion({
+    plan,
+    directedScenes,
+    production,
+    width,
+    height,
+    energy,
+    backgrounds,
+  });
   const project = await prisma.project.create({
     data: {
       name: plan.projectName,

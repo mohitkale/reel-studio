@@ -84,12 +84,29 @@ export function buildTextFitScript(): string {
         widest = Math.max(widest, textWidth + (parseFloat(style.paddingRight) || 0));
         return { inner: size, outer: parseFloat(getComputedStyle(line.parentElement).fontSize) };
       });
-      var scale = Math.min(1, width / Math.max(1, widest), height / Math.max(1, totalHeight));
-      stack.style.fontSize = (parseFloat(stackStyle.fontSize) * scale).toFixed(3) + 'px';
-      lines.forEach(function (line, index) {
-        line.style.fontSize = (sizes[index].inner * scale).toFixed(3) + 'px';
-        line.parentElement.style.fontSize = (sizes[index].outer * scale).toFixed(3) + 'px';
-      });
+      // Fit to the stage: shrink to fit, and grow (up to 2.4x) so short copy fills the
+      // frame, but never past the stage edges (offset metrics ignore animation transforms).
+      var baseStack = parseFloat(stackStyle.fontSize);
+      function apply(value) {
+        stack.style.fontSize = (baseStack * value).toFixed(3) + 'px';
+        lines.forEach(function (line, index) {
+          line.style.fontSize = (sizes[index].inner * value).toFixed(3) + 'px';
+          line.parentElement.style.fontSize = (sizes[index].outer * value).toFixed(3) + 'px';
+        });
+      }
+      function leavesStage() {
+        var top = 0, left = 0, node = stack;
+        while (node && node !== stage) { top += node.offsetTop; left += node.offsetLeft; node = node.offsetParent; }
+        if (node !== stage) return false;
+        return top < stage.clientHeight * 0.04 || top + stack.offsetHeight > stage.clientHeight * 0.9 ||
+          left < stage.clientWidth * 0.03 || left + stack.offsetWidth > stage.clientWidth * 0.97;
+      }
+      var scale = Math.min(2.4, width / Math.max(1, widest), height / Math.max(1, totalHeight));
+      apply(scale);
+      for (var step = 0; scale > 1 && step < 16 && leavesStage(); step++) {
+        scale = Math.max(1, scale * 0.92);
+        apply(scale);
+      }
       stack.dataset.textFitScale = scale.toFixed(3);
       if (Math.min.apply(null, sizes.map(function (size) { return size.inner * scale; })) < 22)
         stack.dataset.textFitWarning = 'Split this copy into shorter scenes for readable text.';

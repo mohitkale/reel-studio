@@ -1,0 +1,161 @@
+{
+  "recordedAt": "2026-11-14",
+  "note": "Baseline of the production path (native scene renderers) before the v0.11 layout work: each golden storyboard compiled in its own format with estimated timing and no voice.",
+  "thresholds": {
+    "fill": 0.45,
+    "minTextShare": {
+      "portrait": 0.022,
+      "landscape": 0.026,
+      "square": 0.024
+    },
+    "contrast": {
+      "small": 4.5,
+      "large": 3
+    },
+    "captionSimilarity": 0.8,
+    "nearIdenticalBits": 3
+  },
+  "examples": [
+    {
+      "name": "comparison",
+      "format": "16:9",
+      "preset": "editorial-explainer",
+      "scenes": 5,
+      "failures": 7,
+      "byCheck": {
+        "frame-fill": 5,
+        "near-identical-neighbour": 1,
+        "smallest-text": 1
+      },
+      "meanFill": 0.018
+    },
+    {
+      "name": "data-story",
+      "format": "1:1",
+      "preset": "data-story",
+      "scenes": 5,
+      "failures": 7,
+      "byCheck": {
+        "frame-fill": 5,
+        "smallest-text": 2
+      },
+      "meanFill": 0.159
+    },
+    {
+      "name": "developer-demo",
+      "format": "16:9",
+      "preset": "developer-demo",
+      "scenes": 5,
+      "failures": 6,
+      "byCheck": {
+        "frame-fill": 5,
+        "smallest-text": 1
+      },
+      "meanFill": 0.098
+    },
+    {
+      "name": "explainer",
+      "format": "16:9",
+      "preset": "editorial-explainer",
+      "scenes": 6,
+      "failures": 7,
+      "byCheck": {
+        "frame-fill": 6,
+        "smallest-text": 1
+      },
+      "meanFill": 0.039
+    },
+    {
+      "name": "how-to",
+      "format": "9:16",
+      "preset": "creator-punch",
+      "scenes": 6,
+      "failures": 10,
+      "byCheck": {
+        "frame-fill": 6,
+        "outside-safe-area": 2,
+        "smallest-text": 2
+      },
+      "meanFill": 0.029
+    },
+    {
+      "name": "listicle",
+      "format": "9:16",
+      "preset": "developer-demo",
+      "scenes": 6,
+      "failures": 10,
+      "byCheck": {
+        "frame-fill": 6,
+        "outside-safe-area": 2,
+        "near-identical-neighbour": 1,
+        "smallest-text": 1
+      },
+      "meanFill": 0.013
+    },
+    {
+      "name": "motivation",
+      "format": "9:16",
+      "preset": "editorial-explainer",
+      "scenes": 4,
+      "failures": 7,
+      "byCheck": {
+        "frame-fill": 4,
+        "outside-safe-area": 2,
+        "smallest-text": 1
+      },
+      "meanFill": 0.034
+    },
+    {
+      "name": "myth-vs-fact",
+      "format": "9:16",
+      "preset": "creator-punch",
+      "scenes": 5,
+      "failures": 8,
+      "byCheck": {
+        "frame-fill": 5,
+        "outside-safe-area": 1,
+        "near-identical-neighbour": 1,
+        "smallest-text": 1
+      },
+      "meanFill": 0.045
+    },
+    {
+      "name": "news-recap",
+      "format": "16:9",
+      "preset": "editorial-explainer",
+      "scenes": 6,
+      "failures": 7,
+      "byCheck": {
+        "frame-fill": 6,
+        "smallest-text": 1
+      },
+      "meanFill": 0.053
+    },
+    {
+      "name": "product-launch",
+      "format": "9:16",
+      "preset": "creator-punch",
+      "scenes": 5,
+      "failures": 13,
+      "byCheck": {
+        "frame-fill": 5,
+        "outside-safe-area": 5,
+        "smallest-text": 3
+      },
+      "meanFill": 0.016
+    },
+    {
+      "name": "story",
+      "format": "9:16",
+      "preset": "creator-punch",
+      "scenes": 6,
+      "failures": 13,
+      "byCheck": {
+        "frame-fill": 6,
+        "outside-safe-area": 5,
+        "smallest-text": 2
+      },
+      "meanFill": 0.023
+    }
+  ]
+}

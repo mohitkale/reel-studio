@@ -50,6 +50,7 @@
     "storyboard:schema": "tsx scripts/generate-storyboard-schema.ts",
     "test:copy-fit": "node --import tsx scripts/verify-copy-fit.mjs",
     "examples:check": "tsx scripts/check-examples.ts",
+    "examples:lint-frames": "node --import tsx scripts/frame-lint.mjs",
     "examples:render": "tsx scripts/render-examples.ts",
     "test:parity": "tsx scripts/verify-feature-parity.ts",
     "docs:links": "node scripts/check-doc-links.mjs",

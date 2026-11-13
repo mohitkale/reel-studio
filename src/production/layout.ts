@@ -23,12 +23,17 @@ export const productionLayoutSchema = z.object({
 export type ProductionLayout = z.infer<typeof productionLayoutSchema>;
 
 const LAYOUT_PROPORTIONS = {
+  // Platform UI (Reels, Shorts, TikTok) covers the bottom 18% and right 12% of
+  // a vertical frame; keep content clear of it and captions just above it.
   portrait: {
     top: 0.078,
     side: 0.089,
-    bottom: 0.115,
+    left: 0.06,
+    right: 0.12,
+    bottom: 0.18,
     contentWidth: 0.82,
     captionWidth: 0.86,
+    // Captions stay where they were until the caption band moves with the layout contract.
     captionBottom: 0.075,
     brandBottom: 0.033,
     progress: 0.0042,
@@ -74,9 +79,9 @@ export function resolveProductionLayout(input: {
     height: input.height,
     safeArea: {
       top: Math.round(input.height * rules.top),
-      right: side,
+      right: "right" in rules ? Math.round(input.width * rules.right) : side,
       bottom: Math.round(input.height * rules.bottom),
-      left: side,
+      left: "left" in rules ? Math.round(input.width * rules.left) : side,
     },
     contentMaxWidth: Math.round(input.width * rules.contentWidth),
     captionMaxWidth: Math.round(input.width * rules.captionWidth),

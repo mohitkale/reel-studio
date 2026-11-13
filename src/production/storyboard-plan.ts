@@ -7,6 +7,8 @@
  * transitions, timing) is decided later by the local director from this plan.
  */
 import type { Orientation } from "@/lib/orientation";
+import type { ProductionPresetId } from "@/production/presets";
+import type { ProductionSceneRole } from "@/production/roles";
 import type { AIScene, ScenePlan } from "@/providers/ai/types";
 import {
   estimateDurationSeconds,
@@ -36,6 +38,38 @@ const ORIENTATION_BY_FORMAT: Record<VideoStoryboard["format"], Orientation> = {
   "1:1": "square",
 };
 
+/** Scene type to the engine-neutral role the motion director plans from. */
+export const STORYBOARD_ROLE_BY_TYPE: Readonly<
+  Record<SceneType, ProductionSceneRole>
+> = {
+  hook: "hook",
+  statement: "explanation",
+  list: "summary",
+  stat: "metric",
+  chart: "chart",
+  quote: "quote",
+  code: "code",
+  media: "feature",
+  cta: "cta",
+};
+
+/**
+ * The look family for a storyboard, decided only from its content and format:
+ * code means a developer demo, charts and stats a data story, a quote or a
+ * landscape explainer the editorial look, everything else creator punch.
+ */
+export function presetForStoryboard(
+  storyboard: VideoStoryboard,
+): ProductionPresetId {
+  const count = (type: SceneType) =>
+    storyboard.scenes.filter((s) => s.type === type).length;
+  if (count("code") > 0) return "developer-demo";
+  if (count("chart") > 0 || count("stat") >= 2) return "data-story";
+  if (count("quote") > 0 || storyboard.format === "16:9")
+    return "editorial-explainer";
+  return "creator-punch";
+}
+
 export interface StoryboardPlanScene {
   index: number;
   type: SceneType;
@@ -48,6 +82,8 @@ export interface StoryboardPlanScene {
 
 export interface StoryboardProductionPlan {
   scenePlan: ScenePlan;
+  presetId: ProductionPresetId;
+  roles: ProductionSceneRole[];
   orientation: Orientation;
   music: { mode: "auto" | "none" | "track"; trackId?: string };
   voice: { enabled: boolean; voiceId?: string; speed?: number };
@@ -176,6 +212,10 @@ export function planFromStoryboard(
       scriptName: storyboard.title,
       scenes,
     },
+    presetId: presetForStoryboard(storyboard),
+    roles: storyboard.scenes.map(
+      (scene) => STORYBOARD_ROLE_BY_TYPE[scene.type],
+    ),
     orientation: ORIENTATION_BY_FORMAT[storyboard.format],
     music,
     voice: {

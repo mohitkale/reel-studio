@@ -30,6 +30,7 @@ import {
   planFromStoryboard,
   type StoryboardProductionPlan,
 } from "@/production/storyboard-plan";
+import { getProductionPreset } from "@/production/presets";
 import { lintStoryboard, type LintResult } from "@/storyboard";
 import { ProviderError } from "@/providers/voice/types";
 
@@ -235,13 +236,20 @@ export async function produceFromStoryboard(
     ),
   };
 
+  const preset = getProductionPreset(plan.presetId);
+  if (!preset) throw new ProviderError(`Unknown look "${plan.presetId}"`, 500);
   const created = await createProjectFromPlan(
     finalPlan,
     plan.orientation,
     backgrounds,
     "hyperframes",
-    { styleId: finalPlan.styleId, energy: finalPlan.energy },
     {
+      styleId: finalPlan.styleId ?? preset.defaults.styleId,
+      energy: finalPlan.energy ?? preset.defaults.energy,
+    },
+    {
+      // No preset: the preset scene renderers show one hero line and drop list
+      // items, stat labels and chart data, which a storyboard supplies.
       savedOverrides: {
         storyboardSource: buildStoryboardSource(storyboard, finalPlan.scenes),
       },
