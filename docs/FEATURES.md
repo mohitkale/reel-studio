@@ -54,6 +54,7 @@ one disappears or when new ones appear without a row here.
 | `TRN01` | Local transcription status                                      | Podcast and caption transcription flows                            | Status polled automatically                           | Choose local engine                                                                | REST 1                | `src/library/local-transcription.int.test.ts`                                                                                                                                                                                            | keep as is                        |
 | `MED01` | Local media serving                                             | Media URLs used by editor, preview and downloads                   | Automatic                                             | None needed                                                                        | REST 1                | `src/app/media/[...path]/route.int.test.ts` `src/lib/media-signature.test.ts`                                                                                                                                                            | keep as is                        |
 | `MCP01` | MCP authoring resources: rules, schemas, catalogs               | MCP clients read `reel://` resources                               | Read by the agent                                     | Read-only reference                                                                | MCP 4                 | none yet (parity check loads the handlers)                                                                                                                                                                                               | keep as is                        |
+| `SBD01` | Storyboard contract and linter                                  | `docs/STORYBOARD.md`; REST                                         | Yes: repairs a model reply automatically              | Read the fixes, warnings and errors; edit the JSON                                 | REST 1                | `src/storyboard/schema.test.ts` `src/storyboard/lint.test.ts` `src/app/api/storyboards/lint/route.test.ts`                                                                                                                               | keep as is                        |
 
 ## Pages
 
@@ -259,6 +260,7 @@ HTTP handlers under `src/app` (`/api/**` and `/media`).
 | `POST /api/stock/keys`                               | STK01      |
 | `GET /api/stock/providers`                           | STK01      |
 | `POST /api/stock/search`                             | STK01      |
+| `POST /api/storyboards/lint`                         | SBD01      |
 | `GET /api/studio-presets`                            | TPL01      |
 | `POST /api/studio-presets`                           | TPL01      |
 | `PATCH /api/takes/[id]`                              | VOI01      |

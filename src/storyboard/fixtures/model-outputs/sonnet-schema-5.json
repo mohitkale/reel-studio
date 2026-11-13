@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "title": "How Roman aqueducts worked",
+  "kind": "video",
+  "format": "9:16",
+  "music": "auto",
+  "captions": "auto",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Rome ran on flowing water",
+      "narration": "Two thousand years ago, Rome delivered fresh water to a huge city with no pumps and no electricity. How? With gravity, patience, and very careful math.",
+      "emphasis": ["gravity"],
+      "icon": "droplet"
+    },
+    {
+      "type": "statement",
+      "headline": "It all starts at a spring",
+      "narration": "Engineers tapped clean springs in the hills, often many miles from the city. The water entered a covered channel and began its slow journey downhill toward Rome.",
+      "body": "The first big aqueduct, the Aqua Appia, dates to 312 BC.",
+      "emphasis": ["springs"]
+    },
+    {
+      "type": "statement",
+      "headline": "The slope was gentle",
+      "narration": "The channel dropped only a tiny amount over each mile. Too steep and the water would erode the stone. Too flat and it would stall. Roman surveyors got it remarkably right.",
+      "emphasis": ["gentle"]
+    },
+    {
+      "type": "media",
+      "headline": "Arches carried water over valleys",
+      "narration": "When the route crossed a valley, builders raised tall arches to keep the channel at the right height. The famous stacked arches you see in photos are just the visible part.",
+      "body": "Most of an aqueduct actually ran underground or at ground level.",
+      "media": { "query": "Roman aqueduct arches against a blue sky" },
+      "emphasis": ["arches"]
+    },
+    {
+      "type": "statement",
+      "headline": "Siphons beat the deepest valleys",
+      "narration": "For very deep valleys, Romans sometimes used inverted siphons: sealed pipes that ran down one side and up the other. Pressure pushed the water back up.",
+      "emphasis": ["siphons"]
+    },
+    {
+      "type": "list",
+      "headline": "What happened in the city",
+      "narration": "Inside Rome, water arrived at distribution tanks and was split between public fountains, baths, and some private homes. Overflow even helped flush the sewers.",
+      "items": [
+        "Distribution tanks sorted the flow",
+        "Public fountains for everyone",
+        "Baths and some wealthy homes",
+        "Overflow cleaned the drains"
+      ],
+      "emphasis": ["distribution"]
+    },
+    {
+      "type": "cta",
+      "headline": "Engineering that outlasted an empire",
+      "narration": "Some aqueducts still stand today. Next time you turn on a tap, remember that the idea is Roman: let gravity do the work.",
+      "body": "Which ancient invention should we explain next?",
+      "emphasis": ["outlasted"]
+    }
+  ]
+}

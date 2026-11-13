@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "title": "Five tips for a calmer morning",
+  "kind": "video",
+  "format": "9:16",
+  "music": "auto",
+  "captions": "auto",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Mornings don't have to feel like a sprint",
+      "narration": "If your mornings feel like a race before eight o'clock, you are not alone. Here are five small changes that can make a real difference.",
+      "emphasis": ["sprint"],
+      "durationHint": 7
+    },
+    {
+      "type": "statement",
+      "headline": "Prep the night before",
+      "narration": "Set out clothes, bags and breakfast dishes before bed. Tomorrow's decisions are already made, so the morning has fewer of them.",
+      "icon": "moon"
+    },
+    {
+      "type": "statement",
+      "headline": "Wake up fifteen minutes earlier",
+      "narration": "A short buffer gives you room to breathe. Use it for stillness, not for scrolling.",
+      "body": "Even a quiet cup of tea counts.",
+      "emphasis": ["fifteen minutes"]
+    },
+    {
+      "type": "statement",
+      "headline": "Park your phone out of reach",
+      "narration": "Leave it charging in another room. The first few minutes of your day belong to you, not to your inbox.",
+      "icon": "phone"
+    },
+    {
+      "type": "statement",
+      "headline": "Give everyone one job",
+      "narration": "Kids can pick their own shoes, and a partner can handle the lunches. Shared tasks shrink the load for everyone.",
+      "icon": "users"
+    },
+    {
+      "type": "statement",
+      "headline": "Leave room for one slow minute",
+      "narration": "Sit down, stretch, or look out of the window for sixty seconds. It resets your mood before the day gets going.",
+      "durationHint": 7
+    },
+    {
+      "type": "cta",
+      "headline": "Pick one tip for tomorrow",
+      "narration": "Start with the one that feels easiest. Calm mornings are built one small habit at a time.",
+      "emphasis": ["one"]
+    }
+  ]
+}

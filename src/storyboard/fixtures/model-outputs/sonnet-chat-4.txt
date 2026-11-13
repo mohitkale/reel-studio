@@ -1,0 +1,49 @@
+Here's a 60-second vertical explainer storyboard on how vaccines are tested:
+
+```json
+{
+  "title": "How Vaccines Are Tested",
+  "format": "9:16",
+  "voice": { "style": "calm, trustworthy", "speed": 1.0 },
+  "music": { "mood": "gentle cinematic", "volume": 0.12 },
+  "captions": { "enabled": true, "style": "bold" },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "How do we know a vaccine is safe?",
+      "narration": "Before a vaccine reaches you, it goes through years of testing in carefully controlled stages."
+    },
+    {
+      "type": "statement",
+      "headline": "Stage 0: Lab and animal studies",
+      "narration": "First, scientists test in the lab and in animals. They check whether it triggers an immune response and look for early safety problems."
+    },
+    {
+      "type": "list",
+      "headline": "Three phases of human trials",
+      "narration": "Then come three phases in people. Phase one tests safety and dosing in a small group, often dozens. Phase two widens to hundreds, looking at immune response and side effects. Phase three enrolls thousands, comparing vaccinated people with a placebo group to measure how well it works.",
+      "items": [
+        "Phase 1: dozens, safety and dose",
+        "Phase 2: hundreds, immune response",
+        "Phase 3: thousands, vs. placebo"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Independent review",
+      "narration": "Regulators and independent experts then review all the data. Only if the benefits clearly outweigh the risks is the vaccine approved."
+    },
+    {
+      "type": "statement",
+      "headline": "Monitoring never stops",
+      "narration": "Even after approval, safety monitoring continues as millions of people receive it, so rare problems can be caught."
+    },
+    {
+      "type": "cta",
+      "headline": "Questions? Ask a clinician",
+      "narration": "For questions about a specific vaccine, ask your doctor or pharmacist. Follow for more explainers.",
+      "cta": "Follow for more explainers"
+    }
+  ]
+}
+```

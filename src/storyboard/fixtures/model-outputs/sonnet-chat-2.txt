@@ -1,0 +1,55 @@
+Here's a 60-second landscape storyboard on three misused Git commands:
+
+```json
+{
+  "title": "Three Git Commands People Misuse",
+  "format": "16:9",
+  "voice": { "style": "clear, friendly", "speed": 1.0 },
+  "music": { "mood": "light electronic", "volume": 0.12 },
+  "captions": { "enabled": true, "style": "clean" },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Git commands that bite back",
+      "narration": "Git is powerful, and a few of its commands can quietly wreck your day. Here are three people misuse all the time."
+    },
+    {
+      "type": "code",
+      "headline": "1. git push --force",
+      "narration": "First, force pushing. It overwrites the remote branch, including your teammates' commits. Use force-with-lease instead. It refuses to push if someone else has added work you haven't seen.",
+      "language": "bash",
+      "code": "# risky\ngit push --force\n\n# safer\ngit push --force-with-lease"
+    },
+    {
+      "type": "code",
+      "headline": "2. git reset --hard",
+      "narration": "Second, reset hard. It throws away uncommitted changes with no undo. If you only want to unstage, use a soft reset, or stash your work first so you can get it back.",
+      "language": "bash",
+      "code": "# destroys uncommitted work\ngit reset --hard\n\n# keeps your changes\ngit reset --soft HEAD~1\ngit stash"
+    },
+    {
+      "type": "code",
+      "headline": "3. git rebase on shared branches",
+      "narration": "Third, rebasing a branch other people use. Rebase rewrites history, so everyone else's copy diverges and merging turns messy. Rebase your own local work, and merge shared branches.",
+      "language": "bash",
+      "code": "# fine: your private branch\ngit rebase main\n\n# shared branch: merge instead\ngit merge main"
+    },
+    {
+      "type": "list",
+      "headline": "The safe habits",
+      "narration": "The pattern is the same. Know whether a command rewrites history or deletes work, and pick the gentler option first.",
+      "items": [
+        "Prefer --force-with-lease",
+        "Stash before you reset",
+        "Never rebase shared history"
+      ]
+    },
+    {
+      "type": "cta",
+      "headline": "Save this before your next push",
+      "narration": "Share this with a teammate who force pushes. Then subscribe for more Git tips.",
+      "cta": "Subscribe for more Git tips"
+    }
+  ]
+}
+```

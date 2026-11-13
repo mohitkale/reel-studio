@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "title": "Why index funds beat most stock pickers",
+  "kind": "video",
+  "format": "9:16",
+  "music": "auto",
+  "captions": "auto",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Most pros can't beat the market",
+      "narration": "Here's an uncomfortable fact. Over long stretches, most professional fund managers fail to beat a plain, boring index fund. Let's look at why.",
+      "emphasis": ["beat"],
+      "icon": "trending-up"
+    },
+    {
+      "type": "statement",
+      "headline": "What is an index fund?",
+      "narration": "An index fund doesn't try to pick winners. It simply buys every company in a list, like the five hundred biggest US companies, and holds them all.",
+      "body": "One purchase gives you a small slice of hundreds of businesses.",
+      "emphasis": ["every company"]
+    },
+    {
+      "type": "statement",
+      "headline": "Stock picking is a zero-sum game",
+      "narration": "Before costs, the average investor earns the market's average return, because together investors are the market. If one picker beats it, someone else has to fall short.",
+      "emphasis": ["zero-sum"]
+    },
+    {
+      "type": "statement",
+      "headline": "Fees quietly eat returns",
+      "narration": "Active funds pay analysts and traders, and they pass that cost on to you every year. Index funds just follow a list, so they charge far less. A small fee gap compounds into a big difference over decades.",
+      "body": "Lower costs mean more of the return stays in your pocket.",
+      "emphasis": ["Fees"]
+    },
+    {
+      "type": "list",
+      "headline": "Why index funds keep winning",
+      "narration": "Put it together. Low fees, wide diversification, and no reliance on one manager's luck. It's not exciting, and that's the point.",
+      "items": [
+        "Very low fees",
+        "Instant diversification",
+        "No star manager to bet on",
+        "Simple to hold for decades"
+      ],
+      "emphasis": ["winning"]
+    },
+    {
+      "type": "statement",
+      "headline": "Picking the winner in advance is hard",
+      "narration": "Some managers do beat the market for a few years. But finding them before they win, and staying with them, is the hard part. Past stars often cool off.",
+      "emphasis": ["hard"]
+    },
+    {
+      "type": "cta",
+      "headline": "Start simple, stay consistent",
+      "narration": "For most beginners, a low-cost index fund bought regularly and held for the long term is a sensible starting point. This is general education, not personal advice. Do your own research.",
+      "body": "Not financial advice. Learn more before you invest.",
+      "emphasis": ["simple"]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+Here's a 45-second vertical storyboard for pour-over coffee:
+
+```json
+{
+  "title": "How to Brew Great Pour-Over Coffee",
+  "format": "9:16",
+  "voice": { "style": "warm, calm", "speed": 1.0 },
+  "music": { "mood": "lo-fi acoustic", "volume": 0.15 },
+  "captions": { "enabled": true, "style": "bold" },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Stop brewing sad coffee",
+      "narration": "Your pour-over tastes flat for a reason. Five small habits fix it."
+    },
+    {
+      "type": "stat",
+      "headline": "The golden ratio",
+      "narration": "Start with a ratio. About one gram of coffee to sixteen grams of water. Weigh both.",
+      "value": "1:16",
+      "label": "coffee to water, by weight"
+    },
+    {
+      "type": "list",
+      "headline": "Dial in the basics",
+      "narration": "Grind fresh, medium-fine, like table salt. Heat water to just off the boil, around ninety-three degrees Celsius. Rinse the filter to remove paper taste.",
+      "items": [
+        "Fresh grind, medium-fine",
+        "Water about 93 °C",
+        "Rinse the filter first"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Bloom for 30 seconds",
+      "narration": "Pour twice the coffee's weight in water and wait thirty seconds. That releases trapped gas so the rest extracts evenly."
+    },
+    {
+      "type": "statement",
+      "headline": "Pour slow, in circles",
+      "narration": "Then pour in slow circles, keeping the water level steady. Aim to finish in about three minutes."
+    },
+    {
+      "type": "cta",
+      "headline": "Taste the difference",
+      "narration": "Brew one cup this way tomorrow. Then follow for more kitchen upgrades.",
+      "cta": "Follow for more"
+    }
+  ]
+}
+```

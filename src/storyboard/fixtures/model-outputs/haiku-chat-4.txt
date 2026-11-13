@@ -1,0 +1,46 @@
+```json
+{
+  "title": "Start an Emergency Fund",
+  "format": "9:16",
+  "duration_seconds": 60,
+  "voice": { "style": "steady, encouraging", "speed": 1.0 },
+  "music": { "mood": "light, upbeat", "volume": 0.15 },
+  "captions": { "enabled": true, "style": "bold-bottom" },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "The car breaks down. Now what?",
+      "narration": "A surprise bill can derail your month. An emergency fund is the cushion that keeps it from becoming debt."
+    },
+    {
+      "type": "stat",
+      "headline": "How much to aim for",
+      "narration": "A common target is three to six months of essential expenses, such as rent, food, utilities and insurance.",
+      "value": "3-6 months",
+      "label": "of essential expenses"
+    },
+    {
+      "type": "list",
+      "headline": "Four steps to start",
+      "narration": "First, list your essential monthly costs. Second, open a separate savings account. Third, set up an automatic transfer. Fourth, build it up one step at a time.",
+      "items": ["List your essential monthly costs", "Open a separate savings account", "Set up an automatic transfer", "Build it up one step at a time"]
+    },
+    {
+      "type": "statement",
+      "headline": "Start small",
+      "narration": "Even a small starter goal, like one month of basic costs, is a real milestone. Each deposit makes the next one easier."
+    },
+    {
+      "type": "statement",
+      "headline": "Keep it for emergencies",
+      "narration": "Keep the money separate from everyday spending, so it is there when something truly unexpected happens."
+    },
+    {
+      "type": "cta",
+      "headline": "Open the account this week",
+      "narration": "Pick a savings account, name it Emergency Fund, and make your first transfer today.",
+      "action": "Compare savings accounts and set up a transfer"
+    }
+  ]
+}
+```

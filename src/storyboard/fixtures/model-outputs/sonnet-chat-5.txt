@@ -1,0 +1,46 @@
+Here's a 45-second vertical storyboard on walking meetings. I included one statistic, from a well-known Stanford study (Oppezzo and Schwartz, 2014), which reported roughly a 60% average increase in creative output while walking. That study tested walking in general rather than walking meetings, so the narration frames it that way. I'd still verify it against the paper before publishing.
+
+```json
+{
+  "title": "The Benefits of Walking Meetings",
+  "format": "9:16",
+  "voice": { "style": "energetic, friendly", "speed": 1.05 },
+  "music": { "mood": "upbeat acoustic", "volume": 0.14 },
+  "captions": { "enabled": true, "style": "bold" },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Ditch the conference room",
+      "narration": "What if your next one-on-one happened outside, on foot?"
+    },
+    {
+      "type": "stat",
+      "headline": "Walking boosts ideas",
+      "narration": "Stanford researchers found that walking raised creative idea generation by around sixty percent compared with sitting.",
+      "value": "~60%",
+      "label": "more creative output while walking (Stanford, 2014)"
+    },
+    {
+      "type": "list",
+      "headline": "Why they work",
+      "narration": "Movement lifts energy and mood. Without screens, people stay focused. And a side-by-side conversation feels less formal, so people speak more openly.",
+      "items": [
+        "More energy, better mood",
+        "No screens, fewer distractions",
+        "Open, relaxed conversation"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Best for small groups",
+      "narration": "Keep it to two or three people, pick a simple route, and save slides and heavy note-taking for desk meetings."
+    },
+    {
+      "type": "cta",
+      "headline": "Try one this week",
+      "narration": "Swap one sit-down meeting for a walk. Follow for more work habits that help.",
+      "cta": "Follow for more"
+    }
+  ]
+}
+```

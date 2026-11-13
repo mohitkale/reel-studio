@@ -1,0 +1,41 @@
+```json
+{
+  "title": "Five Houseplants That Survive Neglect",
+  "format": "9:16",
+  "duration_seconds": 45,
+  "voice": { "style": "warm, relaxed", "speed": 1.0 },
+  "music": { "mood": "light acoustic", "volume": 0.2 },
+  "captions": { "enabled": true, "style": "bold-bottom" },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Forgot to water for two weeks?",
+      "narration": "Forgot to water for two weeks? These five plants will still be fine."
+    },
+    {
+      "type": "list",
+      "headline": "Five plants that forgive",
+      "narration": "Snake plant. ZZ plant. Pothos. Cast iron plant. Jade plant. All of them handle dry spells and low light.",
+      "items": ["Snake plant", "ZZ plant", "Pothos", "Cast iron plant", "Jade plant"]
+    },
+    {
+      "type": "statement",
+      "headline": "Overwatering kills more plants",
+      "narration": "Most plants that die under neglect are actually overwatered. Let the soil dry out before you water again."
+    },
+    {
+      "type": "stat",
+      "headline": "Watering gap",
+      "narration": "A snake plant can go two to four weeks between waterings, especially in winter.",
+      "value": "2-4 weeks",
+      "label": "between waterings for a snake plant"
+    },
+    {
+      "type": "cta",
+      "headline": "Start with a pothos",
+      "narration": "Pick one, give it indirect light, and water only when the soil is dry.",
+      "action": "Save this for your next plant shop trip"
+    }
+  ]
+}
+```

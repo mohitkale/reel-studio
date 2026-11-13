@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "title": "Brim: the bottle you'll actually carry",
+  "kind": "video",
+  "format": "1:1",
+  "music": "auto",
+  "captions": "auto",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Meet Brim",
+      "narration": "Meet Brim. The reusable water bottle made for people who are always on the move.",
+      "emphasis": ["Brim"],
+      "icon": "droplet",
+      "media": { "query": "sleek water bottle on a desk in morning light" }
+    },
+    {
+      "type": "statement",
+      "headline": "Fill it once. Go all day.",
+      "narration": "A wide mouth makes filling and cleaning easy. A leak-resistant lid keeps your bag dry. Brim is built to go wherever your day does.",
+      "body": "Wide mouth, leak-resistant lid, easy to clean.",
+      "emphasis": ["all day"]
+    },
+    {
+      "type": "list",
+      "headline": "Made for real life",
+      "narration": "Brim fits most cup holders, clips to a backpack, and comes in colors that make it easy to spot. Simple things that make you reach for it every day.",
+      "items": [
+        "Fits standard cup holders",
+        "Carry loop for bags",
+        "Dishwasher friendly",
+        "Five calm colors"
+      ],
+      "emphasis": ["real life"]
+    },
+    {
+      "type": "statement",
+      "headline": "One bottle, thousands of refills",
+      "narration": "Every refill is one less single-use bottle. Brim is made to last, so the habit sticks and the waste doesn't.",
+      "emphasis": ["refills"]
+    },
+    {
+      "type": "cta",
+      "headline": "Brim. Drink to your brim.",
+      "narration": "Brim. Fill up and keep going. Coming soon.",
+      "body": "Coming soon. Join the waitlist.",
+      "emphasis": ["Brim"]
+    }
+  ]
+}

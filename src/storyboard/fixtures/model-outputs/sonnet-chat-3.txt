@@ -1,0 +1,43 @@
+Here's a 30-second square storyboard on why the sky is blue:
+
+```json
+{
+  "title": "Why the Sky Is Blue",
+  "format": "1:1",
+  "voice": { "style": "curious, upbeat", "speed": 1.05 },
+  "music": { "mood": "airy ambient", "volume": 0.12 },
+  "captions": { "enabled": true, "style": "bold" },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Why is the sky blue?",
+      "narration": "Sunlight looks white, so why is the sky blue?"
+    },
+    {
+      "type": "statement",
+      "headline": "Sunlight holds every color",
+      "narration": "White light is a mix of all colors, each with a different wavelength."
+    },
+    {
+      "type": "list",
+      "headline": "Shorter waves scatter more",
+      "narration": "Air molecules scatter short blue waves far more than long red ones. This is called Rayleigh scattering.",
+      "items": [
+        "Blue: short wavelength, scatters a lot",
+        "Red: long wavelength, passes through"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Blue comes from every direction",
+      "narration": "So scattered blue light reaches your eyes from all over the sky. At sunset, light travels through more air, the blue scatters away, and red and orange remain."
+    },
+    {
+      "type": "cta",
+      "headline": "Look up at sunset",
+      "narration": "Next sunset, watch the colors shift. Follow for more everyday science.",
+      "cta": "Follow for more science"
+    }
+  ]
+}
+```

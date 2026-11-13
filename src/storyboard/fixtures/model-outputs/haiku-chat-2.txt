@@ -1,0 +1,46 @@
+```json
+{
+  "title": "What Is an API?",
+  "format": "16:9",
+  "duration_seconds": 40,
+  "voice": { "style": "clear, friendly", "speed": 1.0 },
+  "music": { "mood": "soft electronic", "volume": 0.15 },
+  "captions": { "enabled": true, "style": "bold-bottom" },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Ever wondered how apps talk?",
+      "narration": "Every time an app shows you weather or a map, it is asking another system for data. The middleman is called an API."
+    },
+    {
+      "type": "statement",
+      "headline": "API: a menu for software",
+      "narration": "An API, or application programming interface, is a defined set of requests a program can make and the answers it will get back."
+    },
+    {
+      "type": "statement",
+      "headline": "The waiter analogy",
+      "narration": "You do not walk into the kitchen. You tell the waiter what you want, and the waiter brings back the food. The API is the waiter."
+    },
+    {
+      "type": "code",
+      "headline": "A request in practice",
+      "narration": "Here is a request asking a weather service for today's forecast for one city. The service replies with data the app can display.",
+      "language": "http",
+      "code": "GET /v1/forecast?city=London&days=1\nHost: api.example-weather.com"
+    },
+    {
+      "type": "list",
+      "headline": "Where you already use APIs",
+      "narration": "Logging in with another account, checking a delivery, or embedding a video all rely on an API.",
+      "items": ["Logging in with another account", "Tracking a delivery", "Embedding a video", "Checking the weather"]
+    },
+    {
+      "type": "cta",
+      "headline": "Next: try one yourself",
+      "narration": "Pick a free public API, send your first request, and read the response.",
+      "action": "Explore a free public API"
+    }
+  ]
+}
+```

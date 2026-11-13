@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "title": "Is remote work here to stay?",
+  "kind": "podcast",
+  "music": "none",
+  "speakers": [
+    {
+      "id": "maya",
+      "name": "Maya"
+    },
+    {
+      "id": "jonah",
+      "name": "Jonah"
+    }
+  ],
+  "turns": [
+    {
+      "speaker": "maya",
+      "text": "Welcome back. Today's question: is remote work here to stay, or is the office coming back for good?"
+    },
+    {
+      "speaker": "jonah",
+      "text": "Honestly, both are happening. Many companies now ask people to come in a few days a week, but fully remote jobs are still common in software, support and design."
+    },
+    {
+      "speaker": "maya",
+      "text": "Right, and the evidence on productivity is mixed. Some studies show gains from fewer commutes and quieter offices, while others suggest new hires struggle to learn when they never see their colleagues."
+    },
+    {
+      "speaker": "jonah",
+      "text": "Exactly. That learning gap is the strongest argument for the office. Mentoring and spontaneous hallway conversations are really hard to recreate on a video call."
+    },
+    {
+      "speaker": "maya",
+      "text": "But plenty of people won't give up flexibility. Once they've had it, many will take a pay cut or switch jobs rather than go back to five days a week in the office."
+    },
+    {
+      "speaker": "jonah",
+      "text": "So I think we settle on hybrid. The real question is whether companies design their work around it, or just hope people show up and figure it out."
+    }
+  ]
+}

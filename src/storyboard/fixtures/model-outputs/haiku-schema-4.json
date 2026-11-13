@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "title": "How compound interest works",
+  "kind": "video",
+  "format": "9:16",
+  "music": "auto",
+  "captions": "auto",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Your money can earn money",
+      "narration": "Most people think interest is a small bonus. Over a long enough time, it can become the biggest part of your savings.",
+      "emphasis": ["earn money"],
+      "durationHint": 7
+    },
+    {
+      "type": "statement",
+      "headline": "Interest earns interest",
+      "narration": "With compound interest, each year's earnings are added to your balance. Next year, you earn interest on that bigger amount.",
+      "icon": "growth"
+    },
+    {
+      "type": "statement",
+      "headline": "A simple example",
+      "narration": "Say you invest one thousand dollars at five percent a year and leave it alone. The numbers below are round figures, for illustration only.",
+      "body": "Illustrative example, not a forecast."
+    },
+    {
+      "type": "chart",
+      "headline": "Simple vs compound, 30 years",
+      "narration": "After ten years, the compound balance is about sixteen hundred dollars. Simple interest gives fifteen hundred. The gap keeps growing.",
+      "body": "Example only: $1,000 at 5% a year, no extra deposits.",
+      "chart": {
+        "labels": ["Start", "Year 10", "Year 20", "Year 30"],
+        "series": [
+          {
+            "label": "Simple interest",
+            "values": [1000, 1500, 2000, 2500],
+            "unit": "$"
+          },
+          {
+            "label": "Compound interest",
+            "values": [1000, 1629, 2653, 4322],
+            "unit": "$"
+          }
+        ],
+        "source": "Illustrative example, not a forecast"
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "Time does the heavy lifting",
+      "narration": "The earlier you start, the more years interest has to compound. In this example, doubling the years more than doubles the growth.",
+      "emphasis": ["doubling the years"]
+    },
+    {
+      "type": "statement",
+      "headline": "Regular deposits speed it up",
+      "narration": "Adding a fixed amount every month gives compounding more to work with. Your balance grows faster than it would from one deposit alone."
+    },
+    {
+      "type": "statement",
+      "headline": "Fees compound against you",
+      "narration": "Fees and high-interest debt compound too, but they work against you. Check what you pay before you invest.",
+      "icon": "warning"
+    },
+    {
+      "type": "cta",
+      "headline": "Start with what you can",
+      "narration": "You do not need a large sum to begin. Start small, stay steady, and let time do its work. This is general information, not financial advice.",
+      "emphasis": ["Start small"]
+    }
+  ]
+}
