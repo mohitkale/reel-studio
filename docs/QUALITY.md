@@ -31,14 +31,15 @@ exactly as production would (same scene plan, same motion plan, estimated timing
 voice), renders one frame per scene at 60% of the hold in the render browser, and
 measures it. It takes about two minutes for the set.
 
-| Check                      | Fails when                                                                  |
-| -------------------------- | --------------------------------------------------------------------------- |
-| `frame-fill`               | the content's bounding box is under 45% of the safe area                    |
-| `smallest-text`            | text height is under 2.2% of frame height (9:16), 2.6% (16:9), 2.4% (1:1)   |
-| `contrast`                 | text against the pixels around it is under 4.5 to 1 (3 to 1 for large type) |
-| `outside-safe-area`        | text leaves the safe area                                                   |
-| `headline-equals-caption`  | the caption repeats the on-screen text (80% of its words)                   |
-| `near-identical-neighbour` | two adjacent scenes differ in 3 bits or fewer of an 8 by 8 perceptual hash  |
+| Check                      | Fails when                                                                               |
+| -------------------------- | ---------------------------------------------------------------------------------------- |
+| `frame-fill`               | the content's bounding box is under 45% of the safe area                                 |
+| `text-fill`                | the text's bounding box is under 10% of the safe area (a panel must not hide small type) |
+| `smallest-text`            | text height is under 2.2% of frame height (9:16), 2.6% (16:9), 2.4% (1:1)                |
+| `contrast`                 | text against the pixels around it is under 4.5 to 1 (3 to 1 for large type)              |
+| `outside-safe-area`        | text leaves the safe area                                                                |
+| `headline-equals-caption`  | the caption repeats the on-screen text (80% of its words)                                |
+| `near-identical-neighbour` | two adjacent scenes differ in 3 bits or fewer of an 8 by 8 perceptual hash               |
 
 The safe area keeps platform UI clear: on 9:16 the bottom 18% and right 12%, plus 7.8%
 at the top and 6% on the left; 16:9 and 1:1 use 7.5% to 10% margins. Content means text,
@@ -50,6 +51,8 @@ Options: `--only <name>`, `--all-formats` (every example in all three formats),
 `--out <dir>`, `--write-baseline`, and `--gate` (exit 1 on any failure). Output is
 `frame-lint.json` (scene, check, measured value, threshold) and an annotated contact
 sheet per example: green dashed is the safe area, cyan the content box, red a failing scene.
+
+The layout contract these checks measure lives in `src/production/layout.ts`: each format has a safe area, a content region (portrait: 14% to 68% of the frame height; landscape: 12% to 78%; square: 12% to 72%) and a caption band beneath it. Scene content fills its region and the text inside is fitted to it; `debugLayout` on the composition props draws the regions.
 
 Today the check reports only. It gates at the end of the visual-quality milestone.
 Baseline numbers from before the layout work are in

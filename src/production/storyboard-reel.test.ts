@@ -90,3 +90,33 @@ describe("platform safe areas", () => {
     expect(square.left).toBe(square.right);
   });
 });
+
+describe("layout debug overlay", () => {
+  it("draws the safe area, content region and caption band only when asked", () => {
+    const { props } = storyboardToReelProps(storyboard);
+    expect(buildHyperframesCompositionHtml(props)).not.toContain(
+      "caption band",
+    );
+    const html = buildHyperframesCompositionHtml({
+      ...props,
+      debugLayout: true,
+    });
+    for (const label of ["safe area", "content region", "caption band"])
+      expect(html).toContain(label);
+  });
+
+  it("keeps the content region above the caption band in every format", () => {
+    for (const [width, height] of [
+      [1080, 1920],
+      [1920, 1080],
+      [1080, 1080],
+    ] as const) {
+      const layout = resolveProductionLayout({ width, height });
+      const regionBottom = layout.region!.top + layout.region!.height;
+      const captionTop =
+        height - layout.captionBottom - Math.round(height * 0.1);
+      expect(layout.region!.top).toBeGreaterThanOrEqual(layout.safeArea.top);
+      expect(regionBottom).toBeLessThanOrEqual(captionTop);
+    }
+  });
+});

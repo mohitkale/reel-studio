@@ -346,7 +346,7 @@ function timedVideoLayer(
   if (scene.background?.type !== "video" || !scene.background.url) return "";
   const dur = Math.max(0.05, durationSec);
   return `<video id="scene-${escapeHtml(scene.id)}-stock-video" class="bg-video clip" src="${escapeHtml(scene.background.url)}"
-                 data-start="${absoluteStart.toFixed(3)}" data-duration="${dur.toFixed(3)}" data-media-start="${scene.background.startSeconds??0}"
+                 data-start="${absoluteStart.toFixed(3)}" data-duration="${dur.toFixed(3)}" data-media-start="${scene.background.startSeconds ?? 0}"
                  data-track-index="0" muted playsinline preload="auto"></video>`;
 }
 
@@ -966,7 +966,9 @@ export function redundantCaptionCueIds(
   const hidden = new Set<string>();
   const cues = props.captions?.cues ?? [];
   for (const beat of props.timeline) {
-    const scene = props.scenes.find((candidate) => candidate.id === beat.sceneId);
+    const scene = props.scenes.find(
+      (candidate) => candidate.id === beat.sceneId,
+    );
     if (!scene) continue;
     const end = beat.startFrame + beat.durationFrames;
     const inBeat = cues.filter(
@@ -1316,6 +1318,35 @@ export function buildHyperframesCompositionHtml(
           .join("\n")
       : "";
 
+  // Layout debugging: safe area (green), content region (cyan), caption band (magenta).
+  const debugOverlay = props.debugLayout
+    ? (() => {
+        const box = (rect: string, color: string, label: string) =>
+          `<div style="position:absolute;${rect};border:3px dashed ${color};z-index:99999;pointer-events:none;box-sizing:border-box"><span style="position:absolute;left:8px;top:6px;font:600 ${Math.round(height * 0.014)}px monospace;color:${color}">${label}</span></div>`;
+        const s = layout.safeArea;
+        const regionTop = layout.region?.top ?? s.top;
+        const regionHeight = layout.region?.height ?? Math.round(height * 0.6);
+        const bandBottom = layout.captionBottom;
+        const bandHeight = Math.round(height * 0.1);
+        return [
+          box(
+            `left:${s.left}px;top:${s.top}px;right:${s.right}px;bottom:${s.bottom}px`,
+            "#22c55e",
+            "safe area",
+          ),
+          box(
+            `left:${s.left}px;right:${s.right}px;top:${regionTop}px;height:${regionHeight}px`,
+            "#06b6d4",
+            "content region",
+          ),
+          box(
+            `left:${s.left}px;right:${s.right}px;bottom:${bandBottom}px;height:${bandHeight}px`,
+            "#d946ef",
+            "caption band",
+          ),
+        ].join("");
+      })()
+    : "";
   const grainAttr = chrome.grainOpacity > 0 ? "1" : "0";
   // Preview-only paint savings. Producer output always retains the authored look.
   const previewStyles =
@@ -1354,7 +1385,7 @@ ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLE
          data-grain="${grainAttr}"
          data-orientation="${layout.orientation}"
          data-palette-tone="${(colorContrast(tokens.background, "#000000") ?? 0) > (colorContrast(tokens.background, "#FFFFFF") ?? 0) ? "light" : "dark"}"
-         style="width:${width}px;height:${height}px;--brand-background:${tokens.background};--brand-foreground:${tokens.foreground};--brand-muted:${tokens.muted};--brand-accent-foreground:${tokens.accentForeground};--brand-accent-text:${(colorContrast(tokens.accent, tokens.background) ?? 0) >= 4.5 ? tokens.accent : tokens.foreground};--motion-radius:${tokens.radius}px;--motion-gap:${Math.min(width * 0.032, height * 0.045, 48)}px;--brand-font:${escapeHtml(cssFontStack(hyperframesBrandFont(tokens.fontFamily)))};font-family:var(--brand-font);--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--frame-h:${height}px;--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}">
+         style="width:${width}px;height:${height}px;--brand-background:${tokens.background};--brand-foreground:${tokens.foreground};--brand-muted:${tokens.muted};--brand-accent-foreground:${tokens.accentForeground};--brand-accent-text:${(colorContrast(tokens.accent, tokens.background) ?? 0) >= 4.5 ? tokens.accent : tokens.foreground};--motion-radius:${tokens.radius}px;--motion-gap:${Math.min(width * 0.032, height * 0.045, 48)}px;--brand-font:${escapeHtml(cssFontStack(hyperframesBrandFont(tokens.fontFamily)))};font-family:var(--brand-font);--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--frame-h:${height}px;--region-top:${layout.region?.top ?? layout.safeArea.top}px;--region-height:${layout.region?.height ?? Math.round(height * 0.6)}px;--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}">
       ${coverBlock}
       ${progress}
       ${videoBlocks.join("\n")}
@@ -1375,6 +1406,7 @@ ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLE
         .join("\n")}
       ${buildSequenceHandoffs(sequence, tokens, fps, width, height)}
       ${captionBlocks}
+      ${debugOverlay}
       ${audioTags.join("\n")}
     </div>
   </div>
