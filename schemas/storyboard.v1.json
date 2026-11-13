@@ -1,0 +1,515 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "number",
+          "const": 1,
+          "description": "Schema version. Always 1."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Title of the video or episode. Example: \"Why sleep is a skill\"."
+        },
+        "music": {
+          "default": "auto",
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "auto"
+            },
+            {
+              "type": "string",
+              "const": "none"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+            }
+          ],
+          "description": "Background music. \"auto\" picks a fitting bundled track, \"none\" for silence, or a track id. Default \"auto\"."
+        },
+        "sources": {
+          "description": "Pages you used for facts. Leave out if you used none. Never invent sources.",
+          "maxItems": 12,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120,
+                "description": "Title of the page or document. Example: \"WHO sleep guidance\"."
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Public http(s) address of the source."
+              },
+              "accessed": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                "description": "Date you read it, YYYY-MM-DD. Example: \"2026-11-13\"."
+              }
+            },
+            "required": [
+              "title",
+              "url",
+              "accessed"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "kind": {
+          "default": "video",
+          "description": "\"video\" (default) for a video.",
+          "type": "string",
+          "const": "video"
+        },
+        "format": {
+          "default": "9:16",
+          "type": "string",
+          "enum": [
+            "9:16",
+            "16:9",
+            "1:1"
+          ],
+          "description": "Canvas shape. \"9:16\" vertical for Reels, Shorts and TikTok; \"16:9\" landscape for YouTube; \"1:1\" square. Default \"9:16\"."
+        },
+        "theme": {
+          "description": "Optional visual theme name. Omit to let Reel Studio choose a look that fits the content.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+        },
+        "voice": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Narrate the video with a local voice. Default true.",
+              "type": "boolean"
+            },
+            "voiceId": {
+              "description": "Voice name from the voice list, for example \"af_heart\". Omit to use the default voice.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            },
+            "speed": {
+              "description": "Speaking speed, 0.7 to 1.3. Omit for natural speed (1.0).",
+              "type": "number",
+              "minimum": 0.7,
+              "maximum": 1.3
+            }
+          },
+          "additionalProperties": false,
+          "description": "Narration settings. Omit to narrate with the default voice."
+        },
+        "captions": {
+          "default": "auto",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ],
+          "description": "Captions generated from the narration. \"auto\" shows them, \"off\" hides them. Default \"auto\"."
+        },
+        "scenes": {
+          "minItems": 1,
+          "maxItems": 40,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "hook",
+                  "statement",
+                  "list",
+                  "stat",
+                  "chart",
+                  "quote",
+                  "code",
+                  "media",
+                  "cta"
+                ],
+                "description": "What the scene is. hook: opening line that grabs attention. statement: one key idea. list: 2-6 short points (needs items). stat: one big number (needs stat). chart: compare values (needs chart). quote: a quotation (needs quote). code: a code snippet (needs code). media: a picture or clip carries the scene (needs media). cta: closing call to action. Example: \"statement\"."
+              },
+              "headline": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 60,
+                "description": "Short on-screen text, at most 60 characters, a complete phrase that is not cut off. Example: \"Sleep is a skill\"."
+              },
+              "narration": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 400,
+                "description": "What the voice says: full sentences, at most 400 characters, written to be heard. Do not repeat the headline word for word. Example: \"Most adults need seven to nine hours. Treat sleep like training, not an afterthought.\""
+              },
+              "body": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Optional supporting line shown under the headline, at most 200 characters."
+              },
+              "items": {
+                "description": "Points for a list scene, 2 to 6. Example: [\"Same bedtime\", \"No screens\", \"Cool room\"].",
+                "minItems": 2,
+                "maxItems": 6,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60,
+                  "description": "One short point, at most 60 characters."
+                }
+              },
+              "stat": {
+                "description": "Key number for a stat scene.",
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 12,
+                    "description": "The big figure, at most 12 characters. Example: \"73%\"."
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 40,
+                    "description": "What the figure measures, at most 40 characters. Example: \"report better focus\"."
+                  }
+                },
+                "required": [
+                  "value",
+                  "label"
+                ],
+                "additionalProperties": false
+              },
+              "chart": {
+                "type": "object",
+                "properties": {
+                  "labels": {
+                    "minItems": 2,
+                    "maxItems": 6,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 24,
+                      "description": "One category label."
+                    },
+                    "description": "Category labels along the axis. Example: [\"2023\", \"2024\", \"2025\"]."
+                  },
+                  "series": {
+                    "minItems": 1,
+                    "maxItems": 3,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 24,
+                          "description": "Name of this data series. Example: \"Users\"."
+                        },
+                        "values": {
+                          "minItems": 2,
+                          "maxItems": 6,
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "description": "One number per label, in the same order. Use real figures only."
+                        },
+                        "unit": {
+                          "description": "Unit shown with the numbers, for example \"%\" or \"k\".",
+                          "type": "string",
+                          "maxLength": 8
+                        }
+                      },
+                      "required": [
+                        "label",
+                        "values"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "description": "One to three data series. Each needs one value per label."
+                  },
+                  "source": {
+                    "description": "Where the numbers come from. Example: \"Company report, 2025\".",
+                    "type": "string",
+                    "maxLength": 80
+                  }
+                },
+                "required": [
+                  "labels",
+                  "series"
+                ],
+                "additionalProperties": false,
+                "description": "Data for a chart scene. Never invent numbers."
+              },
+              "quote": {
+                "description": "Quotation for a quote scene. Only real, attributed quotes.",
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160,
+                    "description": "The quotation, at most 160 characters, exactly as said."
+                  },
+                  "attribution": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Who said it. Example: \"Dr. Mara Lin, sleep researcher\"."
+                  }
+                },
+                "required": [
+                  "text",
+                  "attribution"
+                ],
+                "additionalProperties": false
+              },
+              "code": {
+                "description": "Code for a code scene.",
+                "type": "object",
+                "properties": {
+                  "language": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9+#-]{1,20}$",
+                    "description": "Language name. Example: \"typescript\"."
+                  },
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 600,
+                    "description": "The snippet, at most 12 lines and 600 characters."
+                  }
+                },
+                "required": [
+                  "language",
+                  "text"
+                ],
+                "additionalProperties": false
+              },
+              "media": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "description": "Plain-words search for a fitting stock picture or clip. Example: \"sunrise over a quiet city street\".",
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 80
+                  },
+                  "assetId": {
+                    "description": "Id of an asset already in the project's library.",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "path": {
+                    "description": "Relative path of a supplied file. Example: \"media/demo.mp4\".",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "additionalProperties": false,
+                "description": "Picture or clip for the scene. Provide exactly one of query, assetId or path."
+              },
+              "icon": {
+                "description": "Optional icon name in lowercase words joined by hyphens. Example: \"moon\".",
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+              },
+              "emphasis": {
+                "description": "Up to three words from the headline or body to highlight. Example: [\"skill\"].",
+                "maxItems": 3,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 24,
+                  "description": "A word or short phrase copied from the headline or body."
+                }
+              },
+              "durationHint": {
+                "description": "Rough seconds for the scene, 2 to 30. Only a hint: real timing follows the narration length. Omit unless you need a longer pause.",
+                "type": "number",
+                "minimum": 2,
+                "maximum": 30
+              }
+            },
+            "required": [
+              "type",
+              "headline",
+              "narration"
+            ],
+            "additionalProperties": false,
+            "description": "One scene: what is shown and what is said."
+          },
+          "description": "Scenes in order. About 8 scenes make a 60-second video. Start with a hook and end with a cta or a statement that closes the idea."
+        }
+      },
+      "required": [
+        "version",
+        "title",
+        "scenes"
+      ],
+      "additionalProperties": false,
+      "description": "A video storyboard."
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "number",
+          "const": 1,
+          "description": "Schema version. Always 1."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Title of the video or episode. Example: \"Why sleep is a skill\"."
+        },
+        "music": {
+          "default": "auto",
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "auto"
+            },
+            {
+              "type": "string",
+              "const": "none"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+            }
+          ],
+          "description": "Background music. \"auto\" picks a fitting bundled track, \"none\" for silence, or a track id. Default \"auto\"."
+        },
+        "sources": {
+          "description": "Pages you used for facts. Leave out if you used none. Never invent sources.",
+          "maxItems": 12,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120,
+                "description": "Title of the page or document. Example: \"WHO sleep guidance\"."
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Public http(s) address of the source."
+              },
+              "accessed": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                "description": "Date you read it, YYYY-MM-DD. Example: \"2026-11-13\"."
+              }
+            },
+            "required": [
+              "title",
+              "url",
+              "accessed"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "kind": {
+          "type": "string",
+          "const": "podcast",
+          "description": "\"podcast\" for an audio episode."
+        },
+        "speakers": {
+          "minItems": 1,
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,19}$",
+                "description": "Short id used by turns. Example: \"host\"."
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40,
+                "description": "Display name. Example: \"Maya\"."
+              },
+              "voiceId": {
+                "description": "Voice name. Omit for the default voice.",
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 60
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          "description": "One to three speakers: solo narration, a two-host talk or an interview."
+        },
+        "turns": {
+          "minItems": 1,
+          "maxItems": 80,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "speaker": {
+                "type": "string",
+                "description": "The id of a speaker listed in speakers."
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 600,
+                "description": "What this speaker says, at most 600 characters, written to be heard."
+              }
+            },
+            "required": [
+              "speaker",
+              "text"
+            ],
+            "additionalProperties": false
+          },
+          "description": "The dialogue in order."
+        }
+      },
+      "required": [
+        "version",
+        "title",
+        "kind",
+        "speakers",
+        "turns"
+      ],
+      "additionalProperties": false,
+      "description": "A podcast storyboard: speakers and their turns."
+    }
+  ],
+  "$id": "https://github.com/mohitkale/reel-studio/blob/main/schemas/storyboard.v1.json",
+  "title": "Reel Studio Storyboard v1"
+}
