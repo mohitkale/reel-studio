@@ -99,6 +99,18 @@ fed with the linter's errors (on a cloud provider that is a second paid call; pa
 `{ "providerId": "gemini", "brief": { "topic": "..." } }` returns the linted
 storyboard and writes nothing; post it to `POST /api/storyboards` to produce the video.
 
+**Research.** With Gemini or OpenAI, `research` defaults to `auto`: one web-grounded
+research call runs first, its facts and real URLs go into the brief, and the cited
+pages land in `storyboard.sources`. Only URLs the provider returned as grounding (or
+that you supplied in `brief.researchNotes`) can appear there; the writer cannot add
+others. The result is cached by topic for 24 hours (`.data/storyboard-research-cache.json`),
+so repeating a topic costs nothing. That is one extra paid request on a cloud
+provider; set `"research": "off"`, or `"fromSourceText": true` when your topic is your
+own text, to skip it. Local models and an unconfigured provider skip research and the
+response carries the note _Written without web research_. If the search fails the
+storyboard is still written, with a note saying why. An agent using MCP does its own
+research and passes the facts in `brief.researchNotes`.
+
 ## Producing a video
 
 ```bash

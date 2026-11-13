@@ -9,6 +9,14 @@ import {
   buildStoryboardMessages,
   type StoryboardBrief,
 } from "./storyboard-prompt";
+import {
+  constrainSources,
+  researchForStoryboard,
+  type ResearchCache,
+  type ResearchOutcome,
+  type ResearchRunner,
+  type ResearchSetting,
+} from "@/research/storyboard-research";
 import { AIError, type AIProvider } from "./types";
 
 export interface StoryboardWriteResult extends LintResult {
@@ -84,4 +92,73 @@ export async function writeStoryboard(args: {
   );
   const second = lintReply(secondReply, options);
   return { ...second, attempts: 2, reply: secondReply };
+}
+
+export interface ResearchedStoryboardResult extends StoryboardWriteResult {
+  research: Pick<
+    ResearchOutcome,
+    "status" | "note" | "cached" | "providerCalls"
+  > & {
+    sources: number;
+  };
+}
+
+/**
+ * Research first when the provider can search the web (setting `auto`, the
+ * default), then write. The brief carries the grounded notes; the finished
+ * storyboard's `sources` can only hold URLs that came from grounding or from
+ * the caller.
+ */
+export async function writeStoryboardWithResearch(
+  args: Parameters<typeof writeStoryboard>[0] & {
+    research?: ResearchSetting;
+    /** The topic is the user's own source text, so no lookup is needed. */
+    hasSourceText?: boolean;
+    researchCache?: ResearchCache;
+    researchRunner?: ResearchRunner;
+  },
+): Promise<ResearchedStoryboardResult> {
+  const outcome = await researchForStoryboard({
+    providerId: args.provider.id,
+    topic: args.brief.topic,
+    setting: args.research ?? "auto",
+    hasSourceText: args.hasSourceText,
+    cache: args.researchCache,
+    runner: args.researchRunner,
+    signal: args.signal,
+  });
+  const suppliedNotes = args.brief.researchNotes ?? [];
+  const brief = {
+    ...args.brief,
+    researchNotes: [...suppliedNotes, ...outcome.notes].slice(0, 12),
+  };
+  const result = await writeStoryboard({ ...args, brief });
+  const allowed = [
+    ...outcome.sources,
+    ...suppliedNotes.flatMap((n) =>
+      n.url
+        ? [
+            {
+              title: n.title,
+              url: n.url,
+              accessed: n.accessed ?? new Date().toISOString().slice(0, 10),
+            },
+          ]
+        : [],
+    ),
+  ];
+  const storyboard = result.storyboard
+    ? constrainSources(result.storyboard, allowed)
+    : null;
+  return {
+    ...result,
+    storyboard,
+    research: {
+      status: outcome.status,
+      note: outcome.note,
+      cached: outcome.cached,
+      providerCalls: outcome.providerCalls,
+      sources: storyboard?.sources?.length ?? 0,
+    },
+  };
 }
