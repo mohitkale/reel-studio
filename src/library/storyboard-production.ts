@@ -30,6 +30,7 @@ import {
   planFromStoryboard,
   type StoryboardProductionPlan,
 } from "@/production/storyboard-plan";
+import { getProductionPreset } from "@/production/presets";
 import { lintStoryboard, type LintResult } from "@/storyboard";
 import { ProviderError } from "@/providers/voice/types";
 
@@ -235,13 +236,21 @@ export async function produceFromStoryboard(
     ),
   };
 
+  const preset = getProductionPreset(plan.presetId);
+  if (!preset) throw new ProviderError(`Unknown look "${plan.presetId}"`, 500);
   const created = await createProjectFromPlan(
     finalPlan,
     plan.orientation,
     backgrounds,
     "hyperframes",
-    { styleId: finalPlan.styleId, energy: finalPlan.energy },
     {
+      styleId: finalPlan.styleId ?? preset.defaults.styleId,
+      energy: finalPlan.energy ?? preset.defaults.energy,
+    },
+    {
+      preset: { id: preset.id, version: preset.version },
+      roles: plan.roles,
+      visualAmbition: "expressive",
       savedOverrides: {
         storyboardSource: buildStoryboardSource(storyboard, finalPlan.scenes),
       },
