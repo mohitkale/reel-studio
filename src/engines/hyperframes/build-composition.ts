@@ -481,7 +481,9 @@ const STYLES = `
   .opener-text, .statement-text, .quote-text, .cta-text, .stat-text {
     font-weight: 800; letter-spacing: -0.03em; line-height: 1.12;
     font-size: clamp(42px, 6.2cqw, 78px);
+    text-wrap: balance; overflow-wrap: break-word;
   }
+  .list-item { text-wrap: balance; }
   .statement-text { text-align: center; }
   .underline {
     width: 120px; height: 6px; border-radius: 999px; margin: 28px auto 0;
@@ -946,6 +948,39 @@ function buildSeekScript(
  * Serialize ReelProps into a standalone HyperFrames HTML document.
  *
  */
+function normalizeCopy(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N} ]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Captions show the narration, not the headline. When a scene's on-screen text
+ * already is the spoken line, its caption cues repeat it and are hidden.
+ */
+export function redundantCaptionCueIds(
+  props: Pick<ReelProps, "scenes" | "timeline" | "captions">,
+): Set<string> {
+  const hidden = new Set<string>();
+  const cues = props.captions?.cues ?? [];
+  for (const beat of props.timeline) {
+    const scene = props.scenes.find((candidate) => candidate.id === beat.sceneId);
+    if (!scene) continue;
+    const end = beat.startFrame + beat.durationFrames;
+    const inBeat = cues.filter(
+      (cue) => cue.startFrame >= beat.startFrame && cue.startFrame < end,
+    );
+    if (inBeat.length === 0) continue;
+    const spoken = normalizeCopy(inBeat.map((cue) => cue.text).join(" "));
+    if (spoken && spoken === normalizeCopy(scene.text)) {
+      for (const cue of inBeat) hidden.add(cue.id);
+    }
+  }
+  return hidden;
+}
+
 export function buildHyperframesCompositionHtml(
   props: ReelProps,
   opts: {
@@ -1255,9 +1290,11 @@ export function buildHyperframesCompositionHtml(
     engine: "hyperframes",
   });
   const captionInner = captionResolved.inner;
+  const redundantCues = redundantCaptionCueIds(props);
   const captionBlocks =
     props.captions?.enabled === true
       ? props.captions.cues
+          .filter((cue) => !redundantCues.has(cue.id))
           .map((cue, index) => {
             const start = coverSeconds + cue.startFrame / fpsSafe;
             const duration =
