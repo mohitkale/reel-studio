@@ -53,8 +53,9 @@ entire suite after every small edit or repeat passing checks without a new reaso
 | Rendering, security, jobs, database, dependencies | Broader tests and relevant actual exports/browser/migration/cancellation scenarios                         | Linux/Windows checks and builds         |
 | Release                                           | Clean install/upgrade, full checks, browser workflows, actual render matrix, recovery, licenses and assets | Verified exact release commit           |
 
-Use `npm run test:unit -- tests/<affected>.test.ts --maxWorkers=2` for focused
-tests and `npm run test:unit -- --maxWorkers=2` for broader local runs. Add
+Use `npm run test:unit` for fast unit tests and
+`npm run test:int -- --maxWorkers=2` for `*.int.test.ts` integration tests
+(SQLite, filesystem, FFmpeg, workers); pass a file path to focus either. Add
 meaningful regression coverage; avoid tests that simply mirror implementation.
 Visual changes require actual exported frames and preview/export inspection.
 Keep paid providers and new model downloads opt-in; use fixtures where possible.

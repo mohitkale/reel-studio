@@ -90,7 +90,7 @@ API authorization and errors, MCP forwarding, and unchanged compiled HTML in
 portrait, landscape, and square.
 
 ```sh
-npm run test:unit -- src/production/film-plan.test.ts src/library/film-plan-service.test.ts src/library/film-plan-mcp.test.ts 'src/app/api/scripts/[id]/film-plan/route.test.ts' --maxWorkers=2
+npx vitest run src/production/film-plan.test.ts src/library/film-plan-service.int.test.ts src/library/film-plan-mcp.test.ts 'src/app/api/scripts/[id]/film-plan/route.test.ts' --maxWorkers=2
 ```
 
 The [M1 validation record](production/ADAPTIVE_M1_VALIDATION.md) records the

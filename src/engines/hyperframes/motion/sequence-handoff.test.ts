@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { it, expect } from "vitest";
 import { gsap } from "gsap";
 import { sequenceFixture } from "../../../../tests/fixtures/sequence-direction";

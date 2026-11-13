@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
 import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-composition";
 import { motionDirection } from "@/production/motion";
