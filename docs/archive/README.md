@@ -8,7 +8,7 @@ or a list of unfinished milestones. The original 15 review milestones are merged
 Stable [v0.4.0](https://github.com/mohitkale/reel-studio/releases/tag/v0.4.0) was
 published 2026-10-03 at `2081ac3edd9eab1f4dc2068c37d1f1deec06c4f1`.
 Use [current documentation](../README.md), [the roadmap](../../ROADMAP.md), and
-[release validation](../production/RELEASE_VALIDATION.md) for supported behavior.
+[release validation](release-evidence/RELEASE_VALIDATION.md) for supported behavior.
 
 | Historical record                                           | Purpose                                                         |
 | ----------------------------------------------------------- | --------------------------------------------------------------- |
@@ -25,11 +25,20 @@ Use [current documentation](../README.md), [the roadmap](../../ROADMAP.md), and
 | [October 1 benchmarks](production/LONG_VIDEO_BENCHMARKS.md) | Hardware-specific dual-engine measurements                      |
 | [Validation history](production/RELEASE_VALIDATION.md)      | Earlier matrices and experiments                                |
 
-Earlier [PR task ledgers](../production/archive/README.md) and JSON evidence
-retain their paths for release-check compatibility. Keep retained catalog
+Earlier [PR task ledgers](release-evidence/archive/README.md) and JSON evidence
+live in `release-evidence/`, which `npm run release:check` reads. Keep retained catalog
 revisions, upgrade fixtures, and component notices even when their names refer
 to older versions.
 
 Later records: [Content studio implementation review](CONTENT_STUDIO_REVIEW.md)
 and [studio completion](CONTENT_STUDIO_COMPLETION.md) document the delivered
 creator workflows and their validation.
+
+## Moved here by the docs consolidation
+
+| Folder                                | Contents                                                                 |
+| ------------------------------------- | ------------------------------------------------------------------------ |
+| [guides](guides/)                     | Earlier detailed guides, each marked with the current guide replacing it |
+| [releases](releases/)                 | Release notes for v0.4.0 to v0.8.0                                       |
+| [release-evidence](release-evidence/) | Validation records, acceptance and matrix JSON, contracts, task ledgers  |
+| [assets](assets/)                     | Screenshots and evidence for past milestones                             |

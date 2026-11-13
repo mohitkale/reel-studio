@@ -6,7 +6,7 @@
 # Build Brief: "Reel Studio" - a professional AI short-form video studio
 
 > Historical plan: engine references describe the earlier dual-engine implementation.
-> New previews and exports use HyperFrames only. See [current engine notes](../VIDEO_ENGINES.md) and [the current review milestones](CRITICAL_REVIEW_PLAN.md).
+> New previews and exports use HyperFrames only. See [current engine notes](guides/VIDEO_ENGINES.md) and [the current review milestones](CRITICAL_REVIEW_PLAN.md).
 
 Paste this whole file into Claude Code as the opening prompt. Build it from
 scratch in a new folder. Treat this as a product spec, not a one-shot script:

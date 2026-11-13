@@ -1,8 +1,8 @@
 # Content studio completion (historical)
 
 Follow-up to [PR #57's original milestone](CONTENT_STUDIO_REVIEW.md).
-Current usage is documented in the [creator guide](../CREATOR_GUIDE.md) and
-[factory guide](../FACTORY_WORKFLOWS.md).
+Current usage is documented in the [creator guide](guides/CREATOR_GUIDE.md) and
+[factory guide](guides/FACTORY_WORKFLOWS.md).
 
 ## Delivered
 

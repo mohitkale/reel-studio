@@ -14,23 +14,23 @@ The first video needs **no AI key or voice-model download**.
 
 [![Reel Studio: lunar phases, seasonal wheel and orbital motion](docs/assets/story-motion-0.5.0.gif)](https://github.com/mohitkale/reel-studio/releases/tag/v0.5.0)
 
-_Native motion examples from v0.5.0's verified feature exports. [Watch with sound](https://github.com/mohitkale/reel-studio/releases/download/v0.5.0/reel-studio-0.5.0-story-motion.mp4). [Demo provenance](docs/DEMO_CAPTURE.md)._
+_Native motion examples from v0.5.0's verified feature exports. [Watch with sound](https://github.com/mohitkale/reel-studio/releases/download/v0.5.0/reel-studio-0.5.0-story-motion.mp4). [Demo provenance](docs/archive/guides/DEMO_CAPTURE.md)._
 
-Use dedicated **Voiceovers** and **Factory** workspaces, organize projects by series, and finish saved audio with local waveform edits. See the [creator guide](docs/CREATOR_GUIDE.md#content-studio-workspaces).
+Use dedicated **Voiceovers** and **Factory** workspaces, organize projects by series, and finish saved audio with local waveform edits. See the [creator guide](docs/archive/guides/CREATOR_GUIDE.md#content-studio-workspaces).
 
-[Get started](#quick-start) · [Creator guide](docs/CREATOR_GUIDE.md) · [Documentation](docs/README.md) · [Contribute](CONTRIBUTING.md)
+[Get started](#quick-start) · [Creator guide](docs/archive/guides/CREATOR_GUIDE.md) · [Documentation](docs/README.md) · [Contribute](CONTRIBUTING.md)
 
-Source-linked writing and targeted editing: see the [editorial guide](docs/EDITORIAL.md) for creative briefs, cached storyboards and guarded revisions.
+Source-linked writing and targeted editing: see the [editorial guide](docs/archive/guides/EDITORIAL.md) for creative briefs, cached storyboards and guarded revisions.
 
 Supplied product proof and ranked stock choices have visible reasons and separate
-optional vision budgets. See [media relevance](docs/MEDIA_RELEVANCE.md) and the
-[offline editorial benchmark](docs/EDITORIAL_BENCHMARK.md) for verified examples
+optional vision budgets. See [media relevance](docs/archive/guides/MEDIA_RELEVANCE.md) and the
+[offline editorial benchmark](docs/archive/guides/EDITORIAL_BENCHMARK.md) for verified examples
 and human export review.
 
 ## What you can make
 
 - **Videos:** six visual presets, 29 motion treatments and nine
-  [story motion showpieces](docs/MOTION_LIBRARY.md#story-motion-showpieces)
+  [story motion showpieces](docs/archive/guides/MOTION_LIBRARY.md#story-motion-showpieces)
   chosen from your content, plus your own screenshots or footage. Export
   portrait **9:16**, landscape **16:9**, or square **1:1**.
 - **Voiceovers and captions:** optional local Kokoro, configurable voice providers,
@@ -40,15 +40,15 @@ and human export review.
 - **Repeatable production:** saved jobs, progress that survives refresh,
   cancellation and retry, format variants, and batches.
 - **AI-assisted workflows:** optional local/cloud planning and a scoped
-  [MCP server](mcp/README.md) for your coding agent or automation.
+  [MCP server](docs/MCP.md) for your coding agent or automation.
 
 Projects, uploads, and outputs stay local. Configured cloud providers receive
-only the data needed for the features you choose. See [local-first behavior](docs/LOCAL_FIRST.md).
+only the data needed for the features you choose. See [local-first behavior](docs/archive/guides/LOCAL_FIRST.md).
 
 ## Quick start
 
 Install **Node 24 LTS** (minimum 24.15), **FFmpeg/FFprobe**, and a supported
-Chrome/Chromium browser. See [setup and troubleshooting](docs/SETUP.md).
+Chrome/Chromium browser. See [setup and troubleshooting](docs/archive/guides/SETUP.md).
 
 ```bash
 git clone https://github.com/mohitkale/reel-studio.git
@@ -70,7 +70,7 @@ The launcher runs both the app and its production worker. `npm run doctor`
 checks your runtime; `npm run sample:export` creates a bundled local example.
 Kokoro downloads and caches model weights on first synthesis if needed.
 
-**Upgrading?** [v0.8.0 upgrade notes](docs/RELEASE_0.8.0.md) cover backups,
+**Upgrading?** [v0.8.0 upgrade notes](docs/archive/releases/RELEASE_0.8.0.md) cover backups,
 migrations, preserved media, and rollback.
 
 ## Choose a look
@@ -87,21 +87,21 @@ migrations, preserved media, and rollback.
 Charts use supplied values. Review optional AI-generated claims before publishing.
 
 Checkpoint the current design from **Customize video → Film plan JSON** or through
-REST/MCP. Six [adaptive recipes](docs/ADAPTIVE_RECIPES.md) reflow supplied content
+REST/MCP. Six [adaptive recipes](docs/archive/guides/ADAPTIVE_RECIPES.md) reflow supplied content
 by density, duration and aspect.
-[Sequence direction](docs/SEQUENCE_DIRECTION.md) adds local lookahead, recurring
+[Sequence direction](docs/archive/guides/SEQUENCE_DIRECTION.md) adds local lookahead, recurring
 subject identities, decision explanations and supported card handoffs. The
-[creation workflow](docs/CREATION_UX.md) adds a contact sheet, draft animatic,
+[creation workflow](docs/archive/guides/CREATION_UX.md) adds a contact sheet, draft animatic,
 reviewed scene/chapter/film variations with guarded undo, and optional local AI
-readiness tests. [Lesson direction](docs/LONG_FORM_DIRECTION.md) adds chapter
+readiness tests. [Lesson direction](docs/archive/guides/LONG_FORM_DIRECTION.md) adds chapter
 goals, recap callbacks and bounded ten-minute exports. The
-[content factory](docs/FACTORY_WORKFLOWS.md) adds versioned series profiles, frozen
-aspect/cutdown variants and pinned recipe-pack archives. See [adaptive film contracts](docs/ADAPTIVE_CONTRACTS.md).
+[content factory](docs/archive/guides/FACTORY_WORKFLOWS.md) adds versioned series profiles, frozen
+aspect/cutdown variants and pinned recipe-pack archives. See [adaptive film contracts](docs/archive/guides/ADAPTIVE_CONTRACTS.md).
 
 Voiceovers and podcasts include database-saved audio edit plans and edited takes.
 Imported recordings can be transcribed with the existing local Whisper setup.
 Language versions support manual translation with no API calls and optional AI
-previews. See the [creator guide](docs/CREATOR_GUIDE.md).
+previews. See the [creator guide](docs/archive/guides/CREATOR_GUIDE.md).
 
 ![Projects with visible AI and local production creation paths](docs/assets/reel-studio-home.png)
 
@@ -119,7 +119,7 @@ Provider keys are optional. Local AI servers are configured separately; Reel
 Studio does not install their models. Unsplash export staging and Coverr remain
 license-gated. [Provider and asset terms](docs/LICENSING.md) apply.
 
-The authenticated [research API](docs/RESEARCH.md) captures supplied sources or
+The authenticated [research API](docs/archive/guides/RESEARCH.md) captures supplied sources or
 uses optional Gemini or OpenAI web research in separate, bounded jobs. It retains
 immutable evidence, citations and usage for inspection. Settings includes a
 research/writer readiness checker; local writers can reuse saved evidence. Run `npm run db:migrate`
@@ -127,9 +127,9 @@ after upgrading. Evidence integration with video creation is separate work.
 
 ## Explore and contribute
 
-- Follow the [walkthroughs](docs/WALKTHROUGHS.md) or explore the app's **Gallery**.
-- Read the [architecture](docs/ARCHITECTURE.md), [template guide](docs/TEMPLATE_AUTHORING.md),
-  and [provider/block extension guide](docs/EXTENSIONS.md).
+- Follow the [walkthroughs](docs/archive/guides/WALKTHROUGHS.md) or explore the app's **Gallery**.
+- Read the [architecture](docs/ARCHITECTURE.md), [template guide](docs/archive/guides/TEMPLATE_AUTHORING.md),
+  and [provider/block extension guide](docs/archive/guides/EXTENSIONS.md).
 - Report a reproducible bug, improve a guide, add a template or provider, or
   submit a focused PR. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
 - See what's shipped and what's next in the [changelog](CHANGELOG.md) and [roadmap](ROADMAP.md).

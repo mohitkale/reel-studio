@@ -16,7 +16,7 @@ upstream terms before commercial or enterprise use — they can change.
 The MIT License covers **our** code only. It does **not** relicense dependencies,
 cloud APIs, stock/music providers, or VoiceForge model weights.
 
-Quick Produce changes orchestration, not licensing. Its immutable revision keeps
+Quick Produce changes orchestration, not licensing. Its saved revision keeps
 the selected engine, model/provider identifiers, media attribution snapshots,
 and output metadata, but it does not grant new rights to any input or provider
 output. The deterministic planner adds no model license. Server-side Kokoro uses
@@ -30,18 +30,18 @@ responsible for the selected local model's terms.
 HyperFrames is the sole preview/export engine, licensed
 [Apache-2.0](https://github.com/heygen-com/hyperframes/blob/main/LICENSE).
 Remotion dependencies and runtime support have been removed. Existing MP4 files
-and immutable production provenance are retained; new exports use HyperFrames.
+and saved production provenance are retained; new exports use HyperFrames.
 
 GSAP uses the [Standard License](https://gsap.com/community/standard-license/),
 a custom no-charge license with restrictions, rather than an OSI license.
 Therefore this runtime is not wholly Apache-2.0 or wholly OSI open source.
 Reel Studio's own MIT license does not relicense dependencies or model weights.
 
-The frozen browser/render runtime in `public/reel-runtime/` also bundles Geist,
+The bundled browser/render runtime in `public/reel-runtime/` also bundles Geist,
 Geist Mono, Inter, EB Garamond, Archivo Black and JetBrains Mono under OFL-1.1.
 Their complete notices accompany the assets; the manifest records installed
 source versions and checksums. Font aliases are rendered by genuine bundled
-faces, rather than relabeling a sans font as a serif. See [export fidelity](EXPORT_FIDELITY.md).
+faces, rather than relabeling a sans font as a serif. See [export fidelity](archive/guides/EXPORT_FIDELITY.md).
 
 ## Local / permissive runtime dependencies (selected)
 
@@ -124,7 +124,7 @@ license.
 
 ## Local-first expansion policy snapshot
 
-The [PR 1 snapshot](production/archive/LOCAL_FIRST_TASKS.md#api-and-licensing-snapshot-2026-09-13)
+The [PR 1 snapshot](archive/release-evidence/archive/LOCAL_FIRST_TASKS.md#api-and-licensing-snapshot-2026-09-13)
 records the earlier stock API research and release gates. The renderer restricts Unsplash
 to hotlinked previews because the reviewed API guidance does not authorize a
 video-render staging exception; its exports remain gated. Coverr remains disabled pending resolution of its API license gate.
@@ -178,4 +178,4 @@ installed build and enabled components; verify `ffmpeg -L` for distributed build
 Run `npm run security:inventory` to list every lockfile package location, version
 and declared license, including nested copies, together with the lockfile SHA-256.
 Undeclared metadata and embedded components still require review. The security
-reachability snapshot is in [PORTABILITY_HARDENING.md](PORTABILITY_HARDENING.md).
+reachability snapshot is in [PORTABILITY_HARDENING.md](archive/guides/PORTABILITY_HARDENING.md).

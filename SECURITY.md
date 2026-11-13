@@ -8,11 +8,11 @@ This project is in active local-first development. The default branch is the onl
 
 Reel Studio is designed as a **single-user, local-first** app (localhost / Docker on `127.0.0.1`).
 
-| Mode | Status |
-| --- | --- |
-| `npm run dev` / Docker on **127.0.0.1** | Supported |
+| Mode                                                         | Status                              |
+| ------------------------------------------------------------ | ----------------------------------- |
+| `npm run dev` / Docker on **127.0.0.1**                      | Supported                           |
 | Binding to LAN / public internet **without** additional auth | **Not supported** — treat as unsafe |
-| Multi-tenant SaaS hosting | Out of scope today |
+| Multi-tenant SaaS hosting                                    | Out of scope today                  |
 
 If you expose the app beyond loopback, you must put your own authentication / reverse proxy in front and set `REEL_STRICT_AUTH=1`. See [Hosting](#hosting--network-exposure).
 
@@ -91,4 +91,4 @@ The scanner checks tracked files (or staged content in the hook) for key signatu
 
 HyperFrames Chromium runs without its OS sandbox. Media signature checks are not full decoder validation, and the CSP does not restrict inline preview scripts. Do not treat uploaded media or local code as safely isolated from your account. The development Docker source mount is writable by the container; named volumes and a non-root user do not make it a hostile-code sandbox.
 
-See [portability and hardening](docs/PORTABILITY_HARDENING.md) for byte limits, tests and remaining advisory reachability. Browser previews may still request public media directly; export DNS pinning does not claim to protect arbitrary browser DNS resolution.
+See [portability and hardening](docs/archive/guides/PORTABILITY_HARDENING.md) for byte limits, tests and remaining advisory reachability. Browser previews may still request public media directly; export DNS pinning does not claim to protect arbitrary browser DNS resolution.
