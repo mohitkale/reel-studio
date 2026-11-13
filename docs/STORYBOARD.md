@@ -143,6 +143,34 @@ MCP and the CLI will call the same function. Scene types map to today's treatmen
 renderer cannot show yet (`body` on most scenes, `icon`, `theme`, `voice.speed`, `media.path`,
 and a code scene's formatting) are listed in the plan's `warnings` instead of being dropped silently.
 
+## Export and import
+
+Every project can be exported as a storyboard: `GET /api/scripts/<id>/storyboard`
+(add `?download=1` for a file), or **Storyboard → Export storyboard JSON** in the
+editor. **Import storyboard JSON** makes a new editable project from a document or a
+pasted chat reply (`POST /api/storyboards?createOnly=1`); nothing is rendered and the
+open project is untouched.
+
+Projects made from a storyboard remember its extra details (a stat's label, a quote's
+headline, a code scene's language, `icon`, `durationHint`, theme, sources) and write
+them back as long as that scene's copy is unchanged; edits made in the editor always
+win. Older projects export from the scene model alone, mapping legacy templates onto
+the nine scene types; anything that cannot be carried over exactly is listed in `notes`
+(for example a template with no v1 equivalent becomes a `statement`). Normalised, a
+storyboard survives storyboard → project → storyboard unchanged; the one thing that does
+not is a `code` scene's formatting beyond its text, which the renderer shows as a bold
+statement today.
+
+## The golden set
+
+`examples/storyboards/` holds twelve hand-written storyboards (a product launch,
+explainer, listicle, data story, how-to, news recap, motivation, developer demo,
+comparison, myth versus fact, story and a podcast episode) in all three formats.
+`npm run examples:check` validates and lints them (zero fixes and warnings; it also
+runs in the unit tests). `npm run examples:render` renders the eleven videos through
+`POST /api/storyboards` into `media/examples/` with a contact sheet each; start the app
+first.
+
 ## What is decided locally
 
 Layout, motion treatments, colour, transitions, caption style, music choice and
