@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Check [ROADMAP.md](https://github.com/mohitkale/reel-studio/blob/main/ROADMAP.md) first.
+        Check the [roadmap](https://github.com/mohitkale/reel-studio/issues/140) and [milestones](https://github.com/mohitkale/reel-studio/milestones) first.
         Do not include API keys or private media.
   - type: textarea
     id: problem

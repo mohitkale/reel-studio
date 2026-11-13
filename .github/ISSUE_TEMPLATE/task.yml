@@ -1,0 +1,57 @@
+name: Roadmap task
+description: A fully specified piece of work that a contributor or coding agent can pick up
+title: "[ID] "
+labels: ["agent-ready"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for planned work that belongs to a milestone. Write it so someone
+        with no other context can finish it. Do not include API keys or private media.
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: The problem, with evidence (a measurement, a frame, an error).
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What to build or change, as a list.
+    validations:
+      required: true
+  - type: textarea
+    id: where
+    attributes:
+      label: Where to start
+      description: Files, folders, routes or settings to look at first.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: Checkable outcomes. The PR ticks each one with its evidence.
+      placeholder: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: verify
+    attributes:
+      label: How to verify
+      description: Commands to run or steps to follow.
+    validations:
+      required: true
+  - type: textarea
+    id: out
+    attributes:
+      label: Not in scope
+  - type: textarea
+    id: deps
+    attributes:
+      label: Depends on
+      description: Issue numbers that must be closed first, or "Nothing".

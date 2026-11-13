@@ -39,6 +39,19 @@ checks, and troubleshooting. Never use `db:push` to upgrade an existing database
   Take the lowest-numbered open `agent-ready` issue in the earliest open
   milestone whose dependencies are closed.
 
+### Labels
+
+| Label                                 | Meaning                                                                     |
+| ------------------------------------- | --------------------------------------------------------------------------- |
+| `area:*`                              | Part of the product: engine, storyboard, mcp, studio, audio, ci, docs, repo |
+| `priority:p0` / `p1` / `p2`           | Blocks the milestone / needed for it / nice to have                         |
+| `size:S` / `M` / `L`                  | Under half a day / one to two days / several days                           |
+| `agent-ready`                         | Fully specified; anyone can pick it up                                      |
+| `needs-decision`                      | Waits for a maintainer decision                                             |
+| `tracking`                            | Roadmap or milestone overview                                               |
+| `bug`, `enhancement`, `documentation` | Reports and requests from the issue forms                                   |
+| `good first issue`, `help wanted`     | Good entry points for new contributors                                      |
+
 Before opening the PR: add or adjust checks for behavior that changed, update
 the owning guide when setup, behavior, or APIs change, run the relevant local
 checks below, inspect your diff, and scan for secrets. Contributors without
