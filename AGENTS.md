@@ -39,6 +39,10 @@ Reel Studio is a local-first content factory for short videos and podcasts. **An
 - Batching (maintainer decision, 2026-11-13): finish a whole milestone on one branch, one commit per issue, then open one PR that starts with a `Closes #<n>` line per issue, ticks every issue's **Done when** lines, and runs the long checks (full tests, real renders, CI) once. Stop early only to ask the maintainer a question. Small unrelated fixes still get their own PR.
 - Fix failed checks on the same branch. Respect required reviews; report blockers instead of working around them.
 
+## Keep the loop fast (maintainer request, 2026-11-14)
+
+Most delay comes from checks, not coding. While iterating, run only the fast loop: one scene or one example (`npm run examples:lint-frames -- --only <name>`), and the unit tests of the files you changed. Run the full frame check, the whole test suite and CI once per PR. Run a real render only when the export path changed, for one example, at draft quality. Do not run the golden-set render (`examples:render`, about 70 minutes) or `release:matrix` unless the maintainer asks or a release needs them. Windows runs only in CI. Say beforehand when a step will take more than 15 minutes.
+
 ## Before pushing
 
 Run what matches the change, not everything every time:

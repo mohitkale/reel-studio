@@ -56,12 +56,55 @@ export function buildTextFitScript(): string {
       }
       if (!fits()) stage.dataset.textFitWarning = 'Split this copy or list into shorter scenes for readable text.';
     });
+    // Lists fill their region: grow the rows until the group nearly fills it.
+    document.querySelectorAll('.fx-panelled .fx-dlg-list').forEach(function (box) {
+      var items = Array.from(box.querySelectorAll('.fx-check-item'));
+      var title = box.querySelector('.fx-list-title');
+      var stage = box.closest('.fx-stage');
+      if (!items.length || !stage) return;
+      var itemBase = parseFloat(getComputedStyle(items[0]).fontSize);
+      var titleBase = title ? parseFloat(getComputedStyle(title).fontSize) : 0;
+      var cs = getComputedStyle(box);
+      var availH = box.clientHeight - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0);
+      var availW = box.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+      var list = box.querySelector('.fx-check-list');
+      function apply(v) {
+        items.forEach(function (item) { item.style.fontSize = (itemBase * v).toFixed(2) + 'px'; });
+        if (title) title.style.fontSize = (titleBase * v).toFixed(2) + 'px';
+        if (list) list.style.gap = (stage.clientHeight * 0.012 * v).toFixed(2) + 'px';
+      }
+      function used() {
+        var h = 0;
+        Array.from(box.children).forEach(function (c) { h += c.offsetHeight; });
+        return { h: h, w: Math.max.apply(null, Array.from(box.children).map(function (c) { return c.scrollWidth; })) };
+      }
+      var cap = Math.max(1, (stage.clientHeight * 0.06) / itemBase);
+      var v = 1;
+      apply(v);
+      while (v < cap) {
+        var next = Math.min(cap, v * 1.05);
+        apply(next);
+        var u = used();
+        if (u.h > availH * 0.94 || u.w > availW + 1) { apply(v); break; }
+        v = next;
+      }
+    });
     document.querySelectorAll('.fx-stack').forEach(function (stack) {
       var stage = stack.closest('.fx-stage');
       var lines = Array.from(stack.querySelectorAll('.fx-line-inner'));
       if (!stage || !lines.length || !stack.clientWidth) return;
       var width = stack.clientWidth * 0.96;
+      // A scene's content lives in one region of the layout: fit to it.
+      var box = stack.closest('.fx-panelled .fx-dialogue');
       var height = stage.clientHeight * 0.62;
+      if (box) {
+        var others = 0;
+        Array.from(box.children).forEach(function (child) { if (!child.contains(stack) && child !== stack) others += child.offsetHeight; });
+        height = Math.max(40, box.clientHeight * 0.84 - others);
+        var holder = stack.closest('.fx-lt-plate') || box;
+        var inset = holder === box ? (parseFloat(getComputedStyle(box).paddingLeft) || 0) * 2 : (parseFloat(getComputedStyle(holder).paddingLeft) || 0) + (parseFloat(getComputedStyle(holder).paddingRight) || 0);
+        width = (holder.clientWidth - inset) * 0.96;
+      }
       var stackStyle = getComputedStyle(stack);
       var widest = 0;
       var totalHeight = stack.offsetHeight;
@@ -84,7 +127,7 @@ export function buildTextFitScript(): string {
         widest = Math.max(widest, textWidth + (parseFloat(style.paddingRight) || 0));
         return { inner: size, outer: parseFloat(getComputedStyle(line.parentElement).fontSize) };
       });
-      // Fit to the stage: shrink to fit, and grow (up to 2.4x) so short copy fills the
+      // Fit to the stage: shrink to fit, and grow (up to 14% of the frame height) so short copy fills the
       // frame, but never past the stage edges (offset metrics ignore animation transforms).
       var baseStack = parseFloat(stackStyle.fontSize);
       function apply(value) {
@@ -98,10 +141,16 @@ export function buildTextFitScript(): string {
         var top = 0, left = 0, node = stack;
         while (node && node !== stage) { top += node.offsetTop; left += node.offsetLeft; node = node.offsetParent; }
         if (node !== stage) return false;
-        return top < stage.clientHeight * 0.04 || top + stack.offsetHeight > stage.clientHeight * 0.9 ||
-          left < stage.clientWidth * 0.03 || left + stack.offsetWidth > stage.clientWidth * 0.97;
+        var vars = getComputedStyle(stage.closest('#root') || document.body);
+        var px = function (name, fallback) { var v = parseFloat(vars.getPropertyValue(name)); return isFinite(v) ? v : fallback; };
+        var safeL = px('--safe-left', stage.clientWidth * 0.04), safeR = px('--safe-right', stage.clientWidth * 0.04);
+        var safeT = px('--safe-top', stage.clientHeight * 0.04), safeB = px('--safe-bottom', stage.clientHeight * 0.1);
+        return top < safeT - 1 || top + stack.offsetHeight > stage.clientHeight - safeB + 1 ||
+          left < safeL - 1 || left + stack.offsetWidth > stage.clientWidth - safeR + 1;
       }
-      var scale = Math.min(2.4, width / Math.max(1, widest), height / Math.max(1, totalHeight));
+      // Largest line may reach 14% of the frame height, however small the authored size.
+      var growCap = Math.max(1, (stage.clientHeight * 0.14) / Math.max.apply(null, sizes.map(function (size) { return size.inner; })));
+      var scale = Math.min(growCap, width / Math.max(1, widest), height / Math.max(1, totalHeight));
       apply(scale);
       for (var step = 0; scale > 1 && step < 16 && leavesStage(); step++) {
         scale = Math.max(1, scale * 0.92);

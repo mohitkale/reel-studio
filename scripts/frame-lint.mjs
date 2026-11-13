@@ -37,6 +37,7 @@ const examplesDir = path.resolve("examples/storyboards");
 /** Thresholds. Fill and the 9:16 text minimum come from the roadmap; the others are decisions recorded in docs/QUALITY.md. */
 export const THRESHOLDS = {
   fill: 0.45,
+  textFill: 0.1,
   minTextShare: { portrait: 0.022, landscape: 0.026, square: 0.024 },
   contrast: { small: 4.5, large: 3 },
   captionSimilarity: 0.8,
@@ -128,7 +129,10 @@ async function measureInPage(safe, png) {
     return false;
   };
   const rgba = (c) => {
-    const m = c.match(/[\d.]+/g)?.map(Number) ?? [0, 0, 0, 1];
+    const m = c.match(/-?[\d.]+(?:e-?\d+)?/g)?.map(Number) ?? [0, 0, 0, 1];
+    // Modern colour functions (color-mix) compute to color(srgb r g b / a) in 0..1.
+    if (/^color\(/.test(c))
+      return { r: m[0] * 255, g: m[1] * 255, b: m[2] * 255, a: m[3] ?? 1 };
     return { r: m[0], g: m[1], b: m[2], a: m[3] ?? 1 };
   };
 
@@ -214,6 +218,20 @@ async function measureInPage(safe, png) {
     right: Math.min(b.right, safeRect.right),
     bottom: Math.min(b.bottom, safeRect.bottom),
   });
+  const bodyText = texts.filter((t) => !t.caption).map((t) => t.rect);
+  const textBox = bodyText.length
+    ? clip({
+        left: Math.min(...bodyText.map((r) => r.left)),
+        top: Math.min(...bodyText.map((r) => r.top)),
+        right: Math.max(...bodyText.map((r) => r.right)),
+        bottom: Math.max(...bodyText.map((r) => r.bottom)),
+      })
+    : null;
+  const textFill = textBox
+    ? (Math.max(0, textBox.right - textBox.left) *
+        Math.max(0, textBox.bottom - textBox.top)) /
+      safeArea
+    : 0;
   const fillBox = bbox ? clip(bbox) : null;
   const fill = fillBox
     ? (Math.max(0, fillBox.right - fillBox.left) *
@@ -300,7 +318,7 @@ async function measureInPage(safe, png) {
 
   const recipe =
     root.querySelector("[data-recipe]")?.getAttribute("data-recipe") ?? null;
-  return { W, H, safeRect, bbox, fill, texts, hash, recipe };
+  return { W, H, safeRect, bbox, fill, textFill, texts, hash, recipe };
 }
 
 async function lintStoryboardFile(file, formatOverride) {
@@ -336,6 +354,12 @@ async function lintStoryboardFile(file, formatOverride) {
     const scene = props.scenes[index];
     const failures = [];
     const body = m.texts.filter((t) => !t.caption);
+    if (m.textFill < THRESHOLDS.textFill)
+      failures.push({
+        check: "text-fill",
+        measured: +m.textFill.toFixed(3),
+        threshold: THRESHOLDS.textFill,
+      });
     if (m.fill < THRESHOLDS.fill)
       failures.push({
         check: "frame-fill",

@@ -446,7 +446,13 @@ function recipeForTemplate(templateId: string, mood?: SceneMood): string {
 
 function chipHtml(speaker: string, accent: string, ink: string): string {
   // Scene roles are internal vocabulary ("summary", "cta"); never put them on screen.
-  if (!speaker || (PRODUCTION_SCENE_ROLES as readonly string[]).includes(speaker.trim().toLowerCase())) return "";
+  if (
+    !speaker ||
+    (PRODUCTION_SCENE_ROLES as readonly string[]).includes(
+      speaker.trim().toLowerCase(),
+    )
+  )
+    return "";
   return `<p class="fx-chip" style="--chip:${accent};color:${ink}">${escapeHtml(speaker)}</p>`;
 }
 
@@ -617,13 +623,15 @@ export function buildNativeCatalogVisual(args: {
       });
       return `
         ${stageShell(sid, pal, "terminal", "fx-chart")}
-          <div class="fx-content">
-            <p class="fx-chart-title" style="color:${pal.ink}">${escapeHtml(scene.visual || scene.text.slice(0, 48))}</p>
-            <div class="fx-chart-bars">
-              ${bars.join("")}
+          <div class="fx-content fx-panelled">
+            <div class="fx-dialogue fx-dlg-chart">
+              <p class="fx-chart-title" style="color:${pal.ink}">${escapeHtml(scene.visual || scene.text.slice(0, 48))}</p>
+              <div class="fx-chart-bars">
+                ${bars.join("")}
+              </div>
+              <p class="fx-chart-line" style="color:${pal.ink}">${textHtml}</p>
+              ${chart.sourceAttribution ? `<p class="fx-chart-source">${escapeHtml(chart.sourceAttribution)}</p>` : ""}
             </div>
-            <p class="fx-chart-line" style="color:${pal.ink}">${textHtml}</p>
-            ${chart.sourceAttribution ? `<p class="fx-chart-source">${escapeHtml(chart.sourceAttribution)}</p>` : ""}
           </div>
         </div>`;
     }
@@ -681,7 +689,7 @@ export function buildCinematicClassicVisual(args: {
         <div class="fx-dialogue fx-dlg-opener">
           <div class="fx-lt-plate" style="--accent:${accent}">
             ${chip}
-            <div class="fx-stack opener-stack" style="color:${pal.ink}">${lineStackHtml(scene.text, scene.emphasis, 24, "fx-line sans", 5)}</div>
+            <div class="fx-stack opener-stack" style="color:${pal.ink}">${lineStackHtml(scene.text, scene.emphasis, 14, "fx-line sans", 3)}</div>
           </div>
         </div>`;
       break;
@@ -689,8 +697,7 @@ export function buildCinematicClassicVisual(args: {
       body = `
         <div class="fx-dialogue fx-dlg-broll">
           <div class="fx-lt-plate fx-broll-plate" style="--accent:${accent}">
-            <p class="fx-kicker" style="color:${accent}">B-ROLL</p>
-            <div class="fx-stack opener-stack" style="color:${pal.ink}">${lineStackHtml(scene.text, scene.emphasis, 18, "fx-line sans", 3)}</div>
+            <div class="fx-stack opener-stack" style="color:${pal.ink}">${lineStackHtml(scene.text, scene.emphasis, 14, "fx-line sans", 3)}</div>
           </div>
         </div>`;
       break;
@@ -765,7 +772,7 @@ export function buildCinematicClassicVisual(args: {
 
   return `
     ${stageShell(sid, pal, recipe, "fx-classic")}
-      <div class="fx-content recipe-content-${recipe}">
+      <div class="fx-content fx-panelled recipe-content-${recipe}">
         ${body}
       </div>
     </div>`;
@@ -1088,6 +1095,7 @@ export const NATIVE_CATALOG_STYLES = `
     opacity: 0; transform: translateY(28px);
   }
   .fx-check-num {
+    color: color-mix(in srgb, var(--fx-c, #ff5a5f) 70%, #fff) !important;
     flex: 0 0 auto; font-family: "Anton", Impact, sans-serif;
     font-size: 0.9em; letter-spacing: 0.04em; line-height: 1.2;
   }
@@ -1119,7 +1127,8 @@ export const NATIVE_CATALOG_STYLES = `
     font-weight: 800; color: #0b0f19; font-size: 18px;
   }
   .fx-cta-btn {
-    margin: 28px auto 0; display: inline-block; opacity: 0; transform: translateY(14px);
+    margin: calc(var(--frame-h, 1920px) * 0.02) auto 0; display: inline-block; opacity: 0; transform: translateY(14px);
+    font-size: calc(var(--frame-h, 1920px) * 0.03); padding: 0.5em 1.1em;
   }
   .fx-yt-btn { background: #f00; color: #fff; }
   .fx-money-num {
@@ -1127,29 +1136,29 @@ export const NATIVE_CATALOG_STYLES = `
     line-height: 0.95; opacity: 0; transform: translateY(24px);
   }
   .fx-money-line, .fx-chart-line {
-    font-size: clamp(26px, 3.8cqw, 40px); font-weight: 700; max-width: 18ch;
+    font-size: calc(var(--frame-h, 1920px) * 0.034); font-weight: 700; max-width: none;
     opacity: 0; transform: translateY(14px);
   }
   .fx-chart-title {
-    font-family: "Instrument Serif", Georgia, serif; font-size: 36px; margin-bottom: 18px;
+    font-family: "Instrument Serif", Georgia, serif; font-size: calc(var(--frame-h, 1920px) * 0.04); margin-bottom: calc(var(--frame-h, 1920px) * 0.012);
     opacity: 0; transform: translateY(10px);
   }
   .fx-chart-bars {
-    display: flex; align-items: stretch; gap: 14px; height: 300px; width: min(760px, 90%);
-    margin-bottom: 20px;
+    display: flex; align-items: stretch; gap: calc(var(--frame-h, 1920px) * 0.01); flex: 1 1 auto; min-height: 30%; width: 100%;
+    margin-bottom: calc(var(--frame-h, 1920px) * 0.012);
   }
   .fx-chart-bar {
     flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-    gap: 8px; color: rgba(255,255,255,.72); font-size: 15px; text-align: center;
+    gap: 8px; color: rgba(255,255,255,.82); font-size: calc(var(--frame-h, 1920px) * 0.027); text-align: center;
   }
-  .fx-chart-bar b { font-size: 17px; white-space: nowrap; }
+  .fx-chart-bar b { font-size: 1.15em; white-space: nowrap; }
   .fx-chart-bar span { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .fx-chart-bars i {
     width: 100%; height: var(--h); border-radius: 10px 10px 4px 4px; display: block;
     background: linear-gradient(180deg, var(--fx-c), #333);
     transform: scaleY(0.08); transform-origin: bottom;
   }
-  .fx-chart-source { max-width: 760px; font-size: 14px; opacity: .62; }
+  .fx-chart-source { max-width: none; font-size: calc(var(--frame-h, 1920px) * 0.027); opacity: .8; margin: 0; }
   .fx-phone {
     width: 250px; height: 500px; border-radius: 34px; padding: 12px; margin-bottom: 26px;
     background: linear-gradient(160deg, #444, #111); box-shadow: 0 36px 80px rgba(0,0,0,0.5);
@@ -1204,6 +1213,26 @@ export const NATIVE_CATALOG_STYLES = `
     .fx-carousel-card { width: min(15cqw, 24cqh); }
   }
   .fx-dialogue { position: relative; width: 100%; max-width: 96%; }
+  /* Layout contract: a scene's content owns one region of the safe area (top
+     and height come from the layout), and fills it. */
+  .fx-content.fx-panelled { position: absolute; inset: 0; padding: 0; display: block; }
+  .fx-panelled .fx-dialogue {
+    position: absolute; left: var(--safe-left, 6%); right: var(--safe-right, 12%);
+    top: var(--region-top, 14%); height: var(--region-height, 54%);
+    width: auto; max-width: none; box-sizing: border-box;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+    padding: calc(var(--frame-h, 1920px) * 0.03) calc(var(--frame-h, 1920px) * 0.025);
+    border-radius: calc(var(--frame-h, 1920px) * 0.022);
+    background: color-mix(in srgb, var(--fx-ink, #fff) 6%, transparent);
+    border: 2px solid color-mix(in srgb, var(--fx-c, #fff) 38%, transparent);
+  }
+  .fx-panelled .fx-dlg-chart { align-items: stretch; text-align: center; }
+  .fx-panelled .fx-dlg-list,
+  .fx-panelled .fx-dlg-quote { align-items: stretch; text-align: left; }
+  .fx-panelled .fx-dlg-opener,
+  .fx-panelled .fx-dlg-broll { display: flex; align-items: center; justify-content: center; }
+  .fx-panelled .fx-lt-plate { width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
+  .fx-panelled .fx-dlg-opener, .fx-panelled .fx-dlg-broll { align-items: stretch; }
   .fx-dlg-quote { text-align: left; }
   .fx-dlg-list { text-align: left; }
   .fx-dlg-opener { width: 100%; display: flex; justify-content: stretch; }

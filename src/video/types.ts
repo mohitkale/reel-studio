@@ -174,6 +174,8 @@ export type ReelProps = {
   styleId?: StyleId;
   /** Cut / text snappiness. Defaults to normal. */
   energy?: EnergyId;
+  /** Draw the safe area, content region and caption band over every frame (layout debugging). */
+  debugLayout?: boolean;
   /** Resolved safe areas shared by preview and export for this exact canvas. */
   layout?: ProductionLayout;
   /** Versioned preset identity retained by both preview and export. */

@@ -16,6 +16,13 @@ export const productionLayoutSchema = z.object({
   captionMaxWidth: z.number().int().positive(),
   captionBottom: z.number().int().nonnegative(),
   brandInsetBottom: z.number().int().nonnegative(),
+  /** The primary region for a scene's content, between the safe top and the caption band. */
+  region: z
+    .object({
+      top: z.number().int().nonnegative(),
+      height: z.number().int().positive(),
+    })
+    .optional(),
   progressBarHeight: z.number().int().positive(),
   typeScale: z.number().positive(),
   mediaFit: z.enum(["cover", "contain"]),
@@ -33,8 +40,9 @@ const LAYOUT_PROPORTIONS = {
     bottom: 0.18,
     contentWidth: 0.82,
     captionWidth: 0.86,
-    // Captions stay where they were until the caption band moves with the layout contract.
-    captionBottom: 0.075,
+    captionBottom: 0.2,
+    regionTop: 0.14,
+    regionBottom: 0.68,
     brandBottom: 0.033,
     progress: 0.0042,
     typeScale: 1,
@@ -45,7 +53,9 @@ const LAYOUT_PROPORTIONS = {
     bottom: 0.1,
     contentWidth: 0.72,
     captionWidth: 0.68,
-    captionBottom: 0.07,
+    captionBottom: 0.1,
+    regionTop: 0.12,
+    regionBottom: 0.78,
     brandBottom: 0.04,
     progress: 0.0056,
     typeScale: 1,
@@ -56,7 +66,9 @@ const LAYOUT_PROPORTIONS = {
     bottom: 0.13,
     contentWidth: 0.84,
     captionWidth: 0.84,
-    captionBottom: 0.08,
+    captionBottom: 0.13,
+    regionTop: 0.12,
+    regionBottom: 0.72,
     brandBottom: 0.045,
     progress: 0.0056,
     typeScale: 0.92,
@@ -86,6 +98,10 @@ export function resolveProductionLayout(input: {
     contentMaxWidth: Math.round(input.width * rules.contentWidth),
     captionMaxWidth: Math.round(input.width * rules.captionWidth),
     captionBottom: Math.round(input.height * rules.captionBottom),
+    region: {
+      top: Math.round(input.height * rules.regionTop),
+      height: Math.round(input.height * (rules.regionBottom - rules.regionTop)),
+    },
     brandInsetBottom: Math.round(input.height * rules.brandBottom),
     progressBarHeight: Math.max(4, Math.round(input.height * rules.progress)),
     typeScale: rules.typeScale * (shortest / 1080),

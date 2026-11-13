@@ -249,7 +249,8 @@ describe("buildHyperframesCompositionHtml", () => {
     expect(html).toContain('data-start="0.500"');
     expect(html).toContain('data-duration="1.500"');
     expect(html).toContain("Spoken &lt;copy&gt; is escaped.");
-    expect(html).toContain("Headline stays here.");
+    // The headline is packed into display lines; every word is still there, in order.
+    expect(html).toMatch(/Headline[\s\S]*stays[\s\S]*here\./);
     expect(html).toContain("syncSubtitles(t)");
   });
 
