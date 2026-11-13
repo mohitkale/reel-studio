@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "title": "Eight billion people",
+  "format": "1:1",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Humanity just passed eight billion",
+      "narration": "In November 2022 the world population passed eight billion. It took only twelve years to add the last billion."
+    },
+    {
+      "type": "chart",
+      "headline": "World population since 1960",
+      "narration": "In 1960 there were about three billion of us. By 2000 it was just over six billion, and today it is around eight.",
+      "chart": {
+        "labels": ["1960", "1980", "2000", "2020"],
+        "series": [
+          {
+            "label": "People",
+            "values": [3.0, 4.4, 6.1, 7.8],
+            "unit": "bn"
+          }
+        ],
+        "source": "UN World Population Prospects"
+      }
+    },
+    {
+      "type": "stat",
+      "headline": "Twelve years for the last billion",
+      "narration": "Seven billion arrived in 2011. Eight billion arrived in 2022, a gap of about twelve years.",
+      "stat": {
+        "value": "12 years",
+        "label": "from 7 to 8 billion"
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "Growth is slowing down",
+      "narration": "The yearly growth rate has been falling for decades, and the United Nations expects the total to level off later this century."
+    },
+    {
+      "type": "cta",
+      "headline": "Numbers behind the news",
+      "narration": "Follow for one chart a week that makes the headlines easier to read."
+    }
+  ],
+  "sources": [
+    {
+      "title": "UN World Population Prospects",
+      "url": "https://population.un.org/wpp/",
+      "accessed": "2026-11-13"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "title": "Cast iron or nonstick?",
+  "format": "16:9",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "One pan or the other?",
+      "narration": "Every kitchen argument ends here. Cast iron or nonstick, which pan deserves the hook on your wall?"
+    },
+    {
+      "type": "list",
+      "headline": "Cast iron wins at",
+      "narration": "Cast iron takes very high heat, sears beautifully and lasts for generations if you look after it.",
+      "items": [
+        "Searing steak",
+        "Oven to stovetop",
+        "Lasts decades",
+        "Gets better with use"
+      ]
+    },
+    {
+      "type": "list",
+      "headline": "Nonstick wins at",
+      "narration": "Nonstick is light, easy to clean and ideal for eggs and delicate fish that would otherwise stick.",
+      "items": [
+        "Eggs and omelettes",
+        "Delicate fish",
+        "Quick cleanup",
+        "Light to lift"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Heat is the dividing line",
+      "narration": "Nonstick coatings are not meant for very high heat, while cast iron is happiest there."
+    },
+    {
+      "type": "cta",
+      "headline": "Own both, use each well",
+      "narration": "If you can only buy one, buy the pan for the food you cook most. Then tell us which one you chose."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "title": "The lighthouse keeper's last winter",
+  "format": "9:16",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "He had kept the light for forty years",
+      "narration": "Every night for forty years, Tomas climbed the same ninety steps to light the lamp."
+    },
+    {
+      "type": "statement",
+      "headline": "That winter, the lamp was automated",
+      "narration": "In his last winter a machine arrived. It could switch the light on and off, and it never needed a single step."
+    },
+    {
+      "type": "media",
+      "headline": "He still climbed the stairs",
+      "narration": "Each evening he climbed anyway, just to stand beside the light and watch the water turn dark.",
+      "media": {
+        "query": "lighthouse at dusk over dark water"
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "One night, the machine failed",
+      "narration": "In a February storm the machine failed. The lamp went dark, and a fishing boat was somewhere out in the fog."
+    },
+    {
+      "type": "statement",
+      "headline": "Ninety steps, one match",
+      "narration": "Tomas climbed faster than he had in years, and lit the old lamp by hand. The boat found the harbour by dawn."
+    },
+    {
+      "type": "cta",
+      "headline": "Some work still needs a person",
+      "narration": "Technology helps, but someone still has to care enough to climb the stairs. Follow for more short stories."
+    }
+  ]
+}

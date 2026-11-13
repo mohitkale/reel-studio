@@ -116,7 +116,7 @@ research and passes the facts in `brief.researchNotes`.
 ```bash
 curl -X POST "http://localhost:3000/api/storyboards" \
   -H "Content-Type: application/json" \
-  -d @examples/storyboards/calm-morning-45s.json
+  -d @examples/storyboards/product-launch.json
 ```
 
 One call lints and repairs the storyboard, creates the editable project, picks

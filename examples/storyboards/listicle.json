@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "title": "Five Excel shortcuts worth learning",
+  "format": "9:16",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Stop clicking through Excel",
+      "narration": "Most people lose hours a week to the mouse. These five Excel shortcuts will win some of that time back."
+    },
+    {
+      "type": "statement",
+      "headline": "Control plus arrow",
+      "narration": "Control plus an arrow key jumps to the edge of your data in one move, however long the table is."
+    },
+    {
+      "type": "code",
+      "headline": "Add shift to select",
+      "narration": "Hold shift as well and Excel selects everything between where you are and the edge of the table.",
+      "code": {
+        "language": "text",
+        "text": "Ctrl + Shift + →"
+      }
+    },
+    {
+      "type": "code",
+      "headline": "Alt plus equals",
+      "narration": "Alt plus equals writes a sum formula for you and guesses the range. Press enter and you are done.",
+      "code": {
+        "language": "text",
+        "text": "Alt + ="
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "F4 repeats and locks",
+      "narration": "F4 repeats your last action, and inside a formula it cycles through locked cell references."
+    },
+    {
+      "type": "cta",
+      "headline": "Pick one and practise",
+      "narration": "Choose one shortcut and use it all week. Follow for a new spreadsheet trick every few days."
+    }
+  ]
+}
