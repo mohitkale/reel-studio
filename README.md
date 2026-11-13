@@ -3,149 +3,78 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-24_LTS-brightgreen.svg)](https://nodejs.org/)
 [![Quality](https://github.com/mohitkale/reel-studio/actions/workflows/quality.yml/badge.svg)](https://github.com/mohitkale/reel-studio/actions/workflows/quality.yml)
-[![MCP](https://img.shields.io/badge/MCP-server-blue.svg)](mcp/README.md)
 
-**Your idea → animated video → downloadable MP4. On your machine.**
+**A local-first video and podcast factory. Your idea in, a finished MP4 out, on your machine.**
 
-Make Reels, Shorts, explainers, voiceovers, podcasts, and audiograms from your
-scripts and media. Let AI develop an idea, or build a production from your own
-content with preset styling, then edit and export the result.
-The first video needs **no AI key or voice-model download**.
+The only AI step is writing the storyboard. Voice, scenes, motion, captions,
+audio and rendering run locally and deterministically, with no cloud render and
+no per-video fees.
 
 [![Reel Studio: lunar phases, seasonal wheel and orbital motion](docs/assets/story-motion-0.5.0.gif)](https://github.com/mohitkale/reel-studio/releases/tag/v0.5.0)
 
-_Native motion examples from v0.5.0's verified feature exports. [Watch with sound](https://github.com/mohitkale/reel-studio/releases/download/v0.5.0/reel-studio-0.5.0-story-motion.mp4). [Demo provenance](docs/archive/guides/DEMO_CAPTURE.md)._
+_Native motion examples from v0.5.0's verified exports. [Watch with sound](https://github.com/mohitkale/reel-studio/releases/download/v0.5.0/reel-studio-0.5.0-story-motion.mp4)._
 
-Use dedicated **Voiceovers** and **Factory** workspaces, organize projects by series, and finish saved audio with local waveform edits. See the [creator guide](docs/archive/guides/CREATOR_GUIDE.md#content-studio-workspaces).
-
-[Get started](#quick-start) · [Creator guide](docs/archive/guides/CREATOR_GUIDE.md) · [Documentation](docs/README.md) · [Contribute](CONTRIBUTING.md)
-
-Source-linked writing and targeted editing: see the [editorial guide](docs/archive/guides/EDITORIAL.md) for creative briefs, cached storyboards and guarded revisions.
-
-Supplied product proof and ranked stock choices have visible reasons and separate
-optional vision budgets. See [media relevance](docs/archive/guides/MEDIA_RELEVANCE.md) and the
-[offline editorial benchmark](docs/archive/guides/EDITORIAL_BENCHMARK.md) for verified examples
-and human export review.
-
-## What you can make
-
-- **Videos:** six visual presets, 29 motion treatments and nine
-  [story motion showpieces](docs/archive/guides/MOTION_LIBRARY.md#story-motion-showpieces)
-  chosen from your content, plus your own screenshots or footage. Export
-  portrait **9:16**, landscape **16:9**, or square **1:1**.
-- **Voiceovers and captions:** optional local Kokoro, configurable voice providers,
-  editable captions, and SRT/VTT import and export.
-- **Podcasts:** solo, two-host, or interview scripts; reusable speech turns;
-  WAV/MP3, transcripts, chapters, and video audiograms.
-- **Repeatable production:** saved jobs, progress that survives refresh,
-  cancellation and retry, format variants, and batches.
-- **AI-assisted workflows:** optional local/cloud planning and a scoped
-  [MCP server](docs/MCP.md) for your coding agent or automation.
-
-Projects, uploads, and outputs stay local. Configured cloud providers receive
-only the data needed for the features you choose. See [local-first behavior](docs/archive/guides/LOCAL_FIRST.md).
+- **Videos** in portrait 9:16, landscape 16:9 or square 1:1, from your script, an idea or your own media.
+- **Voiceovers and captions** with local Kokoro voices, editable captions and SRT/VTT import and export.
+- **Podcasts** with one to two hosts, WAV/MP3, transcripts, chapters and video audiograms.
 
 ## Quick start
 
-Install **Node 24 LTS** (minimum 24.15), **FFmpeg/FFprobe**, and a supported
-Chrome/Chromium browser. See [setup and troubleshooting](docs/archive/guides/SETUP.md).
+Install **Node 24 LTS** (minimum 24.15), **FFmpeg/FFprobe** and Chrome or Chromium.
 
 ```bash
 git clone https://github.com/mohitkale/reel-studio.git
 cd reel-studio
-nvm use
 npm ci
 npm run setup
 npm run dev
 ```
 
-Open **[localhost:3000](http://localhost:3000)**:
+Open [localhost:3000](http://localhost:3000), choose **Create production** and paste
+your content (no AI key needed), then **Export MP4**. `npm run doctor` checks your
+runtime. Details: [getting started](docs/GETTING_STARTED.md).
 
-1. Choose **Create with AI** for an idea, or **Create production** for your own script/article and uploads.
-2. Add content and keep the preset defaults, or customize the style and format.
-3. Select **Create draft** or **Build draft**, review the scenes, add narration if desired, then **Export MP4**.
-4. For an automatic MP4, enable **Quick Produce** in AI creation; follow the saved result to play, download, edit, or remix.
+## Use it from your agent
 
-The launcher runs both the app and its production worker. `npm run doctor`
-checks your runtime; `npm run sample:export` creates a bundled local example.
-Kokoro downloads and caches model weights on first synthesis if needed.
+Start the app, then in **Settings → AI tools / MCP** generate a token and add the
+server to Claude Code, Cursor or any MCP client:
 
-**Upgrading?** [v0.8.0 upgrade notes](docs/archive/releases/RELEASE_0.8.0.md) cover backups,
-migrations, preserved media, and rollback.
+```bash
+REEL_STUDIO_MCP_TOKEN=<token> npm run mcp
+```
 
-## Choose a look
+Your agent can create projects, edit scenes, produce videos and podcasts, and
+download results. See [MCP](docs/MCP.md) for the config and tools.
 
-| Preset              | Use it for                                                   |
-| ------------------- | ------------------------------------------------------------ |
-| Product Launch      | Product screenshots, features, proof, and calls to action    |
-| Editorial Explainer | Headlines, steps, diagrams, and attributed quotes            |
-| Creator Punch       | Hooks, short tips, emphasis, and a clear payoff              |
-| Data Story          | Your supplied metrics, labeled comparisons, and charts       |
-| Developer Demo      | Code, terminal output, diffs, and browser proof              |
-| Cinematic Brand     | Supplied photography/footage, brand stories, and logo closes |
+## Local first, cloud optional
 
-Charts use supplied values. Review optional AI-generated claims before publishing.
+| Feature   | Local                                       | Optional cloud                     |
+| --------- | ------------------------------------------- | ---------------------------------- |
+| Planning  | Deterministic, Ollama, LM Studio, llama.cpp | Gemini, OpenAI                     |
+| Narration | Kokoro, self-hosted VoiceForge              | ElevenLabs, Cartesia               |
+| Media     | Your uploads, animated backgrounds          | Pexels, Pixabay, Unsplash previews |
+| Music     | Bundled CC0 tracks, your uploads            | Jamendo                            |
+| Rendering | HyperFrames on your machine                 | None                               |
 
-Checkpoint the current design from **Customize video → Film plan JSON** or through
-REST/MCP. Six [adaptive recipes](docs/archive/guides/ADAPTIVE_RECIPES.md) reflow supplied content
-by density, duration and aspect.
-[Sequence direction](docs/archive/guides/SEQUENCE_DIRECTION.md) adds local lookahead, recurring
-subject identities, decision explanations and supported card handoffs. The
-[creation workflow](docs/archive/guides/CREATION_UX.md) adds a contact sheet, draft animatic,
-reviewed scene/chapter/film variations with guarded undo, and optional local AI
-readiness tests. [Lesson direction](docs/archive/guides/LONG_FORM_DIRECTION.md) adds chapter
-goals, recap callbacks and bounded ten-minute exports. The
-[content factory](docs/archive/guides/FACTORY_WORKFLOWS.md) adds versioned series profiles, frozen
-aspect/cutdown variants and pinned recipe-pack archives. See [adaptive film contracts](docs/archive/guides/ADAPTIVE_CONTRACTS.md).
+Projects and outputs stay on your machine; providers get data only if you use them.
 
-Voiceovers and podcasts include database-saved audio edit plans and edited takes.
-Imported recordings can be transcribed with the existing local Whisper setup.
-Language versions support manual translation with no API calls and optional AI
-previews. See the [creator guide](docs/archive/guides/CREATOR_GUIDE.md).
+## Learn more and contribute
 
-![Projects with visible AI and local production creation paths](docs/assets/reel-studio-home.png)
+[Creating videos](docs/CREATING_VIDEOS.md) · [Podcasts](docs/PODCASTS.md) ·
+[Scenes and themes](docs/SCENES_AND_THEMES.md) · [Architecture](docs/ARCHITECTURE.md) ·
+[All docs](docs/README.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
 
-## Local tools and optional providers
-
-| Feature                | Local choices                               | Optional cloud choices             |
-| ---------------------- | ------------------------------------------- | ---------------------------------- |
-| Planning               | Deterministic, Ollama, LM Studio, llama.cpp | Gemini, OpenAI                     |
-| Narration              | Kokoro, self-hosted VoiceForge              | ElevenLabs, Cartesia               |
-| Backgrounds            | Your uploads, animated backgrounds          | Pexels, Pixabay, Unsplash previews |
-| Music                  | Bundled CC0 tracks, your uploads            | Jamendo                            |
-| Preview and MP4 export | HyperFrames                                 | —                                  |
-
-Provider keys are optional. Local AI servers are configured separately; Reel
-Studio does not install their models. Unsplash export staging and Coverr remain
-license-gated. [Provider and asset terms](docs/LICENSING.md) apply.
-
-The authenticated [research API](docs/archive/guides/RESEARCH.md) captures supplied sources or
-uses optional Gemini or OpenAI web research in separate, bounded jobs. It retains
-immutable evidence, citations and usage for inspection. Settings includes a
-research/writer readiness checker; local writers can reuse saved evidence. Run `npm run db:migrate`
-after upgrading. Evidence integration with video creation is separate work.
-
-## Explore and contribute
-
-- Follow the [walkthroughs](docs/archive/guides/WALKTHROUGHS.md) or explore the app's **Gallery**.
-- Read the [architecture](docs/ARCHITECTURE.md), [template guide](docs/archive/guides/TEMPLATE_AUTHORING.md),
-  and [provider/block extension guide](docs/archive/guides/EXTENSIONS.md).
-- Report a reproducible bug, improve a guide, add a template or provider, or
-  submit a focused PR. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
-- See what's shipped and what's next in the [changelog](CHANGELOG.md) and [roadmap](ROADMAP.md).
-- If Reel Studio helps you, **star, watch, or fork the repository** and share what you make.
+Bugs, guides, templates and providers are welcome: start with
+[CONTRIBUTING.md](CONTRIBUTING.md). If it helps you, star the repository and share what you make.
 
 Built by **[Mohit Kale](https://github.com/mohitkale)** with
-**[Cursor Agent](https://github.com/cursoragent)** and
-**[OpenAI Codex](https://github.com/codex)**. See [contributors](CONTRIBUTORS.md).
+**[Cursor Agent](https://github.com/cursoragent)**,
+**[OpenAI Codex](https://github.com/codex)** and
+**[Claude Code](https://claude.com/claude-code)**. See [contributors](CONTRIBUTORS.md).
 
 ## Security and licensing
 
-- Designed for a **trusted, single-user local account**; bind defaults are loopback.
-  Remote/multi-user hosting needs additional authentication and isolation.
-  Read [SECURITY.md](SECURITY.md).
-- App code is **MIT**; HyperFrames is **Apache-2.0**.
-- The speech phonemizer includes a **GPL-3.0-or-later** engine. Its matching
-  source archive and notices accompany [v0.8.0](https://github.com/mohitkale/reel-studio/releases/tag/v0.8.0).
-- GSAP, fonts, model weights, providers, and media retain their own terms.
-  See the complete [licensing inventory](docs/LICENSING.md).
+For a trusted, single-user local account: [SECURITY.md](SECURITY.md). App code is
+**MIT**, HyperFrames **Apache-2.0**, the speech phonemizer **GPL-3.0-or-later**
+(source ships with each release). Models, fonts and providers keep their own
+terms: [licensing inventory](docs/LICENSING.md).

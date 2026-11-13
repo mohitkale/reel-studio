@@ -14,6 +14,7 @@ Thank you to everyone helping build Reel Studio.
 | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **[Cursor Agent](https://github.com/cursoragent)** / [Cursor](https://cursor.com)                               | Early implementation, security work, podcasts, MCP tools, and workspace UX                                                                                            |
 | **[Codex](https://github.com/codex)** / [OpenAI](https://developers.openai.com/api/docs/guides/code-generation) | Security/reliability review, HyperFrames consolidation, motion and director work, creation UX, platform CI, licensing verification, v0.4.0 release, and documentation |
+| **[Claude Code](https://claude.com/claude-code)** / [Anthropic](https://www.anthropic.com)                      | Roadmap execution: agent rules, feature inventory and parity check, documentation consolidation                                                                       |
 
 The maintainer reviews and owns the project. These entries acknowledge AI-assisted
 implementation; they do not imply endorsement by the tools' vendors.
@@ -24,6 +25,8 @@ implementation; they do not imply endorsement by the tools' vendors.
   `Co-authored-by: Codex <codex@openai.com>` using the
   [OpenAI commit convention](https://github.com/openai/symphony/blob/main/.codex/skills/commit/SKILL.md).
   Its GitHub account is [`codex`](https://github.com/codex).
+- Claude Code-assisted commits include
+  `Co-Authored-By: Claude <noreply@anthropic.com>`.
 - Cursor-assisted commits can include
   `Co-authored-by: Cursor <cursoragent@cursor.com>`.
 - Keep the maintainer as author/committer and preserve co-author trailers in the
