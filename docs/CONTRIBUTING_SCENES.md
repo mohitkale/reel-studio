@@ -40,7 +40,12 @@ panel) and a `sample`. Registering it is one line in `scenes/registry.ts`.
    for export.
 3. Size text from `--frame-h` with the helpers in `scenes/styles.ts`; the engine grows or
    shrinks it to fit the panel. Use `kit.onAccent` for text on the accent colour.
-4. Check it: `/scenes` shows it, `npx vitest run src/engines/hyperframes/scenes`, and
+4. Give it three arrangements. Arrangement 1 is the classic design; add rules for
+   `.scene[data-arrange="2"]` and `[data-arrange="3"]` to
+   `scenes/arrangements.ts` (alignment, order, spacing, borders and fills; no
+   transforms, the entrance animations own those). Look at all three with
+   `REEL_FORCE_ARRANGE=2 npm run scenes:sheet` and `=3`.
+5. Check it: `/scenes` shows it, `npx vitest run src/engines/hyperframes/scenes`, and
    `npm run examples:lint-frames -- --only <example>` passes for a storyboard that uses it.
 
 ## Add a theme

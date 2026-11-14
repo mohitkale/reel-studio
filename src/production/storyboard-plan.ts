@@ -117,6 +117,8 @@ export interface StoryboardProductionPlan {
     seed: string;
     variety: "low" | "medium" | "high";
     reduceMotion?: boolean;
+    /** True when the storyboard names a series: the look is shared and locked. */
+    locked?: boolean;
   };
   /** Library asset per scene, when the storyboard named one. */
   assetIds: Array<string | undefined>;
@@ -311,8 +313,15 @@ export function planFromStoryboard(
     captions: storyboard.captions,
     sfx: storyboard.sfx ?? "auto",
     look: {
-      // Without a seed the title decides, so a storyboard is stable by default.
-      seed: String(storyboard.seed ?? storyboard.title),
+      // Without a seed the series (one shared family) or the title decides, so
+      // a storyboard is stable by default.
+      seed: String(
+        storyboard.seed ??
+          (storyboard.series
+            ? `series:${storyboard.series}`
+            : storyboard.title),
+      ),
+      ...(storyboard.series ? { locked: true } : {}),
       variety: storyboard.variety ?? "medium",
       ...(storyboard.reduceMotion ? { reduceMotion: true } : {}),
     },

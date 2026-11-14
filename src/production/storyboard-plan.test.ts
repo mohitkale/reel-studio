@@ -188,4 +188,17 @@ describe("planFromStoryboard", () => {
     });
     expect(() => planFromStoryboard(podcast)).toThrow();
   });
+
+  it("derives the look from the title, a series or an explicit seed", () => {
+    expect(plan().look).toEqual({ seed: "T", variety: "medium" });
+    const series = plan({ series: "Weekly Tips" }).look;
+    expect(series).toMatchObject({ seed: "series:Weekly Tips", locked: true });
+    // Two videos in a series share one seed family.
+    expect(plan({ series: "Weekly Tips", title: "Other" }).look.seed).toBe(
+      series.seed,
+    );
+    expect(plan({ series: "Weekly Tips", seed: "mine" }).look.seed).toBe(
+      "mine",
+    );
+  });
 });

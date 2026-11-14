@@ -3,7 +3,7 @@
  * what a viewer sees. Renders the real compiled composition in the render
  * browser (no voice, no network), so it takes seconds, not minutes.
  *
- *   npm run examples:lint-frames [-- --only <name>] [--theme <id>] [--all-formats] [--out <dir>] [--write-baseline] [--gate]
+ *   npm run examples:lint-frames [-- --only <name>] [--theme <id>] [--arrange 1|2|3] [--all-formats] [--out <dir>] [--write-baseline] [--gate]
  *
  * Checks per scene (see docs/QUALITY.md): frame fill, smallest text, contrast,
  * text outside the safe area, headline against caption, and near-identical
@@ -31,6 +31,8 @@ const only = value("--only");
 const themeOverride = value("--theme");
 const seedOverride = value("--seed");
 const varietyOverride = value("--variety");
+const arrangeOverride = value("--arrange");
+if (arrangeOverride) process.env.REEL_FORCE_ARRANGE = arrangeOverride;
 const allFormats = args.includes("--all-formats");
 const gate = args.includes("--gate");
 const writeBaseline = args.includes("--write-baseline");

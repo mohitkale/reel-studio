@@ -19,8 +19,17 @@ export type LayoutVariant = "panel" | "open" | "band";
 export type MotionVariant = "rise" | "slide" | "pop" | "drift";
 export type CameraMove = "none" | "push-in" | "pull-out" | "pan";
 
+/**
+ * How a scene type arranges its own content (1 is the classic arrangement).
+ * Lists become rows, a staggered stair or cards; a comparison stacks, offsets or
+ * fills one side; a quote sits centred or hangs left; and so on. The CSS for
+ * each type lives beside the type, keyed by `data-arrange` on the scene.
+ */
+export type Arrangement = 1 | 2 | 3;
+
 export interface SceneLook {
   layout: LayoutVariant;
+  arrange: Arrangement;
   motion: MotionVariant;
   camera: CameraMove;
   /** True for the scenes that carry the video's visual peaks. */
@@ -40,6 +49,51 @@ export interface LookSceneInput {
   /** Template id of the scene, for text-only detection. */
   templateId: string;
   seconds: number;
+}
+
+/** Chance that a scene keeps the classic arrangement, by variety level. */
+const CLASSIC_ARRANGE_CHANCE: Record<VarietyLevel, number> = {
+  low: 0.8,
+  medium: 0.34,
+  high: 0.2,
+};
+
+/**
+ * Pick each scene's arrangement from its own seeded stream, so adding this
+ * choice never moves the layout, motion or camera a seed already produced.
+ * Above low variety a scene type never repeats the arrangement it last used,
+ * and no arrangement runs more than twice across consecutive scenes.
+ */
+export function planArrangements(input: {
+  templateIds: string[];
+  seed: string;
+  variety: VarietyLevel;
+  /** Diagnostic override: render every scene with one arrangement. */
+  force?: Arrangement;
+}): Arrangement[] {
+  if (input.force) return input.templateIds.map(() => input.force!);
+  const random = rng(hashSeed(`${input.seed}|${input.variety}|arrange`));
+  const lastByTemplate = new Map<string, Arrangement>();
+  const out: Arrangement[] = [];
+  for (const id of input.templateIds) {
+    const draw = random();
+    let arrange: Arrangement =
+      draw < CLASSIC_ARRANGE_CHANCE[input.variety] ? 1 : random() < 0.5 ? 2 : 3;
+    const last = lastByTemplate.get(id);
+    if (input.variety !== "low" && last === arrange) {
+      arrange = ([1, 2, 3] as const).find(
+        (a) => a !== last && a !== out.at(-1),
+      )!;
+    }
+    const a = out.at(-1);
+    const b = out.at(-2);
+    if (a === arrange && b === arrange) {
+      arrange = ([1, 2, 3] as const).find((x) => x !== arrange)!;
+    }
+    lastByTemplate.set(id, arrange);
+    out.push(arrange);
+  }
+  return out;
 }
 
 /** Scenes that are type on a background and nothing else. */
@@ -125,6 +179,8 @@ export function planLook(input: {
   personality: MotionPersonality;
   themeBackground: BackgroundTreatment;
   reduceMotion?: boolean;
+  /** Diagnostic: force one arrangement everywhere (frame checks use it). */
+  forceArrange?: Arrangement;
 }): LookPlan {
   const variety = input.variety ?? "medium";
   const random = rng(hashSeed(`${input.seed}|${variety}|${input.personality}`));
@@ -182,8 +238,17 @@ export function planLook(input: {
       camera = pick(random, ["push-in", "pull-out", "pan"] as const);
     }
     lastCamera = camera !== "none";
-    scenes.push({ layout, motion, camera, peak });
+    scenes.push({ layout, arrange: 1, motion, camera, peak });
   }
+
+  const arrangements = planArrangements({
+    templateIds: input.scenes.map((scene) => scene.templateId),
+    seed: input.seed,
+    variety,
+    force: input.forceArrange,
+  });
+  for (const [index, arrange] of arrangements.entries())
+    scenes[index]!.arrange = arrange;
 
   const backgrounds = allowedBackgrounds(input.themeBackground);
   const background =

@@ -173,6 +173,12 @@ export async function getScripts(
         chapterPlan: overrides.chapterPlan,
         chapterDraft: overrides.chapterDraft,
         factoryLineage: overrides.factoryLineage,
+        ...(overrides.look
+          ? {
+              lookSeed: overrides.look.seed,
+              lookLocked: overrides.look.locked ?? false,
+            }
+          : {}),
       };
       return [script.id, dto] as const;
     }),
@@ -243,6 +249,11 @@ export async function updateScript(
         brandOverridesSchema,
         {},
       );
+      if (data.lookSeed !== undefined && overrides.look?.locked)
+        throw new ProviderError(
+          "This video's look is locked by its series",
+          409,
+        );
       patch.brandOverrides = JSON.stringify({
         ...overrides,
         ...(data.frozenBrandTokens

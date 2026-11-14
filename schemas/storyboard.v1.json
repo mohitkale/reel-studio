@@ -57,6 +57,12 @@
             }
           ]
         },
+        "series": {
+          "description": "Series name. Videos in one series share a look family (the same seed unless a seed is given) so they read as one show, and the look stays locked against Shuffle.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
         "reduceMotion": {
           "description": "Calmer output: no camera moves and gentler entrances. Default false.",
           "type": "boolean"
@@ -588,6 +594,12 @@
               "maximum": 999999999
             }
           ]
+        },
+        "series": {
+          "description": "Series name. Videos in one series share a look family (the same seed unless a seed is given) so they read as one show, and the look stays locked against Shuffle.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
         },
         "reduceMotion": {
           "description": "Calmer output: no camera moves and gentler entrances. Default false.",

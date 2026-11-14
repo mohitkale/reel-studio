@@ -1016,6 +1016,13 @@ export function redundantCaptionCueIds(
   return hidden;
 }
 
+/** Frame checks set REEL_FORCE_ARRANGE=1|2|3 to render every scene one way. */
+function forcedArrangement(): 1 | 2 | 3 | undefined {
+  const value =
+    typeof process === "undefined" ? "" : process.env.REEL_FORCE_ARRANGE;
+  return value === "1" ? 1 : value === "2" ? 2 : value === "3" ? 3 : undefined;
+}
+
 export function buildHyperframesCompositionHtml(
   props: ReelProps,
   opts: {
@@ -1061,6 +1068,7 @@ export function buildHyperframesCompositionHtml(
           personality: theme.motion,
           themeBackground: theme.background,
           reduceMotion: props.tokens.reduceMotion,
+          forceArrange: forcedArrangement(),
         })
       : null;
   // Accent rotation: this video leads with the theme's second accent.
@@ -1490,7 +1498,7 @@ ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLE
           block.replace(
             /(<section\b[^>]*>)([\s\S]*)(<\/section>\s*)$/,
             (_, open: string, body: string, close: string) =>
-              `${transitions ? open.replace("<section ", `<section data-transition="${transitions[index] ?? "cut"}"${look?.scenes[index] ? ` data-layout="${look.scenes[index]!.layout}" data-motion="${look.scenes[index]!.motion}" data-camera="${look.scenes[index]!.camera}"` : ""} `) : open}${open.includes("data-motion-recipe=") ? '<div class="ml-backplate" aria-hidden="true"></div>' : ""}<div class="scene-handoff" style="--handoff:${index === 0 ? "1" : "0"}" data-first-scene="${index === 0 ? "1" : "0"}">${body}</div>${close}`,
+              `${transitions ? open.replace("<section ", `<section data-transition="${transitions[index] ?? "cut"}"${look?.scenes[index] ? ` data-layout="${look.scenes[index]!.layout}" data-arrange="${look.scenes[index]!.arrange}" data-motion="${look.scenes[index]!.motion}" data-camera="${look.scenes[index]!.camera}"` : ""} `) : open}${open.includes("data-motion-recipe=") ? '<div class="ml-backplate" aria-hidden="true"></div>' : ""}<div class="scene-handoff" style="--handoff:${index === 0 ? "1" : "0"}" data-first-scene="${index === 0 ? "1" : "0"}">${body}</div>${close}`,
           ),
         )
         .join("\n")}

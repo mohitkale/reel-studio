@@ -1,6 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Shuffle } from "lucide-react";
+import { toast } from "sonner";
+import { apiPatch, apiPost } from "@/lib/api-client";
 import { useProductionJob } from "@/hooks/production-jobs";
 import { useScript } from "@/hooks/script";
 import { QuickProduceStatus } from "./quick-produce-status";
@@ -8,6 +13,56 @@ import { PromptCreator } from "@/components/projects/prompt-creator";
 import { CreateWithAIDialog } from "@/components/projects/create-with-ai-dialog";
 import { EvidenceReview } from "@/components/projects/evidence-review";
 import { Button } from "@/components/ui/button";
+
+/** A short random seed; the look it produces is fully reproducible. */
+function newLookSeed(): string {
+  return Math.random().toString(36).slice(2, 8);
+}
+
+/**
+ * Re-roll the look: a new seed re-plans layouts, arrangements, motion and
+ * camera for the same storyboard, then the video is produced again.
+ */
+function ShuffleLook({ jobId, scriptId }: { jobId: string; scriptId: string }) {
+  const router = useRouter();
+  const qc = useQueryClient();
+  const script = useScript(scriptId);
+  const shuffle = useMutation({
+    mutationFn: async () => {
+      await apiPatch(`/api/scripts/${scriptId}`, { lookSeed: newLookSeed() });
+      return apiPost<{ job: { id: string } }>(
+        `/api/production-jobs/${jobId}/produce-current`,
+        {},
+      );
+    },
+    onSuccess: ({ job }) => {
+      void qc.invalidateQueries({ queryKey: ["script", scriptId] });
+      toast.success("New look queued");
+      router.push(`/results/${job.id}`);
+    },
+    onError: (error) =>
+      toast.error("Could not shuffle the look", {
+        description: (error as Error).message,
+      }),
+  });
+  // Only storyboard videos have a look seed.
+  if (!script.data?.lookSeed) return null;
+  const locked = script.data.lookLocked === true;
+  return (
+    <Button
+      variant="outline"
+      disabled={locked || shuffle.isPending}
+      title={
+        locked
+          ? "This video's look is locked by its series"
+          : "Try a different look for the same story"
+      }
+      onClick={() => shuffle.mutate()}
+    >
+      <Shuffle className="size-4" aria-hidden /> Shuffle look
+    </Button>
+  );
+}
 
 function Remix({ scriptId }: { scriptId: string }) {
   const script = useScript(scriptId);
@@ -69,6 +124,7 @@ export function ProductionResult({ jobId }: { jobId: string }) {
           <Button variant="outline" asChild>
             <Link href="/">Create another</Link>
           </Button>
+          <ShuffleLook jobId={jobId} scriptId={scriptId} />
           <Button variant="outline" asChild>
             <Link
               href={`/editor/${scriptId}?productionJob=${encodeURIComponent(jobId)}`}

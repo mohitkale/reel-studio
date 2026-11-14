@@ -225,6 +225,7 @@ const ROOT_KEYS = {
     "sfx",
     "variety",
     "seed",
+    "series",
     "reduceMotion",
     "captions",
     "sources",

@@ -96,6 +96,8 @@ export const brandOverridesSchema = z
         seed: z.string().max(60),
         variety: z.enum(["low", "medium", "high"]),
         reduceMotion: z.boolean().optional(),
+        /** The look belongs to a series: Shuffle look is refused. */
+        locked: z.boolean().optional(),
       })
       .optional(),
     styleId: z
