@@ -16,65 +16,65 @@ are enforced by validation rather than by prompt text.
 
 ## Video
 
-| Field      | Required | Meaning                                                                    |
-| ---------- | -------- | -------------------------------------------------------------------------- |
-| `version`  | yes      | Always `1`.                                                                |
-| `kind`     | no       | `"video"` (default) or `"podcast"`.                                        |
-| `title`    | yes      | Up to 80 characters.                                                       |
-| `format`   | no       | `"9:16"` (default), `"16:9"` or `"1:1"`.                                   |
+| Field      | Required | Meaning                                                                     |
+| ---------- | -------- | --------------------------------------------------------------------------- |
+| `version`  | yes      | Always `1`.                                                                 |
+| `kind`     | no       | `"video"` (default) or `"podcast"`.                                         |
+| `title`    | yes      | Up to 80 characters.                                                        |
+| `format`   | no       | `"9:16"` (default), `"16:9"` or `"1:1"`.                                    |
 | `theme`    | no       | One of the ten themes below, or `"auto"`. Omit to let Reel Studio pick one. |
-| `voice`    | no       | `{ enabled, voiceId?, speed? }`. Default: narrated with the default voice. |
-| `music`    | no       | `"auto"` (default), `"none"` or a track id.                                |
-| `captions` | no       | `"auto"` (default) or `"off"`.                                             |
-| `sources`  | no       | Up to 12 `{ title, url, accessed }` for facts you used. Never invented.    |
-| `scenes`   | yes      | 1 to 40 scenes. About eight scenes make a 60-second video.                 |
+| `voice`    | no       | `{ enabled, voiceId?, speed? }`. Default: narrated with the default voice.  |
+| `music`    | no       | `"auto"` (default), `"none"` or a track id.                                 |
+| `captions` | no       | `"auto"` (default) or `"off"`.                                              |
+| `sources`  | no       | Up to 12 `{ title, url, accessed }` for facts you used. Never invented.     |
+| `scenes`   | yes      | 1 to 40 scenes. About eight scenes make a 60-second video.                  |
 
 ### Scene
 
-| Field          | Required | Limit and meaning                                                              |
-| -------------- | -------- | ------------------------------------------------------------------------------ |
-| `type`         | yes      | One of the types below.                                                        |
-| `headline`     | yes      | On-screen text, at most 60 characters, a complete phrase.                      |
-| `narration`    | yes      | Spoken, full sentences, at most 400 characters. Not a copy of the headline.    |
-| `body`         | no       | Supporting line, at most 200 characters.                                       |
-| `items`        | list     | 2 to 6 points of at most 60 characters.                                        |
-| `stat`         | stat     | `{ value (12 chars), label (40 chars) }`.                                      |
-| `chart`        | chart    | 2 to 6 `labels`, 1 to 3 `series` with one number per label, optional `source` and `kind` (`bar`, `line`, `donut`). |
-| `compare`      | comparison, before-after | `{ left, right }`, each `{ label (24 chars), text (80 chars) }`. |
-| `points`       | timeline, diagram | 2 to 5 `{ label (24 chars), text? (70 chars) }` in order.        |
-| `definition`   | definition | `{ term (40 chars), meaning (160 chars) }`.                                   |
-| `quote`        | quote    | `{ text (160 chars), attribution (60 chars) }`.                                |
-| `code`         | code     | `{ language, text }`, at most 12 lines and 600 characters.                     |
-| `media`        | media    | Exactly one of `query` (plain words), `assetId` or `path` (relative file).     |
-| `icon`         | no       | Icon name such as `moon`.                                                      |
-| `emphasis`     | no       | Up to three words from the headline or body to highlight.                      |
-| `durationHint` | no       | Seconds, 2 to 30. A hint only; timing follows the narration length.            |
+| Field          | Required                 | Limit and meaning                                                                                                  |
+| -------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `type`         | yes                      | One of the types below.                                                                                            |
+| `headline`     | yes                      | On-screen text, at most 60 characters, a complete phrase.                                                          |
+| `narration`    | yes                      | Spoken, full sentences, at most 400 characters. Not a copy of the headline.                                        |
+| `body`         | no                       | Supporting line, at most 200 characters.                                                                           |
+| `items`        | list                     | 2 to 6 points of at most 60 characters.                                                                            |
+| `stat`         | stat                     | `{ value (12 chars), label (40 chars) }`.                                                                          |
+| `chart`        | chart                    | 2 to 6 `labels`, 1 to 3 `series` with one number per label, optional `source` and `kind` (`bar`, `line`, `donut`). |
+| `compare`      | comparison, before-after | `{ left, right }`, each `{ label (24 chars), text (80 chars) }`.                                                   |
+| `points`       | timeline, diagram        | 2 to 5 `{ label (24 chars), text? (70 chars) }` in order.                                                          |
+| `definition`   | definition               | `{ term (40 chars), meaning (160 chars) }`.                                                                        |
+| `quote`        | quote                    | `{ text (160 chars), attribution (60 chars) }`.                                                                    |
+| `code`         | code                     | `{ language, text }`, at most 12 lines and 600 characters.                                                         |
+| `media`        | media                    | Exactly one of `query` (plain words), `assetId` or `path` (relative file).                                         |
+| `icon`         | no                       | Icon name such as `moon`.                                                                                          |
+| `emphasis`     | no                       | Up to three words from the headline or body to highlight.                                                          |
+| `durationHint` | no                       | Seconds, 2 to 30. A hint only; timing follows the narration length.                                                |
 
 There are twenty scene types. Every one is shown in every format on the app's
 `/scenes` page.
 
-| Type            | Use it for                                  | Needs      |
-| --------------- | ------------------------------------------- | ---------- |
-| `hook`          | The opening line                            |            |
-| `statement`     | One key idea                                |            |
-| `kinetic-text`  | A punchy line slammed in word by word       |            |
-| `list`          | Two to six points                           | `items`    |
-| `steps`         | Numbered steps in order                     | `items`    |
-| `checklist`     | Things to tick off                          | `items`    |
-| `stat`          | One big number                              | `stat`     |
-| `comparison`    | Two options side by side                    | `compare`  |
-| `before-after`  | A change from one state to another          | `compare`  |
-| `timeline`      | Moments in order                            | `points`   |
-| `diagram`       | Connected parts of a process or system      | `points`   |
-| `chart`         | Bars, a line or a donut from real values    | `chart`    |
-| `quote`         | A real, attributed quotation                | `quote`    |
-| `definition`    | A term and its meaning                      | `definition` |
-| `code`          | A snippet in a code window                  | `code`     |
-| `terminal`      | Shell commands (lines starting `$` are commands) | `code` |
-| `media`         | A full-frame picture or clip                | `media`    |
-| `media-split`   | A picture beside the headline               | `media`    |
-| `device-mockup` | A phone showing a picture or the `body` text |            |
-| `cta`           | The closing call to action                  |            |
+| Type            | Use it for                                       | Needs        |
+| --------------- | ------------------------------------------------ | ------------ |
+| `hook`          | The opening line                                 |              |
+| `statement`     | One key idea                                     |              |
+| `kinetic-text`  | A punchy line slammed in word by word            |              |
+| `list`          | Two to six points                                | `items`      |
+| `steps`         | Numbered steps in order                          | `items`      |
+| `checklist`     | Things to tick off                               | `items`      |
+| `stat`          | One big number                                   | `stat`       |
+| `comparison`    | Two options side by side                         | `compare`    |
+| `before-after`  | A change from one state to another               | `compare`    |
+| `timeline`      | Moments in order                                 | `points`     |
+| `diagram`       | Connected parts of a process or system           | `points`     |
+| `chart`         | Bars, a line or a donut from real values         | `chart`      |
+| `quote`         | A real, attributed quotation                     | `quote`      |
+| `definition`    | A term and its meaning                           | `definition` |
+| `code`          | A snippet in a code window                       | `code`       |
+| `terminal`      | Shell commands (lines starting `$` are commands) | `code`       |
+| `media`         | A full-frame picture or clip                     | `media`      |
+| `media-split`   | A picture beside the headline                    | `media`      |
+| `device-mockup` | A phone showing a picture or the `body` text     |              |
+| `cta`           | The closing call to action                       |              |
 
 A scene whose data is missing or wrong is drawn as a statement instead of
 failing. New types are added without changing the version.
