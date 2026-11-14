@@ -69,12 +69,22 @@ Measured on an Intel i7-9750H laptop (12 cores, 16 GB, Node 24), a 22.5 s 9:16 v
 | standard      |       124 s |                 5.53 |
 | high          |   133–200 s |            5.90–8.87 |
 
-Frame capture (the headless browser screenshotting each frame) is about 85% of the time, with
-two capture workers on this machine. Draft previews now render at half the frame rate. The
-target of a 45 s draft in under 60 s (about 1.3x) is **not met**: it needs a lower capture
-resolution or more efficient capture, which is tracked in the roadmap rather than traded
-against output correctness. Per-scene section renders are cached (see
-`src/library/render-section-cache.int.test.ts`); the one-scene-edit speedup is not yet measured.
+A draft preview captures a quarter of the pixels (a 540 by 960 canvas; the layout is authored at
+full size and scaled as a whole, so nothing reflows) at half the frame rate. That brings a draft to
+about 1.3 to 1.5 render seconds per video second end to end, including linting, planning, mastering
+and the contact sheet:
+
+| Draft (15 fps, half-size capture) |  Video | Render time | Render s per video s |
+| --------------------------------- | -----: | ----------: | -------------------: |
+| `motivation`                      | 22.5 s |     31-34 s |            1.37-1.53 |
+| `how-to`                          | 49.9 s |        66 s |                 1.31 |
+
+So a 45 s draft takes about 60 s on this machine; the fixed overhead is about 10 s. Frame capture
+(the headless browser screenshotting each frame) is still most of the time. Standard and high
+quality are unchanged and still capture full-size frames. Other capture modes (drawElement,
+forcing screenshots off) made no difference here. Per-scene section renders are cached (see
+`src/library/render-section-cache.int.test.ts`); that cache only applies to long, sectioned
+videos, and the one-scene-edit speedup is not yet measured.
 
 ## Bounds and safety
 

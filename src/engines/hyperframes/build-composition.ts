@@ -1023,6 +1023,12 @@ export function buildHyperframesCompositionHtml(
     runtimeUrl?: string;
     /** Preserve the complete endpoint for silent globally timed section projects. */
     totalFrames?: number;
+    /**
+     * Draft previews: capture a smaller canvas (for example 0.5 for a quarter
+     * of the pixels). The layout stays authored at full size and is scaled as
+     * a whole, so nothing reflows.
+     */
+    draftScale?: number;
   } = {},
 ): string {
   const motionSpec = validateMotionForReel({
@@ -1034,6 +1040,13 @@ export function buildHyperframesCompositionHtml(
   const width = props.width || 1080;
   const height = props.height || 1920;
   const layout = props.layout ?? resolveProductionLayout({ width, height });
+  const draftScale =
+    opts.producerMode &&
+    opts.draftScale &&
+    opts.draftScale > 0 &&
+    opts.draftScale < 1
+      ? opts.draftScale
+      : 1;
   const theme = getTheme(props.tokens.themeId);
   const fpsForLook = props.fps ?? 30;
   const look =
@@ -1448,11 +1461,12 @@ ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLE
        data-no-timeline
        data-start="0"
        data-duration="${totalSeconds.toFixed(3)}"
-       data-width="${width}"
-       data-height="${height}"
+       data-width="${Math.round(width * draftScale)}"
+       data-height="${Math.round(height * draftScale)}"
        data-fps="${fps}"
-       style="width:${width}px;height:${height}px">
+       style="width:${Math.round(width * draftScale)}px;height:${Math.round(height * draftScale)}px">
     <div id="root"
+         ${draftScale !== 1 ? `data-draft-scale="${draftScale}"` : ""}
          data-total-frames="${totalFrames}"
          data-style="${styleId}"
          data-energy="${energy}"
@@ -1461,7 +1475,7 @@ ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLE
          data-orientation="${layout.orientation}"
          ${theme ? themeRootAttributes(theme, look?.background) : ""}
          data-palette-tone="${(colorContrast(tokens.background, "#000000") ?? 0) > (colorContrast(tokens.background, "#FFFFFF") ?? 0) ? "light" : "dark"}"
-         style="width:${width}px;height:${height}px;--brand-background:${tokens.background};--brand-foreground:${tokens.foreground};--brand-muted:${tokens.muted};--brand-accent-foreground:${tokens.accentForeground};--brand-accent-text:${(colorContrast(tokens.accent, tokens.background) ?? 0) >= 4.5 ? tokens.accent : tokens.foreground};--motion-radius:${tokens.radius}px;--motion-gap:${Math.min(width * 0.032, height * 0.045, 48)}px;--brand-font:${escapeHtml(cssFontStack(hyperframesBrandFont(tokens.fontFamily)))};font-family:var(--brand-font);--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--frame-h:${height}px;--region-top:${layout.region?.top ?? layout.safeArea.top}px;--region-height:${layout.region?.height ?? Math.round(height * 0.6)}px;--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}${theme ? `;${themeRootStyle(theme)}` : ""}">
+         style="${draftScale !== 1 ? `transform:scale(${draftScale});transform-origin:0 0;` : ""}width:${width}px;height:${height}px;--brand-background:${tokens.background};--brand-foreground:${tokens.foreground};--brand-muted:${tokens.muted};--brand-accent-foreground:${tokens.accentForeground};--brand-accent-text:${(colorContrast(tokens.accent, tokens.background) ?? 0) >= 4.5 ? tokens.accent : tokens.foreground};--motion-radius:${tokens.radius}px;--motion-gap:${Math.min(width * 0.032, height * 0.045, 48)}px;--brand-font:${escapeHtml(cssFontStack(hyperframesBrandFont(tokens.fontFamily)))};font-family:var(--brand-font);--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--frame-h:${height}px;--region-top:${layout.region?.top ?? layout.safeArea.top}px;--region-height:${layout.region?.height ?? Math.round(height * 0.6)}px;--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}${theme ? `;${themeRootStyle(theme)}` : ""}">
       ${coverBlock}
       ${progress}
       ${videoBlocks.join("\n")}
