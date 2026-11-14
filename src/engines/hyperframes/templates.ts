@@ -5,6 +5,7 @@
 
 import type { EngineTemplateMeta } from "@/engines/types";
 import { HF_CATALOG_BLOCKS } from "@/engines/hyperframes/catalog/manifest";
+import { SCENE_DEFINITIONS } from "@/engines/hyperframes/scenes/registry";
 
 const CLASSIC_HF_TEMPLATES: EngineTemplateMeta[] = [
   {
@@ -84,8 +85,18 @@ const CATALOG_HF_TEMPLATES: EngineTemplateMeta[] = HF_CATALOG_BLOCKS.map(
   }),
 );
 
+/** Registered scene types (V3): one entry per folder in `scenes/`. */
+const SCENE_HF_TEMPLATES: EngineTemplateMeta[] = SCENE_DEFINITIONS.map((d) => ({
+  id: d.templateId,
+  name: d.name,
+  description: d.description,
+  sampleText: d.sample.headline,
+  sampleEmphasis: d.sample.emphasis ?? [],
+}));
+
 export const HF_TEMPLATES: EngineTemplateMeta[] = [
   ...CLASSIC_HF_TEMPLATES,
+  ...SCENE_HF_TEMPLATES,
   ...CATALOG_HF_TEMPLATES,
 ];
 

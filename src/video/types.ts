@@ -56,6 +56,8 @@ export interface SceneChartData {
   labels: string[];
   series: SceneChartSeries[];
   sourceAttribution?: string;
+  /** How to draw it; absent means bars. */
+  kind?: "bar" | "line" | "donut";
 }
 
 /** A scene as the video engine consumes it (template + text + emphasis + optional visual). */
@@ -72,6 +74,8 @@ export interface ReelScene {
   /** Explicit list items for list/checklist templates (overrides text splitting). */
   items?: string[];
   chart?: SceneChartData;
+  /** Structured data for registered scene types (steps, timeline, comparison, ...). */
+  panel?: Record<string, unknown>;
   /** Resolved project-owned image URLs available to reviewed carousel adapters. */
   carouselImages?: string[];
   /** Engine-independent purpose used by versioned production presets. */

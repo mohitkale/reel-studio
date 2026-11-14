@@ -7,6 +7,7 @@
  * transitions, timing) is decided later by the local director from this plan.
  */
 import type { Orientation } from "@/lib/orientation";
+import { autoTheme, getTheme } from "@/video/themes";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
 import type { AIScene, ScenePlan } from "@/providers/ai/types";
@@ -27,9 +28,20 @@ export const STORYBOARD_TEMPLATE_BY_TYPE: Readonly<Record<SceneType, string>> =
     stat: "hf-stat",
     chart: "hf-data-chart",
     quote: "hf-quote",
-    code: "hf-statement",
+    code: "hf-terminal",
     media: "hf-broll",
     cta: "hf-cta",
+    "kinetic-text": "hf-kinetic-text",
+    steps: "hf-steps",
+    comparison: "hf-comparison",
+    "before-after": "hf-before-after",
+    timeline: "hf-timeline",
+    definition: "hf-definition",
+    terminal: "hf-terminal",
+    diagram: "hf-diagram",
+    "media-split": "hf-media-split",
+    "device-mockup": "hf-device-mockup",
+    checklist: "hf-checklist",
   };
 
 const ORIENTATION_BY_FORMAT: Record<VideoStoryboard["format"], Orientation> = {
@@ -51,6 +63,17 @@ export const STORYBOARD_ROLE_BY_TYPE: Readonly<
   code: "code",
   media: "feature",
   cta: "cta",
+  "kinetic-text": "emphasis",
+  steps: "explanation",
+  comparison: "comparison",
+  "before-after": "comparison",
+  timeline: "explanation",
+  definition: "explanation",
+  terminal: "terminal",
+  diagram: "diagram",
+  "media-split": "feature",
+  "device-mockup": "screenshot-demo",
+  checklist: "summary",
 };
 
 /**
@@ -63,7 +86,7 @@ export function presetForStoryboard(
 ): ProductionPresetId {
   const count = (type: SceneType) =>
     storyboard.scenes.filter((s) => s.type === type).length;
-  if (count("code") > 0) return "developer-demo";
+  if (count("code") > 0 || count("terminal") > 0) return "developer-demo";
   if (count("chart") > 0 || count("stat") >= 2) return "data-story";
   if (count("quote") > 0 || storyboard.format === "16:9")
     return "editorial-explainer";
@@ -92,6 +115,8 @@ export interface StoryboardProductionPlan {
   assetIds: Array<string | undefined>;
   scenes: StoryboardPlanScene[];
   estimatedSeconds: number;
+  /** The theme the video wears: named in the storyboard, or chosen from its words. */
+  themeId: string;
   /** Things the storyboard asked for that this release does not apply yet. */
   warnings: string[];
 }
@@ -114,6 +139,7 @@ export function planFromStoryboard(
     let visual: string | undefined;
     let backgroundQuery: string | undefined;
     let assetId: string | undefined;
+    let panel: Record<string, unknown> | undefined;
 
     switch (scene.type) {
       case "stat":
@@ -124,13 +150,53 @@ export function planFromStoryboard(
         visual = scene.quote?.attribution;
         break;
       case "code":
-        text = scene.code?.text ?? scene.headline;
-        warnings.push(
-          `scenes.${index}: code scenes render as a bold statement of the snippet until a code treatment exists`,
-        );
+        panel = {
+          lines: (scene.code?.text ?? "").split("\n").slice(0, 12),
+        };
         break;
       case "cta":
         visual = scene.body;
+        break;
+      case "steps":
+      case "checklist":
+        panel = { items: scene.items };
+        break;
+      case "comparison":
+      case "before-after":
+        panel = { left: scene.compare?.left, right: scene.compare?.right };
+        break;
+      case "timeline":
+      case "diagram":
+        panel = { points: scene.points };
+        break;
+      case "definition":
+        panel = {
+          term: scene.definition?.term,
+          meaning: scene.definition?.meaning,
+        };
+        break;
+      case "terminal":
+        panel = { lines: (scene.code?.text ?? "").split("\n").slice(0, 12) };
+        break;
+      case "kinetic-text":
+        panel = {};
+        break;
+      case "media-split":
+      case "device-mockup":
+        panel =
+          scene.type === "media-split"
+            ? { caption: scene.body }
+            : { screen: scene.body };
+        backgroundQuery = scene.media?.query;
+        assetId = scene.media?.assetId;
+        if (scene.media?.path) {
+          warnings.push(
+            `scenes.${index}: media paths are not applied yet; the headline is used as the search query`,
+          );
+          backgroundQuery = scene.headline.slice(0, 80);
+        }
+        if (!backgroundQuery && !assetId && scene.type === "media-split")
+          backgroundQuery = scene.headline.slice(0, 80);
         break;
       case "media":
         backgroundQuery = scene.media?.query;
@@ -147,12 +213,14 @@ export function planFromStoryboard(
       default:
         break;
     }
-    if (scene.body && scene.type !== "cta") {
+    if (
+      scene.body &&
+      !["cta", "media-split", "device-mockup"].includes(scene.type)
+    ) {
       warnings.push(`scenes.${index}: body is not shown yet`);
     }
-    if (scene.icon) {
-      warnings.push(`scenes.${index}: icon "${scene.icon}" is not applied yet`);
-    }
+    if (scene.icon) panel = { ...panel, icon: scene.icon };
+    panel = { ...panel, sceneType: scene.type };
     assetIds.push(assetId);
     planScenes.push({
       index,
@@ -170,6 +238,7 @@ export function planFromStoryboard(
       emphasis: scene.emphasis ?? [],
       visual,
       items: scene.type === "list" ? scene.items : undefined,
+      panel,
       chart:
         scene.type === "chart" && scene.chart
           ? {
@@ -178,6 +247,7 @@ export function planFromStoryboard(
               ...(scene.chart.source
                 ? { sourceAttribution: scene.chart.source }
                 : {}),
+              ...(scene.chart.kind ? { kind: scene.chart.kind } : {}),
             }
           : undefined,
       backgroundQuery,
@@ -200,11 +270,18 @@ export function planFromStoryboard(
       "voice.speed is not applied yet; the voice speaks at its natural speed",
     );
   }
-  if (storyboard.theme) {
-    warnings.push(
-      `theme "${storyboard.theme}" is not applied yet; the look is chosen from the content`,
-    );
-  }
+  const presetId = presetForStoryboard(storyboard);
+  const named = getTheme(storyboard.theme);
+  const themeId = (
+    named ??
+    autoTheme(
+      [
+        storyboard.title,
+        ...storyboard.scenes.flatMap((s) => [s.headline, s.narration]),
+      ].join(" "),
+      presetId,
+    )
+  ).id;
 
   return {
     scenePlan: {
@@ -212,7 +289,8 @@ export function planFromStoryboard(
       scriptName: storyboard.title,
       scenes,
     },
-    presetId: presetForStoryboard(storyboard),
+    presetId,
+    themeId,
     roles: storyboard.scenes.map(
       (scene) => STORYBOARD_ROLE_BY_TYPE[scene.type],
     ),

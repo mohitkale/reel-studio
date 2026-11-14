@@ -48,6 +48,8 @@ export interface SceneDTO {
   items?: string[];
   /** Explicit labels and values for chart templates; never inferred from prose. */
   chart?: SceneChartData;
+  /** Structured data for registered scene types (steps, timeline, comparison, ...). */
+  panel?: Record<string, unknown>;
   /** Per-scene override for on-screen text. null = inherit the script default. */
   hideText: boolean | null;
   /** Emotional/visual tone (AI-suggested or manually set); drives dynamic backgrounds + music. */

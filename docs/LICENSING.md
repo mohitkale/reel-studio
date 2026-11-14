@@ -42,7 +42,7 @@ Reel Studio's own MIT license does not relicense dependencies or model weights.
 The bundled browser/render runtime in `public/reel-runtime/` also bundles Geist,
 Geist Mono, Inter, EB Garamond, Archivo Black and JetBrains Mono under OFL-1.1.
 Their complete notices accompany the assets; the manifest records installed
-source versions and checksums. Font aliases are rendered by genuine bundled
+source versions and checksums. Themes use only these families: Bold Pop (Archivo Black, Inter), Clean Minimal (Geist), Midnight Tech (JetBrains Mono, Inter), Editorial Paper (EB Garamond, Geist), Neon (Archivo Black, Inter), Warm Documentary (EB Garamond, Inter), Corporate Blue (Inter), Playful Pastel (Inter), Mono Brutalist (JetBrains Mono) and Cinematic (Geist, EB Garamond). Font aliases are rendered by genuine bundled
 faces, rather than relabeling a sans font as a serif. See [export fidelity](archive/guides/EXPORT_FIDELITY.md).
 
 ## Local / permissive runtime dependencies (selected)
@@ -50,17 +50,18 @@ faces, rather than relabeling a sans font as a serif. See [export fidelity](arch
 These are commonly used with Reel Studio and are generally permissive. Confirm
 each package’s `LICENSE` file in `node_modules` for the exact text.
 
-| Dependency                  | Typical license | Role                        |
-| --------------------------- | --------------- | --------------------------- |
-| Next.js, React, React DOM   | MIT             | App framework               |
-| Prisma / `@prisma/client`   | Apache-2.0      | Database                    |
-| Tailwind / Radix UI         | MIT             | UI                          |
-| TanStack Query, Zod         | MIT             | Data validation             |
-| lucide-react                | ISC             | Icons                       |
-| Geist variable fonts        | OFL-1.1         | Typography                  |
-| `kokoro-js` / Kokoro model  | Apache-2.0      | Local TTS                   |
-| `@modelcontextprotocol/sdk` | MIT             | MCP server                  |
-| `@hyperframes/producer`     | Apache-2.0      | HyperFrames HTML→MP4 export |
+| Dependency                  | Typical license | Role                                                                                                                              |
+| --------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Next.js, React, React DOM   | MIT             | App framework                                                                                                                     |
+| Prisma / `@prisma/client`   | Apache-2.0      | Database                                                                                                                          |
+| Tailwind / Radix UI         | MIT             | UI                                                                                                                                |
+| TanStack Query, Zod         | MIT             | Data validation                                                                                                                   |
+| lucide-react                | ISC             | Icons                                                                                                                             |
+| lucide icon paths (bundled) | ISC             | About 115 icons as inline SVG in `src/engines/hyperframes/assets/lucide-icons.generated.ts`, produced by `npm run icons:generate` |
+| Geist variable fonts        | OFL-1.1         | Typography                                                                                                                        |
+| `kokoro-js` / Kokoro model  | Apache-2.0      | Local TTS                                                                                                                         |
+| `@modelcontextprotocol/sdk` | MIT             | MCP server                                                                                                                        |
+| `@hyperframes/producer`     | Apache-2.0      | HyperFrames HTML→MP4 export                                                                                                       |
 
 ---
 

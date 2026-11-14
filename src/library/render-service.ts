@@ -69,6 +69,7 @@ export function prepareVideoComposition(
         : undefined,
       items: s.items,
       chart: s.chart,
+      panel: s.panel,
       carouselImages: s.carouselImages?.map((url) => absolute(url)!),
       role: s.role,
       motion: s.motion,

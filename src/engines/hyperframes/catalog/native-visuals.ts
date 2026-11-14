@@ -7,6 +7,9 @@ import { SHOWPIECE_BOOT } from "../motion/showpiece-blocks";
 import { CELESTIAL_BOOT } from "../motion/celestial-blocks";
 import { SEMANTIC_GRAPHIC_BOOT } from "../motion/semantic-blocks";
 import { escapeHtml } from "@/lib/html";
+import { iconForScene, iconSvg } from "@/engines/hyperframes/assets/icons";
+import { sceneDefinitionForTemplate } from "@/engines/hyperframes/scenes/registry";
+import { CHART_STYLES, SCENE_STYLES } from "@/engines/hyperframes/scenes/styles";
 import { MOTION_LIBRARY_TIMING } from "@/video/motion-library";
 import { STORY_MOTION_TRACKS } from "@/production/story-motion";
 import { GRAPH_TIMELINE_BOOT } from "../motion/compile-shot";
@@ -406,7 +409,69 @@ function stageShell(
   }
 }
 
+/** Bars come pre-rendered; line and donut are drawn here from the same values. */
+function chartVariantHtml(args: {
+  kind: "bar" | "line" | "donut";
+  labels: string[];
+  values: number[];
+  unit: string;
+  accent: string;
+  ink: string;
+  barsHtml: string;
+}): string {
+  const { kind, labels, values, unit, accent, ink } = args;
+  if (kind === "line" && values.length >= 2) {
+    const W = 600;
+    const H = 300;
+    const padX = 50;
+    const top = 50;
+    const bottom = 250;
+    const min = Math.min(0, ...values);
+    const max = Math.max(1, ...values);
+    const x = (i: number) =>
+      padX + (i * (W - 2 * padX)) / Math.max(1, values.length - 1);
+    const y = (v: number) =>
+      bottom - ((v - min) / Math.max(1e-9, max - min)) * (bottom - top);
+    const pts = values.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`);
+    return `<svg class="fx-chart-svg fx-rv" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="color:${ink}" role="img" aria-label="${escapeHtml(labels.map((l, i) => `${l}: ${values[i]}${unit}`).join(", "))}">
+      <line x1="${padX - 20}" y1="${bottom}" x2="${W - padX + 20}" y2="${bottom}" stroke="currentColor" stroke-opacity=".3" stroke-width="2"/>
+      <polyline points="${pts.join(" ")}" fill="none" stroke="${accent}" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+      ${values
+        .map(
+          (v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="10" fill="${accent}"/>
+      <text x="${x(i).toFixed(1)}" y="${(y(v) - 22).toFixed(1)}" font-size="30" text-anchor="middle">${escapeHtml(`${v}${unit}`)}</text>
+      <text x="${x(i).toFixed(1)}" y="${bottom + 38}" font-size="28" text-anchor="middle" fill-opacity=".85">${escapeHtml(labels[i] ?? "")}</text>`,
+        )
+        .join("")}
+    </svg>`;
+  }
+  if (kind === "donut") {
+    const positive = values.map((v) => Math.max(0, v));
+    const total = positive.reduce((a, b) => a + b, 0);
+    if (total > 0) {
+      const R = 100;
+      const C = 2 * Math.PI * R;
+      let offset = 0;
+      const ramp = [1, 0.78, 0.58, 0.42, 0.3, 0.2];
+      const arcs = positive.map((v, i) => {
+        const len = (v / total) * C;
+        const arc = `<circle cx="150" cy="150" r="${R}" fill="none" stroke="${accent}" stroke-opacity="${ramp[i % ramp.length]}" stroke-width="56" stroke-dasharray="${Math.max(0, len - 3).toFixed(2)} ${(C - Math.max(0, len - 3)).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}" transform="rotate(-90 150 150)"/>`;
+        offset += len;
+        return arc;
+      });
+      const legend = positive.map(
+        (v, i) =>
+          `<li style="color:${ink}"><i style="background:${accent};opacity:${ramp[i % ramp.length]}"></i>${escapeHtml(labels[i] ?? "")} · ${escapeHtml(`${values[i]}${unit}`)}</li>`,
+      );
+      return `<div class="fx-donut fx-rv"><svg viewBox="0 0 300 300" role="img" aria-label="${escapeHtml(labels.map((l, i) => `${l}: ${values[i]}${unit}`).join(", "))}">${arcs.join("")}</svg><ul class="fx-donut-legend">${legend.join("")}</ul></div>`;
+    }
+  }
+  return `<div class="fx-chart-bars">${args.barsHtml}</div>`;
+}
+
 function recipeForTemplate(templateId: string, mood?: SceneMood): string {
+  const registered = sceneDefinitionForTemplate(templateId);
+  if (registered) return registered.recipe;
   switch (templateId) {
     case "hf-kinetic-slam":
     case "caption-kinetic-slam":
@@ -443,6 +508,25 @@ function recipeForTemplate(templateId: string, mood?: SceneMood): string {
       return "void-slash";
   }
 }
+
+/** Dark or white text, whichever reads better on the accent (WCAG luminance). */
+function onAccentColor(accent: string): string {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(accent.trim());
+  if (!m) return "#0b0b12";
+  const hex = m[1]!.length === 3 ? [...m[1]!].map((c) => c + c).join("") : m[1]!;
+  const channel = (i: number) => {
+    const v = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  const luminance = 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4);
+  // Whichever of dark and white has the higher contrast ratio against it.
+  return (luminance + 0.05) / 0.054 >= 1.05 / (luminance + 0.05)
+    ? "#0b0b12"
+    : "#ffffff";
+}
+
+/** Decorative shapes drawn behind the content; the theme decides whether and how they show. */
+const DECO_HTML = `<div class="fx-deco" aria-hidden="true"><i></i><i></i><i></i></div>`;
 
 function chipHtml(speaker: string, accent: string, ink: string): string {
   // Scene roles are internal vocabulary ("summary", "cta"); never put them on screen.
@@ -621,14 +705,21 @@ export function buildNativeCatalogVisual(args: {
           <span>${escapeHtml(chart.labels[index])}</span>
         </div>`;
       });
+      const chartBody = chartVariantHtml({
+        kind: chart.kind ?? "bar",
+        labels: chart.labels,
+        values,
+        unit: series.unit ?? "",
+        accent,
+        ink: pal.ink,
+        barsHtml: bars.join(""),
+      });
       return `
         ${stageShell(sid, pal, "terminal", "fx-chart")}
           <div class="fx-content fx-panelled">
             <div class="fx-dialogue fx-dlg-chart">
               <p class="fx-chart-title" style="color:${pal.ink}">${escapeHtml(scene.visual || scene.text.slice(0, 48))}</p>
-              <div class="fx-chart-bars">
-                ${bars.join("")}
-              </div>
+              ${chartBody}
               <p class="fx-chart-line" style="color:${pal.ink}">${textHtml}</p>
               ${chart.sourceAttribution ? `<p class="fx-chart-source">${escapeHtml(chart.sourceAttribution)}</p>` : ""}
             </div>
@@ -668,6 +759,8 @@ export function buildCinematicClassicVisual(args: {
   scene: ReelScene;
   tokens: BrandTokens;
   innerHtml: string;
+  /** Picture drawn inside the panel by scenes that frame their media. */
+  mediaUrl?: string;
 }): string {
   const { scene, tokens } = args;
   const pal = paletteFor(scene.mood, tokens);
@@ -681,14 +774,51 @@ export function buildCinematicClassicVisual(args: {
   const tpl = scene.templateId || "hf-statement";
   const recipe = recipeForTemplate(tpl, scene.mood);
   const chip = chipHtml(speaker, accent, pal.ink);
+  // Every scene gets a non-text visual: the storyboard's icon, or one picked
+  // from the scene's words, or the scene type's default.
+  const panelData = (scene.panel ?? {}) as { icon?: string; sceneType?: string };
+  const iconName = iconForScene({
+    text: `${scene.text} ${scene.spokenText ?? ""}`,
+    type: panelData.sceneType,
+    explicit: panelData.icon,
+  });
+  const badge = `<div class="fx-icon-badge" style="background:${accent};color:${onAccentColor(accent)}" data-icon="${iconName}">${iconSvg(iconName)}</div>`;
+  const lead = `${chip}${badge}`;
 
   let body = "";
-  switch (tpl) {
+  const registered = sceneDefinitionForTemplate(tpl);
+  const payload = registered?.schema.safeParse(scene.panel ?? {});
+  if (registered && payload?.success) {
+    body = `
+        <div class="fx-dialogue fx-dlg-${registered.id}"${registered.fixedFill ? "" : " data-sc-grow"}>
+          ${registered.fixedFill || registered.ownVisual ? "" : badge}
+          ${registered.build(payload.data, {
+            text: scene.text,
+            emphasis: scene.emphasis,
+            ink: pal.ink,
+            accent,
+            onAccent: onAccentColor(accent),
+            chip,
+            mediaUrl: args.mediaUrl,
+            escape: escapeHtml,
+            emphasize,
+            lineStack: lineStackHtml,
+          })}
+        </div>`;
+    return `
+    ${stageShell(sid, pal, recipe, "fx-classic")}
+      ${DECO_HTML}
+      <div class="fx-content fx-panelled recipe-content-${recipe}">
+        ${body}
+      </div>
+    </div>`;
+  }
+  switch (registered ? "hf-statement" : tpl) {
     case "hf-opener":
       body = `
         <div class="fx-dialogue fx-dlg-opener">
           <div class="fx-lt-plate" style="--accent:${accent}">
-            ${chip}
+            ${lead}
             <div class="fx-stack opener-stack" style="color:${pal.ink}">${lineStackHtml(scene.text, scene.emphasis, 14, "fx-line sans", 3)}</div>
           </div>
         </div>`;
@@ -704,7 +834,7 @@ export function buildCinematicClassicVisual(args: {
     case "hf-quote":
       body = `
         <div class="fx-dialogue fx-dlg-quote">
-          ${chip}
+          ${lead}
           <div class="fx-qmark" style="color:${accent}">“</div>
           <div class="fx-stack quote-stack" style="color:${pal.ink}">${lineStackHtml(scene.text, scene.emphasis, 22, "fx-line serif", 5)}</div>
         </div>`;
@@ -712,7 +842,7 @@ export function buildCinematicClassicVisual(args: {
     case "hf-statement":
       body = `
         <div class="fx-dialogue fx-dlg-statement">
-          ${chip}
+          ${lead}
           <div class="fx-stack statement-stack" style="color:${pal.ink}">${lineStackHtml(scene.text, scene.emphasis, 12, "fx-line", 2)}</div>
           <div class="fx-rule" style="background:${accent}"></div>
         </div>`;
@@ -723,7 +853,7 @@ export function buildCinematicClassicVisual(args: {
       const items = hasItems ? scene.items! : linesToItems(scene.text);
       body = `
         <div class="fx-dialogue fx-dlg-list">
-          ${chip}
+          ${lead}
           ${hasItems ? `<p class="fx-list-title" style="color:${pal.ink}">${escapeHtml(scene.text)}</p>` : ""}
           <ul class="fx-check-list">
             ${items
@@ -747,8 +877,8 @@ export function buildCinematicClassicVisual(args: {
         : "";
       body = `
         <div class="fx-dialogue fx-dlg-stat">
-          ${chip}
-          <p class="fx-money-num"${countAttrs} style="color:${accent}">${escapeHtml(scene.visual || "—")}</p>
+          ${lead}
+          <p class="fx-money-num"${countAttrs} style="color:${accent};--chars:${Math.max(2, (scene.visual || "—").length)}">${escapeHtml(scene.visual || "—")}</p>
           <div class="fx-stack" style="color:${pal.ink}">${lineStackHtml(scene.text, scene.emphasis, 20, "fx-line sans")}</div>
         </div>`;
       break;
@@ -756,7 +886,7 @@ export function buildCinematicClassicVisual(args: {
     case "hf-cta":
       body = `
         <div class="fx-dialogue fx-dlg-cta">
-          ${chip}
+          ${lead}
           <div class="fx-stack" style="color:${pal.ink}">${lineStackHtml(scene.text, scene.emphasis, 18)}</div>
           <div class="fx-cta-btn" style="background:${accent}">${escapeHtml(scene.visual || "Follow")}</div>
         </div>`;
@@ -764,7 +894,7 @@ export function buildCinematicClassicVisual(args: {
     default:
       body = `
         <div class="fx-dialogue">
-          ${chip}
+          ${lead}
           <div class="fx-stack" style="color:${pal.ink}">${lineStackHtml(scene.text || "", scene.emphasis, 18)}</div>
           ${!scene.text ? textHtml || args.innerHtml : ""}
         </div>`;
@@ -1131,6 +1261,7 @@ export const NATIVE_CATALOG_STYLES = `
     font-size: calc(var(--frame-h, 1920px) * 0.03); padding: 0.5em 1.1em;
   }
   .fx-yt-btn { background: #f00; color: #fff; }
+  .fx-panelled .fx-dlg-stat .fx-money-num { font-size: min(calc(var(--frame-h, 1920px) * 0.17), calc(70cqw / (var(--chars, 4) * 0.6))); }
   .fx-money-num {
     font-size: clamp(88px, 16cqw, 168px); font-weight: 800; letter-spacing: -0.05em;
     line-height: 0.95; opacity: 0; transform: translateY(24px);
@@ -1239,6 +1370,20 @@ export const NATIVE_CATALOG_STYLES = `
   .fx-dlg-broll { width: 100%; display: flex; align-items: flex-end; }
   .fx-broll-plate { max-width: min(760px, 84%); }
   .fx-broll-plate .fx-kicker { margin-bottom: 12px; }
+  .fx-icon-badge { flex: none; width: calc(var(--frame-h, 1920px) * 0.052); height: calc(var(--frame-h, 1920px) * 0.052); border-radius: 50%; display: grid; place-items: center; margin-bottom: calc(var(--frame-h, 1920px) * 0.012); }
+  .fx-icon-svg { width: 58%; height: 58%; }
+  .fx-panelled .fx-dlg-list .fx-icon-badge, .fx-panelled .fx-dlg-quote .fx-icon-badge, .fx-panelled .fx-dlg-steps .fx-icon-badge, .fx-panelled .fx-dlg-checklist .fx-icon-badge, .fx-panelled .fx-dlg-timeline .fx-icon-badge { align-self: flex-start; }
+  .fx-deco { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; display: none; }
+  .fx-deco i { position: absolute; display: block; }
+  #root[data-theme-bg="grid"] .fx-deco, #root[data-theme-bg="glow"] .fx-deco, #root[data-theme-bg="blocks"] .fx-deco,
+  #root[data-theme-bg="blobs"] .fx-deco, #root[data-theme-bg="paper"] .fx-deco { display: block; }
+  .fx-deco i:nth-child(1) { width: calc(var(--frame-h, 1920px) * 0.11); height: calc(var(--frame-h, 1920px) * 0.11); right: 4%; top: calc(2% + var(--fx-hue, 0) * 0.01%); border: calc(var(--frame-h, 1920px) * 0.004) solid var(--fx-c); border-radius: 50%; opacity: .55; }
+  .fx-deco i:nth-child(2) { width: calc(var(--frame-h, 1920px) * 0.05); height: calc(var(--frame-h, 1920px) * 0.05); left: 3%; bottom: 12%; background: var(--fx-glow); opacity: .5; border-radius: 28%; }
+  .fx-deco i:nth-child(3) { width: calc(var(--frame-h, 1920px) * 0.022); height: calc(var(--frame-h, 1920px) * 0.022); left: 46%; top: 3%; background: var(--fx-c); border-radius: 50%; opacity: .6; }
+  #root[data-theme-bg="paper"] .fx-deco i:nth-child(1), #root[data-theme-bg="paper"] .fx-deco i:nth-child(2) { border-radius: 0; }
+  #root[data-theme-bg="blocks"] .fx-deco i { border-radius: 0; }
+${SCENE_STYLES}
+${CHART_STYLES}
 `;
 
 /**
@@ -1252,7 +1397,7 @@ export function buildGsapMotionBootScript(
 <script>
 (function () {
   function revealFallback() {
-    document.querySelectorAll('.fx-line-inner, .fx-kicker, .fx-rule, .fx-logo-mark, .fx-pill, .fx-social-card, .fx-yt-bar, .fx-money-num, .fx-money-line, .fx-chart-line, .fx-chart-title, .fx-phone, .fx-chip, .fx-qmark, .fx-check-item, .fx-cta-btn, .fx-lt-plate, .fx-slash, .fx-letterbox, .fx-term-grid, .fx-chart-bars i, .fx-carousel-card, .tm-impact-shape, .tm-impact-rule, .tm-editorial-rail, .dm-row, .dm-bar-fill, .gm-step, .gm-core, .gm-satellite').forEach(function (el) {
+    document.querySelectorAll('.fx-line-inner, .fx-kicker, .fx-rule, .fx-logo-mark, .fx-pill, .fx-social-card, .fx-yt-bar, .fx-money-num, .fx-money-line, .fx-chart-line, .fx-chart-title, .fx-phone, .fx-chip, .fx-qmark, .fx-check-item, .fx-rv, .fx-cta-btn, .fx-lt-plate, .fx-slash, .fx-letterbox, .fx-term-grid, .fx-chart-bars i, .fx-carousel-card, .tm-impact-shape, .tm-impact-rule, .tm-editorial-rail, .dm-row, .dm-bar-fill, .gm-step, .gm-core, .gm-satellite').forEach(function (el) {
       el.style.opacity = '1';
       el.style.transform = 'none';
     });
@@ -1429,15 +1574,20 @@ ${SEMANTIC_GRAPHIC_BOOT}
       }
 
       var revealDuration = Math.min(1.5, Math.max(.15, Number(stage.getAttribute('data-text-reveal-duration')) || .42));
-      var lineRevealDuration = function(start) { return stage.hasAttribute('data-text-reveal-duration') ? Math.min(revealDuration, Math.max(.01, sceneDuration - start)) : .42; };
-      var revealEase = {linear:'none', smooth:'power2.inOut', snappy:'power3.out'}[stage.getAttribute('data-text-reveal-ease')] || 'power3.out';
+      var lineRevealDuration = function(start) { return stage.hasAttribute('data-text-reveal-duration') ? Math.min(revealDuration, Math.max(.01, sceneDuration - start)) : (persona ? persona.d : .42); };
+      var rootEl = document.getElementById('root');
+      var persona = ({snappy:{ease:'power4.out',d:.3,s:.08}, smooth:{ease:'power2.inOut',d:.5,s:.12}, punchy:{ease:'back.out(1.8)',d:.35,s:.09}, calm:{ease:'sine.out',d:.6,s:.16}, bouncy:{ease:'back.out(2.6)',d:.55,s:.11}, hard:{ease:'power4.in',d:.22,s:.1}, slow:{ease:'power1.out',d:.8,s:.22}})[rootEl ? rootEl.getAttribute('data-theme-motion') : ''] || null;
+      var revealEase = {linear:'none', smooth:'power2.inOut', snappy:'power3.out'}[stage.getAttribute('data-text-reveal-ease')] || (persona ? persona.ease : 'power3.out');
       // Line reveals — clipped, never overlapping
       (stage.hasAttribute('data-design-block') ? [] : lines).forEach(function (inner, i) {
         if (motif) tl.fromTo(inner, { x: motif.x, y: motif.y, opacity: 0 }, { x: 0, y: 0, opacity: 1, force3D: false, duration: lineRevealDuration(events.reveal + i * .1), ease: revealEase }, events.reveal + i * 0.1);
-        else tl.fromTo(inner, { y: '110%' }, { y: '0%', duration: lineRevealDuration((recipe.startsWith('type-') ? events.reveal : .22) + i * .1), ease: revealEase }, (recipe.startsWith('type-') ? events.reveal : 0.22) + i * 0.1);
+        else tl.fromTo(inner, { y: '110%' }, { y: '0%', duration: lineRevealDuration((recipe.startsWith('type-') ? events.reveal : .22) + i * (persona ? persona.s : .1)), ease: revealEase }, (recipe.startsWith('type-') ? events.reveal : 0.22) + i * (persona ? persona.s : 0.1));
       });
 
       if (rule) tl.fromTo(rule, { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: 'power3.out' }, Math.max(0.55, 0.22 + lines.length * 0.1));
+      stage.querySelectorAll('.fx-rv').forEach(function (item, i) {
+        tl.fromTo(item, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: persona ? persona.d : 0.4, ease: persona ? persona.ease : 'power3.out' }, 0.25 + i * (persona ? persona.s * 1.6 : 0.16));
+      });
       checks.forEach(function (item, i) {
         tl.fromTo(item, { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power3.out' }, 0.25 + i * 0.16);
       });
@@ -1462,6 +1612,9 @@ ${SEMANTIC_GRAPHIC_BOOT}
         tl.to(carouselCard, { rotation: '+=4', scale: '+=0.025', duration: loopDuration(1.8, 0.55 + i * 0.03), yoyo: true, repeat: repeatThroughScene(1.8, 0.55 + i * 0.03), ease: 'sine.inOut' }, 0.55 + i * 0.03);
       });
 
+      stage.querySelectorAll('.fx-deco i').forEach(function (el, i) {
+        tl.fromTo(el, { y: 0, rotation: 0 }, { y: i % 2 ? -26 : 22, rotation: i % 2 ? 24 : -18, duration: Math.max(1.5, sceneDuration), ease: 'sine.inOut' }, 0);
+      });
       // Ambient life after the entrance so long VO doesn't freeze into a poster.
       var holdEnd = Math.max(tl.duration(), 1.35);
       if (scan) {

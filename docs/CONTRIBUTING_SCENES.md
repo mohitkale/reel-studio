@@ -26,6 +26,30 @@ validates types, paths, variables, dependencies and assets, records SHA-256
 checksums and never changes an existing version directory. Run it twice before
 review: the second run must report no changes.
 
+## Add a scene type
+
+A storyboard scene type is one folder under `src/engines/hyperframes/scenes/<type>/`
+whose `index.ts` exports a `SceneDefinition` (`src/engines/hyperframes/scenes/types.ts`):
+the payload `schema`, `layout` notes for each format, `build` (the markup inside the
+panel) and a `sample`. Registering it is one line in `scenes/registry.ts`.
+
+1. Add the type to `SCENE_TYPES` and any new data field to `src/storyboard/schema.ts`;
+   run `npm run storyboard:schema`.
+2. Map it in `STORYBOARD_TEMPLATE_BY_TYPE`, `STORYBOARD_ROLE_BY_TYPE` and the `panel`
+   switch in `src/production/storyboard-plan.ts`, and in `src/library/project-storyboard.ts`
+   for export.
+3. Size text from `--frame-h` with the helpers in `scenes/styles.ts`; the engine grows or
+   shrinks it to fit the panel. Use `kit.onAccent` for text on the accent colour.
+4. Check it: `/scenes` shows it, `npx vitest run src/engines/hyperframes/scenes`, and
+   `npm run examples:lint-frames -- --only <example>` passes for a storyboard that uses it.
+
+## Add a theme
+
+One file in `src/video/themes/` plus one line in `src/video/themes/index.ts`. Use only
+the bundled fonts (see [licensing](LICENSING.md)). `themes.test.ts` fails when text,
+muted text or accent text on the theme's panel drops under the contrast limits, and
+`node scripts/theme-sheet.mjs` renders one storyboard in every theme.
+
 ## Add an authored motion block
 
 Register data in `src/video/motion-extensions.ts` and a renderer plus styles in

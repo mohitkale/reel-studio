@@ -52,6 +52,8 @@ export const productionChartDataSchema = z
       .min(1)
       .max(12),
     sourceAttribution: z.string().max(500).optional(),
+    /** How to draw it; absent means bars. */
+    kind: z.enum(["bar", "line", "donut"]).optional(),
   })
   .superRefine((chart, ctx) => {
     for (const [index, series] of chart.series.entries()) {

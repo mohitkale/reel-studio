@@ -82,7 +82,7 @@
           "description": "Canvas shape. \"9:16\" vertical for Reels, Shorts and TikTok; \"16:9\" landscape for YouTube; \"1:1\" square. Default \"9:16\"."
         },
         "theme": {
-          "description": "Optional visual theme name. Omit to let Reel Studio choose a look that fits the content.",
+          "description": "Optional visual theme: \"bold-pop\", \"clean-minimal\", \"midnight-tech\", \"editorial-paper\", \"neon\", \"warm-documentary\", \"corporate-blue\", \"playful-pastel\", \"mono-brutalist\" or \"cinematic\". Omit or use \"auto\" to let Reel Studio choose a theme that fits the content.",
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
         },
@@ -137,9 +137,20 @@
                   "quote",
                   "code",
                   "media",
-                  "cta"
+                  "cta",
+                  "kinetic-text",
+                  "steps",
+                  "comparison",
+                  "before-after",
+                  "timeline",
+                  "definition",
+                  "terminal",
+                  "diagram",
+                  "media-split",
+                  "device-mockup",
+                  "checklist"
                 ],
-                "description": "What the scene is. hook: opening line that grabs attention. statement: one key idea. list: 2-6 short points (needs items). stat: one big number (needs stat). chart: compare values (needs chart). quote: a quotation (needs quote). code: a code snippet (needs code). media: a picture or clip carries the scene (needs media). cta: closing call to action. Example: \"statement\"."
+                "description": "What the scene is. hook: opening line that grabs attention. statement: one key idea. kinetic-text: a punchy line slammed word by word. list: 2-6 short points (needs items). steps: 2-6 numbered steps in order (needs items). checklist: 2-6 things to tick off (needs items). stat: one big number (needs stat). comparison: two options side by side (needs compare). before-after: a change from one state to another (needs compare). timeline: 2-5 moments in order (needs points). diagram: 2-5 connected parts of a process or system (needs points). chart: compare values (needs chart; chart.kind bar, line or donut). quote: a quotation (needs quote). definition: a term and its meaning (needs definition). code: a code snippet (needs code). terminal: shell commands and output (needs code). media: a full-frame picture or clip (needs media). media-split: picture beside the headline (needs media). device-mockup: a phone screen showing a picture (media optional). cta: closing call to action. Example: \"statement\"."
               },
               "headline": {
                 "type": "string",
@@ -249,6 +260,15 @@
                     "description": "Where the numbers come from. Example: \"Company report, 2025\".",
                     "type": "string",
                     "maxLength": 80
+                  },
+                  "kind": {
+                    "description": "How to draw it: \"bar\" to compare, \"line\" for change over time, \"donut\" for shares of a whole (first series only). Default \"bar\".",
+                    "type": "string",
+                    "enum": [
+                      "bar",
+                      "line",
+                      "donut"
+                    ]
                   }
                 },
                 "required": [
@@ -257,6 +277,113 @@
                 ],
                 "additionalProperties": false,
                 "description": "Data for a chart scene. Never invent numbers."
+              },
+              "compare": {
+                "description": "Two sides for a comparison or before-after scene: left is the first option or the before state.",
+                "type": "object",
+                "properties": {
+                  "left": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 24,
+                        "description": "Short title of this side. Example: \"Before\"."
+                      },
+                      "text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80,
+                        "description": "One short sentence about this side, at most 80 characters."
+                      }
+                    },
+                    "required": [
+                      "label",
+                      "text"
+                    ],
+                    "additionalProperties": false,
+                    "description": "The first option, or the before state. Example: {\"label\":\"Before\",\"text\":\"One hour per edit\"}."
+                  },
+                  "right": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 24,
+                        "description": "Short title of this side. Example: \"Before\"."
+                      },
+                      "text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80,
+                        "description": "One short sentence about this side, at most 80 characters."
+                      }
+                    },
+                    "required": [
+                      "label",
+                      "text"
+                    ],
+                    "additionalProperties": false,
+                    "description": "The second option, or the after state. Example: {\"label\":\"After\",\"text\":\"One minute\"}."
+                  }
+                },
+                "required": [
+                  "left",
+                  "right"
+                ],
+                "additionalProperties": false
+              },
+              "points": {
+                "description": "Two to five moments (timeline) or parts (diagram), in order. Example: [{\"label\":\"2019\",\"text\":\"Launch\"},{\"label\":\"2024\",\"text\":\"1M users\"}].",
+                "minItems": 2,
+                "maxItems": 5,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 24,
+                      "description": "A date, name or step title. Example: \"2024\"."
+                    },
+                    "text": {
+                      "description": "Optional short detail, at most 70 characters.",
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 70
+                    }
+                  },
+                  "required": [
+                    "label"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "definition": {
+                "description": "Term and meaning for a definition scene.",
+                "type": "object",
+                "properties": {
+                  "term": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 40,
+                    "description": "The word being defined. Example: \"Latency\"."
+                  },
+                  "meaning": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160,
+                    "description": "Plain-words meaning, at most 160 characters."
+                  }
+                },
+                "required": [
+                  "term",
+                  "meaning"
+                ],
+                "additionalProperties": false
               },
               "quote": {
                 "description": "Quotation for a quote scene. Only real, attributed quotes.",

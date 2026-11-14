@@ -6,6 +6,8 @@ import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
 import type { ScriptDTO, VoiceMode } from "@/lib/dto";
 import { serverDefaultTokens } from "@/lib/brand-defaults";
 import { applyVisualTheme } from "@/production/creative-direction";
+import { applyThemeToTokens, getTheme } from "@/video/themes";
+import type { BrandTokens } from "@/video/tokens";
 import {
   DEFAULT_ENERGY_ID,
   DEFAULT_STYLE_ID,
@@ -40,6 +42,18 @@ function resolveVoiceMode(value: string | null | undefined): VoiceMode {
 }
 
 /** Batch all relations once per list request; no time cache can hide an edit. */
+/** A storyboard theme dresses the project unless a brand kit owns palette and fonts. */
+function withStoryboardTheme(
+  tokens: BrandTokens,
+  themeId: string | undefined,
+  hasBrandKit: boolean,
+): BrandTokens {
+  const theme = getTheme(themeId);
+  return theme
+    ? applyThemeToTokens(tokens, theme, { keepBrand: hasBrandKit })
+    : tokens;
+}
+
 export async function getScripts(
   ids: string[],
 ): Promise<Map<string, ScriptDTO>> {
@@ -108,11 +122,15 @@ export async function getScripts(
         brandKitId: script.project.brandKitId,
         brandTokens:
           overrides.frozenBrandTokens ??
-          applyVisualTheme(
-            brandKit
-              ? resolveBrandTokens(brandKit)
-              : { ...serverDefaultTokens },
-            script.project.brandKitId ? undefined : overrides.visualTheme,
+          withStoryboardTheme(
+            applyVisualTheme(
+              brandKit
+                ? resolveBrandTokens(brandKit)
+                : { ...serverDefaultTokens },
+              script.project.brandKitId ? undefined : overrides.visualTheme,
+            ),
+            overrides.themeId,
+            Boolean(script.project.brandKitId),
           ),
         visualTheme: script.project.brandKitId
           ? undefined

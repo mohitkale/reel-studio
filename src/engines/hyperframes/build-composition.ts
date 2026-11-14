@@ -36,6 +36,13 @@ import {
 import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
 import { getCatalogBlockByTemplateId } from "@/engines/hyperframes/catalog/manifest";
 import { buildCatalogSceneBlock } from "@/engines/hyperframes/catalog/build-scene";
+import { sceneDefinitionForTemplate } from "@/engines/hyperframes/scenes/registry";
+import {
+  THEME_STYLES,
+  themeRootAttributes,
+  themeRootStyle,
+} from "@/engines/hyperframes/theme-styles";
+import { getTheme } from "@/video/themes";
 import {
   NATIVE_CATALOG_STYLES,
   buildGsapMotionBootScript,
@@ -537,6 +544,7 @@ const STYLES = `
     overflow: hidden; pointer-events: none;
   }
   ${NATIVE_CATALOG_STYLES}
+  ${THEME_STYLES}
   /* Style + Energy driven via CSS variables on #root */
   .scene-handoff { position:absolute;inset:0;overflow:hidden;opacity:var(--handoff,1);background:var(--brand-background); }
   .scene {
@@ -1002,6 +1010,7 @@ export function buildHyperframesCompositionHtml(
   const height = props.height || 1920;
   const layout = props.layout ?? resolveProductionLayout({ width, height });
   const tokens = readableMotionPalette(props.tokens);
+  const theme = getTheme(props.tokens.themeId);
   const accent = tokens.accent ?? "#ff6b4a";
   const cover = coverFrames(fps, Boolean(props.coverUrl));
   const coverSeconds = framesToSeconds(cover, fps);
@@ -1216,6 +1225,13 @@ export function buildHyperframesCompositionHtml(
       }
     }
 
+    // Scenes that frame their picture (media split, device mockup) draw a still
+    // image inside the panel instead of full-bleed behind it.
+    const framedUrl =
+      sceneDefinitionForTemplate(scene.templateId)?.framedMedia &&
+      scene.background?.type === "image"
+        ? scene.background.url
+        : undefined;
     sceneBlocks.push(`
       <section${presetMetadata} id="scene-${escapeHtml(scene.id)}" class="clip scene ${transitionClass}${scene.background?.type === "image" || scene.background?.type === "video" ? " has-photo" : ""}" data-scene-id="${escapeHtml(scene.id)}"
                data-start="${absoluteStart.toFixed(3)}"
@@ -1223,11 +1239,12 @@ export function buildHyperframesCompositionHtml(
                data-track-index="1"
                data-exit-window="${exitWindow.toFixed(3)}"
                style="--accent:${accent};--motion-stiffness:${motionStiffness}">
-        ${backgroundLayer(scene, absoluteStart, duration)}
+        ${framedUrl ? "" : backgroundLayer(scene, absoluteStart, duration)}
         ${buildCinematicClassicVisual({
           scene,
           tokens,
           innerHtml: sceneInnerHtml(scene, tokens),
+          mediaUrl: framedUrl,
         })}
       </section>`);
   }
@@ -1384,8 +1401,9 @@ ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLE
          data-hide-progress="${hideProgress ? "1" : "0"}"
          data-grain="${grainAttr}"
          data-orientation="${layout.orientation}"
+         ${theme ? themeRootAttributes(theme) : ""}
          data-palette-tone="${(colorContrast(tokens.background, "#000000") ?? 0) > (colorContrast(tokens.background, "#FFFFFF") ?? 0) ? "light" : "dark"}"
-         style="width:${width}px;height:${height}px;--brand-background:${tokens.background};--brand-foreground:${tokens.foreground};--brand-muted:${tokens.muted};--brand-accent-foreground:${tokens.accentForeground};--brand-accent-text:${(colorContrast(tokens.accent, tokens.background) ?? 0) >= 4.5 ? tokens.accent : tokens.foreground};--motion-radius:${tokens.radius}px;--motion-gap:${Math.min(width * 0.032, height * 0.045, 48)}px;--brand-font:${escapeHtml(cssFontStack(hyperframesBrandFont(tokens.fontFamily)))};font-family:var(--brand-font);--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--frame-h:${height}px;--region-top:${layout.region?.top ?? layout.safeArea.top}px;--region-height:${layout.region?.height ?? Math.round(height * 0.6)}px;--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}">
+         style="width:${width}px;height:${height}px;--brand-background:${tokens.background};--brand-foreground:${tokens.foreground};--brand-muted:${tokens.muted};--brand-accent-foreground:${tokens.accentForeground};--brand-accent-text:${(colorContrast(tokens.accent, tokens.background) ?? 0) >= 4.5 ? tokens.accent : tokens.foreground};--motion-radius:${tokens.radius}px;--motion-gap:${Math.min(width * 0.032, height * 0.045, 48)}px;--brand-font:${escapeHtml(cssFontStack(hyperframesBrandFont(tokens.fontFamily)))};font-family:var(--brand-font);--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--frame-h:${height}px;--region-top:${layout.region?.top ?? layout.safeArea.top}px;--region-height:${layout.region?.height ?? Math.round(height * 0.6)}px;--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}${theme ? `;${themeRootStyle(theme)}` : ""}">
       ${coverBlock}
       ${progress}
       ${videoBlocks.join("\n")}

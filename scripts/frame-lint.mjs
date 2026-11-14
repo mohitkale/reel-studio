@@ -3,7 +3,7 @@
  * what a viewer sees. Renders the real compiled composition in the render
  * browser (no voice, no network), so it takes seconds, not minutes.
  *
- *   npm run examples:lint-frames [-- --only <name>] [--all-formats] [--out <dir>] [--write-baseline] [--gate]
+ *   npm run examples:lint-frames [-- --only <name>] [--theme <id>] [--all-formats] [--out <dir>] [--write-baseline] [--gate]
  *
  * Checks per scene (see docs/QUALITY.md): frame fill, smallest text, contrast,
  * text outside the safe area, headline against caption, and near-identical
@@ -28,6 +28,7 @@ const args = process.argv.slice(2);
 const value = (flag) =>
   args.indexOf(flag) >= 0 ? args[args.indexOf(flag) + 1] : undefined;
 const only = value("--only");
+const themeOverride = value("--theme");
 const allFormats = args.includes("--all-formats");
 const gate = args.includes("--gate");
 const writeBaseline = args.includes("--write-baseline");
@@ -325,6 +326,7 @@ async function lintStoryboardFile(file, formatOverride) {
   const raw = JSON.parse(await readFile(path.join(examplesDir, file), "utf8"));
   if (raw.kind === "podcast") return null;
   if (formatOverride) raw.format = formatOverride;
+  if (themeOverride) raw.theme = themeOverride;
   const storyboard = lintStoryboard(raw).storyboard;
   const reel = storyboardToReelProps(storyboard);
   const [, orientation, width, height] = FORMATS.find(

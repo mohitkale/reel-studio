@@ -140,6 +140,8 @@ const aiSceneTemplateSchema = z.object({
   items: z.array(z.string().trim().min(1).max(80)).max(5).optional(),
   /** Exact user/source-provided chart values. Omit instead of inventing data. */
   chart: productionChartDataSchema.optional(),
+  /** Structured data for registered scene types; set by the storyboard path, never by a model plan. */
+  panel: z.record(z.string(), z.unknown()).optional(),
   /** 2-4 concrete visual keywords for a stock photo background, when one fits. */
   backgroundQuery: z.string().trim().min(2).max(80).optional(),
   /** Desired stock kind only; providers and URLs are always resolved server-side. */

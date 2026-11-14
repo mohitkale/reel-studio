@@ -13,15 +13,26 @@
       "headline": "World population since 1960",
       "narration": "In 1960 there were about three billion of us. By 2000 it was just over six billion, and today it is around eight.",
       "chart": {
-        "labels": ["1960", "1980", "2000", "2020"],
+        "labels": [
+          "1960",
+          "1980",
+          "2000",
+          "2020"
+        ],
         "series": [
           {
             "label": "People",
-            "values": [3.0, 4.4, 6.1, 7.8],
+            "values": [
+              3.0,
+              4.4,
+              6.1,
+              7.8
+            ],
             "unit": "bn"
           }
         ],
-        "source": "UN World Population Prospects"
+        "source": "UN World Population Prospects",
+        "kind": "line"
       }
     },
     {

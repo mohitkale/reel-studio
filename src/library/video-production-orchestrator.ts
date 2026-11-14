@@ -1,3 +1,5 @@
+import { CAPTION_STYLE_PRESETS } from "@/lib/caption-style";
+import { getTheme } from "@/video/themes";
 import { parseWav } from "@/lib/wav";
 import { z } from "zod";
 import { readAudioMasteringReport } from "@/library/video-audio-mastering";
@@ -61,6 +63,12 @@ type Dependencies = {
   synthesize?: typeof generateTakeFromVideoSnapshot;
   contactSheet?: typeof renderContactSheet;
 };
+
+/** The caption look of the video's theme, when it has one. */
+function themeCaptionStyle(themeId: string | undefined) {
+  const theme = getTheme(themeId);
+  return theme ? CAPTION_STYLE_PRESETS[theme.captionStyle] : undefined;
+}
 
 export async function verifyProductionMp4(
   filePath: string,
@@ -411,6 +419,7 @@ export async function executeVideoProductionJob(
             scriptId: media.snapshot.script.id,
             take: audio.take,
             presetId: media.snapshot.script.productionPreset?.id,
+            style: themeCaptionStyle(media.snapshot.script.brandTokens.themeId),
           })
         : null;
     const snapshotWithAudio = {
