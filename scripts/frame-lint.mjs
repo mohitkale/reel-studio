@@ -29,6 +29,8 @@ const value = (flag) =>
   args.indexOf(flag) >= 0 ? args[args.indexOf(flag) + 1] : undefined;
 const only = value("--only");
 const themeOverride = value("--theme");
+const seedOverride = value("--seed");
+const varietyOverride = value("--variety");
 const allFormats = args.includes("--all-formats");
 const gate = args.includes("--gate");
 const writeBaseline = args.includes("--write-baseline");
@@ -43,6 +45,8 @@ export const THRESHOLDS = {
   contrast: { small: 4.5, large: 3 },
   captionSimilarity: 0.8,
   nearIdenticalBits: 3,
+  /** Share of adjacent scene pairs allowed to repeat (roadmap V11). */
+  monotony: { sameLayout: 0, sameMotion: 0.5, nearIdentical: 0.2 },
 };
 /** Safe areas as fractions: platform UI keeps the bottom 18% and right 12% of 9:16 clear. */
 const SAFE = {
@@ -88,7 +92,7 @@ const browser = await puppeteer.launch({
 });
 
 /** Runs in the page. Measures the current frame and returns plain data. */
-async function measureInPage(safe, png) {
+async function measureInPage(safe, png, sceneId) {
   const W = window.innerWidth,
     H = window.innerHeight;
   const root = document.querySelector("#root") ?? document.body;
@@ -318,8 +322,25 @@ async function measureInPage(safe, png) {
   const hash = grey.map((g) => (g > mean ? 1 : 0)).join("");
 
   const recipe =
-    root.querySelector("[data-recipe]")?.getAttribute("data-recipe") ?? null;
-  return { W, H, safeRect, bbox, fill, textFill, texts, hash, recipe };
+    root
+      .querySelector(`[data-scene-id="${sceneId}"] [data-recipe]`)
+      ?.getAttribute("data-recipe") ?? null;
+  const sceneEl = root.querySelector(`[data-scene-id="${sceneId}"]`);
+  const layout = sceneEl?.getAttribute("data-layout") ?? null;
+  const motion = sceneEl?.getAttribute("data-motion") ?? null;
+  return {
+    W,
+    H,
+    safeRect,
+    bbox,
+    fill,
+    textFill,
+    texts,
+    hash,
+    recipe,
+    layout,
+    motion,
+  };
 }
 
 async function lintStoryboardFile(file, formatOverride) {
@@ -327,6 +348,8 @@ async function lintStoryboardFile(file, formatOverride) {
   if (raw.kind === "podcast") return null;
   if (formatOverride) raw.format = formatOverride;
   if (themeOverride) raw.theme = themeOverride;
+  if (seedOverride) raw.seed = seedOverride;
+  if (varietyOverride) raw.variety = varietyOverride;
   const storyboard = lintStoryboard(raw).storyboard;
   const reel = storyboardToReelProps(storyboard);
   const [, orientation, width, height] = FORMATS.find(
@@ -352,8 +375,8 @@ async function lintStoryboardFile(file, formatOverride) {
       (span.startFrame + (span.endFrame - span.startFrame) * 0.6) / props.fps;
     await page.evaluate((t) => window.__timelines.reel.seek(t, true), time);
     const png = await page.screenshot({ encoding: "base64" });
-    const m = await page.evaluate(measureInPage, safe, png);
     const scene = props.scenes[index];
+    const m = await page.evaluate(measureInPage, safe, png, scene.id);
     const failures = [];
     const body = m.texts.filter((t) => !t.caption);
     if (m.textFill < THRESHOLDS.textFill)
@@ -437,6 +460,8 @@ async function lintStoryboardFile(file, formatOverride) {
       scene: index + 1,
       type: scene.templateId,
       recipe: m.recipe,
+      layout: m.layout,
+      motion: m.motion,
       fill: +m.fill.toFixed(3),
       failures,
       hash: m.hash,
@@ -523,10 +548,46 @@ async function lintStoryboardFile(file, formatOverride) {
     "3",
     path.join(outDir, `${name}.contact-sheet.jpg`),
   ]);
+  // Monotony (roadmap V11): how many neighbouring scenes repeat the layout or
+  // the motion, or look near-identical. Gated at the thresholds below.
+  const pairs = Math.max(1, results.length - 1);
+  let sameLayout = 0;
+  let sameMotion = 0;
+  let nearIdentical = 0;
+  for (let i = 1; i < results.length; i++) {
+    if (results[i].layout && results[i].layout === results[i - 1].layout)
+      sameLayout += 1;
+    if (results[i].motion && results[i].motion === results[i - 1].motion)
+      sameMotion += 1;
+    const bits = [...results[i].hash].filter(
+      (c, k) => c !== results[i - 1].hash[k],
+    ).length;
+    if (bits <= THRESHOLDS.nearIdenticalBits) nearIdentical += 1;
+  }
+  const monotony = {
+    sameLayout: +(sameLayout / pairs).toFixed(2),
+    sameMotion: +(sameMotion / pairs).toFixed(2),
+    nearIdentical: +(nearIdentical / pairs).toFixed(2),
+  };
+  const monotonyFails = [];
+  if (monotony.sameLayout > THRESHOLDS.monotony.sameLayout)
+    monotonyFails.push("same-layout");
+  if (monotony.sameMotion > THRESHOLDS.monotony.sameMotion)
+    monotonyFails.push("same-motion");
+  if (monotony.nearIdentical > THRESHOLDS.monotony.nearIdentical)
+    monotonyFails.push("near-identical");
+  if (monotonyFails.length)
+    results[0].failures.push({
+      check: "monotony",
+      measured: monotony,
+      threshold: THRESHOLDS.monotony,
+      text: monotonyFails.join(", "),
+    });
   return {
     name,
     format: storyboard.format,
     preset: reel.presetId,
+    monotony,
     scenes: results.map(({ png, hash, annotate, ...rest }) => rest),
   };
 }

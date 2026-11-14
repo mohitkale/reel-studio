@@ -47,11 +47,23 @@ function withStoryboardTheme(
   tokens: BrandTokens,
   themeId: string | undefined,
   hasBrandKit: boolean,
+  look?: {
+    seed: string;
+    variety: "low" | "medium" | "high";
+    reduceMotion?: boolean;
+  },
 ): BrandTokens {
   const theme = getTheme(themeId);
-  return theme
-    ? applyThemeToTokens(tokens, theme, { keepBrand: hasBrandKit })
-    : tokens;
+  if (!theme) return tokens;
+  const themed = applyThemeToTokens(tokens, theme, { keepBrand: hasBrandKit });
+  return look
+    ? {
+        ...themed,
+        lookSeed: look.seed,
+        variety: look.variety,
+        ...(look.reduceMotion ? { reduceMotion: true } : {}),
+      }
+    : themed;
 }
 
 export async function getScripts(
@@ -131,6 +143,7 @@ export async function getScripts(
             ),
             overrides.themeId,
             Boolean(script.project.brandKitId),
+            overrides.look,
           ),
         visualTheme: script.project.brandKitId
           ? undefined
@@ -188,6 +201,8 @@ export async function updateScript(
     frozenBrandTokens?: import("@/video/tokens").BrandTokens;
     factoryLineage?: import("@/lib/dto").ScriptDTO["factoryLineage"];
     chapterDraft?: import("@/production/chapter-draft").ChapterDraft;
+    /** New look seed for a storyboard video (keeps its variety level). */
+    lookSeed?: string;
   },
   transaction?: Prisma.TransactionClient,
 ): Promise<void> {
@@ -214,6 +229,7 @@ export async function updateScript(
       data.styleId !== undefined ||
       data.energy !== undefined ||
       data.audioMastering !== undefined ||
+      data.lookSeed !== undefined ||
       data.chapterDraft !== undefined ||
       data.frozenBrandTokens !== undefined ||
       data.factoryLineage !== undefined
@@ -240,6 +256,15 @@ export async function updateScript(
           : {}),
         ...(data.audioMastering !== undefined
           ? { audioMastering: data.audioMastering }
+          : {}),
+        ...(data.lookSeed !== undefined
+          ? {
+              look: {
+                variety: overrides.look?.variety ?? "medium",
+                ...(overrides.look?.reduceMotion ? { reduceMotion: true } : {}),
+                seed: data.lookSeed,
+              },
+            }
           : {}),
       });
     }

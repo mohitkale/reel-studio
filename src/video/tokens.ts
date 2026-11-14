@@ -18,6 +18,10 @@ export interface BrandTokens {
   radius: number;
   /** Visual theme id (see src/video/themes); drives type, shape, background and motion. */
   themeId?: string;
+  /** Look seed, variety level and calm-motion switch (see src/video/variety.ts). */
+  lookSeed?: string;
+  variety?: "low" | "medium" | "high";
+  reduceMotion?: boolean;
 }
 
 /** Coral Harbor — Airbnb-inspired default for new content. */

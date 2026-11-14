@@ -44,6 +44,7 @@ import {
 } from "@/engines/hyperframes/theme-styles";
 import { getTheme } from "@/video/themes";
 import { pickTransitions } from "@/video/transitions";
+import { planLook } from "@/video/variety";
 import {
   NATIVE_CATALOG_STYLES,
   buildGsapMotionBootScript,
@@ -1033,8 +1034,37 @@ export function buildHyperframesCompositionHtml(
   const width = props.width || 1080;
   const height = props.height || 1920;
   const layout = props.layout ?? resolveProductionLayout({ width, height });
-  const tokens = readableMotionPalette(props.tokens);
   const theme = getTheme(props.tokens.themeId);
+  const fpsForLook = props.fps ?? 30;
+  const look =
+    theme && props.tokens.lookSeed
+      ? planLook({
+          scenes: props.scenes.map((scene, i) => ({
+            templateId: scene.templateId,
+            seconds: (props.timeline[i]?.durationFrames ?? 150) / fpsForLook,
+          })),
+          seed: props.tokens.lookSeed,
+          variety: props.tokens.variety,
+          personality: theme.motion,
+          themeBackground: theme.background,
+          reduceMotion: props.tokens.reduceMotion,
+        })
+      : null;
+  // Accent rotation: this video leads with the theme's second accent.
+  const rotatedTokens =
+    look?.accentRotation && props.tokens.accentSecondary
+      ? {
+          ...props.tokens,
+          accent: props.tokens.accentSecondary,
+          accentSecondary: props.tokens.accent,
+          accentForeground:
+            (colorContrast("#ffffff", props.tokens.accentSecondary) ?? 0) >=
+            (colorContrast("#0b0b12", props.tokens.accentSecondary) ?? 0)
+              ? "#ffffff"
+              : "#0b0b12",
+        }
+      : props.tokens;
+  const tokens = readableMotionPalette(rotatedTokens);
   const transitions = theme
     ? pickTransitions(props.scenes.length, theme.motion)
     : null;
@@ -1429,7 +1459,7 @@ ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLE
          data-hide-progress="${hideProgress ? "1" : "0"}"
          data-grain="${grainAttr}"
          data-orientation="${layout.orientation}"
-         ${theme ? themeRootAttributes(theme) : ""}
+         ${theme ? themeRootAttributes(theme, look?.background) : ""}
          data-palette-tone="${(colorContrast(tokens.background, "#000000") ?? 0) > (colorContrast(tokens.background, "#FFFFFF") ?? 0) ? "light" : "dark"}"
          style="width:${width}px;height:${height}px;--brand-background:${tokens.background};--brand-foreground:${tokens.foreground};--brand-muted:${tokens.muted};--brand-accent-foreground:${tokens.accentForeground};--brand-accent-text:${(colorContrast(tokens.accent, tokens.background) ?? 0) >= 4.5 ? tokens.accent : tokens.foreground};--motion-radius:${tokens.radius}px;--motion-gap:${Math.min(width * 0.032, height * 0.045, 48)}px;--brand-font:${escapeHtml(cssFontStack(hyperframesBrandFont(tokens.fontFamily)))};font-family:var(--brand-font);--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--frame-h:${height}px;--region-top:${layout.region?.top ?? layout.safeArea.top}px;--region-height:${layout.region?.height ?? Math.round(height * 0.6)}px;--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}${theme ? `;${themeRootStyle(theme)}` : ""}">
       ${coverBlock}
@@ -1446,7 +1476,7 @@ ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLE
           block.replace(
             /(<section\b[^>]*>)([\s\S]*)(<\/section>\s*)$/,
             (_, open: string, body: string, close: string) =>
-              `${transitions ? open.replace("<section ", `<section data-transition="${transitions[index] ?? "cut"}" `) : open}${open.includes("data-motion-recipe=") ? '<div class="ml-backplate" aria-hidden="true"></div>' : ""}<div class="scene-handoff" style="--handoff:${index === 0 ? "1" : "0"}" data-first-scene="${index === 0 ? "1" : "0"}">${body}</div>${close}`,
+              `${transitions ? open.replace("<section ", `<section data-transition="${transitions[index] ?? "cut"}"${look?.scenes[index] ? ` data-layout="${look.scenes[index]!.layout}" data-motion="${look.scenes[index]!.motion}" data-camera="${look.scenes[index]!.camera}"` : ""} `) : open}${open.includes("data-motion-recipe=") ? '<div class="ml-backplate" aria-hidden="true"></div>' : ""}<div class="scene-handoff" style="--handoff:${index === 0 ? "1" : "0"}" data-first-scene="${index === 0 ? "1" : "0"}">${body}</div>${close}`,
           ),
         )
         .join("\n")}

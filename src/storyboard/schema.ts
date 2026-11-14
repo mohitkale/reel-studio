@@ -446,6 +446,24 @@ const base = {
     'Title of the video or episode. Example: "Why sleep is a skill".',
   ),
   music: musicSchema.default("auto"),
+  variety: z
+    .enum(["low", "medium", "high"])
+    .optional()
+    .describe(
+      'How much the look varies from scene to scene inside the theme: "low", "medium" (default) or "high".',
+    ),
+  seed: z
+    .union([z.string().min(1).max(40), z.number().int().min(0).max(999999999)])
+    .optional()
+    .describe(
+      "Look seed. The same storyboard and seed always give the same video; a new seed gives a different cut. Omit to derive one from the title.",
+    ),
+  reduceMotion: z
+    .boolean()
+    .optional()
+    .describe(
+      "Calmer output: no camera moves and gentler entrances. Default false.",
+    ),
   sfx: z
     .enum(["auto", "off"])
     .optional()

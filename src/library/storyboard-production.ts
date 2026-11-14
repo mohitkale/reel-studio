@@ -252,6 +252,7 @@ export async function produceFromStoryboard(
       // items, stat labels and chart data, which a storyboard supplies.
       savedOverrides: {
         themeId: plan.themeId,
+        look: plan.look,
         // Phone feeds expect about -14 LUFS; the mastered file is measured.
         audioMastering: "social",
         storyboardSource: buildStoryboardSource(storyboard, finalPlan.scenes),

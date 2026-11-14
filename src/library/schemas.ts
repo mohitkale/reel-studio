@@ -90,6 +90,14 @@ export const brandOverridesSchema = z
     visualTheme: visualThemeSchema.optional(),
     /** Storyboard theme id (see src/video/themes). */
     themeId: z.string().max(40).optional(),
+    /** Look seed and variety for storyboard videos (see src/video/variety.ts). */
+    look: z
+      .object({
+        seed: z.string().max(60),
+        variety: z.enum(["low", "medium", "high"]),
+        reduceMotion: z.boolean().optional(),
+      })
+      .optional(),
     styleId: z
       .enum(["bold-hook", "clean-story", "teach-me", "soft-brand"])
       .optional(),

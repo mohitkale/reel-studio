@@ -104,7 +104,12 @@ export function storyboardToReelProps(storyboard: Storyboard): StoryboardReel {
       durationFrames: beat.durationFrames,
     })),
     tokens: theme
-      ? applyThemeToTokens(serverDefaultTokens, theme)
+      ? {
+          ...applyThemeToTokens(serverDefaultTokens, theme),
+          lookSeed: plan.look.seed,
+          variety: plan.look.variety,
+          ...(plan.look.reduceMotion ? { reduceMotion: true } : {}),
+        }
       : serverDefaultTokens,
     width,
     height,

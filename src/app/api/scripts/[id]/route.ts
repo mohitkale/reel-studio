@@ -44,6 +44,8 @@ const patchSchema = z.object({
     .optional(),
   energy: z.enum(["calm", "normal", "high"]).optional(),
   voiceMode: z.enum(["oneshot", "per_scene"]).optional(),
+  /** Re-roll the look: a new seed gives a different cut of the same video. */
+  lookSeed: z.string().trim().min(1).max(60).optional(),
 });
 
 export async function PATCH(
