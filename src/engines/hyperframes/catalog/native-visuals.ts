@@ -9,7 +9,10 @@ import { SEMANTIC_GRAPHIC_BOOT } from "../motion/semantic-blocks";
 import { escapeHtml } from "@/lib/html";
 import { iconForScene, iconSvg } from "@/engines/hyperframes/assets/icons";
 import { sceneDefinitionForTemplate } from "@/engines/hyperframes/scenes/registry";
-import { CHART_STYLES, SCENE_STYLES } from "@/engines/hyperframes/scenes/styles";
+import {
+  CHART_STYLES,
+  SCENE_STYLES,
+} from "@/engines/hyperframes/scenes/styles";
 import { MOTION_LIBRARY_TIMING } from "@/video/motion-library";
 import { STORY_MOTION_TRACKS } from "@/production/story-motion";
 import { GRAPH_TIMELINE_BOOT } from "../motion/compile-shot";
@@ -438,7 +441,10 @@ function chartVariantHtml(args: {
       <polyline points="${pts.join(" ")}" fill="none" stroke="${accent}" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
       ${values
         .map(
-          (v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="10" fill="${accent}"/>
+          (
+            v,
+            i,
+          ) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="10" fill="${accent}"/>
       <text x="${x(i).toFixed(1)}" y="${(y(v) - 22).toFixed(1)}" font-size="30" text-anchor="middle">${escapeHtml(`${v}${unit}`)}</text>
       <text x="${x(i).toFixed(1)}" y="${bottom + 38}" font-size="28" text-anchor="middle" fill-opacity=".85">${escapeHtml(labels[i] ?? "")}</text>`,
         )
@@ -513,12 +519,14 @@ function recipeForTemplate(templateId: string, mood?: SceneMood): string {
 function onAccentColor(accent: string): string {
   const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(accent.trim());
   if (!m) return "#0b0b12";
-  const hex = m[1]!.length === 3 ? [...m[1]!].map((c) => c + c).join("") : m[1]!;
+  const hex =
+    m[1]!.length === 3 ? [...m[1]!].map((c) => c + c).join("") : m[1]!;
   const channel = (i: number) => {
     const v = parseInt(hex.slice(i, i + 2), 16) / 255;
     return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
   };
-  const luminance = 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4);
+  const luminance =
+    0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4);
   // Whichever of dark and white has the higher contrast ratio against it.
   return (luminance + 0.05) / 0.054 >= 1.05 / (luminance + 0.05)
     ? "#0b0b12"
@@ -776,7 +784,10 @@ export function buildCinematicClassicVisual(args: {
   const chip = chipHtml(speaker, accent, pal.ink);
   // Every scene gets a non-text visual: the storyboard's icon, or one picked
   // from the scene's words, or the scene type's default.
-  const panelData = (scene.panel ?? {}) as { icon?: string; sceneType?: string };
+  const panelData = (scene.panel ?? {}) as {
+    icon?: string;
+    sceneType?: string;
+  };
   const iconName = iconForScene({
     text: `${scene.text} ${scene.spokenText ?? ""}`,
     type: panelData.sceneType,
@@ -1577,6 +1588,11 @@ ${SEMANTIC_GRAPHIC_BOOT}
       var lineRevealDuration = function(start) { return stage.hasAttribute('data-text-reveal-duration') ? Math.min(revealDuration, Math.max(.01, sceneDuration - start)) : (persona ? persona.d : .42); };
       var rootEl = document.getElementById('root');
       var persona = ({snappy:{ease:'power4.out',d:.3,s:.08}, smooth:{ease:'power2.inOut',d:.5,s:.12}, punchy:{ease:'back.out(1.8)',d:.35,s:.09}, calm:{ease:'sine.out',d:.6,s:.16}, bouncy:{ease:'back.out(2.6)',d:.55,s:.11}, hard:{ease:'power4.in',d:.22,s:.1}, slow:{ease:'power1.out',d:.8,s:.22}})[rootEl ? rootEl.getAttribute('data-theme-motion') : ''] || null;
+      // Scene entrance from the theme's transition (cut adds nothing).
+      var transitionKind = stage.closest('.scene') ? stage.closest('.scene').getAttribute('data-transition') : null;
+      if (transitionKind === 'push') tl.fromTo(stage, { x: stage.clientWidth * 0.08 }, { x: 0, duration: 0.45, ease: 'power3.out' }, 0);
+      else if (transitionKind === 'wipe') tl.fromTo(stage, { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)', duration: 0.5, ease: 'power2.inOut' }, 0);
+      else if (transitionKind === 'zoom') tl.fromTo(stage, { scale: 1.14, transformOrigin: '50% 50%' }, { scale: 1, duration: 0.5, ease: 'power3.out' }, 0);
       var revealEase = {linear:'none', smooth:'power2.inOut', snappy:'power3.out'}[stage.getAttribute('data-text-reveal-ease')] || (persona ? persona.ease : 'power3.out');
       // Line reveals — clipped, never overlapping
       (stage.hasAttribute('data-design-block') ? [] : lines).forEach(function (inner, i) {

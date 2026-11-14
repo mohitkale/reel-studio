@@ -32,6 +32,6 @@ export const neon: Theme = {
   shape: { radius: 18, stroke: 3 },
   background: "glow",
   motion: "punchy",
-  captionStyle: "karaoke",
+  captionStyle: "pop",
   musicMood: "synthwave",
 };

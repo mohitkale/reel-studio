@@ -43,6 +43,7 @@ import {
   themeRootStyle,
 } from "@/engines/hyperframes/theme-styles";
 import { getTheme } from "@/video/themes";
+import { pickTransitions } from "@/video/transitions";
 import {
   NATIVE_CATALOG_STYLES,
   buildGsapMotionBootScript,
@@ -139,6 +140,22 @@ function emphasize(text: string, emphasis: string[]): string {
   return html.replace(/\n/g, "<br/>");
 }
 
+/** Words of the scene on screen at a frame that the storyboard marked for emphasis. */
+function emphasisForCue(props: ReelProps, frame: number): Set<string> {
+  const beat = props.timeline.find(
+    (b) => frame >= b.startFrame && frame < b.startFrame + b.durationFrames,
+  );
+  const scene = beat && props.scenes.find((s) => s.id === beat.sceneId);
+  const words = new Set<string>();
+  for (const phrase of scene?.emphasis ?? []) {
+    for (const word of phrase.toLowerCase().split(/\s+/)) {
+      const clean = word.replace(/[^\p{L}\p{N}]/gu, "");
+      if (clean) words.add(clean);
+    }
+  }
+  return words;
+}
+
 function captionCueHtml(input: {
   cue: ReelCaptionCue;
   coverSeconds: number;
@@ -147,6 +164,8 @@ function captionCueHtml(input: {
   maxLines: number;
   highlightMode: "none" | "word" | "phrase" | "karaoke";
   activeWordColor: string;
+  /** Lower-case words the storyboard marked for emphasis in this cue's scene. */
+  emphasis?: ReadonlySet<string>;
 }): { html: string; lineScale: number } {
   const { cue } = input;
   if (!cue.words?.length) {
@@ -186,7 +205,12 @@ function captionCueHtml(input: {
             input.highlightMode === "phrase"
               ? ` style="color:${input.activeWordColor}"`
               : "";
-          return `<span class="rs-caption-word" data-word-index="${index}"${color}><span>${escapeHtml(word.text)}</span>${active}</span>`;
+          const emphasised = input.emphasis?.has(
+            word.text.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ""),
+          )
+            ? " rs-caption-emph"
+            : "";
+          return `<span class="rs-caption-word${emphasised}" data-word-index="${index}"${color}><span>${escapeHtml(word.text)}</span>${active}</span>`;
         })
         .join(" ");
       return `<span class="rs-caption-line" data-layout-allow-overlap data-layout-allow-occlusion>${words}</span>`;
@@ -1011,6 +1035,9 @@ export function buildHyperframesCompositionHtml(
   const layout = props.layout ?? resolveProductionLayout({ width, height });
   const tokens = readableMotionPalette(props.tokens);
   const theme = getTheme(props.tokens.themeId);
+  const transitions = theme
+    ? pickTransitions(props.scenes.length, theme.motion)
+    : null;
   const accent = tokens.accent ?? "#ff6b4a";
   const cover = coverFrames(fps, Boolean(props.coverUrl));
   const coverSeconds = framesToSeconds(cover, fps);
@@ -1329,6 +1356,7 @@ export function buildHyperframesCompositionHtml(
               maxLines: captionResolved.style.maxLines,
               highlightMode: captionResolved.style.highlightMode,
               activeWordColor: captionInner.activeWordColor,
+              emphasis: emphasisForCue(props, cue.startFrame),
             });
             return `<div id="subtitle-${escapeHtml(cue.id || String(index + 1))}" class="clip rs-subtitle" data-caption-style-version="${captionResolved.style.version}" data-caption-style="${captionResolved.style.presetId}" data-start="${start.toFixed(3)}" data-duration="${duration.toFixed(3)}" data-track-index="20" aria-label="Subtitle ${index + 1}"><span dir="auto" data-layout-allow-overlap data-layout-allow-occlusion style="font-size:${Math.round(captionInner.fontSize * content.lineScale)}px">${content.html}</span></div>`;
           })
@@ -1381,7 +1409,7 @@ export function buildHyperframesCompositionHtml(
 ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLES}${REGISTERED_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_MOTION_STYLES}${STORY_MOTION_STYLES}${MOTION_LIBRARY_STYLES}
     .rs-subtitle{position:absolute;z-index:50;inset:0;box-sizing:border-box;display:flex;flex-direction:column;justify-content:${captionResolved.outer.justifyContent};align-items:${captionResolved.outer.alignItems};padding:${captionResolved.outer.paddingTop}px ${captionResolved.outer.paddingRight}px ${captionResolved.outer.paddingBottom}px ${captionResolved.outer.paddingLeft}px;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
     .rs-subtitle>span{display:block;max-width:${captionInner.maxWidth}px;padding:${captionInner.padding};border-radius:${captionInner.borderRadius}px;background:${captionInner.background};color:${captionInner.color};font-family:${cssFontStack(captionInner.fontFamily)};font-weight:${captionInner.fontWeight};line-height:${captionInner.lineHeight};letter-spacing:${captionInner.letterSpacing};text-align:${captionInner.textAlign};text-shadow:${captionInner.textShadow};${captionInner.WebkitTextStroke ? `-webkit-text-stroke:${captionInner.WebkitTextStroke};` : ""}overflow-wrap:anywhere}
-    .rs-caption-line{display:block}.rs-caption-word{display:inline-block;position:relative}.rs-caption-active{position:absolute;inset:0;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
+    .rs-caption-emph>span:first-child{color:var(--brand-accent-text,var(--accent))}.rs-caption-line{display:block}.rs-caption-word{display:inline-block;position:relative}.rs-caption-active{position:absolute;inset:0;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
   </style>
 </head>
 <body>
@@ -1418,7 +1446,7 @@ ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLE
           block.replace(
             /(<section\b[^>]*>)([\s\S]*)(<\/section>\s*)$/,
             (_, open: string, body: string, close: string) =>
-              `${open}${open.includes("data-motion-recipe=") ? '<div class="ml-backplate" aria-hidden="true"></div>' : ""}<div class="scene-handoff" style="--handoff:${index === 0 ? "1" : "0"}" data-first-scene="${index === 0 ? "1" : "0"}">${body}</div>${close}`,
+              `${transitions ? open.replace("<section ", `<section data-transition="${transitions[index] ?? "cut"}" `) : open}${open.includes("data-motion-recipe=") ? '<div class="ml-backplate" aria-hidden="true"></div>' : ""}<div class="scene-handoff" style="--handoff:${index === 0 ? "1" : "0"}" data-first-scene="${index === 0 ? "1" : "0"}">${body}</div>${close}`,
           ),
         )
         .join("\n")}

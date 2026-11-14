@@ -90,7 +90,7 @@ describe("caption style snapshots", () => {
       "developer-demo": "technical",
       "cinematic-brand": "cinematic",
     });
-    expect(Object.keys(CAPTION_STYLE_PRESETS)).toHaveLength(6);
+    expect(Object.keys(CAPTION_STYLE_PRESETS)).toHaveLength(7);
   });
 
   it("rejects invalid size and line limits and warns on poor contrast", () => {

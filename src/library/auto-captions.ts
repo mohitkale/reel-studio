@@ -17,17 +17,16 @@ type CaptionTrack = NonNullable<
 type Take = NonNullable<VideoSnapshot["take"]>;
 
 const MAX_WORDS_PER_CUE = 7;
+/** The pop style shows two to three words at a time. */
+const POP_WORDS_PER_CUE = 3;
 
-function chunkWords(words: string[]): string[][] {
+function chunkWords(words: string[], limit = MAX_WORDS_PER_CUE): string[][] {
   const chunks: string[][] = [];
   let current: string[] = [];
   for (const word of words) {
     current.push(word);
     const sentenceEnd = /[.!?]["')\]]*$/.test(word);
-    if (
-      current.length >= MAX_WORDS_PER_CUE ||
-      (sentenceEnd && current.length >= 3)
-    ) {
+    if (current.length >= limit || (sentenceEnd && current.length >= 3)) {
       chunks.push(current);
       current = [];
     }
@@ -40,6 +39,31 @@ function chunkWords(words: string[]): string[][] {
   return chunks;
 }
 
+/**
+ * Proportional word times for a cue with no measured timing: each word gets a
+ * share of the cue by its length, so the highlight still walks the sentence in
+ * step with the scene pacing (also with narration off).
+ */
+export function estimateWordTimes(
+  chunk: string[],
+  startFrame: number,
+  endFrame: number,
+): Array<{ text: string; startFrame: number; endFrame: number }> {
+  const weights = chunk.map((word) => Math.max(1, word.length) + 1);
+  const total = weights.reduce((a, b) => a + b, 0);
+  const span = Math.max(chunk.length, endFrame - startFrame);
+  let used = 0;
+  return chunk.map((text, i) => {
+    const from = startFrame + Math.round((used / total) * span);
+    used += weights[i]!;
+    const to =
+      i === chunk.length - 1
+        ? Math.max(endFrame, from + 1)
+        : Math.max(from + 1, startFrame + Math.round((used / total) * span));
+    return { text, startFrame: from, endFrame: to };
+  });
+}
+
 export function buildAutoCaptionTrack(input: {
   scriptId: string;
   take: Take;
@@ -47,6 +71,9 @@ export function buildAutoCaptionTrack(input: {
   style?: CaptionStyleSnapshot;
 }): CaptionTrack | null {
   const { take } = input;
+  const style = input.style ?? captionStyleForProductionPreset(input.presetId);
+  const limit =
+    style.presetId === "pop" ? POP_WORDS_PER_CUE : MAX_WORDS_PER_CUE;
   const cues: CaptionTrack["cues"] = [];
   let measured = 0;
   let total = 0;
@@ -64,7 +91,7 @@ export function buildAutoCaptionTrack(input: {
         : null;
     const beatEnd = beat.startFrame + beat.durationFrames;
     let cursor = 0;
-    for (const chunk of chunkWords(words)) {
+    for (const chunk of chunkWords(words, limit)) {
       let startFrame: number;
       let endFrame: number;
       if (timed && timed.length === words.length) {
@@ -90,15 +117,14 @@ export function buildAutoCaptionTrack(input: {
         startFrame,
         endFrame,
         text: chunk.join(" "),
-        ...(timed && timed.length === words.length
-          ? {
-              words: chunk.map((_, i) => ({
+        words:
+          timed && timed.length === words.length
+            ? chunk.map((_, i) => ({
                 text: timed[cursor + i]!.text,
                 startFrame: timed[cursor + i]!.startFrame,
                 endFrame: timed[cursor + i]!.endFrame,
-              })),
-            }
-          : {}),
+              }))
+            : estimateWordTimes(chunk, startFrame, endFrame),
       });
       cursor += chunk.length;
     }
@@ -115,7 +141,7 @@ export function buildAutoCaptionTrack(input: {
     sourceTakeId: take.id,
     sourceFps: take.fps,
     enabled: true,
-    style: input.style ?? captionStyleForProductionPreset(input.presetId),
+    style,
     updatedAt: take.createdAt,
     cues,
   };

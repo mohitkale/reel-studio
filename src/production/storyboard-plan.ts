@@ -111,6 +111,7 @@ export interface StoryboardProductionPlan {
   music: { mode: "auto" | "none" | "track"; trackId?: string };
   voice: { enabled: boolean; voiceId?: string; speed?: number };
   captions: "auto" | "off";
+  sfx: "auto" | "off";
   /** Library asset per scene, when the storyboard named one. */
   assetIds: Array<string | undefined>;
   scenes: StoryboardPlanScene[];
@@ -302,6 +303,7 @@ export function planFromStoryboard(
       speed: storyboard.voice?.speed,
     },
     captions: storyboard.captions,
+    sfx: storyboard.sfx ?? "auto",
     assetIds,
     scenes: planScenes,
     estimatedSeconds: estimateDurationSeconds(storyboard),

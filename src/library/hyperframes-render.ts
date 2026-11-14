@@ -37,7 +37,10 @@ import { sanitizeKey } from "@/library/storage/local-disk";
 import { getScript } from "@/library/repositories/scripts";
 import { listTakes } from "@/library/repositories/takes";
 import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
-import { buildHyperframesCompositionHtml, compositionTotalFrames } from "@/engines/hyperframes/build-composition";
+import {
+  buildHyperframesCompositionHtml,
+  compositionTotalFrames,
+} from "@/engines/hyperframes/build-composition";
 import { getCatalogBlockByTemplateId } from "@/engines/hyperframes/catalog/manifest";
 import { catalogCompositionFileName } from "@/engines/hyperframes/catalog/build-scene";
 import { personalizeCatalogBlock } from "@/engines/hyperframes/catalog/personalize";
@@ -292,13 +295,15 @@ export async function writeHyperframesProject(
   projectDir: string,
   inputProps: ReelProps,
   lessonBudget = false,
-  packDigest?:string,
+  packDigest?: string,
 ) {
   const scenes = inputProps.scenes;
   const runtimeDir = path.join(projectDir, "_runtime");
   await fs.mkdir(runtimeDir, { recursive: true });
-  if(packDigest){const {copyFactoryRuntime}=await import("./factory-packs");await copyFactoryRuntime(packDigest,runtimeDir);}
-  else await copyHyperframesRuntime(runtimeDir);
+  if (packDigest) {
+    const { copyFactoryRuntime } = await import("./factory-packs");
+    await copyFactoryRuntime(packDigest, runtimeDir);
+  } else await copyHyperframesRuntime(runtimeDir);
 
   // Materialize curated catalog blocks as compositions/*.html so the producer
   // can resolve data-composition-src on the host index.html.
@@ -435,6 +440,11 @@ export async function writeHyperframesReviewProject(
     musicUrl: undefined,
     sfxCues: [],
   });
+}
+
+/** Half the frame rate for a draft preview, when that stays a whole number of 12 fps or more. */
+export function draftFps(fps: number, quality: RenderQuality): number {
+  return quality === "draft" && fps % 2 === 0 && fps / 2 >= 12 ? fps / 2 : fps;
 }
 
 export async function runHyperframesRender(
@@ -612,11 +622,18 @@ export async function runHyperframesRender(
       ? { ...prepared.props, scenes, audioUrl, musicUrl, sfxCues, coverUrl }
       : legacyInputProps;
 
-    await writeHyperframesProject(projectDir, inputProps, Boolean(script.chapterPlan?.longForm),snapshot?.factory?.packDigest);
-    const useSections = Boolean(
-      script.chapterPlan ||
-      (inputProps.sequenceDirection && compositionTotalFrames(inputProps) > script.fps * 30),
-    ) && [24, 30, 60].includes(script.fps);
+    await writeHyperframesProject(
+      projectDir,
+      inputProps,
+      Boolean(script.chapterPlan?.longForm),
+      snapshot?.factory?.packDigest,
+    );
+    const useSections =
+      Boolean(
+        script.chapterPlan ||
+        (inputProps.sequenceDirection &&
+          compositionTotalFrames(inputProps) > script.fps * 30),
+      ) && [24, 30, 60].includes(script.fps);
     if (useSections)
       await writeHyperframesVisualSections(projectDir, inputProps);
 
@@ -632,16 +649,15 @@ export async function runHyperframesRender(
     await runWorker({
       projectDir,
       outputPath,
-      fps: script.fps,
+      // A draft is a preview: half the frames per second renders in about half
+      // the time. The full-quality export keeps the project's own rate.
+      fps: useSections ? script.fps : draftFps(script.fps, quality),
       quality,
-      sections:
-        useSections
-          ? nativeDims
-          : undefined,
+      sections: useSections ? nativeDims : undefined,
       onProgress: (pct) => {
         // Keep a little headroom so "100%" only lands after completeRender.
         const capped = Math.min(
-          script.audioMastering === "balanced" ? 0.96 : 0.99,
+          script.audioMastering !== "original" ? 0.96 : 0.99,
           Math.max(0.02, pct),
         );
         progress(capped, "rendering");

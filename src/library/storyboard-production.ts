@@ -21,7 +21,7 @@ import { createProjectFromPlan } from "@/library/repositories/projects";
 import { getScript, updateScript } from "@/library/repositories/scripts";
 import { submitProduction } from "@/library/production-service";
 import { autoAttachBundledMusic } from "@/library/soundtrack-service";
-import { ensureSfxCues } from "@/library/sfx-service";
+import { ensureSfxCues, setSfxEnabled } from "@/library/sfx-service";
 import { reportStockMediaSelectionUsage } from "@/library/stock-media-usage";
 import { MUSIC_LIBRARY } from "@/lib/music-library";
 import { buildStoryboardSource } from "@/library/project-storyboard";
@@ -252,6 +252,8 @@ export async function produceFromStoryboard(
       // items, stat labels and chart data, which a storyboard supplies.
       savedOverrides: {
         themeId: plan.themeId,
+        // Phone feeds expect about -14 LUFS; the mastered file is measured.
+        audioMastering: "social",
         storyboardSource: buildStoryboardSource(storyboard, finalPlan.scenes),
       },
       mediaPreferences: finalPlan.scenes.map(() => mediaPreference),
@@ -271,7 +273,8 @@ export async function produceFromStoryboard(
     const track = MUSIC_LIBRARY.find((t) => t.id === plan.music.trackId);
     if (track) await updateScript(created.scriptId, { musicUrl: track.url });
   }
-  await ensureSfxCues(created.scriptId);
+  if (plan.sfx === "off") await setSfxEnabled(created.scriptId, false);
+  else await ensureSfxCues(created.scriptId);
 
   if (options.createOnly) {
     return {

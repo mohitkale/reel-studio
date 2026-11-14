@@ -19,6 +19,7 @@ const STYLE_LABELS: Record<CaptionStyleId, string> = {
   minimal: "Minimal",
   editorial: "Editorial",
   karaoke: "Karaoke",
+  pop: "Pop",
   technical: "Technical",
   cinematic: "Cinematic",
 };

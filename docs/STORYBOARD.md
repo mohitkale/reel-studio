@@ -25,6 +25,7 @@ are enforced by validation rather than by prompt text.
 | `theme`    | no       | One of the ten themes below, or `"auto"`. Omit to let Reel Studio pick one. |
 | `voice`    | no       | `{ enabled, voiceId?, speed? }`. Default: narrated with the default voice.  |
 | `music`    | no       | `"auto"` (default), `"none"` or a track id.                                 |
+| `sfx`      | no       | `"auto"` (default) adds low-level sound effects; `"off"` leaves them out.   |
 | `captions` | no       | `"auto"` (default) or `"off"`.                                              |
 | `sources`  | no       | Up to 12 `{ title, url, accessed }` for facts you used. Never invented.     |
 | `scenes`   | yes      | 1 to 40 scenes. About eight scenes make a 60-second video.                  |
@@ -213,6 +214,17 @@ first.
 Layout, motion treatments, colour, transitions, caption style, music choice and
 mix, voice synthesis, scene timing from the narration length, media selection from
 a `query`, and rendering. The model never sees these.
+
+- **Captions** follow the theme: `karaoke` (the spoken word lit), `pop` (two to three words
+  at a time, large), `minimal`/`editorial` (a bar), and the storyboard's `captions: "off"`.
+  Words in the headline's `emphasis` take the accent colour. Word timing comes from the
+  voice when it reports it, and is otherwise spread over each cue by word length, so the
+  highlight also works without narration. SRT and VTT use the same cue timings.
+- **Transitions** come from the theme's motion personality (cut, push, wipe, zoom); a showy
+  one is always followed by a cut.
+- **Sound**: narration over a bundled music track that ducks under it by about 9 dB, plus
+  sound effects unless `sfx` is `"off"`. The finished mix is mastered to about -14 LUFS with
+  a -1 dBTP ceiling and measured.
 
 ## Versioning
 

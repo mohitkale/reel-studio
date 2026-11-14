@@ -33,6 +33,6 @@ export const playfulPastel: Theme = {
   shape: { radius: 40, stroke: 3 },
   background: "blobs",
   motion: "bouncy",
-  captionStyle: "karaoke",
+  captionStyle: "pop",
   musicMood: "playful ukulele",
 };

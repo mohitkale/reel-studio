@@ -446,6 +446,12 @@ const base = {
     'Title of the video or episode. Example: "Why sleep is a skill".',
   ),
   music: musicSchema.default("auto"),
+  sfx: z
+    .enum(["auto", "off"])
+    .optional()
+    .describe(
+      'Sound effects (a whoosh on transitions, a tick on list items, a pop on emphasis) at a low level under the narration. "auto" (default) adds them, "off" leaves them out.',
+    ),
   sources: z
     .array(sourceSchema)
     .max(L.sources)

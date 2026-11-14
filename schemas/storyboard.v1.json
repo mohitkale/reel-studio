@@ -33,6 +33,14 @@
           ],
           "description": "Background music. \"auto\" picks a fitting bundled track, \"none\" for silence, or a track id. Default \"auto\"."
         },
+        "sfx": {
+          "description": "Sound effects (a whoosh on transitions, a tick on list items, a pop on emphasis) at a low level under the narration. \"auto\" (default) adds them, \"off\" leaves them out.",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ]
+        },
         "sources": {
           "description": "Pages you used for facts. Leave out if you used none. Never invent sources.",
           "maxItems": 12,
@@ -528,6 +536,14 @@
             }
           ],
           "description": "Background music. \"auto\" picks a fitting bundled track, \"none\" for silence, or a track id. Default \"auto\"."
+        },
+        "sfx": {
+          "description": "Sound effects (a whoosh on transitions, a tick on list items, a pop on emphasis) at a low level under the narration. \"auto\" (default) adds them, \"off\" leaves them out.",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ]
         },
         "sources": {
           "description": "Pages you used for facts. Leave out if you used none. Never invent sources.",

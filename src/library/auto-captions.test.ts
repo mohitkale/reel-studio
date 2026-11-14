@@ -111,3 +111,19 @@ describe("contactSheetTimes", () => {
     ).toBeCloseTo(5.1, 5);
   });
 });
+
+describe("estimated word timing and the pop style", () => {
+  it("spreads a cue over its words by length, covering it exactly", async () => {
+    const { estimateWordTimes } = await import("./auto-captions");
+    const words = estimateWordTimes(["Go", "far", "beyond"], 10, 40);
+    expect(words[0]!.startFrame).toBe(10);
+    expect(words[2]!.endFrame).toBe(40);
+    for (let i = 1; i < words.length; i++)
+      expect(words[i]!.startFrame).toBeGreaterThanOrEqual(
+        words[i - 1]!.startFrame,
+      );
+    expect(words[2]!.endFrame - words[2]!.startFrame).toBeGreaterThan(
+      words[0]!.endFrame - words[0]!.startFrame,
+    );
+  });
+});
