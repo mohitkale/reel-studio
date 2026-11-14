@@ -11,7 +11,9 @@ export function AudioMasteringControl({
 }) {
   const { data: script } = useScript(scriptId);
   const save = useSetScriptMusic(scriptId);
-  const balanced = script?.audioMastering === "balanced";
+  const balanced =
+    script?.audioMastering === "balanced" ||
+    script?.audioMastering === "social";
   return (
     <div className="grid gap-2 rounded-lg border p-3">
       <Button

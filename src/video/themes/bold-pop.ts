@@ -32,6 +32,6 @@ export const boldPop: Theme = {
   shape: { radius: 28, stroke: 4 },
   background: "blocks",
   motion: "punchy",
-  captionStyle: "karaoke",
+  captionStyle: "pop",
   musicMood: "upbeat pop",
 };

@@ -1,0 +1,48 @@
+{
+  "recordedAt": "2026-11-14",
+  "machine": {
+    "os": "darwin 25.6.0",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "cores": 12,
+    "memoryGb": 16,
+    "node": "v24.18.1"
+  },
+  "note": "Silent 22.5 s 9:16 storyboard (motivation), dev server on the same machine, includes lint, planning, render, mastering and contact sheet. Runs vary by up to 50%.",
+  "rows": [
+    {
+      "example": "motivation",
+      "quality": "draft (30 fps)",
+      "videoSeconds": 22.5,
+      "wallSeconds": 132,
+      "ratio": 5.85
+    },
+    {
+      "example": "motivation",
+      "quality": "draft (15 fps)",
+      "videoSeconds": 22.5,
+      "wallSeconds": 101,
+      "ratio": 4.49
+    },
+    {
+      "example": "motivation",
+      "quality": "standard",
+      "videoSeconds": 22.5,
+      "wallSeconds": 124,
+      "ratio": 5.53
+    },
+    {
+      "example": "motivation",
+      "quality": "high",
+      "videoSeconds": 22.5,
+      "wallSeconds": 133,
+      "ratio": 5.9
+    },
+    {
+      "example": "motivation",
+      "quality": "high (second run)",
+      "videoSeconds": 22.5,
+      "wallSeconds": 200,
+      "ratio": 8.87
+    }
+  ]
+}

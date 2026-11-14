@@ -62,8 +62,17 @@ run(
 );
 
 const withAssets = process.argv.includes("--assets");
+const withVoice = process.argv.includes("--voice");
 if (withAssets) {
   run("npx", ["tsx", "scripts/seed-assets.ts"], "Seed sample assets");
+}
+
+if (withVoice) {
+  run(
+    "npx",
+    ["tsx", "scripts/download-voice-model.ts"],
+    "Download the local voice model",
+  );
 }
 
 run("npx", ["tsx", "scripts/doctor.ts"], "Verify local production runtime");
@@ -78,6 +87,7 @@ Next:
 
 Optional:
   npm run setup -- --assets   # also seed sample SVG/Lottie assets
+  npm run setup -- --voice    # also download the local voice model (about 90 MB)
   npm run demo                # setup + start the app
 
 No cloud API keys are required for the HyperFrames demo project or Kokoro voices.

@@ -271,6 +271,8 @@ HTTP handlers under `src/app` (`/api/**` and `/media`).
 | `PATCH /api/takes/[id]`                              | VOI01      |
 | `DELETE /api/takes/[id]`                             | VOI01      |
 | `POST /api/voice-preview`                            | VOI01      |
+| `GET /api/voice-model`                               | VOI01      |
+| `POST /api/voice-model`                              | VOI01      |
 | `GET /api/voiceforge/engines`                        | VOI02      |
 | `GET /api/voiceforge/voices/[id]/events`             | VOI02      |
 | `GET /api/voiceforge/voices/[id]/preview`            | VOI02      |

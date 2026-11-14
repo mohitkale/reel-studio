@@ -55,6 +55,27 @@ to current templates; saved historical provenance and existing MP4s remain intac
 - MCP tokens: legacy tokens keep human approval for video renders; named scoped
   tokens may allow bounded automation (see [MCP](MCP.md)).
 
+## Render speed
+
+`npm run benchmark:render` renders silent golden storyboards at draft, standard and high
+quality through the real pipeline and writes `docs/quality/render-benchmark.json`.
+Measured on an Intel i7-9750H laptop (12 cores, 16 GB, Node 24), a 22.5 s 9:16 video
+(`motivation`), development server on the same machine:
+
+| Quality       | Render time | Render s per video s |
+| ------------- | ----------: | -------------------: |
+| draft, 30 fps |       132 s |                 5.85 |
+| draft, 15 fps |       101 s |                 4.49 |
+| standard      |       124 s |                 5.53 |
+| high          |   133–200 s |            5.90–8.87 |
+
+Frame capture (the headless browser screenshotting each frame) is about 85% of the time, with
+two capture workers on this machine. Draft previews now render at half the frame rate. The
+target of a 45 s draft in under 60 s (about 1.3x) is **not met**: it needs a lower capture
+resolution or more efficient capture, which is tracked in the roadmap rather than traded
+against output correctness. Per-scene section renders are cached (see
+`src/library/render-section-cache.int.test.ts`); the one-scene-edit speedup is not yet measured.
+
 ## Bounds and safety
 
 - Request bodies are counted from the real stream: 4 MiB for ordinary JSON,

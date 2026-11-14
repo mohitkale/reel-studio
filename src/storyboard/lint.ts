@@ -222,6 +222,7 @@ const ROOT_KEYS = {
     "theme",
     "voice",
     "music",
+    "sfx",
     "captions",
     "sources",
     "scenes",
@@ -638,8 +639,9 @@ function repairScene(
     });
   }
   if (Array.isArray(scene.points)) {
-    scene.points = (scene.points as unknown[]).slice(0, L.pointCount.max).map(
-      (p) => {
+    scene.points = (scene.points as unknown[])
+      .slice(0, L.pointCount.max)
+      .map((p) => {
         const point: Obj = isObj(p) ? { ...p } : { label: String(p) };
         const label = str(point.label) ?? str(point.title) ?? str(point.date);
         const text = str(point.text) ?? str(point.detail) ?? str(point.body);
@@ -647,21 +649,29 @@ function repairScene(
           label: cutAtBoundary(label ?? "", L.pointLabel),
           ...(text ? { text: cutAtBoundary(text, L.pointText) } : {}),
         };
-      },
-    );
+      });
   }
   if (isObj(scene.compare)) {
     const side = (value: unknown, fallback: string) => {
       const v: Obj = isObj(value) ? value : { text: String(value ?? "") };
       return {
-        label: cutAtBoundary(str(v.label) ?? str(v.title) ?? fallback, L.sideLabel),
+        label: cutAtBoundary(
+          str(v.label) ?? str(v.title) ?? fallback,
+          L.sideLabel,
+        ),
         text: cutAtBoundary(str(v.text) ?? str(v.body) ?? "", L.sideText),
       };
     };
     const before = scene.type === "before-after";
     scene.compare = {
-      left: side(scene.compare.left ?? scene.compare.before, before ? "Before" : "Option A"),
-      right: side(scene.compare.right ?? scene.compare.after, before ? "After" : "Option B"),
+      left: side(
+        scene.compare.left ?? scene.compare.before,
+        before ? "Before" : "Option A",
+      ),
+      right: side(
+        scene.compare.right ?? scene.compare.after,
+        before ? "After" : "Option B",
+      ),
     };
   }
   if (isObj(scene.definition)) {
@@ -1170,7 +1180,10 @@ function repairRoot(
     else delete root.theme;
     if (typeof root.theme === "string" && root.theme !== "auto") {
       const known = THEME_IDS.find(
-        (id) => id === root.theme || id.startsWith(`${root.theme}-`) || (root.theme as string).startsWith(`${id}-`),
+        (id) =>
+          id === root.theme ||
+          id.startsWith(`${root.theme}-`) ||
+          (root.theme as string).startsWith(`${id}-`),
       );
       if (known && known !== root.theme) {
         fixes.push({

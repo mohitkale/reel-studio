@@ -1,4 +1,8 @@
-import { type VoiceModel, type VoiceProvider, type VoiceSummary } from "./types";
+import {
+  type VoiceModel,
+  type VoiceProvider,
+  type VoiceSummary,
+} from "./types";
 
 /**
  * Kokoro provider — in-browser, client-runtime TTS.
@@ -126,6 +130,34 @@ export const KOKORO_VOICES: VoiceSummary[] = [
   voice("zm_yunxia", "Yunxia — Mandarin male", "zh", "male"),
   voice("zm_yunyang", "Yunyang — Mandarin male", "zh", "male"),
 ];
+
+/**
+ * Six voices worth offering first, each with a short sample, instead of all 54.
+ * Heart is the default narrator.
+ */
+export const RECOMMENDED_KOKORO_VOICES = [
+  "af_heart",
+  "af_bella",
+  "am_michael",
+  "am_adam",
+  "bf_emma",
+  "bm_george",
+] as const;
+
+/** A good default narrator for each Kokoro language. */
+export const DEFAULT_KOKORO_VOICE_BY_LANGUAGE: Readonly<
+  Record<string, string>
+> = {
+  "en-US": "af_heart",
+  "en-GB": "bf_emma",
+  es: "ef_dora",
+  fr: "ff_siwis",
+  hi: "hf_alpha",
+  it: "if_sara",
+  ja: "jf_alpha",
+  "pt-BR": "pf_dora",
+  zh: "zf_xiaobei",
+};
 
 export const KOKORO_VOICE_IDS = KOKORO_VOICES.map((v) => v.id);
 
