@@ -190,7 +190,18 @@ export function buildTextFitScript(): string {
         stack.dataset.textFitWarning = 'Split this copy into shorter scenes for readable text.';
     });
   }
-  if (document.fonts) document.fonts.ready.then(fitText); else fitText();
+  // Measure with the real faces: a face that nothing has drawn yet (an italic,
+  // say) is not loaded, and measuring it would use a narrower fallback.
+  function loadUsedFonts() {
+    var specs = {};
+    document.querySelectorAll('.fx-stack .fx-line-inner').forEach(function (el) {
+      var cs = getComputedStyle(el);
+      specs[cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily] = true;
+    });
+    return Promise.all(Object.keys(specs).map(function (spec) { return document.fonts.load(spec, 'Aa').catch(function () {}); }));
+  }
+  if (document.fonts) loadUsedFonts().then(function () { return document.fonts.ready; }).then(fitText);
+  else fitText();
 })();
 </script>`;
 }

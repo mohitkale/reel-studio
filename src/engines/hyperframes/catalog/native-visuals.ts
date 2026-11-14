@@ -1368,6 +1368,8 @@ export const NATIVE_CATALOG_STYLES = `
     background: color-mix(in srgb, var(--fx-ink, #fff) 6%, transparent);
     border: 2px solid color-mix(in srgb, var(--fx-c, #fff) 38%, transparent);
   }
+  /* The text fit budgets 96% of the panel; a narrower stack would clip the line. */
+  .fx-panelled .quote-stack, .fx-panelled.recipe-content-editorial .fx-stack { max-width: 96%; }
   .fx-panelled .fx-dlg-chart { align-items: stretch; text-align: center; }
   .fx-panelled .fx-dlg-list,
   .fx-panelled .fx-dlg-quote { align-items: stretch; text-align: left; }

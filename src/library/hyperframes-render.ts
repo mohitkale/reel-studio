@@ -296,6 +296,8 @@ export async function writeHyperframesProject(
   inputProps: ReelProps,
   lessonBudget = false,
   packDigest?: string,
+  /** Capture a smaller canvas (draft previews); the layout is scaled as a whole. */
+  draftScale?: number,
 ) {
   const scenes = inputProps.scenes;
   const runtimeDir = path.join(projectDir, "_runtime");
@@ -354,6 +356,7 @@ export async function writeHyperframesProject(
     {
       producerMode: true,
       runtimeUrl: GSAP_RENDER_URL,
+      draftScale,
     },
   );
   if (lessonBudget) assertLessonHtmlBudget(Buffer.byteLength(html));
@@ -441,6 +444,9 @@ export async function writeHyperframesReviewProject(
     sfxCues: [],
   });
 }
+
+/** Linear scale of a draft capture: 0.5 is a quarter of the pixels. */
+export const DRAFT_SCALE = 0.5;
 
 /** Half the frame rate for a draft preview, when that stays a whole number of 12 fps or more. */
 export function draftFps(fps: number, quality: RenderQuality): number {
@@ -622,18 +628,20 @@ export async function runHyperframesRender(
       ? { ...prepared.props, scenes, audioUrl, musicUrl, sfxCues, coverUrl }
       : legacyInputProps;
 
-    await writeHyperframesProject(
-      projectDir,
-      inputProps,
-      Boolean(script.chapterPlan?.longForm),
-      snapshot?.factory?.packDigest,
-    );
     const useSections =
       Boolean(
         script.chapterPlan ||
         (inputProps.sequenceDirection &&
           compositionTotalFrames(inputProps) > script.fps * 30),
       ) && [24, 30, 60].includes(script.fps);
+    // Drafts capture a quarter of the pixels at half the frame rate.
+    await writeHyperframesProject(
+      projectDir,
+      inputProps,
+      Boolean(script.chapterPlan?.longForm),
+      snapshot?.factory?.packDigest,
+      quality === "draft" && !useSections ? DRAFT_SCALE : undefined,
+    );
     if (useSections)
       await writeHyperframesVisualSections(projectDir, inputProps);
 

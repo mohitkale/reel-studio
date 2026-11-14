@@ -7,42 +7,34 @@
     "memoryGb": 16,
     "node": "v24.18.1"
   },
-  "note": "Silent 22.5 s 9:16 storyboard (motivation), dev server on the same machine, includes lint, planning, render, mastering and contact sheet. Runs vary by up to 50%.",
   "rows": [
     {
-      "example": "motivation",
-      "quality": "draft (30 fps)",
-      "videoSeconds": 22.5,
-      "wallSeconds": 132,
-      "ratio": 5.85
+      "example": "how-to",
+      "quality": "draft",
+      "videoSeconds": 49.933333,
+      "wallSeconds": 65.599,
+      "ratio": 1.3137316509594905
     },
     {
       "example": "motivation",
-      "quality": "draft (15 fps)",
+      "quality": "draft (15 fps, half-size capture)",
       "videoSeconds": 22.5,
-      "wallSeconds": 101,
-      "ratio": 4.49
+      "wallSeconds": 34,
+      "ratio": 1.53
     },
     {
       "example": "motivation",
-      "quality": "standard",
+      "quality": "draft (15 fps, half-size capture), second run",
       "videoSeconds": 22.5,
-      "wallSeconds": 124,
-      "ratio": 5.53
+      "wallSeconds": 31,
+      "ratio": 1.37
     },
     {
-      "example": "motivation",
-      "quality": "high",
-      "videoSeconds": 22.5,
-      "wallSeconds": 133,
-      "ratio": 5.9
-    },
-    {
-      "example": "motivation",
-      "quality": "high (second run)",
-      "videoSeconds": 22.5,
-      "wallSeconds": 200,
-      "ratio": 8.87
+      "example": "how-to",
+      "quality": "draft (15 fps, half-size capture)",
+      "videoSeconds": 49.9,
+      "wallSeconds": 66,
+      "ratio": 1.31
     }
   ]
 }
