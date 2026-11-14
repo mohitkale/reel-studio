@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -85,14 +85,32 @@ describe("guided voice model download", () => {
     expect(seen.at(-1)).toBeCloseTo(1, 2);
   });
 
-  it("resumes an interrupted download with a Range request", async () => {
-    const { url, requests } = await host({ failOnceAfter: 10_000 });
+  it("continues a partial file with a Range request", async () => {
+    const { url, requests } = await host();
     const cacheDir = mkdtempSync(path.join(tmpdir(), "vm-"));
-    await expect(downloadVoiceModel({ cacheDir, host: url })).rejects.toThrow();
-    expect(existsSync(path.join(cacheDir, "tokenizer.json.part"))).toBe(true);
+    mkdirSync(cacheDir, { recursive: true });
+    writeFileSync(
+      path.join(cacheDir, "tokenizer.json.part"),
+      FILES["tokenizer.json"]!.subarray(0, 10_000),
+    );
     const status = await downloadVoiceModel({ cacheDir, host: url });
     expect(status.cached).toBe(true);
-    expect(requests.some((r) => r.range?.startsWith("bytes="))).toBe(true);
+    expect(readFileSync(path.join(cacheDir, "tokenizer.json"))).toEqual(
+      FILES["tokenizer.json"],
+    );
+    expect(
+      requests.find((r) => r.url.endsWith("/resolve/main/tokenizer.json"))
+        ?.range,
+    ).toBe("bytes=10000-");
+  });
+
+  it("recovers after the connection drops mid-file", async () => {
+    const { url } = await host({ failOnceAfter: 10_000 });
+    const cacheDir = mkdtempSync(path.join(tmpdir(), "vm-"));
+    await expect(downloadVoiceModel({ cacheDir, host: url })).rejects.toThrow();
+    expect((await getVoiceModelStatus(cacheDir)).cached).toBe(false);
+    const status = await downloadVoiceModel({ cacheDir, host: url });
+    expect(status.cached).toBe(true);
   });
 
   it("does not download again once cached", async () => {
