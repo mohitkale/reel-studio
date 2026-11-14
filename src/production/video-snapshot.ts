@@ -69,6 +69,7 @@ export const videoScriptSnapshotSchema = z.object({
     handle: z.string(),
     fontFamily: z.string(),
     radius: z.number(),
+    themeId: z.string().optional(),
   }),
   coverUrl: z.string().nullable(),
   musicUrl: z.string().nullable(),

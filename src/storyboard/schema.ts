@@ -23,6 +23,13 @@ export const STORYBOARD_LIMITS = {
   item: 60,
   statValue: 12,
   statLabel: 40,
+  sideLabel: 24,
+  sideText: 80,
+  pointLabel: 24,
+  pointText: 70,
+  pointCount: { min: 2, max: 5 },
+  term: 40,
+  meaning: 160,
   chartLabels: { min: 2, max: 6 },
   chartSeries: { min: 1, max: 3 },
   chartLabel: 24,
@@ -60,11 +67,22 @@ export const SCENE_TYPES = [
   "code",
   "media",
   "cta",
+  "kinetic-text",
+  "steps",
+  "comparison",
+  "before-after",
+  "timeline",
+  "definition",
+  "terminal",
+  "diagram",
+  "media-split",
+  "device-mockup",
+  "checklist",
 ] as const;
 export const sceneTypeSchema = z
   .enum(SCENE_TYPES)
   .describe(
-    'What the scene is. hook: opening line that grabs attention. statement: one key idea. list: 2-6 short points (needs items). stat: one big number (needs stat). chart: compare values (needs chart). quote: a quotation (needs quote). code: a code snippet (needs code). media: a picture or clip carries the scene (needs media). cta: closing call to action. Example: "statement".',
+    'What the scene is. hook: opening line that grabs attention. statement: one key idea. kinetic-text: a punchy line slammed word by word. list: 2-6 short points (needs items). steps: 2-6 numbered steps in order (needs items). checklist: 2-6 things to tick off (needs items). stat: one big number (needs stat). comparison: two options side by side (needs compare). before-after: a change from one state to another (needs compare). timeline: 2-5 moments in order (needs points). diagram: 2-5 connected parts of a process or system (needs points). chart: compare values (needs chart; chart.kind bar, line or donut). quote: a quotation (needs quote). definition: a term and its meaning (needs definition). code: a code snippet (needs code). terminal: shell commands and output (needs code). media: a full-frame picture or clip (needs media). media-split: picture beside the headline (needs media). device-mockup: a phone screen showing a picture (media optional). cta: closing call to action. Example: "statement".',
   );
 
 export const FORMATS = ["9:16", "16:9", "1:1"] as const;
@@ -174,6 +192,12 @@ export const chartSchema = z
       .describe(
         'Where the numbers come from. Example: "Company report, 2025".',
       ),
+    kind: z
+      .enum(["bar", "line", "donut"])
+      .optional()
+      .describe(
+        'How to draw it: "bar" to compare, "line" for change over time, "donut" for shares of a whole (first series only). Default "bar".',
+      ),
   })
   .refine(
     (chart) =>
@@ -222,6 +246,37 @@ function isSafeRelativePath(value: string): boolean {
   return !value.split(/[\\/]/).includes("..");
 }
 
+const sideSchema = z.strictObject({
+  label: z
+    .string()
+    .trim()
+    .min(1)
+    .max(L.sideLabel)
+    .describe('Short title of this side. Example: "Before".'),
+  text: z
+    .string()
+    .trim()
+    .min(1)
+    .max(L.sideText)
+    .describe("One short sentence about this side, at most 80 characters."),
+});
+
+const pointSchema = z.strictObject({
+  label: z
+    .string()
+    .trim()
+    .min(1)
+    .max(L.pointLabel)
+    .describe('A date, name or step title. Example: "2024".'),
+  text: z
+    .string()
+    .trim()
+    .min(1)
+    .max(L.pointText)
+    .optional()
+    .describe("Optional short detail, at most 70 characters."),
+});
+
 export const sceneSchema = z
   .strictObject({
     type: sceneTypeSchema,
@@ -263,6 +318,37 @@ export const sceneSchema = z
       .optional()
       .describe("Key number for a stat scene."),
     chart: chartSchema.optional(),
+    compare: z
+      .strictObject({
+        left: sideSchema.describe(
+          'The first option, or the before state. Example: {"label":"Before","text":"One hour per edit"}.',
+        ),
+        right: sideSchema.describe(
+          'The second option, or the after state. Example: {"label":"After","text":"One minute"}.',
+        ),
+      })
+      .optional()
+      .describe(
+        "Two sides for a comparison or before-after scene: left is the first option or the before state.",
+      ),
+    points: z
+      .array(pointSchema)
+      .min(L.pointCount.min)
+      .max(L.pointCount.max)
+      .optional()
+      .describe(
+        'Two to five moments (timeline) or parts (diagram), in order. Example: [{"label":"2019","text":"Launch"},{"label":"2024","text":"1M users"}].',
+      ),
+    definition: z
+      .strictObject({
+        term: textLine(L.term, 'The word being defined. Example: "Latency".'),
+        meaning: textLine(
+          L.meaning,
+          "Plain-words meaning, at most 160 characters.",
+        ),
+      })
+      .optional()
+      .describe("Term and meaning for a definition scene."),
     quote: z
       .strictObject({
         text: textLine(
@@ -327,11 +413,20 @@ export const sceneSchema = z
       Record<(typeof SCENE_TYPES)[number], keyof typeof scene>
     > = {
       list: "items",
+      steps: "items",
+      checklist: "items",
       stat: "stat",
       chart: "chart",
+      comparison: "compare",
+      "before-after": "compare",
+      timeline: "points",
+      diagram: "points",
       quote: "quote",
+      definition: "definition",
       code: "code",
+      terminal: "code",
       media: "media",
+      "media-split": "media",
     };
     const field = need[scene.type];
     if (field && scene[field] === undefined) {
@@ -371,7 +466,7 @@ export const videoStoryboardSchema = z
     theme: slug
       .optional()
       .describe(
-        "Optional visual theme name. Omit to let Reel Studio choose a look that fits the content.",
+        'Optional visual theme: "bold-pop", "clean-minimal", "midnight-tech", "editorial-paper", "neon", "warm-documentary", "corporate-blue", "playful-pastel", "mono-brutalist" or "cinematic". Omit or use "auto" to let Reel Studio choose a theme that fits the content.',
       ),
     voice: voiceSchema.optional(),
     captions: captionsSchema.default("auto"),

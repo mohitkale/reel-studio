@@ -18,9 +18,13 @@
       }
     },
     {
-      "type": "statement",
+      "type": "terminal",
       "headline": "Use it on the input",
-      "narration": "Pass your search function through debounce, then attach the result to the input event."
+      "narration": "Pass your search function through debounce, then attach the result to the input event.",
+      "code": {
+        "language": "bash",
+        "text": "$ const onType = debounce(search, 300)\n$ input.addEventListener('input', onType)"
+      }
     },
     {
       "type": "list",

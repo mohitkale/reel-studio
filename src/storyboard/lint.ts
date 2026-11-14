@@ -13,6 +13,7 @@
  * Pure and deterministic: no network, no clock unless `options.today` is
  * omitted for a missing source date.
  */
+import { THEME_IDS } from "@/video/themes";
 import { ZodError } from "zod";
 
 import {
@@ -124,9 +125,38 @@ const TYPE_ALIASES: Record<string, (typeof SCENE_TYPES)[number]> = {
   "bullet-list": "list",
   bullets: "list",
   bulleted: "list",
-  checklist: "list",
-  steps: "list",
   tips: "list",
+  "step-by-step": "steps",
+  "how-to": "steps",
+  versus: "comparison",
+  vs: "comparison",
+  compare: "comparison",
+  "pros-cons": "comparison",
+  "before-and-after": "before-after",
+  transformation: "before-after",
+  history: "timeline",
+  roadmap: "timeline",
+  milestones: "timeline",
+  glossary: "definition",
+  define: "definition",
+  meaning: "definition",
+  kinetic: "kinetic-text",
+  slam: "kinetic-text",
+  "big-text": "kinetic-text",
+  shell: "terminal",
+  cli: "terminal",
+  command: "terminal",
+  commands: "terminal",
+  flow: "diagram",
+  flowchart: "diagram",
+  process: "diagram",
+  architecture: "diagram",
+  split: "media-split",
+  "image-split": "media-split",
+  phone: "device-mockup",
+  mockup: "device-mockup",
+  device: "device-mockup",
+  "app-demo": "device-mockup",
   title: "hook",
   intro: "hook",
   opener: "hook",
@@ -217,6 +247,9 @@ const SCENE_KEYS = [
   "quote",
   "code",
   "media",
+  "compare",
+  "points",
+  "definition",
   "icon",
   "emphasis",
   "durationHint",
@@ -243,7 +276,7 @@ const SCENE_FIELD_ALIASES: Record<string, string[]> = {
     "narrationText",
   ],
   body: ["subtitle", "subheadline", "subhead", "description", "supportingText"],
-  items: ["bullets", "points", "list", "steps"],
+  items: ["bullets", "list", "steps"],
   durationHint: ["duration", "seconds", "durationSeconds", "duration_seconds"],
 };
 
@@ -579,6 +612,67 @@ function repairScene(
         message: "Used the call-to-action text as body",
       });
     }
+  }
+
+  // Points: timeline and diagram take labelled moments; models often send
+  // plain items or strings.
+  const pointType = scene.type === "timeline" || scene.type === "diagram";
+  if (pointType && scene.points === undefined && Array.isArray(scene.items)) {
+    scene.points = scene.items;
+    delete scene.items;
+    fixes.push({
+      path: `${path}.points`,
+      rule: "rename-field",
+      message: 'Used "items" as "points"',
+    });
+  }
+  if (!pointType && scene.items === undefined && Array.isArray(scene.points)) {
+    scene.items = (scene.points as unknown[]).map((p) =>
+      isObj(p) ? (str(p.label) ?? str(p.text) ?? "") : String(p),
+    );
+    delete scene.points;
+    fixes.push({
+      path: `${path}.items`,
+      rule: "rename-field",
+      message: 'Used "points" as "items"',
+    });
+  }
+  if (Array.isArray(scene.points)) {
+    scene.points = (scene.points as unknown[]).slice(0, L.pointCount.max).map(
+      (p) => {
+        const point: Obj = isObj(p) ? { ...p } : { label: String(p) };
+        const label = str(point.label) ?? str(point.title) ?? str(point.date);
+        const text = str(point.text) ?? str(point.detail) ?? str(point.body);
+        return {
+          label: cutAtBoundary(label ?? "", L.pointLabel),
+          ...(text ? { text: cutAtBoundary(text, L.pointText) } : {}),
+        };
+      },
+    );
+  }
+  if (isObj(scene.compare)) {
+    const side = (value: unknown, fallback: string) => {
+      const v: Obj = isObj(value) ? value : { text: String(value ?? "") };
+      return {
+        label: cutAtBoundary(str(v.label) ?? str(v.title) ?? fallback, L.sideLabel),
+        text: cutAtBoundary(str(v.text) ?? str(v.body) ?? "", L.sideText),
+      };
+    };
+    const before = scene.type === "before-after";
+    scene.compare = {
+      left: side(scene.compare.left ?? scene.compare.before, before ? "Before" : "Option A"),
+      right: side(scene.compare.right ?? scene.compare.after, before ? "After" : "Option B"),
+    };
+  }
+  if (isObj(scene.definition)) {
+    const d = scene.definition;
+    scene.definition = {
+      term: cutAtBoundary(str(d.term) ?? str(d.word) ?? "", L.term),
+      meaning: cutAtBoundary(
+        str(d.meaning) ?? str(d.definition) ?? str(d.text) ?? "",
+        L.meaning,
+      ),
+    };
   }
 
   // Stat.
@@ -1074,6 +1168,26 @@ function repairRoot(
     }
     if (theme) root.theme = theme;
     else delete root.theme;
+    if (typeof root.theme === "string" && root.theme !== "auto") {
+      const known = THEME_IDS.find(
+        (id) => id === root.theme || id.startsWith(`${root.theme}-`) || (root.theme as string).startsWith(`${id}-`),
+      );
+      if (known && known !== root.theme) {
+        fixes.push({
+          path: "theme",
+          rule: "normalize-theme",
+          message: `Used the theme "${known}" for "${root.theme}"`,
+        });
+        root.theme = known;
+      } else if (!known) {
+        fixes.push({
+          path: "theme",
+          rule: "unknown-theme",
+          message: `There is no theme "${root.theme}"; the theme is chosen from the content`,
+        });
+        delete root.theme;
+      }
+    }
   }
 
   if (Array.isArray(root.sources)) {

@@ -33,6 +33,7 @@ const sceneSnapshotSchema = z.object({
   background: sceneBackgroundSchema.nullable().optional(),
   items: z.array(z.string().max(280)).max(24).optional(),
   chart: productionChartDataSchema.optional(),
+  panel: z.record(z.string(), z.unknown()).optional(),
   mood: sceneMoodSchema.optional(),
   musicMood: z.string().max(60).optional(),
   role: productionSceneRoleSchema.optional(),
@@ -54,6 +55,7 @@ function layoutJsonFor(scene: SceneSnapshot): string | null {
   if (scene.background) config.background = scene.background;
   if (scene.items?.length) config.items = scene.items;
   if (scene.chart) config.chart = scene.chart;
+  if (scene.panel) config.panel = scene.panel;
   if (scene.mood) config.mood = scene.mood;
   if (scene.musicMood) config.musicMood = scene.musicMood;
   if (scene.role) config.role = scene.role;

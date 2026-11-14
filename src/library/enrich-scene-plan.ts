@@ -9,6 +9,7 @@ import {
   type StyleId,
 } from "@/video/visual-style";
 import { mapScenesToEngineTemplates } from "@/engines/hyperframes/map-templates";
+import { SCENE_DEFINITIONS } from "@/engines/hyperframes/scenes/registry";
 
 const MOODS: SceneMood[] = [
   "energetic",
@@ -38,6 +39,8 @@ const MOOD_ONLY_TEMPLATES = new Set<string>([
   "hf-ig-follow",
   "hf-tt-follow",
   "hf-yt-lower-third",
+  // Registered scene types draw their own panel; a photo only when asked for.
+  ...SCENE_DEFINITIONS.map((definition) => definition.templateId),
 ]);
 
 /** Default mood when the model omits one — biased by template so beats feel intentional. */

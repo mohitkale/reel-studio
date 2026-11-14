@@ -16,6 +16,8 @@ export interface BrandTokens {
   handle: string;
   fontFamily: string;
   radius: number;
+  /** Visual theme id (see src/video/themes); drives type, shape, background and motion. */
+  themeId?: string;
 }
 
 /** Coral Harbor — Airbnb-inspired default for new content. */

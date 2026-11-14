@@ -9,9 +9,23 @@
       "narration": "In November 2022 NASA launched the most powerful rocket it had ever built, on a mission called Artemis one."
     },
     {
-      "type": "statement",
-      "headline": "Launch on November sixteenth",
-      "narration": "After several delays, the Space Launch System lifted off from Florida on the sixteenth of November, carrying the uncrewed Orion capsule."
+      "type": "timeline",
+      "headline": "From launch to splashdown",
+      "narration": "After several delays, the Space Launch System lifted off from Florida on the sixteenth of November with the uncrewed Orion capsule. Twenty-five days later, Orion splashed down in the Pacific Ocean on the eleventh of December.",
+      "points": [
+        {
+          "label": "Nov 16",
+          "text": "Launch from Florida"
+        },
+        {
+          "label": "Mid-flight",
+          "text": "Past the Moon"
+        },
+        {
+          "label": "Dec 11",
+          "text": "Pacific splashdown"
+        }
+      ]
     },
     {
       "type": "statement",
@@ -26,11 +40,6 @@
         "value": "1.4M miles",
         "label": "travelled by Orion"
       }
-    },
-    {
-      "type": "statement",
-      "headline": "Splashdown on December eleventh",
-      "narration": "Orion returned to Earth and splashed down in the Pacific Ocean on the eleventh of December, after about twenty-five days."
     },
     {
       "type": "cta",

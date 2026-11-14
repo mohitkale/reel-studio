@@ -302,6 +302,7 @@ export async function createProjectFromPlan(
               if (scene.musicMood) config.musicMood = scene.musicMood;
               if (scene.items?.length) config.items = scene.items;
               if (scene.chart) config.chart = scene.chart;
+              if (scene.panel) config.panel = scene.panel;
               const role = scene.direction?.graphic
                 ? scene.direction.role
                 : production?.roles?.[order];

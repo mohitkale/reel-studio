@@ -251,6 +251,7 @@ export async function produceFromStoryboard(
       // No preset: the preset scene renderers show one hero line and drop list
       // items, stat labels and chart data, which a storyboard supplies.
       savedOverrides: {
+        themeId: plan.themeId,
         storyboardSource: buildStoryboardSource(storyboard, finalPlan.scenes),
       },
       mediaPreferences: finalPlan.scenes.map(() => mediaPreference),

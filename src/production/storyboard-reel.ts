@@ -11,6 +11,8 @@ import { resolveSpokenText } from "@/lib/spoken-text";
 import { buildAutoCaptionTrack } from "@/library/auto-captions";
 import { enrichScenePlan } from "@/library/enrich-scene-plan";
 import { getProductionPreset } from "@/production/presets";
+import { CAPTION_STYLE_PRESETS } from "@/lib/caption-style";
+import { applyThemeToTokens, getTheme } from "@/video/themes";
 import { resolveProductionLayout } from "@/production/layout";
 import { planFromStoryboard } from "@/production/storyboard-plan";
 import type { Storyboard } from "@/storyboard";
@@ -27,6 +29,7 @@ export function storyboardToReelProps(storyboard: Storyboard): StoryboardReel {
   if (storyboard.kind !== "video")
     throw new Error("Only video storyboards have scenes");
   const plan = planFromStoryboard(storyboard);
+  const theme = getTheme(plan.themeId);
   const preset = getProductionPreset(plan.presetId);
   if (!preset) throw new Error(`Unknown look ${plan.presetId}`);
   const { width, height } = dimsFor(plan.orientation);
@@ -51,6 +54,7 @@ export function storyboardToReelProps(storyboard: Storyboard): StoryboardReel {
     visual: scene.visual,
     items: scene.items,
     chart: scene.chart,
+    panel: scene.panel,
     direction: scene.direction,
     mood: scene.mood,
     order,
@@ -69,6 +73,7 @@ export function storyboardToReelProps(storyboard: Storyboard): StoryboardReel {
   const track = buildAutoCaptionTrack({
     scriptId: "frame-check",
     presetId: preset.id,
+    style: theme ? CAPTION_STYLE_PRESETS[theme.captionStyle] : undefined,
     take: {
       id: "estimated",
       scriptId: "frame-check",
@@ -98,7 +103,9 @@ export function storyboardToReelProps(storyboard: Storyboard): StoryboardReel {
       startFrame: beat.startFrame,
       durationFrames: beat.durationFrames,
     })),
-    tokens: serverDefaultTokens,
+    tokens: theme
+      ? applyThemeToTokens(serverDefaultTokens, theme)
+      : serverDefaultTokens,
     width,
     height,
     fps,

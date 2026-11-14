@@ -14,9 +14,23 @@
       "narration": "Tiny microphones on the outside of each ear cup constantly listen to the noise around you."
     },
     {
-      "type": "statement",
+      "type": "diagram",
       "headline": "Then they flip the wave",
-      "narration": "A chip builds a mirror image of that sound, a wave that is exactly upside down, and plays it through the speaker."
+      "narration": "A chip builds a mirror image of that sound, a wave that is exactly upside down, and plays it through the speaker.",
+      "points": [
+        {
+          "label": "Listen",
+          "text": "Mics hear noise"
+        },
+        {
+          "label": "Flip",
+          "text": "Chip inverts the wave"
+        },
+        {
+          "label": "Play",
+          "text": "Speaker cancels it"
+        }
+      ]
     },
     {
       "type": "stat",
@@ -28,7 +42,7 @@
       }
     },
     {
-      "type": "list",
+      "type": "checklist",
       "headline": "Where it works best",
       "narration": "It is best at steady, low sounds. Sudden or high sounds are harder to predict, so padding still does some of the work.",
       "items": [

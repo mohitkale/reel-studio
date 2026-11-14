@@ -5,7 +5,7 @@
   "scenes": [
     {
       "type": "hook",
-      "headline": "Myth or fact?",
+      "headline": "Myth or fact? Let us check",
       "narration": "You have heard all three of these. Let us check what the evidence actually says."
     },
     {
@@ -18,9 +18,19 @@
       }
     },
     {
-      "type": "statement",
-      "headline": "Myth: cracking knuckles gives arthritis",
-      "narration": "Studies that looked for a link have not found one. The popping is gas bubbles in the joint fluid."
+      "type": "before-after",
+      "headline": "Knuckles and arthritis",
+      "narration": "Cracking knuckles does not cause arthritis. Studies that looked for a link have not found one. The popping is gas bubbles in the joint fluid.",
+      "compare": {
+        "left": {
+          "label": "Myth",
+          "text": "Cracking knuckles gives arthritis"
+        },
+        "right": {
+          "label": "Fact",
+          "text": "No link found; it is gas bubbles"
+        }
+      }
     },
     {
       "type": "statement",

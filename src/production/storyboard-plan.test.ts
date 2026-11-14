@@ -1,3 +1,4 @@
+import { SCENE_TYPES } from "@/storyboard";
 import { describe, expect, it } from "vitest";
 
 import { parseStoryboard } from "@/storyboard";
@@ -77,17 +78,9 @@ describe("planFromStoryboard", () => {
       "hf-broll",
       "hf-cta",
     ]);
-    expect(Object.keys(STORYBOARD_TEMPLATE_BY_TYPE).sort()).toEqual([
-      "chart",
-      "code",
-      "cta",
-      "hook",
-      "list",
-      "media",
-      "quote",
-      "stat",
-      "statement",
-    ]);
+    expect(Object.keys(STORYBOARD_TEMPLATE_BY_TYPE).sort()).toEqual(
+      [...SCENE_TYPES].sort(),
+    );
   });
 
   it("carries items, stat, chart, quote and cta fields", () => {
@@ -176,14 +169,7 @@ describe("planFromStoryboard", () => {
       },
     ]);
     const text = p.warnings.join("\n");
-    for (const part of [
-      "code scenes",
-      "body is not shown",
-      "icon",
-      "media paths",
-      "voice.speed",
-      "theme",
-    ]) {
+    for (const part of ["body is not shown", "media paths", "voice.speed"]) {
       expect(text).toContain(part);
     }
   });

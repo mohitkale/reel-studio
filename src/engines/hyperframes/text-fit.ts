@@ -89,6 +89,32 @@ export function buildTextFitScript(): string {
         v = next;
       }
     });
+    // Registered scene types size everything from one scale variable: grow it
+    // until the content fills its panel, or shrink it until it fits.
+    document.querySelectorAll('.fx-panelled .fx-dialogue[data-sc-grow]').forEach(function (box) {
+      var cs = getComputedStyle(box);
+      var availH = box.clientHeight - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0);
+      var availW = box.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+      function used() {
+        var h = 0, w = 0;
+        Array.from(box.children).forEach(function (c) { h += c.offsetHeight; w = Math.max(w, c.scrollWidth); });
+        return { h: h, w: w };
+      }
+      function over() { var u = used(); return u.h > availH * 0.94 || u.w > availW + 1; }
+      var v = 1;
+      box.style.setProperty('--sc-scale', '1');
+      if (over()) {
+        while (v > 0.5 && over()) { v *= 0.95; box.style.setProperty('--sc-scale', v.toFixed(3)); }
+      } else {
+        var cap = 2.2;
+        while (v < cap) {
+          var next = Math.min(cap, v * 1.05);
+          box.style.setProperty('--sc-scale', next.toFixed(3));
+          if (over()) { box.style.setProperty('--sc-scale', v.toFixed(3)); break; }
+          v = next;
+        }
+      }
+    });
     document.querySelectorAll('.fx-stack').forEach(function (stack) {
       var stage = stack.closest('.fx-stage');
       var lines = Array.from(stack.querySelectorAll('.fx-line-inner'));
@@ -101,9 +127,12 @@ export function buildTextFitScript(): string {
         var others = 0;
         Array.from(box.children).forEach(function (child) { if (!child.contains(stack) && child !== stack) others += child.offsetHeight; });
         height = Math.max(40, box.clientHeight * 0.84 - others);
+        var share = parseFloat((stack.closest('[data-fit-share]') || document.body).getAttribute('data-fit-share'));
+        if (share && stage.clientHeight >= stage.clientWidth * 0.9) height = box.clientHeight * share;
         var holder = stack.closest('.fx-lt-plate') || box;
         var inset = holder === box ? (parseFloat(getComputedStyle(box).paddingLeft) || 0) * 2 : (parseFloat(getComputedStyle(holder).paddingLeft) || 0) + (parseFloat(getComputedStyle(holder).paddingRight) || 0);
         width = (holder.clientWidth - inset) * 0.96;
+        if (stack.parentElement && stack.parentElement !== holder && stack.parentElement !== box) width = Math.min(width, stack.parentElement.clientWidth * 0.96);
       }
       var stackStyle = getComputedStyle(stack);
       var widest = 0;

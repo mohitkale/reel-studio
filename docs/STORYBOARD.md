@@ -22,7 +22,7 @@ are enforced by validation rather than by prompt text.
 | `kind`     | no       | `"video"` (default) or `"podcast"`.                                        |
 | `title`    | yes      | Up to 80 characters.                                                       |
 | `format`   | no       | `"9:16"` (default), `"16:9"` or `"1:1"`.                                   |
-| `theme`    | no       | Optional theme name. Omit to let Reel Studio pick a look that fits.        |
+| `theme`    | no       | One of the ten themes below, or `"auto"`. Omit to let Reel Studio pick one. |
 | `voice`    | no       | `{ enabled, voiceId?, speed? }`. Default: narrated with the default voice. |
 | `music`    | no       | `"auto"` (default), `"none"` or a track id.                                |
 | `captions` | no       | `"auto"` (default) or `"off"`.                                             |
@@ -39,7 +39,10 @@ are enforced by validation rather than by prompt text.
 | `body`         | no       | Supporting line, at most 200 characters.                                       |
 | `items`        | list     | 2 to 6 points of at most 60 characters.                                        |
 | `stat`         | stat     | `{ value (12 chars), label (40 chars) }`.                                      |
-| `chart`        | chart    | 2 to 6 `labels`, 1 to 3 `series` with one number per label, optional `source`. |
+| `chart`        | chart    | 2 to 6 `labels`, 1 to 3 `series` with one number per label, optional `source` and `kind` (`bar`, `line`, `donut`). |
+| `compare`      | comparison, before-after | `{ left, right }`, each `{ label (24 chars), text (80 chars) }`. |
+| `points`       | timeline, diagram | 2 to 5 `{ label (24 chars), text? (70 chars) }` in order.        |
+| `definition`   | definition | `{ term (40 chars), meaning (160 chars) }`.                                   |
 | `quote`        | quote    | `{ text (160 chars), attribution (60 chars) }`.                                |
 | `code`         | code     | `{ language, text }`, at most 12 lines and 600 characters.                     |
 | `media`        | media    | Exactly one of `query` (plain words), `assetId` or `path` (relative file).     |
@@ -47,10 +50,44 @@ are enforced by validation rather than by prompt text.
 | `emphasis`     | no       | Up to three words from the headline or body to highlight.                      |
 | `durationHint` | no       | Seconds, 2 to 30. A hint only; timing follows the narration length.            |
 
-Scene types in v1 are the treatments that exist today: `hook`, `statement`,
-`list`, `stat`, `chart`, `quote`, `code`, `media` and `cta`. A type whose name
-appears in the "Required" column (for example `list`) must carry that field.
-New types are added without changing the version.
+There are twenty scene types. Every one is shown in every format on the app's
+`/scenes` page.
+
+| Type            | Use it for                                  | Needs      |
+| --------------- | ------------------------------------------- | ---------- |
+| `hook`          | The opening line                            |            |
+| `statement`     | One key idea                                |            |
+| `kinetic-text`  | A punchy line slammed in word by word       |            |
+| `list`          | Two to six points                           | `items`    |
+| `steps`         | Numbered steps in order                     | `items`    |
+| `checklist`     | Things to tick off                          | `items`    |
+| `stat`          | One big number                              | `stat`     |
+| `comparison`    | Two options side by side                    | `compare`  |
+| `before-after`  | A change from one state to another          | `compare`  |
+| `timeline`      | Moments in order                            | `points`   |
+| `diagram`       | Connected parts of a process or system      | `points`   |
+| `chart`         | Bars, a line or a donut from real values    | `chart`    |
+| `quote`         | A real, attributed quotation                | `quote`    |
+| `definition`    | A term and its meaning                      | `definition` |
+| `code`          | A snippet in a code window                  | `code`     |
+| `terminal`      | Shell commands (lines starting `$` are commands) | `code` |
+| `media`         | A full-frame picture or clip                | `media`    |
+| `media-split`   | A picture beside the headline               | `media`    |
+| `device-mockup` | A phone showing a picture or the `body` text |            |
+| `cta`           | The closing call to action                  |            |
+
+A scene whose data is missing or wrong is drawn as a statement instead of
+failing. New types are added without changing the version.
+
+### Themes
+
+`bold-pop`, `clean-minimal`, `midnight-tech`, `editorial-paper`, `neon`,
+`warm-documentary`, `corporate-blue`, `playful-pastel`, `mono-brutalist` and
+`cinematic`. A theme sets palette, a bundled font pair, type treatment, corner and
+stroke, background treatment, motion personality, caption style and music mood,
+and works with every scene type. With `theme` omitted or `"auto"` the studio picks
+one from the storyboard's words (at least two keyword matches), otherwise from the
+production look. A brand kit overrides the palette and fonts and keeps the rest.
 
 Nothing in a storyboard refers to internal ids: no template, recipe, capability or
 catalog block names. Unknown fields are rejected.
@@ -140,8 +177,8 @@ afterwards to change anything by hand.
 The code path is `produceFromStoryboard` in `src/library/storyboard-production.ts`;
 MCP and the CLI will call the same function. Scene types map to today's treatments
 (`hook` to the opener, `chart` to the data chart, `media` to B-roll, and so on). Fields the
-renderer cannot show yet (`body` on most scenes, `icon`, `theme`, `voice.speed`, `media.path`,
-and a code scene's formatting) are listed in the plan's `warnings` instead of being dropped silently.
+renderer cannot show yet (`body` on most scenes, `voice.speed` and `media.path`)
+are listed in the plan's `warnings` instead of being dropped silently.
 
 ## Export and import
 

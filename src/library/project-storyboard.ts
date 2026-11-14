@@ -15,6 +15,7 @@ import { MUSIC_LIBRARY } from "@/lib/music-library";
 import { prisma } from "@/library/db";
 import { getScript } from "@/library/repositories/scripts";
 import { normalizeHfTemplateId } from "@/engines/hyperframes/templates";
+import { sceneDefinitionForTemplate } from "@/engines/hyperframes/scenes/registry";
 import {
   lintStoryboard,
   STORYBOARD_LIMITS as L,
@@ -86,7 +87,8 @@ function sceneToStoryboard(
   notes: string[],
 ): Record<string, unknown> {
   const template = normalizeHfTemplateId(scene.templateId);
-  let type = extras?.type ?? TYPE_BY_TEMPLATE[template];
+  const registered = sceneDefinitionForTemplate(template);
+  let type = extras?.type ?? registered?.id ?? TYPE_BY_TEMPLATE[template];
   if (!type) {
     type = "statement";
     notes.push(
@@ -108,7 +110,11 @@ function sceneToStoryboard(
     }
   } else if (type === "code" && extras?.code) {
     out.headline = extras.code.headline ?? "Code";
-    out.code = { language: extras.code.language, text: scene.text };
+    const lines = (scene.panel as { lines?: unknown } | undefined)?.lines;
+    out.code = {
+      language: extras.code.language,
+      text: Array.isArray(lines) ? lines.join("\n") : scene.text,
+    };
   } else if (type === "stat") {
     out.headline = extras?.headline ?? scene.text;
     const value = scene.visual ?? "";
@@ -152,6 +158,7 @@ function sceneToStoryboard(
       ...(scene.chart.sourceAttribution
         ? { source: scene.chart.sourceAttribution }
         : {}),
+      ...(scene.chart.kind ? { kind: scene.chart.kind } : {}),
     };
   }
   if (type === "media") {
@@ -159,6 +166,54 @@ function sceneToStoryboard(
     out.media = asset
       ? { assetId: asset }
       : { query: (extras?.mediaQuery ?? scene.text).slice(0, L.mediaQuery) };
+  }
+  if (registered && out.type === registered.id) {
+    const panel = registered.schema.safeParse(scene.panel ?? {});
+    if (!panel.success) {
+      out.type = "statement";
+      notes.push(
+        `scene ${index + 1}: a ${registered.id} scene without its data is exported as a statement`,
+      );
+    } else {
+      const data = panel.data as Record<string, unknown>;
+      switch (registered.id) {
+        case "steps":
+        case "checklist":
+          out.items = data.items;
+          break;
+        case "comparison":
+        case "before-after":
+          out.compare = { left: data.left, right: data.right };
+          break;
+        case "timeline":
+        case "diagram":
+          out.points = data.points;
+          break;
+        case "definition":
+          out.definition = { term: data.term, meaning: data.meaning };
+          break;
+        case "terminal":
+          out.code = {
+            language: "bash",
+            text: (data.lines as string[]).join("\n"),
+          };
+          break;
+        case "media-split":
+        case "device-mockup": {
+          const asset = scene.assetRefs?.[0];
+          if (asset) out.media = { assetId: asset };
+          else if (registered.id === "media-split")
+            out.media = {
+              query: (extras?.mediaQuery ?? scene.text).slice(0, L.mediaQuery),
+            };
+          const copy = (data.caption ?? data.screen) as string | undefined;
+          if (copy && !extras?.body) out.body = copy;
+          break;
+        }
+        default:
+          break;
+      }
+    }
   }
   if (scene.emphasis?.length)
     out.emphasis = scene.emphasis.slice(0, L.emphasisCount);

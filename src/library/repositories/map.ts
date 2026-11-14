@@ -63,6 +63,7 @@ export function toSceneDTO(scene: Scene): SceneDTO {
     mediaPreference: config.mediaPreference ?? "auto",
     items: config.items && config.items.length ? config.items : undefined,
     chart: config.chart,
+    panel: config.panel,
     hideText: scene.hideText ?? null,
     mood: config.mood ?? inferSceneMood(scene.templateId, scene.order),
     musicMood: config.musicMood,

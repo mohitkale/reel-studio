@@ -88,6 +88,8 @@ export const visualStyleSchema = z.object({
 export const brandOverridesSchema = z
   .object({
     visualTheme: visualThemeSchema.optional(),
+    /** Storyboard theme id (see src/video/themes). */
+    themeId: z.string().max(40).optional(),
     styleId: z
       .enum(["bold-hook", "clean-story", "teach-me", "soft-brand"])
       .optional(),
@@ -201,6 +203,8 @@ export const sceneConfigSchema = z.object({
   mediaPreference: mediaPreferenceSchema.optional(),
   items: z.array(z.string()).optional(),
   chart: productionChartDataSchema.optional(),
+  /** Structured data for registered scene types (steps, timeline, comparison, ...). */
+  panel: z.record(z.string(), z.unknown()).optional(),
   /** Emotional/visual tone, drives the dynamic background treatment + music. */
   mood: sceneMoodSchema.optional(),
   /** Free-text music vibe hint (e.g. "uplifting lo-fi"), used for auto music suggestions. */

@@ -28,7 +28,7 @@
       "narration": "Pour just enough water to wet all the grounds and wait thirty seconds. The bubbles are gas escaping, which helps even extraction."
     },
     {
-      "type": "list",
+      "type": "steps",
       "headline": "Pour in slow circles",
       "narration": "Pour in slow circles, keep the water level steady, and aim to finish around three minutes in total.",
       "items": [

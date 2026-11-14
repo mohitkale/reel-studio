@@ -9,10 +9,16 @@
       "narration": "Be honest, your water is warm by lunchtime. Again. We built Brim to fix exactly that."
     },
     {
-      "type": "statement",
-      "headline": "Double-wall steel, vacuum sealed",
+      "type": "definition",
+      "headline": "What the seal does",
       "narration": "Brim is double-wall stainless steel with a vacuum seal, so ice stays frozen through a long afternoon.",
-      "emphasis": ["vacuum"]
+      "emphasis": [
+        "vacuum"
+      ],
+      "definition": {
+        "term": "Vacuum seal",
+        "meaning": "An airless gap between two steel walls that stops heat moving through."
+      }
     },
     {
       "type": "list",
@@ -26,7 +32,7 @@
       ]
     },
     {
-      "type": "media",
+      "type": "media-split",
       "headline": "Made to be carried",
       "narration": "Throw it in a gym bag, a backpack, or the car door. It is made for the way you actually move.",
       "media": {
