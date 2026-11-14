@@ -33,6 +33,34 @@
           ],
           "description": "Background music. \"auto\" picks a fitting bundled track, \"none\" for silence, or a track id. Default \"auto\"."
         },
+        "variety": {
+          "description": "How much the look varies from scene to scene inside the theme: \"low\", \"medium\" (default) or \"high\".",
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "seed": {
+          "description": "Look seed. The same storyboard and seed always give the same video; a new seed gives a different cut. Omit to derive one from the title.",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 999999999
+            }
+          ]
+        },
+        "reduceMotion": {
+          "description": "Calmer output: no camera moves and gentler entrances. Default false.",
+          "type": "boolean"
+        },
         "sfx": {
           "description": "Sound effects (a whoosh on transitions, a tick on list items, a pop on emphasis) at a low level under the narration. \"auto\" (default) adds them, \"off\" leaves them out.",
           "type": "string",
@@ -536,6 +564,34 @@
             }
           ],
           "description": "Background music. \"auto\" picks a fitting bundled track, \"none\" for silence, or a track id. Default \"auto\"."
+        },
+        "variety": {
+          "description": "How much the look varies from scene to scene inside the theme: \"low\", \"medium\" (default) or \"high\".",
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "seed": {
+          "description": "Look seed. The same storyboard and seed always give the same video; a new seed gives a different cut. Omit to derive one from the title.",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 999999999
+            }
+          ]
+        },
+        "reduceMotion": {
+          "description": "Calmer output: no camera moves and gentler entrances. Default false.",
+          "type": "boolean"
         },
         "sfx": {
           "description": "Sound effects (a whoosh on transitions, a tick on list items, a pop on emphasis) at a low level under the narration. \"auto\" (default) adds them, \"off\" leaves them out.",

@@ -117,10 +117,16 @@ async function main(): Promise<void> {
     const metadata =
       video.metadata ??
       (JSON.parse(video.metadataJson ?? "{}") as Record<string, unknown>);
-    const mp4 = await fetch(
-      `${base}/api/production-jobs/${queued.jobId}/artifacts/${video.id}`,
-      { headers },
-    );
+    // The artifact route describes the file; the file itself is at downloadUrl.
+    const artifact = (await (
+      await fetch(
+        `${base}/api/production-jobs/${queued.jobId}/artifacts/${video.id}`,
+        { headers },
+      )
+    ).json()) as { artifact?: { downloadUrl?: string } };
+    const downloadUrl = artifact.artifact?.downloadUrl;
+    if (!downloadUrl) throw new Error(`${report.name}: no download URL`);
+    const mp4 = await fetch(`${base}${downloadUrl}`, { headers });
     await writeFile(
       path.join(outDir, `${report.name}.mp4`),
       Buffer.from(await mp4.arrayBuffer()),

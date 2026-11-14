@@ -28,8 +28,11 @@ export function themeRootStyle(theme: Theme): string {
 }
 
 /** Attributes the stylesheet and the motion script read. */
-export function themeRootAttributes(theme: Theme): string {
-  return `data-theme="${theme.id}" data-theme-bg="${theme.background}" data-theme-motion="${theme.motion}"`;
+export function themeRootAttributes(
+  theme: Theme,
+  background: string = theme.background,
+): string {
+  return `data-theme="${theme.id}" data-theme-bg="${background}" data-theme-motion="${theme.motion}"`;
 }
 
 const HEADINGS = [
@@ -61,6 +64,12 @@ export const THEME_STYLES = `
   #root[data-theme] .fx-cta-btn, #root[data-theme] .fx-social-btn, #root[data-theme] .fx-yt-btn { color: var(--brand-accent-foreground, #0b0f19); }
   #root[data-theme] .fx-cta-btn, #root[data-theme] .fx-pill { border-radius: calc(var(--theme-radius) * 0.7); }
 
+  #root[data-theme] .scene[data-layout="open"] .fx-panelled .fx-dialogue { background: color-mix(in srgb, var(--fx-glow, var(--fx-c, #fff)) 24%, transparent); border-color: transparent; }
+  #root[data-theme] .scene[data-layout="open"] .fx-check-num { color: var(--fx-ink) !important; }
+  #root[data-theme] .scene[data-layout="band"] .fx-panelled .fx-dialogue {
+    background: color-mix(in srgb, var(--fx-c, #fff) 14%, var(--fx-a, transparent));
+    border-left: calc(var(--frame-h, 1920px) * 0.012) solid var(--fx-c, #fff);
+  }
   #root[data-theme]:not([data-theme-bg="cinema"]) .fx-letterbox { display: none; }
   #root[data-theme] .fx-panelled .fx-dialogue { background: color-mix(in srgb, var(--fx-ink, #fff) 9%, var(--fx-a, transparent)); }
   #root[data-theme] .fx-stage::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; }

@@ -16,19 +16,22 @@ are enforced by validation rather than by prompt text.
 
 ## Video
 
-| Field      | Required | Meaning                                                                     |
-| ---------- | -------- | --------------------------------------------------------------------------- |
-| `version`  | yes      | Always `1`.                                                                 |
-| `kind`     | no       | `"video"` (default) or `"podcast"`.                                         |
-| `title`    | yes      | Up to 80 characters.                                                        |
-| `format`   | no       | `"9:16"` (default), `"16:9"` or `"1:1"`.                                    |
-| `theme`    | no       | One of the ten themes below, or `"auto"`. Omit to let Reel Studio pick one. |
-| `voice`    | no       | `{ enabled, voiceId?, speed? }`. Default: narrated with the default voice.  |
-| `music`    | no       | `"auto"` (default), `"none"` or a track id.                                 |
-| `sfx`      | no       | `"auto"` (default) adds low-level sound effects; `"off"` leaves them out.   |
-| `captions` | no       | `"auto"` (default) or `"off"`.                                              |
-| `sources`  | no       | Up to 12 `{ title, url, accessed }` for facts you used. Never invented.     |
-| `scenes`   | yes      | 1 to 40 scenes. About eight scenes make a 60-second video.                  |
+| Field          | Required | Meaning                                                                                                                                        |
+| -------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version`      | yes      | Always `1`.                                                                                                                                    |
+| `kind`         | no       | `"video"` (default) or `"podcast"`.                                                                                                            |
+| `title`        | yes      | Up to 80 characters.                                                                                                                           |
+| `format`       | no       | `"9:16"` (default), `"16:9"` or `"1:1"`.                                                                                                       |
+| `theme`        | no       | One of the ten themes below, or `"auto"`. Omit to let Reel Studio pick one.                                                                    |
+| `voice`        | no       | `{ enabled, voiceId?, speed? }`. Default: narrated with the default voice.                                                                     |
+| `music`        | no       | `"auto"` (default), `"none"` or a track id.                                                                                                    |
+| `variety`      | no       | `"low"`, `"medium"` (default) or `"high"`: how much the look varies from scene to scene.                                                       |
+| `seed`         | no       | A string or whole number. The same storyboard and seed give the same video; a new seed gives a different cut. Default: derived from the title. |
+| `reduceMotion` | no       | `true` for calmer output: no camera moves, gentler entrances.                                                                                  |
+| `sfx`          | no       | `"auto"` (default) adds low-level sound effects; `"off"` leaves them out.                                                                      |
+| `captions`     | no       | `"auto"` (default) or `"off"`.                                                                                                                 |
+| `sources`      | no       | Up to 12 `{ title, url, accessed }` for facts you used. Never invented.                                                                        |
+| `scenes`       | yes      | 1 to 40 scenes. About eight scenes make a 60-second video.                                                                                     |
 
 ### Scene
 
@@ -220,6 +223,12 @@ a `query`, and rendering. The model never sees these.
   Words in the headline's `emphasis` take the accent colour. Word timing comes from the
   voice when it reports it, and is otherwise spread over each cue by word length, so the
   highlight also works without narration. SRT and VTT use the same cue timings.
+- **Variety**: a seeded director gives each scene one of three layouts (outlined card, colour
+  wash, accent-edged card), one of four entrances and sometimes a slow camera move (push-in,
+  pull-out, pan) with the background shapes moving against it. No layout or entrance repeats
+  back to back, the first scene and about every fifteen seconds after carry a visual peak,
+  and the accent and background treatment can change per video, inside the theme's allowed
+  set. Same storyboard and seed resolve to the same plan.
 - **Transitions** come from the theme's motion personality (cut, push, wipe, zoom); a showy
   one is always followed by a cut.
 - **Sound**: narration over a bundled music track that ducks under it by about 9 dB, plus

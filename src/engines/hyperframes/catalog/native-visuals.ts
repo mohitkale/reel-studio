@@ -1593,6 +1593,23 @@ ${SEMANTIC_GRAPHIC_BOOT}
       if (transitionKind === 'push') tl.fromTo(stage, { x: stage.clientWidth * 0.08 }, { x: 0, duration: 0.45, ease: 'power3.out' }, 0);
       else if (transitionKind === 'wipe') tl.fromTo(stage, { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)', duration: 0.5, ease: 'power2.inOut' }, 0);
       else if (transitionKind === 'zoom') tl.fromTo(stage, { scale: 1.14, transformOrigin: '50% 50%' }, { scale: 1, duration: 0.5, ease: 'power3.out' }, 0);
+      // Per-video look: motion variant of the entrance and an eased camera move.
+      var lookScene = stage.closest('.scene');
+      var motionKind = lookScene ? lookScene.getAttribute('data-motion') : null;
+      var cameraKind = lookScene ? lookScene.getAttribute('data-camera') : null;
+      var dialogueEl = stage.querySelector('.fx-dialogue');
+      if (dialogueEl && motionKind === 'slide') tl.fromTo(dialogueEl, { x: -stage.clientWidth * 0.05, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: 'power3.out' }, 0.04);
+      else if (dialogueEl && motionKind === 'pop') tl.fromTo(dialogueEl, { scale: 0.93, opacity: 0, transformOrigin: '50% 50%' }, { scale: 1, opacity: 1, duration: 0.45, ease: 'back.out(1.6)' }, 0.04);
+      else if (dialogueEl && motionKind === 'drift') tl.fromTo(dialogueEl, { y: 36, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: 'sine.out' }, 0.04);
+      var cameraEl = stage.querySelector('.fx-content');
+      var cameraSpan = Math.max(1.5, sceneDuration);
+      if (cameraEl && cameraKind === 'push-in') tl.fromTo(cameraEl, { scale: 1, transformOrigin: '50% 50%' }, { scale: 1.05, duration: cameraSpan, ease: 'sine.inOut' }, 0);
+      else if (cameraEl && cameraKind === 'pull-out') tl.fromTo(cameraEl, { scale: 1.06, transformOrigin: '50% 50%' }, { scale: 1, duration: cameraSpan, ease: 'sine.inOut' }, 0);
+      else if (cameraEl && cameraKind === 'pan') tl.fromTo(cameraEl, { x: -stage.clientWidth * 0.018 }, { x: stage.clientWidth * 0.018, duration: cameraSpan, ease: 'sine.inOut' }, 0);
+      // Parallax: the background shapes travel against the camera at their own depth.
+      if (cameraKind && cameraKind !== 'none') stage.querySelectorAll('.fx-deco i').forEach(function (el, i) {
+        tl.fromTo(el, { x: 0 }, { x: (cameraKind === 'pan' ? -1 : 1) * (i + 1) * stage.clientWidth * 0.012, duration: cameraSpan, ease: 'sine.inOut' }, 0);
+      });
       var revealEase = {linear:'none', smooth:'power2.inOut', snappy:'power3.out'}[stage.getAttribute('data-text-reveal-ease')] || (persona ? persona.ease : 'power3.out');
       // Line reveals — clipped, never overlapping
       (stage.hasAttribute('data-design-block') ? [] : lines).forEach(function (inner, i) {

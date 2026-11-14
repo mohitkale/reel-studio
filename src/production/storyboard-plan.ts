@@ -112,6 +112,12 @@ export interface StoryboardProductionPlan {
   voice: { enabled: boolean; voiceId?: string; speed?: number };
   captions: "auto" | "off";
   sfx: "auto" | "off";
+  /** Seed, variety and calm-motion switch for the variety engine. */
+  look: {
+    seed: string;
+    variety: "low" | "medium" | "high";
+    reduceMotion?: boolean;
+  };
   /** Library asset per scene, when the storyboard named one. */
   assetIds: Array<string | undefined>;
   scenes: StoryboardPlanScene[];
@@ -304,6 +310,12 @@ export function planFromStoryboard(
     },
     captions: storyboard.captions,
     sfx: storyboard.sfx ?? "auto",
+    look: {
+      // Without a seed the title decides, so a storyboard is stable by default.
+      seed: String(storyboard.seed ?? storyboard.title),
+      variety: storyboard.variety ?? "medium",
+      ...(storyboard.reduceMotion ? { reduceMotion: true } : {}),
+    },
     assetIds,
     scenes: planScenes,
     estimatedSeconds: estimateDurationSeconds(storyboard),
