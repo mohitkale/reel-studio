@@ -157,6 +157,10 @@ export interface ScriptDTO {
   >;
   chapterDraft?: import("@/production/chapter-draft").ChapterDraft;
   captionTracks?: CaptionTrackDTO[];
+  /** Look seed of a storyboard video; Shuffle look re-rolls it. */
+  lookSeed?: string;
+  /** True when a series owns the look, so Shuffle look is unavailable. */
+  lookLocked?: boolean;
 }
 
 export interface CaptionCueDTO {

@@ -26,7 +26,7 @@ export const SCENE_STYLES = `
   .sc-card-label { margin: 0 0 ${px(0.008)}; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; font-size: ${px(0.03)}; }
   .sc-card-text { margin: 0; font-weight: 700; line-height: 1.22; font-size: ${px(0.036)}; }
   .sc-vs, .sc-arrow { justify-self: center; align-self: center; font-weight: 900; }
-  .sc-vs { padding: ${px(0.006)} ${px(0.018)}; border-radius: 999px; font-size: ${px(0.03)}; }
+  .sc-vs { padding: max(7px, ${px(0.006)}) max(12px, ${px(0.018)}); border-radius: 999px; font-size: ${px(0.03)}; }
   .sc-arrow { font-size: ${px(0.06)}; line-height: 1; transform: rotate(90deg); }
   .sc-before { border-style: dashed; }
   .sc-after { background: color-mix(in srgb, currentColor 10%, transparent); }

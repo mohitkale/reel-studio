@@ -458,6 +458,15 @@ const base = {
     .describe(
       "Look seed. The same storyboard and seed always give the same video; a new seed gives a different cut. Omit to derive one from the title.",
     ),
+  series: z
+    .string()
+    .trim()
+    .min(1)
+    .max(40)
+    .optional()
+    .describe(
+      "Series name. Videos in one series share a look family (the same seed unless a seed is given) so they read as one show, and the look stays locked against Shuffle.",
+    ),
   reduceMotion: z
     .boolean()
     .optional()

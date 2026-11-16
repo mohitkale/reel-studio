@@ -48,7 +48,7 @@ images, charts and visible blocks; background layers, glows, grain and the progr
 ignored. The 2.6% and 2.4% minimums for 16:9 and 1:1 are decisions (the roadmap fixes only
 9:16); contrast follows WCAG, with large type at 4% of frame height.
 
-Options: `--only <name>`, `--theme <id>`, `--seed <text>`, `--variety low|medium|high`, `--all-formats` (every example in all three formats),
+Options: `--only <name>`, `--theme <id>`, `--seed <text>`, `--variety low|medium|high`, `--arrange 1|2|3` (render every scene with one arrangement, to check each design; neighbouring scenes then look alike on purpose, so expect near-identical findings), `--all-formats` (every example in all three formats),
 `--out <dir>`, `--write-baseline`, and `--gate` (exit 1 on any failure). Output is
 `frame-lint.json` (scene, check, measured value, threshold) and an annotated contact
 sheet per example: green dashed is the safe area, cyan the content box, red a failing scene.

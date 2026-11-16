@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { planLook, type LookSceneInput } from "./variety";
+import { planArrangements, planLook, type LookSceneInput } from "./variety";
 
 const TEMPLATES = [
   "hf-opener",
@@ -98,5 +98,81 @@ describe("planLook", () => {
     expect(planLook({ ...base, seed: "z", variety: "low" }).background).toBe(
       "grid",
     );
+  });
+});
+
+describe("arrangements", () => {
+  const sameType = Array.from({ length: 8 }, () => "hf-steps");
+
+  it("never repeats an arrangement for the same scene type back to back (medium, high)", () => {
+    for (const seed of ["a", "b", "c", "d", "e", "f"]) {
+      for (const variety of ["medium", "high"] as const) {
+        const out = planArrangements({
+          templateIds: sameType,
+          seed,
+          variety,
+        });
+        for (let i = 1; i < out.length; i++)
+          expect(out[i]).not.toBe(out[i - 1]);
+      }
+    }
+  });
+
+  it("uses all three arrangements across a high-variety video", () => {
+    const used = new Set(
+      ["a", "b", "c", "d", "e", "f"].flatMap((seed) =>
+        planArrangements({
+          templateIds: TEMPLATES,
+          seed,
+          variety: "high",
+        }),
+      ),
+    );
+    expect([...used].sort()).toEqual([1, 2, 3]);
+  });
+
+  it("keeps the classic arrangement most of the time at low variety", () => {
+    const out = planArrangements({
+      templateIds: TEMPLATES.concat(TEMPLATES, TEMPLATES),
+      seed: "calm",
+      variety: "low",
+    });
+    expect(out.filter((a) => a === 1).length).toBeGreaterThan(out.length / 2);
+  });
+
+  it("is reproducible and can be forced", () => {
+    const input = {
+      templateIds: TEMPLATES,
+      seed: "x",
+      variety: "medium",
+    } as const;
+    expect(planArrangements(input)).toEqual(planArrangements(input));
+    expect(planArrangements({ ...input, force: 3 })).toEqual(
+      TEMPLATES.map(() => 3),
+    );
+  });
+
+  it("does not move the layout, motion or camera a seed already produced", () => {
+    const plain = planLook({ ...base, seed: "keep", variety: "high" });
+    const forced = planLook({
+      ...base,
+      seed: "keep",
+      variety: "high",
+      forceArrange: 2,
+    });
+    expect(
+      forced.scenes.map(({ layout, motion, camera }) => [
+        layout,
+        motion,
+        camera,
+      ]),
+    ).toEqual(
+      plain.scenes.map(({ layout, motion, camera }) => [
+        layout,
+        motion,
+        camera,
+      ]),
+    );
+    expect(plain.scenes.every((s) => [1, 2, 3].includes(s.arrange))).toBe(true);
   });
 });

@@ -248,6 +248,7 @@ export async function produceFromStoryboard(
       energy: finalPlan.energy ?? preset.defaults.energy,
     },
     {
+      series: storyboard.series,
       // No preset: the preset scene renderers show one hero line and drop list
       // items, stat labels and chart data, which a storyboard supplies.
       savedOverrides: {

@@ -9,6 +9,7 @@ import { SEMANTIC_GRAPHIC_BOOT } from "../motion/semantic-blocks";
 import { escapeHtml } from "@/lib/html";
 import { iconForScene, iconSvg } from "@/engines/hyperframes/assets/icons";
 import { sceneDefinitionForTemplate } from "@/engines/hyperframes/scenes/registry";
+import { ARRANGEMENT_STYLES } from "@/engines/hyperframes/scenes/arrangements";
 import {
   CHART_STYLES,
   SCENE_STYLES,
@@ -1396,6 +1397,7 @@ export const NATIVE_CATALOG_STYLES = `
   #root[data-theme-bg="paper"] .fx-deco i:nth-child(1), #root[data-theme-bg="paper"] .fx-deco i:nth-child(2) { border-radius: 0; }
   #root[data-theme-bg="blocks"] .fx-deco i { border-radius: 0; }
 ${SCENE_STYLES}
+${ARRANGEMENT_STYLES}
 ${CHART_STYLES}
 `;
 
