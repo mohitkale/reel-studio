@@ -36,6 +36,7 @@ import type {
 import { videoProductionJobInputSchema } from "@/production/jobs";
 import { runRenderNow } from "@/library/render-service";
 import { prisma } from "@/library/db";
+import { getRender } from "@/library/repositories/renders";
 import { generateTakeFromVideoSnapshot } from "@/library/take-service";
 import { buildAutoCaptionTrack } from "@/library/auto-captions";
 import { contactSheetTimes, renderContactSheet } from "@/library/contact-sheet";
@@ -129,6 +130,9 @@ export async function verifyProductionMp4(
     audioMastering: await readAudioMasteringReport(filePath, checksum),
   };
 }
+
+/** How often the render step copies the render's progress. */
+const RENDER_PROGRESS_POLL_MS = 2_000;
 
 const defaults: Dependencies = {
   render: (input) => runRenderNow(input),
@@ -478,11 +482,35 @@ export async function executeVideoProductionJob(
       { prepared, quality: input.quality },
       artifactSchema,
       async () => {
-        await dependencies.render({
-          ...input,
-          snapshot: prepared.snapshot,
-          prepared: composition,
-        });
+        // Mirror the render's own progress into the step, so the status card
+        // can name the scene and estimate the time left while it renders.
+        let polling = true;
+        let inFlight: Promise<unknown> = Promise.resolve();
+        const timer = setInterval(() => {
+          if (!polling) return;
+          inFlight = getRender(input.renderId)
+            .then((render) =>
+              render && polling
+                ? dependencies.step(job.id, "render_export", {
+                    state: "running",
+                    progress: Math.min(0.99, Math.max(0, render.progress)),
+                    leaseOwner: job.leaseOwner,
+                  })
+                : undefined,
+            )
+            .catch(() => undefined);
+        }, RENDER_PROGRESS_POLL_MS);
+        try {
+          await dependencies.render({
+            ...input,
+            snapshot: prepared.snapshot,
+            prepared: composition,
+          });
+        } finally {
+          polling = false;
+          clearInterval(timer);
+          await inFlight;
+        }
         const artifact = await dependencies.artifact(input.renderId);
         const verified = await dependencies.verify(
           artifact.path,

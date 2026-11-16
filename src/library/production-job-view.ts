@@ -37,6 +37,7 @@ export function productionJobView(
     updatedAt: Date;
     startedAt: Date | null;
     finishedAt: Date | null;
+    inputSnapshot?: string;
     steps: Array<{
       key: string;
       state: string;
@@ -70,9 +71,19 @@ export function productionJobView(
       : job.steps.length
         ? job.steps.reduce((sum, step) => sum + step.progress, 0) / 8
         : 0;
+  const snapshot = parse(job.inputSnapshot ?? null) as {
+    quality?: unknown;
+  } | null;
+  const quality =
+    snapshot?.quality === "draft" ||
+    snapshot?.quality === "standard" ||
+    snapshot?.quality === "high"
+      ? snapshot.quality
+      : undefined;
   return {
     id: job.id,
     kind: job.kind,
+    quality,
     state: job.state,
     progress,
     priority: job.priority,

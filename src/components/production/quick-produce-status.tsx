@@ -13,6 +13,8 @@ import {
 import { toast } from "sonner";
 
 import { apiPost } from "@/lib/api-client";
+import { useScript } from "@/hooks/script";
+import { describeJobProgress } from "@/production/render-estimate";
 import {
   useCancelProductionJob,
   useProductionJob,
@@ -36,6 +38,38 @@ const STAGES = [
 
 function shortRevision(value: string | null | undefined) {
   return value ? value.slice(0, 12) : "unavailable";
+}
+
+/** Stage, scene and time left, from the benchmark and then the pace so far. */
+function JobProgressLine({
+  job,
+  scriptId,
+}: {
+  job: ProductionJobView;
+  scriptId: string;
+}) {
+  const script = useScript(scriptId);
+  const [now, setNow] = React.useState(() => Date.now());
+  React.useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const take = script.data?.takes[0];
+  const sceneSeconds = (take?.timeline ?? []).map(
+    (beat) => beat.durationFrames / (take?.fps || 30),
+  );
+  const started = Date.parse(job.startedAt ?? job.createdAt);
+  return (
+    <p className="text-muted-foreground text-xs" role="status">
+      {describeJobProgress({
+        steps: job.steps,
+        progress: job.progress,
+        sceneSeconds,
+        quality: job.quality,
+        elapsedSeconds: Math.max(0, (now - started) / 1000),
+      })}
+    </p>
+  );
 }
 
 export function QuickProduceStatus({
@@ -130,6 +164,9 @@ export function QuickProduceStatus({
             style={{ width: `${Math.round(job.progress * 100)}%` }}
           />
         </div>
+        {job.state === "running" && (
+          <JobProgressLine job={job} scriptId={scriptId} />
+        )}
 
         {showPreview &&
           job.state === "succeeded" &&

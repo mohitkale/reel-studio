@@ -26,9 +26,12 @@ export interface ProductionJobView {
   kind: string;
   state: string;
   progress: number;
+  /** Render quality the job was submitted with, when it has one. */
+  quality?: "draft" | "standard" | "high";
   error: string | null;
   createdAt: string;
   updatedAt: string;
+  startedAt?: string | null;
   steps: ProductionJobStepView[];
   outputs: ProductionJobOutputView[];
   revision: {
