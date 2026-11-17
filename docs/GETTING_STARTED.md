@@ -47,6 +47,19 @@ active render can interrupt that job; retry after the reload.
 3. For an AI-written draft, choose **Create with AI** after configuring a provider
    in **Settings**. For an unattended video, enable **Quick Produce**.
 
+## Simple and Pro
+
+A clean install opens in **Simple**: five destinations (Create, Library,
+Podcasts, Brand, Settings), a first-run setup (ready check, voice, who writes the
+storyboard) and one Create box. **Pro** adds every editor and manual workspace.
+An install that already has videos opens in Pro with nothing moved. Switch in
+the header or in **Settings**, which also has **Run setup again** and **Review
+each video before it is made**. Switching never changes your videos.
+
+On a finished video, **Change it** edits text, order, look and music in place,
+**Share it** copies a caption with hashtags and makes the other two sizes from
+the same storyboard.
+
 See [Creating videos](CREATING_VIDEOS.md) for the full workflow.
 
 ## Configuration
