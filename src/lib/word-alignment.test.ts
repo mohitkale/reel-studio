@@ -24,6 +24,24 @@ describe("heardWordsFromWhisperJson", () => {
     ]);
   });
 
+  it("prefers the dtw time of a token over its offsets", () => {
+    expect(
+      heardWordsFromWhisperJson({
+        transcription: [
+          {
+            tokens: [
+              { text: " Most", offsets: { from: 310 }, t_dtw: 48 },
+              { text: " people", offsets: { from: 350 }, t_dtw: -1 },
+            ],
+          },
+        ],
+      }),
+    ).toEqual([
+      { text: "Most", ms: 480 },
+      { text: "people", ms: 350 },
+    ]);
+  });
+
   it("tolerates output it does not understand", () => {
     expect(heardWordsFromWhisperJson(null)).toEqual([]);
     expect(heardWordsFromWhisperJson({ transcription: 5 })).toEqual([]);
