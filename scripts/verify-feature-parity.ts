@@ -99,7 +99,8 @@ export async function codeMcp(): Promise<Registered> {
   const { registerResources } = await import(
     pathToFileURL(path.join(ROOT, "mcp", "src", "resources.ts")).href
   );
-  registerTools(recorder);
+  // The inventory covers every tool, not just the default core set.
+  registerTools(recorder, "all");
   registerResources(recorder);
   return { tools, resources };
 }
