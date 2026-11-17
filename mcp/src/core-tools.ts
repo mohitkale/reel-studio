@@ -109,12 +109,13 @@ export function explainFailure(
   let fix: string;
   if (/kokoro|onnx|voice model|transformers|\.cache/.test(text))
     fix =
-      "The local voice model is missing. Run `npm run voice:download` (about 90 MB), or set voice.enabled to false for a silent video with captions, then call create_video again.";
+      "The local voice model is missing. Run `reel-studio doctor --fix` or `npm run voice:download` (about 90 MB), or set voice.enabled to false for a silent video with captions, then call create_video again.";
   else if (/ffmpeg|ffprobe/.test(text))
-    fix = "FFmpeg is missing or not on PATH. Install FFmpeg, then retry.";
+    fix =
+      "FFmpeg is missing or not on PATH. Run `reel-studio doctor --fix` (it asks before downloading), then retry.";
   else if (/chrome|chromium|puppeteer|browser/.test(text))
     fix =
-      "Chrome could not start. Install Google Chrome (or set REEL_VERIFY_CHROME to its path), then retry.";
+      "Chrome could not start. Run `reel-studio doctor --fix` (it asks before downloading), or set REEL_VERIFY_CHROME to a Chrome path, then retry.";
   else if (/duration|too long|exceeds/.test(text))
     fix =
       "The video is too long. Cut scenes or shorten the narration, then retry.";

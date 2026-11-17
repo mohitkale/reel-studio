@@ -254,7 +254,7 @@ describe("explainFailure", () => {
   it("names the stage, the cause and a specific fix for every kind of failure", () => {
     const cases: Array<[string, string, RegExp]> = [
       ["synthesize_audio", "Kokoro model files not found", /voice:download/],
-      ["render_export", "spawn ffmpeg ENOENT", /FFmpeg/],
+      ["render_export", "spawn ffmpeg ENOENT", /doctor --fix/],
       ["render_export", "Could not find Chrome", /Chrome/],
       ["validate", "scenes[0].type: Unknown", /storyboard is not valid/],
       ["time_content", "Requested duration 900s exceeds", /too long/],
