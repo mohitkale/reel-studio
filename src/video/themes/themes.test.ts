@@ -35,9 +35,9 @@ const mix = (a: string, b: string, t: number) =>
     .join("");
 
 describe("themes", () => {
-  it("offers ten themes with unique ids", () => {
-    expect(THEMES).toHaveLength(10);
-    expect(new Set(THEMES.map((t) => t.id)).size).toBe(10);
+  it("offers at least ten themes with unique ids", () => {
+    expect(THEMES.length).toBeGreaterThanOrEqual(10);
+    expect(new Set(THEMES.map((t) => t.id)).size).toBe(THEMES.length);
   });
 
   it.each(THEMES.map((t) => [t.id, t] as const))(

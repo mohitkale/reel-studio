@@ -48,12 +48,26 @@ panel) and a `sample`. Registering it is one line in `scenes/registry.ts`.
 5. Check it: `/scenes` shows it, `npx vitest run src/engines/hyperframes/scenes`, and
    `npm run examples:lint-frames -- --only <example>` passes for a storyboard that uses it.
 
-## Add a theme
+## Add a theme (15 minutes)
 
-One file in `src/video/themes/` plus one line in `src/video/themes/index.ts`. Use only
-the bundled fonts (see [licensing](LICENSING.md)). `themes.test.ts` fails when text,
-muted text or accent text on the theme's panel drops under the contrast limits, and
-`node scripts/theme-sheet.mjs` renders one storyboard in every theme.
+1. `npm run theme:new ocean-blue` creates `src/video/themes/ocean-blue.ts` from a
+   contrast-safe starting point and adds it to the registry in `src/video/themes/index.ts`.
+2. Edit the palette, the `keywords` that make `theme: "auto"` pick it, the heading font,
+   the background treatment (`flat`, `grid`, `paper`, `glow`, `blocks`, `blobs`, `cinema`),
+   the motion personality and the caption style. Use only the bundled fonts (Geist, Inter,
+   EB Garamond, Archivo Black, JetBrains Mono; see [licensing](LICENSING.md)).
+3. `npx vitest run src/video/themes` fails when text, muted text or accent text on the
+   theme's panel drops under the contrast limits; change the colours until it passes.
+4. `node scripts/theme-sheet.mjs` renders one storyboard in every theme (including yours);
+   look at the sheet in `.artifacts/themes`.
+5. Open a PR with the contact sheet attached.
+
+## Preview a scene type
+
+`npm run scene:preview steps` renders that scene type (with a hook before it and a call to
+action after it) in all three formats through the frame check and writes the frames and a
+contact sheet to `.artifacts/scenes`. Add `REEL_FORCE_ARRANGE=2` or `3` to see the other
+arrangements of the type.
 
 ## Add an authored motion block
 
