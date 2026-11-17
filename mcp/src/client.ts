@@ -85,7 +85,10 @@ export async function apiGetText(path: string): Promise<string> {
   });
   const text = await res.text();
   if (!res.ok) {
-    throw new ApiError(text || `Request failed (HTTP ${res.status})`, res.status);
+    throw new ApiError(
+      text || `Request failed (HTTP ${res.status})`,
+      res.status,
+    );
   }
   return text;
 }
