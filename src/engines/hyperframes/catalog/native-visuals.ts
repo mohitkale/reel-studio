@@ -1703,6 +1703,15 @@ ${SEMANTIC_GRAPHIC_BOOT}
           rootTimeline.fromTo(handoff, { '--handoff': 0 }, { '--handoff': 1, duration: Math.min(0.65, duration * 0.35), ease: 'none', immediateRender: false }, start);
         }
       });
+      // Pop captions scale in as each phrase appears (not with calm motion).
+      if (compositionRoot.getAttribute('data-reduce-motion') !== '1') {
+        compositionRoot.querySelectorAll('.rs-subtitle[data-caption-style="pop"]').forEach(function (subtitle) {
+          var inner = subtitle.firstElementChild;
+          if (!inner) return;
+          var start = Number(subtitle.getAttribute('data-start') || 0);
+          rootTimeline.fromTo(inner, { scale: 0.82 }, { scale: 1, duration: 0.14, ease: 'back.out(1.7)', immediateRender: false }, start);
+        });
+      }
       var authoredDuration = Number(compositionRoot.getAttribute('data-duration') || 0);
       if (authoredDuration > rootTimeline.duration()) {
         rootTimeline.to({}, { duration: authoredDuration }, 0);

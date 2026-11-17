@@ -61,7 +61,7 @@ async function whisperWords(
     const words: Array<{ text: string; ms: number }> = [];
     for (const segment of json.transcription)
       for (const token of segment.tokens ?? []) {
-        if (!token.offsets || /^\[_.*_\]$/.test(token.text)) continue;
+        if (!token.offsets || /^\[_.*\]$/.test(token.text)) continue;
         if (/^\s/.test(token.text) || !words.length) {
           if (token.text.trim())
             words.push({ text: token.text.trim(), ms: token.offsets.from });

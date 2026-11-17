@@ -222,8 +222,12 @@ a `query`, and rendering. The model never sees these.
 - **Captions** follow the theme: `karaoke` (the spoken word lit), `pop` (two to three words
   at a time, large), `minimal`/`editorial` (a bar), and the storyboard's `captions: "off"`.
   Words in the headline's `emphasis` take the accent colour. Word timing comes from the
-  voice when it reports it, and is otherwise spread over each cue by word length, so the
-  highlight also works without narration. SRT and VTT use the same cue timings.
+  voice when it reports it; otherwise standard and high quality exports listen to the take
+  with the local whisper.cpp (when `WHISPER_CPP_MODEL` is set) and time each word where it
+  was spoken, and drafts, or a setup without whisper.cpp, spread the words over each cue by
+  length, so the highlight also works without narration. `npm run captions:verify` measures
+  the estimate against whisper.cpp (median error about 200 ms on the first video). Pop
+  captions scale in as each phrase appears. SRT and VTT use the same cue timings.
 - **Variety**: a seeded director gives each scene one of three layouts (outlined card, colour
   wash, accent-edged card), one of four entrances and sometimes a slow camera move (push-in,
   pull-out, pan) with the background shapes moving against it. No layout or entrance repeats

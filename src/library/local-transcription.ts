@@ -78,7 +78,7 @@ export async function getLocalTranscriptionStatus(): Promise<LocalTranscriptionS
   return { available: true, binary, model, reason: null };
 }
 
-function runWhisper(binary: string, args: string[]): Promise<void> {
+export function runWhisper(binary: string, args: string[]): Promise<void> {
   assertProductionActive();
   return new Promise((resolve, reject) => {
     const child = spawn(binary, args, {
