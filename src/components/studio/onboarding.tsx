@@ -19,14 +19,8 @@ import { useAIProviders, useLocalAIProviders } from "@/hooks/ai";
 import { useStudioDiagnostics } from "@/hooks/diagnostics";
 import { useSetUiMode, useUiState } from "@/hooks/ui-mode";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { SAMPLE_VOICES } from "@/lib/sample-voices";
 import { cn } from "@/lib/utils";
-
-/** Sample voices shown while choosing. Kokoro runs on this computer. */
-const SAMPLE_VOICES = [
-  { id: "af_heart", label: "Heart", detail: "US, warm" },
-  { id: "am_michael", label: "Michael", detail: "US, steady" },
-  { id: "bf_emma", label: "Emma", detail: "UK, clear" },
-] as const;
 
 interface VoiceModelStatus {
   cached: boolean;
@@ -176,7 +170,7 @@ function VoiceStep() {
       </p>
       {data?.cached ? (
         <div className="flex flex-wrap gap-2">
-          {SAMPLE_VOICES.map((voice) => (
+          {SAMPLE_VOICES.slice(0, 3).map((voice) => (
             <Button
               key={voice.id}
               variant="outline"
@@ -375,9 +369,21 @@ export function Onboarding() {
     try {
       let jobId: string | null | undefined;
       if (makeSample) {
-        const { storyboard } = await apiGet<{
+        const { storyboard: example } = await apiGet<{
           storyboard: Record<string, unknown>;
         }>("/api/examples/explainer");
+        // Without the voice model the sample is a silent video with captions.
+        const voice = await apiGet<{ cached: boolean }>("/api/voice-model");
+        const storyboard = voice.cached
+          ? example
+          : {
+              ...example,
+              voice: {
+                ...((example.voice as Record<string, unknown> | undefined) ??
+                  {}),
+                enabled: false,
+              },
+            };
         const queued = await apiPost<{ jobId?: string | null }>(
           "/api/storyboards",
           { storyboard, quality: "draft" },

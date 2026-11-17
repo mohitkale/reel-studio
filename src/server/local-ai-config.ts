@@ -1,3 +1,4 @@
+import { engineHome } from "@/server/local-engine";
 import { generationProbeSchema } from "@/providers/ai/readiness-schema";
 import { createSerialQueue } from "@/lib/serial-queue";
 import { promises as fs } from "node:fs";
@@ -56,7 +57,7 @@ type LocalAIConfigFile = z.infer<typeof localAIConfigFileSchema>;
 type StoredProvider = z.infer<typeof storedProviderSchema>;
 
 function defaultFilePath(): string {
-  return path.join(process.cwd(), ".data", "local-ai-config.json");
+  return path.join(engineHome(), "local-ai-config.json");
 }
 
 function emptyFile(): LocalAIConfigFile {

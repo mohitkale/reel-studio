@@ -61,6 +61,7 @@ export function OnePromptCreate() {
   const [seconds, setSeconds] = React.useState<LengthSeconds>(30);
   const [theme, setTheme] = React.useState("auto");
   const [narration, setNarration] = React.useState(true);
+  const [draft, setDraft] = React.useState(false);
   const [busy, setBusy] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string>();
 
@@ -72,7 +73,7 @@ export function OnePromptCreate() {
       "/api/storyboards",
       {
         storyboard,
-        quality: "standard",
+        quality: draft ? "draft" : "standard",
         ...review,
       },
     );
@@ -218,6 +219,14 @@ export function OnePromptCreate() {
             Narrate it with the local voice (turn off for a silent video with
             captions)
           </label>
+          <label className="mt-2 flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={draft}
+              onChange={(e) => setDraft(e.target.checked)}
+            />
+            Quick draft (lower quality, made faster)
+          </label>
         </details>
         <p className="text-sm">
           <Link href="/examples" className="underline">
@@ -238,6 +247,7 @@ export function OnePromptCreate() {
               seconds={seconds}
               theme={theme}
               narration={narration}
+              draft={draft}
             />
           </div>
         </details>

@@ -20,7 +20,7 @@ vi.mock("../../mcp/src/client.js", () => ({
 import { registerTools } from "../../mcp/src/tools";
 it("registers shared topic planning/edit schemas and forwards only the selected operation", async () => {
   const registerTool = vi.fn();
-  registerTools({ registerTool } as unknown as McpServer);
+  registerTools({ registerTool } as unknown as McpServer, "all");
   const cases = [
     {
       name: "plan_topic_chapters",

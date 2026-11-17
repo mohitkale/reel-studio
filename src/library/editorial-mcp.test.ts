@@ -15,7 +15,7 @@ vi.mock("../../mcp/src/client.js", () => ({
 import { registerTools } from "../../mcp/src/tools";
 it("routes editorial tools through the shared guarded REST contracts", async () => {
   const registerTool = vi.fn();
-  registerTools({ registerTool } as unknown as McpServer);
+  registerTools({ registerTool } as unknown as McpServer, "all");
   const call = async (name: string, input: unknown) => {
     const [, config, handler] = registerTool.mock.calls.find(
       ([value]) => value === name,

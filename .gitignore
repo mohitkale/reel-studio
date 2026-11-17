@@ -60,3 +60,8 @@ next-env.d.ts
 
 # Consistent SQLite migration snapshots
 *.db.backup-*
+
+# Playwright
+/test-results/
+/playwright-report/
+/.next-e2e/

@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "title": "Why the sky is blue",
+  "format": "9:16",
+  "theme": "auto",
+  "voice": { "enabled": false },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Why is the sky blue?",
+      "narration": "Sunlight looks white, so why does the sky turn blue every single day?"
+    },
+    {
+      "type": "statement",
+      "headline": "Blue light scatters most",
+      "narration": "Air scatters short blue waves far more than long red ones, so blue reaches your eyes from everywhere."
+    },
+    {
+      "type": "cta",
+      "headline": "Look up tonight",
+      "narration": "Next time you see a sunset, remember the same trick makes the sky red."
+    }
+  ]
+}

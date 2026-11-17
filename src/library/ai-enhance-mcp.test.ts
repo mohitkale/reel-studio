@@ -16,7 +16,7 @@ vi.mock("../../mcp/src/client.js", () => ({
 import { registerTools } from "../../mcp/src/tools";
 it("exposes the shared append schema and forwards one named-chapter request to REST", async () => {
   const registerTool = vi.fn();
-  registerTools({ registerTool } as unknown as McpServer);
+  registerTools({ registerTool } as unknown as McpServer, "all");
   const [, config, handler] = registerTool.mock.calls.find(
     ([name]) => name === "ai_generate_scenes",
   )!;

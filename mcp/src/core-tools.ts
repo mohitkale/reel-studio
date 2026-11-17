@@ -4,7 +4,7 @@
  * the workflow in two sentences; the storyboard shape is the Storyboard v1 JSON
  * Schema (resource `reel-studio://schema/storyboard`).
  *
- * Set REEL_STUDIO_MCP_TOOLS=core to expose only these tools.
+ * These are the default toolset; REEL_STUDIO_MCP_TOOLS=all adds every other tool.
  */
 import { existsSync } from "node:fs";
 import path from "node:path";

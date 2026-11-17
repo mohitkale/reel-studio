@@ -15,7 +15,7 @@ vi.mock("../../mcp/src/client.js", () => ({
 import { registerTools } from "../../mcp/src/tools";
 it("forwards shared series/run schemas to the same REST services with explicit idempotency", async () => {
   const registerTool = vi.fn();
-  registerTools({ registerTool } as unknown as McpServer);
+  registerTools({ registerTool } as unknown as McpServer, "all");
   const [, config, submit] = registerTool.mock.calls.find(
     ([name]) => name === "create_factory_run",
   )!;
