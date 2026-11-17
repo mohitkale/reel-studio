@@ -180,6 +180,7 @@ export const preparedVideoCompositionSchema = z
             visual: true,
             items: true,
             chart: true,
+            panel: true,
             carouselImages: true,
             role: true,
             motion: true,
