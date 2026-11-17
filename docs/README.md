@@ -9,6 +9,7 @@ Start here.
 - [Creating videos](CREATING_VIDEOS.md): paths, presets, voice, captions, limits.
 - [Podcasts and audio](PODCASTS.md): dialogue, finishing, recordings, audiograms.
 - [MCP](MCP.md): drive Reel Studio from a coding agent.
+- [Command line](CLI.md): storyboard file in, MP4 out, with exit codes for scripts and CI.
 - [Storyboard](STORYBOARD.md): the JSON an agent writes (placeholder until v0.10).
 - [Scenes and themes](SCENES_AND_THEMES.md): presets, families, treatments, rendering.
 - [Quality](QUALITY.md): the rubric and the frame check for judging a video.
