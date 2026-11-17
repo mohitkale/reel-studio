@@ -5,6 +5,22 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 
+/**
+ * A FFmpeg that `doctor --fix` installed into the data directory is put in front
+ * of PATH for the studio's processes; a system FFmpeg is used when none is there.
+ */
+export function withInstalledTools(pathValue, home) {
+  const root = path.join(home, "tools", "ffmpeg");
+  if (!existsSync(root)) return pathValue;
+  const exe = process.platform === "win32" ? ".exe" : "";
+  const bins = [root, ...readdirSync(root).map((name) => path.join(root, name))]
+    .map((dir) => path.join(dir, "bin"))
+    .filter((dir) => existsSync(path.join(dir, `ffmpeg${exe}`)));
+  return bins.length
+    ? [bins[0], pathValue].filter(Boolean).join(path.delimiter)
+    : pathValue;
+}
+
 /** CLI overrides remain explicit; bare dev/start never listen on the LAN. */
 export function nextServerFlags(flags, env = process.env) {
   const hasHostname = flags.some(
@@ -160,6 +176,7 @@ if (
     worker: productionWorkerCommand(mode),
     env: {
       ...process.env,
+      PATH: withInstalledTools(process.env.PATH, home),
       REEL_SUPERVISED_WORKER: "1",
       REEL_WORKER_BASE_URL: `http://127.0.0.1:${port}`,
     },
