@@ -19,6 +19,9 @@ export interface ProductionJobStepView {
   progress: number;
   detail: unknown;
   error: string | null;
+  /** When the step began and ended, when it has. */
+  startedAt?: string | null;
+  finishedAt?: string | null;
 }
 
 export interface ProductionJobView {

@@ -44,6 +44,8 @@ export function productionJobView(
       progress: number;
       detailJson: string | null;
       error: string | null;
+      startedAt?: Date | null;
+      finishedAt?: Date | null;
     }>;
     outputs: Array<{
       id: string;
@@ -114,6 +116,8 @@ export function productionJobView(
       progress: step.progress,
       detail: parse(step.detailJson),
       error: step.error,
+      startedAt: step.startedAt?.toISOString() ?? null,
+      finishedAt: step.finishedAt?.toISOString() ?? null,
     })),
     outputs: job.outputs.map((output) => ({
       id: output.id,

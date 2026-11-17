@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 
 import { apiPost } from "@/lib/api-client";
+import { stepElapsed } from "@/lib/step-time";
 import { useScript } from "@/hooks/script";
 import { describeJobProgress } from "@/production/render-estimate";
 import {
@@ -140,6 +141,7 @@ export function QuickProduceStatus({
 }) {
   const router = useRouter();
   const query = useProductionJob(jobId);
+  const [now, setNow] = React.useState(() => Date.now());
   const cancel = useCancelProductionJob();
   const approve = useApproveProductionJob();
   const retry = useRetryProductionJob();
@@ -172,6 +174,13 @@ export function QuickProduceStatus({
         description: (error as Error).message,
       }),
   });
+
+  const stillWorking = ["queued", "running"].includes(query.data?.state ?? "");
+  React.useEffect(() => {
+    if (!stillWorking) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [stillWorking]);
 
   if (!jobId) return null;
   if (query.isLoading) {
@@ -285,6 +294,13 @@ export function QuickProduceStatus({
                     {stepWords(persisted?.state)}
                     {persisted?.state === "running"
                       ? ` · ${Math.round((persisted?.progress ?? 0) * 100)}%`
+                      : ""}
+                    {stepElapsed(
+                      persisted?.startedAt,
+                      persisted?.finishedAt,
+                      now,
+                    )
+                      ? ` · ${stepElapsed(persisted?.startedAt, persisted?.finishedAt, now)}`
                       : ""}
                   </span>
                   {persisted?.state === "failed" && persisted.error ? (

@@ -105,7 +105,14 @@ function Remix({ scriptId }: { scriptId: string }) {
     </div>
   );
 }
-export function ProductionResult({ jobId }: { jobId: string }) {
+export function ProductionResult({
+  jobId,
+  previousJobId,
+}: {
+  jobId: string;
+  /** The version this one replaced, so a change can be undone without making it again. */
+  previousJobId?: string;
+}) {
   const query = useProductionJob(jobId);
   if (query.isLoading) return <p role="status">Loading your video…</p>;
   if (query.isError || !query.data?.revision)
@@ -136,6 +143,18 @@ export function ProductionResult({ jobId }: { jobId: string }) {
           </Button>
         </div>
       </div>
+      {previousJobId && (
+        <p className="text-sm">
+          Not what you wanted?{" "}
+          <Link
+            href={`/results/${previousJobId}`}
+            className="underline underline-offset-2"
+          >
+            Go back to the previous version
+          </Link>{" "}
+          (it is kept, so nothing is made again).
+        </p>
+      )}
       <QuickProduceStatus jobId={jobId} scriptId={scriptId} />
       {query.data.state === "succeeded" && (
         <>

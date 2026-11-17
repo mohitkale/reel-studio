@@ -65,7 +65,7 @@ export function ChangeVideo({
       ),
     onSuccess: ({ job }) => {
       toast.success("Making the updated video");
-      router.push(`/results/${job.id}`);
+      router.push(`/results/${job.id}?from=${encodeURIComponent(jobId)}`);
     },
     onError: (error) =>
       toast.error("Could not start the update", { description: error.message }),
