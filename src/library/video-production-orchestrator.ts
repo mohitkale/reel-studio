@@ -36,6 +36,7 @@ import type {
 import { videoProductionJobInputSchema } from "@/production/jobs";
 import { runRenderNow } from "@/library/render-service";
 import { prisma } from "@/library/db";
+import { alignTakeWords } from "@/library/take-word-alignment";
 import { getRender } from "@/library/repositories/renders";
 import { generateTakeFromVideoSnapshot } from "@/library/take-service";
 import { buildAutoCaptionTrack } from "@/library/auto-captions";
@@ -129,6 +130,31 @@ export async function verifyProductionMp4(
     checksum: `sha256:${checksum}`,
     audioMastering: await readAudioMasteringReport(filePath, checksum),
   };
+}
+
+/**
+ * For a final-quality export, give each scene's words the times they were
+ * actually spoken at (whisper.cpp, when installed). Drafts keep the quick
+ * length-based estimate, so previews stay fast.
+ */
+async function takeWithHeardWords<
+  T extends Parameters<typeof alignTakeWords>[0],
+>(take: T, quality: "draft" | "standard" | "high"): Promise<T> {
+  if (quality === "draft") return take;
+  try {
+    const aligned = await alignTakeWords(take);
+    if (!aligned.size) return take;
+    return {
+      ...take,
+      timeline: take.timeline.map((beat) =>
+        beat.words || !aligned.has(beat.sceneId)
+          ? beat
+          : { ...beat, words: aligned.get(beat.sceneId) },
+      ),
+    };
+  } catch {
+    return take;
+  }
 }
 
 /** How often the render step copies the render's progress. */
@@ -421,7 +447,7 @@ export async function executeVideoProductionJob(
       !media.snapshot.script.captionTracks?.some((track) => track.enabled)
         ? buildAutoCaptionTrack({
             scriptId: media.snapshot.script.id,
-            take: audio.take,
+            take: await takeWithHeardWords(audio.take, input.quality),
             presetId: media.snapshot.script.productionPreset?.id,
             style: themeCaptionStyle(media.snapshot.script.brandTokens.themeId),
           })

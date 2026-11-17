@@ -7,6 +7,8 @@
  * Pure and deterministic: the same samples always give the same spans.
  */
 
+import { parseWav } from "@/lib/wav";
+
 export type SpeechSpan = [startSeconds: number, endSeconds: number];
 
 const WINDOW_SECONDS = 0.025;
@@ -60,6 +62,21 @@ export function speechSpansFromPcm(
     else merged.push([...span]);
   }
   return merged.filter(([a, b]) => b - a >= MIN_SPAN_SECONDS);
+}
+
+/** Voiced spans of a 16-bit mono PCM WAV file's bytes; empty when unreadable. */
+export function speechSpansFromWav(wav: Buffer): SpeechSpan[] {
+  try {
+    const info = parseWav(wav);
+    if (info.bitsPerSample !== 16 || info.channels !== 1) return [];
+    const from = wav.byteOffset + info.dataOffset;
+    return speechSpansFromPcm(
+      new Int16Array(wav.buffer.slice(from, from + (info.dataLength & ~1))),
+      info.sampleRate,
+    );
+  } catch {
+    return [];
+  }
 }
 
 /** Voiced spans clipped to a window, in seconds. */

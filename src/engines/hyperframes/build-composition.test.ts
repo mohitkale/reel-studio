@@ -254,6 +254,33 @@ describe("buildHyperframesCompositionHtml", () => {
     expect(html).toContain("syncSubtitles(t)");
   });
 
+  it("scales pop captions in, unless motion is reduced", () => {
+    const build = (reduceMotion: boolean) =>
+      buildHyperframesCompositionHtml({
+        scenes: [
+          { id: "s1", templateId: "hf-opener", text: "Hi", emphasis: [] },
+        ],
+        timeline: [{ sceneId: "s1", startFrame: 0, durationFrames: 60 }],
+        width: 1080,
+        height: 1920,
+        fps: 30,
+        tokens: { ...defaultBrandTokens, reduceMotion },
+        captions: {
+          enabled: true,
+          timingSource: "provider",
+          style: CAPTION_STYLE_PRESETS.pop,
+          cues: [{ id: "c", startFrame: 0, endFrame: 60, text: "Ship it" }],
+        },
+      });
+    const calm = build(true);
+    const lively = build(false);
+    expect(lively).toContain('data-caption-style="pop"');
+    expect(lively).toContain(".rs-subtitle[data-caption-style=");
+    expect(lively).toContain("back.out(1.7)");
+    expect(lively).not.toContain('data-reduce-motion="1"');
+    expect(calm).toContain('data-reduce-motion="1"');
+  });
+
   it("serializes a versioned caption style and word timing clips", () => {
     const html = buildHyperframesCompositionHtml({
       scenes: [
