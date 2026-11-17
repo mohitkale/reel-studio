@@ -44,6 +44,23 @@ touches the database directly. By design it can do everything an editor can
    }
    ```
 
+## Core tools
+
+Five high-level tools cover the common path, so an agent does not have to learn the
+92-tool surface (about 34,700 tokens of definitions; the five core tools are about 420).
+
+| Tool           | Use                                                                                     |
+| -------------- | --------------------------------------------------------------------------------------- |
+| `create_video` | Storyboard v1 JSON in; waits (default) and returns the finished video link, or a job id |
+| `get_job`      | State, progress percent, stage and the video link of a job                              |
+| `list_options` | Themes, scene types, formats, qualities, recommended voices and music ids               |
+| `list_videos`  | Recent projects                                                                         |
+| `open_studio`  | The local studio address, or one video's editor address                                 |
+
+Set `REEL_STUDIO_MCP_TOOLS=core` in the server's environment to expose only these; the
+default keeps every tool. Still to come in this set: `create_podcast`, `revise_video` and
+`review_video`.
+
 ## Tools
 
 ### Video storyboards

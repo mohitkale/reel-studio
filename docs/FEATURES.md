@@ -282,7 +282,7 @@ HTTP handlers under `src/app` (`/api/**` and `/media`).
 
 ## MCP tools
 
-Tools registered by `mcp/src/tools.ts`, `editorial-tools.ts` and `research-tools.ts`.
+Tools registered by `mcp/src/tools.ts`, `core-tools.ts`, `editorial-tools.ts` and `research-tools.ts`.
 
 | Item                           | Capability |
 | ------------------------------ | ---------- |
@@ -299,6 +299,11 @@ Tools registered by `mcp/src/tools.ts`, `editorial-tools.ts` and `research-tools
 | `control_editorial_storyboard` | EDT01      |
 | `get_editorial_review`         | EDT01      |
 | `control_editorial_revision`   | EDT01      |
+| `create_video`                 | SBD01      |
+| `get_job`                      | SBD01      |
+| `list_options`                 | SBD01      |
+| `list_videos`                  | SBD01      |
+| `open_studio`                  | SBD01      |
 | `get_film_plan`                | DIR01      |
 | `save_film_plan`               | DIR01      |
 | `list_factory`                 | FAC01      |
