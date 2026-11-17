@@ -69,6 +69,7 @@ Next.js pages under `src/app`.
 | `/editor/[scriptId]`     | SCN01      |
 | `/editor`                | PRJ01      |
 | `/factory`               | FAC01      |
+| `/examples`              | SBD01      |
 | `/gallery`               | GAL01      |
 | `/`                      | PRJ01      |
 | `/podcasts/[id]`         | POD01      |
@@ -266,6 +267,8 @@ HTTP handlers under `src/app` (`/api/**` and `/media`).
 | `POST /api/storyboards`                              | SBD01      |
 | `POST /api/storyboards/lint`                         | SBD01      |
 | `POST /api/storyboards/prompt`                       | SBD01      |
+| `GET /api/examples`                                  | SBD01      |
+| `GET /api/examples/[name]`                           | SBD01      |
 | `POST /api/storyboards/write`                        | SBD01      |
 | `GET /api/studio-presets`                            | TPL01      |
 | `POST /api/studio-presets`                           | TPL01      |
