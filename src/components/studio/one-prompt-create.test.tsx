@@ -6,6 +6,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   post: vi.fn(),
+  review: false,
   providers: {
     data: [{ id: "gemini", configured: true }] as unknown,
     isLoading: false,
@@ -23,6 +24,9 @@ vi.mock("next/link", () => ({
 }));
 vi.mock("@/hooks/ai", () => ({ useAIProviders: () => mocks.providers }));
 vi.mock("@/lib/api-client", () => ({ apiPost: mocks.post }));
+vi.mock("@/hooks/ui-mode", () => ({
+  useReviewFields: () => (mocks.review ? { review: true } : {}),
+}));
 
 import { OnePromptCreate } from "./one-prompt-create";
 

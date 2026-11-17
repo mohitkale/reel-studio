@@ -16,6 +16,7 @@ import { apiPost } from "@/lib/api-client";
 import { useScript } from "@/hooks/script";
 import { describeJobProgress } from "@/production/render-estimate";
 import {
+  useApproveProductionJob,
   useCancelProductionJob,
   useProductionJob,
   useRetryProductionJob,
@@ -26,14 +27,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 const STAGES = [
-  ["validate", "Validate"],
-  ["plan", "Plan"],
-  ["resolve_media", "Resolve media"],
-  ["synthesize_audio", "Synthesize or reuse audio"],
+  ["validate", "Check the storyboard"],
+  ["plan", "Plan the scenes"],
+  ["resolve_media", "Find pictures and clips"],
+  ["synthesize_audio", "Record the voice"],
   ["time_content", "Time captions and scenes"],
-  ["prepare_composition", "Prepare composition"],
-  ["render_export", "Render export"],
-  ["verify_artifacts", "Verify artifacts"],
+  ["prepare_composition", "Lay out the scenes"],
+  ["render_export", "Export the video"],
+  ["verify_artifacts", "Check the result"],
 ] as const;
 
 /** One symbol and plain words per step state, so a step never reads as a bare code. */
@@ -102,6 +103,32 @@ function JobProgressLine({
   );
 }
 
+/** The storyboard's scenes as cards while the video is made, so the wait shows the work. */
+function LiveScenes({ scriptId }: { scriptId: string }) {
+  const script = useScript(scriptId);
+  const scenes = [...(script.data?.scenes ?? [])].sort(
+    (a, b) => a.order - b.order,
+  );
+  if (scenes.length === 0) return null;
+  return (
+    <section aria-label="Scenes in this video">
+      <p className="text-muted-foreground mb-2 text-xs">
+        {scenes.length} scenes, written and checked on this computer
+      </p>
+      <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {scenes.map((scene, index) => (
+          <li key={scene.id} className="rounded-md border p-2 text-xs">
+            <span className="text-muted-foreground block">
+              Scene {index + 1}
+            </span>
+            <span className="line-clamp-2 font-medium">{scene.text}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 export function QuickProduceStatus({
   jobId,
   scriptId,
@@ -114,6 +141,7 @@ export function QuickProduceStatus({
   const router = useRouter();
   const query = useProductionJob(jobId);
   const cancel = useCancelProductionJob();
+  const approve = useApproveProductionJob();
   const retry = useRetryProductionJob();
   const restore = useMutation({
     mutationFn: () =>
@@ -123,7 +151,7 @@ export function QuickProduceStatus({
       ),
     onSuccess: (result) => router.push(`/editor/${result.scriptId}`),
     onError: (error) =>
-      toast.error("Could not open the completed revision", {
+      toast.error("Could not open the video in the editor", {
         description: (error as Error).message,
       }),
   });
@@ -134,13 +162,13 @@ export function QuickProduceStatus({
         {},
       ),
     onSuccess: ({ job }) => {
-      toast.success("Current revision queued");
+      toast.success("Making the updated video");
       router.replace(
         `/editor/${scriptId}?productionJob=${encodeURIComponent(job.id)}`,
       );
     },
     onError: (error) =>
-      toast.error("Could not produce the current revision", {
+      toast.error("Could not start the updated video", {
         description: (error as Error).message,
       }),
   });
@@ -171,10 +199,12 @@ export function QuickProduceStatus({
                 {job.state === "succeeded"
                   ? "Ready to download"
                   : job.state === "failed"
-                    ? "Production failed"
+                    ? "The video could not be made"
                     : job.state === "canceled"
-                      ? "Production canceled"
-                      : "Producing your video"}
+                      ? "Stopped. Your draft is saved"
+                      : job.state === "awaiting_approval"
+                        ? "Waiting for your OK"
+                        : "Making your video"}
               </p>
               <Badge
                 variant={job.state === "failed" ? "destructive" : "outline"}
@@ -213,6 +243,7 @@ export function QuickProduceStatus({
               }
             />
           )}
+        {active && <LiveScenes scriptId={scriptId} />}
         <details className="text-sm" open={active || job.state === "failed"}>
           <summary className="cursor-pointer font-medium">
             Steps and details
@@ -258,8 +289,17 @@ export function QuickProduceStatus({
                   </span>
                   {persisted?.state === "failed" && persisted.error ? (
                     <span className="text-destructive mt-1 block">
-                      {persisted.error}. Retry runs this step again and reuses
-                      the steps that already finished.
+                      {persisted.error}. Trying again runs this step again and
+                      keeps the steps that already finished.
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-2 w-full"
+                        disabled={retry.isPending}
+                        onClick={() => retry.mutate(job.id)}
+                      >
+                        <RefreshCcw className="size-3.5" /> Try this step again
+                      </Button>
                     </span>
                   ) : null}
                 </li>
@@ -270,8 +310,8 @@ export function QuickProduceStatus({
 
         {job.revision?.conflict ? (
           <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm">
-            This project changed after submission. The running result still uses
-            the immutable submitted revision; your newer editable work is safe.
+            This video changed after it was started. This result still shows the
+            version that was started; your newer edits are safe.
           </div>
         ) : null}
         {job.error ? (
@@ -281,6 +321,15 @@ export function QuickProduceStatus({
         ) : null}
 
         <div className="flex flex-wrap gap-2">
+          {job.state === "awaiting_approval" ? (
+            <Button
+              size="sm"
+              disabled={approve.isPending}
+              onClick={() => approve.mutate(job.id)}
+            >
+              Make the video
+            </Button>
+          ) : null}
           {active ? (
             <Button
               size="sm"
@@ -298,7 +347,7 @@ export function QuickProduceStatus({
               disabled={retry.isPending}
               onClick={() => retry.mutate(job.id)}
             >
-              <RefreshCcw className="size-3.5" /> Retry submitted revision
+              <RefreshCcw className="size-3.5" /> Try again
             </Button>
           ) : null}
           {job.state === "succeeded" && job.revision ? (
@@ -308,7 +357,7 @@ export function QuickProduceStatus({
               disabled={restore.isPending}
               onClick={() => restore.mutate()}
             >
-              <ExternalLink className="size-3.5" /> Open completed revision
+              <ExternalLink className="size-3.5" /> Open in the editor
             </Button>
           ) : null}
           {job.revision?.conflict ? (
@@ -322,7 +371,7 @@ export function QuickProduceStatus({
               ) : (
                 <RefreshCcw className="size-3.5" />
               )}
-              Produce current revision
+              Make the updated video
             </Button>
           ) : null}
           {job.outputs.map((output) => (

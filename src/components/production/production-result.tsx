@@ -9,6 +9,8 @@ import { apiPatch, apiPost } from "@/lib/api-client";
 import { useProductionJob } from "@/hooks/production-jobs";
 import { useScript } from "@/hooks/script";
 import { QuickProduceStatus } from "./quick-produce-status";
+import { ChangeVideo } from "./change-video";
+import { ResultActions } from "./result-actions";
 import { PromptCreator } from "@/components/projects/prompt-creator";
 import { CreateWithAIDialog } from "@/components/projects/create-with-ai-dialog";
 import { EvidenceReview } from "@/components/projects/evidence-review";
@@ -111,7 +113,7 @@ export function ProductionResult({ jobId }: { jobId: string }) {
       <div role="alert">
         {query.error?.message ?? "This result is unavailable."}{" "}
         <Link href="/" className="underline">
-          Back to creation
+          Back to Create
         </Link>
       </div>
     );
@@ -129,12 +131,18 @@ export function ProductionResult({ jobId }: { jobId: string }) {
             <Link
               href={`/editor/${scriptId}?productionJob=${encodeURIComponent(jobId)}`}
             >
-              Edit video
+              Open full editor
             </Link>
           </Button>
         </div>
       </div>
       <QuickProduceStatus jobId={jobId} scriptId={scriptId} />
+      {query.data.state === "succeeded" && (
+        <>
+          <ResultActions scriptId={scriptId} quality={query.data.quality} />
+          <ChangeVideo jobId={jobId} scriptId={scriptId} />
+        </>
+      )}
       <Remix scriptId={scriptId} />
     </div>
   );

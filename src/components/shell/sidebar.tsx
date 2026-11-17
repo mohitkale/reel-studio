@@ -6,19 +6,17 @@ import { Film } from "lucide-react";
 
 import { APP_VERSION } from "@/lib/app-version";
 import { cn } from "@/lib/utils";
-import { navItems } from "@/lib/nav";
+import { isNavActive, navForMode } from "@/lib/nav";
+import { useUiMode } from "@/hooks/ui-mode";
 import { useSidebar } from "@/components/shell/sidebar-context";
 import { HintTooltip } from "@/components/ui/hint-tooltip";
-
-function isActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
-  return pathname === href || pathname.startsWith(href + "/");
-}
 
 /** Fixed left navigation rail. Collapses to an icon-only rail on desktop. */
 export function Sidebar() {
   const pathname = usePathname();
   const { collapsed } = useSidebar();
+  const { mode, ready } = useUiMode();
+  const items = ready ? navForMode(mode) : [];
 
   return (
     <aside
@@ -52,8 +50,8 @@ export function Sidebar() {
           collapsed && "items-center px-2",
         )}
       >
-        {navItems.map((item) => {
-          const active = isActive(pathname, item.href);
+        {items.map((item) => {
+          const active = isNavActive(pathname, item, items);
           const Icon = item.icon;
           const link = (
             <Link

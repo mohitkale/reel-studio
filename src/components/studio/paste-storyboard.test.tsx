@@ -3,9 +3,16 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ push: vi.fn(), post: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  push: vi.fn(),
+  post: vi.fn(),
+  review: false,
+}));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock("@/lib/api-client", () => ({ apiPost: mocks.post }));
+vi.mock("@/hooks/ui-mode", () => ({
+  useReviewFields: () => (mocks.review ? { review: true } : {}),
+}));
 
 import { SAMPLE_STORYBOARD } from "@/lib/one-prompt";
 
@@ -19,6 +26,7 @@ beforeEach(() => {
   vi.stubGlobal("navigator", { clipboard });
   mocks.push.mockReset();
   mocks.post.mockReset();
+  mocks.review = false;
   clipboard.writeText.mockReset().mockResolvedValue(undefined);
 });
 afterEach(async () => {
@@ -84,6 +92,16 @@ it("goes from topic to video with two copy-pastes", async () => {
     "Reel Studio in thirty seconds",
   );
   expect(mocks.push).toHaveBeenCalledWith("/results/job7");
+  expect(mocks.post.mock.calls[1]![1]).not.toHaveProperty("review");
+});
+
+it("asks the studio to wait for review when that setting is on", async () => {
+  mocks.review = true;
+  mocks.post.mockResolvedValueOnce({ jobId: "job8" });
+  await mount();
+  await paste(JSON.stringify(SAMPLE_STORYBOARD));
+  await act(async () => button("Make the video").click());
+  expect(mocks.post.mock.calls[0]![1].review).toBe(true);
 });
 
 it("shows errors inline and copies a fix request", async () => {

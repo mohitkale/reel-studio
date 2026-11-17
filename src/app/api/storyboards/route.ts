@@ -27,6 +27,8 @@ const optionsSchema = z
     dryRun: flag.optional(),
     force: flag.optional(),
     createOnly: flag.optional(),
+    /** Wait for approval before making the video (the "review before making" setting). */
+    review: flag.optional(),
     minSeconds: z.coerce.number().positive().max(3600).optional(),
     maxSeconds: z.coerce.number().positive().max(3600).optional(),
   })

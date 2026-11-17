@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/shell/page-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useReviewFields } from "@/hooks/ui-mode";
 import { apiGet, apiPost } from "@/lib/api-client";
 
 interface ExampleSummary {
@@ -23,6 +24,7 @@ type Storyboard = { title: string; scenes: Scene[]; [k: string]: unknown };
 
 function Remix({ name, onClose }: { name: string; onClose: () => void }) {
   const router = useRouter();
+  const review = useReviewFields();
   const [storyboard, setStoryboard] = React.useState<Storyboard>();
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string>();
@@ -65,6 +67,7 @@ function Remix({ name, onClose }: { name: string; onClose: () => void }) {
         {
           storyboard,
           quality: "standard",
+          ...review,
         },
       );
       if (!queued.jobId) throw new Error("The studio did not start a video");
@@ -136,6 +139,7 @@ function Remix({ name, onClose }: { name: string; onClose: () => void }) {
 
 export default function ExamplesPage() {
   const router = useRouter();
+  const review = useReviewFields();
   const [examples, setExamples] = React.useState<ExampleSummary[]>();
   const [open, setOpen] = React.useState<string>();
   const [busy, setBusy] = React.useState<string>();
@@ -167,6 +171,7 @@ export default function ExamplesPage() {
         {
           storyboard,
           quality: "standard",
+          ...review,
         },
       );
       if (!queued.jobId) throw new Error("The studio did not start a video");

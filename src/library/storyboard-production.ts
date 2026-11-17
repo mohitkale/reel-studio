@@ -42,6 +42,8 @@ export interface ProduceFromStoryboardOptions {
   force?: boolean;
   /** Create the editable project only: no narration, no render, no job. */
   createOnly?: boolean;
+  /** Hold the job for approval so the scenes can be looked at first. */
+  review?: boolean;
   minSeconds?: number;
   maxSeconds?: number;
   auth: RequestAuthorization;
@@ -301,7 +303,7 @@ export async function produceFromStoryboard(
       orientation: plan.orientation,
       quality,
       idempotencyKey: options.force ? `${key}:${randomUUID()}` : key,
-      runMode: "automatic",
+      runMode: options.review ? "approval" : "automatic",
       priority: 0,
       quickProduce: {
         enabled: true,
