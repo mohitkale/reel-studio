@@ -48,6 +48,71 @@ MCP**, **Generate token**, and run the server with `REEL_STUDIO_URL` and
 approval unless the token is scoped for automatic production. Not built yet: stopping an
 engine that the MCP server started after an idle timeout, and the published `npx` command.
 
+## Add it to your client
+
+Every client below runs the same command, `node /path/to/reel-studio/bin/reel-studio.mjs mcp`
+(replace the path with your clone; once the package is published this becomes
+`npx -y reel-studio mcp`). The config shapes come from each client's own documentation; **none
+of them has been run against a real install of that client yet**, so the status column says
+what was actually checked. The server itself was checked with the MCP SDK's stdio client on
+macOS on 17 Nov 2026.
+
+| Client         | Where the config goes                          | Status                    |
+| -------------- | ---------------------------------------------- | ------------------------- |
+| Claude Code    | `claude mcp add` (below)                       | not run in the client yet |
+| Claude Desktop | `claude_desktop_config.json`                   | not run in the client yet |
+| Cursor         | `~/.cursor/mcp.json` or `.cursor/mcp.json`     | not run in the client yet |
+| Codex CLI      | `~/.codex/config.toml`                         | not run in the client yet |
+| VS Code        | `.vscode/mcp.json`                             | not run in the client yet |
+| Windsurf       | `~/.codeium/windsurf/mcp_config.json`          | not run in the client yet |
+| Gemini CLI     | `~/.gemini/settings.json`                      | not run in the client yet |
+| T3 Code        | its MCP settings (standard stdio server entry) | not run in the client yet |
+
+**Claude Code**
+
+```bash
+claude mcp add reel-studio -- node /path/to/reel-studio/bin/reel-studio.mjs mcp
+```
+
+**Claude Desktop, Cursor, Windsurf, Gemini CLI** (an `mcpServers` object):
+
+```json
+{
+  "mcpServers": {
+    "reel-studio": {
+      "command": "node",
+      "args": ["/path/to/reel-studio/bin/reel-studio.mjs", "mcp"]
+    }
+  }
+}
+```
+
+**Codex CLI** (`~/.codex/config.toml`):
+
+```toml
+[mcp_servers.reel-studio]
+command = "node"
+args = ["/path/to/reel-studio/bin/reel-studio.mjs", "mcp"]
+```
+
+**VS Code** (`.vscode/mcp.json`):
+
+```json
+{
+  "servers": {
+    "reel-studio": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/path/to/reel-studio/bin/reel-studio.mjs", "mcp"]
+    }
+  }
+}
+```
+
+Then try the prompt `make-short` (in Claude Code: `/mcp__reel-studio__make-short`) or just ask
+for a video. Set the client's tool timeout to at least 10 minutes. Listing in the official MCP
+registry and the community directories waits for the published package.
+
 ## Core tools
 
 Five high-level tools cover the common path, so an agent does not have to learn the
