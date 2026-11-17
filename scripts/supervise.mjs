@@ -1,7 +1,14 @@
 import { spawn } from "node:child_process";
 import { stopProcessTree } from "./process-tree.mjs";
 import { pathToFileURL } from "node:url";
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 
