@@ -6,11 +6,20 @@
  * keeps the security boundary in one place (the app's per-route authorize()).
  */
 
-export const BASE_URL = (
+export let BASE_URL = (
   process.env.REEL_STUDIO_URL ?? "http://127.0.0.1:3000"
 ).replace(/\/$/, "");
 
-const TOKEN = process.env.REEL_STUDIO_MCP_TOKEN;
+let TOKEN = process.env.REEL_STUDIO_MCP_TOKEN;
+
+/** Point the client at a local engine found (or started) by the launcher. */
+export function connectEngine(engine: {
+  baseUrl: string;
+  secret: string;
+}): void {
+  BASE_URL = engine.baseUrl.replace(/\/$/, "");
+  TOKEN = engine.secret;
+}
 
 export class ApiError extends Error {
   constructor(

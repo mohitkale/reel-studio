@@ -240,9 +240,12 @@ export async function submitProduction(args: {
 
   if (resolved.kind === "video" || resolved.kind === "audiogram") {
     if (args.auth.origin === "mcp") {
+      // A local client the user launched may render by default; paid
+      // providers still follow the settings.
       const automatic =
-        args.auth.token.kind === "named" &&
-        hasMcpScope(args.auth.token.record, "production:automatic");
+        args.auth.token.kind === "local" ||
+        (args.auth.token.kind === "named" &&
+          hasMcpScope(args.auth.token.record, "production:automatic"));
       if (!automatic) {
         state = "awaiting_approval";
         approvalReason =

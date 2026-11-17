@@ -18,31 +18,35 @@ touches the database directly. By design it can do everything an editor can
 
 ## Setup
 
-1. Start the app: `npm run dev` (defaults to `http://127.0.0.1:3000`).
-2. In the app, open **Settings → AI tools / MCP** and **Generate token**. Copy it.
-3. Add the server to your AI tool. Copy `.mcp.json.example` to `.mcp.json` and
-   paste the token, or run it directly:
+Add the server to your AI tool and ask for a video. Nothing else is needed: the first time
+it runs, `reel-studio mcp` finds a studio engine on this computer or starts one in the
+background, and authenticates with a per-install secret kept in `.data/local-secret`
+(mode 0600; `REEL_STUDIO_HOME` moves the data directory). Two clients at once share one
+engine, and the studio UI opened later shows the same projects. Because you launched the
+client on this computer, rendering is allowed by default; paid providers stay off unless
+you enable them in Settings.
 
-   ```bash
-   REEL_STUDIO_MCP_TOKEN=<token> npm run mcp
-   ```
+From a clone, the config is (also `.mcp.json.example`, with the path to your clone):
 
-   Config (`.mcp.json`):
+```json
+{
+  "mcpServers": {
+    "reel-studio": {
+      "command": "node",
+      "args": ["/path/to/reel-studio/bin/reel-studio.mjs", "mcp"]
+    }
+  }
+}
+```
 
-   ```json
-   {
-     "mcpServers": {
-       "reel-studio": {
-         "command": "npx",
-         "args": ["tsx", "mcp/src/index.ts"],
-         "env": {
-           "REEL_STUDIO_URL": "http://127.0.0.1:3000",
-           "REEL_STUDIO_MCP_TOKEN": "<token>"
-         }
-       }
-     }
-   }
-   ```
+Logs go to stderr and to `.data/mcp.log` (the engine's own output is in `.data/engine.log`);
+stdout carries only protocol messages. The server reports the version from `package.json`.
+
+For a remote or shared studio, use a token instead: in the app open **Settings → AI tools /
+MCP**, **Generate token**, and run the server with `REEL_STUDIO_URL` and
+`REEL_STUDIO_MCP_TOKEN` set (`npm run mcp` still works). Renders from a token wait for
+approval unless the token is scoped for automatic production. Not built yet: stopping an
+engine that the MCP server started after an idle timeout, and the published `npx` command.
 
 ## Core tools
 

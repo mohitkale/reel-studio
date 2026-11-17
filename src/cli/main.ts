@@ -3,6 +3,7 @@
  * Rendering talks to a running studio engine (REEL_STUDIO_URL, default
  * http://127.0.0.1:3000); linting and the schema need nothing running.
  */
+import { spawn } from "node:child_process";
 import { copyFileSync, existsSync, readdirSync, readFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -27,6 +28,7 @@ const HELP = `reel-studio: storyboard in, video out
   reel-studio lint <file|->        check a storyboard (exit 2 when invalid)
   reel-studio schema               print the Storyboard v1 JSON Schema
   reel-studio examples             copy the example storyboards here
+  reel-studio mcp                  MCP server on stdio; starts the local engine if needed
 
 Exit codes: 0 done, 1 usage, 2 invalid storyboard, 3 engine not running or
 missing dependency, 4 render failed. REEL_STUDIO_URL points at the engine.`;
@@ -240,6 +242,18 @@ export async function main(argv: string[]): Promise<number> {
         return EXIT.ok;
       case "examples":
         return examplesCommand(rest);
+      case "mcp":
+        // The MCP server runs as its own process on stdio (it finds or starts
+        // the local engine itself); nothing here may print to stdout.
+        return await new Promise<number>((resolve) => {
+          const child = spawn(
+            process.execPath,
+            ["--import", "tsx", path.join(root, "mcp", "src", "index.ts")],
+            { cwd: root, stdio: "inherit", env: process.env },
+          );
+          child.once("exit", (code) => resolve(code ?? 1));
+          child.once("error", () => resolve(EXIT.missing));
+        });
       case undefined:
       case "help":
       case "--help":

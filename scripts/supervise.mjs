@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
 import { stopProcessTree } from "./process-tree.mjs";
 import { pathToFileURL } from "node:url";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import path from "node:path";
 import { createRequire } from "node:module";
 
 /** CLI overrides remain explicit; bare dev/start never listen on the LAN. */
@@ -118,6 +120,36 @@ if (
   );
   const port =
     portIndex >= 0 ? flags[portIndex + 1] : process.env.PORT || "3000";
+  // Record where this engine listens so a local MCP client finds it instead of
+  // starting a second one (roadmap M2).
+  const home = process.env.REEL_STUDIO_HOME?.trim()
+    ? path.resolve(process.env.REEL_STUDIO_HOME)
+    : path.join(process.cwd(), ".data");
+  const infoPath = path.join(home, "engine.json");
+  try {
+    mkdirSync(home, { recursive: true });
+    writeFileSync(
+      infoPath,
+      `${JSON.stringify({
+        port: Number(port),
+        pid: process.pid,
+        startedBy:
+          process.env.REEL_ENGINE_STARTED_BY === "mcp" ? "mcp" : "user",
+        startedAt: new Date().toISOString(),
+      })}\n`,
+    );
+  } catch {
+    // Discovery is a convenience; the engine runs without it.
+  }
+  const forgetInfo = () => {
+    try {
+      const recorded = JSON.parse(readFileSync(infoPath, "utf8"));
+      if (recorded.pid === process.pid) rmSync(infoPath, { force: true });
+    } catch {
+      // already gone
+    }
+  };
+  process.once("exit", forgetInfo);
   const runner = supervise({
     web: [
       process.execPath,
