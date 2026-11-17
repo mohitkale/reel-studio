@@ -2,6 +2,9 @@
   "name": "reel-studio",
   "version": "0.8.0",
   "private": true,
+  "bin": {
+    "reel-studio": "bin/reel-studio.mjs"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=24.15.0 <25"
@@ -78,6 +81,7 @@
     "scenes:sheet": "node --import tsx scripts/scene-sheet.mjs",
     "voice:download": "node --import tsx scripts/download-voice-model.ts",
     "benchmark:render": "node --import tsx scripts/benchmark-render.ts",
+    "cli:verify": "bash scripts/verify-cli.sh",
     "captions:verify": "node --import tsx scripts/verify-caption-timing.ts",
     "seeds:sheet": "node scripts/seed-sheet.mjs",
     "showcase": "node --import tsx scripts/showcase.ts"
