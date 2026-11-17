@@ -1,3 +1,4 @@
+import { registerCoreTools } from "./core-tools.js";
 import { registerEditorialTools } from "./editorial-tools.js";
 import { registerResearchTools } from "./research-tools.js";
 import { projectCreationRequestSchema } from "@/research/creation-request";
@@ -92,6 +93,9 @@ const backgroundShape = z.object({
 });
 
 export function registerTools(server: McpServer): void {
+  registerCoreTools(server);
+  // REEL_STUDIO_MCP_TOOLS=core exposes only the few high-level tools.
+  if (process.env.REEL_STUDIO_MCP_TOOLS === "core") return;
   registerResearchTools(server);
   registerEditorialTools(server);
   server.registerTool("get_film_plan", {
