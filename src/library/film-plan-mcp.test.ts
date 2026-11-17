@@ -17,7 +17,7 @@ vi.mock("../../mcp/src/client.js", () => ({
 import { registerTools } from "../../mcp/src/tools";
 it("reads and checkpoints the same validated document through REST", async () => {
   const registerTool = vi.fn();
-  registerTools({ registerTool } as unknown as McpServer);
+  registerTools({ registerTool } as unknown as McpServer, "all");
   const document = {
     kind: "reel-studio-film-plan",
     version: 1,

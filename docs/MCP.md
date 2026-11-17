@@ -137,8 +137,9 @@ out first, the job keeps running: call `get_job`; a render can take several minu
 client's tool timeout to at least 10 minutes. A failed job returns the failing stage, the cause and
 a specific fix (for example: the voice model is missing, run `npm run voice:download`).
 
-Set `REEL_STUDIO_MCP_TOOLS=core` in the server's environment to expose only these; the
-default keeps every tool. Still to come in this set: `create_podcast` (podcast storyboards are not produced by
+These seven are the default. Set `REEL_STUDIO_MCP_TOOLS=all` in the server's environment to
+expose every other tool as well (research, editorial, podcasts, factory, voice takes and the rest;
+nothing is removed). Still to come in this set: `create_podcast` (podcast storyboards are not produced by
 `create_video` yet) and re-rendering only the scenes a revision changed.
 
 ## Storyboard resources and prompts

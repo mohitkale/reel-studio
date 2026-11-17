@@ -15,7 +15,7 @@ vi.mock("../../mcp/src/client.js", () => ({
 import { registerTools } from "../../mcp/src/tools";
 it("forwards explicit chapter motif changes and rejects arbitrary choreography", async () => {
   const registerTool = vi.fn();
-  registerTools({ registerTool } as unknown as McpServer);
+  registerTools({ registerTool } as unknown as McpServer, "all");
   const [, config, handler] = registerTool.mock.calls.find(
     ([name]) => name === "replan_motion_direction",
   )!;
@@ -41,7 +41,7 @@ it("forwards explicit chapter motif changes and rejects arbitrary choreography",
 
 it("forwards a bounded visual family through MCP", async () => {
   const registerTool = vi.fn();
-  registerTools({ registerTool } as unknown as McpServer);
+  registerTools({ registerTool } as unknown as McpServer, "all");
   const [, config, handler] = registerTool.mock.calls.find(
     ([name]) => name === "replan_motion_direction",
   )!;

@@ -15,7 +15,7 @@ vi.mock("../../mcp/src/client.js", () => ({
 import { registerTools } from "../../mcp/src/tools";
 it("forwards reviewed music and take to the shared cut proposal endpoint", async () => {
   const registerTool = vi.fn();
-  registerTools({ registerTool } as unknown as McpServer);
+  registerTools({ registerTool } as unknown as McpServer, "all");
   const [, config, handler] = registerTool.mock.calls.find(
     ([name]) => name === "suggest_narration_cuts",
   )!;

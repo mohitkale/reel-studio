@@ -133,13 +133,13 @@ it("list_options is one compact answer", async () => {
   expect(options.formats).toEqual(["9:16", "16:9", "1:1"]);
 });
 
-it("REEL_STUDIO_MCP_TOOLS=core hides the advanced tools; the default keeps them", () => {
-  const all = register(registerTools);
-  expect(all.size).toBeGreaterThan(80);
-  vi.stubEnv("REEL_STUDIO_MCP_TOOLS", "core");
-  const core = register(registerTools);
-  vi.unstubAllEnvs();
+it("the default toolset is the core tools; REEL_STUDIO_MCP_TOOLS=all adds the rest", () => {
+  const byDefault = register((server) => registerTools(server, undefined));
+  expect(byDefault.size).toBe(7);
+  const core = register((server) => registerTools(server, "core"));
   expect(core.size).toBe(7);
+  const all = register((server) => registerTools(server, "all"));
+  expect(all.size).toBeGreaterThan(80);
   expect(all.has("create_video")).toBe(true);
 });
 

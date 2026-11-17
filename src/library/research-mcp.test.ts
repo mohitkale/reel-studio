@@ -19,7 +19,7 @@ it("registers research discovery, durable jobs, evidence import/read and the sha
   mocks.get.mockResolvedValue({});
   mocks.post.mockResolvedValue({});
   const registerTool = vi.fn();
-  registerTools({ registerTool } as unknown as McpServer);
+  registerTools({ registerTool } as unknown as McpServer, "all");
   const tool = (name: string) =>
     registerTool.mock.calls.find(([value]) => value === name)!;
   const call = async (name: string, input: unknown) => {

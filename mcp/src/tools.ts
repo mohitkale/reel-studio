@@ -95,10 +95,16 @@ const backgroundShape = z.object({
   muted: z.boolean().optional(),
 });
 
-export function registerTools(server: McpServer): void {
+/**
+ * The default toolset is the few high-level core tools (roadmap M3). Set
+ * REEL_STUDIO_MCP_TOOLS=all to expose every fine-grained tool as well.
+ */
+export function registerTools(
+  server: McpServer,
+  toolset: string | undefined = process.env.REEL_STUDIO_MCP_TOOLS,
+): void {
   registerCoreTools(server);
-  // REEL_STUDIO_MCP_TOOLS=core exposes only the few high-level tools.
-  if (process.env.REEL_STUDIO_MCP_TOOLS === "core") return;
+  if (toolset !== "all") return;
   registerResearchTools(server);
   registerEditorialTools(server);
   server.registerTool(
