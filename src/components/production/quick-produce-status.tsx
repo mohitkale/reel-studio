@@ -26,14 +26,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 const STAGES = [
-  ["validate", "Validate"],
-  ["plan", "Plan"],
-  ["resolve_media", "Resolve media"],
-  ["synthesize_audio", "Synthesize or reuse audio"],
+  ["validate", "Check the storyboard"],
+  ["plan", "Plan the scenes"],
+  ["resolve_media", "Find pictures and clips"],
+  ["synthesize_audio", "Record the voice"],
   ["time_content", "Time captions and scenes"],
-  ["prepare_composition", "Prepare composition"],
-  ["render_export", "Render export"],
-  ["verify_artifacts", "Verify artifacts"],
+  ["prepare_composition", "Lay out the scenes"],
+  ["render_export", "Export the video"],
+  ["verify_artifacts", "Check the result"],
 ] as const;
 
 /** One symbol and plain words per step state, so a step never reads as a bare code. */
@@ -123,7 +123,7 @@ export function QuickProduceStatus({
       ),
     onSuccess: (result) => router.push(`/editor/${result.scriptId}`),
     onError: (error) =>
-      toast.error("Could not open the completed revision", {
+      toast.error("Could not open the video in the editor", {
         description: (error as Error).message,
       }),
   });
@@ -134,13 +134,13 @@ export function QuickProduceStatus({
         {},
       ),
     onSuccess: ({ job }) => {
-      toast.success("Current revision queued");
+      toast.success("Making the updated video");
       router.replace(
         `/editor/${scriptId}?productionJob=${encodeURIComponent(job.id)}`,
       );
     },
     onError: (error) =>
-      toast.error("Could not produce the current revision", {
+      toast.error("Could not start the updated video", {
         description: (error as Error).message,
       }),
   });
@@ -171,10 +171,10 @@ export function QuickProduceStatus({
                 {job.state === "succeeded"
                   ? "Ready to download"
                   : job.state === "failed"
-                    ? "Production failed"
+                    ? "The video could not be made"
                     : job.state === "canceled"
-                      ? "Production canceled"
-                      : "Producing your video"}
+                      ? "Stopped. Your draft is saved"
+                      : "Making your video"}
               </p>
               <Badge
                 variant={job.state === "failed" ? "destructive" : "outline"}
@@ -270,8 +270,8 @@ export function QuickProduceStatus({
 
         {job.revision?.conflict ? (
           <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm">
-            This project changed after submission. The running result still uses
-            the immutable submitted revision; your newer editable work is safe.
+            This video changed after it was started. This result still shows the
+            version that was started; your newer edits are safe.
           </div>
         ) : null}
         {job.error ? (
@@ -298,7 +298,7 @@ export function QuickProduceStatus({
               disabled={retry.isPending}
               onClick={() => retry.mutate(job.id)}
             >
-              <RefreshCcw className="size-3.5" /> Retry submitted revision
+              <RefreshCcw className="size-3.5" /> Try again
             </Button>
           ) : null}
           {job.state === "succeeded" && job.revision ? (
@@ -308,7 +308,7 @@ export function QuickProduceStatus({
               disabled={restore.isPending}
               onClick={() => restore.mutate()}
             >
-              <ExternalLink className="size-3.5" /> Open completed revision
+              <ExternalLink className="size-3.5" /> Open in the editor
             </Button>
           ) : null}
           {job.revision?.conflict ? (
@@ -322,7 +322,7 @@ export function QuickProduceStatus({
               ) : (
                 <RefreshCcw className="size-3.5" />
               )}
-              Produce current revision
+              Make the updated video
             </Button>
           ) : null}
           {job.outputs.map((output) => (
