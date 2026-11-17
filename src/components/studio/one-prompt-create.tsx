@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PasteStoryboard } from "@/components/studio/paste-storyboard";
 import { useAIProviders } from "@/hooks/ai";
 import { apiPost } from "@/lib/api-client";
 import {
@@ -214,6 +215,20 @@ export function OnePromptCreate() {
             Narrate it with the local voice (turn off for a silent video with
             captions)
           </label>
+        </details>
+        <details className="text-sm" open={!providers.isLoading && !writer}>
+          <summary className="cursor-pointer font-medium">
+            Use my own chat assistant (ChatGPT, Claude, Gemini, a local model)
+          </summary>
+          <div className="mt-3">
+            <PasteStoryboard
+              topic={text}
+              format={format}
+              seconds={seconds}
+              theme={theme}
+              narration={narration}
+            />
+          </div>
         </details>
         <div className="flex flex-wrap items-center gap-3">
           <Button
