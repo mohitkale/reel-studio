@@ -304,6 +304,8 @@ Tools registered by `mcp/src/tools.ts`, `core-tools.ts`, `editorial-tools.ts` an
 | `list_options`                 | SBD01      |
 | `list_videos`                  | SBD01      |
 | `open_studio`                  | SBD01      |
+| `review_video`                 | SBD01      |
+| `revise_video`                 | SBD01      |
 | `get_film_plan`                | DIR01      |
 | `save_film_plan`               | DIR01      |
 | `list_factory`                 | FAC01      |

@@ -60,6 +60,8 @@ it("registers the core tools with short definitions", () => {
     "list_options",
     "list_videos",
     "open_studio",
+    "review_video",
+    "revise_video",
   ]);
   const size = [...tools.entries()].reduce(
     (sum, [name, { config }]) =>
@@ -70,7 +72,7 @@ it("registers the core tools with short definitions", () => {
     0,
   );
   // About four characters per token; the roadmap budget for all eight is 3000.
-  expect(size / 4).toBeLessThan(1500);
+  expect(size / 4).toBeLessThan(2500);
 });
 
 it("create_video queues, waits and returns the finished video link", async () => {
@@ -137,7 +139,7 @@ it("REEL_STUDIO_MCP_TOOLS=core hides the advanced tools; the default keeps them"
   vi.stubEnv("REEL_STUDIO_MCP_TOOLS", "core");
   const core = register(registerTools);
   vi.unstubAllEnvs();
-  expect(core.size).toBe(5);
+  expect(core.size).toBe(7);
   expect(all.has("create_video")).toBe(true);
 });
 
@@ -285,5 +287,77 @@ describe("explainFailure", () => {
     const body = JSON.parse((await run({ jobId: "j9" })).content[0]!.text);
     expect(body.failure).toMatchObject({ stage: "synthesize_audio" });
     expect(body.failure.fix).toContain("voice:download");
+  });
+});
+
+describe("review_video and revise_video", () => {
+  const exported = {
+    version: 1,
+    title: "T",
+    scenes: [
+      {
+        type: "list",
+        headline:
+          "One two three four five six seven eight nine ten eleven twelve",
+        narration: "Short.",
+      },
+      { type: "statement", headline: "Two", narration: "Short again." },
+    ],
+  };
+  beforeEach(() => {
+    mocks.get.mockImplementation(async (path: string) => {
+      if (path === "/api/projects")
+        return { projects: [{ id: "p1", firstScriptId: "s1" }] };
+      if (path.endsWith("/storyboard"))
+        return { storyboard: exported, notes: [] };
+      if (path.startsWith("/api/production-jobs?"))
+        return {
+          jobs: [
+            { id: "j1", state: "succeeded", revision: { scriptId: "s1" } },
+          ],
+        };
+      if (path.endsWith("/artifacts/o1"))
+        return { artifact: { downloadUrl: "/media/renders/r.mp4" } };
+      return succeededJob;
+    });
+    mocks.binary.mockResolvedValue(Buffer.from("jpeg"));
+  });
+
+  it("review returns suggested edits, pacing and the latest contact sheet", async () => {
+    const run = register(registerCoreTools).get("review_video")!.run;
+    const result = await run({ projectId: "p1" });
+    const body = JSON.parse(result.content[0]!.text);
+    expect(body.findings.map((f: { rule: string }) => f.rule)).toContain(
+      "long-headline",
+    );
+    expect(body.pacing).toHaveLength(2);
+    expect(body.latestVideo.state).toBe("succeeded");
+    expect(result.content[1]).toMatchObject({ type: "image" });
+  });
+
+  it("revise applies the edits to the exported storyboard and produces it again", async () => {
+    mocks.post.mockResolvedValue({ jobId: "j2", projectId: "p2" });
+    const run = register(registerCoreTools).get("revise_video")!.run;
+    await run({
+      projectId: "p1",
+      changes: [{ op: "update", index: 1, fields: { headline: "Short one" } }],
+      set: { title: "T2" },
+      wait: false,
+    });
+    const [url, sent] = mocks.post.mock.calls[0]!;
+    expect(url).toBe("/api/storyboards?quality=standard");
+    expect(sent.scenes[0].headline).toBe("Short one");
+    expect(sent.title).toBe("T2");
+    expect(exported.scenes[0]!.headline).toContain("One two");
+  });
+
+  it("tells the agent when a scene number does not exist", async () => {
+    const run = register(registerCoreTools).get("revise_video")!.run;
+    const result = await run({
+      projectId: "p1",
+      changes: [{ op: "remove", index: 9 }],
+    });
+    expect(result.isError).toBe(true);
+    expect(result.content[0]!.text).toContain("Scene number 9 is out of range");
   });
 });

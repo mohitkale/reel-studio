@@ -15,6 +15,11 @@ import { z } from "zod";
 import { RECOMMENDED_KOKORO_VOICES } from "@/providers/voice/kokoro";
 import { MUSIC_LIBRARY } from "@/lib/music-library";
 import { SCENE_TYPES } from "@/storyboard";
+import {
+  applyChanges,
+  reviewStoryboard,
+  type Change,
+} from "@/storyboard/review";
 import { THEMES } from "@/video/themes";
 
 import {
@@ -248,6 +253,53 @@ function progressReporter(extra: ToolExtra) {
   };
 }
 
+/** Queue a storyboard and, unless wait is false, wait for the finished video. */
+async function produce(
+  storyboard: Record<string, unknown>,
+  options: { quality?: string; wait?: boolean; waitSeconds?: number },
+  extra: ToolExtra,
+): Promise<ToolResult> {
+  const queued = await apiPost<{
+    jobId?: string | null;
+    projectId?: string;
+    reused?: boolean;
+    warnings?: unknown[];
+    fixes?: unknown[];
+  }>(`/api/storyboards?quality=${options.quality ?? "standard"}`, storyboard);
+  if (!queued.jobId) return json(queued);
+  const base = {
+    projectId: queued.projectId,
+    reused: queued.reused,
+    fixes: queued.fixes,
+    warnings: queued.warnings,
+  };
+  if (options.wait === false)
+    return json({ ...base, jobId: queued.jobId, state: "queued" });
+  const view = await waitForJob(
+    queued.jobId,
+    options.waitSeconds ?? 600,
+    3000,
+    progressReporter(extra),
+  );
+  return json({ ...base, ...view }, await contactSheetImage(view));
+}
+
+/** The first script of a project and its storyboard export. */
+async function exportedStoryboard(projectId: string) {
+  const { projects } = await apiGet<{
+    projects: Array<{ id: string; firstScriptId: string | null }>;
+  }>("/api/projects");
+  const scriptId = projects.find((p) => p.id === projectId)?.firstScriptId;
+  if (!scriptId) throw new Error(`No project with id ${projectId}`);
+  const result = await apiGet<{
+    storyboard?: Record<string, unknown>;
+    notes?: string[];
+  }>(`/api/scripts/${encode(scriptId)}/storyboard`);
+  if (!result.storyboard)
+    throw new Error("This project cannot be exported as a storyboard");
+  return { scriptId, storyboard: result.storyboard, notes: result.notes ?? [] };
+}
+
 export function registerCoreTools(server: McpServer): void {
   server.registerTool(
     "create_video",
@@ -261,31 +313,9 @@ export function registerCoreTools(server: McpServer): void {
         waitSeconds: z.number().int().min(10).max(1800).optional(),
       },
     },
-    guard(async ({ storyboard, quality, wait, waitSeconds }, extra) => {
-      const queued = await apiPost<{
-        jobId?: string | null;
-        projectId?: string;
-        reused?: boolean;
-        warnings?: unknown[];
-        fixes?: unknown[];
-      }>(`/api/storyboards?quality=${quality ?? "standard"}`, storyboard);
-      if (!queued.jobId) return json(queued);
-      const base = {
-        projectId: queued.projectId,
-        reused: queued.reused,
-        fixes: queued.fixes,
-        warnings: queued.warnings,
-      };
-      if (wait === false)
-        return json({ ...base, jobId: queued.jobId, state: "queued" });
-      const view = await waitForJob(
-        queued.jobId,
-        waitSeconds ?? 600,
-        3000,
-        progressReporter(extra),
-      );
-      return json({ ...base, ...view }, await contactSheetImage(view));
-    }),
+    guard(({ storyboard, quality, wait, waitSeconds }, extra) =>
+      produce(storyboard, { quality, wait, waitSeconds }, extra),
+    ),
   );
 
   server.registerTool(
@@ -366,6 +396,90 @@ export function registerCoreTools(server: McpServer): void {
       return json({
         url: scriptId ? `${BASE_URL}/editor/${encode(scriptId)}` : BASE_URL,
       });
+    }),
+  );
+
+  server.registerTool(
+    "review_video",
+    {
+      description:
+        "Look over a finished video's storyboard: findings phrased as the edit that fixes each one (long headlines, repeated scene types, missing hook or close), pacing per scene, and the latest contact sheet image. Fix what it names with revise_video, once.",
+      inputSchema: { projectId: z.string().min(1) },
+    },
+    guard(async ({ projectId }) => {
+      const { scriptId, storyboard } = await exportedStoryboard(projectId);
+      const review = reviewStoryboard(storyboard);
+      const { jobs } = await apiGet<{
+        jobs: Array<{
+          id: string;
+          state: string;
+          revision?: { scriptId?: string } | null;
+        }>;
+      }>("/api/production-jobs?limit=50");
+      const latest = jobs.find(
+        (j) => j.state === "succeeded" && j.revision?.scriptId === scriptId,
+      );
+      const view = latest ? await describeJob(latest.id) : undefined;
+      return json(
+        {
+          projectId,
+          ...review,
+          latestVideo: view,
+          frameCheck:
+            "Layout checks run on the finished frames (npm run examples:lint-frames); review_video does not run them yet, so look at the contact sheet for clipped or crowded text.",
+        },
+        view ? await contactSheetImage(view) : undefined,
+      );
+    }),
+  );
+
+  server.registerTool(
+    "revise_video",
+    {
+      description:
+        "Change a finished video's storyboard and make it again. changes is a list of edits to scenes counted from 1: {op:'update',index,fields}, {op:'replace',index,scene}, {op:'insert',index,scene}, {op:'remove',index}, {op:'move',from,to}; set changes top-level fields such as title or theme. Creates a new video (the whole video is rendered again).",
+      inputSchema: {
+        projectId: z.string().min(1),
+        changes: z
+          .array(
+            z.discriminatedUnion("op", [
+              z.object({
+                op: z.literal("update"),
+                index: z.number().int(),
+                fields: z.record(z.string(), z.unknown()),
+              }),
+              z.object({
+                op: z.literal("replace"),
+                index: z.number().int(),
+                scene: z.record(z.string(), z.unknown()),
+              }),
+              z.object({
+                op: z.literal("insert"),
+                index: z.number().int(),
+                scene: z.record(z.string(), z.unknown()),
+              }),
+              z.object({ op: z.literal("remove"), index: z.number().int() }),
+              z.object({
+                op: z.literal("move"),
+                from: z.number().int(),
+                to: z.number().int(),
+              }),
+            ]),
+          )
+          .default([]),
+        set: z.record(z.string(), z.unknown()).optional(),
+        quality: z.enum(["draft", "standard", "high"]).optional(),
+        wait: z.boolean().optional(),
+      },
+    },
+    guard(async ({ projectId, changes, set, quality, wait }, extra) => {
+      const { storyboard } = await exportedStoryboard(projectId);
+      const revised = applyChanges(storyboard, changes as Change[], set);
+      return produce(
+        revised as Record<string, unknown>,
+        { quality, wait },
+        extra,
+      );
     }),
   );
 }
