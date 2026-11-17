@@ -13,6 +13,9 @@ import path from "node:path";
 import { SCENE_DEFINITIONS } from "../src/engines/hyperframes/scenes/registry.ts";
 
 const args = process.argv.slice(2);
+const only = args.includes("--only")
+  ? args[args.indexOf("--only") + 1]
+  : undefined;
 const out = path.resolve(
   args.includes("--out")
     ? args[args.indexOf("--out") + 1]
@@ -40,7 +43,7 @@ const tour = {
       headline: "Twenty ways to say it",
       narration: "A tour of every scene type the studio can draw.",
     },
-    ...SCENE_DEFINITIONS.map((d) => ({
+    ...SCENE_DEFINITIONS.filter((d) => !only || d.id === only).map((d) => ({
       type: d.id,
       headline: d.sample.headline,
       narration: d.sample.narration,
