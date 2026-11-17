@@ -8,18 +8,27 @@ import {
   getVoiceModelStatus,
 } from "../src/library/voice-model";
 
-const before = await getVoiceModelStatus();
-if (before.cached) {
-  console.log(`✓ Voice model already on this machine: ${before.location}`);
-  process.exit(0);
+async function main(): Promise<void> {
+  const before = await getVoiceModelStatus();
+  if (before.cached) {
+    console.log(`✓ Voice model already on this machine: ${before.location}`);
+    return;
+  }
+  console.log(
+    `Downloading the voice model (about 90 MB) to ${before.location}`,
+  );
+  let last = "";
+  await downloadVoiceModel({
+    onProgress: (p) => {
+      const line = `  ${Math.round((p.bytesDone / Math.max(1, p.bytesTotal)) * 100)}%  ${p.file} (${p.fileIndex + 1}/${p.fileCount})`;
+      if (line !== last) process.stdout.write(`\r${line}      `);
+      last = line;
+    },
+  });
+  console.log("\n✓ Voice model ready. Narration now runs fully offline.");
 }
-console.log(`Downloading the voice model (about 90 MB) to ${before.location}`);
-let last = "";
-await downloadVoiceModel({
-  onProgress: (p) => {
-    const line = `  ${Math.round((p.bytesDone / Math.max(1, p.bytesTotal)) * 100)}%  ${p.file} (${p.fileIndex + 1}/${p.fileCount})`;
-    if (line !== last) process.stdout.write(`\r${line}      `);
-    last = line;
-  },
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
 });
-console.log("\n✓ Voice model ready. Narration now runs fully offline.");
