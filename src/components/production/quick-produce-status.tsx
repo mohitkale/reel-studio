@@ -102,6 +102,32 @@ function JobProgressLine({
   );
 }
 
+/** The storyboard's scenes as cards while the video is made, so the wait shows the work. */
+function LiveScenes({ scriptId }: { scriptId: string }) {
+  const script = useScript(scriptId);
+  const scenes = [...(script.data?.scenes ?? [])].sort(
+    (a, b) => a.order - b.order,
+  );
+  if (scenes.length === 0) return null;
+  return (
+    <section aria-label="Scenes in this video">
+      <p className="text-muted-foreground mb-2 text-xs">
+        {scenes.length} scenes, written and checked on this computer
+      </p>
+      <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {scenes.map((scene, index) => (
+          <li key={scene.id} className="rounded-md border p-2 text-xs">
+            <span className="text-muted-foreground block">
+              Scene {index + 1}
+            </span>
+            <span className="line-clamp-2 font-medium">{scene.text}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 export function QuickProduceStatus({
   jobId,
   scriptId,
@@ -213,6 +239,7 @@ export function QuickProduceStatus({
               }
             />
           )}
+        {active && <LiveScenes scriptId={scriptId} />}
         <details className="text-sm" open={active || job.state === "failed"}>
           <summary className="cursor-pointer font-medium">
             Steps and details
@@ -258,8 +285,17 @@ export function QuickProduceStatus({
                   </span>
                   {persisted?.state === "failed" && persisted.error ? (
                     <span className="text-destructive mt-1 block">
-                      {persisted.error}. Retry runs this step again and reuses
-                      the steps that already finished.
+                      {persisted.error}. Trying again runs this step again and
+                      keeps the steps that already finished.
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-2 w-full"
+                        disabled={retry.isPending}
+                        onClick={() => retry.mutate(job.id)}
+                      >
+                        <RefreshCcw className="size-3.5" /> Try this step again
+                      </Button>
                     </span>
                   ) : null}
                 </li>
