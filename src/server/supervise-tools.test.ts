@@ -4,7 +4,6 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, expect, it } from "vitest";
 
-// @ts-expect-error The launcher is plain JavaScript.
 import { withInstalledTools } from "../../scripts/supervise.mjs";
 
 const homes: string[] = [];
