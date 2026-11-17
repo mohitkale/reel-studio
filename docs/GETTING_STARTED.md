@@ -99,6 +99,13 @@ OpenAI (the prompts you submit), Pexels, Pixabay or Unsplash (search queries),
 ElevenLabs or Cartesia (text, and cloning samples if used) and Jamendo (music
 search). There is no analytics or telemetry. See [SECURITY.md](../SECURITY.md).
 
+Narration with the local voice, checked on a fresh clone (17 Nov 2026, macOS, Node 24.18,
+Intel i7-9750H): `git clone`, `npm ci` (2 min), `npm run setup -- --voice` (48 s, including the
+90 MB model), `npm run dev`, then a narrated video from a storyboard
+(`node bin/reel-studio.mjs render motivation.json --quality draft`, 55 s for 20.8 s of video).
+The MP4 had a video and an audio stream at -14.0 LUFS. Creating a video from a typed prompt on
+the home screen also needs an AI writer (a Gemini or OpenAI key, or a local model).
+
 Voices and providers:
 
 | Provider      | Runs where  | Key      | Notes                                       |
