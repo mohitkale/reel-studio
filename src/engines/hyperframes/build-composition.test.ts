@@ -254,6 +254,32 @@ describe("buildHyperframesCompositionHtml", () => {
     expect(html).toContain("syncSubtitles(t)");
   });
 
+  it("draws a scene's illustration behind its panel and seeks its loop in the preview", () => {
+    const html = buildHyperframesCompositionHtml({
+      scenes: [
+        {
+          id: "s1",
+          templateId: "hf-statement",
+          text: "Hi",
+          emphasis: [],
+          panel: { illustration: "stars-2", sceneType: "statement" },
+        },
+        { id: "s2", templateId: "hf-statement", text: "Plain", emphasis: [] },
+      ],
+      timeline: [
+        { sceneId: "s1", startFrame: 0, durationFrames: 60 },
+        { sceneId: "s2", startFrame: 60, durationFrames: 60 },
+      ],
+      width: 1080,
+      height: 1920,
+      fps: 30,
+      tokens: defaultBrandTokens,
+    });
+    expect(html.match(/class="fx-illus"/g)).toHaveLength(1);
+    expect(html).toContain('data-illustration="stars-2"');
+    expect(html).toContain("syncIllustrations(t)");
+  });
+
   it("scales pop captions in, unless motion is reduced", () => {
     const build = (reduceMotion: boolean) =>
       buildHyperframesCompositionHtml({

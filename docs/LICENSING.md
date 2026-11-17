@@ -50,18 +50,19 @@ faces, rather than relabeling a sans font as a serif. See [export fidelity](arch
 These are commonly used with Reel Studio and are generally permissive. Confirm
 each package’s `LICENSE` file in `node_modules` for the exact text.
 
-| Dependency                  | Typical license | Role                                                                                                                              |
-| --------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Next.js, React, React DOM   | MIT             | App framework                                                                                                                     |
-| Prisma / `@prisma/client`   | Apache-2.0      | Database                                                                                                                          |
-| Tailwind / Radix UI         | MIT             | UI                                                                                                                                |
-| TanStack Query, Zod         | MIT             | Data validation                                                                                                                   |
-| lucide-react                | ISC             | Icons                                                                                                                             |
-| lucide icon paths (bundled) | ISC             | About 115 icons as inline SVG in `src/engines/hyperframes/assets/lucide-icons.generated.ts`, produced by `npm run icons:generate` |
-| Geist variable fonts        | OFL-1.1         | Typography                                                                                                                        |
-| `kokoro-js` / Kokoro model  | Apache-2.0      | Local TTS                                                                                                                         |
-| `@modelcontextprotocol/sdk` | MIT             | MCP server                                                                                                                        |
-| `@hyperframes/producer`     | Apache-2.0      | HyperFrames HTML→MP4 export                                                                                                       |
+| Dependency                  | Typical license    | Role                                                                                                                                          |
+| --------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Next.js, React, React DOM   | MIT                | App framework                                                                                                                                 |
+| Prisma / `@prisma/client`   | Apache-2.0         | Database                                                                                                                                      |
+| Tailwind / Radix UI         | MIT                | UI                                                                                                                                            |
+| TanStack Query, Zod         | MIT                | Data validation                                                                                                                               |
+| lucide-react                | ISC                | Icons                                                                                                                                         |
+| Looping illustrations       | MIT (this project) | Sixty original vector scenes drawn by code in `src/engines/hyperframes/assets/illustrations.ts`; no third-party artwork, nothing to attribute |
+| lucide icon paths (bundled) | ISC                | About 115 icons as inline SVG in `src/engines/hyperframes/assets/lucide-icons.generated.ts`, produced by `npm run icons:generate`             |
+| Geist variable fonts        | OFL-1.1            | Typography                                                                                                                                    |
+| `kokoro-js` / Kokoro model  | Apache-2.0         | Local TTS                                                                                                                                     |
+| `@modelcontextprotocol/sdk` | MIT                | MCP server                                                                                                                                    |
+| `@hyperframes/producer`     | Apache-2.0         | HyperFrames HTML→MP4 export                                                                                                                   |
 
 ---
 

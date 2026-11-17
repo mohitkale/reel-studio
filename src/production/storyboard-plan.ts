@@ -1,3 +1,4 @@
+import { resolveIllustration } from "@/engines/hyperframes/assets/illustrations";
 /**
  * Maps a validated Storyboard v1 video onto the existing scene plan that the
  * project repository, media resolution and renderer already consume. Pure and
@@ -229,6 +230,14 @@ export function planFromStoryboard(
       warnings.push(`scenes.${index}: body is not shown yet`);
     }
     if (scene.icon) panel = { ...panel, icon: scene.icon };
+    if (scene.illustration) {
+      const illustration = resolveIllustration(scene.illustration);
+      if (illustration) panel = { ...panel, illustration };
+      else
+        warnings.push(
+          `scenes.${index}: unknown illustration "${scene.illustration}" is not drawn`,
+        );
+    }
     panel = { ...panel, sceneType: scene.type };
     assetIds.push(assetId);
     planScenes.push({

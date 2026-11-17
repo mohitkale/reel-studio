@@ -39,6 +39,7 @@ export interface SceneExtras {
   headline?: string;
   body?: string;
   icon?: string;
+  illustration?: string;
   durationHint?: number;
   statLabel?: string;
   quoteAttribution?: string;
@@ -218,6 +219,7 @@ function sceneToStoryboard(
   if (scene.emphasis?.length)
     out.emphasis = scene.emphasis.slice(0, L.emphasisCount);
   if (extras?.icon) out.icon = extras.icon;
+  if (extras?.illustration) out.illustration = extras.illustration;
   if (extras?.durationHint) out.durationHint = extras.durationHint;
   return out;
 }
@@ -323,6 +325,7 @@ export function buildStoryboardSource(
         headline: scene.headline,
         ...(scene.body ? { body: scene.body } : {}),
         ...(scene.icon ? { icon: scene.icon } : {}),
+        ...(scene.illustration ? { illustration: scene.illustration } : {}),
         ...(scene.durationHint ? { durationHint: scene.durationHint } : {}),
         ...(scene.stat ? { statLabel: scene.stat.label } : {}),
         ...(scene.quote ? { quoteAttribution: scene.quote.attribution } : {}),

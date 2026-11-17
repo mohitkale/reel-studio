@@ -553,4 +553,26 @@ describe("helpers", () => {
     const sb = lint(single()).storyboard!;
     expect(estimateDurationSeconds(sb)).toBeGreaterThan(5);
   });
+
+  it("normalises an illustration name", () => {
+    const result = lintStoryboard({
+      version: 1,
+      title: "T",
+      scenes: [
+        {
+          type: "hook",
+          headline: "Hello there",
+          narration: "Hello there friend, welcome.",
+          illustration: "Stars 2",
+        },
+        { type: "cta", headline: "Go", narration: "Go and do it now friend." },
+      ],
+    });
+    expect(result.errors).toEqual([]);
+    expect(result.fixes.map((f) => f.rule)).toContain("normalize-illustration");
+    expect(
+      (result.storyboard as { scenes: Array<{ illustration?: string }> })
+        .scenes[0]!.illustration,
+    ).toBe("stars-2");
+  });
 });

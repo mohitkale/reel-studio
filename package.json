@@ -81,6 +81,7 @@
     "scenes:sheet": "node --import tsx scripts/scene-sheet.mjs",
     "voice:download": "node --import tsx scripts/download-voice-model.ts",
     "benchmark:render": "node --import tsx scripts/benchmark-render.ts",
+    "illustrations:sheet": "node --import tsx scripts/illustration-sheet.ts",
     "cli:verify": "bash scripts/verify-cli.sh",
     "captions:verify": "node --import tsx scripts/verify-caption-timing.ts",
     "seeds:sheet": "node scripts/seed-sheet.mjs",

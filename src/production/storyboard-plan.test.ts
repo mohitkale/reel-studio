@@ -201,4 +201,31 @@ describe("planFromStoryboard", () => {
       "mine",
     );
   });
+
+  it("carries a resolved illustration and warns about an unknown one", () => {
+    const scenes = [
+      {
+        type: "hook",
+        headline: "Hook",
+        narration: "A hook worth hearing today.",
+        illustration: "space",
+      },
+      {
+        type: "statement",
+        headline: "Plain",
+        narration: "A plain statement for you.",
+        illustration: "unicorn",
+      },
+    ];
+    const result = plan({}, scenes);
+    expect(result.scenePlan.scenes[0]!.panel).toMatchObject({
+      illustration: "stars-1",
+    });
+    expect(result.scenePlan.scenes[1]!.panel).not.toHaveProperty(
+      "illustration",
+    );
+    expect(result.warnings.join(" ")).toContain(
+      'unknown illustration "unicorn"',
+    );
+  });
 });

@@ -654,6 +654,15 @@ function buildSeekScript(
     photo.style.animationDelay = (-t).toFixed(4) + 's';
   }
 
+  function syncIllustrations(time) {
+    // Looping illustrations: paused animations seeked with a negative delay,
+    // the same technique as the photo pans.
+    document.querySelectorAll('.fx-illus .il *').forEach(function (el) {
+      el.style.animationPlayState = 'paused';
+      el.style.animationDelay = (-Math.max(0, time)).toFixed(3) + 's';
+    });
+  }
+
   function syncAllBgPhotos(time) {
     document.querySelectorAll('.bg-photo').forEach((photo) => {
       const start = Number(photo.dataset.start || 0);
@@ -760,6 +769,7 @@ function buildSeekScript(
     const t = Math.max(0, Math.min(CFG.totalSeconds, time));
     root._t = t;
     syncAllBgPhotos(t);
+    syncIllustrations(t);
     syncTimedVideos(t);
     syncSubtitles(t);
     if (cover) {
