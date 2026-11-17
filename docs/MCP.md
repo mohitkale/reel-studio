@@ -115,20 +115,31 @@ registry and the community directories waits for the published package.
 
 ## Core tools
 
-Five high-level tools cover the common path, so an agent does not have to learn the
-92-tool surface (about 34,700 tokens of definitions; the five core tools are about 420).
+Seven high-level tools cover the common path, so an agent does not have to learn the
+94-tool surface (about 35,300 tokens of definitions; the seven core tools are about 1,100).
 
 | Tool           | Use                                                                                     |
 | -------------- | --------------------------------------------------------------------------------------- |
 | `create_video` | Storyboard v1 JSON in; waits (default) and returns the finished video link, or a job id |
 | `get_job`      | State, progress percent, stage and the video link of a job                              |
 | `list_options` | Themes, scene types, formats, qualities, recommended voices and music ids               |
+| `review_video` | Findings as suggested storyboard edits, pacing per scene, the latest contact sheet      |
+| `revise_video` | Apply scene edits (update, replace, insert, remove, move) and make the video again      |
 | `list_videos`  | Recent projects                                                                         |
 | `open_studio`  | The local studio address, or one video's editor address                                 |
 
+`create_video` and `get_job` return, once the video is done: the video link, the local file
+path (when the engine is on this computer), duration, resolution, size, the studio page, and an
+**image block with the contact sheet** (one labelled frame per scene, under 1 MB) so an agent that
+can see images can look at its work. While `create_video` waits it sends MCP progress
+notifications (stage and percent) if the client supplied a progress token. If your client times
+out first, the job keeps running: call `get_job`; a render can take several minutes, so set the
+client's tool timeout to at least 10 minutes. A failed job returns the failing stage, the cause and
+a specific fix (for example: the voice model is missing, run `npm run voice:download`).
+
 Set `REEL_STUDIO_MCP_TOOLS=core` in the server's environment to expose only these; the
-default keeps every tool. Still to come in this set: `create_podcast`, `revise_video` and
-`review_video`.
+default keeps every tool. Still to come in this set: `create_podcast` (podcast storyboards are not produced by
+`create_video` yet) and re-rendering only the scenes a revision changed.
 
 ## Storyboard resources and prompts
 

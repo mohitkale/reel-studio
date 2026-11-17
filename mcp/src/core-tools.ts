@@ -6,29 +6,61 @@
  *
  * Set REEL_STUDIO_MCP_TOOLS=core to expose only these tools.
  */
+import { existsSync } from "node:fs";
+import path from "node:path";
+
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import { RECOMMENDED_KOKORO_VOICES } from "@/providers/voice/kokoro";
 import { MUSIC_LIBRARY } from "@/lib/music-library";
 import { SCENE_TYPES } from "@/storyboard";
+import {
+  applyChanges,
+  reviewStoryboard,
+  type Change,
+} from "@/storyboard/review";
 import { THEMES } from "@/video/themes";
 
-import { absoluteUrl, apiGet, apiPost, BASE_URL, encode } from "./client.js";
+import {
+  absoluteUrl,
+  apiGet,
+  apiGetBinary,
+  apiPost,
+  BASE_URL,
+  encode,
+} from "./client.js";
 
-type ToolResult = {
-  content: { type: "text"; text: string }[];
-  isError?: boolean;
-};
+type ToolContent =
+  | { type: "text"; text: string }
+  | { type: "image"; data: string; mimeType: string };
+type ToolResult = { content: ToolContent[]; isError?: boolean };
 
-const json = (data: unknown): ToolResult => ({
-  content: [{ type: "text", text: JSON.stringify(data) }],
+/** What the SDK hands a tool handler besides its arguments. */
+interface ToolExtra {
+  _meta?: { progressToken?: string | number };
+  sendNotification?: (notification: {
+    method: "notifications/progress";
+    params: {
+      progressToken: string | number;
+      progress: number;
+      total: number;
+      message?: string;
+    };
+  }) => Promise<void>;
+}
+
+const json = (data: unknown, image?: ToolContent): ToolResult => ({
+  content: [
+    { type: "text", text: JSON.stringify(data) },
+    ...(image ? [image] : []),
+  ],
 });
 
-function guard<A>(fn: (args: A) => Promise<ToolResult>) {
-  return async (args: A): Promise<ToolResult> => {
+function guard<A>(fn: (args: A, extra: ToolExtra) => Promise<ToolResult>) {
+  return async (args: A, extra: ToolExtra = {}): Promise<ToolResult> => {
     try {
-      return await fn(args);
+      return await fn(args, extra);
     } catch (e) {
       return {
         isError: true,
@@ -45,13 +77,79 @@ interface JobView {
   state: string;
   progress?: number;
   error?: string | null;
-  steps?: Array<{ key: string; state: string }>;
-  outputs?: Array<{ id: string; kind: string }>;
+  steps?: Array<{ key: string; state: string; error?: string | null }>;
+  outputs?: Array<{
+    id: string;
+    kind: string;
+    metadata?: Record<string, unknown> | null;
+  }>;
 }
 
 const TERMINAL = ["succeeded", "failed", "canceled"];
 
-/** Job status with a download link for the finished video. */
+const STAGE_LABEL: Record<string, string> = {
+  validate: "checking the storyboard",
+  plan: "planning scenes",
+  resolve_media: "finding media",
+  synthesize_audio: "recording the narration",
+  time_content: "timing captions and scenes",
+  prepare_composition: "preparing the video",
+  render_export: "rendering",
+  verify_artifacts: "checking the file",
+};
+
+/** A specific, actionable explanation of a failed stage. */
+export function explainFailure(
+  stage: string | undefined,
+  error: string | null | undefined,
+): { stage: string; cause: string; fix: string } {
+  const cause = (error ?? "The job failed without a message").slice(0, 400);
+  const at = stage ?? "unknown";
+  const text = `${cause}`.toLowerCase();
+  let fix: string;
+  if (/kokoro|onnx|voice model|transformers|\.cache/.test(text))
+    fix =
+      "The local voice model is missing. Run `reel-studio doctor --fix` or `npm run voice:download` (about 90 MB), or set voice.enabled to false for a silent video with captions, then call create_video again.";
+  else if (/ffmpeg|ffprobe/.test(text))
+    fix =
+      "FFmpeg is missing or not on PATH. Run `reel-studio doctor --fix` (it asks before downloading), then retry.";
+  else if (/chrome|chromium|puppeteer|browser/.test(text))
+    fix =
+      "Chrome could not start. Run `reel-studio doctor --fix` (it asks before downloading), or set REEL_VERIFY_CHROME to a Chrome path, then retry.";
+  else if (/duration|too long|exceeds/.test(text))
+    fix =
+      "The video is too long. Cut scenes or shorten the narration, then retry.";
+  else if (at === "validate" || /storyboard|lint/.test(text))
+    fix =
+      "The storyboard is not valid. Fix the errors named in the cause (see reel://storyboard/schema), then call create_video again.";
+  else if (at === "resolve_media")
+    fix =
+      "Stock media could not be fetched. Remove the media query from the scene or add a library asset, then retry.";
+  else if (at === "synthesize_audio")
+    fix =
+      "Narration failed. Check the voice settings, or set voice.enabled to false for a silent video.";
+  else
+    fix = `The ${STAGE_LABEL[at] ?? at} step failed. Retry once with quality "draft"; if it fails the same way, check .data/engine.log.`;
+  return { stage: at, cause, fix };
+}
+
+const root = path.resolve(import.meta.dirname, "..", "..");
+
+/** Where the finished file is on this computer, when the engine is local. */
+export function localFilePath(
+  downloadUrl: string | undefined,
+): string | undefined {
+  if (!downloadUrl) return undefined;
+  const key = decodeURIComponent(new URL(downloadUrl).pathname).replace(
+    /^\/media\//,
+    "",
+  );
+  for (const candidate of [path.join(root, "media", key), `/${key}`])
+    if (existsSync(candidate)) return candidate;
+  return undefined;
+}
+
+/** Job status with the file, its facts and a contact sheet once it is done. */
 export async function describeJob(jobId: string) {
   const body = await apiGet<{ job?: JobView } & JobView>(
     `/api/production-jobs/${encode(jobId)}`,
@@ -66,6 +164,8 @@ export async function describeJob(jobId: string) {
     const link = artifact.artifact?.downloadUrl;
     videoUrl = link ? absoluteUrl(link) : undefined;
   }
+  const meta = video?.metadata ?? {};
+  const failedStep = job.steps?.find((s) => s.state === "failed");
   return {
     jobId,
     state: job.state,
@@ -73,21 +173,132 @@ export async function describeJob(jobId: string) {
     stage: job.steps?.find((s) => s.state === "running")?.key,
     error: job.error ?? undefined,
     videoUrl,
+    studioUrl: `${BASE_URL}/results/${encode(jobId)}`,
+    ...(job.state === "succeeded"
+      ? {
+          filePath: localFilePath(videoUrl),
+          durationSeconds:
+            typeof meta.duration === "number"
+              ? Math.round(meta.duration * 10) / 10
+              : undefined,
+          width: typeof meta.width === "number" ? meta.width : undefined,
+          height: typeof meta.height === "number" ? meta.height : undefined,
+          bytes: typeof meta.bytes === "number" ? meta.bytes : undefined,
+          contactSheet:
+            typeof meta.contactSheet === "string"
+              ? meta.contactSheet
+              : undefined,
+        }
+      : {}),
+    ...(job.state === "failed"
+      ? {
+          failure: explainFailure(
+            failedStep?.key,
+            failedStep?.error ?? job.error,
+          ),
+        }
+      : {}),
   };
 }
 
-/** Poll a job until it ends or `waitSeconds` pass. */
+/** The contact sheet as an image block, when it exists and is under 1 MB. */
+export async function contactSheetImage(view: {
+  contactSheet?: string;
+}): Promise<ToolContent | undefined> {
+  if (!view.contactSheet) return undefined;
+  const bytes = await apiGetBinary(
+    `/media/${view.contactSheet.replace(/^\/?media\//, "")}`,
+  );
+  if (!bytes || bytes.length > 1_000_000) return undefined;
+  return {
+    type: "image",
+    data: bytes.toString("base64"),
+    mimeType: "image/jpeg",
+  };
+}
+
+/** Poll a job until it ends or `waitSeconds` pass, reporting progress. */
 export async function waitForJob(
   jobId: string,
   waitSeconds: number,
   pollMs = 3000,
+  onProgress?: (
+    view: Awaited<ReturnType<typeof describeJob>>,
+  ) => void | Promise<void>,
 ) {
   const deadline = Date.now() + waitSeconds * 1000;
   for (;;) {
     const view = await describeJob(jobId);
+    await onProgress?.(view);
     if (TERMINAL.includes(view.state) || Date.now() >= deadline) return view;
     await new Promise((resolve) => setTimeout(resolve, pollMs));
   }
+}
+
+/** A progress notification sender, or nothing when the client sent no token. */
+function progressReporter(extra: ToolExtra) {
+  const token = extra._meta?.progressToken;
+  if (token === undefined || !extra.sendNotification) return undefined;
+  return async (view: { progress: number; stage?: string }) => {
+    await extra.sendNotification!({
+      method: "notifications/progress",
+      params: {
+        progressToken: token,
+        progress: view.progress,
+        total: 100,
+        message: view.stage
+          ? (STAGE_LABEL[view.stage] ?? view.stage)
+          : undefined,
+      },
+    }).catch(() => undefined);
+  };
+}
+
+/** Queue a storyboard and, unless wait is false, wait for the finished video. */
+async function produce(
+  storyboard: Record<string, unknown>,
+  options: { quality?: string; wait?: boolean; waitSeconds?: number },
+  extra: ToolExtra,
+): Promise<ToolResult> {
+  const queued = await apiPost<{
+    jobId?: string | null;
+    projectId?: string;
+    reused?: boolean;
+    warnings?: unknown[];
+    fixes?: unknown[];
+  }>(`/api/storyboards?quality=${options.quality ?? "standard"}`, storyboard);
+  if (!queued.jobId) return json(queued);
+  const base = {
+    projectId: queued.projectId,
+    reused: queued.reused,
+    fixes: queued.fixes,
+    warnings: queued.warnings,
+  };
+  if (options.wait === false)
+    return json({ ...base, jobId: queued.jobId, state: "queued" });
+  const view = await waitForJob(
+    queued.jobId,
+    options.waitSeconds ?? 600,
+    3000,
+    progressReporter(extra),
+  );
+  return json({ ...base, ...view }, await contactSheetImage(view));
+}
+
+/** The first script of a project and its storyboard export. */
+async function exportedStoryboard(projectId: string) {
+  const { projects } = await apiGet<{
+    projects: Array<{ id: string; firstScriptId: string | null }>;
+  }>("/api/projects");
+  const scriptId = projects.find((p) => p.id === projectId)?.firstScriptId;
+  if (!scriptId) throw new Error(`No project with id ${projectId}`);
+  const result = await apiGet<{
+    storyboard?: Record<string, unknown>;
+    notes?: string[];
+  }>(`/api/scripts/${encode(scriptId)}/storyboard`);
+  if (!result.storyboard)
+    throw new Error("This project cannot be exported as a storyboard");
+  return { scriptId, storyboard: result.storyboard, notes: result.notes ?? [] };
 }
 
 export function registerCoreTools(server: McpServer): void {
@@ -103,28 +314,9 @@ export function registerCoreTools(server: McpServer): void {
         waitSeconds: z.number().int().min(10).max(1800).optional(),
       },
     },
-    guard(async ({ storyboard, quality, wait, waitSeconds }) => {
-      const queued = await apiPost<{
-        jobId?: string | null;
-        projectId?: string;
-        reused?: boolean;
-        warnings?: unknown[];
-        fixes?: unknown[];
-      }>(`/api/storyboards?quality=${quality ?? "standard"}`, storyboard);
-      if (!queued.jobId) return json(queued);
-      const base = {
-        projectId: queued.projectId,
-        reused: queued.reused,
-        fixes: queued.fixes,
-        warnings: queued.warnings,
-      };
-      if (wait === false)
-        return json({ ...base, jobId: queued.jobId, state: "queued" });
-      return json({
-        ...base,
-        ...(await waitForJob(queued.jobId, waitSeconds ?? 600)),
-      });
-    }),
+    guard(({ storyboard, quality, wait, waitSeconds }, extra) =>
+      produce(storyboard, { quality, wait, waitSeconds }, extra),
+    ),
   );
 
   server.registerTool(
@@ -134,7 +326,10 @@ export function registerCoreTools(server: McpServer): void {
         "Status of a video job: state, progress percent, current stage and, once finished, the video link.",
       inputSchema: { jobId: z.string().min(1) },
     },
-    guard(async ({ jobId }) => json(await describeJob(jobId))),
+    guard(async ({ jobId }) => {
+      const view = await describeJob(jobId);
+      return json(view, await contactSheetImage(view));
+    }),
   );
 
   server.registerTool(
@@ -202,6 +397,90 @@ export function registerCoreTools(server: McpServer): void {
       return json({
         url: scriptId ? `${BASE_URL}/editor/${encode(scriptId)}` : BASE_URL,
       });
+    }),
+  );
+
+  server.registerTool(
+    "review_video",
+    {
+      description:
+        "Look over a finished video's storyboard: findings phrased as the edit that fixes each one (long headlines, repeated scene types, missing hook or close), pacing per scene, and the latest contact sheet image. Fix what it names with revise_video, once.",
+      inputSchema: { projectId: z.string().min(1) },
+    },
+    guard(async ({ projectId }) => {
+      const { scriptId, storyboard } = await exportedStoryboard(projectId);
+      const review = reviewStoryboard(storyboard);
+      const { jobs } = await apiGet<{
+        jobs: Array<{
+          id: string;
+          state: string;
+          revision?: { scriptId?: string } | null;
+        }>;
+      }>("/api/production-jobs?limit=50");
+      const latest = jobs.find(
+        (j) => j.state === "succeeded" && j.revision?.scriptId === scriptId,
+      );
+      const view = latest ? await describeJob(latest.id) : undefined;
+      return json(
+        {
+          projectId,
+          ...review,
+          latestVideo: view,
+          frameCheck:
+            "Layout checks run on the finished frames (npm run examples:lint-frames); review_video does not run them yet, so look at the contact sheet for clipped or crowded text.",
+        },
+        view ? await contactSheetImage(view) : undefined,
+      );
+    }),
+  );
+
+  server.registerTool(
+    "revise_video",
+    {
+      description:
+        "Change a finished video's storyboard and make it again. changes is a list of edits to scenes counted from 1: {op:'update',index,fields}, {op:'replace',index,scene}, {op:'insert',index,scene}, {op:'remove',index}, {op:'move',from,to}; set changes top-level fields such as title or theme. Creates a new video (the whole video is rendered again).",
+      inputSchema: {
+        projectId: z.string().min(1),
+        changes: z
+          .array(
+            z.discriminatedUnion("op", [
+              z.object({
+                op: z.literal("update"),
+                index: z.number().int(),
+                fields: z.record(z.string(), z.unknown()),
+              }),
+              z.object({
+                op: z.literal("replace"),
+                index: z.number().int(),
+                scene: z.record(z.string(), z.unknown()),
+              }),
+              z.object({
+                op: z.literal("insert"),
+                index: z.number().int(),
+                scene: z.record(z.string(), z.unknown()),
+              }),
+              z.object({ op: z.literal("remove"), index: z.number().int() }),
+              z.object({
+                op: z.literal("move"),
+                from: z.number().int(),
+                to: z.number().int(),
+              }),
+            ]),
+          )
+          .default([]),
+        set: z.record(z.string(), z.unknown()).optional(),
+        quality: z.enum(["draft", "standard", "high"]).optional(),
+        wait: z.boolean().optional(),
+      },
+    },
+    guard(async ({ projectId, changes, set, quality, wait }, extra) => {
+      const { storyboard } = await exportedStoryboard(projectId);
+      const revised = applyChanges(storyboard, changes as Change[], set);
+      return produce(
+        revised as Record<string, unknown>,
+        { quality, wait },
+        extra,
+      );
     }),
   );
 }
