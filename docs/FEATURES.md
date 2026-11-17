@@ -71,6 +71,7 @@ Next.js pages under `src/app`.
 | `/factory`               | FAC01      |
 | `/examples`              | SBD01      |
 | `/gallery`               | GAL01      |
+| `/library`               | PRJ01      |
 | `/`                      | PRJ01      |
 | `/podcasts/[id]`         | POD01      |
 | `/podcasts`              | POD01      |
@@ -255,6 +256,8 @@ HTTP handlers under `src/app` (`/api/**` and `/media`).
 | `GET /api/settings/keys`                             | SET01      |
 | `POST /api/settings/keys`                            | SET01      |
 | `GET /api/settings/mcp-token`                        | SET01      |
+| `GET /api/ui-mode`                                   | SET01      |
+| `POST /api/ui-mode`                                  | SET01      |
 | `POST /api/settings/mcp-token`                       | SET01      |
 | `DELETE /api/settings/mcp-token`                     | SET01      |
 | `DELETE /api/settings/mcp-tokens/[id]`               | SET01      |

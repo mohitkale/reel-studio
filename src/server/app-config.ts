@@ -22,6 +22,12 @@ export interface AppConfig {
    * `undefined` / omitted / empty = show all 54 voices (the default).
    */
   kokoroVisibleVoiceIds?: string[];
+  /** Simple or Pro tools. Unset means "decide from whether the install has work in it". */
+  uiMode?: "simple" | "pro";
+  /** ISO time the first-run setup was finished or skipped; unset shows it once. */
+  onboardedAt?: string;
+  /** The user asked to run first-run setup again (Settings). Shows it even on an existing install. */
+  setupRequested?: boolean;
 }
 
 const EMPTY: AppConfig = { defaultModel: {} };
@@ -44,7 +50,11 @@ export async function getConfig(): Promise<AppConfig> {
 
 async function writeConfig(config: AppConfig): Promise<void> {
   await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2) + "\n", "utf8");
+  await fs.writeFile(
+    CONFIG_FILE,
+    JSON.stringify(config, null, 2) + "\n",
+    "utf8",
+  );
 }
 
 export async function setDefaultProvider(id: ProviderId): Promise<AppConfig> {
@@ -76,6 +86,27 @@ export async function setKokoroVisibleVoices(
     delete config.kokoroVisibleVoiceIds;
   } else {
     config.kokoroVisibleVoiceIds = [...new Set(voiceIds)];
+  }
+  await writeConfig(config);
+  return config;
+}
+
+export async function setUiMode(mode: "simple" | "pro"): Promise<AppConfig> {
+  const config = await getConfig();
+  config.uiMode = mode;
+  await writeConfig(config);
+  return config;
+}
+
+/** Remember that first-run setup is done so the screen shows once. `null` shows it again. */
+export async function setOnboarded(done: boolean): Promise<AppConfig> {
+  const config = await getConfig();
+  if (done) {
+    config.onboardedAt = new Date().toISOString();
+    delete config.setupRequested;
+  } else {
+    delete config.onboardedAt;
+    config.setupRequested = true;
   }
   await writeConfig(config);
   return config;

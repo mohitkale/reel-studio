@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Activity, Monitor, Moon, Sun } from "lucide-react";
 
@@ -27,6 +28,8 @@ import { StockProviderCard } from "@/components/stock/stock-provider-card";
 import { MusicProviderCard } from "@/components/music/music-provider-card";
 import { McpTokenCard } from "@/components/mcp/mcp-token-card";
 import { cn } from "@/lib/utils";
+import { ModeSwitch } from "@/components/shell/mode-switch";
+import { useSetUiMode } from "@/hooks/ui-mode";
 import { ResearchReadinessCard } from "@/components/ai/research-readiness-card";
 
 const themeOptions = [
@@ -36,6 +39,8 @@ const themeOptions = [
 ];
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const setup = useSetUiMode();
   const { theme, setTheme } = useTheme();
   const mounted = useMounted();
   const { data, isLoading } = useProviders();
@@ -51,6 +56,33 @@ export default function SettingsPage() {
         title="Settings"
         description="Manage the local runtime, providers, API keys and appearance."
       />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Mode and setup</CardTitle>
+          <CardDescription>
+            Simple shows five destinations and the one-box Create screen. Pro
+            adds every editor and manual control. Switching never changes your
+            videos.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center gap-3">
+          <ModeSwitch />
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={setup.isPending}
+            onClick={() =>
+              setup.mutate(
+                { onboarded: false },
+                { onSuccess: () => router.push("/") },
+              )
+            }
+          >
+            Run setup again
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="sm:flex-row sm:items-center sm:justify-between sm:space-y-0">

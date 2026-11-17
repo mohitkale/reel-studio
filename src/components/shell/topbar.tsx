@@ -7,18 +7,16 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Film, Menu } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { navItems } from "@/lib/nav";
+import { isNavActive, navForMode, navItems } from "@/lib/nav";
+import { useUiMode } from "@/hooks/ui-mode";
+import { ModeSwitch } from "@/components/shell/mode-switch";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSidebar } from "@/components/shell/sidebar-context";
 import { HintTooltip } from "@/components/ui/hint-tooltip";
 
 function currentTitle(pathname: string) {
-  const match = navItems.find((item) =>
-    item.href === "/"
-      ? pathname === "/"
-      : pathname === item.href || pathname.startsWith(item.href + "/"),
-  );
+  const match = navItems.find((item) => isNavActive(pathname, item, navItems));
   return match?.title ?? "Reel Studio";
 }
 
@@ -27,6 +25,8 @@ export function Topbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const { collapsed, toggle } = useSidebar();
+  const { mode, ready } = useUiMode();
+  const items = ready ? navForMode(mode) : [];
 
   return (
     <header className="bg-background/80 sticky top-0 z-30 flex h-14 items-center gap-3 border-b px-4 backdrop-blur">
@@ -69,12 +69,9 @@ export function Topbar() {
               <span className="text-sm font-semibold">Reel Studio</span>
             </div>
             <nav className="flex flex-col gap-1">
-              {navItems.map((item) => {
+              {items.map((item) => {
                 const Icon = item.icon;
-                const active =
-                  item.href === "/"
-                    ? pathname === "/"
-                    : pathname.startsWith(item.href);
+                const active = isNavActive(pathname, item, items);
                 return (
                   <Link
                     key={item.href}
@@ -101,6 +98,7 @@ export function Topbar() {
       <h1 className="text-sm font-semibold">{currentTitle(pathname)}</h1>
 
       <div className="ml-auto flex items-center gap-1">
+        <ModeSwitch />
         <ThemeToggle />
       </div>
     </header>
