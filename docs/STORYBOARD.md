@@ -226,8 +226,7 @@ a `query`, and rendering. The model never sees these.
   voice when it reports it; otherwise standard and high quality exports listen to the take
   with the local whisper.cpp (when `WHISPER_CPP_MODEL` is set) and time each word where it
   was spoken, and drafts, or a setup without whisper.cpp, spread the words over each cue by
-  length, so the highlight also works without narration. `npm run captions:verify` measures
-  the estimate against whisper.cpp (median error about 200 ms on the first video). Pop
+  length, so the highlight also works without narration. `npm run captions:verify` compares them with a second whisper model: with whisper timing the median error is about 47 ms and 78% of spot-checked words are within 80 ms (43 of 55 across eleven videos); the length estimate drafts use is off by about 190 ms. Pop
   captions scale in as each phrase appears. SRT and VTT use the same cue timings.
 - **Variety**: a seeded director gives each scene one of three layouts (outlined card, colour
   wash, accent-edged card), one of four entrances and sometimes a slow camera move (push-in,

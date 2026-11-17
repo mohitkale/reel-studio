@@ -38,10 +38,42 @@ export interface AlignableTake {
   }>;
 }
 
-/** Words the recogniser heard in a local take. Null when it cannot run. */
-async function hearTake(audioPath: string): Promise<HeardWord[] | null> {
+const DTW_MODELS = new Set([
+  "tiny",
+  "tiny.en",
+  "base",
+  "base.en",
+  "small",
+  "small.en",
+  "medium",
+  "medium.en",
+  "large.v1",
+  "large.v2",
+  "large.v3",
+]);
+
+/** whisper.cpp's `-dtw` preset for a model file such as ggml-small.en.bin. */
+export function dtwPreset(modelPath: string): string | null {
+  const name = path
+    .basename(modelPath)
+    .replace(/^ggml-/, "")
+    .replace(/\.bin$/, "")
+    .replace(/-q\d.*$/, "")
+    .replace(/^large-v(\d)/, "large.v$1");
+  return DTW_MODELS.has(name) ? name : null;
+}
+
+/**
+ * Words whisper.cpp heard in a WAV file, with token-level (dtw) times when the
+ * model supports them. Null when whisper.cpp is not installed.
+ */
+export async function hearWav(
+  audioPath: string,
+  modelOverride?: string,
+): Promise<HeardWord[] | null> {
   const status = await getLocalTranscriptionStatus();
   if (!status.available || !status.binary || !status.model) return null;
+  const model = modelOverride ?? status.model;
   const directory = await mkdtemp(path.join(tmpdir(), "reel-align-"));
   try {
     const input = path.join(directory, "voice.wav");
@@ -58,13 +90,16 @@ async function hearTake(audioPath: string): Promise<HeardWord[] | null> {
       input,
     ]);
     const base = path.join(directory, "words");
+    const preset = dtwPreset(model);
     await runWhisper(status.binary, [
       "-m",
-      status.model,
+      model,
       "-f",
       input,
       "-ojf",
       "-np",
+      // DTW needs flash attention off in whisper.cpp.
+      ...(preset ? ["-dtw", preset, "-nfa"] : []),
       "-of",
       base,
     ]);
@@ -87,7 +122,7 @@ export async function alignTakeWords(
   if (!take.audioUrl.startsWith("/media/")) return result;
   const audioPath = path.join(process.cwd(), "media", take.audioUrl.slice(7));
   const wav = await readFile(audioPath);
-  const heard = await hearTake(audioPath);
+  const heard = await hearWav(audioPath);
   if (!heard?.length) return result;
   const spans = speechSpansFromWav(wav);
   let from = 0;

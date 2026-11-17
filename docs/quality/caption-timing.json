@@ -1,0 +1,106 @@
+{
+  "recordedAt": "2026-11-17",
+  "limitMs": 80,
+  "mode": "aligned",
+  "rows": [
+    {
+      "example": "comparison",
+      "timing": "whisper aligned 4/4 scenes",
+      "matched": "83/83",
+      "medianMs": 47,
+      "p90Ms": 100,
+      "within80": "83%",
+      "spots": "4/5 within 80 ms"
+    },
+    {
+      "example": "data-story",
+      "timing": "whisper aligned 5/5 scenes",
+      "matched": "85/93",
+      "medianMs": 53,
+      "p90Ms": 113,
+      "within80": "81%",
+      "spots": "4/5 within 80 ms"
+    },
+    {
+      "example": "developer-demo",
+      "timing": "whisper aligned 5/5 scenes",
+      "matched": "78/80",
+      "medianMs": 47,
+      "p90Ms": 113,
+      "within80": "76%",
+      "spots": "4/5 within 80 ms"
+    },
+    {
+      "example": "explainer",
+      "timing": "whisper aligned 6/6 scenes",
+      "matched": "113/115",
+      "medianMs": 53,
+      "p90Ms": 107,
+      "within80": "73%",
+      "spots": "5/5 within 80 ms"
+    },
+    {
+      "example": "how-to",
+      "timing": "whisper aligned 6/6 scenes",
+      "matched": "117/121",
+      "medianMs": 53,
+      "p90Ms": 113,
+      "within80": "73%",
+      "spots": "5/5 within 80 ms"
+    },
+    {
+      "example": "listicle",
+      "timing": "whisper aligned 6/6 scenes",
+      "matched": "108/109",
+      "medianMs": 40,
+      "p90Ms": 107,
+      "within80": "83%",
+      "spots": "4/5 within 80 ms"
+    },
+    {
+      "example": "motivation",
+      "timing": "whisper aligned 4/4 scenes",
+      "matched": "52/54",
+      "medianMs": 47,
+      "p90Ms": 93,
+      "within80": "81%",
+      "spots": "4/5 within 80 ms"
+    },
+    {
+      "example": "myth-vs-fact",
+      "timing": "whisper aligned 5/5 scenes",
+      "matched": "89/92",
+      "medianMs": 47,
+      "p90Ms": 133,
+      "within80": "78%",
+      "spots": "5/5 within 80 ms"
+    },
+    {
+      "example": "news-recap",
+      "timing": "whisper aligned 5/5 scenes",
+      "matched": "105/113",
+      "medianMs": 67,
+      "p90Ms": 233,
+      "within80": "65%",
+      "spots": "1/5 within 80 ms"
+    },
+    {
+      "example": "product-launch",
+      "timing": "whisper aligned 5/5 scenes",
+      "matched": "87/88",
+      "medianMs": 47,
+      "p90Ms": 113,
+      "within80": "78%",
+      "spots": "4/5 within 80 ms"
+    },
+    {
+      "example": "story",
+      "timing": "whisper aligned 6/6 scenes",
+      "matched": "110/115",
+      "medianMs": 47,
+      "p90Ms": 113,
+      "within80": "81%",
+      "spots": "3/5 within 80 ms"
+    }
+  ]
+}
