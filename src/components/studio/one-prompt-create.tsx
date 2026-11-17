@@ -216,6 +216,14 @@ export function OnePromptCreate() {
             captions)
           </label>
         </details>
+        <p className="text-sm">
+          <Link href="/examples" className="underline">
+            Or start from an example
+          </Link>{" "}
+          <span className="text-muted-foreground">
+            (change the text, no AI needed)
+          </span>
+        </p>
         <details className="text-sm" open={!providers.isLoading && !writer}>
           <summary className="cursor-pointer font-medium">
             Use my own chat assistant (ChatGPT, Claude, Gemini, a local model)
