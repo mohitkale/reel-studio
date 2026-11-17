@@ -36,6 +36,36 @@ const STAGES = [
   ["verify_artifacts", "Verify artifacts"],
 ] as const;
 
+/** One symbol and plain words per step state, so a step never reads as a bare code. */
+function stepMark(state: string | undefined): string {
+  switch (state) {
+    case "succeeded":
+      return "✓";
+    case "running":
+      return "●";
+    case "failed":
+      return "✗";
+    case "canceled":
+      return "–";
+    default:
+      return "○";
+  }
+}
+function stepWords(state: string | undefined): string {
+  switch (state) {
+    case "succeeded":
+      return "Done";
+    case "running":
+      return "Working now";
+    case "failed":
+      return "Failed";
+    case "canceled":
+      return "Canceled";
+    default:
+      return "Waiting";
+  }
+}
+
 function shortRevision(value: string | null | undefined) {
   return value ? value.slice(0, 12) : "unavailable";
 }
@@ -183,10 +213,14 @@ export function QuickProduceStatus({
               }
             />
           )}
-        <details className="text-sm">
+        <details className="text-sm" open={active || job.state === "failed"}>
           <summary className="cursor-pointer font-medium">
-            Production details
+            Steps and details
           </summary>
+          <p className="text-muted-foreground mt-1 text-xs">
+            Every step runs on this computer; nothing is uploaded unless you
+            turned on an online voice or stock media.
+          </p>
           <p className="text-muted-foreground mt-1 text-xs">
             Durable job {job.id.slice(-10)} · submitted revision{" "}
             <span className="font-mono">
@@ -206,12 +240,28 @@ export function QuickProduceStatus({
             {STAGES.map(([key, label]) => {
               const persisted = job.steps.find((step) => step.key === key);
               return (
-                <li key={key} className="rounded-md border px-2.5 py-2 text-xs">
-                  <span className="block font-medium">{label}</span>
-                  <span className="text-muted-foreground">
-                    {persisted?.state ?? "queued"} ·{" "}
-                    {Math.round((persisted?.progress ?? 0) * 100)}%
+                <li
+                  key={key}
+                  className="rounded-md border px-2.5 py-2 text-xs"
+                  aria-current={
+                    persisted?.state === "running" ? "step" : undefined
+                  }
+                >
+                  <span className="block font-medium">
+                    {stepMark(persisted?.state)} {label}
                   </span>
+                  <span className="text-muted-foreground">
+                    {stepWords(persisted?.state)}
+                    {persisted?.state === "running"
+                      ? ` · ${Math.round((persisted?.progress ?? 0) * 100)}%`
+                      : ""}
+                  </span>
+                  {persisted?.state === "failed" && persisted.error ? (
+                    <span className="text-destructive mt-1 block">
+                      {persisted.error}. Retry runs this step again and reuses
+                      the steps that already finished.
+                    </span>
+                  ) : null}
                 </li>
               );
             })}
