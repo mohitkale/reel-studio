@@ -101,3 +101,54 @@ describe("applyChanges", () => {
     );
   });
 });
+
+describe("one review and one revision", () => {
+  it("removes every finding on a deliberately poor storyboard", () => {
+    const poorish = {
+      version: 1,
+      title: "Poor",
+      scenes: [
+        scene(
+          "list",
+          "A very long headline that keeps going on and on far past what fits",
+          "Short.",
+        ),
+        scene("list", "Second", "word ".repeat(60)),
+        scene("list", "Third"),
+        scene("list", "Third"),
+      ],
+    };
+    const before = reviewStoryboard(poorish).findings.filter(
+      (f) => f.scene > 0,
+    );
+    expect(before.length).toBeGreaterThanOrEqual(5);
+    const revised = applyChanges(poorish, [
+      {
+        op: "update",
+        index: 1,
+        fields: { type: "hook", headline: "Why this matters" },
+      },
+      {
+        op: "update",
+        index: 2,
+        fields: {
+          type: "statement",
+          narration: "A shorter explanation of the idea.",
+        },
+      },
+      {
+        op: "update",
+        index: 3,
+        fields: { type: "stat", headline: "One number to remember" },
+      },
+      {
+        op: "update",
+        index: 4,
+        fields: { type: "cta", headline: "Try it today" },
+      },
+    ]);
+    expect(
+      reviewStoryboard(revised).findings.filter((f) => f.scene > 0),
+    ).toEqual([]);
+  });
+});
