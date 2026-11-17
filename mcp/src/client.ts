@@ -102,4 +102,16 @@ export async function apiGetText(path: string): Promise<string> {
   return text;
 }
 
+/** GET a file (for example a contact sheet image); null when it is not there. */
+export async function apiGetBinary(path: string): Promise<Buffer | null> {
+  try {
+    const res = await fetch(absoluteUrl(path), {
+      headers: TOKEN ? { authorization: `Bearer ${TOKEN}` } : undefined,
+    });
+    return res.ok ? Buffer.from(await res.arrayBuffer()) : null;
+  } catch {
+    return null;
+  }
+}
+
 export const encode = (s: string) => encodeURIComponent(s);
