@@ -5,6 +5,7 @@ import {
   getMcpToken,
   reserveNamedMcpPaidRequest,
 } from "@/server/secrets";
+import { peekLocalSecret } from "@/server/local-engine";
 import { ProviderError } from "@/providers/voice/types";
 import {
   hasMcpScope,
@@ -35,6 +36,8 @@ export type RequestOrigin = "web" | "mcp";
 export type RequestAuthorization =
   | { origin: "web"; token: null }
   | { origin: "mcp"; token: { kind: "legacy" } }
+  /** A local, user-launched MCP client presenting the per-install secret. */
+  | { origin: "mcp"; token: { kind: "local" } }
   | { origin: "mcp"; token: { kind: "named"; record: McpNamedTokenRecord } };
 
 function constantTimeEquals(a: string, b: string): boolean {
@@ -142,6 +145,11 @@ export function authorizeRequest(
     const expected = getMcpToken();
     if (expected && constantTimeEquals(token, expected)) {
       return { origin: "mcp", token: { kind: "legacy" } };
+    }
+    // The per-install secret is only honoured on a loopback connection.
+    const local = peekLocalSecret();
+    if (local && isLoopbackRequest(req) && constantTimeEquals(token, local)) {
+      return { origin: "mcp", token: { kind: "local" } };
     }
     const named = findNamedMcpToken(token);
     if (named) {
