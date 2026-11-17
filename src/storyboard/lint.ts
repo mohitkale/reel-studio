@@ -256,6 +256,7 @@ const SCENE_KEYS = [
   "points",
   "definition",
   "icon",
+  "illustration",
   "emphasis",
   "durationHint",
 ];
@@ -919,6 +920,18 @@ function repairScene(
     }
     if (icon) scene.icon = icon;
     else delete scene.icon;
+  }
+  if (typeof scene.illustration === "string") {
+    const illustration = slugify(scene.illustration);
+    if (illustration !== scene.illustration) {
+      fixes.push({
+        path: `${path}.illustration`,
+        rule: "normalize-illustration",
+        message: `Normalized illustration "${scene.illustration}"`,
+      });
+    }
+    if (illustration) scene.illustration = illustration;
+    else delete scene.illustration;
   }
   if (typeof scene.emphasis === "string") {
     scene.emphasis = [scene.emphasis];

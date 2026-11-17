@@ -387,6 +387,13 @@ export const sceneSchema = z
       .describe(
         'Optional icon name in lowercase words joined by hyphens. Example: "moon".',
       ),
+    illustration: z
+      .string()
+      .regex(/^[a-z0-9][a-z0-9-]{0,39}$/)
+      .optional()
+      .describe(
+        'Optional looping background illustration: one of sixty names such as "stars-2" or "bars-1", a motif ("orbits", "waves", "bubbles", "network", "bars", "rays", "leaves", "skyline", "gears", "dots", "stars", "spiral") or a related word like "space" or "growth". Decorative only.',
+      ),
     emphasis: z
       .array(
         textLine(

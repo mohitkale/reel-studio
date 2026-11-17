@@ -8,6 +8,10 @@ import { CELESTIAL_BOOT } from "../motion/celestial-blocks";
 import { SEMANTIC_GRAPHIC_BOOT } from "../motion/semantic-blocks";
 import { escapeHtml } from "@/lib/html";
 import { iconForScene, iconSvg } from "@/engines/hyperframes/assets/icons";
+import {
+  ILLUSTRATION_STYLES,
+  illustrationSvg,
+} from "@/engines/hyperframes/assets/illustrations";
 import { sceneDefinitionForTemplate } from "@/engines/hyperframes/scenes/registry";
 import { ARRANGEMENT_STYLES } from "@/engines/hyperframes/scenes/arrangements";
 import {
@@ -788,7 +792,14 @@ export function buildCinematicClassicVisual(args: {
   const panelData = (scene.panel ?? {}) as {
     icon?: string;
     sceneType?: string;
+    illustration?: string;
   };
+  const illustration = panelData.illustration
+    ? illustrationSvg(panelData.illustration)
+    : null;
+  const illustrationLayer = illustration
+    ? `<div class="fx-illus" aria-hidden="true">${illustration}</div>`
+    : "";
   const iconName = iconForScene({
     text: `${scene.text} ${scene.spokenText ?? ""}`,
     type: panelData.sceneType,
@@ -819,6 +830,7 @@ export function buildCinematicClassicVisual(args: {
         </div>`;
     return `
     ${stageShell(sid, pal, recipe, "fx-classic")}
+      ${illustrationLayer}
       ${DECO_HTML}
       <div class="fx-content fx-panelled recipe-content-${recipe}">
         ${body}
@@ -914,6 +926,7 @@ export function buildCinematicClassicVisual(args: {
 
   return `
     ${stageShell(sid, pal, recipe, "fx-classic")}
+      ${illustrationLayer}
       <div class="fx-content fx-panelled recipe-content-${recipe}">
         ${body}
       </div>
@@ -1398,6 +1411,7 @@ export const NATIVE_CATALOG_STYLES = `
   #root[data-theme-bg="blocks"] .fx-deco i { border-radius: 0; }
 ${SCENE_STYLES}
 ${ARRANGEMENT_STYLES}
+${ILLUSTRATION_STYLES}
 ${CHART_STYLES}
 `;
 

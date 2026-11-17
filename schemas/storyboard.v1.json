@@ -502,6 +502,11 @@
                 "type": "string",
                 "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
               },
+              "illustration": {
+                "description": "Optional looping background illustration: one of sixty names such as \"stars-2\" or \"bars-1\", a motif (\"orbits\", \"waves\", \"bubbles\", \"network\", \"bars\", \"rays\", \"leaves\", \"skyline\", \"gears\", \"dots\", \"stars\", \"spiral\") or a related word like \"space\" or \"growth\". Decorative only.",
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+              },
               "emphasis": {
                 "description": "Up to three words from the headline or body to highlight. Example: [\"skill\"].",
                 "maxItems": 3,

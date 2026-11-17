@@ -36,24 +36,25 @@ are enforced by validation rather than by prompt text.
 
 ### Scene
 
-| Field          | Required                 | Limit and meaning                                                                                                  |
-| -------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `type`         | yes                      | One of the types below.                                                                                            |
-| `headline`     | yes                      | On-screen text, at most 60 characters, a complete phrase.                                                          |
-| `narration`    | yes                      | Spoken, full sentences, at most 400 characters. Not a copy of the headline.                                        |
-| `body`         | no                       | Supporting line, at most 200 characters.                                                                           |
-| `items`        | list                     | 2 to 6 points of at most 60 characters.                                                                            |
-| `stat`         | stat                     | `{ value (12 chars), label (40 chars) }`.                                                                          |
-| `chart`        | chart                    | 2 to 6 `labels`, 1 to 3 `series` with one number per label, optional `source` and `kind` (`bar`, `line`, `donut`). |
-| `compare`      | comparison, before-after | `{ left, right }`, each `{ label (24 chars), text (80 chars) }`.                                                   |
-| `points`       | timeline, diagram        | 2 to 5 `{ label (24 chars), text? (70 chars) }` in order.                                                          |
-| `definition`   | definition               | `{ term (40 chars), meaning (160 chars) }`.                                                                        |
-| `quote`        | quote                    | `{ text (160 chars), attribution (60 chars) }`.                                                                    |
-| `code`         | code                     | `{ language, text }`, at most 12 lines and 600 characters.                                                         |
-| `media`        | media                    | Exactly one of `query` (plain words), `assetId` or `path` (relative file).                                         |
-| `icon`         | no                       | Icon name such as `moon`.                                                                                          |
-| `emphasis`     | no                       | Up to three words from the headline or body to highlight.                                                          |
-| `durationHint` | no                       | Seconds, 2 to 30. A hint only; timing follows the narration length.                                                |
+| Field          | Required                 | Limit and meaning                                                                                                                                                                                                                                 |
+| -------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type`         | yes                      | One of the types below.                                                                                                                                                                                                                           |
+| `headline`     | yes                      | On-screen text, at most 60 characters, a complete phrase.                                                                                                                                                                                         |
+| `narration`    | yes                      | Spoken, full sentences, at most 400 characters. Not a copy of the headline.                                                                                                                                                                       |
+| `body`         | no                       | Supporting line, at most 200 characters.                                                                                                                                                                                                          |
+| `items`        | list                     | 2 to 6 points of at most 60 characters.                                                                                                                                                                                                           |
+| `stat`         | stat                     | `{ value (12 chars), label (40 chars) }`.                                                                                                                                                                                                         |
+| `chart`        | chart                    | 2 to 6 `labels`, 1 to 3 `series` with one number per label, optional `source` and `kind` (`bar`, `line`, `donut`).                                                                                                                                |
+| `compare`      | comparison, before-after | `{ left, right }`, each `{ label (24 chars), text (80 chars) }`.                                                                                                                                                                                  |
+| `points`       | timeline, diagram        | 2 to 5 `{ label (24 chars), text? (70 chars) }` in order.                                                                                                                                                                                         |
+| `definition`   | definition               | `{ term (40 chars), meaning (160 chars) }`.                                                                                                                                                                                                       |
+| `quote`        | quote                    | `{ text (160 chars), attribution (60 chars) }`.                                                                                                                                                                                                   |
+| `code`         | code                     | `{ language, text }`, at most 12 lines and 600 characters.                                                                                                                                                                                        |
+| `media`        | media                    | Exactly one of `query` (plain words), `assetId` or `path` (relative file).                                                                                                                                                                        |
+| `icon`         | no                       | Icon name such as `moon`.                                                                                                                                                                                                                         |
+| `illustration` | no                       | A looping background illustration: a name such as `stars-2` (sixty exist), a motif (`orbits`, `waves`, `bubbles`, `network`, `bars`, `rays`, `leaves`, `skyline`, `gears`, `dots`, `stars`, `spiral`) or a related word like `space` or `growth`. |
+| `emphasis`     | no                       | Up to three words from the headline or body to highlight.                                                                                                                                                                                         |
+| `durationHint` | no                       | Seconds, 2 to 30. A hint only; timing follows the narration length.                                                                                                                                                                               |
 
 There are twenty scene types. Every one is shown in every format on the app's
 `/scenes` page.
