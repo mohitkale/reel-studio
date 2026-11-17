@@ -28,6 +28,7 @@ const HELP = `reel-studio: storyboard in, video out
   reel-studio lint <file|->        check a storyboard (exit 2 when invalid)
   reel-studio schema               print the Storyboard v1 JSON Schema
   reel-studio examples             copy the example storyboards here
+  reel-studio doctor [--fix [--yes]]  check FFmpeg, Chrome, voice model; --fix downloads what is missing (asks first)
   reel-studio mcp                  MCP server on stdio; starts the local engine if needed
 
 Exit codes: 0 done, 1 usage, 2 invalid storyboard, 3 engine not running or
@@ -242,6 +243,21 @@ export async function main(argv: string[]): Promise<number> {
         return EXIT.ok;
       case "examples":
         return examplesCommand(rest);
+      case "doctor":
+        return await new Promise<number>((resolve) => {
+          const child = spawn(
+            process.execPath,
+            [
+              "--import",
+              "tsx",
+              path.join(root, "scripts", "doctor.ts"),
+              ...rest,
+            ],
+            { cwd: root, stdio: "inherit", env: process.env },
+          );
+          child.once("exit", (code) => resolve(code ?? 1));
+          child.once("error", () => resolve(EXIT.missing));
+        });
       case "mcp":
         // The MCP server runs as its own process on stdio (it finds or starts
         // the local engine itself); nothing here may print to stdout.

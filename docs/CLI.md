@@ -28,6 +28,13 @@ sends the storyboard to the studio engine and downloads the finished file. The e
 | 3         | The engine is not running or a dependency is missing              |
 | 4         | The render failed                                                 |
 
+`doctor` reports Node, FFmpeg, FFprobe, a browser, disk space, the voice model and optional
+Whisper. `doctor --fix` offers to download what is missing into the data directory, one question
+per download (`--yes` or `REEL_STUDIO_AUTO_INSTALL=1` answers for you): a pinned,
+checksum-verified FFmpeg (a tampered file is deleted and rejected), Chrome through Puppeteer's
+installer, and the voice model. A system FFmpeg is always preferred when present. Exit code 1
+when something required is missing.
+
 `npm run cli:verify` runs a shell test of every exit code. Not built yet: starting the engine
 for you when it is not running (the self-starting MCP server issue) and the published
 `npx` entry.
