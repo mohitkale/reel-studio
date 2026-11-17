@@ -5,6 +5,7 @@
  * no-key mode skip it and say so. Sources are never invented: only URLs the
  * provider returned as grounding are ever allowed into `storyboard.sources`.
  */
+import { engineHome } from "@/server/local-engine";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -56,7 +57,7 @@ const MAX_NOTE_CHARS = 1200;
 
 /** File cache beside the app's other local data, written atomically. */
 export function fileResearchCache(
-  file = path.join(process.cwd(), ".data", "storyboard-research-cache.json"),
+  file = path.join(engineHome(), "storyboard-research-cache.json"),
 ): ResearchCache {
   async function read(): Promise<Record<string, CachedResearch>> {
     try {

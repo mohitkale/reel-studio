@@ -75,6 +75,10 @@ npm run test:unit -- src/video/motion-spec.test.ts
 npm run test:int -- --maxWorkers=2
 npm run test:int -- src/library/production-jobs.int.test.ts
 
+# Browser tests: three journeys and accessibility, against a throwaway install
+# with a fake writer (no network). Real draft exports; needs FFmpeg and Chrome.
+npm run test:e2e
+
 npm run typecheck
 npm run lint
 npm run security:scan

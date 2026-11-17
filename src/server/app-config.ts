@@ -2,6 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 
 import { type ProviderId } from "@/providers/voice/types";
+import { engineHome } from "@/server/local-engine";
 
 /**
  * Non-secret app settings (default provider + default model per provider).
@@ -11,8 +12,9 @@ import { type ProviderId } from "@/providers/voice/types";
  * Server-only.
  */
 
-const DATA_DIR = path.join(process.cwd(), ".data");
-const CONFIG_FILE = path.join(DATA_DIR, "app-config.json");
+// `REEL_STUDIO_HOME` moves the data directory (tests and second installs use it).
+const dataDir = () => engineHome();
+const configFile = () => path.join(dataDir(), "app-config.json");
 
 export interface AppConfig {
   defaultProviderId?: ProviderId;
@@ -36,7 +38,7 @@ const EMPTY: AppConfig = { defaultModel: {} };
 
 export async function getConfig(): Promise<AppConfig> {
   try {
-    const raw = await fs.readFile(CONFIG_FILE, "utf8");
+    const raw = await fs.readFile(configFile(), "utf8");
     const parsed = JSON.parse(raw) as Partial<AppConfig>;
     const config: AppConfig = { defaultModel: {}, ...parsed };
     // Normalize: empty array means "all" so users can't lock themselves out.
@@ -51,9 +53,9 @@ export async function getConfig(): Promise<AppConfig> {
 }
 
 async function writeConfig(config: AppConfig): Promise<void> {
-  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.mkdir(dataDir(), { recursive: true });
   await fs.writeFile(
-    CONFIG_FILE,
+    configFile(),
     JSON.stringify(config, null, 2) + "\n",
     "utf8",
   );

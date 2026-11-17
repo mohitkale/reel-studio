@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".next-e2e/**",
+    "test-results/**",
+    "playwright-report/**",
     // Exact third-party runtime bytes are verified against the asset manifest.
     "public/reel-runtime/gsap.min.js",
     "vendor/phonemizer/engine.js",

@@ -70,7 +70,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 40
     env:
       ONNXRUNTIME_NODE_INSTALL_CUDA: skip # CPU Kokoro does not use CUDA
     steps:
@@ -122,6 +122,21 @@ jobs:
       - run: npm run build
         env:
           DATABASE_URL: file:./ci.db
+      - name: Browser tests (three journeys and accessibility, Linux)
+        if: runner.os == 'Linux'
+        run: npm run test:e2e
+        env:
+          E2E_SERVER: start
+          E2E_REUSE_BUILD: "1"
+          CI: "true"
+      - name: Keep browser test traces
+        if: failure() && runner.os == 'Linux'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: e2e-traces
+          path: |
+            test-results
+            playwright-report
   renders:
     if: github.event_name == 'workflow_dispatch' && github.workflow == 'Quality'
     runs-on: ubuntu-latest

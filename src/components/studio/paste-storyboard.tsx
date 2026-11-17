@@ -20,12 +20,15 @@ export function PasteStoryboard({
   seconds,
   theme,
   narration,
+  draft = false,
 }: {
   topic: string;
   format: string;
   seconds: number;
   theme: string;
   narration: boolean;
+  /** Make a lower-quality, faster draft. */
+  draft?: boolean;
 }) {
   const router = useRouter();
   const review = useReviewFields();
@@ -81,7 +84,7 @@ export function PasteStoryboard({
             result.lint.storyboard as unknown as Record<string, unknown>,
             { theme, narration },
           ),
-          quality: "standard",
+          quality: draft ? "draft" : "standard",
           ...review,
         },
       );
