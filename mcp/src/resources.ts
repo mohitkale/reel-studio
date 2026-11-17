@@ -1,3 +1,7 @@
+import {
+  registerStoryboardPrompts,
+  registerStoryboardResources,
+} from "./storyboard-resources.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import { apiGet } from "./client.js";
@@ -196,6 +200,8 @@ const PODCAST_SCHEMA = {
 };
 
 export function registerResources(server: McpServer): void {
+  registerStoryboardResources(server);
+  registerStoryboardPrompts(server);
   server.registerResource(
     "authoring-rules",
     "reel://authoring/rules",

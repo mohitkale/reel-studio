@@ -5,6 +5,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { BASE_URL } from "./client.js";
 import { registerTools } from "./tools.js";
 import { registerResources } from "./resources.js";
+import { SERVER_INSTRUCTIONS } from "./storyboard-resources.js";
 
 /**
  * Reel Studio MCP server (stdio).
@@ -28,10 +29,10 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const server = new McpServer({
-    name: "reel-studio",
-    version: "0.1.0",
-  });
+  const server = new McpServer(
+    { name: "reel-studio", version: "0.1.0" },
+    { instructions: SERVER_INSTRUCTIONS },
+  );
 
   registerTools(server);
   registerResources(server);

@@ -383,11 +383,15 @@ Tools registered by `mcp/src/tools.ts`, `core-tools.ts`, `editorial-tools.ts` an
 
 Resources registered by `mcp/src/resources.ts`.
 
-| Item                       | Capability |
-| -------------------------- | ---------- |
-| `reel://authoring/rules`   | MCP01      |
-| `reel://authoring/podcast` | MCP01      |
-| `reel://schema/scene`      | MCP01      |
-| `reel://schema/podcast`    | MCP01      |
-| `reel://catalog/templates` | TPL01      |
-| `reel://catalog/voices`    | VOI02      |
+| Item                         | Capability |
+| ---------------------------- | ---------- |
+| `reel://storyboard/schema`   | MCP01      |
+| `reel://storyboard/guide`    | MCP01      |
+| `reel://storyboard/examples` | MCP01      |
+| `reel://options`             | MCP01      |
+| `reel://authoring/rules`     | MCP01      |
+| `reel://authoring/podcast`   | MCP01      |
+| `reel://schema/scene`        | MCP01      |
+| `reel://schema/podcast`      | MCP01      |
+| `reel://catalog/templates`   | TPL01      |
+| `reel://catalog/voices`      | VOI02      |

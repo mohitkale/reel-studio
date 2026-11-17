@@ -61,6 +61,17 @@ Set `REEL_STUDIO_MCP_TOOLS=core` in the server's environment to expose only thes
 default keeps every tool. Still to come in this set: `create_podcast`, `revise_video` and
 `review_video`.
 
+## Storyboard resources and prompts
+
+Resources `reel://storyboard/schema`, `reel://storyboard/guide` (the writer guide),
+`reel://storyboard/examples` (an explainer, a list and a myth check) and `reel://options`
+(themes, scene types, voices, music) give the agent what the built-in writer gets. Prompts
+`make-short`, `make-explainer`, `make-podcast`, `repurpose` and `series` appear as slash
+commands in clients that support MCP prompts (in Claude Code: `/mcp__reel-studio__make-short`).
+Each asks the agent to research time-sensitive topics itself and put the sources in
+`storyboard.sources`. The server `instructions` give the four-sentence workflow. The older
+`reel://authoring/*` resources stay.
+
 ## Tools
 
 ### Video storyboards

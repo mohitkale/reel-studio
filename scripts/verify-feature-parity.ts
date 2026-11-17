@@ -90,6 +90,8 @@ export async function codeMcp(): Promise<Registered> {
     registerResource(_name: string, uri: unknown) {
       resources.add(String(uri));
     },
+    // Prompts are slash commands, not inventoried capabilities.
+    registerPrompt() {},
   };
   const { registerTools } = await import(
     pathToFileURL(path.join(ROOT, "mcp", "src", "tools.ts")).href
