@@ -72,7 +72,7 @@ export const proNavItems: NavItem[] = [
     title: "Voiceovers",
     href: "/voiceovers",
     icon: AudioLines,
-    description: "Audio projects and narration",
+    description: "Narration and audio-only videos",
   },
   {
     title: "Batches",
@@ -102,7 +102,7 @@ export const proNavItems: NavItem[] = [
     title: "Gallery",
     href: "/gallery",
     icon: Images,
-    description: "Reproducible examples and production presets",
+    description: "Reproducible examples and ready-made looks",
   },
   {
     title: "Assets",

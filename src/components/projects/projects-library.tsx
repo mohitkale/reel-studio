@@ -239,8 +239,8 @@ export function ProjectsLibrary() {
       ) : !filtered?.length ? (
         <EmptyState
           icon={Clapperboard}
-          title={projects?.length ? "No matching projects" : "No projects yet"}
-          description="Choose Create with AI for an idea, or Create production for a script, article, or uploads."
+          title={projects?.length ? "No matching videos" : "No videos yet"}
+          description="Describe a video on the Create screen and it appears here."
         />
       ) : view === "list" ? (
         <div className="space-y-2">

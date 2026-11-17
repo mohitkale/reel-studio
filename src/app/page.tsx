@@ -16,6 +16,12 @@ export default function CreatePage() {
     <div className="space-y-8">
       <Onboarding />
       <OnePromptCreate />
+      <p className="text-muted-foreground text-sm">
+        <Link href="/scenes" className="text-foreground underline">
+          Browse scene types and looks
+        </Link>{" "}
+        to see what a video can contain.
+      </p>
       {ready && mode === "simple" ? (
         <p className="text-muted-foreground text-sm">
           Your finished videos are in the{" "}
