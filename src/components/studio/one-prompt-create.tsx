@@ -8,7 +8,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PasteStoryboard } from "@/components/studio/paste-storyboard";
 import { useAIProviders } from "@/hooks/ai";
-import { useReviewFields } from "@/hooks/ui-mode";
+import { useAutomation, useReviewFields } from "@/hooks/ui-mode";
 import { apiPost } from "@/lib/api-client";
 import {
   buildWriteRequest,
@@ -60,7 +60,16 @@ export function OnePromptCreate() {
   const [format, setFormat] = React.useState<FormatId>("9:16");
   const [seconds, setSeconds] = React.useState<LengthSeconds>(30);
   const [theme, setTheme] = React.useState("auto");
-  const [narration, setNarration] = React.useState(true);
+  // Saved defaults for which steps run by themselves; this video can change them.
+  const automation = useAutomation();
+  const [overrides, setOverrides] = React.useState<{
+    voice?: boolean;
+    music?: boolean;
+    captions?: boolean;
+  }>({});
+  const narration = overrides.voice ?? automation.voice;
+  const music = overrides.music ?? automation.music;
+  const captions = overrides.captions ?? automation.captions;
   const [draft, setDraft] = React.useState(false);
   const [busy, setBusy] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string>();
@@ -83,7 +92,11 @@ export function OnePromptCreate() {
 
   async function create() {
     setError(undefined);
-    const request = buildWriteRequest(text, { format, seconds });
+    const request = buildWriteRequest(text, {
+      format,
+      seconds,
+      research: automation.research,
+    });
     if (!request || !writer) return;
     try {
       setBusy("Writing the storyboard…");
@@ -97,7 +110,14 @@ export function OnePromptCreate() {
             "The writer did not return a storyboard. Try again.",
         );
       setBusy("Starting the video…");
-      await produce(finishStoryboard(written.storyboard, { theme, narration }));
+      await produce(
+        finishStoryboard(written.storyboard, {
+          theme,
+          narration,
+          music,
+          captions,
+        }),
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setBusy(null);
@@ -214,10 +234,32 @@ export function OnePromptCreate() {
             <input
               type="checkbox"
               checked={narration}
-              onChange={(e) => setNarration(e.target.checked)}
+              onChange={(e) =>
+                setOverrides((o) => ({ ...o, voice: e.target.checked }))
+              }
             />
             Narrate it with the local voice (turn off for a silent video with
             captions)
+          </label>
+          <label className="mt-2 flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={music}
+              onChange={(e) =>
+                setOverrides((o) => ({ ...o, music: e.target.checked }))
+              }
+            />
+            Add background music
+          </label>
+          <label className="mt-2 flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={captions}
+              onChange={(e) =>
+                setOverrides((o) => ({ ...o, captions: e.target.checked }))
+              }
+            />
+            Show captions
           </label>
           <label className="mt-2 flex items-center gap-2">
             <input
@@ -247,6 +289,8 @@ export function OnePromptCreate() {
               seconds={seconds}
               theme={theme}
               narration={narration}
+              music={music}
+              captions={captions}
               draft={draft}
             />
           </div>

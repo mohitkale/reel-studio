@@ -76,6 +76,40 @@ describe("finishStoryboard", () => {
   });
 });
 
+describe("steps that run by themselves", () => {
+  it("turns music and captions off when asked", () => {
+    expect(
+      finishStoryboard(
+        { title: "T" },
+        { theme: "auto", narration: true, music: false, captions: false },
+      ),
+    ).toEqual({ title: "T", music: "none", captions: "off" });
+  });
+
+  it("leaves them alone when on or not mentioned", () => {
+    expect(
+      finishStoryboard(
+        { title: "T" },
+        { theme: "auto", narration: true, music: true, captions: true },
+      ),
+    ).toEqual({ title: "T" });
+  });
+
+  it("skips the web lookup for a topic when research is off", () => {
+    const on = buildWriteRequest("Why the sky is blue", {
+      format: "9:16",
+      seconds: 30,
+    });
+    const off = buildWriteRequest("Why the sky is blue", {
+      format: "9:16",
+      seconds: 30,
+      research: false,
+    });
+    expect(on?.research).toBe("auto");
+    expect(off?.research).toBe("off");
+  });
+});
+
 describe("the built-in sample", () => {
   it("is a valid storyboard", () => {
     const lint = lintStoryboard(SAMPLE_STORYBOARD);

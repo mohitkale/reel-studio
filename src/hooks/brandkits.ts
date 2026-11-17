@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { BrandKitDTO } from "@/lib/dto";
 
 async function fetchBrandKits(): Promise<BrandKitDTO[]> {
@@ -44,7 +40,13 @@ export function useUpdateBrandKit() {
     mutationFn: async ({
       id,
       ...patch
-    }: { id: string; name?: string; handle?: string | null; palette?: Record<string, string>; fonts?: { fontFamily?: string } }) => {
+    }: {
+      id: string;
+      name?: string;
+      handle?: string | null;
+      palette?: Record<string, string>;
+      fonts?: { fontFamily?: string };
+    }) => {
       const res = await fetch(`/api/brandkits/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -77,7 +79,13 @@ export function useDeleteBrandKit() {
 export function useSetDefaultBrandKit() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, isDefault }: { id: string; isDefault: boolean }) => {
+    mutationFn: async ({
+      id,
+      isDefault,
+    }: {
+      id: string;
+      isDefault: boolean;
+    }) => {
       const res = await fetch(`/api/brandkits/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

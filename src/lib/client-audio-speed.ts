@@ -66,9 +66,7 @@ export async function downloadWavAtSpeed(opts: {
     a.href = objectUrl;
     const base = opts.filename.replace(/\.wav$/i, "") || "podcast";
     const speedTag =
-      Math.abs(opts.speed - 1) < 0.001
-        ? ""
-        : `_${formatSpeedTag(opts.speed)}x`;
+      Math.abs(opts.speed - 1) < 0.001 ? "" : `_${formatSpeedTag(opts.speed)}x`;
     a.download = `${base}${speedTag}.wav`;
     document.body.appendChild(a);
     a.click();

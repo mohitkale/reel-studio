@@ -17,10 +17,9 @@ describe("framesFromSeconds", () => {
 describe("estimateSpeechSeconds", () => {
   it("scales with word count and enforces a floor", () => {
     expect(estimateSpeechSeconds("")).toBeCloseTo(2.0, 5);
-    expect(estimateSpeechSeconds(Array(150).fill("word").join(" "))).toBeCloseTo(
-      60,
-      5,
-    );
+    expect(
+      estimateSpeechSeconds(Array(150).fill("word").join(" ")),
+    ).toBeCloseTo(60, 5);
   });
 });
 

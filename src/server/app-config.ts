@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { type ProviderId } from "@/providers/voice/types";
 import { engineHome } from "@/server/local-engine";
+import type { Automation } from "@/lib/automation";
 
 /**
  * Non-secret app settings (default provider + default model per provider).
@@ -32,6 +33,8 @@ export interface AppConfig {
   setupRequested?: boolean;
   /** Stop for a look at the scenes before a video is made (one stop, after the storyboard is checked). */
   reviewBeforeMaking?: boolean;
+  /** Steps a new video runs by itself; a missing key means on. */
+  automation?: Partial<Automation>;
 }
 
 const EMPTY: AppConfig = { defaultModel: {} };
@@ -120,6 +123,15 @@ export async function setReviewBeforeMaking(on: boolean): Promise<AppConfig> {
   const config = await getConfig();
   if (on) config.reviewBeforeMaking = true;
   else delete config.reviewBeforeMaking;
+  await writeConfig(config);
+  return config;
+}
+
+export async function setAutomation(
+  change: Partial<Automation>,
+): Promise<AppConfig> {
+  const config = await getConfig();
+  config.automation = { ...config.automation, ...change };
   await writeConfig(config);
   return config;
 }

@@ -44,7 +44,11 @@ export function useKokoroGenerate(scriptId: string) {
         onModelProgress: (modelProgress) =>
           setProgress({ phase: "model", modelProgress }),
         onScene: (completed, total) =>
-          setProgress({ phase: "synth", scene: completed + 1, sceneCount: total }),
+          setProgress({
+            phase: "synth",
+            scene: completed + 1,
+            sceneCount: total,
+          }),
       });
 
       setProgress({ phase: "upload" });
@@ -183,7 +187,11 @@ export function useKokoroGenerateOneSceneClip(scriptId: string) {
         onModelProgress: (modelProgress) =>
           setProgress({ phase: "model", modelProgress }),
         onScene: (completed, total) =>
-          setProgress({ phase: "synth", scene: completed + 1, sceneCount: total }),
+          setProgress({
+            phase: "synth",
+            scene: completed + 1,
+            sceneCount: total,
+          }),
       });
 
       setProgress({ phase: "upload" });

@@ -3,7 +3,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { apiGet, apiPost } from "@/lib/api-client";
-import type { MusicProviderId, RemoteMusicTrack } from "@/providers/music/types";
+import type {
+  MusicProviderId,
+  RemoteMusicTrack,
+} from "@/providers/music/types";
 
 export interface MusicProviderStatus {
   id: MusicProviderId;
@@ -19,13 +22,14 @@ export function useMusicProviders() {
   return useQuery({
     queryKey: ["music-providers"],
     queryFn: () =>
-      apiGet<{ status: Record<MusicProviderId, boolean> }>("/api/music/keys").then(
-        (r) =>
-          (Object.keys(r.status) as MusicProviderId[]).map((id) => ({
-            id,
-            label: LABELS[id] ?? id,
-            configured: r.status[id],
-          })),
+      apiGet<{ status: Record<MusicProviderId, boolean> }>(
+        "/api/music/keys",
+      ).then((r) =>
+        (Object.keys(r.status) as MusicProviderId[]).map((id) => ({
+          id,
+          label: LABELS[id] ?? id,
+          configured: r.status[id],
+        })),
       ),
   });
 }

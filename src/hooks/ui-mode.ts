@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { UiMode, UiState } from "@/server/ui-mode";
+import { DEFAULT_AUTOMATION, type Automation } from "@/lib/automation";
 import { apiGet, apiPost } from "@/lib/api-client";
 
 export type { UiMode };
@@ -31,6 +32,7 @@ export function useSetUiMode() {
       mode?: UiMode;
       onboarded?: boolean;
       reviewBeforeMaking?: boolean;
+      automation?: Partial<Automation>;
     }) => apiPost<UiState>("/api/ui-mode", input),
     onSuccess: (state) => client.setQueryData(KEY, state),
   });
@@ -40,4 +42,10 @@ export function useSetUiMode() {
 export function useReviewFields(): { review?: true } {
   const { data } = useUiState();
   return data?.reviewBeforeMaking ? { review: true } : {};
+}
+
+/** The saved defaults for which steps run by themselves. */
+export function useAutomation(): Automation {
+  const { data } = useUiState();
+  return data?.automation ?? DEFAULT_AUTOMATION;
 }

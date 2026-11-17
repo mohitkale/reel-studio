@@ -30,6 +30,7 @@ import { McpTokenCard } from "@/components/mcp/mcp-token-card";
 import { cn } from "@/lib/utils";
 import { ModeSwitch } from "@/components/shell/mode-switch";
 import { useSetUiMode, useUiState } from "@/hooks/ui-mode";
+import { DEFAULT_AUTOMATION, type Automation } from "@/lib/automation";
 import { ResearchReadinessCard } from "@/components/ai/research-readiness-card";
 
 const themeOptions = [
@@ -93,6 +94,42 @@ export default function SettingsPage() {
             />
             Review each video before it is made
           </label>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">What runs by itself</CardTitle>
+          <CardDescription>
+            Defaults for every new video. You can change them for one video
+            under More options on the Create screen.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-2 sm:grid-cols-2">
+          {(
+            [
+              ["research", "Look the topic up on the web before writing"],
+              ["voice", "Narrate with the local voice"],
+              ["music", "Add background music"],
+              ["captions", "Show captions"],
+            ] as [keyof Automation, string][]
+          ).map(([key, label]) => (
+            <label key={key} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={(ui.data?.automation ?? DEFAULT_AUTOMATION)[key]}
+                disabled={!ui.data || setup.isPending}
+                onChange={(event) =>
+                  setup.mutate({ automation: { [key]: event.target.checked } })
+                }
+              />
+              {label}
+            </label>
+          ))}
+          <p className="text-muted-foreground text-xs sm:col-span-2">
+            To stop for an OK before a video is made, use Review each video
+            before it is made above.
+          </p>
         </CardContent>
       </Card>
 

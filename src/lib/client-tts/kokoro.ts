@@ -43,7 +43,8 @@ function ensureWorker(): Worker {
       const req = pending.get(m.id);
       if (!req) return;
       pending.delete(m.id);
-      if (m.type === "error") req.reject(new Error(m.message ?? "Kokoro failed"));
+      if (m.type === "error")
+        req.reject(new Error(m.message ?? "Kokoro failed"));
       else req.resolve(m.wavBase64 ?? "");
     };
     worker.onerror = (e: ErrorEvent) => {
@@ -88,7 +89,8 @@ export async function generateScenesToBeats(
   const beats: { sceneId: string; wavBase64: string }[] = [];
   try {
     for (let i = 0; i < scenes.length; i++) {
-      if (opts.signal?.aborted) throw new DOMException("Cancelled", "AbortError");
+      if (opts.signal?.aborted)
+        throw new DOMException("Cancelled", "AbortError");
       opts.onScene?.(i, scenes.length);
       const wavBase64 = await synthOne(scenes[i].text, opts.voice, opts.speed);
       beats.push({ sceneId: scenes[i].id, wavBase64 });

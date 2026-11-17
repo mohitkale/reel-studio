@@ -30,7 +30,10 @@ export function dimsFor(orientation: Orientation): Dimensions {
 }
 
 /** Best-effort reverse lookup: dimensions -> orientation (defaults to portrait). */
-export function orientationFromDims(width: number, height: number): Orientation {
+export function orientationFromDims(
+  width: number,
+  height: number,
+): Orientation {
   if (width > height) return "landscape";
   if (width === height) return "square";
   return "portrait";
