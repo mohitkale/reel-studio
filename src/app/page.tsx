@@ -2,6 +2,7 @@
 import { QueryError } from "@/components/ui/query-error";
 
 import { CreationHub } from "@/components/studio/creation-hub";
+import { OnePromptCreate } from "@/components/studio/one-prompt-create";
 import { CreationReadiness } from "@/components/projects/creation-readiness";
 import * as React from "react";
 import Link from "next/link";
@@ -173,7 +174,15 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-8">
-      <CreationHub />
+      <OnePromptCreate />
+      <details className="rounded-xl border p-3">
+        <summary className="cursor-pointer text-sm font-medium">
+          More ways to create: podcast, voiceover, repurpose, manual production
+        </summary>
+        <div className="mt-4">
+          <CreationHub />
+        </div>
+      </details>
       <details className="rounded-xl border p-3">
         <summary className="cursor-pointer text-sm font-medium">
           Check creation readiness
