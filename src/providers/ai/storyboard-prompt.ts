@@ -38,6 +38,11 @@ export interface StoryboardBrief {
   targetSeconds?: number;
   format?: "9:16" | "16:9" | "1:1";
   tone?: string;
+  /**
+   * Change an existing storyboard instead of writing a new one. The writer gets
+   * the current storyboard and the instruction, and keeps everything else as is.
+   */
+  revise?: { storyboard: unknown; instruction: string };
   /** Facts and pages the writer may use. Nothing outside these is stated as fact. */
   researchNotes?: Array<{
     title: string;
@@ -51,6 +56,16 @@ export function buildStoryboardMessages(brief: StoryboardBrief): {
   system: string;
   user: string;
 } {
+  if (brief.revise) {
+    return {
+      system: STORYBOARD_WRITER_PROMPT,
+      user: JSON.stringify({
+        task: "Change the current storyboard as the instruction says and return the complete new storyboard as one JSON object. Keep every scene, headline and narration the instruction does not mention exactly as it is. Do not add facts that are not already in the storyboard or the instruction.",
+        instruction: brief.revise.instruction,
+        currentStoryboard: brief.revise.storyboard,
+      }),
+    };
+  }
   return {
     system: STORYBOARD_WRITER_PROMPT,
     user: JSON.stringify({
@@ -81,11 +96,17 @@ export function buildRetryMessages(
   }>,
 ): { system: string; user: string } {
   const first = buildStoryboardMessages(brief);
+  const original = JSON.parse(first.user) as Record<string, unknown>;
   return {
     system: first.system,
     user: JSON.stringify({
       task: "Your previous reply could not be used. Fix exactly these problems and return the complete corrected storyboard as one JSON object.",
-      brief: JSON.parse(first.user).brief,
+      ...(brief.revise
+        ? {
+            instruction: original.instruction,
+            currentStoryboard: original.currentStoryboard,
+          }
+        : { brief: original.brief }),
       previousReply: previousReply.slice(0, 12_000),
       problems,
     }),

@@ -1,0 +1,61 @@
+import { expect, test } from "@playwright/test";
+
+// The writer-driven change box and the "what runs by itself" switches, on the
+// video the journeys already made. The fake writer returns the same storyboard,
+// so the box reports no changes (or lists a few): either way it shows its answer.
+test("tell me what to change shows the writer's answer before anything is made", async ({
+  page,
+  request,
+}) => {
+  const { jobs } = (await (
+    await request.get("/api/production-jobs?limit=5")
+  ).json()) as { jobs: { id: string; state: string }[] };
+  const done = jobs.find((job) => job.state === "succeeded");
+  expect(done, "a finished video from the journeys").toBeTruthy();
+  await page.goto(`/results/${done!.id}`);
+  await expect(page.getByLabel("Finished video")).toBeVisible();
+
+  await page
+    .getByLabel("What should change in this video")
+    .fill("Make the opening shorter");
+  await page.getByRole("button", { name: "Show me the changes" }).click();
+  await expect(
+    page
+      .getByText(/The writer made no changes/)
+      .or(page.getByRole("button", { name: "Make this version" })),
+  ).toBeVisible({ timeout: 60_000 });
+});
+
+test("automation defaults save and show on the Create screen", async ({
+  page,
+}) => {
+  await page.goto("/settings");
+  const captions = page.getByLabel("Show captions");
+  await expect(captions).toBeEnabled();
+  await expect(captions).toBeChecked();
+  await captions.click();
+  await expect(captions).not.toBeChecked();
+  await expect
+    .poll(async () => {
+      const state = await (await page.request.get("/api/ui-mode")).json();
+      return state.automation.captions;
+    })
+    .toBe(false);
+
+  await page.goto("/");
+  await page.getByText("More options").click();
+  await expect(page.getByLabel("Show captions")).not.toBeChecked();
+
+  // Put it back so nothing after this depends on it.
+  await page.goto("/settings");
+  await expect(page.getByLabel("Show captions")).toBeEnabled();
+  await page.getByLabel("Show captions").click();
+  await expect(page.getByLabel("Show captions")).toBeChecked();
+  await expect
+    .poll(
+      async () =>
+        (await (await page.request.get("/api/ui-mode")).json()).automation
+          .captions,
+    )
+    .toBe(true);
+});

@@ -263,6 +263,7 @@ export function OnePromptCreate() {
           </label>
           <label className="mt-2 flex items-center gap-2">
             <input
+              id="quick-draft"
               type="checkbox"
               checked={draft}
               onChange={(e) => setDraft(e.target.checked)}

@@ -34,6 +34,27 @@ export function useSetUiMode() {
       reviewBeforeMaking?: boolean;
       automation?: Partial<Automation>;
     }) => apiPost<UiState>("/api/ui-mode", input),
+    // Show a switch's new value at once; the server's answer replaces it.
+    onMutate: async (input) => {
+      await client.cancelQueries({ queryKey: KEY });
+      const previous = client.getQueryData<UiState>(KEY);
+      if (previous) {
+        client.setQueryData<UiState>(KEY, {
+          ...previous,
+          ...(input.mode ? { mode: input.mode } : {}),
+          ...(input.reviewBeforeMaking !== undefined
+            ? { reviewBeforeMaking: input.reviewBeforeMaking }
+            : {}),
+          ...(input.automation
+            ? { automation: { ...previous.automation, ...input.automation } }
+            : {}),
+        });
+      }
+      return { previous };
+    },
+    onError: (_error, _input, context) => {
+      if (context?.previous) client.setQueryData(KEY, context.previous);
+    },
     onSuccess: (state) => client.setQueryData(KEY, state),
   });
 }
