@@ -265,6 +265,7 @@ HTTP handlers under `src/app` (`/api/**` and `/media`).
 | `POST /api/stock/search`                             | STK01      |
 | `POST /api/storyboards`                              | SBD01      |
 | `POST /api/storyboards/lint`                         | SBD01      |
+| `POST /api/storyboards/prompt`                       | SBD01      |
 | `POST /api/storyboards/write`                        | SBD01      |
 | `GET /api/studio-presets`                            | TPL01      |
 | `POST /api/studio-presets`                           | TPL01      |
