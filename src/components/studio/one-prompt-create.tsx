@@ -8,6 +8,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PasteStoryboard } from "@/components/studio/paste-storyboard";
 import { useAIProviders } from "@/hooks/ai";
+import { useReviewFields } from "@/hooks/ui-mode";
 import { apiPost } from "@/lib/api-client";
 import {
   buildWriteRequest,
@@ -53,6 +54,7 @@ function Chip({
  */
 export function OnePromptCreate() {
   const router = useRouter();
+  const review = useReviewFields();
   const providers = useAIProviders();
   const [text, setText] = React.useState("");
   const [format, setFormat] = React.useState<FormatId>("9:16");
@@ -71,6 +73,7 @@ export function OnePromptCreate() {
       {
         storyboard,
         quality: "standard",
+        ...review,
       },
     );
     if (!queued.jobId) throw new Error("The studio did not start a video");

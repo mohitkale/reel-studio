@@ -29,7 +29,7 @@ import { MusicProviderCard } from "@/components/music/music-provider-card";
 import { McpTokenCard } from "@/components/mcp/mcp-token-card";
 import { cn } from "@/lib/utils";
 import { ModeSwitch } from "@/components/shell/mode-switch";
-import { useSetUiMode } from "@/hooks/ui-mode";
+import { useSetUiMode, useUiState } from "@/hooks/ui-mode";
 import { ResearchReadinessCard } from "@/components/ai/research-readiness-card";
 
 const themeOptions = [
@@ -41,6 +41,7 @@ const themeOptions = [
 export default function SettingsPage() {
   const router = useRouter();
   const setup = useSetUiMode();
+  const ui = useUiState();
   const { theme, setTheme } = useTheme();
   const mounted = useMounted();
   const { data, isLoading } = useProviders();
@@ -81,6 +82,17 @@ export default function SettingsPage() {
           >
             Run setup again
           </Button>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={ui.data?.reviewBeforeMaking ?? false}
+              disabled={!ui.data || setup.isPending}
+              onChange={(event) =>
+                setup.mutate({ reviewBeforeMaking: event.target.checked })
+              }
+            />
+            Review each video before it is made
+          </label>
         </CardContent>
       </Card>
 

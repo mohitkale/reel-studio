@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ClipboardCopy, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useReviewFields } from "@/hooks/ui-mode";
 import { apiPost } from "@/lib/api-client";
 import { finishStoryboard } from "@/lib/one-prompt";
 import { buildFixRequest, checkPasted } from "@/lib/paste-storyboard";
@@ -27,6 +28,7 @@ export function PasteStoryboard({
   narration: boolean;
 }) {
   const router = useRouter();
+  const review = useReviewFields();
   const [reply, setReply] = React.useState("");
   const [copied, setCopied] = React.useState<string>();
   const [busy, setBusy] = React.useState(false);
@@ -80,6 +82,7 @@ export function PasteStoryboard({
             { theme, narration },
           ),
           quality: "standard",
+          ...review,
         },
       );
       if (!queued.jobId) throw new Error("The studio did not start a video");

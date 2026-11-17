@@ -8,6 +8,7 @@ describe("decideUiState", () => {
       mode: "simple",
       needsOnboarding: true,
       existingInstall: false,
+      reviewBeforeMaking: false,
     });
   });
 
@@ -32,5 +33,11 @@ describe("decideUiState", () => {
     expect(decideUiState({ setupRequested: true }, true).needsOnboarding).toBe(
       true,
     );
+  });
+
+  it("carries the review-before-making switch", () => {
+    expect(
+      decideUiState({ reviewBeforeMaking: true }, false).reviewBeforeMaking,
+    ).toBe(true);
   });
 });

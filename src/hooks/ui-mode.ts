@@ -27,8 +27,17 @@ export function useUiMode(): { mode: UiMode; ready: boolean } {
 export function useSetUiMode() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (input: { mode?: UiMode; onboarded?: boolean }) =>
-      apiPost<UiState>("/api/ui-mode", input),
+    mutationFn: (input: {
+      mode?: UiMode;
+      onboarded?: boolean;
+      reviewBeforeMaking?: boolean;
+    }) => apiPost<UiState>("/api/ui-mode", input),
     onSuccess: (state) => client.setQueryData(KEY, state),
   });
+}
+
+/** Extra request fields so a video waits for review when the user turned that on. */
+export function useReviewFields(): { review?: true } {
+  const { data } = useUiState();
+  return data?.reviewBeforeMaking ? { review: true } : {};
 }

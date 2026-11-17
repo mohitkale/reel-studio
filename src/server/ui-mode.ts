@@ -14,6 +14,8 @@ export interface UiState {
   needsOnboarding: boolean;
   /** True when the install already had work in it before modes existed. */
   existingInstall: boolean;
+  /** Videos wait for an OK on the scenes before they are made. */
+  reviewBeforeMaking: boolean;
 }
 
 /** Work the user made themselves. The seeded sample project does not count. */
@@ -28,7 +30,10 @@ export async function hasExistingWork(): Promise<boolean> {
 }
 
 export function decideUiState(
-  config: Pick<AppConfig, "uiMode" | "onboardedAt" | "setupRequested">,
+  config: Pick<
+    AppConfig,
+    "uiMode" | "onboardedAt" | "setupRequested" | "reviewBeforeMaking"
+  >,
   existingInstall: boolean,
 ): UiState {
   return {
@@ -38,6 +43,7 @@ export function decideUiState(
       Boolean(config.setupRequested) ||
       (!config.onboardedAt && !existingInstall),
     existingInstall,
+    reviewBeforeMaking: Boolean(config.reviewBeforeMaking),
   };
 }
 

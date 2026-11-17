@@ -16,6 +16,7 @@ import { apiPost } from "@/lib/api-client";
 import { useScript } from "@/hooks/script";
 import { describeJobProgress } from "@/production/render-estimate";
 import {
+  useApproveProductionJob,
   useCancelProductionJob,
   useProductionJob,
   useRetryProductionJob,
@@ -140,6 +141,7 @@ export function QuickProduceStatus({
   const router = useRouter();
   const query = useProductionJob(jobId);
   const cancel = useCancelProductionJob();
+  const approve = useApproveProductionJob();
   const retry = useRetryProductionJob();
   const restore = useMutation({
     mutationFn: () =>
@@ -200,7 +202,9 @@ export function QuickProduceStatus({
                     ? "The video could not be made"
                     : job.state === "canceled"
                       ? "Stopped. Your draft is saved"
-                      : "Making your video"}
+                      : job.state === "awaiting_approval"
+                        ? "Waiting for your OK"
+                        : "Making your video"}
               </p>
               <Badge
                 variant={job.state === "failed" ? "destructive" : "outline"}
@@ -317,6 +321,15 @@ export function QuickProduceStatus({
         ) : null}
 
         <div className="flex flex-wrap gap-2">
+          {job.state === "awaiting_approval" ? (
+            <Button
+              size="sm"
+              disabled={approve.isPending}
+              onClick={() => approve.mutate(job.id)}
+            >
+              Make the video
+            </Button>
+          ) : null}
           {active ? (
             <Button
               size="sm"

@@ -6,7 +6,11 @@ import {
   parseClientInput,
   readRequestJson,
 } from "@/server/api-helpers";
-import { setOnboarded, setUiMode } from "@/server/app-config";
+import {
+  setOnboarded,
+  setReviewBeforeMaking,
+  setUiMode,
+} from "@/server/app-config";
 import { readUiState } from "@/server/ui-mode";
 
 export const runtime = "nodejs";
@@ -17,6 +21,8 @@ const bodySchema = z
     mode: z.enum(["simple", "pro"]).optional(),
     /** `true` marks first-run setup finished or skipped; `false` shows it again. */
     onboarded: z.boolean().optional(),
+    /** Stop for review before a video is made. */
+    reviewBeforeMaking: z.boolean().optional(),
   })
   .strict();
 
@@ -37,6 +43,8 @@ export async function POST(req: Request) {
     const body = parseClientInput(bodySchema, await readRequestJson(req));
     if (body.mode) await setUiMode(body.mode);
     if (body.onboarded !== undefined) await setOnboarded(body.onboarded);
+    if (body.reviewBeforeMaking !== undefined)
+      await setReviewBeforeMaking(body.reviewBeforeMaking);
     return Response.json(await readUiState());
   } catch (error) {
     return errorResponse(error);

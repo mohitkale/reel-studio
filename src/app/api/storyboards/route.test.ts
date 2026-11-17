@@ -112,3 +112,17 @@ it("rejects unknown options and unauthorized callers", async () => {
   });
   expect((await post(storyboard)).status).toBeGreaterThanOrEqual(400);
 });
+
+it("passes review through and does not start the worker for a job waiting for approval", async () => {
+  mocks.produce.mockResolvedValue({
+    dryRun: false,
+    jobId: "j",
+    projectId: "p",
+    state: "awaiting_approval",
+    reused: false,
+  });
+  const response = await post({ storyboard, review: true });
+  expect(response.status).toBe(202);
+  expect(mocks.produce.mock.calls[0]![1]).toMatchObject({ review: true });
+  expect(mocks.after).not.toHaveBeenCalled();
+});
