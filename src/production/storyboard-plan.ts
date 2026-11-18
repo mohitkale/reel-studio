@@ -106,6 +106,9 @@ export interface StoryboardPlanScene {
   assetId?: string;
 }
 
+/** How much faster or slower a scene is read than the video's voice speed. */
+export const PACE_FACTOR = { slow: 0.88, normal: 1, fast: 1.12 } as const;
+
 export interface StoryboardProductionPlan {
   scenePlan: ScenePlan;
   presetId: ProductionPresetId;
@@ -132,6 +135,8 @@ export interface StoryboardProductionPlan {
   assetIds: Array<string | undefined>;
   /** Pictures the storyboard asked a local image model to make, per scene. */
   generatePrompts: Array<string | undefined>;
+  /** Reading pace per scene, a multiplier on the voice speed (1 is normal). */
+  scenePaces: number[];
   scenes: StoryboardPlanScene[];
   estimatedSeconds: number;
   /** The theme the video wears: named in the storyboard, or chosen from its words. */
@@ -150,6 +155,7 @@ export function planFromStoryboard(
   const warnings: string[] = [];
   const assetIds: Array<string | undefined> = [];
   const generatePrompts: Array<string | undefined> = [];
+  const scenePaces: number[] = [];
   const planScenes: StoryboardPlanScene[] = [];
 
   const scenes: AIScene[] = storyboard.scenes.map((scene, index) => {
@@ -251,6 +257,7 @@ export function planFromStoryboard(
     panel = { ...panel, sceneType: scene.type };
     assetIds.push(assetId);
     generatePrompts.push(scene.media?.generate);
+    scenePaces.push(PACE_FACTOR[scene.pace ?? "normal"]);
     planScenes.push({
       index,
       type: scene.type,
@@ -345,6 +352,7 @@ export function planFromStoryboard(
     },
     assetIds,
     generatePrompts,
+    scenePaces,
     scenes: planScenes,
     estimatedSeconds: estimateDurationSeconds(storyboard),
     warnings,

@@ -271,6 +271,7 @@ const SCENE_KEYS = [
   "icon",
   "illustration",
   "emphasis",
+  "pace",
   "durationHint",
 ];
 

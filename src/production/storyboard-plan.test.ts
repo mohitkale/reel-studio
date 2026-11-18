@@ -232,3 +232,26 @@ describe("planFromStoryboard", () => {
     );
   });
 });
+
+describe("scene pace", () => {
+  it("turns each scene's pace into a speed multiplier, in scene order", () => {
+    const plan = planFromStoryboard(
+      sb({}, [
+        {
+          type: "hook",
+          headline: "Hook",
+          narration: "A hook worth hearing today.",
+          pace: "fast",
+        },
+        {
+          type: "statement",
+          headline: "Idea",
+          narration: "One idea that should land slowly.",
+          pace: "slow",
+        },
+        { type: "cta", headline: "Go", narration: "Go and try it today." },
+      ]),
+    );
+    expect(plan.scenePaces).toEqual([1.12, 0.88, 1]);
+  });
+});

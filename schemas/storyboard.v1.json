@@ -610,6 +610,15 @@
                   "description": "A word or short phrase copied from the headline or body."
                 }
               },
+              "pace": {
+                "description": "How fast this scene is read: \"slow\" for a key idea or a number that should land, \"fast\" for a quick aside. Omit for the normal pace.",
+                "type": "string",
+                "enum": [
+                  "slow",
+                  "normal",
+                  "fast"
+                ]
+              },
               "durationHint": {
                 "description": "Rough seconds for the scene, 2 to 30. Only a hint: real timing follows the narration length. Omit unless you need a longer pause.",
                 "type": "number",

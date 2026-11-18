@@ -484,6 +484,12 @@ export const sceneSchema = z
       .describe(
         'Up to three words from the headline or body to highlight. Example: ["skill"].',
       ),
+    pace: z
+      .enum(["slow", "normal", "fast"])
+      .optional()
+      .describe(
+        'How fast this scene is read: "slow" for a key idea or a number that should land, "fast" for a quick aside. Omit for the normal pace.',
+      ),
     durationHint: z
       .number()
       .min(L.durationHint.min)

@@ -385,6 +385,9 @@ export async function produceFromStoryboard(
             ? { speed: plan.voice.speed }
             : {}),
           ...(plan.voice.style ? { style: plan.voice.style } : {}),
+          ...(plan.scenePaces.some((p) => p !== 1)
+            ? { paces: plan.scenePaces }
+            : {}),
         },
       },
       captions: plan.captions,
