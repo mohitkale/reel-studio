@@ -24,7 +24,6 @@ describe("Product Launch renderer adapters", () => {
       }
     }
   });
-
 });
 
 describe("Editorial Explainer renderer adapters", () => {
@@ -47,7 +46,6 @@ describe("Editorial Explainer renderer adapters", () => {
       }
     }
   });
-
 });
 
 describe("Creator Punch renderer adapters", () => {
@@ -70,7 +68,6 @@ describe("Creator Punch renderer adapters", () => {
       }
     }
   });
-
 });
 
 describe("Data Story renderer adapters", () => {
@@ -93,7 +90,6 @@ describe("Data Story renderer adapters", () => {
       }
     }
   });
-
 });
 
 describe("Developer Demo renderer adapters", () => {
@@ -115,7 +111,6 @@ describe("Developer Demo renderer adapters", () => {
       }
     }
   });
-
 });
 
 describe("Cinematic Brand renderer adapters", () => {
@@ -137,5 +132,4 @@ describe("Cinematic Brand renderer adapters", () => {
       }
     }
   });
-
 });

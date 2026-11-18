@@ -69,7 +69,11 @@ dates, ordinals, units, links, handles and acronyms are spoken in words, and emo
 are dropped. A starter list covers common tech and brand terms. Add your own under
 **Settings, How the voice says things** (`word = how it sounds`); only the narration
 changes, never the text on screen. The storyboard linter warns when narration has
-characters a voice cannot say.
+characters a voice cannot say. Narration also gets short pauses between sentences and
+paragraphs, a beat before a punchline or a number, and a slightly slower first
+sentence; `voice.speed` in a storyboard now changes the speaking rate. The same
+Settings card can play a line as written and cleaned up, so the two can be compared by
+ear.
 
 On a finished video, **Publishing kit** gives a title, description and hashtags with
 copy buttons, whether each fits YouTube, Shorts, Reels, TikTok and LinkedIn, and one zip

@@ -61,6 +61,8 @@ export const synthOptionsSchema = z.object({
   stability: z.number().min(0).max(1).optional(),
   similarity: z.number().min(0).max(1).optional(),
   language: z.string().optional(),
+  /** Read the text exactly as written, without the speech clean-up (listening comparison). */
+  rawText: z.boolean().optional(),
 });
 export type SynthOptions = z.infer<typeof synthOptionsSchema> & {
   signal?: AbortSignal;

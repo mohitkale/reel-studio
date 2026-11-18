@@ -30,6 +30,8 @@ export const quickProduceOptionsSchema = z
           .default("kokoro-server"),
         voiceId: z.string().min(1).default("af_heart"),
         modelId: z.string().min(1).optional(),
+        /** Speaking rate for providers that support it (0.7 to 1.3). */
+        speed: z.number().min(0.7).max(1.3).optional(),
       })
       .default({
         enabled: true,

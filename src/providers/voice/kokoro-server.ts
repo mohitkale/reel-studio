@@ -154,17 +154,20 @@ export function createKokoroServerProvider(): VoiceProvider {
             : 1;
         // Numbers, money, dates, links and acronyms are written the way they
         // are said; what is on screen is not changed.
-        const spoken = normalizeForSpeech(opts.text, {
-          dictionary: await readDictionary(),
-        });
+        const spoken = opts.rawText
+          ? opts.text
+          : normalizeForSpeech(opts.text, {
+              dictionary: await readDictionary(),
+            });
         const audio = await inference(
           () =>
             synthesizeSpeechChunks(
               spoken,
-              (text) =>
-                tts.generate(text, { voice: opts.voiceId, speed } as Parameters<
-                  typeof tts.generate
-                >[1]),
+              (text, factor = 1) =>
+                tts.generate(text, {
+                  voice: opts.voiceId,
+                  speed: speed * factor,
+                } as Parameters<typeof tts.generate>[1]),
               signal,
             ),
           signal,

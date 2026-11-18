@@ -21,6 +21,7 @@ const bodySchema = z.object({
   voiceId: z.string().trim().min(1).max(200),
   modelId: z.string().trim().max(200).optional(),
   text: z.string().trim().max(200).optional(),
+  raw: z.boolean().optional(),
 });
 
 /** POST /api/voice-preview — synth (or cache-hit) a short reusable voice sample. */
@@ -33,6 +34,7 @@ export async function POST(req: Request) {
       voiceId: body.voiceId,
       modelId: body.modelId,
       text: body.text || VOICE_PREVIEW_TEXT,
+      raw: body.raw,
     });
     return NextResponse.json({
       ...result,

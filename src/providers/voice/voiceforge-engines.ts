@@ -4,11 +4,7 @@
  */
 
 export type VoiceforgeEngineId =
-  | "xtts-v2"
-  | "f5-tts"
-  | "openvoice-v2"
-  | "rvc"
-  | (string & {});
+  "xtts-v2" | "f5-tts" | "openvoice-v2" | "rvc" | (string & {});
 
 export interface VoiceforgeEngineGuide {
   id: string;
@@ -34,7 +30,8 @@ export const VOICEFORGE_ENGINE_GUIDES: Record<string, VoiceforgeEngineGuide> = {
       "Strong multilingual clone similarity when it has enough RAM/VRAM — often the best “sounds like me” option among zero-shot engines.",
     speed:
       "Heavy on CPU (many minutes per scene). Much better on a GPU session. Can OOM on small Docker CPU hosts.",
-    license: "CPML — non-commercial / research only (not for commercial products).",
+    license:
+      "CPML — non-commercial / research only (not for commercial products).",
     commercialOk: false,
     needsGpu: true,
   },
@@ -45,7 +42,8 @@ export const VOICEFORGE_ENGINE_GUIDES: Record<string, VoiceforgeEngineGuide> = {
       "Often excellent speaker similarity and naturalness; competitive with or better than XTTS in many evals.",
     speed:
       "Also heavy on CPU — expect long waits or memory pressure without a GPU. Prefer a remote GPU for real use.",
-    license: "Apache-2.0 / CC model weights — generally permissive for commercial use (verify upstream).",
+    license:
+      "Apache-2.0 / CC model weights — generally permissive for commercial use (verify upstream).",
     commercialOk: true,
     needsGpu: true,
   },
@@ -67,7 +65,8 @@ export const VOICEFORGE_ENGINE_GUIDES: Record<string, VoiceforgeEngineGuide> = {
       "Best path to high likeness: train a short conversion model on your samples, then convert base TTS → your timbre.",
     speed:
       "Needs a training pass (GPU strongly recommended). Instant zero-shot is not the main mode.",
-    license: "MIT (RVC architecture) — commercial use typically allowed; check your base TTS too.",
+    license:
+      "MIT (RVC architecture) — commercial use typically allowed; check your base TTS too.",
     commercialOk: true,
     needsGpu: true,
   },

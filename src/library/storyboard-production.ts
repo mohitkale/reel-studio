@@ -313,6 +313,9 @@ export async function produceFromStoryboard(
           enabled: plan.voice.enabled,
           providerId: "kokoro-server",
           voiceId: plan.voice.voiceId ?? "af_heart",
+          ...(plan.voice.speed !== undefined
+            ? { speed: plan.voice.speed }
+            : {}),
         },
       },
       captions: plan.captions,

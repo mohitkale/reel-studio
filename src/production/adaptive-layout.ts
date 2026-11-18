@@ -200,7 +200,11 @@ export function resolveAdaptiveLayout(
   // every format instead of sitting at a fixed pixel size.
   const headMax =
     height *
-    (id === "adaptive-concept" ? 0.115 : id === "adaptive-editorial" ? 0.085 : 0.065);
+    (id === "adaptive-concept"
+      ? 0.115
+      : id === "adaptive-editorial"
+        ? 0.085
+        : 0.065);
   const headFont = fitAdaptiveText(
     scene.text,
     head.width,

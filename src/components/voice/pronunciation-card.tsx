@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, Play } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +40,8 @@ export function PronunciationCard() {
     "Raised $2M on 2026-11-13, up 40%. Learn SQL at example.com",
   );
   const [saving, setSaving] = React.useState(false);
+  const [playing, setPlaying] = React.useState<"raw" | "spoken">();
+  const [listenError, setListenError] = React.useState<string>();
   const [message, setMessage] = React.useState<string>();
   const shown = text ?? formatDictionary(query.data?.rules ?? []);
   const rules = parseDictionary(shown);
@@ -58,6 +60,26 @@ export function PronunciationCard() {
       setMessage(e instanceof Error ? e.message : "Could not save");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function listen(kind: "raw" | "spoken") {
+    setPlaying(kind);
+    setListenError(undefined);
+    try {
+      // The server cleans the text itself with your saved respellings; the
+      // "as written" version skips that so the two can be compared by ear.
+      const result = await apiPost<{ audioUrl: string }>("/api/voice-preview", {
+        providerId: "kokoro-server",
+        voiceId: "af_heart",
+        text: sample.slice(0, 200),
+        raw: kind === "raw",
+      });
+      await new Audio(result.audioUrl).play();
+    } catch (e) {
+      setListenError(e instanceof Error ? e.message : "Could not play it");
+    } finally {
+      setPlaying(undefined);
     }
   }
 
@@ -112,6 +134,38 @@ export function PronunciationCard() {
           <p className="text-sm">
             <span className="text-muted-foreground">The voice is given: </span>
             {normalizeForSpeech(sample, { dictionary: rules })}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {(
+              [
+                ["raw", "Listen as written"],
+                ["spoken", "Listen cleaned up"],
+              ] as const
+            ).map(([kind, label]) => (
+              <Button
+                key={kind}
+                variant="outline"
+                size="sm"
+                disabled={playing !== undefined}
+                onClick={() => void listen(kind)}
+              >
+                {playing === kind ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                ) : (
+                  <Play className="size-4" aria-hidden />
+                )}
+                {label}
+              </Button>
+            ))}
+            {listenError && (
+              <span role="alert" className="text-destructive text-sm">
+                {listenError}
+              </span>
+            )}
+          </div>
+          <p className="text-muted-foreground text-xs">
+            Save your respellings first; the cleaned-up reading uses the saved
+            list. Needs the local voice model.
           </p>
         </div>
       </CardContent>

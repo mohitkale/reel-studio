@@ -99,10 +99,11 @@ ctx.onmessage = async (e: MessageEvent) => {
           ? Math.min(1.35, Math.max(0.7, msg.speed))
           : 1;
       const audio = await inference(() =>
-        synthesizeSpeechChunks(text, (chunk) =>
-          tts.generate(chunk, { voice: msg.voice, speed } as Parameters<
-            typeof tts.generate
-          >[1]),
+        synthesizeSpeechChunks(text, (chunk, factor = 1) =>
+          tts.generate(chunk, {
+            voice: msg.voice,
+            speed: speed * factor,
+          } as Parameters<typeof tts.generate>[1]),
         ),
       );
       const resampled = resampleLinear(
