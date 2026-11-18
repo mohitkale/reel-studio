@@ -130,7 +130,7 @@ Eight high-level tools cover the common path, so an agent does not have to learn
 | `open_studio`    | The local studio address, or one video's editor address                                                                                           |
 
 `create_video` and `get_job` return, once the video is done: the video link, the local file
-path (when the engine is on this computer), duration, resolution, size, the studio page, and an
+path (when the engine is on this computer), a thumbnail link, duration, resolution, size, the studio page, and an
 **image block with the contact sheet** (one labelled frame per scene, under 1 MB) so an agent that
 can see images can look at its work. While `create_video` waits it sends MCP progress
 notifications (stage and percent) if the client supplied a progress token. If your client times

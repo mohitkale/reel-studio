@@ -98,6 +98,8 @@ it("create_video queues, waits and returns the finished video link", async () =>
     projectId: "p1",
     state: "succeeded",
     videoUrl: "http://studio/media/v.mp4",
+    thumbnailUrl:
+      "http://studio/api/production-jobs/j1/thumbnail?size=landscape",
   });
 });
 

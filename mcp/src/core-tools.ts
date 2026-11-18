@@ -177,6 +177,10 @@ export async function describeJob(jobId: string) {
     ...(job.state === "succeeded"
       ? {
           filePath: localFilePath(videoUrl),
+          // 1280x720 PNG made on request from a frame of the video; size=vertical for 1080x1920.
+          thumbnailUrl: absoluteUrl(
+            `/api/production-jobs/${encode(jobId)}/thumbnail?size=landscape`,
+          ),
           durationSeconds:
             typeof meta.duration === "number"
               ? Math.round(meta.duration * 10) / 10
