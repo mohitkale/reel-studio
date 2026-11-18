@@ -19,7 +19,10 @@ import {
 } from "@/lib/publishing-kit";
 import { buildZip } from "@/lib/zip";
 
-type Storyboard = KitSource & { [k: string]: unknown };
+type Storyboard = Omit<KitSource, "chapters"> & {
+  chapters?: { title: string; startScene: number }[];
+  [k: string]: unknown;
+};
 
 /**
  * What a person needs to post the video (roadmap A6): a title, a description and
@@ -31,7 +34,10 @@ export function PublishingKit({
   scriptId,
   jobId,
   hasCaptions,
+  sceneStarts,
 }: {
+  /** Seconds at which each scene starts in the finished video, in scene order. */
+  sceneStarts?: number[];
   scriptId: string;
   /** The finished video's job; the thumbnails use a frame from its MP4. */
   jobId: string;
@@ -50,7 +56,17 @@ export function PublishingKit({
       .then(({ storyboard }) => {
         if (!alive) return;
         setStoryboard(storyboard);
-        setKit(buildPublishingKit(storyboard));
+        setKit(
+          buildPublishingKit({
+            ...storyboard,
+            chapters: storyboard.chapters?.flatMap((chapter) => {
+              const at = sceneStarts?.[chapter.startScene];
+              return at === undefined
+                ? []
+                : [{ title: chapter.title, startSeconds: at }];
+            }),
+          }),
+        );
       })
       .catch(
         (e: unknown) =>
@@ -60,7 +76,7 @@ export function PublishingKit({
     return () => {
       alive = false;
     };
-  }, [scriptId]);
+  }, [scriptId, sceneStarts]);
 
   async function copy(label: string, text: string) {
     setFallback(undefined);

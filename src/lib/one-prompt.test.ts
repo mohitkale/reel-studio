@@ -6,6 +6,7 @@ import {
   buildWriteRequest,
   classifyEntry,
   finishPodcast,
+  lengthLabel,
   finishStoryboard,
   SAMPLE_STORYBOARD,
 } from "./one-prompt";
@@ -74,6 +75,14 @@ describe("finishStoryboard", () => {
     ).toEqual({
       title: "T",
     });
+  });
+});
+
+describe("lengths", () => {
+  it("reads short lengths in seconds and long ones in minutes", () => {
+    expect(lengthLabel(30)).toBe("30 s");
+    expect(lengthLabel(60)).toBe("60 s");
+    expect(lengthLabel(300)).toBe("5 min");
   });
 });
 

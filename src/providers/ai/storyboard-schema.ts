@@ -59,10 +59,46 @@ function simplify(node: unknown): unknown {
   return out;
 }
 
-export type StoryboardKind = "video" | "podcast";
+/** Pass one of a long video: the chapters, each with a title and what it must cover. */
+const OUTLINE_SCHEMA: Node = {
+  type: "object",
+  properties: {
+    title: {
+      type: "string",
+      description: "Title of the whole video, at most 100 characters.",
+    },
+    chapters: {
+      type: "array",
+      description:
+        "Three to twelve chapters in order. Each builds on the one before.",
+      items: {
+        type: "object",
+        properties: {
+          title: {
+            type: "string",
+            description:
+              'Chapter title, at most 60 characters. Example: "How light scatters".',
+          },
+          goal: {
+            type: "string",
+            description:
+              "One or two sentences: what this chapter explains and which facts, examples or numbers it uses.",
+          },
+        },
+        required: ["title", "goal"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["title", "chapters"],
+  additionalProperties: false,
+};
+
+export type StoryboardKind = "video" | "podcast" | "outline";
 
 /** The video or podcast storyboard, in the plain subset every provider supports. */
 export function storyboardWriterSchema(kind: StoryboardKind = "video"): Node {
+  if (kind === "outline") return OUTLINE_SCHEMA;
   const full = storyboardJsonSchema() as { anyOf: Node[] };
   const variant = full.anyOf[kind === "podcast" ? 1 : 0]!;
   return simplify({ ...variant, type: "object" }) as Node;

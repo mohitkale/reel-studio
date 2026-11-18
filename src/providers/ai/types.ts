@@ -301,7 +301,7 @@ export interface StructuredCompletionInput {
   temperature?: number;
   signal?: AbortSignal;
   /** Which storyboard to ask for; the output schema follows it. Default "video". */
-  kind?: "video" | "podcast";
+  kind?: "video" | "podcast" | "outline";
 }
 
 export interface AIProvider {

@@ -15,6 +15,8 @@ export interface KitSource {
   };
   scenes: { headline?: string; narration?: string }[];
   sources?: { title: string; url: string }[];
+  /** Chapters with their start in seconds; they become timestamps in the description. */
+  chapters?: { title: string; startSeconds: number }[];
 }
 
 export interface PublishingKit {
@@ -63,6 +65,30 @@ const trimTo = (text: string, max: number) => {
   return `${(space > max * 0.6 ? cut.slice(0, space) : cut).trimEnd()}…`;
 };
 
+/** "0:00", "12:05" or "1:02:03", the way YouTube reads chapter timestamps. */
+export function formatTimestamp(totalSeconds: number): string {
+  const seconds = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return h > 0
+    ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+    : `${m}:${String(s).padStart(2, "0")}`;
+}
+
+/**
+ * YouTube shows chapters only when the list starts at 0:00, has at least three
+ * entries and every chapter lasts at least ten seconds.
+ */
+export function chapterLines(chapters: KitSource["chapters"]): string[] {
+  if (!chapters || chapters.length < 3) return [];
+  const sorted = [...chapters].sort((a, b) => a.startSeconds - b.startSeconds);
+  if (Math.floor(sorted[0]!.startSeconds) !== 0) return [];
+  for (let i = 1; i < sorted.length; i++)
+    if (sorted[i]!.startSeconds - sorted[i - 1]!.startSeconds < 10) return [];
+  return sorted.map((c) => `${formatTimestamp(c.startSeconds)} ${c.title}`);
+}
+
 export function buildPublishingKit(source: KitSource): PublishingKit {
   const share = buildShareCaption(source);
   const chosen = source.publish;
@@ -83,6 +109,9 @@ export function buildPublishingKit(source: KitSource): PublishingKit {
     opening,
     ...(points.length
       ? ["", "In this video:", ...points.map((p) => `- ${p}`)]
+      : []),
+    ...(chapterLines(source.chapters).length
+      ? ["", "Chapters:", ...chapterLines(source.chapters)]
       : []),
     ...(source.sources?.length
       ? ["", "Sources:", ...source.sources.map((s) => `- ${s.title}: ${s.url}`)]

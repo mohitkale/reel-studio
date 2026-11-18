@@ -28,6 +28,7 @@ Scene types
 Rules
 - Layout, colour, motion, timing and transitions are decided later. Do not describe them.
 - sources: only pages listed in the research notes, each with its title, url and the date accessed.
+- chapters: only for a video over about three minutes. Mark where each chapter starts with its title and startScene, start every chapter with a scene that names it, and bring the viewer back with a hook, stat, quote or comparison every minute or so.
 - publish: a title, a one or two sentence description, up to ten hashtags and three to six big words of thumbnailText for posting. Leave out what you are unsure of.
 - Use the requested format and tone, and write in the language of the brief.`;
 
@@ -55,6 +56,15 @@ Rules
 - publish: a title, a one or two sentence description and up to ten hashtags for the episode listing. Leave out what you are unsure of.
 - Write in the language of the brief.`;
 
+/** Pass one for a long video: plan the chapters before any scene is written. */
+export const OUTLINE_WRITER_PROMPT = `You plan a long video for Reel Studio. Reply with a single JSON object that matches the supplied JSON Schema, and nothing else.
+
+- Plan the chapters of one video, in order. Each chapter has a short title and a goal: what it explains and which concrete facts, numbers or examples it uses.
+- The first chapter hooks the viewer and says what the video will cover. The last chapter ends with a payoff and a call to action.
+- Chapters build on each other; none repeats another. Aim for chapters of about two to three minutes.
+- Be concrete: use real numbers, names and examples from the brief or research notes. Never invent statistics, quotes or sources.
+- Write in the language of the brief.`;
+
 export interface StoryboardBrief {
   /** "podcast" asks for a spoken episode; the default is a video. */
   kind?: "video" | "podcast";
@@ -79,6 +89,28 @@ export interface StoryboardBrief {
     accessed?: string;
     notes: string;
   }>;
+}
+
+export function buildOutlineMessages(
+  brief: StoryboardBrief,
+  chapterCount: number,
+): { system: string; user: string } {
+  return {
+    system: OUTLINE_WRITER_PROMPT,
+    user: JSON.stringify({
+      task: "Plan the chapters for this video.",
+      brief: {
+        topic: brief.topic,
+        audience: brief.audience ?? "a general audience",
+        targetSeconds: brief.targetSeconds ?? 600,
+        chapters: chapterCount,
+        tone: brief.tone ?? "clear and friendly",
+        ...(brief.researchNotes?.length
+          ? { researchNotes: brief.researchNotes }
+          : {}),
+      },
+    }),
+  };
 }
 
 export function buildStoryboardMessages(brief: StoryboardBrief): {

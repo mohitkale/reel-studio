@@ -84,6 +84,12 @@ On a finished video, **Publishing kit** gives a title, description and hashtags 
 copy buttons, whether each fits YouTube, Shorts, Reels, TikTok and LinkedIn, and one zip
 with the text, storyboard and captions. It is built from the storyboard's own words.
 
+**Long videos**: choose **5 min** on Create. The writer plans the chapters first, then
+writes each chapter's scenes (one model call for the outline plus one per chapter, so a paid
+provider is charged for each). The storyboard marks where chapters start; the publishing kit
+turns them into YouTube timestamps, and the linter warns when a long video has no chapters or
+goes more than 90 seconds without a hook, stat, quote, chart or comparison.
+
 See [Creating videos](CREATING_VIDEOS.md) for the full workflow.
 
 ## Configuration

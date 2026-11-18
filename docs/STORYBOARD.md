@@ -33,7 +33,8 @@ are enforced by validation rather than by prompt text.
 | `captions`     | no       | `"auto"` (default) or `"off"`.                                                                                                                                                                        |
 | `sources`      | no       | Up to 12 `{ title, url, accessed }` for facts you used. Never invented.                                                                                                                               |
 | `publish`      | no       | How to post it: `{ title (100), description (1500), hashtags (up to 10), thumbnailText (40) }`, every field optional. The writer fills it in the same call; the publishing kit and thumbnails use it. |
-| `scenes`       | yes      | 1 to 40 scenes. About eight scenes make a 60-second video.                                                                                                                                            |
+| `chapters`     | no       | Long videos: up to 20 `{ title, startScene }` marking where each chapter starts (0-based scene number; the first is 0). The publishing kit turns them into timestamps.                                |
+| `scenes`       | yes      | 1 to 120 scenes. About eight scenes make a 60-second video.                                                                                                                                           |
 
 ### Scene
 

@@ -53,6 +53,7 @@ export interface StoryboardSource {
     captions?: "auto" | "off";
     sources?: unknown[];
     publish?: unknown;
+    chapters?: unknown[];
     voice?: unknown;
   };
   scenes: Array<{ fingerprint: string; extras: SceneExtras }>;
@@ -271,6 +272,7 @@ export function scriptToStoryboard(
     captions: source?.root.captions ?? "auto",
     ...(source?.root.sources ? { sources: source.root.sources } : {}),
     ...(source?.root.publish ? { publish: source.root.publish } : {}),
+    ...(source?.root.chapters ? { chapters: source.root.chapters } : {}),
     scenes,
   };
   if (source?.root.voice) raw.voice = source.root.voice;
@@ -319,6 +321,9 @@ export function buildStoryboardSource(
       captions: storyboard.captions,
       ...(storyboard.sources ? { sources: storyboard.sources } : {}),
       ...(storyboard.publish ? { publish: storyboard.publish } : {}),
+      ...(storyboard.kind === "video" && storyboard.chapters
+        ? { chapters: storyboard.chapters }
+        : {}),
       ...(storyboard.voice ? { voice: storyboard.voice } : {}),
     },
     scenes: storyboard.scenes.map((scene, index) => {

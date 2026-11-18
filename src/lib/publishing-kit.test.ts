@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPublishingKit, checkPlatforms } from "@/lib/publishing-kit";
+import {
+  buildPublishingKit,
+  chapterLines,
+  checkPlatforms,
+  formatTimestamp,
+} from "@/lib/publishing-kit";
 
 const source = {
   title: "Why the sky is blue",
@@ -95,5 +100,52 @@ describe("checkPlatforms", () => {
     expect(fits.youtube!.ok).toBe(true);
     expect(fits.reels!.ok).toBe(false);
     expect(fits.reels!.problems[0]).toContain("2300 of 2200");
+  });
+});
+
+describe("chapter timestamps", () => {
+  const chapters = [
+    { title: "The question", startSeconds: 0 },
+    { title: "The answer", startSeconds: 95 },
+    { title: "What it means", startSeconds: 3725 },
+  ];
+
+  it("formats minutes and hours", () => {
+    expect(formatTimestamp(0)).toBe("0:00");
+    expect(formatTimestamp(95.7)).toBe("1:35");
+    expect(formatTimestamp(3725)).toBe("1:02:05");
+  });
+
+  it("lists chapters in the description when YouTube would show them", () => {
+    expect(chapterLines(chapters)).toEqual([
+      "0:00 The question",
+      "1:35 The answer",
+      "1:02:05 What it means",
+    ]);
+    const kit = buildPublishingKit({ ...source, chapters });
+    expect(kit.description).toContain(
+      "Chapters:\n0:00 The question\n1:35 The answer",
+    );
+    // The block sits between the scene list and the sources.
+    expect(kit.description.indexOf("Chapters:")).toBeLessThan(
+      kit.description.indexOf("Sources:"),
+    );
+  });
+
+  it("leaves chapters out when YouTube would ignore them", () => {
+    expect(chapterLines(chapters.slice(0, 2))).toEqual([]);
+    expect(
+      chapterLines(
+        chapters.map((c, i) => ({ ...c, startSeconds: 5 + i * 100 })),
+      ),
+    ).toEqual([]);
+    expect(
+      chapterLines([
+        { title: "a", startSeconds: 0 },
+        { title: "b", startSeconds: 4 },
+        { title: "c", startSeconds: 60 },
+      ]),
+    ).toEqual([]);
+    expect(chapterLines(undefined)).toEqual([]);
   });
 });

@@ -19,6 +19,7 @@ import {
   finishStoryboard,
   FORMATS,
   LENGTHS,
+  lengthLabel,
   SAMPLE_STORYBOARD,
   type FormatId,
   type LengthSeconds,
@@ -212,7 +213,7 @@ export function OnePromptCreate() {
         <div className="flex flex-wrap gap-2" role="group" aria-label="Length">
           {LENGTHS.map((s) => (
             <Chip key={s} active={seconds === s} onClick={() => setSeconds(s)}>
-              {s} s
+              {lengthLabel(s)}
             </Chip>
           ))}
         </div>

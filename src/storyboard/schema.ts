@@ -45,7 +45,9 @@ export const STORYBOARD_LIMITS = {
   emphasisCount: 3,
   emphasisWord: 24,
   durationHint: { min: 2, max: 30 },
-  scenes: { min: 1, max: 40 },
+  scenes: { min: 1, max: 120 },
+  chapters: 20,
+  chapterTitle: 60,
   sources: 12,
   publishTitle: 100,
   publishDescription: 1500,
@@ -137,6 +139,23 @@ export const captionsSchema = z
   .describe(
     'Captions generated from the narration. "auto" shows them, "off" hides them. Default "auto".',
   );
+
+export const chapterSchema = z.strictObject({
+  title: z
+    .string()
+    .min(1)
+    .max(L.chapterTitle)
+    .describe(
+      'Chapter title, at most 60 characters. Example: "How light scatters".',
+    ),
+  startScene: z
+    .number()
+    .int()
+    .min(0)
+    .describe(
+      "Number of the scene where this chapter starts, counting from 0. The first chapter starts at 0. Start each chapter with a scene that names it.",
+    ),
+});
 
 export const publishSchema = z
   .strictObject({
@@ -551,12 +570,19 @@ export const videoStoryboardSchema = z
       ),
     voice: voiceSchema.optional(),
     captions: captionsSchema.default("auto"),
+    chapters: z
+      .array(chapterSchema)
+      .max(L.chapters)
+      .optional()
+      .describe(
+        "Long videos only (over about three minutes): where each chapter starts, so the description gets timestamps. Leave out for short videos.",
+      ),
     scenes: z
       .array(sceneSchema)
       .min(L.scenes.min)
       .max(L.scenes.max)
       .describe(
-        "Scenes in order. About 8 scenes make a 60-second video. Start with a hook and end with a cta or a statement that closes the idea.",
+        "Scenes in order. About 8 scenes make a 60-second video; a long video can use up to 120. Start with a hook and end with a cta or a statement that closes the idea.",
       ),
   })
   .describe("A video storyboard.");

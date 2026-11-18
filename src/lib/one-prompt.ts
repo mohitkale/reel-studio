@@ -9,7 +9,12 @@ export const FORMATS = [
 ] as const;
 export type FormatId = (typeof FORMATS)[number]["id"];
 
-export const LENGTHS = [15, 30, 60] as const;
+export const LENGTHS = [15, 30, 60, 300] as const;
+
+/** "30 s", "5 min": how a length reads on a chip. */
+export function lengthLabel(seconds: number): string {
+  return seconds >= 120 ? `${Math.round(seconds / 60)} min` : `${seconds} s`;
+}
 export type LengthSeconds = (typeof LENGTHS)[number];
 
 /** Pasted text longer than this is the user's own script, not a topic. */

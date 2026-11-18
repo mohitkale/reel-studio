@@ -195,9 +195,36 @@
           ],
           "description": "Captions generated from the narration. \"auto\" shows them, \"off\" hides them. Default \"auto\"."
         },
+        "chapters": {
+          "description": "Long videos only (over about three minutes): where each chapter starts, so the description gets timestamps. Leave out for short videos.",
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 60,
+                "description": "Chapter title, at most 60 characters. Example: \"How light scatters\"."
+              },
+              "startScene": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Number of the scene where this chapter starts, counting from 0. The first chapter starts at 0. Start each chapter with a scene that names it."
+              }
+            },
+            "required": [
+              "title",
+              "startScene"
+            ],
+            "additionalProperties": false
+          }
+        },
         "scenes": {
           "minItems": 1,
-          "maxItems": 40,
+          "maxItems": 120,
           "type": "array",
           "items": {
             "type": "object",
@@ -567,7 +594,7 @@
             "additionalProperties": false,
             "description": "One scene: what is shown and what is said."
           },
-          "description": "Scenes in order. About 8 scenes make a 60-second video. Start with a hook and end with a cta or a statement that closes the idea."
+          "description": "Scenes in order. About 8 scenes make a 60-second video; a long video can use up to 120. Start with a hook and end with a cta or a statement that closes the idea."
         }
       },
       "required": [

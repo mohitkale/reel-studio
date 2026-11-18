@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -71,9 +72,21 @@ function ShuffleLook({ jobId, scriptId }: { jobId: string; scriptId: string }) {
 /** The publishing kit, with captions in the zip when the video has them. */
 function KitSection({ scriptId, jobId }: { scriptId: string; jobId: string }) {
   const script = useScript(scriptId);
+  const take = script.data?.takes[0];
+  // Where each scene starts in the finished video, for chapter timestamps.
+  const sceneStarts = React.useMemo(() => {
+    if (!take || !script.data) return undefined;
+    const startOf = new Map(
+      take.timeline.map((beat) => [beat.sceneId, beat.startFrame / take.fps]),
+    );
+    return [...script.data.scenes]
+      .sort((a, b) => a.order - b.order)
+      .map((scene) => startOf.get(scene.id) ?? 0);
+  }, [take, script.data]);
   if (!script.data) return null;
   return (
     <PublishingKit
+      sceneStarts={sceneStarts}
       scriptId={scriptId}
       jobId={jobId}
       hasCaptions={(script.data.captionTracks ?? []).some((t) => t.enabled)}

@@ -120,7 +120,7 @@ describe("auto-repair", () => {
   });
 
   it("clamps the scene count", () => {
-    const many = Array.from({ length: 45 }, () => scene());
+    const many = Array.from({ length: L.scenes.max + 5 }, () => scene());
     const r = lint(video(many));
     expect(rules(r)).toContain("clamp-scenes");
     expect(r.storyboard?.kind === "video" && r.storyboard.scenes.length).toBe(
@@ -650,5 +650,102 @@ describe("publish details", () => {
     const result = lintStoryboard({ ...base, publish: "post it" });
     expect(result.errors).toEqual([]);
     expect(result.storyboard?.publish).toBeUndefined();
+  });
+});
+
+describe("chapters and long videos", () => {
+  const scene = (i: number, type = "statement", words = 30) => ({
+    type,
+    headline: `Scene ${i}`,
+    narration:
+      Array.from({ length: words }, (_, w) => `word${w}`).join(" ") + ".",
+  });
+  const longVideo = (count: number, extra: Record<string, unknown> = {}) => ({
+    version: 1,
+    title: "Long",
+    scenes: Array.from({ length: count }, (_, i) =>
+      scene(i, i === 0 ? "hook" : "statement"),
+    ),
+    ...extra,
+  });
+
+  it("accepts up to 120 scenes and keeps chapter marks in order", () => {
+    const result = lintStoryboard(
+      longVideo(60, {
+        chapters: [
+          { title: "Middle", startScene: 20 },
+          { title: "Start", startScene: 0 },
+          { title: "End", startScene: 40 },
+        ],
+      }),
+    );
+    expect(result.errors).toEqual([]);
+    expect((result.storyboard as { scenes: unknown[] }).scenes.length).toBe(60);
+    const marks = (
+      result.storyboard as {
+        chapters?: { title: string; startScene: number }[];
+      }
+    ).chapters;
+    expect(marks?.map((c) => c.title)).toEqual(["Start", "Middle", "End"]);
+  });
+
+  it("drops marks that point nowhere, repeats, and puts the first chapter at scene 0", () => {
+    const result = lintStoryboard(
+      longVideo(10, {
+        chapters: [
+          { title: "A", startScene: 2 },
+          { title: "Same place", startScene: 2 },
+          { title: "Past the end", startScene: 99 },
+          { title: "", startScene: 5 },
+          { title: "B", startScene: 6 },
+        ],
+      }),
+    );
+    const marks = (
+      result.storyboard as {
+        chapters?: { title: string; startScene: number }[];
+      }
+    ).chapters;
+    expect(marks).toEqual([
+      { title: "A", startScene: 0 },
+      { title: "B", startScene: 6 },
+    ]);
+    expect(result.fixes.map((f) => f.rule)).toContain("tidy-chapters");
+  });
+
+  it("asks a long video for chapters, but not a short one", () => {
+    const long = lintStoryboard(longVideo(30));
+    expect(long.warnings.map((w) => w.rule)).toContain("long-form-chapters");
+    const short = lintStoryboard(longVideo(6));
+    expect(short.warnings.map((w) => w.rule)).not.toContain(
+      "long-form-chapters",
+    );
+    const marked = lintStoryboard(
+      longVideo(30, {
+        chapters: [
+          { title: "A", startScene: 0 },
+          { title: "B", startScene: 10 },
+          { title: "C", startScene: 20 },
+        ],
+      }),
+    );
+    expect(marked.warnings.map((w) => w.rule)).not.toContain(
+      "long-form-chapters",
+    );
+  });
+
+  it("warns when a long stretch has nothing to bring the viewer back", () => {
+    const flat = lintStoryboard(longVideo(30));
+    expect(flat.warnings.some((w) => w.rule === "long-form-rehook")).toBe(true);
+    const lively = lintStoryboard({
+      version: 1,
+      title: "Lively",
+      scenes: Array.from({ length: 30 }, (_, i) =>
+        scene(i, i % 4 === 0 ? "hook" : "statement"),
+      ),
+    });
+    expect(lively.warnings.some((w) => w.rule === "long-form-rehook")).toBe(
+      false,
+    );
   });
 });
