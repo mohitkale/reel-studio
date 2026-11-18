@@ -73,9 +73,7 @@ export function resolveCaptionRenderStyle(input: {
       maxWidth: layout.captionMaxWidth,
       padding: `${Math.round(style.paddingY * scale)}px ${Math.round(style.paddingX * scale)}px`,
       borderRadius:
-        style.presetId === "legacy"
-          ? 18
-          : Math.round(style.radius * scale),
+        style.presetId === "legacy" ? 18 : Math.round(style.radius * scale),
       background: colorWithOpacity(
         style.backgroundColor,
         style.backgroundOpacity,

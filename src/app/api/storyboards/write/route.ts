@@ -24,6 +24,14 @@ const bodySchema = z
         targetSeconds: z.number().min(5).max(600).optional(),
         format: z.enum(["9:16", "16:9", "1:1"]).optional(),
         tone: z.string().trim().min(1).max(200).optional(),
+        /** Change an existing storyboard as the instruction says (result page). */
+        revise: z
+          .object({
+            storyboard: z.record(z.string(), z.unknown()),
+            instruction: z.string().trim().min(1).max(500),
+          })
+          .strict()
+          .optional(),
         researchNotes: z
           .array(
             z.object({

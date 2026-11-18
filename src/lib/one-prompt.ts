@@ -43,7 +43,7 @@ export interface WriteRequest {
 
 export function buildWriteRequest(
   text: string,
-  options: { format: FormatId; seconds: number },
+  options: { format: FormatId; seconds: number; research?: boolean },
 ): WriteRequest | null {
   const kind = classifyEntry(text);
   if (kind === "empty") return null;
@@ -59,18 +59,26 @@ export function buildWriteRequest(
     },
     // Your own text is the source; a topic or a URL may be researched.
     fromSourceText: kind === "own-text",
-    research: kind === "own-text" ? "off" : "auto",
+    research:
+      kind === "own-text" || options.research === false ? "off" : "auto",
   };
 }
 
-/** Apply the chosen theme and narration switch to a written storyboard. */
+/** Apply the chosen theme and the narration, music and caption switches to a written storyboard. */
 export function finishStoryboard(
   storyboard: Record<string, unknown>,
-  options: { theme: string; narration: boolean },
+  options: {
+    theme: string;
+    narration: boolean;
+    music?: boolean;
+    captions?: boolean;
+  },
 ): Record<string, unknown> {
   return {
     ...storyboard,
     ...(options.theme !== "auto" ? { theme: options.theme } : {}),
+    ...(options.music === false ? { music: "none" } : {}),
+    ...(options.captions === false ? { captions: "off" } : {}),
     ...(!options.narration
       ? {
           voice: {

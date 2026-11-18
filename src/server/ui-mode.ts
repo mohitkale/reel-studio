@@ -1,6 +1,7 @@
 import { prisma } from "@/library/db";
 import { SAMPLE_PROJECT_NAME } from "@/library/sample-content";
 import { getConfig, type AppConfig } from "@/server/app-config";
+import { resolveAutomation, type Automation } from "@/lib/automation";
 
 /**
  * Simple is for people who want a finished video from a sentence. Pro keeps
@@ -16,6 +17,8 @@ export interface UiState {
   existingInstall: boolean;
   /** Videos wait for an OK on the scenes before they are made. */
   reviewBeforeMaking: boolean;
+  /** Steps a new video runs by itself. */
+  automation: Automation;
 }
 
 /** Work the user made themselves. The seeded sample project does not count. */
@@ -32,7 +35,11 @@ export async function hasExistingWork(): Promise<boolean> {
 export function decideUiState(
   config: Pick<
     AppConfig,
-    "uiMode" | "onboardedAt" | "setupRequested" | "reviewBeforeMaking"
+    | "uiMode"
+    | "onboardedAt"
+    | "setupRequested"
+    | "reviewBeforeMaking"
+    | "automation"
   >,
   existingInstall: boolean,
 ): UiState {
@@ -44,6 +51,7 @@ export function decideUiState(
       (!config.onboardedAt && !existingInstall),
     existingInstall,
     reviewBeforeMaking: Boolean(config.reviewBeforeMaking),
+    automation: resolveAutomation(config.automation),
   };
 }
 

@@ -1,11 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import {
-  makeSilentWav,
-  normalizeWavToTarget,
-  parseWav,
-  pcmToWav,
-} from "./wav";
+import { makeSilentWav, normalizeWavToTarget, parseWav, pcmToWav } from "./wav";
 
 describe("wav", () => {
   it("round-trips PCM through a WAV header", () => {

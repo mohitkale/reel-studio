@@ -64,7 +64,10 @@ export function normalizeWavLoudness(wav: Buffer): Buffer {
 
   const out = Buffer.alloc(pcm.length);
   for (let i = 0; i < sampleCount; i++) {
-    const v = Math.max(-1, Math.min(1, (pcm.readInt16LE(i * 2) / 32768) * gain));
+    const v = Math.max(
+      -1,
+      Math.min(1, (pcm.readInt16LE(i * 2) / 32768) * gain),
+    );
     out.writeInt16LE(Math.round(v < 0 ? v * 0x8000 : v * 0x7fff), i * 2);
   }
   return pcmToWav(out, {

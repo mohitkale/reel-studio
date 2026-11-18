@@ -9,6 +9,7 @@ describe("decideUiState", () => {
       needsOnboarding: true,
       existingInstall: false,
       reviewBeforeMaking: false,
+      automation: { research: true, voice: true, music: true, captions: true },
     });
   });
 
@@ -39,5 +40,11 @@ describe("decideUiState", () => {
     expect(
       decideUiState({ reviewBeforeMaking: true }, false).reviewBeforeMaking,
     ).toBe(true);
+  });
+
+  it("keeps stored automation switches and fills in the rest as on", () => {
+    expect(
+      decideUiState({ automation: { music: false } }, false).automation,
+    ).toEqual({ research: true, voice: true, music: false, captions: true });
   });
 });

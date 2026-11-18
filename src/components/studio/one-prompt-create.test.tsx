@@ -26,6 +26,12 @@ vi.mock("@/hooks/ai", () => ({ useAIProviders: () => mocks.providers }));
 vi.mock("@/lib/api-client", () => ({ apiPost: mocks.post }));
 vi.mock("@/hooks/ui-mode", () => ({
   useReviewFields: () => (mocks.review ? { review: true } : {}),
+  useAutomation: () => ({
+    research: true,
+    voice: true,
+    music: true,
+    captions: true,
+  }),
 }));
 
 import { OnePromptCreate } from "./one-prompt-create";

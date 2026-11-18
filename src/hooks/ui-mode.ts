@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { UiMode, UiState } from "@/server/ui-mode";
+import { DEFAULT_AUTOMATION, type Automation } from "@/lib/automation";
 import { apiGet, apiPost } from "@/lib/api-client";
 
 export type { UiMode };
@@ -31,7 +32,29 @@ export function useSetUiMode() {
       mode?: UiMode;
       onboarded?: boolean;
       reviewBeforeMaking?: boolean;
+      automation?: Partial<Automation>;
     }) => apiPost<UiState>("/api/ui-mode", input),
+    // Show a switch's new value at once; the server's answer replaces it.
+    onMutate: async (input) => {
+      await client.cancelQueries({ queryKey: KEY });
+      const previous = client.getQueryData<UiState>(KEY);
+      if (previous) {
+        client.setQueryData<UiState>(KEY, {
+          ...previous,
+          ...(input.mode ? { mode: input.mode } : {}),
+          ...(input.reviewBeforeMaking !== undefined
+            ? { reviewBeforeMaking: input.reviewBeforeMaking }
+            : {}),
+          ...(input.automation
+            ? { automation: { ...previous.automation, ...input.automation } }
+            : {}),
+        });
+      }
+      return { previous };
+    },
+    onError: (_error, _input, context) => {
+      if (context?.previous) client.setQueryData(KEY, context.previous);
+    },
     onSuccess: (state) => client.setQueryData(KEY, state),
   });
 }
@@ -40,4 +63,10 @@ export function useSetUiMode() {
 export function useReviewFields(): { review?: true } {
   const { data } = useUiState();
   return data?.reviewBeforeMaking ? { review: true } : {};
+}
+
+/** The saved defaults for which steps run by themselves. */
+export function useAutomation(): Automation {
+  const { data } = useUiState();
+  return data?.automation ?? DEFAULT_AUTOMATION;
 }

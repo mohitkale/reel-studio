@@ -31,13 +31,22 @@ function readTag(buf: Buffer, offset: number) {
  * is not a PCM WAV. Tolerates extra chunks (LIST, fact, etc.) before `data`.
  */
 export function parseWav(buf: Buffer): WavInfo {
-  if (buf.length < 12 || readTag(buf, 0) !== "RIFF" || readTag(buf, 8) !== "WAVE") {
+  if (
+    buf.length < 12 ||
+    readTag(buf, 0) !== "RIFF" ||
+    readTag(buf, 8) !== "WAVE"
+  ) {
     throw new Error("Not a RIFF/WAVE file");
   }
 
   let offset = 12;
   let fmt:
-    | { audioFormat: number; channels: number; sampleRate: number; bitsPerSample: number }
+    | {
+        audioFormat: number;
+        channels: number;
+        sampleRate: number;
+        bitsPerSample: number;
+      }
     | undefined;
   let dataLength: number | undefined;
   let dataOffset = 0;

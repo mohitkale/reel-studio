@@ -26,8 +26,7 @@ test("prompt to a changed, downloaded video by keyboard", async ({ page }) => {
   // More options: open with the keyboard and choose the quick draft.
   await tabTo(page, (f) => f.label === "More options");
   await page.keyboard.press("Enter");
-  await tabTo(page, (f) => f.tag === "input");
-  await tabTo(page, (f) => /Quick draft/.test(f.label) || f.tag === "input");
+  await tabTo(page, (f) => f.label === "quick-draft");
   await page.keyboard.press("Space");
   await expect(page.getByLabel(/Quick draft/)).toBeChecked();
 
@@ -50,5 +49,9 @@ test("prompt to a changed, downloaded video by keyboard", async ({ page }) => {
     (url) => url.toString() !== first && /\/results\//.test(url.pathname),
   );
   await expectPlayableVideo(page);
+  // The earlier version is kept and one click away; nothing is made again.
+  await expect(
+    page.getByRole("link", { name: /previous version/ }),
+  ).toHaveAttribute("href", new RegExp(`${first.split("/results/")[1]}$`));
   await downloadMp4(page);
 });

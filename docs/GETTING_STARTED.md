@@ -56,9 +56,13 @@ An install that already has videos opens in Pro with nothing moved. Switch in
 the header or in **Settings**, which also has **Run setup again** and **Review
 each video before it is made**. Switching never changes your videos.
 
-On a finished video, **Change it** edits text, order, look and music in place,
-**Share it** copies a caption with hashtags and makes the other two sizes from
-the same storyboard.
+**Settings** also has **What runs by itself** (web research, voice, music and
+captions; each can be changed for one video under More options on Create). On a
+finished video, **Change it** edits text, order, look and music in place and
+links back to the previous version, **Tell me what to change** asks the
+storyboard writer for edits and shows them before anything is made, and **Share
+it** copies a caption with hashtags and makes the other two sizes or another
+voice from the same storyboard.
 
 See [Creating videos](CREATING_VIDEOS.md) for the full workflow.
 

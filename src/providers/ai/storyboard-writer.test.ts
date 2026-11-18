@@ -107,6 +107,32 @@ describe("the writer prompt", () => {
     });
   });
 
+  it("asks to change an existing storyboard and keeps the rest as it is", () => {
+    const current = { version: 1, title: "T", scenes: [{ type: "hook" }] };
+    const brief: StoryboardBrief = {
+      topic: "Revise an existing video",
+      revise: { storyboard: current, instruction: "Make the hook shorter" },
+    };
+    const { system, user } = buildStoryboardMessages(brief);
+    expect(system).toBe(STORYBOARD_WRITER_PROMPT);
+    expect(JSON.parse(user)).toMatchObject({
+      instruction: "Make the hook shorter",
+      currentStoryboard: current,
+    });
+    expect(JSON.parse(user).task).toMatch(/exactly as it is/);
+    const retry = JSON.parse(
+      buildRetryMessages(brief, "bad", [
+        { path: "scenes", message: "Required", expected: "x", example: "[]" },
+      ]).user,
+    );
+    expect(retry).toMatchObject({
+      instruction: "Make the hook shorter",
+      currentStoryboard: current,
+      previousReply: "bad",
+    });
+    expect(retry.brief).toBeUndefined();
+  });
+
   it("is published for chat apps and the generated files are current", () => {
     const doc = readFileSync(
       path.join(root, "docs", "prompts", "storyboard-writer.md"),

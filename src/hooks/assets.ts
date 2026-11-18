@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { AssetDTO } from "@/lib/dto";
 
 async function fetchAssets(type?: string): Promise<AssetDTO[]> {
@@ -25,7 +21,10 @@ export function useUploadAsset() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (formData: FormData) => {
-      const res = await fetch("/api/assets", { method: "POST", body: formData });
+      const res = await fetch("/api/assets", {
+        method: "POST",
+        body: formData,
+      });
       if (!res.ok) throw new Error(await res.text());
       return res.json() as Promise<AssetDTO>;
     },

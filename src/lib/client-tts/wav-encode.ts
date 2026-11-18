@@ -37,7 +37,8 @@ export function encodeWavPcm16(
   const view = new DataView(buffer);
 
   const writeStr = (offset: number, s: string) => {
-    for (let i = 0; i < s.length; i++) view.setUint8(offset + i, s.charCodeAt(i));
+    for (let i = 0; i < s.length; i++)
+      view.setUint8(offset + i, s.charCodeAt(i));
   };
 
   writeStr(0, "RIFF");

@@ -27,7 +27,8 @@ export const MUSIC_LIBRARY: MusicTrack[] = [
     id: "tech-minimal",
     name: "Tech Minimal",
     url: "/music/tech-minimal.wav",
-    description: "Driving sequencer arp + light beat — product and tech content.",
+    description:
+      "Driving sequencer arp + light beat — product and tech content.",
     moods: ["tech"],
   },
   {
@@ -41,14 +42,16 @@ export const MUSIC_LIBRARY: MusicTrack[] = [
     id: "upbeat-drive",
     name: "Upbeat Drive",
     url: "/music/upbeat-drive.wav",
-    description: "Punchy syncopated bass + bright arp — energetic hooks and lists.",
+    description:
+      "Punchy syncopated bass + bright arp — energetic hooks and lists.",
     moods: ["energetic"],
   },
   {
     id: "cinematic-tension",
     name: "Cinematic Tension",
     url: "/music/cinematic-tension.wav",
-    description: "Low sustained pad + rising lead — dramatic reveals and stakes.",
+    description:
+      "Low sustained pad + rising lead — dramatic reveals and stakes.",
     moods: ["dramatic"],
   },
   {
@@ -62,13 +65,16 @@ export const MUSIC_LIBRARY: MusicTrack[] = [
     id: "warm-acoustic",
     name: "Warm Acoustic",
     url: "/music/warm-acoustic.wav",
-    description: "Gentle rolling fingerstyle arpeggio — nature and heartfelt moments.",
+    description:
+      "Gentle rolling fingerstyle arpeggio — nature and heartfelt moments.",
     moods: ["nature", "inspiring"],
   },
 ];
 
 /** Pick the bundled track that best matches a scene mood, if any. */
-export function suggestBundledTrack(mood: string | undefined): MusicTrack | undefined {
+export function suggestBundledTrack(
+  mood: string | undefined,
+): MusicTrack | undefined {
   if (!mood) return undefined;
   return MUSIC_LIBRARY.find((t) => t.moods.includes(mood as SceneMood));
 }

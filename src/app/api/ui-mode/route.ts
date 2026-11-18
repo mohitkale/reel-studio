@@ -7,6 +7,7 @@ import {
   readRequestJson,
 } from "@/server/api-helpers";
 import {
+  setAutomation,
   setOnboarded,
   setReviewBeforeMaking,
   setUiMode,
@@ -23,6 +24,17 @@ const bodySchema = z
     onboarded: z.boolean().optional(),
     /** Stop for review before a video is made. */
     reviewBeforeMaking: z.boolean().optional(),
+    /** Which steps run by themselves; only the keys sent change. */
+    automation: z
+      .object({
+        research: z.boolean(),
+        voice: z.boolean(),
+        music: z.boolean(),
+        captions: z.boolean(),
+      })
+      .partial()
+      .strict()
+      .optional(),
   })
   .strict();
 
@@ -43,6 +55,7 @@ export async function POST(req: Request) {
     const body = parseClientInput(bodySchema, await readRequestJson(req));
     if (body.mode) await setUiMode(body.mode);
     if (body.onboarded !== undefined) await setOnboarded(body.onboarded);
+    if (body.automation) await setAutomation(body.automation);
     if (body.reviewBeforeMaking !== undefined)
       await setReviewBeforeMaking(body.reviewBeforeMaking);
     return Response.json(await readUiState());
