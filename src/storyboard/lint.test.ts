@@ -600,3 +600,55 @@ describe("narration a voice cannot say", () => {
     expect(rules).not.toContain("scenes.1.narration:unspeakable-characters");
   });
 });
+
+describe("publish details", () => {
+  const base = {
+    version: 1,
+    title: "T",
+    scenes: [
+      {
+        type: "hook",
+        headline: "H",
+        narration: "A line that is spoken aloud.",
+      },
+      { type: "cta", headline: "Go", narration: "Try it today and tell us." },
+    ],
+  };
+
+  it("accepts a tidy publish block", () => {
+    const result = lintStoryboard({
+      ...base,
+      publish: {
+        title: "Why the sky is blue",
+        description: "A short look at scattering.",
+        hashtags: ["science", "#sky"],
+        thumbnailText: "Why is the sky blue?",
+      },
+    });
+    expect(result.errors).toEqual([]);
+    expect(result.storyboard?.publish?.title).toBe("Why the sky is blue");
+  });
+
+  it("repairs long text, odd hashtags and repeats instead of failing", () => {
+    const result = lintStoryboard({
+      ...base,
+      publish: {
+        title: `${"word ".repeat(40)}`,
+        hashtags: ["#Science", "science", "bad tag!", "x", "#sky"],
+      },
+    });
+    expect(result.errors).toEqual([]);
+    const publish = result.storyboard?.publish;
+    expect(publish?.title?.length).toBeLessThanOrEqual(100);
+    expect(publish?.hashtags).toEqual(["Science", "sky"]);
+    const rules = result.fixes.map((f) => f.rule);
+    expect(rules).toContain("shorten-publish");
+    expect(rules).toContain("tidy-hashtags");
+  });
+
+  it("drops a publish value that is not an object", () => {
+    const result = lintStoryboard({ ...base, publish: "post it" });
+    expect(result.errors).toEqual([]);
+    expect(result.storyboard?.publish).toBeUndefined();
+  });
+});

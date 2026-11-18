@@ -29,9 +29,12 @@ type Storyboard = KitSource & { [k: string]: unknown };
  */
 export function PublishingKit({
   scriptId,
+  jobId,
   hasCaptions,
 }: {
   scriptId: string;
+  /** The finished video's job; the thumbnails use a frame from its MP4. */
+  jobId: string;
   hasCaptions: boolean;
 }) {
   const [kit, setKit] = React.useState<Kit>();
@@ -98,6 +101,19 @@ export function PublishingKit({
               data: new Uint8Array(await response.arrayBuffer()),
             });
         }
+      }
+      // A thumbnail needs Chrome; the zip is still useful without it.
+      try {
+        const thumbnail = await fetch(
+          `/api/production-jobs/${jobId}/thumbnail?size=landscape`,
+        );
+        if (thumbnail.ok)
+          files.push({
+            name: "thumbnail-1280x720.png",
+            data: new Uint8Array(await thumbnail.arrayBuffer()),
+          });
+      } catch {
+        // Leave the thumbnail out.
       }
       const blob = new Blob([buildZip(files) as BlobPart], {
         type: "application/zip",
@@ -218,7 +234,9 @@ export function PublishingKit({
         )}
       </div>
       <p className="text-muted-foreground text-xs">
-        The zip holds the title, description, hashtags, storyboard
+        The thumbnail puts the thumbnail text over a frame of the video, in the
+        theme&apos;s colours. The zip holds the title, description, hashtags,
+        storyboard, the 1280×720 thumbnail
         {hasCaptions ? " and captions (SRT and VTT)" : ""}. Platform limits
         change; check the platform before relying on them. The video itself is
         the MP4 above.

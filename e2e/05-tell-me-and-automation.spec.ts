@@ -104,3 +104,29 @@ test("the publishing kit shows copyable text, platform fit and a zip", async ({
   expect(bytes.toString("latin1")).toContain("description.txt");
   expect(bytes.toString("latin1")).toContain("storyboard.json");
 });
+
+test("the thumbnail endpoint returns PNGs at both sizes", async ({
+  request,
+}) => {
+  const { jobs } = (await (
+    await request.get("/api/production-jobs?limit=5")
+  ).json()) as { jobs: { id: string; state: string }[] };
+  const done = jobs.find((job) => job.state === "succeeded");
+  expect(done, "a finished video from the journeys").toBeTruthy();
+  for (const [size, width, height] of [
+    ["landscape", 1280, 720],
+    ["vertical", 1080, 1920],
+  ] as const) {
+    const response = await request.get(
+      `/api/production-jobs/${done!.id}/thumbnail?size=${size}`,
+      { timeout: 90_000 },
+    );
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toBe("image/png");
+    const bytes = await response.body();
+    // PNG signature, then the IHDR width and height.
+    expect(bytes.subarray(1, 4).toString()).toBe("PNG");
+    expect(bytes.readUInt32BE(16)).toBe(width);
+    expect(bytes.readUInt32BE(20)).toBe(height);
+  }
+});

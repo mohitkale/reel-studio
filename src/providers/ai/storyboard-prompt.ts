@@ -28,6 +28,7 @@ Scene types
 Rules
 - Layout, colour, motion, timing and transitions are decided later. Do not describe them.
 - sources: only pages listed in the research notes, each with its title, url and the date accessed.
+- publish: a title, a one or two sentence description, up to ten hashtags and three to six big words of thumbnailText for posting. Leave out what you are unsure of.
 - Use the requested format and tone, and write in the language of the brief.`;
 
 export interface StoryboardBrief {

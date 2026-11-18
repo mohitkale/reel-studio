@@ -47,6 +47,10 @@ export const STORYBOARD_LIMITS = {
   durationHint: { min: 2, max: 30 },
   scenes: { min: 1, max: 40 },
   sources: 12,
+  publishTitle: 100,
+  publishDescription: 1500,
+  publishHashtags: 10,
+  thumbnailText: 40,
   sourceTitle: 120,
   speakers: { min: 1, max: 3 },
   speakerName: 40,
@@ -132,6 +136,42 @@ export const captionsSchema = z
   .enum(["auto", "off"])
   .describe(
     'Captions generated from the narration. "auto" shows them, "off" hides them. Default "auto".',
+  );
+
+export const publishSchema = z
+  .strictObject({
+    title: z
+      .string()
+      .min(1)
+      .max(L.publishTitle)
+      .optional()
+      .describe(
+        'Title for posting, at most 100 characters. A clear promise, not clickbait. Example: "Why the sky is blue".',
+      ),
+    description: z
+      .string()
+      .min(1)
+      .max(L.publishDescription)
+      .optional()
+      .describe(
+        "Post description: one or two sentences of what the viewer gets. No hashtags here; they go in hashtags.",
+      ),
+    hashtags: z
+      .array(z.string().regex(/^#?[\p{L}\p{N}_]{2,40}$/u))
+      .max(L.publishHashtags)
+      .optional()
+      .describe("Up to ten hashtags, with or without the # sign."),
+    thumbnailText: z
+      .string()
+      .min(1)
+      .max(L.thumbnailText)
+      .optional()
+      .describe(
+        'Three to six big words for the thumbnail, at most 40 characters. Example: "Why is the sky blue?".',
+      ),
+  })
+  .describe(
+    "How to post the video: title, description, hashtags and thumbnail text. Leave out what you are unsure of.",
   );
 
 export const sourceSchema = z.strictObject({
@@ -493,6 +533,7 @@ const base = {
     .describe(
       "Pages you used for facts. Leave out if you used none. Never invent sources.",
     ),
+  publish: publishSchema.optional(),
 };
 
 export const videoStoryboardSchema = z

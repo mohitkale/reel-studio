@@ -6,11 +6,20 @@ import { buildShareCaption } from "@/lib/share-caption";
  */
 export interface KitSource {
   title: string;
+  /** What the writer chose for posting; these win over the built-from-text defaults. */
+  publish?: {
+    title?: string;
+    description?: string;
+    hashtags?: string[];
+    thumbnailText?: string;
+  };
   scenes: { headline?: string; narration?: string }[];
   sources?: { title: string; url: string }[];
 }
 
 export interface PublishingKit {
+  /** Big words for the thumbnail. */
+  thumbnailText: string;
   title: string;
   description: string;
   hashtags: string[];
@@ -56,32 +65,38 @@ const trimTo = (text: string, max: number) => {
 
 export function buildPublishingKit(source: KitSource): PublishingKit {
   const share = buildShareCaption(source);
+  const chosen = source.publish;
   const points = source.scenes
     .map((scene) => scene.headline?.trim())
     .filter((headline): headline is string => Boolean(headline))
     .slice(1, 7);
-  const opening = source.scenes
-    .map((scene) => scene.narration?.trim())
-    .find((narration): narration is string => Boolean(narration));
-  const lines = [
-    opening ?? share.caption,
+  const opening =
+    chosen?.description?.trim() ||
+    source.scenes
+      .map((scene) => scene.narration?.trim())
+      .find((narration): narration is string => Boolean(narration)) ||
+    share.caption;
+  const hashtags = chosen?.hashtags?.length
+    ? chosen.hashtags.map((tag) => `#${tag.replace(/^#+/, "")}`)
+    : share.hashtags;
+  const body = [
+    opening,
     ...(points.length
       ? ["", "In this video:", ...points.map((p) => `- ${p}`)]
       : []),
     ...(source.sources?.length
       ? ["", "Sources:", ...source.sources.map((s) => `- ${s.title}: ${s.url}`)]
       : []),
-    "",
-    share.hashtags.join(" "),
-  ];
+  ].join("\n");
   return {
-    title: trimTo(source.title.trim(), 100),
-    description: lines
-      .join("\n")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim(),
-    hashtags: share.hashtags,
-    hashtagLine: share.hashtags.join(" "),
+    thumbnailText: trimTo(
+      chosen?.thumbnailText?.trim() || source.title.trim(),
+      40,
+    ),
+    title: trimTo((chosen?.title ?? source.title).trim(), 100),
+    description: `${body}\n\n${hashtags.join(" ")}`.trim(),
+    hashtags,
+    hashtagLine: hashtags.join(" "),
   };
 }
 

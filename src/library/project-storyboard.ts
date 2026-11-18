@@ -52,6 +52,7 @@ export interface StoryboardSource {
     theme?: string;
     captions?: "auto" | "off";
     sources?: unknown[];
+    publish?: unknown;
     voice?: unknown;
   };
   scenes: Array<{ fingerprint: string; extras: SceneExtras }>;
@@ -269,6 +270,7 @@ export function scriptToStoryboard(
     music,
     captions: source?.root.captions ?? "auto",
     ...(source?.root.sources ? { sources: source.root.sources } : {}),
+    ...(source?.root.publish ? { publish: source.root.publish } : {}),
     scenes,
   };
   if (source?.root.voice) raw.voice = source.root.voice;
@@ -316,6 +318,7 @@ export function buildStoryboardSource(
       ...(storyboard.theme ? { theme: storyboard.theme } : {}),
       captions: storyboard.captions,
       ...(storyboard.sources ? { sources: storyboard.sources } : {}),
+      ...(storyboard.publish ? { publish: storyboard.publish } : {}),
       ...(storyboard.voice ? { voice: storyboard.voice } : {}),
     },
     scenes: storyboard.scenes.map((scene, index) => {

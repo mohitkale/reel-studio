@@ -107,6 +107,40 @@
             "additionalProperties": false
           }
         },
+        "publish": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "description": "Title for posting, at most 100 characters. A clear promise, not clickbait. Example: \"Why the sky is blue\".",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "description": {
+              "description": "Post description: one or two sentences of what the viewer gets. No hashtags here; they go in hashtags.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1500
+            },
+            "hashtags": {
+              "description": "Up to ten hashtags, with or without the # sign.",
+              "maxItems": 10,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^#?[\\p{L}\\p{N}_]{2,40}$"
+              }
+            },
+            "thumbnailText": {
+              "description": "Three to six big words for the thumbnail, at most 40 characters. Example: \"Why is the sky blue?\".",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            }
+          },
+          "additionalProperties": false,
+          "description": "How to post the video: title, description, hashtags and thumbnail text. Leave out what you are unsure of."
+        },
         "kind": {
           "default": "video",
           "description": "\"video\" (default) for a video.",
@@ -649,6 +683,40 @@
             ],
             "additionalProperties": false
           }
+        },
+        "publish": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "description": "Title for posting, at most 100 characters. A clear promise, not clickbait. Example: \"Why the sky is blue\".",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "description": {
+              "description": "Post description: one or two sentences of what the viewer gets. No hashtags here; they go in hashtags.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1500
+            },
+            "hashtags": {
+              "description": "Up to ten hashtags, with or without the # sign.",
+              "maxItems": 10,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^#?[\\p{L}\\p{N}_]{2,40}$"
+              }
+            },
+            "thumbnailText": {
+              "description": "Three to six big words for the thumbnail, at most 40 characters. Example: \"Why is the sky blue?\".",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            }
+          },
+          "additionalProperties": false,
+          "description": "How to post the video: title, description, hashtags and thumbnail text. Leave out what you are unsure of."
         },
         "kind": {
           "type": "string",

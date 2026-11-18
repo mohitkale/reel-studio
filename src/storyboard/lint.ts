@@ -230,6 +230,7 @@ const ROOT_KEYS = {
     "reduceMotion",
     "captions",
     "sources",
+    "publish",
     "scenes",
   ],
   podcast: [
@@ -238,6 +239,7 @@ const ROOT_KEYS = {
     "title",
     "music",
     "sources",
+    "publish",
     "speakers",
     "turns",
   ],
@@ -1277,6 +1279,8 @@ function repairRoot(
     if ((root.sources as unknown[]).length === 0) delete root.sources;
   }
 
+  repairPublish(root, fixes);
+
   if (podcast) repairPodcast(root, fixes, warnings);
   else {
     if (Array.isArray(root.scenes)) {
@@ -1489,6 +1493,11 @@ const EXAMPLES: [RegExp, string, string][] = [
     '{ "speaker": "host", "text": "Welcome." }',
   ],
   [
+    /^publish/,
+    "{ title (at most 100 characters), description (at most 1500), hashtags (up to 10), thumbnailText (at most 40) }",
+    '{ "title": "Why the sky is blue", "hashtags": ["science", "#sky"] }',
+  ],
+  [
     /^sources/,
     "{ title, url (http/https), accessed (YYYY-MM-DD) }",
     '{ "title": "Guide", "url": "https://example.com", "accessed": "2026-11-13" }',
@@ -1519,6 +1528,63 @@ function zodToErrors(error: ZodError): LintError[] {
     out.push({ path, message: issue.message, expected, example });
   }
   return out;
+}
+
+/** Keep the posting details inside their limits instead of failing the storyboard. */
+function repairPublish(root: Record<string, unknown>, fixes: LintFix[]) {
+  const publish = root.publish;
+  if (publish === undefined) return;
+  if (!publish || typeof publish !== "object" || Array.isArray(publish)) {
+    delete root.publish;
+    fixes.push({
+      path: "publish",
+      rule: "drop-publish",
+      message: "Removed publish because it was not an object",
+    });
+    return;
+  }
+  const record = publish as Record<string, unknown>;
+  for (const [key, max] of [
+    ["title", L.publishTitle],
+    ["description", L.publishDescription],
+    ["thumbnailText", L.thumbnailText],
+  ] as const) {
+    const value = record[key];
+    if (typeof value !== "string") continue;
+    const clean = squash(value);
+    if (!clean) delete record[key];
+    else if (clean.length > max) {
+      record[key] = cutAtBoundary(clean, max);
+      fixes.push({
+        path: `publish.${key}`,
+        rule: "shorten-publish",
+        message: `Cut publish.${key} to ${max} characters at a boundary`,
+      });
+    } else record[key] = clean;
+  }
+  if (Array.isArray(record.hashtags)) {
+    const seen = new Set<string>();
+    const tags: string[] = [];
+    for (const raw of record.hashtags) {
+      if (typeof raw !== "string") continue;
+      const tag = raw.trim().replace(/^#+/, "").replace(/\s+/g, "");
+      if (!/^[\p{L}\p{N}_]{2,40}$/u.test(tag) || seen.has(tag.toLowerCase()))
+        continue;
+      seen.add(tag.toLowerCase());
+      tags.push(tag);
+    }
+    if (tags.length !== record.hashtags.length) {
+      fixes.push({
+        path: "publish.hashtags",
+        rule: "tidy-hashtags",
+        message: "Removed invalid or repeated hashtags and the # signs",
+      });
+    }
+    if (tags.length > L.publishHashtags) tags.length = L.publishHashtags;
+    if (tags.length) record.hashtags = tags;
+    else delete record.hashtags;
+  }
+  if (Object.keys(record).length === 0) delete root.publish;
 }
 
 function addWarnings(

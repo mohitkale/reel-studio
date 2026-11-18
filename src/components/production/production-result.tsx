@@ -69,12 +69,13 @@ function ShuffleLook({ jobId, scriptId }: { jobId: string; scriptId: string }) {
 }
 
 /** The publishing kit, with captions in the zip when the video has them. */
-function KitSection({ scriptId }: { scriptId: string }) {
+function KitSection({ scriptId, jobId }: { scriptId: string; jobId: string }) {
   const script = useScript(scriptId);
   if (!script.data) return null;
   return (
     <PublishingKit
       scriptId={scriptId}
+      jobId={jobId}
       hasCaptions={(script.data.captionTracks ?? []).some((t) => t.enabled)}
     />
   );
@@ -173,7 +174,7 @@ export function ProductionResult({
       {query.data.state === "succeeded" && (
         <>
           <ResultActions scriptId={scriptId} quality={query.data.quality} />
-          <KitSection scriptId={scriptId} />
+          <KitSection scriptId={scriptId} jobId={jobId} />
           <ChangeVideo jobId={jobId} scriptId={scriptId} />
           <TellMe
             jobId={jobId}

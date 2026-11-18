@@ -50,6 +50,35 @@ describe("buildPublishingKit", () => {
   });
 });
 
+describe("what the writer chose for posting", () => {
+  it("wins over the text-built defaults and keeps the scene list and sources", () => {
+    const kit = buildPublishingKit({
+      ...source,
+      publish: {
+        title: "The real reason the sky is blue",
+        description: "Light scatters; blue scatters most.",
+        hashtags: ["science", "#sky"],
+        thumbnailText: "Why blue?",
+      },
+    });
+    expect(kit.title).toBe("The real reason the sky is blue");
+    expect(kit.thumbnailText).toBe("Why blue?");
+    expect(kit.hashtags).toEqual(["#science", "#sky"]);
+    expect(
+      kit.description.startsWith("Light scatters; blue scatters most."),
+    ).toBe(true);
+    expect(kit.description).toContain("In this video:");
+    expect(kit.description).toContain("Sources:");
+    expect(kit.description.endsWith("#science #sky")).toBe(true);
+  });
+
+  it("falls back to the title for thumbnail text", () => {
+    expect(buildPublishingKit(source).thumbnailText).toBe(
+      "Why the sky is blue",
+    );
+  });
+});
+
 describe("checkPlatforms", () => {
   it("passes a normal kit everywhere", () => {
     expect(checkPlatforms(buildPublishingKit(source)).every((p) => p.ok)).toBe(
