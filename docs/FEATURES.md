@@ -379,6 +379,7 @@ Tools registered by `mcp/src/tools.ts`, `core-tools.ts`, `editorial-tools.ts` an
 | `list_podcasts`                | POD01      |
 | `get_podcast`                  | POD01      |
 | `create_podcast`               | POD01      |
+| `create_podcast_draft`         | POD01      |
 | `update_podcast`               | POD01      |
 | `replace_podcast_characters`   | POD01      |
 | `update_podcast_characters`    | POD01      |

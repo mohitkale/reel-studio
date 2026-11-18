@@ -52,9 +52,10 @@ beforeEach(() => {
   mocks.binary.mockReset();
 });
 
-it("registers the core tools with short definitions", () => {
+it("registers the eight core tools with short definitions", () => {
   const tools = register(registerCoreTools);
   expect([...tools.keys()].sort()).toEqual([
+    "create_podcast",
     "create_video",
     "get_job",
     "list_options",
@@ -135,9 +136,9 @@ it("list_options is one compact answer", async () => {
 
 it("the default toolset is the core tools; REEL_STUDIO_MCP_TOOLS=all adds the rest", () => {
   const byDefault = register((server) => registerTools(server, undefined));
-  expect(byDefault.size).toBe(7);
+  expect(byDefault.size).toBe(8);
   const core = register((server) => registerTools(server, "core"));
-  expect(core.size).toBe(7);
+  expect(core.size).toBe(8);
   const all = register((server) => registerTools(server, "all"));
   expect(all.size).toBeGreaterThan(80);
   expect(all.has("create_video")).toBe(true);
@@ -359,5 +360,66 @@ describe("review_video and revise_video", () => {
     });
     expect(result.isError).toBe(true);
     expect(result.content[0]!.text).toContain("Scene number 9 is out of range");
+  });
+});
+
+describe("create_podcast", () => {
+  it("queues a podcast storyboard and returns the episode links when done", async () => {
+    mocks.post.mockResolvedValue({ jobId: "j9", podcastId: "p9", fixes: [] });
+    mocks.get.mockResolvedValue({
+      job: {
+        status: "done",
+        scene: 3,
+        sceneCount: 3,
+        error: null,
+        podcastTake: {
+          id: "t1",
+          totalFrames: 4500,
+          fps: 30,
+          audioUrl: "/media/podcast-takes/t1.wav",
+          mp3Url: "/media/podcast-takes/t1.mp3",
+        },
+      },
+    });
+    const run = register(registerCoreTools).get("create_podcast")!.run;
+    const result = await run({ storyboard: { version: 1, title: "P" } });
+    expect(mocks.post).toHaveBeenCalledWith("/api/storyboards", {
+      version: 1,
+      title: "P",
+      kind: "podcast",
+    });
+    expect(JSON.parse(result.content[0]!.text)).toMatchObject({
+      podcastId: "p9",
+      state: "succeeded",
+      durationSeconds: 150,
+      mp3Url: "http://studio/media/podcast-takes/t1.mp3",
+      packageUrl: "http://studio/api/podcast-takes/t1/bundle",
+      studioUrl: "http://studio/podcasts/p9",
+    });
+  });
+
+  it("can return the job straight away, and explains a failure", async () => {
+    mocks.post.mockResolvedValue({ jobId: "j9", podcastId: "p9" });
+    const run = register(registerCoreTools).get("create_podcast")!.run;
+    const quick = JSON.parse(
+      (await run({ storyboard: {}, wait: false })).content[0]!.text,
+    );
+    expect(quick).toMatchObject({
+      jobId: "j9",
+      podcastId: "p9",
+      state: "queued",
+    });
+    mocks.get.mockResolvedValue({
+      job: {
+        status: "error",
+        scene: 1,
+        sceneCount: 3,
+        error: "Kokoro model not found",
+        podcastTake: null,
+      },
+    });
+    const failed = JSON.parse((await run({ storyboard: {} })).content[0]!.text);
+    expect(failed.state).toBe("failed");
+    expect(failed.failure.fix).toMatch(/voice model/i);
   });
 });

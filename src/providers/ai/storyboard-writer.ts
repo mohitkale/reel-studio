@@ -70,9 +70,11 @@ export async function writeStoryboard(args: {
       provider.id,
     );
   }
+  const target =
+    args.brief.targetSeconds ?? (args.brief.kind === "podcast" ? 180 : 60);
   const options: LintOptions = {
-    minSeconds: args.lint?.minSeconds ?? (args.brief.targetSeconds ?? 60) * 0.6,
-    maxSeconds: args.lint?.maxSeconds ?? (args.brief.targetSeconds ?? 60) * 1.5,
+    minSeconds: args.lint?.minSeconds ?? target * 0.6,
+    maxSeconds: args.lint?.maxSeconds ?? target * 1.5,
     ...args.lint,
   };
   const call = (messages: { system: string; user: string }) =>
@@ -80,6 +82,7 @@ export async function writeStoryboard(args: {
       ...messages,
       modelId: args.modelId,
       signal: args.signal,
+      kind: args.brief.kind ?? "video",
     });
 
   const firstReply = await call(buildStoryboardMessages(args.brief));

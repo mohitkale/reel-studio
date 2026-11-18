@@ -36,6 +36,8 @@ export interface WriteRequest {
     topic: string;
     targetSeconds: number;
     format: FormatId;
+    /** "podcast" asks for a spoken episode instead of a video. */
+    kind?: "podcast";
   };
   fromSourceText: boolean;
   research: "auto" | "off";
@@ -43,19 +45,25 @@ export interface WriteRequest {
 
 export function buildWriteRequest(
   text: string,
-  options: { format: FormatId; seconds: number; research?: boolean },
+  options: {
+    format: FormatId;
+    seconds: number;
+    research?: boolean;
+    podcast?: boolean;
+  },
 ): WriteRequest | null {
   const kind = classifyEntry(text);
   if (kind === "empty") return null;
   const topic =
     kind === "url"
-      ? `Make a video that explains the page at ${text.trim()}. Read it first and keep the facts accurate.`
+      ? `Make ${options.podcast ? "a podcast episode" : "a video"} that explains the page at ${text.trim()}. Read it first and keep the facts accurate.`
       : text.trim();
   return {
     brief: {
       topic,
       targetSeconds: options.seconds,
       format: options.format,
+      ...(options.podcast ? { kind: "podcast" as const } : {}),
     },
     // Your own text is the source; a topic or a URL may be researched.
     fromSourceText: kind === "own-text",
@@ -94,6 +102,21 @@ export function finishStoryboard(
           },
         }
       : {}),
+  };
+}
+
+/** Apply the music choice to a written podcast storyboard (it has no theme or captions). */
+export function finishPodcast(
+  storyboard: Record<string, unknown>,
+  options: { music?: boolean; musicTrack?: string },
+): Record<string, unknown> {
+  return {
+    ...storyboard,
+    ...(options.music === false
+      ? { music: "none" }
+      : options.musicTrack && options.musicTrack !== "auto"
+        ? { music: options.musicTrack }
+        : {}),
   };
 }
 

@@ -20,6 +20,9 @@ const bodySchema = z
     brief: z
       .object({
         topic: z.string().trim().min(1).max(20_000),
+        /** "podcast" writes a spoken episode instead of a video. */
+        kind: z.enum(["video", "podcast"]).optional(),
+        hosts: z.union([z.literal(1), z.literal(2)]).optional(),
         audience: z.string().trim().min(1).max(200).optional(),
         targetSeconds: z.number().min(5).max(600).optional(),
         format: z.enum(["9:16", "16:9", "1:1"]).optional(),

@@ -16,23 +16,24 @@ are enforced by validation rather than by prompt text.
 
 ## Video
 
-| Field          | Required | Meaning                                                                                                                                                            |
-| -------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `version`      | yes      | Always `1`.                                                                                                                                                        |
-| `kind`         | no       | `"video"` (default) or `"podcast"`.                                                                                                                                |
-| `title`        | yes      | Up to 80 characters.                                                                                                                                               |
-| `format`       | no       | `"9:16"` (default), `"16:9"` or `"1:1"`.                                                                                                                           |
-| `theme`        | no       | One of the ten themes below, or `"auto"`. Omit to let Reel Studio pick one.                                                                                        |
-| `voice`        | no       | `{ enabled, voiceId?, speed? }`. Default: narrated with the default voice.                                                                                         |
-| `music`        | no       | `"auto"` (default), `"none"` or a track id.                                                                                                                        |
-| `variety`      | no       | `"low"`, `"medium"` (default) or `"high"`: how much the look varies from scene to scene.                                                                           |
-| `seed`         | no       | A string or whole number. The same storyboard and seed give the same video; a new seed gives a different cut. Default: derived from the title (or the series).     |
-| `series`       | no       | A series name. Videos with the same `series` share one look family (seed `series:<name>`, unless a `seed` is given) and their look is locked against Shuffle look. |
-| `reduceMotion` | no       | `true` for calmer output: no camera moves, gentler entrances.                                                                                                      |
-| `sfx`          | no       | `"auto"` (default) adds low-level sound effects; `"off"` leaves them out.                                                                                          |
-| `captions`     | no       | `"auto"` (default) or `"off"`.                                                                                                                                     |
-| `sources`      | no       | Up to 12 `{ title, url, accessed }` for facts you used. Never invented.                                                                                            |
-| `scenes`       | yes      | 1 to 40 scenes. About eight scenes make a 60-second video.                                                                                                         |
+| Field          | Required | Meaning                                                                                                                                                                                               |
+| -------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version`      | yes      | Always `1`.                                                                                                                                                                                           |
+| `kind`         | no       | `"video"` (default) or `"podcast"`.                                                                                                                                                                   |
+| `title`        | yes      | Up to 80 characters.                                                                                                                                                                                  |
+| `format`       | no       | `"9:16"` (default), `"16:9"` or `"1:1"`.                                                                                                                                                              |
+| `theme`        | no       | One of the ten themes below, or `"auto"`. Omit to let Reel Studio pick one.                                                                                                                           |
+| `voice`        | no       | `{ enabled, voiceId?, speed? }`. Default: narrated with the default voice.                                                                                                                            |
+| `music`        | no       | `"auto"` (default), `"none"` or a track id.                                                                                                                                                           |
+| `variety`      | no       | `"low"`, `"medium"` (default) or `"high"`: how much the look varies from scene to scene.                                                                                                              |
+| `seed`         | no       | A string or whole number. The same storyboard and seed give the same video; a new seed gives a different cut. Default: derived from the title (or the series).                                        |
+| `series`       | no       | A series name. Videos with the same `series` share one look family (seed `series:<name>`, unless a `seed` is given) and their look is locked against Shuffle look.                                    |
+| `reduceMotion` | no       | `true` for calmer output: no camera moves, gentler entrances.                                                                                                                                         |
+| `sfx`          | no       | `"auto"` (default) adds low-level sound effects; `"off"` leaves them out.                                                                                                                             |
+| `captions`     | no       | `"auto"` (default) or `"off"`.                                                                                                                                                                        |
+| `sources`      | no       | Up to 12 `{ title, url, accessed }` for facts you used. Never invented.                                                                                                                               |
+| `publish`      | no       | How to post it: `{ title (100), description (1500), hashtags (up to 10), thumbnailText (40) }`, every field optional. The writer fills it in the same call; the publishing kit and thumbnails use it. |
+| `scenes`       | yes      | 1 to 40 scenes. About eight scenes make a 60-second video.                                                                                                                                            |
 
 ### Scene
 
@@ -102,8 +103,14 @@ catalog block names. Unknown fields are rejected.
 
 Same file, same version, with `kind: "podcast"`, `speakers` (one to three, each
 with an `id`, a `name` and an optional `voiceId`) and `turns` (1 to 80, each with a
-`speaker` id and up to 600 characters of `text`). `title`, `music` and `sources`
-work as for video.
+`speaker` id and up to 600 characters of `text`). `title`, `music`, `sources` and
+`publish` work as for video. Posting a podcast storyboard to `POST /api/storyboards`
+(or calling the MCP tool `create_podcast`) makes the podcast with its cast and voices,
+loads the script, adds intro and outro music from the bundled library, and queues the
+episode, mastered to -16 LUFS. The finished take has WAV and MP3, a transcript,
+chapter markers and show notes, in one package at `/api/podcast-takes/:id/bundle`.
+The writer prompt for a spoken, two-host episode is
+[prompts/podcast-writer.md](prompts/podcast-writer.md).
 
 ## Linting and auto-repair
 
@@ -178,7 +185,7 @@ afterwards to change anything by hand.
   (`reused: true`). Add `force` to produce again.
 - A storyboard with errors that cannot be repaired answers `422` with the same
   `errors` as the linter, each with `expected` and `example`.
-- Podcast storyboards are not produced here yet.
+- A podcast storyboard answers with `kind: "podcast"`, a `podcastId` (also in `projectId`) and the episode `jobId`; follow it at `GET /api/podcasts/:id/takes/:jobId`.
 
 The code path is `produceFromStoryboard` in `src/library/storyboard-production.ts`;
 MCP and the CLI will call the same function. Scene types map to today's treatments

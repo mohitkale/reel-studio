@@ -5,10 +5,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createGeminiProvider } from "./gemini";
 import { createLMStudioProvider } from "./lm-studio";
 import { createOpenAIProvider } from "./openai";
-import { storyboardWriterPromptDocument } from "./storyboard-doc";
+import {
+  podcastWriterPromptDocument,
+  storyboardWriterPromptDocument,
+} from "./storyboard-doc";
 import {
   buildRetryMessages,
   buildStoryboardMessages,
+  PODCAST_WRITER_PROMPT,
   STORYBOARD_WRITER_PROMPT,
   type StoryboardBrief,
 } from "./storyboard-prompt";
@@ -131,6 +135,44 @@ describe("the writer prompt", () => {
       previousReply: "bad",
     });
     expect(retry.brief).toBeUndefined();
+  });
+
+  it("has a podcast variant: its own prompt, its own schema, a spoken task", () => {
+    const brief: StoryboardBrief = {
+      kind: "podcast",
+      topic: "Why the sky is blue",
+      hosts: 1,
+    };
+    const { system, user } = buildStoryboardMessages(brief);
+    expect(system).toBe(PODCAST_WRITER_PROMPT);
+    expect(system).toMatch(/sound spoken/);
+    const parsed = JSON.parse(user);
+    expect(parsed.task).toMatch(/podcast/);
+    expect(parsed.brief).toMatchObject({
+      topic: "Why the sky is blue",
+      speakers: 1,
+      targetSeconds: 180,
+    });
+    const schema = strictStoryboardSchema("podcast").schema as {
+      properties: Record<string, unknown>;
+    };
+    expect(Object.keys(schema.properties)).toEqual(
+      expect.arrayContaining(["speakers", "turns"]),
+    );
+    expect(Object.keys(schema.properties)).not.toContain("scenes");
+    const video = strictStoryboardSchema().schema as {
+      properties: Record<string, unknown>;
+    };
+    expect(Object.keys(video.properties)).toContain("scenes");
+  });
+
+  it("publishes the podcast prompt and keeps its generated document current", () => {
+    const doc = readFileSync(
+      path.join(root, "docs", "prompts", "podcast-writer.md"),
+      "utf8",
+    );
+    expect(doc).toBe(podcastWriterPromptDocument());
+    expect(doc).toContain(PODCAST_WRITER_PROMPT);
   });
 
   it("is published for chat apps and the generated files are current", () => {

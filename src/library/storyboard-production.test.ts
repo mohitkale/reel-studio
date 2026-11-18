@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  producePodcast: vi.fn(),
   createProjectFromPlan: vi.fn(),
   getScript: vi.fn(),
   updateScript: vi.fn(),
@@ -12,6 +13,10 @@ const mocks = vi.hoisted(() => ({
   ensureSfxCues: vi.fn(),
   reportStockMediaSelectionUsage: vi.fn(),
   resolveAutomaticSceneMediaBatch: vi.fn(),
+}));
+vi.mock("@/library/podcast-storyboard-production", () => ({
+  EPISODE_LUFS: -16,
+  producePodcastFromStoryboard: mocks.producePodcast,
 }));
 vi.mock("@/library/repositories/projects", () => ({
   createProjectFromPlan: mocks.createProjectFromPlan,
@@ -191,19 +196,48 @@ describe("produceFromStoryboard", () => {
     expect(mocks.createProjectFromPlan).not.toHaveBeenCalled();
   });
 
-  it("refuses a podcast storyboard here", async () => {
-    await expect(
-      produceFromStoryboard(
-        {
-          version: 1,
-          kind: "podcast",
-          title: "P",
-          speakers: [{ id: "a", name: "A" }],
-          turns: [{ speaker: "a", text: "Hi." }],
-        },
-        base,
-      ),
-    ).rejects.toThrow(/Podcast/);
+  const podcast = {
+    version: 1,
+    kind: "podcast",
+    title: "P",
+    speakers: [
+      { id: "a", name: "A" },
+      { id: "b", name: "B" },
+    ],
+    turns: [
+      { speaker: "a", text: "Welcome to the show today, everyone." },
+      { speaker: "b", text: "Thanks for having me on the show." },
+    ],
+  };
+
+  it("makes an episode from a podcast storyboard", async () => {
+    mocks.producePodcast.mockResolvedValue({
+      podcastId: "pod1",
+      jobId: "job1",
+      title: "P",
+      speakers: 2,
+      turns: 2,
+    });
+    const result = await produceFromStoryboard(podcast, base);
+    expect(mocks.producePodcast).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({
+      dryRun: false,
+      kind: "podcast",
+      podcastId: "pod1",
+      projectId: "pod1",
+      jobId: "job1",
+      state: "queued",
+    });
+  });
+
+  it("previews a podcast without making anything", async () => {
+    const result = await produceFromStoryboard(podcast, {
+      ...base,
+      dryRun: true,
+    });
+    expect(result.dryRun).toBe(true);
+    expect(mocks.producePodcast).not.toHaveBeenCalled();
+    expect(JSON.stringify(result)).toContain("-16 LUFS");
   });
 
   it("rejects an asset id that is not in the library", async () => {

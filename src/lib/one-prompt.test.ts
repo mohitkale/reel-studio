@@ -5,6 +5,7 @@ import { lintStoryboard } from "@/storyboard";
 import {
   buildWriteRequest,
   classifyEntry,
+  finishPodcast,
   finishStoryboard,
   SAMPLE_STORYBOARD,
 } from "./one-prompt";
@@ -73,6 +74,37 @@ describe("finishStoryboard", () => {
     ).toEqual({
       title: "T",
     });
+  });
+});
+
+describe("finishPodcast", () => {
+  it("applies only the music choice", () => {
+    expect(finishPodcast({ kind: "podcast" }, { music: false })).toEqual({
+      kind: "podcast",
+      music: "none",
+    });
+    expect(
+      finishPodcast(
+        { kind: "podcast" },
+        { music: true, musicTrack: "calm-water" },
+      ),
+    ).toEqual({ kind: "podcast", music: "calm-water" });
+    expect(finishPodcast({ kind: "podcast" }, { musicTrack: "auto" })).toEqual({
+      kind: "podcast",
+    });
+  });
+
+  it("asks the writer for an episode when podcast is chosen", () => {
+    const request = buildWriteRequest("Why the sky is blue", {
+      format: "9:16",
+      seconds: 60,
+      podcast: true,
+    });
+    expect(request?.brief.kind).toBe("podcast");
+    expect(
+      buildWriteRequest("Why the sky is blue", { format: "9:16", seconds: 60 })
+        ?.brief.kind,
+    ).toBeUndefined();
   });
 });
 

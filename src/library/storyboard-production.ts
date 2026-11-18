@@ -7,6 +7,10 @@
  * renders and verifies the MP4. REST, MCP and the CLI share this function.
  * The project stays editable in the existing editor.
  */
+import {
+  EPISODE_LUFS,
+  producePodcastFromStoryboard,
+} from "@/library/podcast-storyboard-production";
 import { createHash, randomUUID } from "node:crypto";
 
 import type { RequestAuthorization } from "@/server/auth";
@@ -32,7 +36,11 @@ import {
   type StoryboardProductionPlan,
 } from "@/production/storyboard-plan";
 import { getProductionPreset } from "@/production/presets";
-import { lintStoryboard, type LintResult } from "@/storyboard";
+import {
+  estimateDurationSeconds,
+  lintStoryboard,
+  type LintResult,
+} from "@/storyboard";
 import { ProviderError } from "@/providers/voice/types";
 
 export interface ProduceFromStoryboardOptions {
@@ -78,6 +86,9 @@ export interface StoryboardPreview {
 
 export interface StoryboardProduction {
   dryRun: false;
+  /** Set for a podcast episode; `projectId` then holds the podcast id. */
+  kind?: "podcast";
+  podcastId?: string;
   jobId: string | null;
   projectId: string;
   scriptId: string | null;
@@ -124,10 +135,44 @@ export async function produceFromStoryboard(
   if (!linted.storyboard) throw new StoryboardLintError(linted);
   const storyboard = linted.storyboard;
   if (storyboard.kind !== "video") {
-    throw new ProviderError(
-      "Podcast storyboards are not produced by this entry point yet; create the podcast through the podcast tools",
-      400,
-    );
+    // A podcast storyboard makes an audio episode, not a video.
+    const hash = storyboardHash(storyboard, {});
+    const estimatedSeconds = estimateDurationSeconds(storyboard);
+    if (options.dryRun) {
+      return {
+        dryRun: true,
+        hash,
+        fixes: linted.fixes,
+        warnings: linted.warnings,
+        plan: {
+          orientation: "portrait",
+          music: { mode: "auto" },
+          voice: { enabled: true },
+          captions: "off",
+          scenes: [],
+          estimatedSeconds,
+          warnings: [
+            `Podcast episode: ${storyboard.speakers.length} speaker(s), ${storyboard.turns.length} turns; mastered to ${EPISODE_LUFS} LUFS`,
+          ],
+        } as unknown as StoryboardPreview["plan"],
+      };
+    }
+    const made = await producePodcastFromStoryboard(storyboard);
+    return {
+      dryRun: false,
+      kind: "podcast",
+      podcastId: made.podcastId,
+      jobId: made.jobId,
+      projectId: made.podcastId,
+      scriptId: null,
+      state: "queued",
+      reused: false,
+      hash,
+      fixes: linted.fixes,
+      warnings: linted.warnings,
+      planWarnings: [],
+      estimatedSeconds,
+    };
   }
 
   const plan = planFromStoryboard(storyboard, {

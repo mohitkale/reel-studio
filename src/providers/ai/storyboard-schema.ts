@@ -59,20 +59,22 @@ function simplify(node: unknown): unknown {
   return out;
 }
 
-/** The video storyboard, in the plain subset every provider supports. */
-export function storyboardWriterSchema(): Node {
+export type StoryboardKind = "video" | "podcast";
+
+/** The video or podcast storyboard, in the plain subset every provider supports. */
+export function storyboardWriterSchema(kind: StoryboardKind = "video"): Node {
   const full = storyboardJsonSchema() as { anyOf: Node[] };
-  const video = full.anyOf[0]!;
-  return simplify({ ...video, type: "object" }) as Node;
+  const variant = full.anyOf[kind === "podcast" ? 1 : 0]!;
+  return simplify({ ...variant, type: "object" }) as Node;
 }
 
 /** Gemini `responseJsonSchema`. */
-export function geminiStoryboardSchema(): Node {
-  return storyboardWriterSchema();
+export function geminiStoryboardSchema(kind: StoryboardKind = "video"): Node {
+  return storyboardWriterSchema(kind);
 }
 
 /** OpenAI, LM Studio, llama.cpp and Ollama `json_schema` / `format` wrapper. */
-export function strictStoryboardSchema(): {
+export function strictStoryboardSchema(kind: StoryboardKind = "video"): {
   name: string;
   strict: true;
   schema: Node;
@@ -81,7 +83,7 @@ export function strictStoryboardSchema(): {
     name: "storyboard",
     strict: true,
     schema: strictOutputSchema({
-      ...storyboardWriterSchema(),
+      ...storyboardWriterSchema(kind),
       additionalProperties: false,
     }) as Node,
   };

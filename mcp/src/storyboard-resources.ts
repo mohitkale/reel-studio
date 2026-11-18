@@ -144,7 +144,7 @@ export function registerStoryboardPrompts(server: McpServer): void {
     },
     ({ topic, hosts }) =>
       userText(
-        `Read reel://authoring/podcast first. Plan a short podcast episode with ${hosts ?? "two hosts"} about: ${topic}. ${RESEARCH} Create it with the podcast tools (create_podcast, import_podcast_script, create_podcast_take), which need REEL_STUDIO_MCP_TOOLS=all in the server environment. Give me the episode link.`,
+        `Read reel://authoring/podcast first. Plan a short podcast episode with ${hosts ?? "two hosts"} about: ${topic}. ${RESEARCH} Write it as a Storyboard v1 document with kind "podcast" and call create_podcast. Give me the episode link and the package link.`,
       ),
   );
   server.registerPrompt(

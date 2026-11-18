@@ -115,18 +115,19 @@ registry and the community directories waits for the published package.
 
 ## Core tools
 
-Seven high-level tools cover the common path, so an agent does not have to learn the
-94-tool surface (about 35,300 tokens of definitions; the seven core tools are about 1,100).
+Eight high-level tools cover the common path, so an agent does not have to learn the
+95-tool surface (about 35,300 tokens of definitions; the eight core tools are about 1,300).
 
-| Tool           | Use                                                                                     |
-| -------------- | --------------------------------------------------------------------------------------- |
-| `create_video` | Storyboard v1 JSON in; waits (default) and returns the finished video link, or a job id |
-| `get_job`      | State, progress percent, stage and the video link of a job                              |
-| `list_options` | Themes, scene types, formats, qualities, recommended voices and music ids               |
-| `review_video` | Findings as suggested storyboard edits, pacing per scene, the latest contact sheet      |
-| `revise_video` | Apply scene edits (update, replace, insert, remove, move) and make the video again      |
-| `list_videos`  | Recent projects                                                                         |
-| `open_studio`  | The local studio address, or one video's editor address                                 |
+| Tool             | Use                                                                                                                                               |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `create_video`   | Storyboard v1 JSON in; waits (default) and returns the finished video link, or a job id                                                           |
+| `create_podcast` | A podcast storyboard in; waits (default) and returns the episode links and one .tar.gz package with WAV, MP3, transcript, chapters and show notes |
+| `get_job`        | State, progress percent, stage and the video link of a job                                                                                        |
+| `list_options`   | Themes, scene types, formats, qualities, recommended voices and music ids                                                                         |
+| `review_video`   | Findings as suggested storyboard edits, pacing per scene, the latest contact sheet                                                                |
+| `revise_video`   | Apply scene edits (update, replace, insert, remove, move) and make the video again                                                                |
+| `list_videos`    | Recent projects                                                                                                                                   |
+| `open_studio`    | The local studio address, or one video's editor address                                                                                           |
 
 `create_video` and `get_job` return, once the video is done: the video link, the local file
 path (when the engine is on this computer), duration, resolution, size, the studio page, and an
@@ -137,10 +138,9 @@ out first, the job keeps running: call `get_job`; a render can take several minu
 client's tool timeout to at least 10 minutes. A failed job returns the failing stage, the cause and
 a specific fix (for example: the voice model is missing, run `npm run voice:download`).
 
-These seven are the default. Set `REEL_STUDIO_MCP_TOOLS=all` in the server's environment to
+These eight are the default. Set `REEL_STUDIO_MCP_TOOLS=all` in the server's environment to
 expose every other tool as well (research, editorial, podcasts, factory, voice takes and the rest;
-nothing is removed). Still to come in this set: `create_podcast` (podcast storyboards are not produced by
-`create_video` yet) and re-rendering only the scenes a revision changed.
+nothing is removed). Still to come in this set: re-rendering only the scenes a revision changed.
 
 ## Storyboard resources and prompts
 
@@ -183,7 +183,7 @@ Each asks the agent to research time-sensitive topics itself and put the sources
 ### Audio podcasts
 
 - **Read:** `list_podcasts`, `get_podcast`, `list_podcast_takes`
-- **Create / edit:** `create_podcast`, `update_podcast`,
+- **Create / edit:** `create_podcast_draft` (an empty podcast; the core `create_podcast` makes a whole episode), `update_podcast`,
   `replace_podcast_characters` (clears turns), `update_podcast_characters`,
   `ai_generate_podcast_script`, `import_podcast_script`, `insert_podcast_turn`,
   `update_podcast_turn`
@@ -318,7 +318,7 @@ failure preserves completed siblings and their downloadable artifacts.
 
 ### Podcast
 
-1. `create_podcast` → `update_podcast_characters` (set TTS voices).
+1. `create_podcast_draft` → `update_podcast_characters` (set TTS voices).
 2. `ai_generate_podcast_script` (or `import_podcast_script` / `insert_podcast_turn`).
 3. `create_podcast_take` → poll `get_podcast_take_job` → `download_podcast_take`.
 

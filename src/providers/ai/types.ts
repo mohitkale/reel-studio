@@ -300,6 +300,8 @@ export interface StructuredCompletionInput {
   modelId?: string;
   temperature?: number;
   signal?: AbortSignal;
+  /** Which storyboard to ask for; the output schema follows it. Default "video". */
+  kind?: "video" | "podcast";
 }
 
 export interface AIProvider {

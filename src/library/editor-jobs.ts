@@ -179,6 +179,7 @@ export async function executeEditorVoiceJob(
       const take = await generatePodcastTake({
         podcastId: input.resourceId,
         regenerateTurnIds: input.regenerateTurnIds,
+        masterLufs: input.masterLufs,
         onProgress,
       });
       progress = {

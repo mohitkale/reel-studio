@@ -242,7 +242,9 @@ export function createGeminiProvider(): AIProvider {
       return scenePlanSchema.parse(parsed);
     },
 
-    async completeStructured(input: StructuredCompletionInput): Promise<string> {
+    async completeStructured(
+      input: StructuredCompletionInput,
+    ): Promise<string> {
       const model = input.modelId || GEMINI_DEFAULT_MODEL;
       const res = await aiFetch(
         `${API_BASE}/models/${model}:generateContent`,
@@ -254,7 +256,7 @@ export function createGeminiProvider(): AIProvider {
             contents: [{ role: "user", parts: [{ text: input.user }] }],
             generationConfig: {
               responseMimeType: "application/json",
-              responseJsonSchema: geminiStoryboardSchema(),
+              responseJsonSchema: geminiStoryboardSchema(input.kind),
               temperature: input.temperature ?? 0.7,
             },
           }),

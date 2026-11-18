@@ -199,13 +199,15 @@ export function createOllamaProvider(
       return scenePlanSchema.parse(raw);
     },
 
-    async completeStructured(input: StructuredCompletionInput): Promise<string> {
+    async completeStructured(
+      input: StructuredCompletionInput,
+    ): Promise<string> {
       const modelId = await selectedModel(store, input.modelId);
       return complete(store, {
         system: input.system,
         user: input.user,
         modelId,
-        jsonSchema: strictStoryboardSchema(),
+        jsonSchema: strictStoryboardSchema(input.kind),
         signal: input.signal,
       });
     },

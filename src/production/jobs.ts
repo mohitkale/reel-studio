@@ -128,4 +128,6 @@ export const editorVoiceInputSchema = audioProductionJobInputSchema
     scriptId: z.string().min(1).optional(),
     regenerateTurnIds: z.array(z.string().min(1)).max(120).optional(),
     podcastVoiceSignature: z.string().optional(),
+    /** Master a podcast episode to this loudness (LUFS); omitted leaves the level as is. */
+    masterLufs: z.number().min(-30).max(-10).optional(),
   });

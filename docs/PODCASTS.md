@@ -15,6 +15,15 @@ exports, and optional video audiograms.
 4. Generate a take. Unchanged turns are reused from cache; regenerate only the
    turns you edit.
 
+## From a storyboard, in one step
+
+Choose **Podcast** on the Create screen and describe the episode, or post a podcast
+storyboard (see [Storyboard](STORYBOARD.md#podcast)) to `POST /api/storyboards`, or call
+`create_podcast` over MCP. The writer produces a spoken, back-and-forth script; the studio
+makes the cast with Kokoro voices, loads the turns, adds intro and outro music from the
+bundled library and masters the episode to -16 LUFS. The result has WAV and MP3, a
+transcript, chapter markers and show notes in one .tar.gz package.
+
 ## Finishing
 
 - Optional six-second intro and outro, per-turn pauses and pronunciation

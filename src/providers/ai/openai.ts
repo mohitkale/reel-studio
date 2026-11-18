@@ -68,13 +68,15 @@ export function createOpenAIProvider(): AIProvider {
       return scenePlanSchema.parse(parseJson(text, "JSON"));
     },
 
-    async completeStructured(input: StructuredCompletionInput): Promise<string> {
+    async completeStructured(
+      input: StructuredCompletionInput,
+    ): Promise<string> {
       return transport.complete({
         model: input.modelId || OPENAI_DEFAULT_MODEL,
         temperature: input.temperature ?? 0.7,
         system: input.system,
         user: input.user,
-        jsonSchema: strictStoryboardSchema(),
+        jsonSchema: strictStoryboardSchema(input.kind),
         signal: input.signal,
       });
     },

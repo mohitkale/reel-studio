@@ -15,6 +15,7 @@ import {
   buildWriteRequest,
   classifyEntry,
   EXAMPLE_PROMPTS,
+  finishPodcast,
   finishStoryboard,
   FORMATS,
   LENGTHS,
@@ -59,6 +60,7 @@ export function OnePromptCreate() {
   const providers = useAIProviders();
   const [text, setText] = React.useState("");
   const [format, setFormat] = React.useState<FormatId>("9:16");
+  const [podcast, setPodcast] = React.useState(false);
   const [seconds, setSeconds] = React.useState<LengthSeconds>(30);
   const [theme, setTheme] = React.useState("auto");
   // Saved defaults for which steps run by themselves; this video can change them.
@@ -80,16 +82,21 @@ export function OnePromptCreate() {
   const kind = classifyEntry(text);
 
   async function produce(storyboard: Record<string, unknown>) {
-    const queued = await apiPost<{ jobId?: string | null }>(
-      "/api/storyboards",
-      {
-        storyboard,
-        quality: draft ? "draft" : "standard",
-        ...review,
-      },
-    );
+    const queued = await apiPost<{
+      jobId?: string | null;
+      podcastId?: string;
+    }>("/api/storyboards", {
+      storyboard,
+      quality: draft ? "draft" : "standard",
+      ...review,
+    });
     if (!queued.jobId) throw new Error("The studio did not start a video");
-    router.push(`/results/${queued.jobId}`);
+    // A podcast storyboard makes an episode, shown on its own page.
+    router.push(
+      queued.podcastId
+        ? `/podcasts/${queued.podcastId}`
+        : `/results/${queued.jobId}`,
+    );
   }
 
   async function create() {
@@ -98,6 +105,7 @@ export function OnePromptCreate() {
       format,
       seconds,
       research: automation.research,
+      podcast,
     });
     if (!request || !writer) return;
     try {
@@ -111,15 +119,17 @@ export function OnePromptCreate() {
           written.errors?.map((e) => `${e.path}: ${e.message}`).join("; ") ||
             "The writer did not return a storyboard. Try again.",
         );
-      setBusy("Starting the video…");
+      setBusy(podcast ? "Starting the episode…" : "Starting the video…");
       await produce(
-        finishStoryboard(written.storyboard, {
-          theme,
-          narration,
-          music,
-          musicTrack,
-          captions,
-        }),
+        podcast
+          ? finishPodcast(written.storyboard, { music, musicTrack })
+          : finishStoryboard(written.storyboard, {
+              theme,
+              narration,
+              music,
+              musicTrack,
+              captions,
+            }),
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -181,19 +191,23 @@ export function OnePromptCreate() {
           {FORMATS.map((f) => (
             <Chip
               key={f.id}
-              active={format === f.id}
-              onClick={() => setFormat(f.id)}
+              active={!podcast && format === f.id}
+              onClick={() => {
+                setPodcast(false);
+                setFormat(f.id);
+              }}
               label={`${f.label} ${f.hint}`}
             >
               {f.label} <span className="text-muted-foreground">{f.hint}</span>
             </Chip>
           ))}
-          <Link
-            href="/podcasts"
-            className="focus-visible:outline-ring bg-card hover:bg-muted inline-flex min-h-10 items-center rounded-full border px-4 text-sm focus-visible:outline-2"
+          <Chip
+            active={podcast}
+            onClick={() => setPodcast(true)}
+            label="Podcast, audio only"
           >
             Podcast
-          </Link>
+          </Chip>
         </div>
         <div className="flex flex-wrap gap-2" role="group" aria-label="Length">
           {LENGTHS.map((s) => (
