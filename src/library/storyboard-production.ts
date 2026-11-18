@@ -21,6 +21,7 @@ import {
 } from "@/library/automatic-stock-media";
 import { getAssets } from "@/library/repositories/assets";
 import { getProductionJobByIdempotencyKey } from "@/library/repositories/production-jobs";
+import { getBrandKit } from "@/library/repositories/brandkits";
 import { createProjectFromPlan } from "@/library/repositories/projects";
 import { getScript, updateScript } from "@/library/repositories/scripts";
 import { submitProduction } from "@/library/production-service";
@@ -60,6 +61,8 @@ export interface ProduceFromStoryboardOptions {
   createOnly?: boolean;
   /** Hold the job for approval so the scenes can be looked at first. */
   review?: boolean;
+  /** A brand kit for the new project (from a series). Unknown ids are ignored. */
+  brandKitId?: string;
   minSeconds?: number;
   maxSeconds?: number;
   auth: RequestAuthorization;
@@ -124,10 +127,16 @@ function canonical(value: unknown): string {
 
 export function storyboardHash(
   storyboard: unknown,
-  options: Pick<ProduceFromStoryboardOptions, "quality"> = {},
+  options: Pick<ProduceFromStoryboardOptions, "quality" | "brandKitId"> = {},
 ): string {
   return createHash("sha256")
-    .update(canonical({ storyboard, quality: options.quality ?? "standard" }))
+    .update(
+      canonical({
+        storyboard,
+        quality: options.quality ?? "standard",
+        ...(options.brandKitId ? { brandKitId: options.brandKitId } : {}),
+      }),
+    )
     .digest("hex");
 }
 
@@ -186,7 +195,12 @@ export async function produceFromStoryboard(
     knownTrackIds: MUSIC_LIBRARY.map((track) => track.id),
   });
   const quality = options.quality ?? "standard";
-  const hash = storyboardHash(storyboard, { quality });
+  // A series can name a brand kit; one that no longer exists is ignored.
+  const brandKitId =
+    options.brandKitId && (await getBrandKit(options.brandKitId))
+      ? options.brandKitId
+      : undefined;
+  const hash = storyboardHash(storyboard, { quality, brandKitId });
   const fixes = linted.fixes;
   const warnings = linted.warnings;
 
@@ -319,6 +333,7 @@ export async function produceFromStoryboard(
     },
     {
       series: storyboard.series,
+      ...(brandKitId ? { brandKitId } : {}),
       // No preset: the preset scene renderers show one hero line and drop list
       // items, stat labels and chart data, which a storyboard supplies.
       savedOverrides: {

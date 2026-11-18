@@ -7,6 +7,7 @@ import { Download, Loader2, Pause, Play, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
 import { useAIProviders } from "@/hooks/ai";
+import { useBrandKits } from "@/hooks/brandkits";
 import { useAutomation } from "@/hooks/ui-mode";
 import { apiGet, apiPost, apiPut } from "@/lib/api-client";
 import {
@@ -39,6 +40,7 @@ function SeriesEditor({
   onChange: (next: Series[]) => Promise<void>;
 }) {
   const [draft, setDraft] = React.useState<Series>(EMPTY_SERIES);
+  const brandKits = useBrandKits();
   const [error, setError] = React.useState<string>();
   const set = (patch: Partial<Series>) => setDraft((d) => ({ ...d, ...patch }));
 
@@ -163,6 +165,20 @@ function SeriesEditor({
               {MUSIC_LIBRARY.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name}
+                </option>
+              ))}
+            </NativeSelect>
+          </label>
+          <label className="grid gap-1">
+            Brand kit
+            <NativeSelect
+              value={draft.brandKitId ?? ""}
+              onChange={(e) => set({ brandKitId: e.target.value || undefined })}
+            >
+              <option value="">None</option>
+              {(brandKits.data ?? []).map((kit) => (
+                <option key={kit.id} value={kit.id}>
+                  {kit.name}
                 </option>
               ))}
             </NativeSelect>

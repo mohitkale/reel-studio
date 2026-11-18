@@ -95,7 +95,7 @@ self-contained runs (by chapter, or at the scenes that open a new thought), adds
 lacks one and a closing line, and makes each a vertical short. The choice is plain code, so the same
 video always gives the same shorts. Over MCP, `revise_video` with `derive: "shorts"` does the same.
 
-**Series and many videos at once**: a series is a saved set of defaults (look, format, length, voice, voice style, language, intro and outro chimes,
+**Series and many videos at once**: a series is a saved set of defaults (look, format, length, voice, voice style, language, brand kit, intro and outro chimes,
 music). On **Make many videos** (`/batch`, linked from Create), paste topics or a CSV, pick a series,
 and the topics are written and made one at a time, each with its own status, retry, pause and resume.
 `create_video` over MCP takes a `series` name, and `list_options` lists the saved ones.

@@ -154,3 +154,13 @@ describe("series chimes, voice style and language", () => {
     ).toThrow();
   });
 });
+
+describe("series brand kit", () => {
+  it("accepts a brand kit id and keeps it out of the storyboard", () => {
+    const s = seriesSchema.parse({ name: "Branded", brandKitId: "kit_1" });
+    expect(s.brandKitId).toBe("kit_1");
+    expect(
+      applySeries({ version: 1, title: "T", scenes: [] }, s),
+    ).not.toHaveProperty("brandKitId");
+  });
+});

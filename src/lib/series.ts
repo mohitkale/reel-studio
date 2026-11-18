@@ -25,6 +25,8 @@ export const seriesSchema = z
     narration: z.boolean().optional(),
     captions: z.boolean().optional(),
     tone: z.string().trim().max(120).optional(),
+    /** A brand kit (colours, fonts, logo) every video in the series wears. */
+    brandKitId: z.string().trim().min(1).max(80).optional(),
     /** A short chime at the start and the end of every video in the series. */
     stings: z.boolean().optional(),
     /** How the voice reads every video: calm, energetic, storyteller or news. */
