@@ -9,6 +9,16 @@ import {
 import { getAIProvider, isAIProviderId } from "@/providers/ai/registry";
 import { writeStoryboardWithResearch } from "@/providers/ai/storyboard-writer";
 import { AI_PROVIDER_IDS, AIError } from "@/providers/ai/types";
+import { isLocalAIProviderId } from "@/providers/ai/local-definitions";
+import { isSmallModel } from "@/providers/ai/local-models";
+import { localAIConfigStore } from "@/server/local-ai-config";
+
+async function configuredModel(
+  providerId: string,
+): Promise<string | undefined> {
+  if (!isLocalAIProviderId(providerId)) return undefined;
+  return (await localAIConfigStore.readProvider(providerId)).modelId;
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,6 +37,8 @@ const bodySchema = z
         targetSeconds: z.number().min(5).max(600).optional(),
         format: z.enum(["9:16", "16:9", "1:1"]).optional(),
         tone: z.string().trim().min(1).max(200).optional(),
+        /** Shorter prompt. Chosen automatically for small local models. */
+        compact: z.boolean().optional(),
         /** Change an existing storyboard as the instruction says (result page). */
         revise: z
           .object({
@@ -57,6 +69,8 @@ const bodySchema = z
     research: z.enum(["auto", "off"]).default("auto"),
     /** The topic is your own source text, so nothing is looked up. */
     fromSourceText: z.boolean().default(false),
+    /** Outline first, then the scenes. Chosen automatically for small local models. */
+    twoPass: z.boolean().optional(),
   })
   .strict();
 
@@ -89,9 +103,16 @@ export async function POST(req: Request) {
         body.providerId,
       );
     }
+    // A small model on this computer gets the short prompt and the two-step writer.
+    const modelId = body.modelId ?? (await configuredModel(body.providerId));
+    const small = isLocalAIProviderId(body.providerId) && isSmallModel(modelId);
+    const twoPass =
+      body.twoPass ??
+      (small && !body.brief.revise && body.brief.kind !== "podcast");
     const result = await writeStoryboardWithResearch({
       provider,
-      brief: body.brief,
+      brief: { ...body.brief, compact: body.brief.compact ?? small },
+      twoPass,
       modelId: body.modelId,
       retry: body.retry,
       research: body.research,

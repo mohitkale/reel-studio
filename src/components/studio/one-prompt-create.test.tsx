@@ -22,7 +22,11 @@ vi.mock("next/link", () => ({
     children: React.ReactNode;
   }) => <a href={href}>{children}</a>,
 }));
-vi.mock("@/hooks/ai", () => ({ useAIProviders: () => mocks.providers }));
+vi.mock("@/hooks/ai", () => ({
+  useAIProviders: () => mocks.providers,
+  useLocalWriter: () => ({ data: undefined }),
+  useLocalWriterAction: () => ({ mutate: vi.fn(), isPending: false }),
+}));
 vi.mock("@/lib/api-client", () => ({ apiPost: mocks.post }));
 vi.mock("@/hooks/ui-mode", () => ({
   useReviewFields: () => (mocks.review ? { review: true } : {}),

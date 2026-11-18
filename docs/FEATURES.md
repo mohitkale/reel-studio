@@ -96,6 +96,8 @@ HTTP handlers under `src/app` (`/api/**` and `/media`).
 | `GET /api/ai/local-config`                           | AIP01      |
 | `POST /api/ai/local-config`                          | AIP01      |
 | `PUT /api/ai/local-config`                           | AIP01      |
+| `GET /api/ai/local-writer`                           | AIP01      |
+| `POST /api/ai/local-writer`                          | AIP01      |
 | `GET /api/ai/providers/[id]/models`                  | AIP01      |
 | `GET /api/ai/providers`                              | AIP01      |
 | `DELETE /api/assets/[id]`                            | AST01      |

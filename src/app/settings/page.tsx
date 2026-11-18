@@ -25,6 +25,7 @@ import { KokoroVoicesCard } from "@/components/voice/kokoro-voices-card";
 import { PronunciationCard } from "@/components/voice/pronunciation-card";
 import { AIProviderCard } from "@/components/ai/ai-provider-card";
 import { LocalAIProviderCard } from "@/components/ai/local-ai-provider-card";
+import { LocalWriterSetup } from "@/components/ai/local-writer-setup";
 import { StockProviderCard } from "@/components/stock/stock-provider-card";
 import { MusicProviderCard } from "@/components/music/music-provider-card";
 import { McpTokenCard } from "@/components/mcp/mcp-token-card";
@@ -165,6 +166,7 @@ export default function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <LocalWriterSetup />
           {localAILoading || !localAIProviders ? (
             <div className="space-y-4">
               <Skeleton className="h-40 w-full" />

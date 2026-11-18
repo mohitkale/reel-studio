@@ -492,6 +492,49 @@ describe("a long video in two passes", () => {
     ).rejects.toThrow(/usable chapter outline/);
   });
 
+  it("writes a short video in two steps for a weak model, without chapter marks or cards", async () => {
+    const outline = JSON.stringify({
+      title: "Short and sure",
+      chapters: [
+        { title: "Open", goal: "Hook." },
+        { title: "Middle", goal: "Explain." },
+        { title: "Close", goal: "Payoff." },
+      ],
+    });
+    const { provider, calls } = fakeProvider([
+      outline,
+      chapterReply(1),
+      chapterReply(2),
+      chapterReply(3),
+    ]);
+    const result = await writeStoryboard({
+      provider,
+      twoPass: true,
+      brief: { topic: "T", targetSeconds: 45, compact: true },
+      lint: { minSeconds: 1, maxSeconds: 10_000 },
+    });
+    expect(calls.map((c) => c.kind)).toEqual([
+      "outline",
+      "video",
+      "video",
+      "video",
+    ]);
+    expect(result.errors).toEqual([]);
+    const board = result.storyboard as unknown as {
+      scenes: unknown[];
+      chapters?: unknown;
+    };
+    expect(board.chapters).toBeUndefined();
+    expect(board.scenes).toHaveLength(9);
+  });
+
+  it("uses the shorter prompt for a compact brief", () => {
+    const full = buildStoryboardMessages({ topic: "T" });
+    const compact = buildStoryboardMessages({ topic: "T", compact: true });
+    expect(compact.system.length).toBeLessThan(full.system.length / 2);
+    expect(compact.system).toContain("JSON Schema");
+  });
+
   it("keeps short videos to one call", async () => {
     const { provider, calls } = fakeProvider([chapterReply(1)]);
     await writeStoryboard({
