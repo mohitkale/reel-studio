@@ -23,6 +23,7 @@ import {
 import { buildWriteRequest, lengthLabel } from "@/lib/one-prompt";
 import { MUSIC_LIBRARY } from "@/lib/music-library";
 import { parseTopics, type Series } from "@/lib/series";
+import { VOICE_STYLES, VOICE_STYLE_IDS } from "@/lib/voice-styles";
 import { THEMES } from "@/video/themes";
 
 const STORAGE_KEY = "reel-batch-v1";
@@ -166,6 +167,25 @@ function SeriesEditor({
               ))}
             </NativeSelect>
           </label>
+          <label className="grid gap-1">
+            Voice style
+            <NativeSelect
+              value={draft.voiceStyle ?? ""}
+              onChange={(e) =>
+                set({
+                  voiceStyle: (e.target.value ||
+                    undefined) as Series["voiceStyle"],
+                })
+              }
+            >
+              <option value="">Natural</option>
+              {VOICE_STYLE_IDS.map((id) => (
+                <option key={id} value={id}>
+                  {VOICE_STYLES[id].label}
+                </option>
+              ))}
+            </NativeSelect>
+          </label>
           <div className="flex items-end gap-3">
             <label className="flex items-center gap-2">
               <input
@@ -176,6 +196,16 @@ function SeriesEditor({
                 }
               />
               Narrated
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={draft.stings === true}
+                onChange={(e) =>
+                  set({ stings: e.target.checked ? true : undefined })
+                }
+              />
+              Intro and outro chimes
             </label>
             <label className="flex items-center gap-2">
               <input
