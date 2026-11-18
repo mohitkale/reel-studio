@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildRecordingClipHtml, captionGroups } from "./build-recording-clip";
+import { CHARACTERS } from "./presenter/characters";
 
 const words =
   "So this is how the caption lines get broken into short readable groups. Then a new one starts."
@@ -75,5 +76,37 @@ describe("recording clip composition", () => {
         colors: { ...props.colors, accent: "red;}" },
       }),
     ).toThrow(/palette/);
+  });
+});
+
+describe("recording clip with a presenter", () => {
+  const presenter = {
+    character: CHARACTERS[0]!,
+    placement: "full" as const,
+    track: {
+      mouth: [{ viseme: "ah" as const, start: 0.2, end: 0.4 }],
+      blinks: [],
+      accents: [],
+    },
+  };
+  it("shows the presenter instead of the waveform for audio and drives its mouth", () => {
+    const html = buildRecordingClipHtml({
+      ...props,
+      hasVideo: false,
+      presenter,
+    });
+    expect(html).toContain('id="presenter"');
+    expect(html).not.toContain('class="wave"');
+    expect(html).toContain("tl.set('#pres-mouth-ah',{opacity:1},0.200);");
+  });
+  it("gives the video its half in a split screen", () => {
+    const html = buildRecordingClipHtml({
+      ...props,
+      presenter: { ...presenter, placement: "split" },
+    });
+    expect(html).toContain("clip.mp4");
+    expect(html).toMatch(
+      /\.bgblur,\.main\{left:0px;top:0px;width:1080px;height:960px/,
+    );
   });
 });

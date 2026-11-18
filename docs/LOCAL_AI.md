@@ -139,3 +139,19 @@ For an agent, `create_video` with `source: { path }` (instead of a storyboard)
 does steps 1, 2 and 4 with the three best clips and returns their links and file
 paths. Reframing is a plain centre crop or blurred fit; there is no face tracking.
 Speakers are not separated.
+
+## Animated presenter
+
+A clip can be spoken by a drawn host with lip sync, all on this computer.
+Choose a **Presenter** on the Recordings page: Maya and Sam (flat), Ada and Rex
+(line art), Orb (3D look) or Bolt (a mascot). Audio-only recordings get the
+presenter in the full frame in place of a waveform; recordings with video get a
+corner bubble, the full frame, or a split screen next to the video. The mouth
+follows the phonemes and timing of the words (twelve mouth shapes), falling back
+to the loudness of the audio for words it cannot read. The character blinks,
+nods on emphasis, raises its brows on a question and sways a little. How it
+works and how to add a character: [Contributing presenters](CONTRIBUTING_PRESENTERS.md).
+
+Not done yet: a `presenter` field in the storyboard for narrated videos (the
+presenter works on recording clips only), and two presenters for a podcast
+audiogram. Nobody has reviewed the lip sync at half speed.

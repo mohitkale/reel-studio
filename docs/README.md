@@ -20,6 +20,7 @@ Start here.
 ## Build on it
 
 - [Architecture](ARCHITECTURE.md): boundaries, jobs, recovery, safety bounds.
+- [Contributing presenters](CONTRIBUTING_PRESENTERS.md): add an animated host character.
 - [Contributing scenes](CONTRIBUTING_SCENES.md): add a template, treatment or provider.
 - [Feature inventory](FEATURES.md): every page, route and tool, guarded by `npm run test:parity`.
 - [Licensing](LICENSING.md): third-party terms and notices.

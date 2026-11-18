@@ -13,6 +13,11 @@ import {
   type RecWord,
 } from "@/lib/recording-clips";
 import { THEMES } from "@/video/themes";
+import {
+  CHARACTERS,
+  getCharacter,
+} from "@/engines/hyperframes/presenter/characters";
+import { PresenterPreview } from "@/components/studio/presenter-preview";
 import type { ClipJob, RecordingRecord } from "@/library/recording-repurpose";
 
 type Summary = Omit<RecordingRecord, "words">;
@@ -178,6 +183,10 @@ function RecordingView({ id }: { id: string }) {
   const [format, setFormat] = React.useState<"9:16" | "1:1" | "16:9">("9:16");
   const [reframe, setReframe] = React.useState<"blur" | "fill">("blur");
   const [theme, setTheme] = React.useState("bold-pop");
+  const [presenterId, setPresenterId] = React.useState("");
+  const [chosenPlacement, setPlacement] = React.useState<
+    "full" | "corner" | "split" | undefined
+  >();
   const [job, setJob] = React.useState<ClipJob | null>(null);
   const [error, setError] = React.useState<string>();
 
@@ -217,6 +226,8 @@ function RecordingView({ id }: { id: string }) {
     );
 
   const words: RecWord[] = recording.words;
+  // A recording with video gets a corner bubble by default; audio gets the full frame.
+  const placement = chosenPlacement ?? (recording.hasVideo ? "corner" : "full");
   const inClip = (index: number) =>
     selected.some(
       (i) =>
@@ -242,6 +253,9 @@ function RecordingView({ id }: { id: string }) {
           format,
           reframe,
           theme,
+          ...(presenterId
+            ? { presenter: { character: presenterId, placement } }
+            : {}),
           quality: "standard",
         },
       );
@@ -399,6 +413,51 @@ function RecordingView({ id }: { id: string }) {
             </NativeSelect>
           </label>
         </div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+          <label className="flex items-center gap-2">
+            Presenter
+            <NativeSelect
+              aria-label="Presenter"
+              value={presenterId}
+              onChange={(e) => setPresenterId(e.target.value)}
+            >
+              <option value="">None</option>
+              {CHARACTERS.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.style})
+                </option>
+              ))}
+            </NativeSelect>
+          </label>
+          {presenterId && (
+            <label className="flex items-center gap-2">
+              Where
+              <NativeSelect
+                aria-label="Presenter placement"
+                value={placement}
+                onChange={(e) =>
+                  setPlacement(e.target.value as "full" | "corner" | "split")
+                }
+              >
+                <option value="full">Full frame</option>
+                <option value="corner">Corner bubble</option>
+                {recording.hasVideo && (
+                  <option value="split">Split screen with the video</option>
+                )}
+              </NativeSelect>
+            </label>
+          )}
+        </div>
+        {presenterId && getCharacter(presenterId) && (
+          <div className="flex items-center gap-3 text-xs">
+            <PresenterPreview character={getCharacter(presenterId)!} />
+            <p className="text-muted-foreground max-w-sm">
+              {getCharacter(presenterId)!.description} The mouth follows the
+              words and the audio, and the character blinks and nods. The
+              preview steps through all twelve mouth shapes.
+            </p>
+          </div>
+        )}
         <Button
           onClick={() => void make()}
           disabled={running || selected.length === 0}

@@ -6,6 +6,9 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { z } from "zod";
 
+import { getCharacter } from "@/engines/hyperframes/presenter/characters";
+import { PRESENTER_PLACEMENTS } from "@/engines/hyperframes/presenter/build-presenter";
+import { buildPresenterTrack } from "@/library/presenter-track";
 import { buildRecordingClipHtml } from "@/engines/hyperframes/build-recording-clip";
 import { HYPERFRAMES_RENDER_FONT_FILES } from "@/engines/hyperframes/render-fonts";
 import {
@@ -380,6 +383,13 @@ export const clipRequestSchema = z
     format: z.enum(["9:16", "1:1", "16:9"]).default("9:16"),
     reframe: z.enum(["fill", "blur"]).default("blur"),
     theme: z.string().max(40).optional(),
+    /** An animated presenter that speaks the clip with lip sync. */
+    presenter: z
+      .object({
+        character: z.string().max(20),
+        placement: z.enum(PRESENTER_PLACEMENTS as [string, ...string[]]),
+      })
+      .optional(),
     quality: z.enum(["draft", "standard", "high"]).default("standard"),
   })
   .strict();
@@ -572,6 +582,26 @@ export async function startClips(
             ),
           ]);
           const wav = await fs.readFile(path.join(directory, "audio.wav"));
+          const character = getCharacter(request.presenter?.character);
+          if (request.presenter && !character)
+            throw new Error(
+              `Unknown presenter "${request.presenter.character}"`,
+            );
+          const presenterProps =
+            request.presenter && character
+              ? {
+                  character,
+                  placement: request.presenter.placement as
+                    "full" | "corner" | "split",
+                  track: await buildPresenterTrack({
+                    words,
+                    wav,
+                    seconds,
+                    seed: `${id}:${index}`,
+                    language: record.language,
+                  }),
+                }
+              : undefined;
           const title =
             clip.title ??
             words
@@ -589,6 +619,7 @@ export async function startClips(
               reframe: request.reframe,
               words,
               waveform: waveformEnvelope(wav, 48),
+              presenter: presenterProps ?? undefined,
               colors: {
                 background: theme.palette.background,
                 foreground: theme.palette.foreground,
