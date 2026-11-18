@@ -33,6 +33,21 @@ Rules
 - Use the requested format and tone, and write in the language of the brief.`;
 
 /**
+ * A shorter prompt for models with a small context window or about four billion
+ * parameters or fewer: the same rules in fewer words, so the JSON Schema and the
+ * brief keep most of the window. Used with the two-step writer.
+ */
+export const COMPACT_WRITER_PROMPT = `You write one storyboard for Reel Studio. Reply with one JSON object that matches the JSON Schema, and nothing else.
+
+- Scene one is a hook. One idea per scene. A headline is at most seven words.
+- Narration is short spoken sentences. Never repeat the headline.
+- Use only facts from the brief or notes. Never invent numbers, quotes or sources.
+- Scene types: hook, statement, list (items), stat (stat), quote (quote), code (code), media (media with a query), cta. Do not use the same type three times in a row. End with a cta.
+- About 2.5 spoken words per second of the target length.
+- Do not describe layout, colour, motion or timing.
+- Write in the language of the brief.`;
+
+/**
  * The prompt for a spoken episode: a conversation, not an article read aloud.
  * Pasted into any chat app the same way as the video prompt.
  */
@@ -77,6 +92,8 @@ export interface StoryboardBrief {
   targetSeconds?: number;
   format?: "9:16" | "16:9" | "1:1";
   tone?: string;
+  /** Use the shorter prompt (small models and small context windows). */
+  compact?: boolean;
   /**
    * Change an existing storyboard instead of writing a new one. The writer gets
    * the current storyboard and the instruction, and keeps everything else as is.
@@ -146,7 +163,7 @@ export function buildStoryboardMessages(brief: StoryboardBrief): {
     };
   }
   return {
-    system: STORYBOARD_WRITER_PROMPT,
+    system: brief.compact ? COMPACT_WRITER_PROMPT : STORYBOARD_WRITER_PROMPT,
     user: JSON.stringify({
       task: "Write the storyboard for this brief.",
       brief: {

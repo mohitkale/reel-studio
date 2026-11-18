@@ -24,6 +24,10 @@ export default function CreatePage() {
         <Link href="/batch" className="text-foreground underline">
           make many videos from a list of topics
         </Link>
+        , or{" "}
+        <Link href="/recordings" className="text-foreground underline">
+          turn a recording into clips
+        </Link>
         .
       </p>
       {ready && mode === "simple" ? (

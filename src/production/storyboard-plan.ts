@@ -11,6 +11,8 @@ import type { Orientation } from "@/lib/orientation";
 import { autoTheme, getTheme } from "@/video/themes";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
+import { defaultVoiceForLanguage } from "@/providers/voice/voice-catalog";
+import type { VoiceStyleId } from "@/lib/voice-styles";
 import type { AIScene, ScenePlan } from "@/providers/ai/types";
 import {
   estimateDurationSeconds,
@@ -110,7 +112,12 @@ export interface StoryboardProductionPlan {
   roles: ProductionSceneRole[];
   orientation: Orientation;
   music: { mode: "auto" | "none" | "track"; trackId?: string };
-  voice: { enabled: boolean; voiceId?: string; speed?: number };
+  voice: {
+    enabled: boolean;
+    voiceId?: string;
+    speed?: number;
+    style?: VoiceStyleId;
+  };
   captions: "auto" | "off";
   sfx: "auto" | "off";
   /** Seed, variety and calm-motion switch for the variety engine. */
@@ -123,6 +130,8 @@ export interface StoryboardProductionPlan {
   };
   /** Library asset per scene, when the storyboard named one. */
   assetIds: Array<string | undefined>;
+  /** Pictures the storyboard asked a local image model to make, per scene. */
+  generatePrompts: Array<string | undefined>;
   scenes: StoryboardPlanScene[];
   estimatedSeconds: number;
   /** The theme the video wears: named in the storyboard, or chosen from its words. */
@@ -140,6 +149,7 @@ export function planFromStoryboard(
   }
   const warnings: string[] = [];
   const assetIds: Array<string | undefined> = [];
+  const generatePrompts: Array<string | undefined> = [];
   const planScenes: StoryboardPlanScene[] = [];
 
   const scenes: AIScene[] = storyboard.scenes.map((scene, index) => {
@@ -240,6 +250,7 @@ export function planFromStoryboard(
     }
     panel = { ...panel, sceneType: scene.type };
     assetIds.push(assetId);
+    generatePrompts.push(scene.media?.generate);
     planScenes.push({
       index,
       type: scene.type,
@@ -311,8 +322,11 @@ export function planFromStoryboard(
     music,
     voice: {
       enabled: storyboard.voice?.enabled ?? true,
-      voiceId: storyboard.voice?.voiceId,
+      voiceId:
+        storyboard.voice?.voiceId ??
+        defaultVoiceForLanguage(storyboard.language),
       speed: storyboard.voice?.speed,
+      style: storyboard.voice?.style,
     },
     captions: storyboard.captions,
     sfx: storyboard.sfx ?? "auto",
@@ -330,6 +344,7 @@ export function planFromStoryboard(
       ...(storyboard.reduceMotion ? { reduceMotion: true } : {}),
     },
     assetIds,
+    generatePrompts,
     scenes: planScenes,
     estimatedSeconds: estimateDurationSeconds(storyboard),
     warnings,

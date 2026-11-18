@@ -1,4 +1,5 @@
 import {
+  DEFAULT_PACING,
   guardKokoroTokenizer,
   synthesizeSpeechChunks,
   createInferenceGate,
@@ -6,6 +7,7 @@ import {
 } from "@/lib/kokoro-chunks";
 import { abortable } from "@/lib/deadline-fetch";
 import { normalizeForSpeech } from "@/lib/speech-normalize";
+import { pacingForStyle, pitchRatio, styledSpeed } from "@/lib/voice-styles";
 import { getConfig } from "@/server/app-config";
 import type { KokoroTTS } from "kokoro-js";
 
@@ -148,10 +150,18 @@ export function createKokoroServerProvider(): VoiceProvider {
         }
 
         // Clamp speed to Kokoro's practical range (slightly slow reads more natural).
-        const speed =
+        // A style scales the speed and moves the pitch by a few tenths of a tone.
+        const requested = styledSpeed(
+          opts.style,
           typeof opts.speed === "number" && Number.isFinite(opts.speed)
-            ? Math.min(1.35, Math.max(0.7, opts.speed))
-            : 1;
+            ? opts.speed
+            : undefined,
+        );
+        const pitch = pitchRatio(opts.style);
+        const speed =
+          requested === undefined
+            ? 1
+            : Math.min(1.35, Math.max(0.6, requested));
         // Numbers, money, dates, links and acronyms are written the way they
         // are said; what is on screen is not changed.
         const spoken = opts.rawText
@@ -166,16 +176,18 @@ export function createKokoroServerProvider(): VoiceProvider {
               (text, factor = 1) =>
                 tts.generate(text, {
                   voice: opts.voiceId,
-                  speed: speed * factor,
+                  // Slower by the pitch ratio now, played back faster below: same length, new pitch.
+                  speed: (speed * factor) / pitch,
                 } as Parameters<typeof tts.generate>[1]),
               signal,
+              pacingForStyle(opts.style, DEFAULT_PACING),
             ),
           signal,
         );
         const target = opts.sampleRate ?? TARGET_SAMPLE_RATE;
         const resampled = resampleLinear(
           audio.audio,
-          audio.sampling_rate,
+          audio.sampling_rate * pitch,
           target,
         );
         const wav = pcmToWav(floatToPcm16(resampled), {

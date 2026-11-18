@@ -17,6 +17,7 @@ import type { VisualAmbition } from "@/production/motion-plan";
 import type { EnergyId, StyleId } from "@/video/visual-style";
 import type { MediaPreference } from "@/lib/media-preference";
 import type { AutomaticMediaState } from "@/library/automatic-stock-media";
+import type { LocalWriterState } from "@/library/local-writer-setup";
 import type {
   LocalAIProviderConfigInput,
   LocalAIProviderId,
@@ -72,6 +73,49 @@ export function useLocalAIProviders() {
       apiGet<{ providers: LocalAIProviderView[] }>("/api/ai/local-config").then(
         (response) => response.providers,
       ),
+  });
+}
+
+export function useLocalWriter() {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: ["local-writer"],
+    queryFn: async () => {
+      const state = await apiGet<LocalWriterState>("/api/ai/local-writer");
+      // A download finishes on the server after the click: when a different
+      // model becomes active, refresh what the studio thinks can write.
+      const before = queryClient.getQueryData<LocalWriterState>([
+        "local-writer",
+      ]);
+      if (before && before.active?.modelId !== state.active?.modelId) {
+        void queryClient.invalidateQueries({ queryKey: ["ai-providers"] });
+        void queryClient.invalidateQueries({
+          queryKey: ["local-ai-providers"],
+        });
+      }
+      return state;
+    },
+    // Poll while a model downloads, and slowly otherwise so a server that is
+    // started or installed is noticed without a click.
+    refetchInterval: (query) =>
+      query.state.data?.pull.state === "pulling" ? 1500 : 6000,
+  });
+}
+
+export function useLocalWriterAction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (
+      body:
+        | { action: "pull"; model?: string }
+        | { action: "use"; providerId: LocalAIProviderId; model: string }
+        | { action: "cancel" },
+    ) => apiPost<LocalWriterState>("/api/ai/local-writer", body),
+    onSuccess: (state) => {
+      queryClient.setQueryData(["local-writer"], state);
+      queryClient.invalidateQueries({ queryKey: ["local-ai-providers"] });
+      queryClient.invalidateQueries({ queryKey: ["ai-providers"] });
+    },
   });
 }
 

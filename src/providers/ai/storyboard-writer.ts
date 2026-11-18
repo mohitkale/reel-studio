@@ -92,6 +92,12 @@ type WriteArgs = {
   lint?: LintOptions;
   /** Plan a long video in one call instead of chapter by chapter. */
   longForm?: boolean;
+  /**
+   * For models too weak to write a whole video in one call: plan the parts first,
+   * then write each part, each validated. No chapter marks or chapter cards are
+   * added, so a short video stays a short video.
+   */
+  twoPass?: boolean;
 };
 
 /**
@@ -105,10 +111,11 @@ async function writeLongStoryboard(
 ): Promise<StoryboardWriteResult> {
   const { provider, brief } = args;
   const total = brief.targetSeconds ?? LONG_FORM_SECONDS;
-  const chapterCount = Math.min(
-    12,
-    Math.max(3, Math.round(total / CHAPTER_SECONDS)),
-  );
+  const twoPass = args.twoPass === true;
+  // Two-pass parts are short (about 20 s): three to five of them.
+  const chapterCount = twoPass
+    ? Math.min(5, Math.max(3, Math.round(total / 20)))
+    : Math.min(12, Math.max(3, Math.round(total / CHAPTER_SECONDS)));
   const ask = (
     messages: { system: string; user: string },
     kind: "outline" | "video",
@@ -162,11 +169,12 @@ async function writeLongStoryboard(
     const result = await writeStoryboard({
       ...args,
       longForm: false,
+      twoPass: false,
       brief: {
         ...brief,
         kind: "video",
         targetSeconds: perChapter,
-        topic: `${brief.topic}\n\nYou are writing chapter ${index + 1} of ${outline.chapters.length} of a longer video titled "${outline.title}". This chapter: "${chapter.title}". ${chapter.goal}\nThe other chapters are: ${others}. Write only this chapter's scenes; do not repeat the others.${index > 0 ? " Do not open with a hook for the whole video." : ""}${index < outline.chapters.length - 1 ? " Do not close the whole video." : ""}`,
+        topic: `${brief.topic}\n\nYou are writing ${twoPass ? "part" : "chapter"} ${index + 1} of ${outline.chapters.length} of a longer video titled "${outline.title}". This chapter: "${chapter.title}". ${chapter.goal}\nThe other chapters are: ${others}. Write only this chapter's scenes; do not repeat the others.${index > 0 ? " Do not open with a hook for the whole video." : ""}${index < outline.chapters.length - 1 ? " Do not close the whole video." : ""}`,
       },
       lint: {
         ...args.lint,
@@ -189,7 +197,7 @@ async function writeLongStoryboard(
     head ??= board as unknown as Record<string, unknown>;
     marks.push({ title: chapter.title, startScene: scenes.length });
     // Chapters after the first open with a card that names them.
-    if (index > 0)
+    if (index > 0 && !twoPass)
       scenes.push({
         type: "statement",
         headline: chapter.title,
@@ -211,7 +219,7 @@ async function writeLongStoryboard(
     ...rest,
     title: outline.title,
     ...(sources.size ? { sources: [...sources.values()] } : {}),
-    chapters: marks,
+    ...(twoPass ? {} : { chapters: marks }),
     scenes,
   };
   const options: LintOptions = {
@@ -238,7 +246,7 @@ export async function writeStoryboard(
     args.longForm !== false &&
     args.brief.kind !== "podcast" &&
     !args.brief.revise &&
-    (args.brief.targetSeconds ?? 0) >= LONG_FORM_SECONDS
+    ((args.brief.targetSeconds ?? 0) >= LONG_FORM_SECONDS || args.twoPass)
   )
     return writeLongStoryboard(args);
   const target =

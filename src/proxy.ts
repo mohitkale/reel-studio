@@ -13,3 +13,8 @@ export function proxy(request: NextRequest) {
     return errorResponse(error);
   }
 }
+
+// The proxy buffers each request body (10 MB by default) so it can be read twice,
+// which would cut a large recording upload short. That route is left out; its
+// handler checks the host itself and reads the body with a hard size limit.
+export const config = { matcher: ["/((?!api/recordings$).*)"] };

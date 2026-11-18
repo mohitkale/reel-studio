@@ -17,6 +17,7 @@ import { VoiceBrowser } from "@/components/voice/voice-browser";
 import { VoiceClonePanel } from "@/components/voice/voice-clone-panel";
 import { VoiceModelCard } from "@/components/voice/voice-model-card";
 import { RecommendedVoices } from "@/components/voice/recommended-voices";
+import { VoiceGallery } from "@/components/voice/voice-gallery";
 
 export default function VoicesPage() {
   const { data, isLoading, isError, error, refetch, isFetching } =
@@ -36,6 +37,7 @@ export default function VoicesPage() {
 
       <VoiceModelCard />
       <RecommendedVoices />
+      <VoiceGallery />
 
       {isError && (
         <QueryError

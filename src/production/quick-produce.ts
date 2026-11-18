@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { mediaPreferenceSchema } from "@/lib/media-preference";
+import { VOICE_STYLE_IDS } from "@/lib/voice-styles";
 import { AI_PROVIDER_IDS } from "@/providers/ai/types";
 
 export const QUICK_PRODUCE_VOICE_PROVIDERS = [
@@ -32,6 +33,8 @@ export const quickProduceOptionsSchema = z
         modelId: z.string().min(1).optional(),
         /** Speaking rate for providers that support it (0.7 to 1.3). */
         speed: z.number().min(0.7).max(1.3).optional(),
+        /** A way of reading the voice: speed, pauses and pitch (local Kokoro). */
+        style: z.enum(VOICE_STYLE_IDS).optional(),
       })
       .default({
         enabled: true,

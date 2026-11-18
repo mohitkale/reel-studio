@@ -28,6 +28,7 @@ import {
   type SceneAudioCacheKey,
 } from "@/library/scene-audio-cache";
 import { resolveSpokenText } from "@/lib/spoken-text";
+import type { VoiceStyleId } from "@/lib/voice-styles";
 import type { VideoSnapshot } from "@/production/video-snapshot";
 
 /** Reported as scenes finish synthesizing (cache hit or fresh call) or when stitching starts. */
@@ -49,6 +50,8 @@ export interface GenerateTakeInput {
   modelId?: string;
   /** Optional speaking rate for providers that support it (e.g. Kokoro). */
   speed?: number;
+  /** A way of reading the voice (calm, energetic, storyteller, news). */
+  style?: VoiceStyleId;
   label?: string;
   onProgress?: (progress: TakeProgress) => void;
 }
@@ -69,6 +72,7 @@ async function synthesizeScenesConcurrently(
     voiceId: string;
     modelId?: string;
     speed?: number;
+    style?: VoiceStyleId;
   },
   synth: (opts: SynthOptions) => Promise<SynthResult>,
   maxConcurrency: number,
@@ -80,9 +84,9 @@ async function synthesizeScenesConcurrently(
   let completed = 0;
   // Bake speed into the cache key so retunes don't reuse wrong-rate audio.
   const speedTag =
-    typeof ctx.speed === "number" && Number.isFinite(ctx.speed)
+    (typeof ctx.speed === "number" && Number.isFinite(ctx.speed)
       ? `\0speed=${ctx.speed}`
-      : "";
+      : "") + (ctx.style ? `\0style=${ctx.style}` : "");
 
   async function worker() {
     while (cursor < scenes.length) {
@@ -105,6 +109,7 @@ async function synthesizeScenesConcurrently(
           modelId: ctx.modelId,
           text: scene.text,
           ...(ctx.speed !== undefined ? { speed: ctx.speed } : {}),
+          ...(ctx.style ? { style: ctx.style } : {}),
         });
         assertProductionActive();
         audio = result;
@@ -204,6 +209,7 @@ async function generateTakeForScenes(
         voiceId: input.voiceId,
         modelId: input.modelId,
         speed: input.speed,
+        style: input.style,
       },
       provider.synth,
       provider.maxConcurrency ?? DEFAULT_SYNTH_CONCURRENCY,

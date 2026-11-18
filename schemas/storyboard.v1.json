@@ -141,6 +141,21 @@
           "additionalProperties": false,
           "description": "How to post the video: title, description, hashtags and thumbnail text. Leave out what you are unsure of."
         },
+        "language": {
+          "description": "The language the narration is written in, when it is not American English: \"en-GB\", \"es\", \"fr\", \"hi\", \"it\", \"ja\", \"pt-BR\" or \"zh\". The voice is chosen to match.",
+          "type": "string",
+          "enum": [
+            "en-US",
+            "en-GB",
+            "es",
+            "fr",
+            "hi",
+            "it",
+            "ja",
+            "pt-BR",
+            "zh"
+          ]
+        },
         "kind": {
           "default": "video",
           "description": "\"video\" (default) for a video.",
@@ -181,6 +196,16 @@
               "type": "number",
               "minimum": 0.7,
               "maximum": 1.3
+            },
+            "style": {
+              "description": "How the voice reads: \"calm\", \"energetic\", \"storyteller\" or \"news\". Omit for the natural read.",
+              "type": "string",
+              "enum": [
+                "calm",
+                "energetic",
+                "storyteller",
+                "news"
+              ]
             }
           },
           "additionalProperties": false,
@@ -548,6 +573,12 @@
                     "minLength": 1,
                     "maxLength": 80
                   },
+                  "generate": {
+                    "description": "Describe a picture to make with a local image model, in plain words. Only used when the person has set one up; otherwise \"query\" (or the headline) finds a stock picture instead. Example: \"a lighthouse on a cliff at dusk, calm sea\".",
+                    "type": "string",
+                    "minLength": 4,
+                    "maxLength": 300
+                  },
                   "path": {
                     "description": "Relative path of a supplied file. Example: \"media/demo.mp4\".",
                     "type": "string",
@@ -556,7 +587,7 @@
                   }
                 },
                 "additionalProperties": false,
-                "description": "Picture or clip for the scene. Provide exactly one of query, assetId or path."
+                "description": "Picture or clip for the scene. Provide exactly one of query, assetId, path or generate (generate may also carry a query as its fallback)."
               },
               "icon": {
                 "description": "Optional icon name in lowercase words joined by hyphens. Example: \"moon\".",
@@ -744,6 +775,21 @@
           },
           "additionalProperties": false,
           "description": "How to post the video: title, description, hashtags and thumbnail text. Leave out what you are unsure of."
+        },
+        "language": {
+          "description": "The language the narration is written in, when it is not American English: \"en-GB\", \"es\", \"fr\", \"hi\", \"it\", \"ja\", \"pt-BR\" or \"zh\". The voice is chosen to match.",
+          "type": "string",
+          "enum": [
+            "en-US",
+            "en-GB",
+            "es",
+            "fr",
+            "hi",
+            "it",
+            "ja",
+            "pt-BR",
+            "zh"
+          ]
         },
         "kind": {
           "type": "string",

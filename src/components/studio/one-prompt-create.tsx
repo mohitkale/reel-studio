@@ -8,6 +8,12 @@ import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MusicPicker } from "@/components/studio/music-picker";
 import { PasteStoryboard } from "@/components/studio/paste-storyboard";
+import { LocalWriterSetup } from "@/components/ai/local-writer-setup";
+import {
+  cloudFallback,
+  pickWriter,
+  writerPrivacyNote,
+} from "@/lib/writer-chain";
 import { useAIProviders } from "@/hooks/ai";
 import { useAutomation, useReviewFields } from "@/hooks/ui-mode";
 import { apiPost } from "@/lib/api-client";
@@ -79,7 +85,10 @@ export function OnePromptCreate() {
   const [busy, setBusy] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string>();
 
-  const writer = providers.data?.find((p) => p.configured);
+  // This computer first, then an online key (see writerChain).
+  const writer = pickWriter(providers.data);
+  const fallback = cloudFallback(providers.data);
+  const [offerFallback, setOfferFallback] = React.useState(false);
   const kind = classifyEntry(text);
 
   async function produce(storyboard: Record<string, unknown>) {
@@ -100,21 +109,23 @@ export function OnePromptCreate() {
     );
   }
 
-  async function create() {
+  async function create(useProviderId?: string) {
     setError(undefined);
+    setOfferFallback(false);
+    const chosen = useProviderId ?? writer?.id;
     const request = buildWriteRequest(text, {
       format,
       seconds,
       research: automation.research,
       podcast,
     });
-    if (!request || !writer) return;
+    if (!request || !chosen) return;
     try {
       setBusy("Writing the storyboard…");
       const written = await apiPost<{
         storyboard?: Record<string, unknown>;
         errors?: Array<{ path: string; message: string }>;
-      }>("/api/storyboards/write", { providerId: writer.id, ...request });
+      }>("/api/storyboards/write", { providerId: chosen, ...request });
       if (!written.storyboard)
         throw new Error(
           written.errors?.map((e) => `${e.path}: ${e.message}`).join("; ") ||
@@ -135,6 +146,9 @@ export function OnePromptCreate() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setBusy(null);
+      // The writer on this computer did not answer: offer, never assume, the online one.
+      if (writer?.kind === "local" && fallback && !useProviderId)
+        setOfferFallback(true);
     }
   }
 
@@ -335,19 +349,24 @@ export function OnePromptCreate() {
             </span>
           )}
         </div>
+        {writer && (
+          <p className="text-muted-foreground text-xs">
+            {writerPrivacyNote(writer)}
+          </p>
+        )}
         {!providers.isLoading && !writer && (
           <div
             role="note"
-            className="bg-muted/50 space-y-2 rounded-lg border p-3 text-sm"
+            className="bg-muted/50 space-y-3 rounded-lg border p-3 text-sm"
           >
             <p>
-              Nothing is set up to write the storyboard yet. Add a Gemini or
-              OpenAI key, or a local model, in{" "}
+              Nothing is set up to write the storyboard yet. Set up a free
+              writer on this computer below, add a Gemini or OpenAI key in{" "}
               <Link href="/settings" className="underline">
                 Settings
               </Link>
-              , or let an AI agent write it through MCP. You can still see a
-              video right now:
+              , or paste a reply from your own chat assistant (above). You can
+              still see a video right now:
             </p>
             <Button
               variant="outline"
@@ -356,12 +375,32 @@ export function OnePromptCreate() {
             >
               Make a sample video
             </Button>
+            <LocalWriterSetup />
           </div>
         )}
         {error && (
           <p role="alert" className="text-destructive text-sm">
             {error}
           </p>
+        )}
+        {offerFallback && fallback && (
+          <div
+            role="note"
+            className="flex flex-wrap items-center gap-2 text-sm"
+          >
+            <span>
+              The writer on this computer did not answer. {fallback.label} can
+              write it instead, but your topic would be sent to {fallback.label}
+              .
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void create(fallback.id)}
+            >
+              Write with {fallback.label}
+            </Button>
+          </div>
         )}
       </div>
     </section>

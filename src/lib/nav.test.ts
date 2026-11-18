@@ -9,6 +9,7 @@ const REACHED_FROM: Record<string, string> = {
   "/examples": "Create (Or start from an example)",
   "/scenes": "Create (Browse scene types and looks)",
   "/batch": "Create (make many videos from a list of topics)",
+  "/recordings": "Create (turn a recording into clips)",
   "/diagnostics": "Settings (Run system check)",
 };
 

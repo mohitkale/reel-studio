@@ -42,6 +42,9 @@ import {
   type LintResult,
 } from "@/storyboard";
 import { ProviderError } from "@/providers/voice/types";
+import { generateSceneImages } from "@/library/scene-image-generation";
+import { imageProviderConfigStore } from "@/server/image-provider-config";
+import { createImageProvider } from "@/providers/image/registry";
 
 export interface ProduceFromStoryboardOptions {
   quality?: "draft" | "standard" | "high";
@@ -223,6 +226,21 @@ export async function produceFromStoryboard(
     }
   }
 
+  // Pictures the storyboard asked a local image model for. With none set up
+  // (the default) the scenes keep their stock search and a note says so.
+  const imageConfig = await imageProviderConfigStore.read();
+  const images = await generateSceneImages({
+    prompts: plan.generatePrompts,
+    orientation: plan.orientation,
+    themeId: plan.themeId,
+    videoSeed: plan.look.seed,
+    provider: imageConfig ? createImageProvider(imageConfig) : null,
+  });
+  plan.assetIds = plan.assetIds.map(
+    (id, index) => id ?? images.assetIds[index],
+  );
+  plan.warnings.push(...images.notes);
+
   // Uploaded library assets named by the storyboard become scene backgrounds.
   const namedAssetIds = plan.assetIds.filter((id): id is string => Boolean(id));
   const assets = namedAssetIds.length ? await getAssets(namedAssetIds) : [];
@@ -366,6 +384,7 @@ export async function produceFromStoryboard(
           ...(plan.voice.speed !== undefined
             ? { speed: plan.voice.speed }
             : {}),
+          ...(plan.voice.style ? { style: plan.voice.style } : {}),
         },
       },
       captions: plan.captions,

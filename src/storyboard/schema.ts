@@ -12,6 +12,8 @@
  */
 import { z } from "zod";
 
+import { VOICE_STYLE_IDS } from "@/lib/voice-styles";
+
 export const STORYBOARD_VERSION = 1 as const;
 
 export const STORYBOARD_LIMITS = {
@@ -40,6 +42,7 @@ export const STORYBOARD_LIMITS = {
   codeText: 600,
   codeLines: 12,
   mediaQuery: 80,
+  mediaGenerate: 300,
   mediaPath: 200,
   icon: 40,
   emphasisCount: 3,
@@ -125,6 +128,12 @@ export const voiceSchema = z
       .max(1.3)
       .optional()
       .describe("Speaking speed, 0.7 to 1.3. Omit for natural speed (1.0)."),
+    style: z
+      .enum(VOICE_STYLE_IDS)
+      .optional()
+      .describe(
+        'How the voice reads: "calm", "energetic", "storyteller" or "news". Omit for the natural read.',
+      ),
   })
   .describe("Narration settings. Omit to narrate with the default voice.");
 
@@ -281,6 +290,14 @@ export const mediaSchema = z
       .max(80)
       .optional()
       .describe("Id of an asset already in the project's library."),
+    generate: z
+      .string()
+      .min(4)
+      .max(L.mediaGenerate)
+      .optional()
+      .describe(
+        'Describe a picture to make with a local image model, in plain words. Only used when the person has set one up; otherwise "query" (or the headline) finds a stock picture instead. Example: "a lighthouse on a cliff at dusk, calm sea".',
+      ),
     path: z
       .string()
       .min(1)
@@ -292,12 +309,14 @@ export const mediaSchema = z
       .describe('Relative path of a supplied file. Example: "media/demo.mp4".'),
   })
   .refine(
+    // A query may sit beside generate: it is the stock search used when no image model is set up.
     (m) =>
-      [m.query, m.assetId, m.path].filter((v) => v !== undefined).length === 1,
-    { message: "Give exactly one of query, assetId or path" },
+      [m.query ?? m.generate, m.assetId, m.path].filter((v) => v !== undefined)
+        .length === 1,
+    { message: "Give exactly one of query, assetId, path or generate" },
   )
   .describe(
-    "Picture or clip for the scene. Provide exactly one of query, assetId or path.",
+    "Picture or clip for the scene. Provide exactly one of query, assetId, path or generate (generate may also carry a query as its fallback).",
   );
 
 function isSafeRelativePath(value: string): boolean {
@@ -553,6 +572,12 @@ const base = {
       "Pages you used for facts. Leave out if you used none. Never invent sources.",
     ),
   publish: publishSchema.optional(),
+  language: z
+    .enum(["en-US", "en-GB", "es", "fr", "hi", "it", "ja", "pt-BR", "zh"])
+    .optional()
+    .describe(
+      'The language the narration is written in, when it is not American English: "en-GB", "es", "fr", "hi", "it", "ja", "pt-BR" or "zh". The voice is chosen to match.',
+    ),
 };
 
 export const videoStoryboardSchema = z

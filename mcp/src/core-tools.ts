@@ -297,6 +297,132 @@ async function produce(
   return json({ ...base, ...view }, await contactSheetImage(view));
 }
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Turn a recording on this computer into captioned clips: transcribe locally,
+ * take the three best passages the studio's plain rules suggest, and export each
+ * with a hook title and word-synced captions. Nothing leaves the machine.
+ */
+async function produceFromRecording(
+  source: { path: string; language?: string },
+  options: { wait?: boolean; waitSeconds?: number },
+): Promise<ToolResult> {
+  const { id } = await apiPost<{ id: string }>("/api/recordings", {
+    path: source.path,
+    ...(source.language ? { language: source.language } : {}),
+  });
+  if (options.wait === false)
+    return json({ recordingId: id, state: "transcribing" });
+  const deadline = Date.now() + (options.waitSeconds ?? 900) * 1000;
+  type Detail = {
+    recording: { status: string; error?: string; name: string };
+    suggestions: Array<{
+      startWord: number;
+      endWord: number;
+      title: string;
+      seconds: number;
+      reasons: string[];
+    }>;
+  };
+  let detail: Detail;
+  for (;;) {
+    detail = await apiGet<Detail>(`/api/recordings/${encode(id)}`);
+    if (detail.recording.status !== "transcribing") break;
+    if (Date.now() > deadline)
+      return json({
+        recordingId: id,
+        state: "transcribing",
+        note: "Still transcribing; call create_video again later with wait=false, or open the studio at /recordings.",
+      });
+    await sleep(3000);
+  }
+  if (detail.recording.status === "failed")
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            recordingId: id,
+            state: "failed",
+            cause: detail.recording.error,
+            fix: "Check that whisper.cpp and its model are set up (reel-studio doctor), then retry.",
+          }),
+        },
+      ],
+      isError: true,
+    };
+  if (detail.suggestions.length === 0)
+    return json({
+      recordingId: id,
+      state: "no-clips",
+      note: "No complete 20 to 55 second passage was found.",
+    });
+  await apiPost(`/api/recordings/${encode(id)}/clips`, {
+    clips: detail.suggestions.map((clip) => ({
+      startWord: clip.startWord,
+      endWord: clip.endWord,
+      title: clip.title,
+    })),
+    trimSilence: true,
+    removeFillers: true,
+    format: "9:16",
+    reframe: "blur",
+    quality: "standard",
+  });
+  type Job = {
+    job: {
+      state: string;
+      step: string;
+      error?: string;
+      results: Array<{
+        title: string;
+        seconds: number;
+        url: string;
+        kit: unknown;
+      }>;
+    } | null;
+  };
+  for (;;) {
+    const { job } = await apiGet<Job>(`/api/recordings/${encode(id)}/clips`);
+    if (job && job.state !== "running")
+      return job.state === "failed"
+        ? {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  recordingId: id,
+                  state: "failed",
+                  cause: job.error,
+                }),
+              },
+            ],
+            isError: true,
+          }
+        : json({
+            recordingId: id,
+            state: "succeeded",
+            studioUrl: `${BASE_URL}/recordings`,
+            clips: job.results.map((clip) => ({
+              title: clip.title,
+              seconds: Math.round(clip.seconds),
+              videoUrl: absoluteUrl(clip.url),
+              localFile: localFilePath(absoluteUrl(clip.url)),
+              publishingKit: clip.kit,
+            })),
+          });
+    if (Date.now() > deadline)
+      return json({
+        recordingId: id,
+        state: "running",
+        step: job?.step,
+        studioUrl: `${BASE_URL}/recordings`,
+      });
+    await sleep(3000);
+  }
+}
+
 interface PodcastJobView {
   job: {
     status: string;
@@ -408,9 +534,16 @@ export function registerCoreTools(server: McpServer): void {
     "create_video",
     {
       description:
-        "Make a video from a Storyboard v1 JSON object (read the schema resource first). The studio narrates, animates, captions and renders it locally; with wait=true (default) this returns the finished video link, otherwise a jobId for get_job.",
+        "Make a video from a Storyboard v1 JSON object (read the schema resource first). The studio narrates, animates, captions and renders it locally; with wait=true (default) this returns the finished video link, otherwise a jobId for get_job. Or pass source { path } instead of a storyboard to turn a recording on this computer (audio or video) into three captioned 9:16 clips, transcribed locally; list_options reports whether transcription is ready.",
       inputSchema: {
-        storyboard: z.record(z.string(), z.unknown()),
+        storyboard: z.record(z.string(), z.unknown()).optional(),
+        /** A recording on this computer to turn into captioned clips, instead of a storyboard. */
+        source: z
+          .object({
+            path: z.string().min(1).max(4096),
+            language: z.string().min(2).max(12).optional(),
+          })
+          .optional(),
         quality: z.enum(["draft", "standard", "high"]).optional(),
         wait: z.boolean().optional(),
         waitSeconds: z.number().int().min(10).max(1800).optional(),
@@ -418,8 +551,19 @@ export function registerCoreTools(server: McpServer): void {
         series: z.string().min(1).max(40).optional(),
       },
     },
-    guard(({ storyboard, quality, wait, waitSeconds, series }, extra) =>
-      produce(storyboard, { quality, wait, waitSeconds, series }, extra),
+    guard(
+      ({ storyboard, source, quality, wait, waitSeconds, series }, extra) => {
+        if (source) return produceFromRecording(source, { wait, waitSeconds });
+        if (!storyboard)
+          throw new Error(
+            "Give a storyboard, or a source { path } to a recording on this computer.",
+          );
+        return produce(
+          storyboard,
+          { quality, wait, waitSeconds, series },
+          extra,
+        );
+      },
     ),
   );
 
@@ -469,7 +613,20 @@ export function registerCoreTools(server: McpServer): void {
       } catch {
         // No studio answer for series: list the rest.
       }
+      // Whether a recording can be transcribed here (whisper.cpp and FFmpeg).
+      let transcription: { available: boolean; reason: string | null } = {
+        available: false,
+        reason: "The studio did not answer.",
+      };
+      try {
+        transcription = (
+          await apiGet<{ readiness: typeof transcription }>("/api/recordings")
+        ).readiness;
+      } catch {
+        // Keep the unavailable default.
+      }
       return json({
+        transcription,
         series: (saved.series ?? []).map((item) => item.name),
         themes: THEMES.map((t) => ({ id: t.id, use: t.description })),
         sceneTypes: SCENE_TYPES,
