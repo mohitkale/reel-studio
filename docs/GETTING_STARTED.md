@@ -90,6 +90,16 @@ provider is charged for each). The storyboard marks where chapters start; the pu
 turns them into YouTube timestamps, and the linter warns when a long video has no chapters or
 goes more than 90 seconds without a hook, stat, quote, chart or comparison.
 
+**Shorts from a long video**: on a finished video, **Make shorts from this** picks three to five
+self-contained runs (by chapter, or at the scenes that open a new thought), adds a hook when a run
+lacks one and a closing line, and makes each a vertical short. The choice is plain code, so the same
+video always gives the same shorts. Over MCP, `revise_video` with `derive: "shorts"` does the same.
+
+**Series and many videos at once**: a series is a saved set of defaults (look, format, length, voice,
+music). On **Make many videos** (`/batch`, linked from Create), paste topics or a CSV, pick a series,
+and the topics are written and made one at a time, each with its own status, retry, pause and resume.
+`create_video` over MCP takes a `series` name, and `list_options` lists the saved ones.
+
 See [Creating videos](CREATING_VIDEOS.md) for the full workflow.
 
 ## Configuration
