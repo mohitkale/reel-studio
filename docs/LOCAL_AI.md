@@ -63,5 +63,6 @@ in use:
 
 ## More local options
 
+- Voices, languages and styles: [Voice providers](VOICE_PROVIDERS.md).
 - Optional image generation, recordings to clips and the presenter are described
   in their own sections as they ship.

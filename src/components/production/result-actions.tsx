@@ -9,6 +9,10 @@ import { apiGet, apiPost } from "@/lib/api-client";
 import { SAMPLE_VOICES } from "@/lib/sample-voices";
 import { NativeSelect } from "@/components/ui/native-select";
 import { buildShareCaption, type CaptionSource } from "@/lib/share-caption";
+import { useAIProviders } from "@/hooks/ai";
+import { pickWriter } from "@/lib/writer-chain";
+import { VOICE_STYLES, VOICE_STYLE_IDS } from "@/lib/voice-styles";
+import { KOKORO_LANGUAGE_GROUPS } from "@/providers/voice/kokoro";
 
 const FORMATS = ["9:16", "16:9", "1:1"] as const;
 type Storyboard = CaptionSource & { format?: string; [k: string]: unknown };
@@ -31,8 +35,11 @@ export function ResultActions({
   quality?: "draft" | "standard" | "high";
 }) {
   const [busy, setBusy] = React.useState<
-    "caption" | "sizes" | "voice" | "shorts"
+    "caption" | "sizes" | "voice" | "shorts" | "language"
   >();
+  const providers = useAIProviders();
+  const [style, setStyle] = React.useState<string>("");
+  const [language, setLanguage] = React.useState<string>("es");
   const [voiceId, setVoiceId] = React.useState<string>(SAMPLE_VOICES[1].id);
   const [message, setMessage] = React.useState<string>();
   const [fallback, setFallback] = React.useState<string>();
@@ -138,7 +145,12 @@ export function ResultActions({
         {
           storyboard: {
             ...storyboard,
-            voice: { ...voice, enabled: true, voiceId },
+            voice: {
+              ...voice,
+              enabled: true,
+              voiceId,
+              ...(style ? { style } : {}),
+            },
           },
           quality: quality ?? "standard",
         },
@@ -147,6 +159,58 @@ export function ResultActions({
     } catch (e) {
       setMessage(
         e instanceof Error ? e.message : "Could not start the new voice",
+      );
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
+  /** The same video in another language: the writer translates, the scenes stay. */
+  async function makeLanguage() {
+    setBusy("language");
+    setMessage(undefined);
+    setMade([]);
+    try {
+      const writer = pickWriter(providers.data);
+      if (!writer)
+        throw new Error(
+          "A language version needs a writer to translate the words. Set one up in Settings.",
+        );
+      const label =
+        KOKORO_LANGUAGE_GROUPS.find((group) => group.id === language)?.label ??
+        language;
+      const storyboard = await load();
+      const written = await apiPost<{
+        storyboard?: Record<string, unknown>;
+        errors?: Array<{ path: string; message: string }>;
+      }>("/api/storyboards/write", {
+        providerId: writer.id,
+        research: "off",
+        fromSourceText: true,
+        brief: {
+          topic: "Translate this video",
+          revise: {
+            storyboard,
+            instruction: `Translate the narration and every on-screen text into ${label} and set language to "${language}". Keep the scene types, their order, the numbers and the structure exactly as they are.`,
+          },
+        },
+      });
+      if (!written.storyboard)
+        throw new Error(
+          written.errors?.map((e) => e.message).join("; ") ||
+            "The writer did not return a translation.",
+        );
+      const queued = await apiPost<{ jobId?: string | null }>(
+        "/api/storyboards",
+        {
+          storyboard: written.storyboard,
+          quality: quality ?? "standard",
+        },
+      );
+      setMade([{ format: label, jobId: queued.jobId }]);
+    } catch (e) {
+      setMessage(
+        e instanceof Error ? e.message : "Could not make the language version",
       );
     } finally {
       setBusy(undefined);
@@ -213,6 +277,22 @@ export function ResultActions({
             ))}
           </NativeSelect>
         </label>
+        <label className="flex items-center gap-2 text-sm">
+          Style
+          <NativeSelect
+            aria-label="Voice style"
+            className="w-36"
+            value={style}
+            onChange={(event) => setStyle(event.target.value)}
+          >
+            <option value="">Natural</option>
+            {VOICE_STYLE_IDS.map((id) => (
+              <option key={id} value={id} title={VOICE_STYLES[id].description}>
+                {VOICE_STYLES[id].label}
+              </option>
+            ))}
+          </NativeSelect>
+        </label>
         <Button
           variant="outline"
           size="sm"
@@ -223,6 +303,32 @@ export function ResultActions({
             <Loader2 className="size-4 animate-spin" aria-hidden />
           )}
           Make it with this voice
+        </Button>
+        <label className="flex items-center gap-2 text-sm">
+          Language
+          <NativeSelect
+            aria-label="Language"
+            className="w-44"
+            value={language}
+            onChange={(event) => setLanguage(event.target.value)}
+          >
+            {KOKORO_LANGUAGE_GROUPS.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.label}
+              </option>
+            ))}
+          </NativeSelect>
+        </label>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={busy !== undefined}
+          onClick={() => void makeLanguage()}
+        >
+          {busy === "language" && (
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+          )}
+          Make it in this language
         </Button>
         <Button variant="outline" size="sm" asChild>
           <a href={`/api/scripts/${scriptId}/storyboard?download=1`} download>

@@ -14,6 +14,13 @@
  * omitted for a missing source date.
  */
 import { unspeakableCharacters } from "@/lib/speech-normalize";
+import { isVoiceStyleId } from "@/lib/voice-styles";
+import {
+  defaultVoiceForLanguage,
+  languageSupport,
+  normalizeLanguageCode,
+  voiceSupportsLanguage,
+} from "@/providers/voice/voice-catalog";
 import { THEME_IDS } from "@/video/themes";
 import { ZodError } from "zod";
 
@@ -231,6 +238,7 @@ const ROOT_KEYS = {
     "captions",
     "sources",
     "publish",
+    "language",
     "chapters",
     "scenes",
   ],
@@ -241,6 +249,7 @@ const ROOT_KEYS = {
     "music",
     "sources",
     "publish",
+    "language",
     "speakers",
     "turns",
   ],
@@ -1052,6 +1061,25 @@ function repairRoot(
     }
   }
 
+  if (root.language !== undefined) {
+    const mapped = normalizeLanguageCode(root.language);
+    if (!mapped) {
+      fixes.push({
+        path: "language",
+        rule: "drop-unknown-field",
+        message: `Removed the unsupported language "${String(root.language)}"`,
+      });
+      delete root.language;
+    } else if (mapped !== root.language) {
+      fixes.push({
+        path: "language",
+        rule: "map-enum",
+        message: `Set the language to "${mapped}"`,
+      });
+      root.language = mapped;
+    }
+  }
+
   if (!podcast) {
     if (
       root.format === undefined &&
@@ -1142,7 +1170,7 @@ function repairRoot(
         }
       }
       for (const key of Object.keys(voice)) {
-        if (!["enabled", "voiceId", "speed"].includes(key)) {
+        if (!["enabled", "voiceId", "speed", "style"].includes(key)) {
           delete voice[key];
           fixes.push({
             path: `voice.${key}`,
@@ -1151,7 +1179,32 @@ function repairRoot(
           });
         }
       }
+      if (voice.style !== undefined && !isVoiceStyleId(voice.style)) {
+        fixes.push({
+          path: "voice.style",
+          rule: "drop-unknown-field",
+          message: `Removed the unknown voice style "${String(voice.style)}"`,
+        });
+        delete voice.style;
+      }
       root.voice = voice;
+    }
+    // A voice that speaks another language than the video is swapped for the language's own.
+    if (
+      typeof root.language === "string" &&
+      isObj(root.voice) &&
+      typeof root.voice.voiceId === "string" &&
+      !voiceSupportsLanguage(root.voice.voiceId, root.language)
+    ) {
+      const replacement = defaultVoiceForLanguage(root.language);
+      if (replacement) {
+        fixes.push({
+          path: "voice.voiceId",
+          rule: "match-voice-language",
+          message: `The voice "${root.voice.voiceId}" does not speak ${root.language}; used "${replacement}"`,
+        });
+        root.voice = { ...root.voice, voiceId: replacement };
+      }
     }
   }
 
@@ -1693,6 +1746,18 @@ function addWarnings(
   options: LintOptions,
   warnings: LintWarning[],
 ) {
+  if (
+    storyboard.language &&
+    languageSupport(storyboard.language) === "limited" &&
+    storyboard.kind === "video" &&
+    storyboard.voice?.enabled !== false
+  ) {
+    warnings.push({
+      path: "language",
+      rule: "language-pronunciation",
+      message: `The local voice reads ${storyboard.language} with English pronunciation rules, so some words will sound off; check the narration by ear, or use a multilingual voice provider`,
+    });
+  }
   if (storyboard.kind === "video") {
     const scenes = storyboard.scenes;
     for (const [i, s] of scenes.entries()) {

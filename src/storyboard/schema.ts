@@ -12,6 +12,8 @@
  */
 import { z } from "zod";
 
+import { VOICE_STYLE_IDS } from "@/lib/voice-styles";
+
 export const STORYBOARD_VERSION = 1 as const;
 
 export const STORYBOARD_LIMITS = {
@@ -125,6 +127,12 @@ export const voiceSchema = z
       .max(1.3)
       .optional()
       .describe("Speaking speed, 0.7 to 1.3. Omit for natural speed (1.0)."),
+    style: z
+      .enum(VOICE_STYLE_IDS)
+      .optional()
+      .describe(
+        'How the voice reads: "calm", "energetic", "storyteller" or "news". Omit for the natural read.',
+      ),
   })
   .describe("Narration settings. Omit to narrate with the default voice.");
 
@@ -553,6 +561,12 @@ const base = {
       "Pages you used for facts. Leave out if you used none. Never invent sources.",
     ),
   publish: publishSchema.optional(),
+  language: z
+    .enum(["en-US", "en-GB", "es", "fr", "hi", "it", "ja", "pt-BR", "zh"])
+    .optional()
+    .describe(
+      'The language the narration is written in, when it is not American English: "en-GB", "es", "fr", "hi", "it", "ja", "pt-BR" or "zh". The voice is chosen to match.',
+    ),
 };
 
 export const videoStoryboardSchema = z

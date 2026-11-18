@@ -1,6 +1,8 @@
 import type { SpeechWord } from "@/lib/speech-words";
 import { z } from "zod";
 
+import { VOICE_STYLE_IDS } from "@/lib/voice-styles";
+
 /**
  * Voice provider contract. The UI and API talk only to this interface, never to
  * a vendor SDK directly. Adding a new TTS vendor = implement this + register it.
@@ -61,6 +63,8 @@ export const synthOptionsSchema = z.object({
   stability: z.number().min(0).max(1).optional(),
   similarity: z.number().min(0).max(1).optional(),
   language: z.string().optional(),
+  /** A way of reading the voice: speed, pauses and a small pitch shift (local Kokoro only). */
+  style: z.enum(VOICE_STYLE_IDS).optional(),
   /** Read the text exactly as written, without the speech clean-up (listening comparison). */
   rawText: z.boolean().optional(),
 });

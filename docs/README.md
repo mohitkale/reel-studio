@@ -9,6 +9,7 @@ Start here.
 - [Creating videos](CREATING_VIDEOS.md): paths, presets, voice, captions, limits.
 - [Podcasts and audio](PODCASTS.md): dialogue, finishing, recordings, audiograms.
 - [Local AI](LOCAL_AI.md): a storyboard writer on this computer, a voice range, images and recordings, all optional.
+- [Voice providers](VOICE_PROVIDERS.md): the voice gallery, languages, styles, cloning and how to add a voice model.
 - [MCP](MCP.md): drive Reel Studio from a coding agent.
 - [Command line](CLI.md): storyboard file in, MP4 out, with exit codes for scripts and CI.
 - [Storyboard](STORYBOARD.md): the JSON an agent writes (placeholder until v0.10).

@@ -366,6 +366,7 @@ export async function produceFromStoryboard(
           ...(plan.voice.speed !== undefined
             ? { speed: plan.voice.speed }
             : {}),
+          ...(plan.voice.style ? { style: plan.voice.style } : {}),
         },
       },
       captions: plan.captions,
