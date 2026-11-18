@@ -544,7 +544,7 @@ export function registerCoreTools(server: McpServer): void {
     "revise_video",
     {
       description:
-        "Change a finished video's storyboard and make it again. changes is a list of edits to scenes counted from 1: {op:'update',index,fields}, {op:'replace',index,scene}, {op:'insert',index,scene}, {op:'remove',index}, {op:'move',from,to}; set changes top-level fields such as title or theme. Creates a new video (the whole video is rendered again).",
+        "Change a finished video's storyboard and make it again, or with derive=\"shorts\" cut it into three to five vertical shorts (self-contained runs with a hook and a closing line). changes is a list of edits to scenes counted from 1: {op:'update',index,fields}, {op:'replace',index,scene}, {op:'insert',index,scene}, {op:'remove',index}, {op:'move',from,to}; set changes top-level fields such as title or theme. Creates a new video (the whole video is rendered again).",
       inputSchema: {
         projectId: z.string().min(1),
         changes: z
@@ -577,16 +577,51 @@ export function registerCoreTools(server: McpServer): void {
         set: z.record(z.string(), z.unknown()).optional(),
         quality: z.enum(["draft", "standard", "high"]).optional(),
         wait: z.boolean().optional(),
+        /** "shorts" cuts the video into three to five vertical shorts instead of editing it. */
+        derive: z.literal("shorts").optional(),
+        count: z.number().int().min(1).max(5).optional(),
+        maxSeconds: z.number().min(10).max(90).optional(),
       },
     },
-    guard(async ({ projectId, changes, set, quality, wait }, extra) => {
-      const { storyboard } = await exportedStoryboard(projectId);
-      const revised = applyChanges(storyboard, changes as Change[], set);
-      return produce(
-        revised as Record<string, unknown>,
-        { quality, wait },
+    guard(
+      async (
+        { projectId, changes, set, quality, wait, derive, count, maxSeconds },
         extra,
-      );
-    }),
+      ) => {
+        if (derive === "shorts") {
+          const { scriptId } = await exportedStoryboard(projectId);
+          const made = await apiPost<{
+            shorts: Array<{
+              title: string;
+              seconds: number;
+              jobId?: string | null;
+              projectId?: string | null;
+            }>;
+          }>(`/api/scripts/${encode(scriptId)}/cutdowns`, {
+            count,
+            maxSeconds,
+            quality: quality ?? "standard",
+          });
+          return json({
+            projectId,
+            derived: "shorts",
+            shorts: made.shorts.map((short) => ({
+              ...short,
+              studioUrl: short.jobId
+                ? `${BASE_URL}/results/${encode(short.jobId)}`
+                : undefined,
+            })),
+            next: "Each short is a job; call get_job with its jobId until it is done.",
+          });
+        }
+        const { storyboard } = await exportedStoryboard(projectId);
+        const revised = applyChanges(storyboard, changes as Change[], set);
+        return produce(
+          revised as Record<string, unknown>,
+          { quality, wait },
+          extra,
+        );
+      },
+    ),
   );
 }

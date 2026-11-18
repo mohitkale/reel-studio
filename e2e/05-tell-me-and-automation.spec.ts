@@ -130,3 +130,22 @@ test("the thumbnail endpoint returns PNGs at both sizes", async ({
     expect(bytes.readUInt32BE(20)).toBe(height);
   }
 });
+
+test("shorts cutdowns say plainly when a video is too short to cut", async ({
+  request,
+}) => {
+  const { jobs } = (await (
+    await request.get("/api/production-jobs?limit=5")
+  ).json()) as { jobs: { id: string; state: string }[] };
+  const done = jobs.find((job) => job.state === "succeeded");
+  expect(done, "a finished video from the journeys").toBeTruthy();
+  const view = (await (
+    await request.get(`/api/production-jobs/${done!.id}`)
+  ).json()) as { job: { revision: { scriptId: string } } };
+  const response = await request.post(
+    `/api/scripts/${view.job.revision.scriptId}/cutdowns`,
+    { data: { preview: true } },
+  );
+  expect(response.status()).toBe(422);
+  expect(JSON.stringify(await response.json())).toMatch(/too short/i);
+});

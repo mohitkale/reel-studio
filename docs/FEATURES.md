@@ -205,6 +205,7 @@ HTTP handlers under `src/app` (`/api/**` and `/media`).
 | `PATCH /api/scripts/[id]/captions/[cueId]`           | CAP01      |
 | `GET /api/scripts/[id]/captions`                     | CAP01      |
 | `POST /api/scripts/[id]/captions`                    | CAP01      |
+| `POST /api/scripts/[id]/cutdowns`                    | RND01      |
 | `POST /api/scripts/[id]/chapter-draft/generate`      | CHP01      |
 | `POST /api/scripts/[id]/chapter-draft`               | CHP01      |
 | `PATCH /api/scripts/[id]/chapter-draft`              | CHP01      |

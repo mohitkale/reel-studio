@@ -423,3 +423,35 @@ describe("create_podcast", () => {
     expect(failed.failure.fix).toMatch(/voice model/i);
   });
 });
+
+describe("revise_video with derive shorts", () => {
+  it("asks the studio to cut the video into shorts and lists their jobs", async () => {
+    mocks.get.mockImplementation(async (path: string) => {
+      if (path === "/api/projects")
+        return { projects: [{ id: "p1", firstScriptId: "s1" }] };
+      return { storyboard: { version: 1, title: "T", scenes: [] } };
+    });
+    mocks.post.mockResolvedValue({
+      shorts: [
+        { title: "Part one", seconds: 30, jobId: "j1", projectId: "pa" },
+        { title: "Part two", seconds: 28, jobId: "j2", projectId: "pb" },
+      ],
+    });
+    const run = register(registerCoreTools).get("revise_video")!.run;
+    const result = JSON.parse(
+      (await run({ projectId: "p1", derive: "shorts", count: 2 })).content[0]!
+        .text,
+    );
+    expect(mocks.post).toHaveBeenCalledWith("/api/scripts/s1/cutdowns", {
+      count: 2,
+      maxSeconds: undefined,
+      quality: "standard",
+    });
+    expect(result.derived).toBe("shorts");
+    expect(result.shorts.map((s: { jobId: string }) => s.jobId)).toEqual([
+      "j1",
+      "j2",
+    ]);
+    expect(result.shorts[0].studioUrl).toBe("http://studio/results/j1");
+  });
+});
