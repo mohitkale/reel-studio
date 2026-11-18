@@ -21,6 +21,7 @@ import {
 } from "@/library/automatic-stock-media";
 import { getAssets } from "@/library/repositories/assets";
 import { getProductionJobByIdempotencyKey } from "@/library/repositories/production-jobs";
+import { chapterPlanFromStarts } from "@/production/chapters";
 import { getBrandKit } from "@/library/repositories/brandkits";
 import { createProjectFromPlan } from "@/library/repositories/projects";
 import { getScript, updateScript } from "@/library/repositories/scripts";
@@ -320,6 +321,26 @@ export async function produceFromStoryboard(
     ),
   };
 
+  // Chapter marks become a chapter plan, so a long video is rendered in sections
+  // that a retry can reuse. Marks that do not fit the scenes are left out.
+  const chapterStarts = (() => {
+    if (storyboard.kind !== "video" || !storyboard.chapters?.length)
+      return undefined;
+    const starts = storyboard.chapters.map((chapter) => ({
+      title: chapter.title,
+      firstSceneIndex: chapter.startScene,
+    }));
+    try {
+      chapterPlanFromStarts(
+        starts,
+        finalPlan.scenes.map((_, index) => `scene-${index}`),
+      );
+      return starts;
+    } catch {
+      return undefined;
+    }
+  })();
+
   const preset = getProductionPreset(plan.presetId);
   if (!preset) throw new ProviderError(`Unknown look "${plan.presetId}"`, 500);
   const created = await createProjectFromPlan(
@@ -334,6 +355,7 @@ export async function produceFromStoryboard(
     {
       series: storyboard.series,
       ...(brandKitId ? { brandKitId } : {}),
+      ...(chapterStarts ? { chapterStarts } : {}),
       // No preset: the preset scene renderers show one hero line and drop list
       // items, stat labels and chart data, which a storyboard supplies.
       savedOverrides: {

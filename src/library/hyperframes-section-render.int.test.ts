@@ -91,6 +91,26 @@ it("renders the scoped native plan for each cache key but assembles once with th
         producer as unknown as Parameters<typeof renderHyperframesSections>[1],
       ),
     ).rejects.toThrow("changed global coverage");
+    // The planner rounds the page's duration up to a whole frame, so the sections
+    // may have been cut from a timeline one frame shorter. More than that is refused.
+    await fs.writeFile(
+      path.join(visualRoot, "manifest.json"),
+      JSON.stringify({ version: 1, totalFrames: 959, fps: 30, count: 2 }),
+    );
+    await renderHyperframesSections(
+      input,
+      producer as unknown as Parameters<typeof renderHyperframesSections>[1],
+    );
+    await fs.writeFile(
+      path.join(visualRoot, "manifest.json"),
+      JSON.stringify({ version: 1, totalFrames: 958, fps: 30, count: 2 }),
+    );
+    await expect(
+      renderHyperframesSections(
+        input,
+        producer as unknown as Parameters<typeof renderHyperframesSections>[1],
+      ),
+    ).rejects.toThrow();
     await fs.writeFile(path.join(visualRoot, "manifest.json"), "{}");
     await expect(
       renderHyperframesSections(
