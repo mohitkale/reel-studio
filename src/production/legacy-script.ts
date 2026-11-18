@@ -211,8 +211,7 @@ export function productionSpecFromLegacyScript(
     engine: {
       id: script.videoEngine,
       adapterVersion: "1.0.0",
-      catalogRevision:
-        CURRENT_HF_CATALOG_REVISION,
+      catalogRevision: CURRENT_HF_CATALOG_REVISION,
     },
     preset: {
       id: preset.id,
@@ -267,7 +266,14 @@ export function productionSpecFromLegacyScript(
       };
     }),
     narration: {
-      measuredWords: resolveSpokenWordWindows(script.captionTracks, resolved.takeUsable ? take?.id : null, script.fps, script.scenes.some(scene => Boolean(scene.direction?.graphic?.presentation))),
+      measuredWords: resolveSpokenWordWindows(
+        script.captionTracks,
+        resolved.takeUsable ? take?.id : null,
+        script.fps,
+        script.scenes.some((scene) =>
+          Boolean(scene.direction?.graphic?.presentation),
+        ),
+      ),
       mode: script.voiceMode,
       readiness: narrationReadiness(take, resolved.takeUsable),
       takeId: take?.id,

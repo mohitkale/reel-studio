@@ -21,6 +21,7 @@ export function PasteStoryboard({
   theme,
   narration,
   music = true,
+  musicTrack,
   captions = true,
   draft = false,
 }: {
@@ -30,6 +31,7 @@ export function PasteStoryboard({
   theme: string;
   narration: boolean;
   music?: boolean;
+  musicTrack?: string;
   captions?: boolean;
   /** Make a lower-quality, faster draft. */
   draft?: boolean;
@@ -86,7 +88,7 @@ export function PasteStoryboard({
         {
           storyboard: finishStoryboard(
             result.lint.storyboard as unknown as Record<string, unknown>,
-            { theme, narration, music, captions },
+            { theme, narration, music, musicTrack, captions },
           ),
           quality: draft ? "draft" : "standard",
           ...review,

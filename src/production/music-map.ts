@@ -9,7 +9,7 @@ export const musicMapSchema = z
     bpm: z.number().finite().min(40).max(240),
     offsetSeconds: z.number().finite().min(0).max(1.5),
     confidence: z.number().min(0).max(1),
-    method: z.enum(["energy-onsets", "manual"]),
+    method: z.enum(["energy-onsets", "manual", "bundled-grid"]),
     disabledBeats: z.array(z.number().int().min(0).max(719)).max(720),
     dropSeconds: z.number().finite().nonnegative().max(180).nullable(),
   })

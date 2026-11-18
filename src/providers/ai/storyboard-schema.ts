@@ -59,20 +59,58 @@ function simplify(node: unknown): unknown {
   return out;
 }
 
-/** The video storyboard, in the plain subset every provider supports. */
-export function storyboardWriterSchema(): Node {
+/** Pass one of a long video: the chapters, each with a title and what it must cover. */
+const OUTLINE_SCHEMA: Node = {
+  type: "object",
+  properties: {
+    title: {
+      type: "string",
+      description: "Title of the whole video, at most 100 characters.",
+    },
+    chapters: {
+      type: "array",
+      description:
+        "Three to twelve chapters in order. Each builds on the one before.",
+      items: {
+        type: "object",
+        properties: {
+          title: {
+            type: "string",
+            description:
+              'Chapter title, at most 60 characters. Example: "How light scatters".',
+          },
+          goal: {
+            type: "string",
+            description:
+              "One or two sentences: what this chapter explains and which facts, examples or numbers it uses.",
+          },
+        },
+        required: ["title", "goal"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["title", "chapters"],
+  additionalProperties: false,
+};
+
+export type StoryboardKind = "video" | "podcast" | "outline";
+
+/** The video or podcast storyboard, in the plain subset every provider supports. */
+export function storyboardWriterSchema(kind: StoryboardKind = "video"): Node {
+  if (kind === "outline") return OUTLINE_SCHEMA;
   const full = storyboardJsonSchema() as { anyOf: Node[] };
-  const video = full.anyOf[0]!;
-  return simplify({ ...video, type: "object" }) as Node;
+  const variant = full.anyOf[kind === "podcast" ? 1 : 0]!;
+  return simplify({ ...variant, type: "object" }) as Node;
 }
 
 /** Gemini `responseJsonSchema`. */
-export function geminiStoryboardSchema(): Node {
-  return storyboardWriterSchema();
+export function geminiStoryboardSchema(kind: StoryboardKind = "video"): Node {
+  return storyboardWriterSchema(kind);
 }
 
 /** OpenAI, LM Studio, llama.cpp and Ollama `json_schema` / `format` wrapper. */
-export function strictStoryboardSchema(): {
+export function strictStoryboardSchema(kind: StoryboardKind = "video"): {
   name: string;
   strict: true;
   schema: Node;
@@ -81,7 +119,7 @@ export function strictStoryboardSchema(): {
     name: "storyboard",
     strict: true,
     schema: strictOutputSchema({
-      ...storyboardWriterSchema(),
+      ...storyboardWriterSchema(kind),
       additionalProperties: false,
     }) as Node,
   };

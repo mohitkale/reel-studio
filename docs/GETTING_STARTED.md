@@ -64,6 +64,42 @@ storyboard writer for edits and shows them before anything is made, and **Share
 it** copies a caption with hashtags and makes the other two sizes or another
 voice from the same storyboard.
 
+**Music**: twenty bundled tracks (all CC0, generated here) with mood tags, energy and an
+exact beat grid. Under More options on Create you can pick one and preview it; the
+default is automatic, which follows the look's music mood. Cut suggestions snap to
+the exact grid of a bundled track.
+
+**Narration** is cleaned before the voice reads it: numbers, money, percentages,
+dates, ordinals, units, links, handles and acronyms are spoken in words, and emoji
+are dropped. A starter list covers common tech and brand terms. Add your own under
+**Settings, How the voice says things** (`word = how it sounds`); only the narration
+changes, never the text on screen. The storyboard linter warns when narration has
+characters a voice cannot say. Narration also gets short pauses between sentences and
+paragraphs, a beat before a punchline or a number, and a slightly slower first
+sentence; `voice.speed` in a storyboard now changes the speaking rate. The same
+Settings card can play a line as written and cleaned up, so the two can be compared by
+ear.
+
+On a finished video, **Publishing kit** gives a title, description and hashtags with
+copy buttons, whether each fits YouTube, Shorts, Reels, TikTok and LinkedIn, and one zip
+with the text, storyboard and captions. It is built from the storyboard's own words.
+
+**Long videos**: choose **5 min** on Create. The writer plans the chapters first, then
+writes each chapter's scenes (one model call for the outline plus one per chapter, so a paid
+provider is charged for each). The storyboard marks where chapters start; the publishing kit
+turns them into YouTube timestamps, and the linter warns when a long video has no chapters or
+goes more than 90 seconds without a hook, stat, quote, chart or comparison.
+
+**Shorts from a long video**: on a finished video, **Make shorts from this** picks three to five
+self-contained runs (by chapter, or at the scenes that open a new thought), adds a hook when a run
+lacks one and a closing line, and makes each a vertical short. The choice is plain code, so the same
+video always gives the same shorts. Over MCP, `revise_video` with `derive: "shorts"` does the same.
+
+**Series and many videos at once**: a series is a saved set of defaults (look, format, length, voice,
+music). On **Make many videos** (`/batch`, linked from Create), paste topics or a CSV, pick a series,
+and the topics are written and made one at a time, each with its own status, retry, pause and resume.
+`create_video` over MCP takes a `series` name, and `list_options` lists the saved ones.
+
 See [Creating videos](CREATING_VIDEOS.md) for the full workflow.
 
 ## Configuration

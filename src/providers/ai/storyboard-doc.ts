@@ -1,4 +1,7 @@
-import { STORYBOARD_WRITER_PROMPT } from "./storyboard-prompt";
+import {
+  PODCAST_WRITER_PROMPT,
+  STORYBOARD_WRITER_PROMPT,
+} from "./storyboard-prompt";
 import { storyboardWriterSchema } from "./storyboard-schema";
 
 /** docs/prompts/storyboard-writer.md, generated so it can never drift from the code. */
@@ -47,6 +50,48 @@ schema with all limits is [schemas/storyboard.v1.json](../../schemas/storyboard.
 
 \`\`\`json
 ${JSON.stringify(storyboardWriterSchema())}
+\`\`\`
+`;
+}
+
+/** docs/prompts/podcast-writer.md, generated like the video prompt. */
+export function podcastWriterPromptDocument(): string {
+  return `# Podcast writer prompt
+
+The prompt Reel Studio gives a model to write a podcast episode as a Storyboard v1
+document with \`"kind": "podcast"\`. Paste it into any chat app, then send your brief.
+Post the reply to \`POST /api/storyboards\`: it makes the cast, loads the script, adds
+intro and outro music and queues the episode, mastered to -16 LUFS. Fields and limits:
+[Storyboard](../STORYBOARD.md).
+
+This file is generated from \`src/providers/ai/storyboard-prompt.ts\` by
+\`npm run storyboard:schema\`; do not edit it by hand.
+
+## 1. Prompt
+
+\`\`\`text
+${PODCAST_WRITER_PROMPT}
+\`\`\`
+
+## 2. Your brief
+
+\`\`\`json
+{
+  "task": "Write the podcast storyboard for this brief.",
+  "brief": {
+    "topic": "Why the sky is blue",
+    "audience": "curious adults",
+    "targetSeconds": 180,
+    "speakers": 2,
+    "tone": "warm and curious"
+  }
+}
+\`\`\`
+
+## 3. JSON Schema
+
+\`\`\`json
+${JSON.stringify(storyboardWriterSchema("podcast"))}
 \`\`\`
 `;
 }

@@ -13,6 +13,7 @@
  * Pure and deterministic: no network, no clock unless `options.today` is
  * omitted for a missing source date.
  */
+import { unspeakableCharacters } from "@/lib/speech-normalize";
 import { THEME_IDS } from "@/video/themes";
 import { ZodError } from "zod";
 
@@ -229,6 +230,8 @@ const ROOT_KEYS = {
     "reduceMotion",
     "captions",
     "sources",
+    "publish",
+    "chapters",
     "scenes",
   ],
   podcast: [
@@ -237,6 +240,7 @@ const ROOT_KEYS = {
     "title",
     "music",
     "sources",
+    "publish",
     "speakers",
     "turns",
   ],
@@ -1276,6 +1280,8 @@ function repairRoot(
     if ((root.sources as unknown[]).length === 0) delete root.sources;
   }
 
+  repairPublish(root, fixes);
+
   if (podcast) repairPodcast(root, fixes, warnings);
   else {
     if (Array.isArray(root.scenes)) {
@@ -1304,6 +1310,7 @@ function repairRoot(
         message: "Used the first headline as the title",
       });
     }
+    repairChapters(root, fixes);
   }
 
   drop(root, ROOT_KEYS[podcast ? "podcast" : "video"], "", fixes);
@@ -1488,6 +1495,16 @@ const EXAMPLES: [RegExp, string, string][] = [
     '{ "speaker": "host", "text": "Welcome." }',
   ],
   [
+    /^chapters/,
+    "up to 20 { title (at most 60 characters), startScene (0-based scene number; the first chapter starts at 0) }",
+    '{ "title": "How light scatters", "startScene": 0 }',
+  ],
+  [
+    /^publish/,
+    "{ title (at most 100 characters), description (at most 1500), hashtags (up to 10), thumbnailText (at most 40) }",
+    '{ "title": "Why the sky is blue", "hashtags": ["science", "#sky"] }',
+  ],
+  [
     /^sources/,
     "{ title, url (http/https), accessed (YYYY-MM-DD) }",
     '{ "title": "Guide", "url": "https://example.com", "accessed": "2026-11-13" }',
@@ -1520,6 +1537,157 @@ function zodToErrors(error: ZodError): LintError[] {
   return out;
 }
 
+/**
+ * Chapter marks: keep the valid ones, in order, one per scene, starting at 0.
+ * A mark that points past the last scene is dropped.
+ */
+function repairChapters(root: Record<string, unknown>, fixes: LintFix[]) {
+  if (root.chapters === undefined) return;
+  const count = Array.isArray(root.scenes) ? root.scenes.length : 0;
+  if (!Array.isArray(root.chapters)) {
+    delete root.chapters;
+    fixes.push({
+      path: "chapters",
+      rule: "drop-chapters",
+      message: "Removed chapters because they were not a list",
+    });
+    return;
+  }
+  const seen = new Set<number>();
+  const marks: { title: string; startScene: number }[] = [];
+  for (const raw of root.chapters) {
+    if (!isObj(raw)) continue;
+    const title = typeof raw.title === "string" ? squash(raw.title) : "";
+    const start = Number(raw.startScene);
+    if (!title || !Number.isInteger(start) || start < 0 || start >= count)
+      continue;
+    if (seen.has(start)) continue;
+    seen.add(start);
+    marks.push({
+      title: cutAtBoundary(title, L.chapterTitle),
+      startScene: start,
+    });
+  }
+  marks.sort((a, b) => a.startScene - b.startScene);
+  // The first chapter always begins with the first scene.
+  if (marks.length > 0 && marks[0]!.startScene !== 0) marks[0]!.startScene = 0;
+  const kept = marks.slice(0, L.chapters);
+  if (kept.length !== root.chapters.length) {
+    fixes.push({
+      path: "chapters",
+      rule: "tidy-chapters",
+      message: "Kept the valid chapter marks, in order, the first at scene 0",
+    });
+  }
+  if (kept.length) root.chapters = kept;
+  else delete root.chapters;
+}
+
+/** Keep the posting details inside their limits instead of failing the storyboard. */
+function repairPublish(root: Record<string, unknown>, fixes: LintFix[]) {
+  const publish = root.publish;
+  if (publish === undefined) return;
+  if (!publish || typeof publish !== "object" || Array.isArray(publish)) {
+    delete root.publish;
+    fixes.push({
+      path: "publish",
+      rule: "drop-publish",
+      message: "Removed publish because it was not an object",
+    });
+    return;
+  }
+  const record = publish as Record<string, unknown>;
+  for (const [key, max] of [
+    ["title", L.publishTitle],
+    ["description", L.publishDescription],
+    ["thumbnailText", L.thumbnailText],
+  ] as const) {
+    const value = record[key];
+    if (typeof value !== "string") continue;
+    const clean = squash(value);
+    if (!clean) delete record[key];
+    else if (clean.length > max) {
+      record[key] = cutAtBoundary(clean, max);
+      fixes.push({
+        path: `publish.${key}`,
+        rule: "shorten-publish",
+        message: `Cut publish.${key} to ${max} characters at a boundary`,
+      });
+    } else record[key] = clean;
+  }
+  if (Array.isArray(record.hashtags)) {
+    const seen = new Set<string>();
+    const tags: string[] = [];
+    for (const raw of record.hashtags) {
+      if (typeof raw !== "string") continue;
+      const tag = raw.trim().replace(/^#+/, "").replace(/\s+/g, "");
+      if (!/^[\p{L}\p{N}_]{2,40}$/u.test(tag) || seen.has(tag.toLowerCase()))
+        continue;
+      seen.add(tag.toLowerCase());
+      tags.push(tag);
+    }
+    if (tags.length !== record.hashtags.length) {
+      fixes.push({
+        path: "publish.hashtags",
+        rule: "tidy-hashtags",
+        message: "Removed invalid or repeated hashtags and the # signs",
+      });
+    }
+    if (tags.length > L.publishHashtags) tags.length = L.publishHashtags;
+    if (tags.length) record.hashtags = tags;
+    else delete record.hashtags;
+  }
+  if (Object.keys(record).length === 0) delete root.publish;
+}
+
+/** Scene types that change the pace and bring a viewer back. */
+const REHOOK_TYPES = new Set([
+  "hook",
+  "stat",
+  "quote",
+  "kinetic-text",
+  "comparison",
+  "before-after",
+  "chart",
+]);
+export const LONG_FORM_SECONDS = 180;
+export const REHOOK_SECONDS = 90;
+
+/** Long videos (over three minutes) need chapters and a change of pace every minute or so. */
+function addLongFormWarnings(
+  storyboard: Extract<Storyboard, { kind: "video" }>,
+  warnings: LintWarning[],
+) {
+  const total = estimateDurationSeconds(storyboard);
+  if (total <= LONG_FORM_SECONDS) return;
+  const chapters = storyboard.chapters ?? [];
+  if (chapters.length < 3) {
+    warnings.push({
+      path: "chapters",
+      rule: "long-form-chapters",
+      message: `This video is about ${Math.round(total / 60)} minutes; mark at least three chapters so viewers can find their way and the description gets timestamps`,
+    });
+  }
+  let since = 0;
+  for (const [i, scene] of storyboard.scenes.entries()) {
+    const seconds = Math.max(
+      MIN_SCENE_SECONDS,
+      countWords(scene.narration) / WORDS_PER_SECOND,
+      scene.durationHint ?? 0,
+    );
+    if (REHOOK_TYPES.has(scene.type)) since = 0;
+    since += seconds;
+    if (since > REHOOK_SECONDS) {
+      warnings.push({
+        path: `scenes.${i}.type`,
+        rule: "long-form-rehook",
+        message: `${Math.round(since)} seconds without a hook, stat, quote, chart or comparison; add one to bring the viewer back`,
+      });
+      since = 0;
+    }
+  }
+}
+
 function addWarnings(
   storyboard: Storyboard,
   options: LintOptions,
@@ -1534,6 +1702,14 @@ function addWarnings(
           rule: "headline-equals-narration",
           message:
             "The headline repeats the narration word for word; the on-screen text should be shorter than what is said",
+        });
+      }
+      const unsayable = unspeakableCharacters(s.narration);
+      if (unsayable.length > 0) {
+        warnings.push({
+          path: `scenes.${i}.narration`,
+          rule: "unspeakable-characters",
+          message: `Narration has characters a voice cannot say (${unsayable.join(" ")}); use words, and keep symbols and emoji for the on-screen text`,
         });
       }
       const words = countWords(s.narration);
@@ -1552,6 +1728,7 @@ function addWarnings(
         });
       }
     }
+    addLongFormWarnings(storyboard, warnings);
     let run = 1;
     for (let i = 1; i < scenes.length; i++) {
       run = scenes[i]!.type === scenes[i - 1]!.type ? run + 1 : 1;

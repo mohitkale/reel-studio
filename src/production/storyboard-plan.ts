@@ -283,11 +283,6 @@ export function planFromStoryboard(
       );
     }
   }
-  if (storyboard.voice?.speed !== undefined) {
-    warnings.push(
-      "voice.speed is not applied yet; the voice speaks at its natural speed",
-    );
-  }
   const presetId = presetForStoryboard(storyboard);
   const named = getTheme(storyboard.theme);
   const themeId = (

@@ -1,14 +1,23 @@
 "use client";
 
-import { use } from "react";
+import { Suspense, use } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { usePodcast } from "@/hooks/podcasts";
+import { EpisodeProgress } from "@/components/podcasts/episode-progress";
 import { PodcastWorkspace } from "@/components/podcasts/podcast-workspace";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+
+/** The banner for an episode being made in one step, from `?job=`. */
+function MakingBanner({ podcastId }: { podcastId: string }) {
+  const job = useSearchParams().get("job");
+  if (!job || !/^[A-Za-z0-9]{8,40}$/.test(job)) return null;
+  return <EpisodeProgress podcastId={podcastId} jobId={job} />;
+}
 
 export default function PodcastDetailPage({
   params,
@@ -45,5 +54,12 @@ export default function PodcastDetailPage({
     );
   }
 
-  return <PodcastWorkspace podcast={podcast} />;
+  return (
+    <div className="flex flex-col gap-4">
+      <Suspense fallback={null}>
+        <MakingBanner podcastId={id} />
+      </Suspense>
+      <PodcastWorkspace podcast={podcast} />
+    </div>
+  );
 }

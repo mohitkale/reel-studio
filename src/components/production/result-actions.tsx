@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Copy, FileJson, Loader2, Maximize } from "lucide-react";
+import { Copy, FileJson, Loader2, Maximize, Scissors } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { apiGet, apiPost } from "@/lib/api-client";
@@ -30,7 +30,9 @@ export function ResultActions({
   scriptId: string;
   quality?: "draft" | "standard" | "high";
 }) {
-  const [busy, setBusy] = React.useState<"caption" | "sizes" | "voice">();
+  const [busy, setBusy] = React.useState<
+    "caption" | "sizes" | "voice" | "shorts"
+  >();
   const [voiceId, setVoiceId] = React.useState<string>(SAMPLE_VOICES[1].id);
   const [message, setMessage] = React.useState<string>();
   const [fallback, setFallback] = React.useState<string>();
@@ -97,6 +99,33 @@ export function ResultActions({
     }
   }
 
+  async function makeShorts() {
+    setBusy("shorts");
+    setMessage(undefined);
+    setMade([]);
+    try {
+      const result = await apiPost<{
+        shorts: Array<{
+          title: string;
+          seconds: number;
+          jobId?: string | null;
+        }>;
+      }>(`/api/scripts/${scriptId}/cutdowns`, {
+        quality: quality ?? "standard",
+      });
+      setMade(
+        result.shorts.map((short) => ({
+          format: `${short.title} (${short.seconds} s)`,
+          jobId: short.jobId,
+        })),
+      );
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Could not make the shorts");
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
   async function tryVoice() {
     setBusy("voice");
     setMessage(undefined);
@@ -155,6 +184,19 @@ export function ResultActions({
             <Maximize className="size-4" aria-hidden />
           )}
           Make other sizes
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={busy !== undefined}
+          onClick={() => void makeShorts()}
+        >
+          {busy === "shorts" ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+          ) : (
+            <Scissors className="size-4" aria-hidden />
+          )}
+          Make shorts from this
         </Button>
         <label className="flex items-center gap-2 text-sm">
           Voice

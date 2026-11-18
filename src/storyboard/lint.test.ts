@@ -120,7 +120,7 @@ describe("auto-repair", () => {
   });
 
   it("clamps the scene count", () => {
-    const many = Array.from({ length: 45 }, () => scene());
+    const many = Array.from({ length: L.scenes.max + 5 }, () => scene());
     const r = lint(video(many));
     expect(rules(r)).toContain("clamp-scenes");
     expect(r.storyboard?.kind === "video" && r.storyboard.scenes.length).toBe(
@@ -574,5 +574,178 @@ describe("helpers", () => {
       (result.storyboard as { scenes: Array<{ illustration?: string }> })
         .scenes[0]!.illustration,
     ).toBe("stars-2");
+  });
+});
+
+describe("narration a voice cannot say", () => {
+  it("warns about emoji and symbols in narration but not on screen", () => {
+    const result = lintStoryboard({
+      version: 1,
+      title: "T",
+      scenes: [
+        {
+          type: "hook",
+          headline: "Big news 🎉",
+          narration: "We shipped it → finally 🎉 and it works for everyone.",
+        },
+        {
+          type: "cta",
+          headline: "Try it",
+          narration: "Try it today and tell us.",
+        },
+      ],
+    });
+    const rules = result.warnings.map((w) => `${w.path}:${w.rule}`);
+    expect(rules).toContain("scenes.0.narration:unspeakable-characters");
+    expect(rules).not.toContain("scenes.1.narration:unspeakable-characters");
+  });
+});
+
+describe("publish details", () => {
+  const base = {
+    version: 1,
+    title: "T",
+    scenes: [
+      {
+        type: "hook",
+        headline: "H",
+        narration: "A line that is spoken aloud.",
+      },
+      { type: "cta", headline: "Go", narration: "Try it today and tell us." },
+    ],
+  };
+
+  it("accepts a tidy publish block", () => {
+    const result = lintStoryboard({
+      ...base,
+      publish: {
+        title: "Why the sky is blue",
+        description: "A short look at scattering.",
+        hashtags: ["science", "#sky"],
+        thumbnailText: "Why is the sky blue?",
+      },
+    });
+    expect(result.errors).toEqual([]);
+    expect(result.storyboard?.publish?.title).toBe("Why the sky is blue");
+  });
+
+  it("repairs long text, odd hashtags and repeats instead of failing", () => {
+    const result = lintStoryboard({
+      ...base,
+      publish: {
+        title: `${"word ".repeat(40)}`,
+        hashtags: ["#Science", "science", "bad tag!", "x", "#sky"],
+      },
+    });
+    expect(result.errors).toEqual([]);
+    const publish = result.storyboard?.publish;
+    expect(publish?.title?.length).toBeLessThanOrEqual(100);
+    expect(publish?.hashtags).toEqual(["Science", "sky"]);
+    const rules = result.fixes.map((f) => f.rule);
+    expect(rules).toContain("shorten-publish");
+    expect(rules).toContain("tidy-hashtags");
+  });
+
+  it("drops a publish value that is not an object", () => {
+    const result = lintStoryboard({ ...base, publish: "post it" });
+    expect(result.errors).toEqual([]);
+    expect(result.storyboard?.publish).toBeUndefined();
+  });
+});
+
+describe("chapters and long videos", () => {
+  const scene = (i: number, type = "statement", words = 30) => ({
+    type,
+    headline: `Scene ${i}`,
+    narration:
+      Array.from({ length: words }, (_, w) => `word${w}`).join(" ") + ".",
+  });
+  const longVideo = (count: number, extra: Record<string, unknown> = {}) => ({
+    version: 1,
+    title: "Long",
+    scenes: Array.from({ length: count }, (_, i) =>
+      scene(i, i === 0 ? "hook" : "statement"),
+    ),
+    ...extra,
+  });
+
+  it("accepts up to 120 scenes and keeps chapter marks in order", () => {
+    const result = lintStoryboard(
+      longVideo(60, {
+        chapters: [
+          { title: "Middle", startScene: 20 },
+          { title: "Start", startScene: 0 },
+          { title: "End", startScene: 40 },
+        ],
+      }),
+    );
+    expect(result.errors).toEqual([]);
+    expect((result.storyboard as { scenes: unknown[] }).scenes.length).toBe(60);
+    const marks = (
+      result.storyboard as {
+        chapters?: { title: string; startScene: number }[];
+      }
+    ).chapters;
+    expect(marks?.map((c) => c.title)).toEqual(["Start", "Middle", "End"]);
+  });
+
+  it("drops marks that point nowhere, repeats, and puts the first chapter at scene 0", () => {
+    const result = lintStoryboard(
+      longVideo(10, {
+        chapters: [
+          { title: "A", startScene: 2 },
+          { title: "Same place", startScene: 2 },
+          { title: "Past the end", startScene: 99 },
+          { title: "", startScene: 5 },
+          { title: "B", startScene: 6 },
+        ],
+      }),
+    );
+    const marks = (
+      result.storyboard as {
+        chapters?: { title: string; startScene: number }[];
+      }
+    ).chapters;
+    expect(marks).toEqual([
+      { title: "A", startScene: 0 },
+      { title: "B", startScene: 6 },
+    ]);
+    expect(result.fixes.map((f) => f.rule)).toContain("tidy-chapters");
+  });
+
+  it("asks a long video for chapters, but not a short one", () => {
+    const long = lintStoryboard(longVideo(30));
+    expect(long.warnings.map((w) => w.rule)).toContain("long-form-chapters");
+    const short = lintStoryboard(longVideo(6));
+    expect(short.warnings.map((w) => w.rule)).not.toContain(
+      "long-form-chapters",
+    );
+    const marked = lintStoryboard(
+      longVideo(30, {
+        chapters: [
+          { title: "A", startScene: 0 },
+          { title: "B", startScene: 10 },
+          { title: "C", startScene: 20 },
+        ],
+      }),
+    );
+    expect(marked.warnings.map((w) => w.rule)).not.toContain(
+      "long-form-chapters",
+    );
+  });
+
+  it("warns when a long stretch has nothing to bring the viewer back", () => {
+    const flat = lintStoryboard(longVideo(30));
+    expect(flat.warnings.some((w) => w.rule === "long-form-rehook")).toBe(true);
+    const lively = lintStoryboard({
+      version: 1,
+      title: "Lively",
+      scenes: Array.from({ length: 30 }, (_, i) =>
+        scene(i, i % 4 === 0 ? "hook" : "statement"),
+      ),
+    });
+    expect(lively.warnings.some((w) => w.rule === "long-form-rehook")).toBe(
+      false,
+    );
   });
 });

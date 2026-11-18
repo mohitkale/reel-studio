@@ -9,7 +9,12 @@ export const FORMATS = [
 ] as const;
 export type FormatId = (typeof FORMATS)[number]["id"];
 
-export const LENGTHS = [15, 30, 60] as const;
+export const LENGTHS = [15, 30, 60, 300] as const;
+
+/** "30 s", "5 min": how a length reads on a chip. */
+export function lengthLabel(seconds: number): string {
+  return seconds >= 120 ? `${Math.round(seconds / 60)} min` : `${seconds} s`;
+}
 export type LengthSeconds = (typeof LENGTHS)[number];
 
 /** Pasted text longer than this is the user's own script, not a topic. */
@@ -36,6 +41,8 @@ export interface WriteRequest {
     topic: string;
     targetSeconds: number;
     format: FormatId;
+    /** "podcast" asks for a spoken episode instead of a video. */
+    kind?: "podcast";
   };
   fromSourceText: boolean;
   research: "auto" | "off";
@@ -43,19 +50,25 @@ export interface WriteRequest {
 
 export function buildWriteRequest(
   text: string,
-  options: { format: FormatId; seconds: number; research?: boolean },
+  options: {
+    format: FormatId;
+    seconds: number;
+    research?: boolean;
+    podcast?: boolean;
+  },
 ): WriteRequest | null {
   const kind = classifyEntry(text);
   if (kind === "empty") return null;
   const topic =
     kind === "url"
-      ? `Make a video that explains the page at ${text.trim()}. Read it first and keep the facts accurate.`
+      ? `Make ${options.podcast ? "a podcast episode" : "a video"} that explains the page at ${text.trim()}. Read it first and keep the facts accurate.`
       : text.trim();
   return {
     brief: {
       topic,
       targetSeconds: options.seconds,
       format: options.format,
+      ...(options.podcast ? { kind: "podcast" as const } : {}),
     },
     // Your own text is the source; a topic or a URL may be researched.
     fromSourceText: kind === "own-text",
@@ -71,13 +84,19 @@ export function finishStoryboard(
     theme: string;
     narration: boolean;
     music?: boolean;
+    /** A bundled track id; anything else (or "auto") leaves the choice to the theme. */
+    musicTrack?: string;
     captions?: boolean;
   },
 ): Record<string, unknown> {
   return {
     ...storyboard,
     ...(options.theme !== "auto" ? { theme: options.theme } : {}),
-    ...(options.music === false ? { music: "none" } : {}),
+    ...(options.music === false
+      ? { music: "none" }
+      : options.musicTrack && options.musicTrack !== "auto"
+        ? { music: options.musicTrack }
+        : {}),
     ...(options.captions === false ? { captions: "off" } : {}),
     ...(!options.narration
       ? {
@@ -88,6 +107,21 @@ export function finishStoryboard(
           },
         }
       : {}),
+  };
+}
+
+/** Apply the music choice to a written podcast storyboard (it has no theme or captions). */
+export function finishPodcast(
+  storyboard: Record<string, unknown>,
+  options: { music?: boolean; musicTrack?: string },
+): Record<string, unknown> {
+  return {
+    ...storyboard,
+    ...(options.music === false
+      ? { music: "none" }
+      : options.musicTrack && options.musicTrack !== "auto"
+        ? { music: options.musicTrack }
+        : {}),
   };
 }
 

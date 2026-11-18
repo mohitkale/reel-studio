@@ -259,7 +259,140 @@ function warmAcoustic() {
   return normalize(buf, -8);
 }
 
+
+// --- Parameterised grooves (roadmap A3) ---
+//
+// One builder, many arrangements. The tempo is chosen so the 16 second loop
+// holds a whole number of beats (60, 90, 120 and 150 bpm give 16, 24, 32 and 40),
+// so the beat grid in src/lib/music-library.ts is exact, not estimated.
+
+/**
+ * Like addNote, but the note always ends with a short fade, so a tail that is
+ * cut at `dur` never leaves a click. Used by the grooves; the original seven
+ * tracks keep addNote so their bytes do not change.
+ */
+function addSoftNote(buf, { freq, start, dur, gain, partials, attack = 0.005, decay }) {
+  const s = Math.floor(start * SR);
+  const len = Math.floor(dur * SR);
+  const a = Math.max(1, Math.max(attack, 0.003) * SR);
+  const d = decay * SR;
+  const release = Math.min(len, Math.floor(0.012 * SR));
+  for (let i = 0; i < len; i++) {
+    let env = i < a ? i / a : Math.exp(-(i - a) / d);
+    if (i > len - release) env *= (len - i) / release;
+    if (env < 0.0005) continue;
+    let v = 0;
+    for (let h = 0; h < partials.length; h++) {
+      v += partials[h] * Math.sin(2 * Math.PI * freq * (h + 1) * (i / SR));
+    }
+    buf[(s + i) % N] += v * env * gain;
+  }
+}
+
+/**
+ * A pad whose pitches are rounded to whole cycles per loop, so the sound at the
+ * end of the loop meets the start with no jump. (The detune is under 1/32 Hz.)
+ */
+function addLoopPad(buf, { midis, gain }) {
+  const lfo = 0.1875; // multiple of 1/LOOP
+  for (const m of midis) {
+    const f = Math.round(noteFreq(m) * LOOP) / LOOP;
+    for (let n = 0; n < N; n++) {
+      const trem = 0.85 + 0.15 * Math.sin(2 * Math.PI * lfo * (n / SR));
+      buf[n] += Math.sin(2 * Math.PI * f * (n / SR)) * gain * trem;
+    }
+  }
+}
+
+const CHORDS = {
+  maj: [0, 4, 7, 12],
+  min: [0, 3, 7, 12],
+  maj7: [0, 4, 7, 11],
+  min7: [0, 3, 7, 10],
+  sus: [0, 5, 7, 12],
+  add9: [0, 4, 7, 14],
+};
+
+/**
+ * @param {object} o
+ * @param {number} o.bpm 60, 90, 120 or 150
+ * @param {Array<[number, keyof CHORDS]>} o.chords root midi (low register) and quality; count must divide the chord slots
+ * @param {number[]} o.arp indices into the 4 chord tones, one entry per arp step
+ * @param {number} o.arpDiv arp steps per beat (1, 2 or 4)
+ * @param {number[]} o.bass beats within a bar (4 beats) where the bass plays
+ * @param {"off"|"eighth"|"none"} o.hats
+ */
+function groove(o) {
+  const buf = new Float32Array(N);
+  const rng = mulberry32(o.seed ?? 1);
+  const beat = 60 / o.bpm;
+  const totalBeats = Math.round(LOOP / beat);
+  const slots = totalBeats / 4; // one chord per bar
+  for (let slot = 0; slot < slots; slot++) {
+    const [root, quality] = o.chords[slot % o.chords.length];
+    const tones = CHORDS[quality].map((i) => root + 12 + i);
+    const t0 = slot * 4 * beat;
+    if (o.pad) addLoopPad(buf, { midis: tones.slice(0, 3).map((m) => m - 12), gain: o.pad });
+    for (const b of o.bass ?? []) {
+      addSoftNote(buf, {
+        freq: noteFreq(root),
+        start: t0 + b * beat,
+        dur: beat * 0.9,
+        gain: o.bassGain ?? 0.45,
+        partials: o.bassPartials ?? [1, 0.45, 0.2],
+        decay: beat * (o.bassDecay ?? 0.7),
+      });
+    }
+    if (o.arpDiv) {
+      const steps = 4 * o.arpDiv;
+      for (let i = 0; i < steps; i++) {
+        const tone = tones[o.arp[i % o.arp.length] % tones.length];
+        addSoftNote(buf, {
+          freq: noteFreq(tone + (o.arpOctave ?? 0)),
+          start: t0 + (i / o.arpDiv) * beat,
+          dur: (beat / o.arpDiv) * (o.arpLength ?? 1.4),
+          gain: o.arpGain ?? 0.26,
+          partials: o.partials ?? PLUCK,
+          attack: o.attack ?? 0.005,
+          decay: (beat / o.arpDiv) * (o.arpDecay ?? 1.3),
+        });
+      }
+    }
+    if (o.hats === "off" || o.hats === "eighth") {
+      const per = o.hats === "off" ? 4 : 8;
+      for (let i = 0; i < per; i++) {
+        const at = o.hats === "off" ? i * beat + beat / 2 : (i * beat) / 2;
+        addTick(buf, { start: t0 + at, dur: 0.06, gain: o.hatGain ?? 0.12, decay: 0.02, rng });
+      }
+    }
+  }
+  return normalize(buf, o.level ?? -7);
+}
+
+const MIN = "min", MAJ = "maj", M7 = "min7", MJ7 = "maj7", SUS = "sus", ADD9 = "add9";
+// Low-register roots (MIDI). C2=36, D2=38, E2=40, F2=41, G2=43, A2=45, B2=47.
+const C = 36, D = 38, E = 40, F = 41, G = 43, A = 45, B = 47, Bb = 46, Eb = 39, Ab = 44;
+const UP = [0, 1, 2, 3], UPDOWN = [0, 1, 2, 3, 2, 1, 2, 3], BROKEN = [0, 2, 1, 3, 0, 2, 1, 3];
+
+const GROOVES = {
+  "corporate-bright": () => groove({ bpm: 120, chords: [[C, MAJ], [G, MAJ], [A, MIN], [F, MAJ]], arp: UPDOWN, arpDiv: 2, bass: [0, 2], hats: "off", pad: 0.04, level: -7, seed: 11 }),
+  "corporate-steady": () => groove({ bpm: 90, chords: [[D, MAJ], [B, MIN], [G, MAJ], [A, SUS], [D, MAJ], [B, MIN]], arp: BROKEN, arpDiv: 2, bass: [0, 2], hats: "off", hatGain: 0.09, pad: 0.05, level: -8, seed: 12 }),
+  "upbeat-sunny": () => groove({ bpm: 120, chords: [[G, MAJ], [E, MIN], [C, MAJ], [D, MAJ]], arp: UPDOWN, arpDiv: 4, bass: [0, 1.5, 2, 3], hats: "eighth", pad: 0.03, level: -6, seed: 13 }),
+  "upbeat-pop": () => groove({ bpm: 150, chords: [[A, MIN], [F, MAJ]], arp: UP, arpDiv: 2, bass: [0, 1, 2, 3], hats: "off", arpGain: 0.28, level: -6, seed: 14 }),
+  "calm-morning": () => groove({ bpm: 60, chords: [[C, MJ7], [A, M7], [F, MJ7], [G, SUS]], arp: UP, arpDiv: 1, bass: [0], pad: 0.08, arpDecay: 3, arpLength: 3, partials: [1, 0.35, 0.12], level: -9, seed: 15 }),
+  "calm-water": () => groove({ bpm: 90, chords: [[E, M7], [A, M7], [D, MJ7], [G, MJ7], [C, MJ7], [F, MJ7]], arp: BROKEN, arpDiv: 1, bass: [0], pad: 0.09, arpDecay: 2.5, arpLength: 2.5, partials: [1, 0.3, 0.1], level: -9, seed: 16 }),
+  "tech-pulse": () => groove({ bpm: 120, chords: [[A, M7], [F, MJ7], [C, MAJ], [G, SUS]], arp: UP, arpDiv: 4, bass: [0, 1, 2, 3], hats: "off", pad: 0.03, arpGain: 0.22, arpDecay: 0.9, level: -7, seed: 17 }),
+  "tech-grid": () => groove({ bpm: 150, chords: [[E, MIN], [C, ADD9]], arp: BROKEN, arpDiv: 4, bass: [0, 2], hats: "eighth", hatGain: 0.1, arpGain: 0.2, arpDecay: 0.8, level: -7, seed: 18 }),
+  "cinematic-rise": () => groove({ bpm: 60, chords: [[C, MIN], [Ab, MAJ], [Eb, MAJ], [Bb, MAJ]], arp: UP, arpDiv: 1, bass: [0], pad: 0.12, arpGain: 0.2, attack: 0.25, arpDecay: 3, arpLength: 3.5, partials: BELL, bassDecay: 3, level: -8, seed: 19 }),
+  "cinematic-epic": () => groove({ bpm: 90, chords: [[D, MIN], [Bb, MAJ], [F, MAJ], [C, MAJ], [D, MIN], [A, MAJ]], arp: UPDOWN, arpDiv: 2, bass: [0, 2], pad: 0.1, arpGain: 0.18, attack: 0.02, arpDecay: 1.6, partials: BELL, bassGain: 0.5, level: -7, seed: 20 }),
+  "lofi-rain": () => groove({ bpm: 90, chords: [[E, M7], [A, M7], [D, M7], [G, MJ7], [C, MJ7], [F, MJ7]], arp: BROKEN, arpDiv: 2, bass: [0, 2.5], hats: "off", hatGain: 0.07, pad: 0.05, arpGain: 0.24, arpDecay: 1.6, level: -8, seed: 21 }),
+  "lofi-night": () => groove({ bpm: 60, chords: [[F, MJ7], [E, M7], [D, M7], [C, MJ7]], arp: UPDOWN, arpDiv: 2, bass: [0, 2], hats: "off", hatGain: 0.06, pad: 0.06, arpGain: 0.26, arpDecay: 1.4, level: -8, seed: 22 }),
+  "dramatic-pulse": () => groove({ bpm: 90, chords: [[C, MIN], [C, MIN], [Ab, MAJ], [G, MAJ], [C, MIN], [Bb, MAJ]], arp: UP, arpDiv: 2, bass: [0, 1, 2, 3], pad: 0.1, arpGain: 0.16, partials: [1, 0.6, 0.35], bassGain: 0.55, bassDecay: 0.5, level: -7, seed: 23 }),
+};
+
+
 const TRACKS = {
+  ...Object.fromEntries(Object.entries(GROOVES)),
   "lofi-chill": lofiChill,
   "tech-minimal": techMinimal,
   "ambient-glow": ambientGlow,

@@ -1,3 +1,4 @@
+import { masterToLufs } from "@/lib/loudness";
 import {
   productionSignal,
   assertProductionActive,
@@ -58,6 +59,8 @@ export interface GeneratePodcastTakeInput {
   label?: string;
   /** Bypass the cache only for these turns; all other exact matches are reused. */
   regenerateTurnIds?: string[];
+  /** Master the finished episode to this loudness in LUFS (for example -16). */
+  masterLufs?: number;
   onProgress?: (progress: PodcastTakeProgress) => void;
 }
 
@@ -358,7 +361,16 @@ export async function generatePodcastTake(
     outroWav: outro?.wav,
     fps: DEFAULT_FPS,
   });
-  const wav = master.wav;
+  // A target loudness is met with two passes of loudnorm, after the intro and
+  // outro are in, so the whole episode lands on it.
+  const wav =
+    input.masterLufs !== undefined
+      ? await masterToLufs(master.wav, {
+          targetLufs: input.masterLufs,
+          sampleRate: 44_100,
+          channels: 1,
+        })
+      : master.wav;
   analyzeWav(wav);
 
   const timeline: PodcastBeatTiming[] = stitched.timeline.map((beat, i) => ({

@@ -34,4 +34,19 @@ test.describe("accessibility", () => {
     await expect(page.getByLabel("Finished video")).toBeVisible();
     expect(await seriousAccessibilityFindings(page)).toEqual([]);
   });
+
+  test("Create fits a 375 px wide phone without sideways scrolling", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/");
+    await expect(
+      page.getByRole("heading", { name: "What do you want to make?" }),
+    ).toBeVisible();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    );
+    expect(overflow).toBeLessThanOrEqual(1);
+    expect(await seriousAccessibilityFindings(page)).toEqual([]);
+  });
 });

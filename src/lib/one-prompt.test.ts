@@ -5,6 +5,8 @@ import { lintStoryboard } from "@/storyboard";
 import {
   buildWriteRequest,
   classifyEntry,
+  finishPodcast,
+  lengthLabel,
   finishStoryboard,
   SAMPLE_STORYBOARD,
 } from "./one-prompt";
@@ -76,6 +78,45 @@ describe("finishStoryboard", () => {
   });
 });
 
+describe("lengths", () => {
+  it("reads short lengths in seconds and long ones in minutes", () => {
+    expect(lengthLabel(30)).toBe("30 s");
+    expect(lengthLabel(60)).toBe("60 s");
+    expect(lengthLabel(300)).toBe("5 min");
+  });
+});
+
+describe("finishPodcast", () => {
+  it("applies only the music choice", () => {
+    expect(finishPodcast({ kind: "podcast" }, { music: false })).toEqual({
+      kind: "podcast",
+      music: "none",
+    });
+    expect(
+      finishPodcast(
+        { kind: "podcast" },
+        { music: true, musicTrack: "calm-water" },
+      ),
+    ).toEqual({ kind: "podcast", music: "calm-water" });
+    expect(finishPodcast({ kind: "podcast" }, { musicTrack: "auto" })).toEqual({
+      kind: "podcast",
+    });
+  });
+
+  it("asks the writer for an episode when podcast is chosen", () => {
+    const request = buildWriteRequest("Why the sky is blue", {
+      format: "9:16",
+      seconds: 60,
+      podcast: true,
+    });
+    expect(request?.brief.kind).toBe("podcast");
+    expect(
+      buildWriteRequest("Why the sky is blue", { format: "9:16", seconds: 60 })
+        ?.brief.kind,
+    ).toBeUndefined();
+  });
+});
+
 describe("steps that run by themselves", () => {
   it("turns music and captions off when asked", () => {
     expect(
@@ -91,6 +132,32 @@ describe("steps that run by themselves", () => {
       finishStoryboard(
         { title: "T" },
         { theme: "auto", narration: true, music: true, captions: true },
+      ),
+    ).toEqual({ title: "T" });
+  });
+
+  it("uses a chosen bundled track, but music off wins", () => {
+    expect(
+      finishStoryboard(
+        { title: "T" },
+        { theme: "auto", narration: true, musicTrack: "lofi-rain" },
+      ),
+    ).toEqual({ title: "T", music: "lofi-rain" });
+    expect(
+      finishStoryboard(
+        { title: "T" },
+        {
+          theme: "auto",
+          narration: true,
+          music: false,
+          musicTrack: "lofi-rain",
+        },
+      ),
+    ).toEqual({ title: "T", music: "none" });
+    expect(
+      finishStoryboard(
+        { title: "T" },
+        { theme: "auto", narration: true, musicTrack: "auto" },
       ),
     ).toEqual({ title: "T" });
   });

@@ -177,6 +177,10 @@ export async function describeJob(jobId: string) {
     ...(job.state === "succeeded"
       ? {
           filePath: localFilePath(videoUrl),
+          // 1280x720 PNG made on request from a frame of the video; size=vertical for 1080x1920.
+          thumbnailUrl: absoluteUrl(
+            `/api/production-jobs/${encode(jobId)}/thumbnail?size=landscape`,
+          ),
           durationSeconds:
             typeof meta.duration === "number"
               ? Math.round(meta.duration * 10) / 10
@@ -257,7 +261,12 @@ function progressReporter(extra: ToolExtra) {
 /** Queue a storyboard and, unless wait is false, wait for the finished video. */
 async function produce(
   storyboard: Record<string, unknown>,
-  options: { quality?: string; wait?: boolean; waitSeconds?: number },
+  options: {
+    quality?: string;
+    wait?: boolean;
+    waitSeconds?: number;
+    series?: string;
+  },
   extra: ToolExtra,
 ): Promise<ToolResult> {
   const queued = await apiPost<{
@@ -266,7 +275,10 @@ async function produce(
     reused?: boolean;
     warnings?: unknown[];
     fixes?: unknown[];
-  }>(`/api/storyboards?quality=${options.quality ?? "standard"}`, storyboard);
+  }>(
+    `/api/storyboards?quality=${options.quality ?? "standard"}${options.series ? `&series=${encode(options.series)}` : ""}`,
+    storyboard,
+  );
   if (!queued.jobId) return json(queued);
   const base = {
     projectId: queued.projectId,
@@ -283,6 +295,96 @@ async function produce(
     progressReporter(extra),
   );
   return json({ ...base, ...view }, await contactSheetImage(view));
+}
+
+interface PodcastJobView {
+  job: {
+    status: string;
+    scene: number;
+    sceneCount: number;
+    error: string | null;
+    podcastTake: {
+      id: string;
+      totalFrames: number;
+      fps: number;
+      mp3Url?: string | null;
+      audioUrl?: string | null;
+    } | null;
+  };
+}
+
+/** Where an episode is, and once it is done, its files and the package link. */
+export async function describePodcastJob(podcastId: string, jobId: string) {
+  const { job } = await apiGet<PodcastJobView>(
+    `/api/podcasts/${encode(podcastId)}/takes/${encode(jobId)}`,
+  );
+  const done = job.status === "done" && job.podcastTake;
+  const take = job.podcastTake;
+  return {
+    jobId,
+    podcastId,
+    state: done
+      ? "succeeded"
+      : job.status === "error"
+        ? "failed"
+        : job.status === "queued"
+          ? "queued"
+          : "running",
+    progress: job.sceneCount
+      ? Math.round((job.scene / job.sceneCount) * 100)
+      : 0,
+    stage: job.status,
+    studioUrl: `${BASE_URL}/podcasts/${encode(podcastId)}`,
+    ...(done && take
+      ? {
+          takeId: take.id,
+          durationSeconds: Math.round((take.totalFrames / take.fps) * 10) / 10,
+          audioUrl: take.audioUrl ? absoluteUrl(take.audioUrl) : undefined,
+          mp3Url: take.mp3Url ? absoluteUrl(take.mp3Url) : undefined,
+          // WAV and MP3, transcript, chapters, show notes and a manifest in one .tar.gz.
+          packageUrl: absoluteUrl(
+            `/api/podcast-takes/${encode(take.id)}/bundle`,
+          ),
+        }
+      : {}),
+    ...(job.status === "error"
+      ? {
+          failure: explainFailure("synthesize_audio", job.error ?? undefined),
+        }
+      : {}),
+  };
+}
+
+/** Queue a podcast storyboard and, unless wait is false, wait for the finished episode. */
+async function producePodcast(
+  storyboard: Record<string, unknown>,
+  options: { wait?: boolean; waitSeconds?: number },
+  extra: ToolExtra,
+): Promise<ToolResult> {
+  const queued = await apiPost<{
+    jobId?: string | null;
+    podcastId?: string;
+    warnings?: unknown[];
+    fixes?: unknown[];
+  }>("/api/storyboards", { ...storyboard, kind: "podcast" });
+  if (!queued.jobId || !queued.podcastId) return json(queued);
+  const base = { fixes: queued.fixes, warnings: queued.warnings };
+  if (options.wait === false)
+    return json({
+      ...base,
+      jobId: queued.jobId,
+      podcastId: queued.podcastId,
+      state: "queued",
+    });
+  const deadline = Date.now() + (options.waitSeconds ?? 900) * 1000;
+  const report = progressReporter(extra);
+  for (;;) {
+    const view = await describePodcastJob(queued.podcastId, queued.jobId);
+    await report?.({ progress: view.progress, stage: view.stage });
+    if (TERMINAL.includes(view.state) || Date.now() >= deadline)
+      return json({ ...base, ...view });
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+  }
 }
 
 /** The first script of a project and its storyboard export. */
@@ -312,10 +414,28 @@ export function registerCoreTools(server: McpServer): void {
         quality: z.enum(["draft", "standard", "high"]).optional(),
         wait: z.boolean().optional(),
         waitSeconds: z.number().int().min(10).max(1800).optional(),
+        /** Name of a saved series; it fills in the theme, voice, format and music the storyboard leaves out. */
+        series: z.string().min(1).max(40).optional(),
       },
     },
-    guard(({ storyboard, quality, wait, waitSeconds }, extra) =>
-      produce(storyboard, { quality, wait, waitSeconds }, extra),
+    guard(({ storyboard, quality, wait, waitSeconds, series }, extra) =>
+      produce(storyboard, { quality, wait, waitSeconds, series }, extra),
+    ),
+  );
+
+  server.registerTool(
+    "create_podcast",
+    {
+      description:
+        'Make a podcast episode from a Storyboard v1 JSON object with kind "podcast" (speakers and turns; read reel://authoring/podcast first). The studio speaks each turn with the speaker\'s voice, adds intro and outro music, masters to -16 LUFS and returns the episode links, including one .tar.gz package with WAV, MP3, transcript, chapters and show notes. With wait=true (default) it returns when the episode is done.',
+      inputSchema: {
+        storyboard: z.record(z.string(), z.unknown()),
+        wait: z.boolean().optional(),
+        waitSeconds: z.number().int().min(10).max(3600).optional(),
+      },
+    },
+    guard(({ storyboard, wait, waitSeconds }, extra) =>
+      producePodcast(storyboard, { wait, waitSeconds }, extra),
     ),
   );
 
@@ -339,16 +459,26 @@ export function registerCoreTools(server: McpServer): void {
         "Everything a storyboard can choose from, in one compact answer: themes, scene types, formats, qualities, recommended voices and music track ids.",
       inputSchema: {},
     },
-    guard(async () =>
-      json({
+    guard(async () => {
+      // Saved series are named sets of defaults; a failed lookup just means none.
+      let saved: { series?: Array<{ name: string }> } = {};
+      try {
+        saved =
+          (await apiGet<{ series?: Array<{ name: string }> }>("/api/series")) ??
+          {};
+      } catch {
+        // No studio answer for series: list the rest.
+      }
+      return json({
+        series: (saved.series ?? []).map((item) => item.name),
         themes: THEMES.map((t) => ({ id: t.id, use: t.description })),
         sceneTypes: SCENE_TYPES,
         formats: ["9:16", "16:9", "1:1"],
         qualities: ["draft", "standard", "high"],
         voices: RECOMMENDED_KOKORO_VOICES,
         music: MUSIC_LIBRARY.map((track) => track.id),
-      }),
-    ),
+      });
+    }),
   );
 
   server.registerTool(
@@ -438,7 +568,7 @@ export function registerCoreTools(server: McpServer): void {
     "revise_video",
     {
       description:
-        "Change a finished video's storyboard and make it again. changes is a list of edits to scenes counted from 1: {op:'update',index,fields}, {op:'replace',index,scene}, {op:'insert',index,scene}, {op:'remove',index}, {op:'move',from,to}; set changes top-level fields such as title or theme. Creates a new video (the whole video is rendered again).",
+        "Change a finished video's storyboard and make it again, or with derive=\"shorts\" cut it into three to five vertical shorts (self-contained runs with a hook and a closing line). changes is a list of edits to scenes counted from 1: {op:'update',index,fields}, {op:'replace',index,scene}, {op:'insert',index,scene}, {op:'remove',index}, {op:'move',from,to}; set changes top-level fields such as title or theme. Creates a new video (the whole video is rendered again).",
       inputSchema: {
         projectId: z.string().min(1),
         changes: z
@@ -471,16 +601,51 @@ export function registerCoreTools(server: McpServer): void {
         set: z.record(z.string(), z.unknown()).optional(),
         quality: z.enum(["draft", "standard", "high"]).optional(),
         wait: z.boolean().optional(),
+        /** "shorts" cuts the video into three to five vertical shorts instead of editing it. */
+        derive: z.literal("shorts").optional(),
+        count: z.number().int().min(1).max(5).optional(),
+        maxSeconds: z.number().min(10).max(90).optional(),
       },
     },
-    guard(async ({ projectId, changes, set, quality, wait }, extra) => {
-      const { storyboard } = await exportedStoryboard(projectId);
-      const revised = applyChanges(storyboard, changes as Change[], set);
-      return produce(
-        revised as Record<string, unknown>,
-        { quality, wait },
+    guard(
+      async (
+        { projectId, changes, set, quality, wait, derive, count, maxSeconds },
         extra,
-      );
-    }),
+      ) => {
+        if (derive === "shorts") {
+          const { scriptId } = await exportedStoryboard(projectId);
+          const made = await apiPost<{
+            shorts: Array<{
+              title: string;
+              seconds: number;
+              jobId?: string | null;
+              projectId?: string | null;
+            }>;
+          }>(`/api/scripts/${encode(scriptId)}/cutdowns`, {
+            count,
+            maxSeconds,
+            quality: quality ?? "standard",
+          });
+          return json({
+            projectId,
+            derived: "shorts",
+            shorts: made.shorts.map((short) => ({
+              ...short,
+              studioUrl: short.jobId
+                ? `${BASE_URL}/results/${encode(short.jobId)}`
+                : undefined,
+            })),
+            next: "Each short is a job; call get_job with its jobId until it is done.",
+          });
+        }
+        const { storyboard } = await exportedStoryboard(projectId);
+        const revised = applyChanges(storyboard, changes as Change[], set);
+        return produce(
+          revised as Record<string, unknown>,
+          { quality, wait },
+          extra,
+        );
+      },
+    ),
   );
 }

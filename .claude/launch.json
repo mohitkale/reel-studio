@@ -4,9 +4,20 @@
     {
       "name": "reel-studio",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "reel-studio-sandbox",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "e2e/start-server.mjs"
+      ],
+      "port": 3187
     }
   ]
 }

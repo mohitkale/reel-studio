@@ -359,6 +359,7 @@ export async function executeVideoProductionJob(
             providerId: input.quickProduce.voice.providerId,
             voiceId: input.quickProduce.voice.voiceId,
             modelId: input.quickProduce.voice.modelId,
+            speed: input.quickProduce.voice.speed,
             label: "Quick Produce",
           });
           const frozen = videoTakeSnapshotSchema.parse(generated);

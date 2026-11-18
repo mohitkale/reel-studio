@@ -28,9 +28,48 @@ Scene types
 Rules
 - Layout, colour, motion, timing and transitions are decided later. Do not describe them.
 - sources: only pages listed in the research notes, each with its title, url and the date accessed.
+- chapters: only for a video over about three minutes. Mark where each chapter starts with its title and startScene, start every chapter with a scene that names it, and bring the viewer back with a hook, stat, quote or comparison every minute or so.
+- publish: a title, a one or two sentence description, up to ten hashtags and three to six big words of thumbnailText for posting. Leave out what you are unsure of.
 - Use the requested format and tone, and write in the language of the brief.`;
 
+/**
+ * The prompt for a spoken episode: a conversation, not an article read aloud.
+ * Pasted into any chat app the same way as the video prompt.
+ */
+export const PODCAST_WRITER_PROMPT = `You write one podcast episode for Reel Studio. Reply with a single JSON object that matches the supplied JSON Schema, and nothing else. kind is "podcast".
+
+Craft
+- It must sound spoken. Short turns, usually one to three sentences. Contractions, reactions ("Right.", "Huh, I didn't know that."), real questions and answers.
+- Never read a list aloud. Turn points into a back and forth: one speaker asks, the other explains, then a follow-up.
+- The host opens by welcoming the listener and naming the topic in one sentence, and closes with one clear takeaway and a thanks.
+- Speakers address each other by name now and then, not every turn.
+- Be concrete: use real numbers, names and examples from the brief or research notes. Never invent statistics, quotes or sources. If a fact is not in the brief or notes, leave it out.
+- Length: about 2.5 spoken words per second of the target length.
+
+Cast
+- One speaker for a solo narration (id "host"), two for a conversation (ids "host" and "guest"). Give each a first name. Use only voice names from the voice list when you set voiceId, otherwise leave it out.
+- Every turn's speaker is the id of one of the speakers.
+
+Rules
+- Do not describe music, sound effects or pauses; they are added later.
+- sources: only pages listed in the research notes, each with its title, url and the date accessed.
+- publish: a title, a one or two sentence description and up to ten hashtags for the episode listing. Leave out what you are unsure of.
+- Write in the language of the brief.`;
+
+/** Pass one for a long video: plan the chapters before any scene is written. */
+export const OUTLINE_WRITER_PROMPT = `You plan a long video for Reel Studio. Reply with a single JSON object that matches the supplied JSON Schema, and nothing else.
+
+- Plan the chapters of one video, in order. Each chapter has a short title and a goal: what it explains and which concrete facts, numbers or examples it uses.
+- The first chapter hooks the viewer and says what the video will cover. The last chapter ends with a payoff and a call to action.
+- Chapters build on each other; none repeats another. Aim for chapters of about two to three minutes.
+- Be concrete: use real numbers, names and examples from the brief or research notes. Never invent statistics, quotes or sources.
+- Write in the language of the brief.`;
+
 export interface StoryboardBrief {
+  /** "podcast" asks for a spoken episode; the default is a video. */
+  kind?: "video" | "podcast";
+  /** Podcast: 1 for a solo narration, 2 for a conversation. Default 2. */
+  hosts?: 1 | 2;
   /** The topic or idea, or the full source text to turn into a video. */
   topic: string;
   audience?: string;
@@ -52,6 +91,28 @@ export interface StoryboardBrief {
   }>;
 }
 
+export function buildOutlineMessages(
+  brief: StoryboardBrief,
+  chapterCount: number,
+): { system: string; user: string } {
+  return {
+    system: OUTLINE_WRITER_PROMPT,
+    user: JSON.stringify({
+      task: "Plan the chapters for this video.",
+      brief: {
+        topic: brief.topic,
+        audience: brief.audience ?? "a general audience",
+        targetSeconds: brief.targetSeconds ?? 600,
+        chapters: chapterCount,
+        tone: brief.tone ?? "clear and friendly",
+        ...(brief.researchNotes?.length
+          ? { researchNotes: brief.researchNotes }
+          : {}),
+      },
+    }),
+  };
+}
+
 export function buildStoryboardMessages(brief: StoryboardBrief): {
   system: string;
   user: string;
@@ -63,6 +124,24 @@ export function buildStoryboardMessages(brief: StoryboardBrief): {
         task: "Change the current storyboard as the instruction says and return the complete new storyboard as one JSON object. Keep every scene, headline and narration the instruction does not mention exactly as it is. Do not add facts that are not already in the storyboard or the instruction.",
         instruction: brief.revise.instruction,
         currentStoryboard: brief.revise.storyboard,
+      }),
+    };
+  }
+  if (brief.kind === "podcast") {
+    return {
+      system: PODCAST_WRITER_PROMPT,
+      user: JSON.stringify({
+        task: "Write the podcast storyboard for this brief.",
+        brief: {
+          topic: brief.topic,
+          audience: brief.audience ?? "a general audience",
+          targetSeconds: brief.targetSeconds ?? 180,
+          speakers: brief.hosts ?? 2,
+          tone: brief.tone ?? "warm and curious",
+          ...(brief.researchNotes?.length
+            ? { researchNotes: brief.researchNotes }
+            : {}),
+        },
       }),
     };
   }

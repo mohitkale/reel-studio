@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { MusicPicker } from "@/components/studio/music-picker";
 import { PasteStoryboard } from "@/components/studio/paste-storyboard";
 import { useAIProviders } from "@/hooks/ai";
 import { useAutomation, useReviewFields } from "@/hooks/ui-mode";
@@ -14,9 +15,11 @@ import {
   buildWriteRequest,
   classifyEntry,
   EXAMPLE_PROMPTS,
+  finishPodcast,
   finishStoryboard,
   FORMATS,
   LENGTHS,
+  lengthLabel,
   SAMPLE_STORYBOARD,
   type FormatId,
   type LengthSeconds,
@@ -58,6 +61,7 @@ export function OnePromptCreate() {
   const providers = useAIProviders();
   const [text, setText] = React.useState("");
   const [format, setFormat] = React.useState<FormatId>("9:16");
+  const [podcast, setPodcast] = React.useState(false);
   const [seconds, setSeconds] = React.useState<LengthSeconds>(30);
   const [theme, setTheme] = React.useState("auto");
   // Saved defaults for which steps run by themselves; this video can change them.
@@ -71,6 +75,7 @@ export function OnePromptCreate() {
   const music = overrides.music ?? automation.music;
   const captions = overrides.captions ?? automation.captions;
   const [draft, setDraft] = React.useState(false);
+  const [musicTrack, setMusicTrack] = React.useState("auto");
   const [busy, setBusy] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string>();
 
@@ -78,16 +83,21 @@ export function OnePromptCreate() {
   const kind = classifyEntry(text);
 
   async function produce(storyboard: Record<string, unknown>) {
-    const queued = await apiPost<{ jobId?: string | null }>(
-      "/api/storyboards",
-      {
-        storyboard,
-        quality: draft ? "draft" : "standard",
-        ...review,
-      },
-    );
+    const queued = await apiPost<{
+      jobId?: string | null;
+      podcastId?: string;
+    }>("/api/storyboards", {
+      storyboard,
+      quality: draft ? "draft" : "standard",
+      ...review,
+    });
     if (!queued.jobId) throw new Error("The studio did not start a video");
-    router.push(`/results/${queued.jobId}`);
+    // A podcast storyboard makes an episode, shown on its own page.
+    router.push(
+      queued.podcastId
+        ? `/podcasts/${queued.podcastId}?job=${encodeURIComponent(queued.jobId)}`
+        : `/results/${queued.jobId}`,
+    );
   }
 
   async function create() {
@@ -96,6 +106,7 @@ export function OnePromptCreate() {
       format,
       seconds,
       research: automation.research,
+      podcast,
     });
     if (!request || !writer) return;
     try {
@@ -109,14 +120,17 @@ export function OnePromptCreate() {
           written.errors?.map((e) => `${e.path}: ${e.message}`).join("; ") ||
             "The writer did not return a storyboard. Try again.",
         );
-      setBusy("Starting the video…");
+      setBusy(podcast ? "Starting the episode…" : "Starting the video…");
       await produce(
-        finishStoryboard(written.storyboard, {
-          theme,
-          narration,
-          music,
-          captions,
-        }),
+        podcast
+          ? finishPodcast(written.storyboard, { music, musicTrack })
+          : finishStoryboard(written.storyboard, {
+              theme,
+              narration,
+              music,
+              musicTrack,
+              captions,
+            }),
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
@@ -178,24 +192,28 @@ export function OnePromptCreate() {
           {FORMATS.map((f) => (
             <Chip
               key={f.id}
-              active={format === f.id}
-              onClick={() => setFormat(f.id)}
+              active={!podcast && format === f.id}
+              onClick={() => {
+                setPodcast(false);
+                setFormat(f.id);
+              }}
               label={`${f.label} ${f.hint}`}
             >
               {f.label} <span className="text-muted-foreground">{f.hint}</span>
             </Chip>
           ))}
-          <Link
-            href="/podcasts"
-            className="focus-visible:outline-ring bg-card hover:bg-muted inline-flex min-h-10 items-center rounded-full border px-4 text-sm focus-visible:outline-2"
+          <Chip
+            active={podcast}
+            onClick={() => setPodcast(true)}
+            label="Podcast, audio only"
           >
             Podcast
-          </Link>
+          </Chip>
         </div>
         <div className="flex flex-wrap gap-2" role="group" aria-label="Length">
           {LENGTHS.map((s) => (
             <Chip key={s} active={seconds === s} onClick={() => setSeconds(s)}>
-              {s} s
+              {lengthLabel(s)}
             </Chip>
           ))}
         </div>
@@ -251,6 +269,7 @@ export function OnePromptCreate() {
             />
             Add background music
           </label>
+          {music && <MusicPicker value={musicTrack} onChange={setMusicTrack} />}
           <label className="mt-2 flex items-center gap-2">
             <input
               type="checkbox"
@@ -291,6 +310,7 @@ export function OnePromptCreate() {
               theme={theme}
               narration={narration}
               music={music}
+              musicTrack={musicTrack}
               captions={captions}
               draft={draft}
             />

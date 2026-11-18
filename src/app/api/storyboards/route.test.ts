@@ -2,6 +2,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  config: vi.fn(),
   authorizeRequest: vi.fn(),
   produce: vi.fn(),
   after: vi.fn(),
@@ -11,6 +12,7 @@ vi.mock("next/server", async (importOriginal) => ({
   ...(await importOriginal<typeof import("next/server")>()),
   after: mocks.after,
 }));
+vi.mock("@/server/app-config", () => ({ getConfig: mocks.config }));
 vi.mock("@/library/production-worker", () => ({
   runProductionWorkerOnce: vi.fn(),
 }));
@@ -125,4 +127,45 @@ it("passes review through and does not start the worker for a job waiting for ap
   expect(response.status).toBe(202);
   expect(mocks.produce.mock.calls[0]![1]).toMatchObject({ review: true });
   expect(mocks.after).not.toHaveBeenCalled();
+});
+
+it("fills in what the storyboard leaves out from a named series, and keeps what it sets", async () => {
+  mocks.config.mockResolvedValue({
+    series: [
+      {
+        name: "Daily tips",
+        theme: "bold-pop",
+        music: "upbeat-pop",
+        format: "9:16",
+      },
+    ],
+  });
+  mocks.produce.mockResolvedValue({
+    dryRun: false,
+    jobId: "j",
+    projectId: "p",
+    state: "queued",
+    reused: false,
+  });
+  const response = await post({
+    storyboard: { ...storyboard, theme: "neon" },
+    series: "daily TIPS",
+  });
+  expect(response.status).toBe(202);
+  const sent = mocks.produce.mock.calls[0]![0] as Record<string, unknown>;
+  expect(sent).toMatchObject({
+    theme: "neon",
+    music: "upbeat-pop",
+    format: "9:16",
+  });
+  // The series name is not a production option.
+  expect(mocks.produce.mock.calls[0]![1]).not.toHaveProperty("series");
+});
+
+it("says so when the series does not exist", async () => {
+  mocks.config.mockResolvedValue({ series: [] });
+  const response = await post({ storyboard, series: "Nope" });
+  expect(response.status).toBe(404);
+  expect(JSON.stringify(await response.json())).toContain("no series called");
+  expect(mocks.produce).not.toHaveBeenCalled();
 });

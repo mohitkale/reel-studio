@@ -1189,7 +1189,7 @@ export function registerTools(
   );
 
   server.registerTool(
-    "create_podcast",
+    "create_podcast_draft",
     {
       description:
         "Create an audio-only podcast episode with a default 2-character cast. Then set voices via update_podcast_characters and generate a script.",

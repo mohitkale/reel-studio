@@ -169,9 +169,12 @@ describe("planFromStoryboard", () => {
       },
     ]);
     const text = p.warnings.join("\n");
-    for (const part of ["body is not shown", "media paths", "voice.speed"]) {
+    for (const part of ["body is not shown", "media paths"]) {
       expect(text).toContain(part);
     }
+    // voice.speed is applied now, so it is passed on instead of warned about.
+    expect(text).not.toContain("voice.speed");
+    expect(p.voice.speed).toBe(1.1);
   });
 
   it("estimates the spoken length", () => {

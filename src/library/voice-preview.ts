@@ -1,10 +1,7 @@
 import { createHash } from "node:crypto";
 
 import { getProvider } from "@/providers/voice/registry";
-import {
-  ProviderError,
-  type ProviderId,
-} from "@/providers/voice/types";
+import { ProviderError, type ProviderId } from "@/providers/voice/types";
 import { getAssetStore } from "@/library/storage";
 
 export const VOICE_PREVIEW_TEXT = "Hi, how are you doing today?";
@@ -14,9 +11,19 @@ function previewKey(
   voiceId: string,
   modelId: string | undefined,
   text: string,
+  raw: boolean,
 ): string {
   const hash = createHash("sha1")
-    .update([providerId, voiceId, modelId ?? "", text].join("|"))
+    // "speech-v2": narration is cleaned before it is read; older samples were not.
+    .update(
+      [
+        providerId,
+        voiceId,
+        modelId ?? "",
+        text,
+        raw ? "raw" : "speech-v2",
+      ].join("|"),
+    )
     .digest("hex")
     .slice(0, 24);
   return `voice-previews/${providerId}/${hash}.wav`;
@@ -31,6 +38,8 @@ export async function getOrCreateVoicePreview(input: {
   voiceId: string;
   modelId?: string;
   text?: string;
+  /** Read the text exactly as written, to compare with the cleaned-up reading. */
+  raw?: boolean;
 }): Promise<{ audioUrl: string; cached: boolean }> {
   const text = (input.text?.trim() || VOICE_PREVIEW_TEXT).slice(0, 200);
   const key = previewKey(
@@ -38,6 +47,7 @@ export async function getOrCreateVoicePreview(input: {
     input.voiceId,
     input.modelId,
     text,
+    Boolean(input.raw),
   );
   const store = getAssetStore();
 
@@ -65,6 +75,7 @@ export async function getOrCreateVoicePreview(input: {
     voiceId: input.voiceId,
     modelId: input.modelId,
     text,
+    ...(input.raw ? { rawText: true } : {}),
   });
   await store.put(key, result.wav);
   return { audioUrl: store.url(key), cached: false };

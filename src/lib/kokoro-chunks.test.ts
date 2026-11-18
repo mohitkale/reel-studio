@@ -5,6 +5,8 @@ import {
   createInferenceGate,
   guardKokoroTokenizer,
   KokoroTokenLimit,
+  NO_PACING,
+  planPacing,
   splitSpeechText,
   synthesizeSpeechChunks,
 } from "./kokoro-chunks";
@@ -17,10 +19,15 @@ describe("Kokoro complete narration", () => {
         (_, i) => `Sentence ${i} has several spoken words.`,
       ).join(" ") + " The final word is finito.";
     const seen: string[] = [];
-    const result = await synthesizeSpeechChunks(text, async (chunk) => {
-      seen.push(chunk);
-      return { audio: new Float32Array([seen.length]), sampling_rate: 24000 };
-    });
+    const result = await synthesizeSpeechChunks(
+      text,
+      async (chunk) => {
+        seen.push(chunk);
+        return { audio: new Float32Array([seen.length]), sampling_rate: 24000 };
+      },
+      undefined,
+      NO_PACING,
+    );
     expect(seen.join(" ")).toBe(text);
     expect(result.audio.length).toBe(seen.length);
     expect(result.audio.at(-1)).toBe(seen.length);
@@ -138,4 +145,64 @@ it("bounds queued inference and frees canceled entries behind a stalled active c
   await active;
   expect(await replacement).toBe("replacement");
   expect(run).not.toHaveBeenCalled();
+});
+
+describe("pacing", () => {
+  const long = "This first sentence has quite a few spoken words in it.";
+
+  it("plans pauses: none first, a short one between sentences, a longer one between paragraphs", () => {
+    const plan = planPacing(
+      `${long} Another longer sentence follows here today.\n\nNew paragraph starts now.`,
+    );
+    expect(plan.map((c) => c.pauseBefore)).toEqual([0, 0.16, 0.4]);
+  });
+
+  it("reads the first sentence a little slower and the rest at speed", () => {
+    const plan = planPacing(`${long} The second sentence is plain enough.`);
+    expect(plan.map((c) => c.speed)).toEqual([0.95, 1]);
+  });
+
+  it("adds a beat before a short punchline and before a number", () => {
+    const punchline = planPacing(
+      `${long} Then a somewhat longer sentence comes in. Yes.`,
+    );
+    expect(punchline.at(-1)!.pauseBefore).toBeCloseTo(0.36);
+    const stat = planPacing(`${long} 40% of people agree.`);
+    expect(stat.at(-1)!.pauseBefore).toBeCloseTo(0.36);
+    // After normalisation the number is a word.
+    const spoken = planPacing(
+      `${long} Forty percent of people from the survey agree.`,
+    );
+    expect(spoken.at(-1)!.pauseBefore).toBeCloseTo(0.36);
+  });
+
+  it("puts the planned silence between the audio parts", async () => {
+    const result = await synthesizeSpeechChunks(
+      `${long} The second sentence is plain enough.`,
+      async () => ({
+        audio: new Float32Array(100).fill(1),
+        sampling_rate: 1000,
+      }),
+    );
+    // 100 + 160 samples of silence (0.16 s at 1 kHz) + 100.
+    expect(result.audio.length).toBe(360);
+    expect(result.audio.slice(100, 260).every((v) => v === 0)).toBe(true);
+    expect(result.audio[260]).toBe(1);
+  });
+
+  it("passes the first-sentence speed to the voice", async () => {
+    const factors: Array<number | undefined> = [];
+    await synthesizeSpeechChunks(
+      `${long} The second sentence is plain enough.`,
+      async (_chunk, factor) => {
+        factors.push(factor);
+        return { audio: new Float32Array(2).fill(1), sampling_rate: 1000 };
+      },
+    );
+    expect(factors).toEqual([0.95, 1]);
+  });
+
+  it("is the same every time", () => {
+    expect(planPacing(`${long} Yes.`)).toEqual(planPacing(`${long} Yes.`));
+  });
 });

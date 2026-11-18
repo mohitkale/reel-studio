@@ -136,3 +136,29 @@ it("offers a sample video when nothing can write a storyboard", async () => {
   );
   expect(mocks.push).toHaveBeenCalledWith("/results/sample1");
 });
+
+it("makes a podcast episode when Podcast is chosen and opens its page", async () => {
+  mocks.post
+    .mockResolvedValueOnce({
+      storyboard: {
+        version: 1,
+        kind: "podcast",
+        title: "P",
+        speakers: [{ id: "host", name: "Maya" }],
+        turns: [{ speaker: "host", text: "Hello there." }],
+      },
+    })
+    .mockResolvedValueOnce({ jobId: "job7", podcastId: "pod7" });
+  await mount();
+  await type("Why the sky is blue");
+  await act(async () => button("Podcast").click());
+  await act(async () => button("Create").click());
+  const [writeUrl, writeBody] = mocks.post.mock.calls[0]!;
+  expect(writeUrl).toBe("/api/storyboards/write");
+  expect(writeBody.brief.kind).toBe("podcast");
+  const [produceUrl, produceBody] = mocks.post.mock.calls[1]!;
+  expect(produceUrl).toBe("/api/storyboards");
+  // A podcast has no theme or captions to apply.
+  expect(produceBody.storyboard.theme).toBeUndefined();
+  expect(mocks.push).toHaveBeenCalledWith("/podcasts/pod7?job=job7");
+});

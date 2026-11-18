@@ -5,10 +5,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createGeminiProvider } from "./gemini";
 import { createLMStudioProvider } from "./lm-studio";
 import { createOpenAIProvider } from "./openai";
-import { storyboardWriterPromptDocument } from "./storyboard-doc";
+import {
+  podcastWriterPromptDocument,
+  storyboardWriterPromptDocument,
+} from "./storyboard-doc";
 import {
   buildRetryMessages,
   buildStoryboardMessages,
+  PODCAST_WRITER_PROMPT,
   STORYBOARD_WRITER_PROMPT,
   type StoryboardBrief,
 } from "./storyboard-prompt";
@@ -131,6 +135,44 @@ describe("the writer prompt", () => {
       previousReply: "bad",
     });
     expect(retry.brief).toBeUndefined();
+  });
+
+  it("has a podcast variant: its own prompt, its own schema, a spoken task", () => {
+    const brief: StoryboardBrief = {
+      kind: "podcast",
+      topic: "Why the sky is blue",
+      hosts: 1,
+    };
+    const { system, user } = buildStoryboardMessages(brief);
+    expect(system).toBe(PODCAST_WRITER_PROMPT);
+    expect(system).toMatch(/sound spoken/);
+    const parsed = JSON.parse(user);
+    expect(parsed.task).toMatch(/podcast/);
+    expect(parsed.brief).toMatchObject({
+      topic: "Why the sky is blue",
+      speakers: 1,
+      targetSeconds: 180,
+    });
+    const schema = strictStoryboardSchema("podcast").schema as {
+      properties: Record<string, unknown>;
+    };
+    expect(Object.keys(schema.properties)).toEqual(
+      expect.arrayContaining(["speakers", "turns"]),
+    );
+    expect(Object.keys(schema.properties)).not.toContain("scenes");
+    const video = strictStoryboardSchema().schema as {
+      properties: Record<string, unknown>;
+    };
+    expect(Object.keys(video.properties)).toContain("scenes");
+  });
+
+  it("publishes the podcast prompt and keeps its generated document current", () => {
+    const doc = readFileSync(
+      path.join(root, "docs", "prompts", "podcast-writer.md"),
+      "utf8",
+    );
+    expect(doc).toBe(podcastWriterPromptDocument());
+    expect(doc).toContain(PODCAST_WRITER_PROMPT);
   });
 
   it("is published for chat apps and the generated files are current", () => {
@@ -355,5 +397,108 @@ describe("writeStoryboard through each provider's native structured output", () 
     await expect(
       writeStoryboard({ provider, brief: BRIEFS[0]! }),
     ).rejects.toBeInstanceOf(AIError);
+  });
+});
+
+describe("a long video in two passes", () => {
+  const chapterReply = (n: number) =>
+    JSON.stringify({
+      version: 1,
+      title: `Chapter ${n} board`,
+      scenes: [
+        {
+          type: n === 1 ? "hook" : "statement",
+          headline: `Part ${n} opens`,
+          narration: "A line that is spoken aloud for this chapter.",
+        },
+        {
+          type: "statement",
+          headline: `Part ${n} idea`,
+          narration: "One more idea that follows right after the first.",
+        },
+        {
+          type: "cta",
+          headline: `Part ${n} ends`,
+          narration: "And a closing line that wraps up this chapter.",
+        },
+      ],
+    });
+
+  function fakeProvider(replies: string[]) {
+    const calls: { kind?: string; user: string }[] = [];
+    const provider = {
+      id: "openai",
+      label: "Fake",
+      isConfigured: () => true,
+      completeStructured: async (input: { kind?: string; user: string }) => {
+        calls.push({ kind: input.kind, user: input.user });
+        return replies[calls.length - 1]!;
+      },
+    } as unknown as AIProvider;
+    return { provider, calls };
+  }
+
+  it("plans the chapters first, then writes each chapter and joins them with marks and title cards", async () => {
+    const outline = JSON.stringify({
+      title: "The whole story",
+      chapters: [
+        { title: "The question", goal: "Pose it." },
+        { title: "The answer", goal: "Give it." },
+        { title: "What it means", goal: "Close it." },
+      ],
+    });
+    const { provider, calls } = fakeProvider([
+      outline,
+      chapterReply(1),
+      chapterReply(2),
+      chapterReply(3),
+    ]);
+    const result = await writeStoryboard({
+      provider,
+      brief: { topic: "A long topic", targetSeconds: 450 },
+      lint: { minSeconds: 1, maxSeconds: 10_000 },
+    });
+    expect(calls.map((c) => c.kind)).toEqual([
+      "outline",
+      "video",
+      "video",
+      "video",
+    ]);
+    expect(calls[2]!.user).toContain("chapter 2 of 3");
+    expect(result.attempts).toBe(4);
+    expect(result.errors).toEqual([]);
+    const board = result.storyboard as unknown as {
+      title: string;
+      scenes: { type: string; headline: string }[];
+      chapters: { title: string; startScene: number }[];
+    };
+    expect(board.title).toBe("The whole story");
+    // Chapter one keeps its hook first; the others open with a card naming them.
+    expect(board.scenes[0]!.type).toBe("hook");
+    expect(board.chapters).toEqual([
+      { title: "The question", startScene: 0 },
+      { title: "The answer", startScene: 3 },
+      { title: "What it means", startScene: 7 },
+    ]);
+    expect(board.scenes[3]!.headline).toBe("The answer");
+    expect(board.scenes[7]!.headline).toBe("What it means");
+    expect(board.scenes).toHaveLength(11);
+  });
+
+  it("retries an unusable outline once, then says so plainly", async () => {
+    const { provider } = fakeProvider(["not json", "still not json"]);
+    await expect(
+      writeStoryboard({ provider, brief: { topic: "T", targetSeconds: 450 } }),
+    ).rejects.toThrow(/usable chapter outline/);
+  });
+
+  it("keeps short videos to one call", async () => {
+    const { provider, calls } = fakeProvider([chapterReply(1)]);
+    await writeStoryboard({
+      provider,
+      brief: { topic: "T", targetSeconds: 60 },
+    });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.kind).toBe("video");
   });
 });

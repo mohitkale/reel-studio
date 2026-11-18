@@ -2,6 +2,7 @@
  * Writes the generated storyboard files from the Zod schema and the writer prompt:
  *   schemas/storyboard.v1.json          the published JSON Schema
  *   docs/prompts/storyboard-writer.md   the prompt for pasting into any chat app
+ *   docs/prompts/podcast-writer.md      the same for a podcast episode
  *
  *   npm run storyboard:schema            write the files
  *   npm run storyboard:schema -- --check fail if a checked-in file is stale
@@ -9,7 +10,10 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { storyboardWriterPromptDocument } from "../src/providers/ai/storyboard-doc";
+import {
+  podcastWriterPromptDocument,
+  storyboardWriterPromptDocument,
+} from "../src/providers/ai/storyboard-doc";
 import { storyboardJsonSchema } from "../src/storyboard/schema";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -21,6 +25,10 @@ const files: Array<[string, string]> = [
   [
     path.join(root, "docs", "prompts", "storyboard-writer.md"),
     storyboardWriterPromptDocument(),
+  ],
+  [
+    path.join(root, "docs", "prompts", "podcast-writer.md"),
+    podcastWriterPromptDocument(),
   ],
 ];
 
