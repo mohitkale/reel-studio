@@ -1,7 +1,5 @@
 "use client";
 
-import * as React from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Download, ExternalLink, Loader2, Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -28,13 +26,6 @@ export function LocalWriterSetup({
   const action = useLocalWriterAction();
   const providers = useAIProviders();
   const state = writer.data;
-  // A download finishes on the server, after the click: refresh what can write once a model is in use.
-  const queryClient = useQueryClient();
-  const activeModel = state?.active?.modelId;
-  React.useEffect(() => {
-    void queryClient.invalidateQueries({ queryKey: ["ai-providers"] });
-    void queryClient.invalidateQueries({ queryKey: ["local-ai-providers"] });
-  }, [activeModel, queryClient]);
   const chain = writerChain(providers.data);
 
   return (
