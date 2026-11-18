@@ -46,11 +46,13 @@ test("a batch of topics is made one at a time with the series applied", async ({
   await expect(page.getByRole("link", { name: "Open" })).toHaveCount(2);
 
   // The series filled in what the written storyboard left out.
-  const { jobs } = (await (
-    await page.request.get("/api/production-jobs?limit=5")
-  ).json()) as { jobs: { id: string; state: string }[] };
+  const href = await page
+    .getByRole("link", { name: "Open" })
+    .first()
+    .getAttribute("href");
+  const jobId = href!.split("/results/")[1]!;
   const job = (await (
-    await page.request.get(`/api/production-jobs/${jobs[0]!.id}`)
+    await page.request.get(`/api/production-jobs/${jobId}`)
   ).json()) as { job: { revision: { scriptId: string } } };
   const exported = (await (
     await page.request.get(

@@ -63,6 +63,14 @@ describe("applySeries", () => {
     expect(podcast).not.toHaveProperty("voice");
   });
 
+  it("treats auto as not chosen, because writers often say auto", () => {
+    const out = applySeries(
+      { version: 1, title: "T", theme: "auto", music: "auto", scenes: [] },
+      series,
+    );
+    expect(out).toMatchObject({ theme: "bold-pop", music: "upbeat-pop" });
+  });
+
   it("does not change the input", () => {
     const input = { title: "T" };
     applySeries(input, series);

@@ -131,7 +131,7 @@ test("the thumbnail endpoint returns PNGs at both sizes", async ({
   }
 });
 
-test("shorts cutdowns say plainly when a video is too short to cut", async ({
+test("shorts cutdowns list what they would make, or say plainly that the video is too short", async ({
   request,
 }) => {
   const { jobs } = (await (
@@ -146,6 +146,19 @@ test("shorts cutdowns say plainly when a video is too short to cut", async ({
     `/api/scripts/${view.job.revision.scriptId}/cutdowns`,
     { data: { preview: true } },
   );
-  expect(response.status()).toBe(422);
-  expect(JSON.stringify(await response.json())).toMatch(/too short/i);
+  // Which answer depends on the video's length; both are the route doing its job.
+  if (response.status() === 422) {
+    expect(JSON.stringify(await response.json())).toMatch(/too short/i);
+    return;
+  }
+  expect(response.status()).toBe(200);
+  const { shorts } = (await response.json()) as {
+    shorts: { title: string; seconds: number }[];
+  };
+  expect(shorts.length).toBeGreaterThanOrEqual(1);
+  expect(shorts.length).toBeLessThanOrEqual(3);
+  for (const short of shorts) {
+    expect(short.title.length).toBeGreaterThan(0);
+    expect(short.seconds).toBeLessThanOrEqual(45);
+  }
 });

@@ -45,13 +45,15 @@ export function applySeries(
 ): Record<string, unknown> {
   const out: Record<string, unknown> = { ...storyboard };
   const podcast = out.kind === "podcast";
+  // "auto" means the writer left the choice open, so a series may fill it in.
+  const open = (value: unknown) => value === undefined || value === "auto";
   if (!podcast) {
     if (series.format && out.format === undefined) out.format = series.format;
-    if (series.theme && out.theme === undefined) out.theme = series.theme;
+    if (series.theme && open(out.theme)) out.theme = series.theme;
     if (series.captions === false && out.captions === undefined)
       out.captions = "off";
   }
-  if (series.music && out.music === undefined) out.music = series.music;
+  if (series.music && open(out.music)) out.music = series.music;
   const voice = (out.voice ?? {}) as Record<string, unknown>;
   if (!podcast && (series.voiceId || series.narration === false)) {
     out.voice = {
