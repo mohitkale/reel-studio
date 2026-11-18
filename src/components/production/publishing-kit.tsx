@@ -230,6 +230,21 @@ export function PublishingKit({
         ))}
       </ul>
       <div className="flex flex-wrap items-center gap-2">
+        {(
+          [
+            ["landscape", "Thumbnail 1280×720"],
+            ["vertical", "Thumbnail 1080×1920"],
+          ] as const
+        ).map(([size, label]) => (
+          <Button key={size} variant="outline" size="sm" asChild>
+            <a
+              href={`/api/production-jobs/${jobId}/thumbnail?size=${size}&download=1`}
+              download
+            >
+              <Download className="size-4" aria-hidden /> {label}
+            </a>
+          </Button>
+        ))}
         <Button
           variant="outline"
           size="sm"

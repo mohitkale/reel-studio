@@ -91,6 +91,12 @@ test("the publishing kit shows copyable text, platform fit and a zip", async ({
   await expect(
     page.getByRole("list", { name: "Fit on each platform" }),
   ).toContainText("YouTube");
+  // Both thumbnail sizes are offered as downloads.
+  for (const name of ["Thumbnail 1280×720", "Thumbnail 1080×1920"])
+    await expect(page.getByRole("link", { name })).toHaveAttribute(
+      "href",
+      /\/thumbnail\?size=(landscape|vertical)&download=1/,
+    );
 
   const [download] = await Promise.all([
     page.waitForEvent("download"),

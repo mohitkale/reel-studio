@@ -130,7 +130,7 @@ export const navItems: NavItem[] = [...proNavItems];
 /** Pages that belong to a nav item without being its href (so it stays highlighted). */
 export const navAliases: Record<string, string[]> = {
   "/brand-kits": ["/assets"],
-  "/": ["/examples", "/results", "/scenes"],
+  "/": ["/examples", "/results", "/scenes", "/batch"],
   "/settings": ["/diagnostics"],
 };
 
