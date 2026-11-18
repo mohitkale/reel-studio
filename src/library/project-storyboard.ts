@@ -182,6 +182,7 @@ function sceneToStoryboard(
       switch (registered.id) {
         case "steps":
         case "checklist":
+        case "recap":
           out.items = data.items;
           break;
         case "comparison":

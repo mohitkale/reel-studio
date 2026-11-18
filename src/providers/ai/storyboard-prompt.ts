@@ -28,7 +28,7 @@ Scene types
 Rules
 - Layout, colour, motion, timing and transitions are decided later. Do not describe them.
 - sources: only pages listed in the research notes, each with its title, url and the date accessed.
-- chapters: only for a video over about three minutes. Mark where each chapter starts with its title and startScene, start every chapter with a scene that names it, and bring the viewer back with a hook, stat, quote or comparison every minute or so.
+- chapters: only for a video over about three minutes. Mark where each chapter starts with its title and startScene, start every chapter with a scene that names it, and end each chapter with a recap scene, and bring the viewer back with a hook, stat, quote or comparison every minute or so.
 - publish: a title, a one or two sentence description, up to ten hashtags and three to six big words of thumbnailText for posting. Leave out what you are unsure of.
 - Use the requested format and tone, and write in the language of the brief.`;
 

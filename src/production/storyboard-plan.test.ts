@@ -287,3 +287,35 @@ describe("presenter", () => {
     expect(plan().look.presenter).toBeUndefined();
   });
 });
+
+describe("recap scene", () => {
+  it("is planned as a summary treatment carrying its lines", () => {
+    const p = plan({}, [
+      {
+        type: "hook",
+        headline: "Hook",
+        narration: "A hook worth hearing today.",
+      },
+      {
+        type: "recap",
+        headline: "What we covered",
+        narration: "So, to recap: sleep, hours and a dark room.",
+        items: [
+          "Sleep saves memories",
+          "Seven hours is the target",
+          "A dark room helps",
+        ],
+      },
+      { type: "cta", headline: "Go", narration: "Go and try it today." },
+    ]);
+    expect(p.scenes[1]!.templateId).toBe("hf-recap");
+    expect(p.roles[1]).toBe("summary");
+    expect(p.scenePlan.scenes[1]!.panel).toMatchObject({
+      items: [
+        "Sleep saves memories",
+        "Seven hours is the target",
+        "A dark room helps",
+      ],
+    });
+  });
+});

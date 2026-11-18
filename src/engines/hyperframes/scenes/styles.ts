@@ -21,6 +21,13 @@ export const SCENE_STYLES = `
   .sc-step-num { flex: none; width: ${px(0.058)}; height: ${px(0.058)}; border-radius: 50%; display: grid; place-items: center; font-size: ${px(0.034)}; font-weight: 900; }
   .sc-tick { flex: none; width: ${px(0.052)}; height: ${px(0.052)}; border-radius: ${px(0.012)}; border: 3px solid; display: grid; place-items: center; font-size: ${px(0.036)}; font-weight: 900; }
 
+  .fx-panelled .fx-dialogue:has(> .sc-recap) { align-items: stretch; text-align: left; justify-content: center; }
+  .sc-recap-kicker { margin: 0 0 ${px(0.012)}; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; font-size: ${px(0.03)}; }
+  .sc-recap { list-style: none; margin: 0; padding: 0; display: grid; gap: ${px(0.02)}; width: 100%; }
+  .sc-recap-row { display: flex; align-items: stretch; gap: ${px(0.022)}; font-weight: 700; line-height: 1.22; font-size: ${px(0.036)}; }
+  .sc-recap-bar { flex: none; width: ${px(0.009)}; border-radius: 999px; }
+  .sc-recap-text { padding: ${px(0.004)} 0; }
+
   .sc-compare { display: grid; grid-template-columns: 1fr; gap: ${px(0.014)}; align-items: stretch; width: 100%; }
   .sc-card { border: 2px solid color-mix(in srgb, currentColor 22%, transparent); border-radius: ${px(0.018)}; padding: ${px(0.022)} ${px(0.026)}; background: color-mix(in srgb, currentColor 5%, transparent); }
   .sc-card-label { margin: 0 0 ${px(0.008)}; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; font-size: ${px(0.03)}; }

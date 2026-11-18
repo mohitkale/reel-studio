@@ -46,6 +46,7 @@ export const STORYBOARD_TEMPLATE_BY_TYPE: Readonly<Record<SceneType, string>> =
     "media-split": "hf-media-split",
     "device-mockup": "hf-device-mockup",
     checklist: "hf-checklist",
+    recap: "hf-recap",
   };
 
 const ORIENTATION_BY_FORMAT: Record<VideoStoryboard["format"], Orientation> = {
@@ -78,6 +79,7 @@ export const STORYBOARD_ROLE_BY_TYPE: Readonly<
   "media-split": "feature",
   "device-mockup": "screenshot-demo",
   checklist: "summary",
+  recap: "summary",
 };
 
 /**
@@ -189,6 +191,7 @@ export function planFromStoryboard(
         break;
       case "steps":
       case "checklist":
+      case "recap":
         panel = { items: scene.items };
         break;
       case "comparison":

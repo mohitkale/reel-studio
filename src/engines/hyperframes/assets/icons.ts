@@ -173,6 +173,7 @@ const TYPE_DEFAULT: Readonly<Record<string, string>> = {
   list: "list-checks",
   steps: "list-checks",
   checklist: "circle-check",
+  recap: "list-checks",
   stat: "gauge",
   chart: "chart-bar",
   comparison: "scale",
