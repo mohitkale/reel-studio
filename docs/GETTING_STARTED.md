@@ -64,6 +64,17 @@ storyboard writer for edits and shows them before anything is made, and **Share
 it** copies a caption with hashtags and makes the other two sizes or another
 voice from the same storyboard.
 
+**Narration** is cleaned before the voice reads it: numbers, money, percentages,
+dates, ordinals, units, links, handles and acronyms are spoken in words, and emoji
+are dropped. A starter list covers common tech and brand terms. Add your own under
+**Settings, How the voice says things** (`word = how it sounds`); only the narration
+changes, never the text on screen. The storyboard linter warns when narration has
+characters a voice cannot say.
+
+On a finished video, **Publishing kit** gives a title, description and hashtags with
+copy buttons, whether each fits YouTube, Shorts, Reels, TikTok and LinkedIn, and one zip
+with the text, storyboard and captions. It is built from the storyboard's own words.
+
 See [Creating videos](CREATING_VIDEOS.md) for the full workflow.
 
 ## Configuration

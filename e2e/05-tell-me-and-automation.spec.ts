@@ -59,3 +59,48 @@ test("automation defaults save and show on the Create screen", async ({
     )
     .toBe(true);
 });
+
+test("the pronunciation preview shows what the voice is given", async ({
+  page,
+}) => {
+  await page.goto("/settings");
+  const preview = page.getByText(/The voice is given:/).locator("..");
+  await expect(preview).toContainText("two million dollars");
+  await expect(preview).toContainText("November thirteenth, 2026");
+  await expect(preview).toContainText("forty percent");
+  await expect(preview).toContainText("sequel");
+  await expect(preview).toContainText("example dot com");
+});
+
+test("the publishing kit shows copyable text, platform fit and a zip", async ({
+  page,
+  request,
+}) => {
+  const { jobs } = (await (
+    await request.get("/api/production-jobs?limit=5")
+  ).json()) as { jobs: { id: string; state: string }[] };
+  const done = jobs.find((job) => job.state === "succeeded");
+  expect(done, "a finished video from the journeys").toBeTruthy();
+  await page.goto(`/results/${done!.id}`);
+  await expect(
+    page.getByRole("heading", { name: "Publishing kit" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Copy description" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("list", { name: "Fit on each platform" }),
+  ).toContainText("YouTube");
+
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: /Download the kit/ }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe("publishing-kit.zip");
+  const { readFileSync } = await import("node:fs");
+  const bytes = readFileSync(await download.path());
+  // A zip starts with "PK"; the file names are stored in the clear.
+  expect(bytes.subarray(0, 2).toString()).toBe("PK");
+  expect(bytes.toString("latin1")).toContain("description.txt");
+  expect(bytes.toString("latin1")).toContain("storyboard.json");
+});

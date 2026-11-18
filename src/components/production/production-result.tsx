@@ -12,6 +12,7 @@ import { QuickProduceStatus } from "./quick-produce-status";
 import { ChangeVideo } from "./change-video";
 import { ResultActions } from "./result-actions";
 import { TellMe } from "./tell-me";
+import { PublishingKit } from "./publishing-kit";
 import { PromptCreator } from "@/components/projects/prompt-creator";
 import { CreateWithAIDialog } from "@/components/projects/create-with-ai-dialog";
 import { EvidenceReview } from "@/components/projects/evidence-review";
@@ -64,6 +65,18 @@ function ShuffleLook({ jobId, scriptId }: { jobId: string; scriptId: string }) {
     >
       <Shuffle className="size-4" aria-hidden /> Shuffle look
     </Button>
+  );
+}
+
+/** The publishing kit, with captions in the zip when the video has them. */
+function KitSection({ scriptId }: { scriptId: string }) {
+  const script = useScript(scriptId);
+  if (!script.data) return null;
+  return (
+    <PublishingKit
+      scriptId={scriptId}
+      hasCaptions={(script.data.captionTracks ?? []).some((t) => t.enabled)}
+    />
   );
 }
 
@@ -160,6 +173,7 @@ export function ProductionResult({
       {query.data.state === "succeeded" && (
         <>
           <ResultActions scriptId={scriptId} quality={query.data.quality} />
+          <KitSection scriptId={scriptId} />
           <ChangeVideo jobId={jobId} scriptId={scriptId} />
           <TellMe
             jobId={jobId}
