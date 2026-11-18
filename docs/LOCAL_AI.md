@@ -64,5 +64,48 @@ in use:
 ## More local options
 
 - Voices, languages and styles: [Voice providers](VOICE_PROVIDERS.md).
-- Optional image generation, recordings to clips and the presenter are described
-  in their own sections as they ship.
+
+## Image generation (optional)
+
+A scene can ask for a picture with `media.generate`, a plain-words prompt. This
+is the only place a second model is involved, it is **off by default**, and it
+runs on your computer.
+
+1. Run a local image server: [ComfyUI](https://github.com/comfyanonymous/ComfyUI)
+   (default `http://127.0.0.1:8188`) or any server that answers
+   `POST /v1/images/generations` and returns base64 images.
+2. **Settings, Image generation:** choose the server, press **Test**, then
+   **Turn on**. Nothing is downloaded for you. Only this computer, or a private
+   network address you allow, can be reached.
+3. Storyboards with `media: { generate: "..." }` now get that picture. A `query`
+   beside it is the stock search used when no generator is set up.
+
+```json
+{
+  "type": "media",
+  "headline": "A quiet coast",
+  "narration": "...",
+  "media": {
+    "generate": "a lighthouse on a cliff at dusk, calm sea",
+    "query": "lighthouse at dusk"
+  }
+}
+```
+
+- The look supplies a style suffix (for example cinematic, neon, paper), so the
+  pictures match the video. The seed comes from the video's seed and the scene
+  number: the same video makes the same pictures.
+- Pictures are cached by prompt, style, seed, size and model, and saved as
+  library assets named `Generated: ...`, so they are listed in Assets and a
+  repeat render makes nothing new.
+- With nothing configured, or when a picture fails, the scene uses a stock
+  picture or the themed background, and the result's warnings say which scenes
+  fell back. It is never an error.
+- The ComfyUI adapter queues a plain text-to-image graph (`CheckpointLoaderSimple`,
+  `KSampler`, `SaveImage`) with the checkpoint you name, or the first installed.
+  It was tested against a fixture server in CI, **not yet against a real ComfyUI
+  with a model.**
+
+To add another image backend, implement `ImageProvider`
+(`src/providers/image/types.ts`) and add one case to
+`src/providers/image/registry.ts`.

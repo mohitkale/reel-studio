@@ -573,6 +573,12 @@
                     "minLength": 1,
                     "maxLength": 80
                   },
+                  "generate": {
+                    "description": "Describe a picture to make with a local image model, in plain words. Only used when the person has set one up; otherwise \"query\" (or the headline) finds a stock picture instead. Example: \"a lighthouse on a cliff at dusk, calm sea\".",
+                    "type": "string",
+                    "minLength": 4,
+                    "maxLength": 300
+                  },
                   "path": {
                     "description": "Relative path of a supplied file. Example: \"media/demo.mp4\".",
                     "type": "string",
@@ -581,7 +587,7 @@
                   }
                 },
                 "additionalProperties": false,
-                "description": "Picture or clip for the scene. Provide exactly one of query, assetId or path."
+                "description": "Picture or clip for the scene. Provide exactly one of query, assetId, path or generate (generate may also carry a query as its fallback)."
               },
               "icon": {
                 "description": "Optional icon name in lowercase words joined by hyphens. Example: \"moon\".",

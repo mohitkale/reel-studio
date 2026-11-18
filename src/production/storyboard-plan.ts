@@ -130,6 +130,8 @@ export interface StoryboardProductionPlan {
   };
   /** Library asset per scene, when the storyboard named one. */
   assetIds: Array<string | undefined>;
+  /** Pictures the storyboard asked a local image model to make, per scene. */
+  generatePrompts: Array<string | undefined>;
   scenes: StoryboardPlanScene[];
   estimatedSeconds: number;
   /** The theme the video wears: named in the storyboard, or chosen from its words. */
@@ -147,6 +149,7 @@ export function planFromStoryboard(
   }
   const warnings: string[] = [];
   const assetIds: Array<string | undefined> = [];
+  const generatePrompts: Array<string | undefined> = [];
   const planScenes: StoryboardPlanScene[] = [];
 
   const scenes: AIScene[] = storyboard.scenes.map((scene, index) => {
@@ -247,6 +250,7 @@ export function planFromStoryboard(
     }
     panel = { ...panel, sceneType: scene.type };
     assetIds.push(assetId);
+    generatePrompts.push(scene.media?.generate);
     planScenes.push({
       index,
       type: scene.type,
@@ -340,6 +344,7 @@ export function planFromStoryboard(
       ...(storyboard.reduceMotion ? { reduceMotion: true } : {}),
     },
     assetIds,
+    generatePrompts,
     scenes: planScenes,
     estimatedSeconds: estimateDurationSeconds(storyboard),
     warnings,

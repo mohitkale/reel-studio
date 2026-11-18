@@ -42,6 +42,7 @@ export const STORYBOARD_LIMITS = {
   codeText: 600,
   codeLines: 12,
   mediaQuery: 80,
+  mediaGenerate: 300,
   mediaPath: 200,
   icon: 40,
   emphasisCount: 3,
@@ -289,6 +290,14 @@ export const mediaSchema = z
       .max(80)
       .optional()
       .describe("Id of an asset already in the project's library."),
+    generate: z
+      .string()
+      .min(4)
+      .max(L.mediaGenerate)
+      .optional()
+      .describe(
+        'Describe a picture to make with a local image model, in plain words. Only used when the person has set one up; otherwise "query" (or the headline) finds a stock picture instead. Example: "a lighthouse on a cliff at dusk, calm sea".',
+      ),
     path: z
       .string()
       .min(1)
@@ -300,12 +309,14 @@ export const mediaSchema = z
       .describe('Relative path of a supplied file. Example: "media/demo.mp4".'),
   })
   .refine(
+    // A query may sit beside generate: it is the stock search used when no image model is set up.
     (m) =>
-      [m.query, m.assetId, m.path].filter((v) => v !== undefined).length === 1,
-    { message: "Give exactly one of query, assetId or path" },
+      [m.query ?? m.generate, m.assetId, m.path].filter((v) => v !== undefined)
+        .length === 1,
+    { message: "Give exactly one of query, assetId, path or generate" },
   )
   .describe(
-    "Picture or clip for the scene. Provide exactly one of query, assetId or path.",
+    "Picture or clip for the scene. Provide exactly one of query, assetId, path or generate (generate may also carry a query as its fallback).",
   );
 
 function isSafeRelativePath(value: string): boolean {

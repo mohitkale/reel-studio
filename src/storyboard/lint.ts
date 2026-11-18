@@ -868,7 +868,7 @@ function repairScene(
     });
   } else if (isObj(scene.media)) {
     const media: Obj = {};
-    const order = ["assetId", "path", "query"];
+    const order = ["assetId", "path", "generate", "query"];
     const present = order.filter(
       (k) =>
         typeof scene.media !== "undefined" &&
@@ -908,6 +908,14 @@ function repairScene(
         message:
           "The media had no query, assetId or path; used the headline as the search query",
       });
+    } else if (
+      present.length === 2 &&
+      present.includes("generate") &&
+      present.includes("query")
+    ) {
+      // A generate prompt keeps its stock query as the fallback.
+      media.generate = (scene.media as Obj).generate;
+      media.query = (scene.media as Obj).query;
     } else if (present.length > 0) {
       media[present[0]!] = (scene.media as Obj)[present[0]!];
       if (present.length > 1) {

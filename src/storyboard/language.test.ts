@@ -95,3 +95,67 @@ describe("storyboard language and voice style", () => {
     ).toBeUndefined();
   });
 });
+
+describe("media.generate", () => {
+  const media = (m: unknown) =>
+    lint({
+      version: 1,
+      title: "Pictures",
+      scenes: [
+        {
+          type: "hook",
+          headline: "A coast",
+          narration: "Look at this coast at dusk tonight.",
+          media: m,
+        },
+        {
+          type: "statement",
+          headline: "The idea",
+          narration: "This is the one idea for the video.",
+        },
+        {
+          type: "cta",
+          headline: "Thanks",
+          narration: "Thanks for watching this video today.",
+        },
+      ],
+    });
+
+  it("accepts a prompt for a local image model", () => {
+    const result = media({ generate: "a lighthouse on a cliff at dusk" });
+    expect(result.errors).toEqual([]);
+    expect(
+      result.storyboard?.kind === "video" && result.storyboard.scenes[0]!.media,
+    ).toEqual({
+      generate: "a lighthouse on a cliff at dusk",
+    });
+  });
+
+  it("keeps a stock query beside it as the fallback", () => {
+    const result = media({
+      generate: "a lighthouse on a cliff at dusk",
+      query: "lighthouse at dusk",
+    });
+    expect(result.errors).toEqual([]);
+    const m =
+      result.storyboard?.kind === "video"
+        ? result.storyboard.scenes[0]!.media
+        : undefined;
+    expect(m).toEqual({
+      generate: "a lighthouse on a cliff at dusk",
+      query: "lighthouse at dusk",
+    });
+  });
+
+  it("still allows only one source otherwise", () => {
+    const result = media({
+      generate: "a lighthouse on a cliff at dusk",
+      assetId: "abc",
+    });
+    const m =
+      result.storyboard?.kind === "video"
+        ? result.storyboard.scenes[0]!.media
+        : undefined;
+    expect(Object.keys(m ?? {})).toHaveLength(1);
+  });
+});

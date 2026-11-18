@@ -25,6 +25,7 @@ import { KokoroVoicesCard } from "@/components/voice/kokoro-voices-card";
 import { PronunciationCard } from "@/components/voice/pronunciation-card";
 import { AIProviderCard } from "@/components/ai/ai-provider-card";
 import { LocalAIProviderCard } from "@/components/ai/local-ai-provider-card";
+import { ImageProviderCard } from "@/components/ai/image-provider-card";
 import { LocalWriterSetup } from "@/components/ai/local-writer-setup";
 import { StockProviderCard } from "@/components/stock/stock-provider-card";
 import { MusicProviderCard } from "@/components/music/music-provider-card";
@@ -187,6 +188,8 @@ export default function SettingsPage() {
       </Card>
 
       <ResearchReadinessCard />
+
+      <ImageProviderCard />
 
       <Card>
         <CardHeader>
