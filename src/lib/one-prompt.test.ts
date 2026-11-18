@@ -95,6 +95,32 @@ describe("steps that run by themselves", () => {
     ).toEqual({ title: "T" });
   });
 
+  it("uses a chosen bundled track, but music off wins", () => {
+    expect(
+      finishStoryboard(
+        { title: "T" },
+        { theme: "auto", narration: true, musicTrack: "lofi-rain" },
+      ),
+    ).toEqual({ title: "T", music: "lofi-rain" });
+    expect(
+      finishStoryboard(
+        { title: "T" },
+        {
+          theme: "auto",
+          narration: true,
+          music: false,
+          musicTrack: "lofi-rain",
+        },
+      ),
+    ).toEqual({ title: "T", music: "none" });
+    expect(
+      finishStoryboard(
+        { title: "T" },
+        { theme: "auto", narration: true, musicTrack: "auto" },
+      ),
+    ).toEqual({ title: "T" });
+  });
+
   it("skips the web lookup for a topic when research is off", () => {
     const on = buildWriteRequest("Why the sky is blue", {
       format: "9:16",

@@ -82,7 +82,11 @@ describe("produceFromStoryboard", () => {
       reused: false,
     });
     expect(mocks.createProjectFromPlan).toHaveBeenCalledTimes(1);
-    expect(mocks.autoAttachBundledMusic).toHaveBeenCalledWith("s1");
+    // Automatic music follows the theme's music mood.
+    expect(mocks.updateScript).toHaveBeenCalledWith("s1", {
+      musicUrl: expect.stringMatching(/^\/music\/[a-z-]+\.wav$/),
+    });
+    expect(mocks.autoAttachBundledMusic).not.toHaveBeenCalled();
     expect(mocks.ensureSfxCues).toHaveBeenCalledWith("s1");
     const request = mocks.submitProduction.mock.calls[0]![0].request;
     expect(request).toMatchObject({

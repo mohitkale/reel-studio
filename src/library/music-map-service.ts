@@ -1,3 +1,4 @@
+import { MUSIC_LIBRARY } from "@/lib/music-library";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { tmpdir } from "node:os";
@@ -95,6 +96,24 @@ export async function analyzeMusicMap(
     overrides.musicMap.sourceHash === source.hash
   )
     return overrides.musicMap;
+  // A bundled track has an exact grid (it was composed on one), so there is
+  // nothing to estimate.
+  const bundled = MUSIC_LIBRARY.find((track) => track.url === row.musicUrl);
+  if (bundled) {
+    const map = musicMapSchema.parse({
+      version: 1,
+      sourceUrl: row.musicUrl,
+      sourceHash: source.hash,
+      durationSeconds: bundled.loopSeconds,
+      bpm: bundled.bpm,
+      offsetSeconds: bundled.offsetSeconds,
+      confidence: 1,
+      method: "bundled-grid",
+      disabledBeats: [],
+      dropSeconds: null,
+    });
+    return await saveMap(scriptId, map, overrides.musicMap);
+  }
   const directory = await fs.mkdtemp(path.join(tmpdir(), "reel-music-map-"));
   try {
     const file = path.join(directory, `source${source.extension}`);

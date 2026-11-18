@@ -71,13 +71,19 @@ export function finishStoryboard(
     theme: string;
     narration: boolean;
     music?: boolean;
+    /** A bundled track id; anything else (or "auto") leaves the choice to the theme. */
+    musicTrack?: string;
     captions?: boolean;
   },
 ): Record<string, unknown> {
   return {
     ...storyboard,
     ...(options.theme !== "auto" ? { theme: options.theme } : {}),
-    ...(options.music === false ? { music: "none" } : {}),
+    ...(options.music === false
+      ? { music: "none" }
+      : options.musicTrack && options.musicTrack !== "auto"
+        ? { music: options.musicTrack }
+        : {}),
     ...(options.captions === false ? { captions: "off" } : {}),
     ...(!options.narration
       ? {

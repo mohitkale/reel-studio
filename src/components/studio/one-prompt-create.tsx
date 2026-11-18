@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, Sparkles } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { MusicPicker } from "@/components/studio/music-picker";
 import { PasteStoryboard } from "@/components/studio/paste-storyboard";
 import { useAIProviders } from "@/hooks/ai";
 import { useAutomation, useReviewFields } from "@/hooks/ui-mode";
@@ -71,6 +72,7 @@ export function OnePromptCreate() {
   const music = overrides.music ?? automation.music;
   const captions = overrides.captions ?? automation.captions;
   const [draft, setDraft] = React.useState(false);
+  const [musicTrack, setMusicTrack] = React.useState("auto");
   const [busy, setBusy] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string>();
 
@@ -115,6 +117,7 @@ export function OnePromptCreate() {
           theme,
           narration,
           music,
+          musicTrack,
           captions,
         }),
       );
@@ -251,6 +254,7 @@ export function OnePromptCreate() {
             />
             Add background music
           </label>
+          {music && <MusicPicker value={musicTrack} onChange={setMusicTrack} />}
           <label className="mt-2 flex items-center gap-2">
             <input
               type="checkbox"
@@ -291,6 +295,7 @@ export function OnePromptCreate() {
               theme={theme}
               narration={narration}
               music={music}
+              musicTrack={musicTrack}
               captions={captions}
               draft={draft}
             />

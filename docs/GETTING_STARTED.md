@@ -64,6 +64,11 @@ storyboard writer for edits and shows them before anything is made, and **Share
 it** copies a caption with hashtags and makes the other two sizes or another
 voice from the same storyboard.
 
+**Music**: twenty bundled tracks (all CC0, generated here) with mood tags, energy and an
+exact beat grid. Under More options on Create you can pick one and preview it; the
+default is automatic, which follows the look's music mood. Cut suggestions snap to
+the exact grid of a bundled track.
+
 **Narration** is cleaned before the voice reads it: numbers, money, percentages,
 dates, ordinals, units, links, handles and acronyms are spoken in words, and emoji
 are dropped. A starter list covers common tech and brand terms. Add your own under

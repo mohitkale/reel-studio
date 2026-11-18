@@ -23,7 +23,8 @@ import { submitProduction } from "@/library/production-service";
 import { autoAttachBundledMusic } from "@/library/soundtrack-service";
 import { ensureSfxCues, setSfxEnabled } from "@/library/sfx-service";
 import { reportStockMediaSelectionUsage } from "@/library/stock-media-usage";
-import { MUSIC_LIBRARY } from "@/lib/music-library";
+import { MUSIC_LIBRARY, suggestTrackForText } from "@/lib/music-library";
+import { getTheme } from "@/video/themes";
 import { buildStoryboardSource } from "@/library/project-storyboard";
 import type { SceneBackground } from "@/video/types";
 import {
@@ -272,7 +273,11 @@ export async function produceFromStoryboard(
   }
 
   if (plan.music.mode === "auto") {
-    await autoAttachBundledMusic(created.scriptId);
+    // A fitting track from the theme's music mood; scene moods decide when the
+    // theme gives no clear answer.
+    const themed = suggestTrackForText(getTheme(plan.themeId)?.musicMood);
+    if (themed) await updateScript(created.scriptId, { musicUrl: themed.url });
+    else await autoAttachBundledMusic(created.scriptId);
   } else if (plan.music.mode === "track") {
     const track = MUSIC_LIBRARY.find((t) => t.id === plan.music.trackId);
     if (track) await updateScript(created.scriptId, { musicUrl: track.url });
