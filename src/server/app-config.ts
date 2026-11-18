@@ -4,6 +4,7 @@ import path from "node:path";
 import { type ProviderId } from "@/providers/voice/types";
 import { engineHome } from "@/server/local-engine";
 import type { Automation } from "@/lib/automation";
+import type { PronunciationRule } from "@/lib/speech-normalize";
 
 /**
  * Non-secret app settings (default provider + default model per provider).
@@ -35,6 +36,8 @@ export interface AppConfig {
   reviewBeforeMaking?: boolean;
   /** Steps a new video runs by itself; a missing key means on. */
   automation?: Partial<Automation>;
+  /** The person's own respellings for the voice; they win over the bundled list. */
+  pronunciations?: PronunciationRule[];
 }
 
 const EMPTY: AppConfig = { defaultModel: {} };
@@ -132,6 +135,16 @@ export async function setAutomation(
 ): Promise<AppConfig> {
   const config = await getConfig();
   config.automation = { ...config.automation, ...change };
+  await writeConfig(config);
+  return config;
+}
+
+export async function setPronunciations(
+  rules: PronunciationRule[],
+): Promise<AppConfig> {
+  const config = await getConfig();
+  if (rules.length === 0) delete config.pronunciations;
+  else config.pronunciations = rules;
   await writeConfig(config);
   return config;
 }

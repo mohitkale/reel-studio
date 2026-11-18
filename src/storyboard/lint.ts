@@ -13,6 +13,7 @@
  * Pure and deterministic: no network, no clock unless `options.today` is
  * omitted for a missing source date.
  */
+import { unspeakableCharacters } from "@/lib/speech-normalize";
 import { THEME_IDS } from "@/video/themes";
 import { ZodError } from "zod";
 
@@ -1534,6 +1535,14 @@ function addWarnings(
           rule: "headline-equals-narration",
           message:
             "The headline repeats the narration word for word; the on-screen text should be shorter than what is said",
+        });
+      }
+      const unsayable = unspeakableCharacters(s.narration);
+      if (unsayable.length > 0) {
+        warnings.push({
+          path: `scenes.${i}.narration`,
+          rule: "unspeakable-characters",
+          message: `Narration has characters a voice cannot say (${unsayable.join(" ")}); use words, and keep symbols and emoji for the on-screen text`,
         });
       }
       const words = countWords(s.narration);

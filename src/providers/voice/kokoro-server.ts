@@ -5,6 +5,8 @@ import {
   KokoroQueueFull,
 } from "@/lib/kokoro-chunks";
 import { abortable } from "@/lib/deadline-fetch";
+import { normalizeForSpeech } from "@/lib/speech-normalize";
+import { getConfig } from "@/server/app-config";
 import type { KokoroTTS } from "kokoro-js";
 
 import { pcmToWav, TARGET_SAMPLE_RATE } from "@/lib/wav";
@@ -91,6 +93,15 @@ function floatToPcm16(samples: Float32Array): Buffer {
   return buf;
 }
 
+/** The person's pronunciation dictionary; a missing or unreadable file means none. */
+async function readDictionary() {
+  try {
+    return (await getConfig()).pronunciations;
+  } catch {
+    return undefined;
+  }
+}
+
 export function createKokoroServerProvider(): VoiceProvider {
   return {
     id: "kokoro-server",
@@ -141,10 +152,15 @@ export function createKokoroServerProvider(): VoiceProvider {
           typeof opts.speed === "number" && Number.isFinite(opts.speed)
             ? Math.min(1.35, Math.max(0.7, opts.speed))
             : 1;
+        // Numbers, money, dates, links and acronyms are written the way they
+        // are said; what is on screen is not changed.
+        const spoken = normalizeForSpeech(opts.text, {
+          dictionary: await readDictionary(),
+        });
         const audio = await inference(
           () =>
             synthesizeSpeechChunks(
-              opts.text,
+              spoken,
               (text) =>
                 tts.generate(text, { voice: opts.voiceId, speed } as Parameters<
                   typeof tts.generate

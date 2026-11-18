@@ -256,6 +256,8 @@ HTTP handlers under `src/app` (`/api/**` and `/media`).
 | `GET /api/settings/keys`                             | SET01      |
 | `POST /api/settings/keys`                            | SET01      |
 | `GET /api/settings/mcp-token`                        | SET01      |
+| `GET /api/settings/pronunciations`                   | SET01      |
+| `POST /api/settings/pronunciations`                  | SET01      |
 | `GET /api/ui-mode`                                   | SET01      |
 | `POST /api/ui-mode`                                  | SET01      |
 | `POST /api/settings/mcp-token`                       | SET01      |

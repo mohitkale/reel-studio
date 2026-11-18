@@ -576,3 +576,27 @@ describe("helpers", () => {
     ).toBe("stars-2");
   });
 });
+
+describe("narration a voice cannot say", () => {
+  it("warns about emoji and symbols in narration but not on screen", () => {
+    const result = lintStoryboard({
+      version: 1,
+      title: "T",
+      scenes: [
+        {
+          type: "hook",
+          headline: "Big news 🎉",
+          narration: "We shipped it → finally 🎉 and it works for everyone.",
+        },
+        {
+          type: "cta",
+          headline: "Try it",
+          narration: "Try it today and tell us.",
+        },
+      ],
+    });
+    const rules = result.warnings.map((w) => `${w.path}:${w.rule}`);
+    expect(rules).toContain("scenes.0.narration:unspeakable-characters");
+    expect(rules).not.toContain("scenes.1.narration:unspeakable-characters");
+  });
+});

@@ -1,3 +1,4 @@
+import { normalizeForSpeech } from "@/lib/speech-normalize";
 import {
   guardKokoroTokenizer,
   synthesizeSpeechChunks,
@@ -87,7 +88,7 @@ ctx.onmessage = async (e: MessageEvent) => {
   if (msg.type !== "synth") return;
 
   try {
-    const text = (msg.text ?? "").trim();
+    const text = normalizeForSpeech((msg.text ?? "").trim());
     let wavBase64: string;
     if (!text) {
       wavBase64 = silentWavBase64(0.6);
