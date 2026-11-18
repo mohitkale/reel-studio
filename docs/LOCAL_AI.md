@@ -154,9 +154,14 @@ works and how to add a character: [Contributing presenters](CONTRIBUTING_PRESENT
 
 A narrated video can have the same presenter with `presenter: { character, placement }` in
 its storyboard (`corner` bubble or `full` host); a scene with `presenter: "off"` hides it for
-full-bleed pictures. In a storyboard video the mouth and blinks are drawn, but not the nods and
-sway, and the live editor preview does not show the presenter (the export does). A video with a
-presenter is exported in one piece rather than in reusable sections, so long ones take longer.
+full-bleed pictures. In a storyboard video the presenter is drawn as timed pieces (a still face,
+a mouth, a blink, and a short head drop on a nod), so there is no idle sway there; recording clips
+have sway. The editor's live preview does not show the presenter (the export does), and a video
+with a presenter is exported in one piece rather than in reusable sections, so long ones take
+longer.
 
-Not done yet: two presenters for a podcast audiogram, and the maintainer's review of the lip sync
-at normal and half speed.
+On a podcast, **Create audiogram** has a checkbox for two presenters, one for each of the first two
+speakers (Maya and Sam). Each one's mouth moves only during that speaker's turns, from the words
+of the turn spread across its time, and the other listens.
+
+Not done yet: the maintainer's review of the lip sync at normal and half speed.

@@ -306,6 +306,7 @@ export function useGeneratePodcastAudiogram() {
       endTurnId: string;
       orientation: "portrait" | "landscape" | "square";
       quality?: "draft" | "standard" | "high";
+      presenters?: boolean;
       onProgress?: (job: PodcastAudiogramJobDTO) => void;
     }) => {
       const { jobId } = await apiPost<{ jobId: string }>(
@@ -315,6 +316,7 @@ export function useGeneratePodcastAudiogram() {
           endTurnId: vars.endTurnId,
           orientation: vars.orientation,
           quality: vars.quality ?? "standard",
+          ...(vars.presenters ? { presenters: true } : {}),
           idempotencyKey: `audiogram:${crypto.randomUUID()}`,
         },
       );

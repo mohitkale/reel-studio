@@ -1,6 +1,6 @@
 import { getCharacter } from "@/engines/hyperframes/presenter/characters";
 import { buildPresenterClips } from "@/engines/hyperframes/presenter/build-presenter-clips";
-import type { Blink, MouthKey } from "@/video/visemes";
+import type { Accent, Blink, MouthKey } from "@/video/visemes";
 import { buildMultiSeriesScene } from "./motion/multi-series-scene";
 import { buildAdaptiveScene, ADAPTIVE_STYLES } from "./motion/adaptive-blocks";
 import { resolveSequenceContinuity } from "@/production/sequence-continuity";
@@ -1050,7 +1050,11 @@ export function buildHyperframesCompositionHtml(
      */
     draftScale?: number;
     /** What the presenter does over time, from the narration (see src/library/presenter-track.ts). */
-    presenterTrack?: { mouth: MouthKey[]; blinks: Blink[] };
+    presenterTrack?: {
+      mouth: MouthKey[];
+      blinks: Blink[];
+      accents?: Accent[];
+    };
   } = {},
 ): string {
   const motionSpec = validateMotionForReel({
@@ -1470,6 +1474,9 @@ export function buildHyperframesCompositionHtml(
           total: totalSeconds,
           mouth: opts.presenterTrack.mouth,
           blinks: opts.presenterTrack.blinks,
+          nods: (opts.presenterTrack.accents ?? [])
+            .filter((a) => a.kind === "nod")
+            .map((a) => a.at),
           off: (presenterSetting.off ?? []).flatMap((index) => {
             const beat = props.timeline[index];
             return beat

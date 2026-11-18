@@ -78,6 +78,8 @@ export const audiogramProductionJobInputSchema = z.object({
   endTurnId: z.string().min(1),
   orientation: z.enum(["portrait", "landscape", "square"]).default("portrait"),
   quality: z.enum(["draft", "standard", "high"]).default("standard"),
+  /** Two animated presenters, one per speaker, instead of the waveform. */
+  presenters: z.boolean().optional(),
 });
 export type AudiogramProductionJobInput = z.infer<
   typeof audiogramProductionJobInputSchema

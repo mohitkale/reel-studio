@@ -59,7 +59,7 @@ describe("presenter clips for a storyboard video", () => {
     );
     expect(html.match(/data-track-index="30"/g)).toHaveLength(1);
     expect(html.match(/data-track-index="32"/g)).toHaveLength(1);
-    expect(html).toContain("clip presenter-stage");
+    expect(html).toContain("clip presenter-stage-p");
   });
 
   it("drops everything while a scene turns the presenter off", () => {
@@ -72,6 +72,49 @@ describe("presenter clips for a storyboard video", () => {
     expect(html).not.toContain('data-start="1.000" data-duration="0.400"');
     // The blink at 2.0 is after the gap, so it stays.
     expect(html.match(/data-track-index="32"/g)).toHaveLength(1);
+  });
+
+  it("covers the whole video with a mouth, filling gaps with rest", () => {
+    const { html } = buildPresenterClips({
+      ...args,
+      mouth: [{ viseme: "ah", start: 1, end: 1.4 }],
+    });
+    const mouths = [
+      ...html.matchAll(
+        /data-start="([\d.]+)" data-duration="([\d.]+)" data-track-index="31"/g,
+      ),
+    ];
+    const total = mouths.reduce((sum, m) => sum + Number(m[2]), 0);
+    expect(total).toBeCloseTo(3, 2);
+    expect(mouths).toHaveLength(3);
+  });
+
+  it("drops the head for a moment on a nod, moving the face with it", () => {
+    const { html } = buildPresenterClips({ ...args, nods: [1.1] });
+    expect(html).toContain('<g id="pres-head-p1" transform="translate(0 11)">');
+    expect(html).toContain('<g transform="translate(0 11)">');
+    // The base is cut at the start and the end of the nod: three pieces.
+    expect(html.match(/data-track-index="30"/g)).toHaveLength(3);
+  });
+
+  it("puts two presenters in one frame with their own ids", () => {
+    const a = buildPresenterClips({
+      ...args,
+      uid: "a",
+      box: { left: 0, top: 800, width: 400, height: 500 },
+    });
+    const b = buildPresenterClips({
+      ...args,
+      character: CHARACTERS[1]!,
+      uid: "b",
+      box: { left: 600, top: 800, width: 400, height: 500 },
+    });
+    const ids = [...(a.html + b.html).matchAll(/ id="([^"]+)"/g)].map(
+      (m) => m[1],
+    );
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(a.css).toContain("left:0px");
+    expect(b.css).toContain("left:600px");
   });
 
   it("keeps gradient ids unique across the cut bases and shapes the corner bubble round", () => {

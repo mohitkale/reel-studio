@@ -301,12 +301,23 @@ export function characterLayer(
   c: Character,
   layer: "base" | "blink" | Viseme,
   uid = "0",
+  /** Move the head down this many rig units (a nod): the face layers follow it. */
+  dy = 0,
 ): string {
+  const shift = (inner: string) =>
+    dy ? `<g transform="translate(0 ${dy})">${inner}</g>` : inner;
   if (layer === "base") {
-    const back = backLayer(c).replace(
-      "</g></g>",
-      `${faceLayer(c, { mouths: false, eyesClosed: false })}</g></g>`,
-    );
+    const back = backLayer(c)
+      .replace(
+        '<g id="pres-head">',
+        dy
+          ? `<g id="pres-head" transform="translate(0 ${dy})">`
+          : '<g id="pres-head">',
+      )
+      .replace(
+        "</g></g>",
+        `${faceLayer(c, { mouths: false, eyesClosed: false })}</g></g>`,
+      );
     const unique = back
       .replace(/url\(#pres-(skin|shirt)\)/g, `url(#pres-$1-${uid})`)
       .replace(/ id="pres-([a-z-]+)"/g, ` id="pres-$1-${uid}"`);
@@ -329,7 +340,7 @@ export function characterLayer(
           `<path d="M${x - r + 2} ${eyeY} Q${x} ${eyeY + 12} ${x + r - 2} ${eyeY}" fill="none" stroke="${c.ink}" stroke-width="5" stroke-linecap="round"/>`,
       )
       .join("");
-    return `<svg ${FRAME}>${lid}${closed}</svg>`;
+    return `<svg ${FRAME}>${shift(lid + closed)}</svg>`;
   }
-  return `<svg ${FRAME}>${mouthShape(layer, c)}</svg>`;
+  return `<svg ${FRAME}>${shift(mouthShape(layer, c))}</svg>`;
 }

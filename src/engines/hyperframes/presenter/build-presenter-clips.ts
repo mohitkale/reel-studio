@@ -43,6 +43,26 @@ function within(start: number, end: number, spans: readonly PresenterSpan[]) {
   });
 }
 
+/** The mouth keys with rest filling every gap, from 0 to `total`, so a mouth is always showing. */
+export function coverMouth(
+  mouth: readonly MouthKey[],
+  total: number,
+): MouthKey[] {
+  const out: MouthKey[] = [];
+  let cursor = 0;
+  for (const key of [...mouth].sort((a, b) => a.start - b.start)) {
+    if (key.start > cursor + 0.01)
+      out.push({ viseme: "rest", start: cursor, end: key.start });
+    out.push(key);
+    cursor = Math.max(cursor, key.end);
+  }
+  if (cursor < total) out.push({ viseme: "rest", start: cursor, end: total });
+  return out;
+}
+
+const NOD_SECONDS = 0.28;
+const NOD_DROP = 11;
+
 export function buildPresenterClips(options: {
   character: Character;
   placement: Exclude<PresenterPlacement, "split">;
@@ -51,19 +71,33 @@ export function buildPresenterClips(options: {
   total: number;
   mouth: readonly MouthKey[];
   blinks: readonly Blink[];
+  /** Times of head nods: the head drops a little for a moment. */
+  nods?: readonly number[];
   off?: readonly PresenterSpan[];
+  /** Put the presenter here instead of where the placement says (two presenters share a frame). */
+  box?: { left: number; top: number; width: number; height: number };
+  /** Keeps ids unique when more than one presenter is in the page. */
+  uid?: string;
+  /** Round bubble for the box; the default follows the placement. */
+  circle?: boolean;
 }): { html: string; css: string } {
   const { character: c } = options;
   const layout = presenterLayout(options.placement, options.frame);
-  const box = layout.presenter;
+  const box = options.box ?? layout.presenter;
   const px = (n: number) => `${Math.round(n)}px`;
-  const circle = layout.circle;
-  const css = `.presenter-stage{position:absolute;left:${px(box.left)};top:${px(box.top)};width:${px(box.width)};height:${px(box.height)};z-index:40;pointer-events:none}${
+  const circle = options.circle ?? layout.circle;
+  const uid = options.uid ?? "p";
+  const stage = `presenter-stage-${uid}`;
+  const css = `.${stage}{position:absolute;left:${px(box.left)};top:${px(box.top)};width:${px(box.width)};height:${px(box.height)};z-index:40;pointer-events:none}${
     circle
-      ? `.presenter-stage.corner{border-radius:50%;overflow:hidden;background:${c.accent};box-shadow:0 0 0 ${Math.max(6, Math.round(box.width * 0.035))}px ${c.accent},0 12px 32px #0008}.presenter-stage.corner .presenter-svg{transform:scale(1.18) translateY(7%)}`
+      ? `.${stage}.bubble{border-radius:50%;overflow:hidden;background:${c.accent};box-shadow:0 0 0 ${Math.max(6, Math.round(box.width * 0.035))}px ${c.accent},0 12px 32px #0008}.${stage}.bubble .presenter-svg{transform:scale(1.18) translateY(7%)}`
       : ""
-  }.presenter-stage.presenter-overlay{background:none;box-shadow:none}.presenter-stage .presenter-svg{position:absolute;inset:0;display:block;width:100%;height:100%;overflow:visible}`;
+  }.${stage}.presenter-overlay{background:none;box-shadow:none}.${stage} .presenter-svg{position:absolute;inset:0;display:block;width:100%;height:100%;overflow:visible}`;
   const spans = onSpans(options.total, options.off ?? []);
+  const nods = [...(options.nods ?? [])].sort((a, b) => a - b);
+  /** Is a nod under way at these times? Returns the nod that covers [start, end], if any. */
+  const nodAt = (start: number, end: number) =>
+    nods.some((n) => start < n + NOD_SECONDS && end > n);
   const layers: string[] = [];
   const clip = (
     inner: string,
@@ -72,21 +106,60 @@ export function buildPresenterClips(options: {
     track: number,
     overlay = false,
   ) =>
-    `<div class="clip presenter-stage${overlay ? " presenter-overlay" : ""} ${options.placement}" data-layout-allow-overlap data-start="${t3(start)}" data-duration="${t3(end - start)}" data-track-index="${track}">${inner}</div>`;
-  spans.forEach((span, index) => {
-    layers.push(
-      clip(characterLayer(c, "base", String(index)), span.start, span.end, 30),
-    );
-  });
-  for (const key of options.mouth)
-    for (const part of within(key.start, key.end, spans))
+    `<div class="clip ${stage}${circle ? " bubble" : ""}${overlay ? " presenter-overlay" : ""}" data-layout-allow-overlap data-start="${t3(start)}" data-duration="${t3(end - start)}" data-track-index="${track}">${inner}</div>`;
+  let baseIndex = 0;
+  // The still face is cut at every nod so the head can drop for a moment.
+  for (const span of spans) {
+    const cuts = [span.start];
+    for (const n of nods)
+      for (const edge of [n, n + NOD_SECONDS])
+        if (edge > span.start + 0.02 && edge < span.end - 0.02) cuts.push(edge);
+    cuts.push(span.end);
+    const sorted = [...new Set(cuts)].sort((a, b) => a - b);
+    for (let i = 0; i + 1 < sorted.length; i++) {
+      const [a, b] = [sorted[i]!, sorted[i + 1]!];
+      const dy = nodAt(a, b) ? NOD_DROP : 0;
       layers.push(
-        clip(characterLayer(c, key.viseme), part.start, part.end, 31, true),
+        clip(characterLayer(c, "base", `${uid}${baseIndex++}`, dy), a, b, 30),
       );
+    }
+  }
+  /** A layer is split at nod edges so its shift matches the head. */
+  const split = (start: number, end: number) => {
+    const edges = [start, end];
+    for (const n of nods)
+      for (const edge of [n, n + NOD_SECONDS])
+        if (edge > start + 0.02 && edge < end - 0.02) edges.push(edge);
+    const sorted = [...new Set(edges)].sort((x, y) => x - y);
+    return sorted.slice(0, -1).map((a, i) => ({
+      start: a,
+      end: sorted[i + 1]!,
+      dy: nodAt(a, sorted[i + 1]!) ? NOD_DROP : 0,
+    }));
+  };
+  for (const key of coverMouth(options.mouth, options.total))
+    for (const part of within(key.start, key.end, spans))
+      for (const piece of split(part.start, part.end))
+        layers.push(
+          clip(
+            characterLayer(c, key.viseme, uid, piece.dy),
+            piece.start,
+            piece.end,
+            31,
+            true,
+          ),
+        );
   for (const blink of options.blinks)
     for (const part of within(blink.start, blink.end, spans))
-      layers.push(
-        clip(characterLayer(c, "blink"), part.start, part.end, 32, true),
-      );
+      for (const piece of split(part.start, part.end))
+        layers.push(
+          clip(
+            characterLayer(c, "blink", uid, piece.dy),
+            piece.start,
+            piece.end,
+            32,
+            true,
+          ),
+        );
   return { html: layers.join("\n"), css };
 }

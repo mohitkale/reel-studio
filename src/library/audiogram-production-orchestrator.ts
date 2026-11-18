@@ -1,3 +1,4 @@
+import { buildAudiogramPresenters } from "@/library/audiogram-presenters";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 
@@ -43,6 +44,8 @@ export async function executeAudiogramProductionJob(
     sourceWav,
     selection: input,
   });
+  if (input.presenters)
+    plan.props.presenters = await buildAudiogramPresenters(plan.props);
   await upsertProductionJobStep(job.id, "validate", {
     state: "succeeded",
     progress: 1,
