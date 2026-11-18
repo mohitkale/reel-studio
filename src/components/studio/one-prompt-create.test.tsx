@@ -160,5 +160,5 @@ it("makes a podcast episode when Podcast is chosen and opens its page", async ()
   expect(produceUrl).toBe("/api/storyboards");
   // A podcast has no theme or captions to apply.
   expect(produceBody.storyboard.theme).toBeUndefined();
-  expect(mocks.push).toHaveBeenCalledWith("/podcasts/pod7");
+  expect(mocks.push).toHaveBeenCalledWith("/podcasts/pod7?job=job7");
 });

@@ -95,7 +95,7 @@ export function OnePromptCreate() {
     // A podcast storyboard makes an episode, shown on its own page.
     router.push(
       queued.podcastId
-        ? `/podcasts/${queued.podcastId}`
+        ? `/podcasts/${queued.podcastId}?job=${encodeURIComponent(queued.jobId)}`
         : `/results/${queued.jobId}`,
     );
   }
