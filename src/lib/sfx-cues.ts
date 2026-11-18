@@ -22,7 +22,17 @@ import {
 
 export const sfxCueSchema = z.object({
   sceneId: z.string().min(1).max(160),
-  sfxId: z.enum(["whoosh", "soft-hit", "pop", "click", "riser", "swipe"]),
+  sfxId: z.enum([
+    "whoosh",
+    "soft-hit",
+    "pop",
+    "click",
+    "riser",
+    "swipe",
+    "sting-intro",
+    "sting-outro",
+  ]),
+  fromEnd: z.boolean().optional(),
   offsetSeconds: z.coerce
     .number()
     .finite()
@@ -121,6 +131,9 @@ export function resolveReelSfxCues(args: {
     const clip = getSfxClip(cue.sfxId);
     if (!beat || !clip || cue.volume === 0) return undefined;
     let offset = cue.offsetSeconds;
+    // From the end: the clip finishes with the scene (or that long before it).
+    if (cue.fromEnd)
+      offset += beat.durationFrames / args.fps - clip.durationSeconds;
     let quietShowpiece = false;
     if (cue.showpieceEvent) {
       const scene = scenes.get(cue.sceneId);

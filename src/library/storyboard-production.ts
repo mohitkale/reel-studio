@@ -25,7 +25,11 @@ import { createProjectFromPlan } from "@/library/repositories/projects";
 import { getScript, updateScript } from "@/library/repositories/scripts";
 import { submitProduction } from "@/library/production-service";
 import { autoAttachBundledMusic } from "@/library/soundtrack-service";
-import { ensureSfxCues, setSfxEnabled } from "@/library/sfx-service";
+import {
+  ensureSfxCues,
+  ensureStingCues,
+  setSfxEnabled,
+} from "@/library/sfx-service";
 import { reportStockMediaSelectionUsage } from "@/library/stock-media-usage";
 import { MUSIC_LIBRARY, suggestTrackForText } from "@/lib/music-library";
 import { getTheme } from "@/video/themes";
@@ -347,6 +351,8 @@ export async function produceFromStoryboard(
   }
   if (plan.sfx === "off") await setSfxEnabled(created.scriptId, false);
   else await ensureSfxCues(created.scriptId);
+  if (plan.stings === "auto" && plan.sfx !== "off")
+    await ensureStingCues(created.scriptId);
 
   if (options.createOnly) {
     return {

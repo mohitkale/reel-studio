@@ -231,6 +231,7 @@ const ROOT_KEYS = {
     "voice",
     "music",
     "sfx",
+    "stings",
     "variety",
     "seed",
     "series",

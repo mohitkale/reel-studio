@@ -570,6 +570,12 @@ const base = {
     .describe(
       'Sound effects (a whoosh on transitions, a tick on list items, a pop on emphasis) at a low level under the narration. "auto" (default) adds them, "off" leaves them out.',
     ),
+  stings: z
+    .enum(["auto", "off"])
+    .optional()
+    .describe(
+      'A short chime at the start and another at the end of the video. "auto" adds them; omit for none.',
+    ),
   sources: z
     .array(sourceSchema)
     .max(L.sources)

@@ -75,6 +75,14 @@
             "off"
           ]
         },
+        "stings": {
+          "description": "A short chime at the start and another at the end of the video. \"auto\" adds them; omit for none.",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ]
+        },
         "sources": {
           "description": "Pages you used for facts. Leave out if you used none. Never invent sources.",
           "maxItems": 12,
@@ -713,6 +721,14 @@
         },
         "sfx": {
           "description": "Sound effects (a whoosh on transitions, a tick on list items, a pop on emphasis) at a low level under the narration. \"auto\" (default) adds them, \"off\" leaves them out.",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ]
+        },
+        "stings": {
+          "description": "A short chime at the start and another at the end of the video. \"auto\" adds them; omit for none.",
           "type": "string",
           "enum": [
             "auto",

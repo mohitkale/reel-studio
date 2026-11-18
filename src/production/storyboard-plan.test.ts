@@ -255,3 +255,10 @@ describe("scene pace", () => {
     expect(plan.scenePaces).toEqual([1.12, 0.88, 1]);
   });
 });
+
+describe("stings", () => {
+  it("are off unless the storyboard asks for them", () => {
+    expect(plan().stings).toBe("off");
+    expect(plan({ stings: "auto" }).stings).toBe("auto");
+  });
+});
