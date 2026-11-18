@@ -455,3 +455,28 @@ describe("revise_video with derive shorts", () => {
     expect(result.shorts[0].studioUrl).toBe("http://studio/results/j1");
   });
 });
+
+describe("series", () => {
+  it("create_video passes a series name to the studio", async () => {
+    mocks.post.mockResolvedValue({ jobId: "j1", projectId: "p1" });
+    const run = register(registerCoreTools).get("create_video")!.run;
+    await run({
+      storyboard: { version: 1 },
+      wait: false,
+      series: "Daily tips",
+    });
+    expect(mocks.post).toHaveBeenCalledWith(
+      "/api/storyboards?quality=standard&series=Daily%20tips",
+      { version: 1 },
+    );
+  });
+
+  it("list_options names the saved series", async () => {
+    mocks.get.mockResolvedValue({
+      series: [{ name: "Daily tips" }, { name: "Deep dives" }],
+    });
+    const run = register(registerCoreTools).get("list_options")!.run;
+    const options = JSON.parse((await run({})).content[0]!.text);
+    expect(options.series).toEqual(["Daily tips", "Deep dives"]);
+  });
+});

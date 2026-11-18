@@ -20,7 +20,11 @@ export default function CreatePage() {
         <Link href="/scenes" className="text-foreground underline">
           Browse scene types and looks
         </Link>{" "}
-        to see what a video can contain.
+        to see what a video can contain, or{" "}
+        <Link href="/batch" className="text-foreground underline">
+          make many videos from a list of topics
+        </Link>
+        .
       </p>
       {ready && mode === "simple" ? (
         <p className="text-muted-foreground text-sm">

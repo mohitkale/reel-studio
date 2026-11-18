@@ -257,7 +257,12 @@ function progressReporter(extra: ToolExtra) {
 /** Queue a storyboard and, unless wait is false, wait for the finished video. */
 async function produce(
   storyboard: Record<string, unknown>,
-  options: { quality?: string; wait?: boolean; waitSeconds?: number },
+  options: {
+    quality?: string;
+    wait?: boolean;
+    waitSeconds?: number;
+    series?: string;
+  },
   extra: ToolExtra,
 ): Promise<ToolResult> {
   const queued = await apiPost<{
@@ -266,7 +271,10 @@ async function produce(
     reused?: boolean;
     warnings?: unknown[];
     fixes?: unknown[];
-  }>(`/api/storyboards?quality=${options.quality ?? "standard"}`, storyboard);
+  }>(
+    `/api/storyboards?quality=${options.quality ?? "standard"}${options.series ? `&series=${encode(options.series)}` : ""}`,
+    storyboard,
+  );
   if (!queued.jobId) return json(queued);
   const base = {
     projectId: queued.projectId,
@@ -402,10 +410,12 @@ export function registerCoreTools(server: McpServer): void {
         quality: z.enum(["draft", "standard", "high"]).optional(),
         wait: z.boolean().optional(),
         waitSeconds: z.number().int().min(10).max(1800).optional(),
+        /** Name of a saved series; it fills in the theme, voice, format and music the storyboard leaves out. */
+        series: z.string().min(1).max(40).optional(),
       },
     },
-    guard(({ storyboard, quality, wait, waitSeconds }, extra) =>
-      produce(storyboard, { quality, wait, waitSeconds }, extra),
+    guard(({ storyboard, quality, wait, waitSeconds, series }, extra) =>
+      produce(storyboard, { quality, wait, waitSeconds, series }, extra),
     ),
   );
 
@@ -445,16 +455,26 @@ export function registerCoreTools(server: McpServer): void {
         "Everything a storyboard can choose from, in one compact answer: themes, scene types, formats, qualities, recommended voices and music track ids.",
       inputSchema: {},
     },
-    guard(async () =>
-      json({
+    guard(async () => {
+      // Saved series are named sets of defaults; a failed lookup just means none.
+      let saved: { series?: Array<{ name: string }> } = {};
+      try {
+        saved =
+          (await apiGet<{ series?: Array<{ name: string }> }>("/api/series")) ??
+          {};
+      } catch {
+        // No studio answer for series: list the rest.
+      }
+      return json({
+        series: (saved.series ?? []).map((item) => item.name),
         themes: THEMES.map((t) => ({ id: t.id, use: t.description })),
         sceneTypes: SCENE_TYPES,
         formats: ["9:16", "16:9", "1:1"],
         qualities: ["draft", "standard", "high"],
         voices: RECOMMENDED_KOKORO_VOICES,
         music: MUSIC_LIBRARY.map((track) => track.id),
-      }),
-    ),
+      });
+    }),
   );
 
   server.registerTool(

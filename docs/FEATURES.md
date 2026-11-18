@@ -64,6 +64,7 @@ Next.js pages under `src/app`.
 | Item                     | Capability |
 | ------------------------ | ---------- |
 | `/assets`                | AST01      |
+| `/batch`                 | FAC01      |
 | `/brand-kits`            | BRD01      |
 | `/diagnostics`           | DIA01      |
 | `/editor/[scriptId]`     | SCN01      |
@@ -254,6 +255,8 @@ HTTP handlers under `src/app` (`/api/**` and `/media`).
 | `POST /api/scripts/[id]/takes`                       | VOI01      |
 | `POST /api/scripts/[id]/takes/upload`                | VOI01      |
 | `POST /api/scripts/[id]/undo`                        | SCN01      |
+| `GET /api/series`                                    | FAC01      |
+| `PUT /api/series`                                    | FAC01      |
 | `POST /api/settings/defaults`                        | SET01      |
 | `GET /api/settings/keys`                             | SET01      |
 | `POST /api/settings/keys`                            | SET01      |

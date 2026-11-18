@@ -8,6 +8,7 @@ import { isNavActive, proNavItems, simpleNavItems } from "@/lib/nav";
 const REACHED_FROM: Record<string, string> = {
   "/examples": "Create (Or start from an example)",
   "/scenes": "Create (Browse scene types and looks)",
+  "/batch": "Create (make many videos from a list of topics)",
   "/diagnostics": "Settings (Run system check)",
 };
 

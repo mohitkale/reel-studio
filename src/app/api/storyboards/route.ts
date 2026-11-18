@@ -1,3 +1,5 @@
+import { applySeries, findSeries } from "@/lib/series";
+import { getConfig } from "@/server/app-config";
 import { randomUUID } from "node:crypto";
 import { after, NextResponse } from "next/server";
 import { z } from "zod";
@@ -29,6 +31,8 @@ const optionsSchema = z
     createOnly: flag.optional(),
     /** Wait for approval before making the video (the "review before making" setting). */
     review: flag.optional(),
+    /** Name of a saved series; it fills in what the storyboard leaves out. */
+    series: z.string().trim().min(1).max(40).optional(),
     minSeconds: z.coerce.number().positive().max(3600).optional(),
     maxSeconds: z.coerce.number().positive().max(3600).optional(),
   })
@@ -66,14 +70,25 @@ export async function POST(req: Request) {
       ...fromQuery,
       ...fromBody,
     });
-    const result = await produceFromStoryboard(
-      wrapped ? record.storyboard : body,
-      {
-        ...options,
-        auth,
-        serverBaseUrl: url.origin,
-      },
-    );
+    const { series: seriesName, ...productionOptions } = options;
+    let source: unknown = wrapped ? record.storyboard : body;
+    if (seriesName) {
+      const found = findSeries((await getConfig()).series, seriesName);
+      if (!found)
+        return NextResponse.json(
+          {
+            error: `There is no series called "${seriesName}". See GET /api/series.`,
+          },
+          { status: 404 },
+        );
+      if (source && typeof source === "object" && !Array.isArray(source))
+        source = applySeries(source as Record<string, unknown>, found);
+    }
+    const result = await produceFromStoryboard(source, {
+      ...productionOptions,
+      auth,
+      serverBaseUrl: url.origin,
+    });
     if (result.dryRun) return NextResponse.json(result);
     if (result.state === "queued" && !result.reused && result.jobId) {
       after(() =>
