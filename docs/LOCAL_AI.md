@@ -109,3 +109,33 @@ runs on your computer.
 To add another image backend, implement `ImageProvider`
 (`src/providers/image/types.ts`) and add one case to
 `src/providers/image/registry.ts`.
+
+## Recordings to clips
+
+Open **Recordings** (linked under the Create box, or `/recordings`) and import a
+talk, a podcast or a screen capture (audio or video, up to 1 GB). Everything runs
+on this computer:
+
+1. **Transcribe.** FFmpeg extracts the audio and whisper.cpp writes a word-timed
+   transcript (with DTW word times when the model supports them). This needs
+   `whisper-cli` and a model (`WHISPER_CPP_BIN`, `WHISPER_CPP_MODEL`, see
+   [Getting started](GETTING_STARTED.md)); the page and `list_options` say when it
+   is missing.
+2. **Suggest clips.** Plain rules, no model: runs of whole sentences of 20 to 55
+   seconds, scored on a question or a number at the start, a question answered
+   inside the clip, how many of the recording's frequent words it carries, the
+   loudness of the audio and nearness to 35 seconds. Passages that start
+   mid-thought are marked down. The same recording always gives the same picks.
+3. **Edit by deleting text.** Click words in the transcript to cut them from the
+   media. Options trim long silences (kept to about a third of a second) and
+   remove "um" and "uh".
+4. **Make the clips.** FFmpeg cuts the media once, then HyperFrames exports a
+   9:16, 1:1 or 16:9 MP4 with a hook title card, word-synced captions in the
+   chosen look, and either the speaker's video (whole picture over a blurred
+   copy, or cropped to the middle) or a waveform for audio-only input. Each clip
+   comes with a title, description and hashtags to copy, and is saved in Assets.
+
+For an agent, `create_video` with `source: { path }` (instead of a storyboard)
+does steps 1, 2 and 4 with the three best clips and returns their links and file
+paths. Reframing is a plain centre crop or blurred fit; there is no face tracking.
+Speakers are not separated.
