@@ -1,4 +1,5 @@
 import { CORAL_HARBOR_PALETTE } from "@/lib/brand-defaults";
+import type { PresenterConfig } from "@/video/presenter-config";
 
 /**
  * Design tokens for the video templates. Concrete hex values (canvas and WebGL
@@ -22,6 +23,8 @@ export interface BrandTokens {
   lookSeed?: string;
   variety?: "low" | "medium" | "high";
   reduceMotion?: boolean;
+  /** An animated presenter over the video (see src/video/presenter-config.ts). */
+  presenter?: PresenterConfig;
 }
 
 /** Coral Harbor — Airbnb-inspired default for new content. */

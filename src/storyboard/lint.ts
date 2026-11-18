@@ -229,6 +229,7 @@ const ROOT_KEYS = {
     "format",
     "theme",
     "voice",
+    "presenter",
     "music",
     "sfx",
     "stings",
@@ -272,6 +273,7 @@ const SCENE_KEYS = [
   "icon",
   "illustration",
   "emphasis",
+  "presenter",
   "pace",
   "durationHint",
 ];

@@ -152,6 +152,11 @@ to the loudness of the audio for words it cannot read. The character blinks,
 nods on emphasis, raises its brows on a question and sways a little. How it
 works and how to add a character: [Contributing presenters](CONTRIBUTING_PRESENTERS.md).
 
-Not done yet: a `presenter` field in the storyboard for narrated videos (the
-presenter works on recording clips only), and two presenters for a podcast
-audiogram. Nobody has reviewed the lip sync at half speed.
+A narrated video can have the same presenter with `presenter: { character, placement }` in
+its storyboard (`corner` bubble or `full` host); a scene with `presenter: "off"` hides it for
+full-bleed pictures. In a storyboard video the mouth and blinks are drawn, but not the nods and
+sway, and the live editor preview does not show the presenter (the export does). A video with a
+presenter is exported in one piece rather than in reusable sections, so long ones take longer.
+
+Not done yet: two presenters for a podcast audiogram, and the maintainer's review of the lip sync
+at normal and half speed.

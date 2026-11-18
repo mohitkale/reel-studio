@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 import type { PresenterTrack } from "@/engines/hyperframes/presenter/build-presenter";
 import { parseWav } from "@/lib/wav";
+import type { ReelCaptionCue } from "@/video/types";
 import {
   accentTrack,
   blinkTrack,
@@ -55,7 +56,8 @@ async function loadPhonemizer(): Promise<Phonemize | undefined> {
  */
 export async function buildPresenterTrack(input: {
   words: readonly TimedWord[];
-  wav: Buffer;
+  /** The narration audio, for the loudness fallback. Without it that fallback is a steady half-open mouth. */
+  wav?: Buffer;
   seconds: number;
   /** Anything stable, such as the title, so the blinks are the same every render. */
   seed: string;
@@ -83,11 +85,47 @@ export async function buildPresenterTrack(input: {
         ipa.set(word, undefined);
       }
     }
-  const energy = loudness(input.wav);
+  const energy = input.wav ? loudness(input.wav) : undefined;
   const seed = createHash("sha256").update(input.seed).digest().readUInt32BE(0);
   return {
     mouth: mouthTrack(input.words, (word) => ipa.get(word), energy),
     blinks: blinkTrack(input.seconds, seed),
     accents: accentTrack(input.words),
   };
+}
+
+/**
+ * The presenter's track for a whole video, from its captions: every cue's words
+ * with their times (spread evenly across the cue when it has no word times),
+ * moved past the cover frame to where the narration really starts.
+ */
+export async function buildReelPresenterTrack(args: {
+  cues: ReadonlyArray<ReelCaptionCue>;
+  fps: number;
+  coverSeconds: number;
+  totalSeconds: number;
+  seed: string;
+}): Promise<PresenterTrack> {
+  const words: TimedWord[] = args.cues.flatMap((cue) => {
+    if (cue.words?.length)
+      return cue.words.map((w) => ({
+        text: w.text,
+        start: args.coverSeconds + w.startFrame / args.fps,
+        end: args.coverSeconds + w.endFrame / args.fps,
+      }));
+    const parts = cue.text.split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return [];
+    const start = args.coverSeconds + cue.startFrame / args.fps;
+    const span = (cue.endFrame - cue.startFrame) / args.fps / parts.length;
+    return parts.map((text, i) => ({
+      text,
+      start: start + i * span,
+      end: start + (i + 1) * span,
+    }));
+  });
+  return buildPresenterTrack({
+    words,
+    seconds: args.totalSeconds,
+    seed: args.seed,
+  });
 }

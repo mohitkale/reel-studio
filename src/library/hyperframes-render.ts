@@ -29,6 +29,7 @@ import path from "node:path";
 import { promises as fs } from "node:fs";
 import { spawn } from "node:child_process";
 
+import { buildReelPresenterTrack } from "@/library/presenter-track";
 import { coverFrames, type ReelProps, type ReelScene } from "@/video/types";
 import { extendHyperframesMusic } from "@/library/hyperframes-music-loop";
 import { type Orientation, dimsFor } from "@/lib/orientation";
@@ -351,12 +352,23 @@ export async function writeHyperframesProject(
     inputProps.musicUrl,
     durationFrames / fps,
   );
+  // A presenter needs its mouth worked out from the words before the page is built.
+  const presenterTrack = inputProps.tokens?.presenter
+    ? await buildReelPresenterTrack({
+        cues: inputProps.captions?.cues ?? [],
+        fps,
+        coverSeconds: coverFrames(fps, Boolean(inputProps.coverUrl)) / fps,
+        totalSeconds: durationFrames / fps,
+        seed: inputProps.tokens.lookSeed ?? "presenter",
+      })
+    : undefined;
   const html = buildHyperframesCompositionHtml(
     { ...inputProps, musicUrl },
     {
       producerMode: true,
       runtimeUrl: GSAP_RENDER_URL,
       draftScale,
+      presenterTrack,
     },
   );
   if (lessonBudget) assertLessonHtmlBudget(Buffer.byteLength(html));
@@ -628,12 +640,15 @@ export async function runHyperframesRender(
       ? { ...prepared.props, scenes, audioUrl, musicUrl, sfxCues, coverUrl }
       : legacyInputProps;
 
+    // The presenter lives in the main page, so a video with one is not cut into scoped sections.
     const useSections =
+      !inputProps.tokens?.presenter &&
       Boolean(
         script.chapterPlan ||
         (inputProps.sequenceDirection &&
           compositionTotalFrames(inputProps) > script.fps * 30),
-      ) && [24, 30, 60].includes(script.fps);
+      ) &&
+      [24, 30, 60].includes(script.fps);
     // Drafts capture a quarter of the pixels at half the frame rate.
     await writeHyperframesProject(
       projectDir,

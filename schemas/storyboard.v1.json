@@ -219,6 +219,37 @@
           "additionalProperties": false,
           "description": "Narration settings. Omit to narrate with the default voice."
         },
+        "presenter": {
+          "description": "An animated presenter over the video. Omit for none.",
+          "type": "object",
+          "properties": {
+            "character": {
+              "type": "string",
+              "enum": [
+                "maya",
+                "sam",
+                "ada",
+                "rex",
+                "orb",
+                "bolt"
+              ],
+              "description": "A drawn host who speaks the narration with lip sync: \"maya\", \"sam\", \"ada\", \"rex\", \"orb\" or \"bolt\"."
+            },
+            "placement": {
+              "default": "corner",
+              "description": "\"corner\" (a round bubble, default) or \"full\" (a large host over the middle of the frame).",
+              "type": "string",
+              "enum": [
+                "corner",
+                "full"
+              ]
+            }
+          },
+          "required": [
+            "character"
+          ],
+          "additionalProperties": false
+        },
         "captions": {
           "default": "auto",
           "type": "string",
@@ -617,6 +648,11 @@
                   "maxLength": 24,
                   "description": "A word or short phrase copied from the headline or body."
                 }
+              },
+              "presenter": {
+                "description": "Set to \"off\" on a scene where the video-level presenter should not appear (a full-bleed picture, for example).",
+                "type": "string",
+                "const": "off"
               },
               "pace": {
                 "description": "How fast this scene is read: \"slow\" for a key idea or a number that should land, \"fast\" for a quick aside. Omit for the normal pace.",

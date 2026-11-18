@@ -262,3 +262,28 @@ describe("stings", () => {
     expect(plan({ stings: "auto" }).stings).toBe("auto");
   });
 });
+
+describe("presenter", () => {
+  it("is carried in the look with the scenes that turn it off", () => {
+    const p = plan({ presenter: { character: "bolt", placement: "full" } }, [
+      {
+        type: "hook",
+        headline: "Hook",
+        narration: "A hook worth hearing today.",
+      },
+      {
+        type: "statement",
+        headline: "Bare",
+        narration: "A scene without the host today.",
+        presenter: "off",
+      },
+      { type: "cta", headline: "Go", narration: "Go and try it today." },
+    ]);
+    expect(p.look.presenter).toEqual({
+      character: "bolt",
+      placement: "full",
+      off: [1],
+    });
+    expect(plan().look.presenter).toBeUndefined();
+  });
+});

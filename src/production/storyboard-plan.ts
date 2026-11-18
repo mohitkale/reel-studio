@@ -12,6 +12,7 @@ import { autoTheme, getTheme } from "@/video/themes";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
 import { defaultVoiceForLanguage } from "@/providers/voice/voice-catalog";
+import type { PresenterConfig } from "@/video/presenter-config";
 import type { VoiceStyleId } from "@/lib/voice-styles";
 import type { AIScene, ScenePlan } from "@/providers/ai/types";
 import {
@@ -130,6 +131,7 @@ export interface StoryboardProductionPlan {
     seed: string;
     variety: "low" | "medium" | "high";
     reduceMotion?: boolean;
+    presenter?: PresenterConfig;
     /** True when the storyboard names a series: the look is shared and locked. */
     locked?: boolean;
   };
@@ -352,6 +354,17 @@ export function planFromStoryboard(
       ...(storyboard.series ? { locked: true } : {}),
       variety: storyboard.variety ?? "medium",
       ...(storyboard.reduceMotion ? { reduceMotion: true } : {}),
+      ...(storyboard.presenter
+        ? {
+            presenter: {
+              character: storyboard.presenter.character,
+              placement: storyboard.presenter.placement,
+              off: storyboard.scenes.flatMap((scene, index) =>
+                scene.presenter === "off" ? [index] : [],
+              ),
+            },
+          }
+        : {}),
     },
     assetIds,
     generatePrompts,

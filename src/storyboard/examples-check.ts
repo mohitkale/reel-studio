@@ -46,7 +46,8 @@ export function checkExamples(dir = EXAMPLES_DIR): {
     for (const w of result.warnings)
       problems.push(`warning ${w.rule} at ${w.path || "root"}: ${w.message}`);
     const sb = result.storyboard;
-    if (sb?.kind === "video") for (const scene of sb.scenes) sceneTypes.add(scene.type);
+    if (sb?.kind === "video")
+      for (const scene of sb.scenes) sceneTypes.add(scene.type);
     const seconds = sb ? estimateDurationSeconds(sb) : 0;
     if (sb?.kind === "video" && (seconds < 20 || seconds > 90)) {
       problems.push(

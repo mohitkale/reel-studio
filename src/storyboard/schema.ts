@@ -13,6 +13,10 @@
 import { z } from "zod";
 
 import { VOICE_STYLE_IDS } from "@/lib/voice-styles";
+import {
+  PRESENTER_CHARACTER_IDS,
+  VIDEO_PRESENTER_PLACEMENTS,
+} from "@/video/presenter-config";
 
 export const STORYBOARD_VERSION = 1 as const;
 
@@ -484,6 +488,12 @@ export const sceneSchema = z
       .describe(
         'Up to three words from the headline or body to highlight. Example: ["skill"].',
       ),
+    presenter: z
+      .literal("off")
+      .optional()
+      .describe(
+        'Set to "off" on a scene where the video-level presenter should not appear (a full-bleed picture, for example).',
+      ),
     pace: z
       .enum(["slow", "normal", "fast"])
       .optional()
@@ -606,6 +616,22 @@ export const videoStoryboardSchema = z
         'Optional visual theme: "bold-pop", "clean-minimal", "midnight-tech", "editorial-paper", "neon", "warm-documentary", "corporate-blue", "playful-pastel", "mono-brutalist" or "cinematic". Omit or use "auto" to let Reel Studio choose a theme that fits the content.',
       ),
     voice: voiceSchema.optional(),
+    presenter: z
+      .strictObject({
+        character: z
+          .enum(PRESENTER_CHARACTER_IDS)
+          .describe(
+            'A drawn host who speaks the narration with lip sync: "maya", "sam", "ada", "rex", "orb" or "bolt".',
+          ),
+        placement: z
+          .enum(VIDEO_PRESENTER_PLACEMENTS)
+          .default("corner")
+          .describe(
+            '"corner" (a round bubble, default) or "full" (a large host over the middle of the frame).',
+          ),
+      })
+      .optional()
+      .describe("An animated presenter over the video. Omit for none."),
     captions: captionsSchema.default("auto"),
     chapters: z
       .array(chapterSchema)
