@@ -4,6 +4,7 @@ import path from "node:path";
 import { buildPublishingKit } from "@/lib/publishing-kit";
 import { productionJobViewWithRevision } from "@/library/production-job-view";
 import { projectToStoryboard } from "@/library/project-storyboard";
+import { getScript } from "@/library/repositories/scripts";
 import { getProductionJob } from "@/library/repositories/production-jobs";
 import { renderThumbnailPng } from "@/library/thumbnail";
 import { ProviderError } from "@/providers/voice/types";
@@ -56,6 +57,28 @@ export async function writeExportFolder(jobId: string): Promise<ExportFolder> {
     files.push(name);
   };
 
+  // Chapter timestamps need to know when each scene starts in the finished video.
+  const script = scriptId ? await getScript(scriptId) : null;
+  const take = script?.takes[0];
+  const startOf = new Map(
+    (take?.timeline ?? []).map((beat) => [
+      beat.sceneId,
+      beat.startFrame / (take?.fps || 30),
+    ]),
+  );
+  const sceneStarts = [...(script?.scenes ?? [])]
+    .sort((a, b) => a.order - b.order)
+    .map((scene) => startOf.get(scene.id));
+  const chapters =
+    storyboard.kind === "video"
+      ? (storyboard.chapters ?? []).flatMap((chapter) => {
+          const at = sceneStarts[chapter.startScene];
+          return at === undefined
+            ? []
+            : [{ title: chapter.title, startSeconds: at }];
+        })
+      : [];
+
   const kit = buildPublishingKit({
     title: storyboard.title,
     publish: storyboard.publish,
@@ -64,6 +87,7 @@ export async function writeExportFolder(jobId: string): Promise<ExportFolder> {
         ? storyboard.scenes
         : storyboard.turns.map((t) => ({ narration: t.text })),
     sources: storyboard.sources,
+    chapters,
   });
   await write("title.txt", `${kit.title}\n`);
   await write("description.txt", `${kit.description}\n`);
