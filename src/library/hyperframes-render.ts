@@ -296,15 +296,25 @@ async function runWorker(args: {
  * is built. The same for the whole page and for every scoped section, so a
  * presenter looks identical wherever the video is cut.
  */
-async function presenterTrackFor(inputProps: ReelProps) {
+async function presenterTrackFor(inputProps: ReelProps, projectDir: string) {
   if (!inputProps.tokens?.presenter) return undefined;
   const fps = inputProps.fps || 30;
+  // The narration, once copied into the project, lets the mouth rest in pauses.
+  let wav: Buffer | undefined;
+  if (inputProps.audioUrl?.startsWith("_assets/")) {
+    try {
+      wav = await fs.readFile(path.join(projectDir, inputProps.audioUrl));
+    } catch {
+      wav = undefined;
+    }
+  }
   return buildReelPresenterTrack({
     cues: inputProps.captions?.cues ?? [],
     fps,
     coverSeconds: coverFrames(fps, Boolean(inputProps.coverUrl)) / fps,
     totalSeconds: compositionTotalFrames(inputProps) / fps,
     seed: inputProps.tokens.lookSeed ?? "presenter",
+    wav,
   });
 }
 
@@ -369,7 +379,7 @@ export async function writeHyperframesProject(
     inputProps.musicUrl,
     durationFrames / fps,
   );
-  const presenterTrack = await presenterTrackFor(inputProps);
+  const presenterTrack = await presenterTrackFor(inputProps, projectDir);
   const html = buildHyperframesCompositionHtml(
     { ...inputProps, musicUrl },
     {
@@ -666,7 +676,7 @@ export async function runHyperframesRender(
       await writeHyperframesVisualSections(
         projectDir,
         inputProps,
-        await presenterTrackFor(inputProps),
+        await presenterTrackFor(inputProps, projectDir),
       );
 
     const store = getAssetStore();
