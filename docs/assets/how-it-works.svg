@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 250" role="img" aria-labelledby="t d">
+  <title id="t">How Reel Studio works</title>
+  <desc id="d">An idea goes to a writer, which is the only AI step and produces storyboard JSON. Local, deterministic steps then make the voice, scenes, motion, captions and music, and render an MP4.</desc>
+  <rect width="900" height="250" rx="14" fill="#ffffff"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#475569"/></marker>
+  </defs>
+  <g font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="15" text-anchor="middle" fill="#0f172a">
+    <rect x="20" y="85" width="120" height="70" rx="10" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="80" y="116" font-weight="600">Your idea</text>
+    <text x="80" y="138" font-size="12" fill="#475569">or a script</text>
+
+    <rect x="190" y="75" width="150" height="90" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+    <text x="265" y="106" font-weight="600">Storyboard</text>
+    <text x="265" y="126" font-size="12" fill="#475569">JSON, written by you,</text>
+    <text x="265" y="143" font-size="12" fill="#475569">an agent or a local model</text>
+    <rect x="205" y="38" width="120" height="26" rx="13" fill="#d97706"/>
+    <text x="265" y="56" font-size="12" font-weight="600" fill="#ffffff">the only AI step</text>
+
+    <rect x="390" y="25" width="330" height="200" rx="12" fill="#ecfdf5" stroke="#059669"/>
+    <text x="555" y="50" font-weight="600">On your machine, the same result every time</text>
+    <g font-size="13">
+      <rect x="410" y="68" width="140" height="34" rx="8" fill="#ffffff" stroke="#6ee7b7"/><text x="480" y="90">Voice (Kokoro)</text>
+      <rect x="560" y="68" width="140" height="34" rx="8" fill="#ffffff" stroke="#6ee7b7"/><text x="630" y="90">Scenes and motion</text>
+      <rect x="410" y="112" width="140" height="34" rx="8" fill="#ffffff" stroke="#6ee7b7"/><text x="480" y="134">Captions</text>
+      <rect x="560" y="112" width="140" height="34" rx="8" fill="#ffffff" stroke="#6ee7b7"/><text x="630" y="134">Music and sound</text>
+      <rect x="410" y="168" width="290" height="34" rx="8" fill="#ffffff" stroke="#059669"/><text x="555" y="190" font-weight="600">Render with FFmpeg and Chrome</text>
+    </g>
+
+    <rect x="770" y="85" width="110" height="70" rx="10" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="825" y="116" font-weight="600">MP4</text>
+    <text x="825" y="138" font-size="12" fill="#475569">9:16, 16:9, 1:1</text>
+
+    <path d="M140 120H186" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+    <path d="M340 120H386" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+    <path d="M720 120H766" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+  </g>
+</svg>

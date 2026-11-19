@@ -4,77 +4,122 @@
 [![Node.js](https://img.shields.io/badge/node-24_LTS-brightgreen.svg)](https://nodejs.org/)
 [![Quality](https://github.com/mohitkale/reel-studio/actions/workflows/quality.yml/badge.svg)](https://github.com/mohitkale/reel-studio/actions/workflows/quality.yml)
 
-**A local-first video and podcast factory. Your idea in, a finished MP4 out, on your machine.**
+**Type an idea, get a finished short video or podcast. Free, on your own computer.**
 
-The only AI step is writing the storyboard. Voice, scenes, motion, captions,
-audio and rendering run locally and deterministically, with no cloud render and
-no per-video fees.
+![Three videos made by Reel Studio](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/hero.gif)
 
-[![Reel Studio: lunar phases, seasonal wheel and orbital motion](docs/assets/story-motion-0.5.0.gif)](https://github.com/mohitkale/reel-studio/releases/tag/v0.5.0)
+<sub>Made from [storyboards in this repository](examples/storyboards). [Hero as MP4](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/hero.mp4).</sub>
 
-_Native motion examples from v0.5.0's verified exports. [Watch with sound](https://github.com/mohitkale/reel-studio/releases/download/v0.5.0/reel-studio-0.5.0-story-motion.mp4)._
+## Try it
 
-- **Videos** in portrait 9:16, landscape 16:9 or square 1:1, from your script, an idea or your own media.
-- **Voiceovers and captions** with local Kokoro voices, editable captions and SRT/VTT import and export.
-- **Podcasts** with one to two hosts, WAV/MP3, transcripts, chapters and video audiograms.
-
-## Quick start
-
-Install **Node 24 LTS** (minimum 24.15), **FFmpeg/FFprobe** and Chrome or Chromium.
+Needs **Node 24 LTS** (24.15 or newer), **FFmpeg** and **Chrome**. No account, no API key.
 
 ```bash
 git clone https://github.com/mohitkale/reel-studio.git
 cd reel-studio
-npm ci
-npm run setup
-npm run dev
+npm ci && npm run setup && npm run dev
 ```
 
-Open [localhost:3000](http://localhost:3000), choose **Create production** and paste
-your content (no AI key needed), then **Export MP4**. `npm run doctor` checks your
-runtime. Details: [getting started](docs/GETTING_STARTED.md).
+Open [localhost:3000](http://localhost:3000), type what you want to make, press **Create**.
+`npm run doctor` tells you what is missing. Details: [getting started](docs/GETTING_STARTED.md).
+An `npx reel-studio` one-liner is planned; it is not published yet.
+
+## What it makes
+
+Every video below was made from a short JSON file in [`examples/storyboards`](examples/storyboards).
+Click one for the full MP4 with sound.
+
+|                                                                                                                                                                                                            |                                                                                                                                                                                                                           |                                                                                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [![Listicle](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-listicle.gif)](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-listicle.mp4)    | [![Product launch](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-product-launch.gif)](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-product-launch.mp4) | [![How-to](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-how-to.gif)](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-how-to.mp4)                         |
+| [![Explainer](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-explainer.gif)](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-explainer.mp4) | [![Data story](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-data-story.gif)](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-data-story.mp4)             | [![Developer demo](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-developer-demo.gif)](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-developer-demo.mp4) |
+
+Also: **podcasts** with one or two hosts (WAV or MP3, transcript, chapters, video audiograms),
+vertical, square or wide output, captions you can edit, and your own footage and music.
+
+## How it works
+
+![An idea becomes a storyboard (the only AI step), then voice, scenes, captions and music are made on your machine and rendered to an MP4](docs/assets/how-it-works.svg)
+
+An AI model, or you, writes one small JSON file, the **storyboard**. Everything after that is
+ordinary software: the same storyboard gives the same video, with no cloud render and no
+per-video fee. A scene in the file and the frame it becomes:
+
+<table><tr><td>
+
+```json
+{
+  "type": "hook",
+  "headline": "Stop clicking through Excel",
+  "narration": "Most people lose hours a week to the mouse. These five Excel shortcuts will win some of that time back."
+}
+```
+
+</td><td><img src="https://github.com/mohitkale/reel-studio/releases/download/demo-assets/frame-listicle.jpg" alt="The first frame of the listicle video" width="180"></td></tr></table>
+
+The full format is in [STORYBOARD.md](docs/STORYBOARD.md); there is a JSON Schema in
+[`schemas/storyboard.v1.json`](schemas/storyboard.v1.json).
 
 ## Use it from your agent
 
-Start the app, then in **Settings → AI tools / MCP** generate a token and add the
-server to Claude Code, Cursor or any MCP client:
+Add the server to Claude Code, Cursor, Codex or any MCP client and ask for a video. It finds or
+starts the studio itself and needs no token on your own computer.
 
-```bash
-REEL_STUDIO_MCP_TOKEN=<token> npm run mcp
+```json
+{
+  "mcpServers": {
+    "reel-studio": {
+      "command": "node",
+      "args": ["/path/to/reel-studio/bin/reel-studio.mjs", "mcp"]
+    }
+  }
+}
 ```
 
-Your agent can create projects, edit scenes, produce videos and podcasts, and
-download results. See [MCP](docs/MCP.md) for the config and tools.
+![An agent makes a video through the MCP server](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/mcp-terminal.gif)
 
-## Local first, cloud optional
+Eight core tools by default; the rest are opt-in. See [MCP](docs/MCP.md). No agent? Use the
+[command line](docs/CLI.md): `node bin/reel-studio.mjs render story.json -o story.mp4`.
 
-| Feature   | Local                                       | Optional cloud                     |
-| --------- | ------------------------------------------- | ---------------------------------- |
-| Planning  | Deterministic, Ollama, LM Studio, llama.cpp | Gemini, OpenAI                     |
-| Narration | Kokoro, self-hosted VoiceForge              | ElevenLabs, Cartesia               |
-| Media     | Your uploads, animated backgrounds          | Pexels, Pixabay, Unsplash previews |
-| Music     | Bundled CC0 tracks, your uploads            | Jamendo                            |
-| Rendering | HyperFrames on your machine                 | None                               |
+## Use it in the browser
 
-Projects and outputs stay on your machine; providers get data only if you use them.
+![Typing a prompt and getting a finished video](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/ui-prompt-to-video.gif)
 
-## Learn more and contribute
+<sub>The wait while the video is made is shown twelve times faster. Mobile works too: [home](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/ui-home-mobile.png), [result](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/ui-result-mobile.png).</sub>
 
-[Creating videos](docs/CREATING_VIDEOS.md) · [Podcasts](docs/PODCASTS.md) ·
-[Scenes and themes](docs/SCENES_AND_THEMES.md) · [Architecture](docs/ARCHITECTURE.md) ·
-[All docs](docs/README.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
+## Themes and scene types
 
-Bugs, guides, templates and providers are welcome: start with
-[CONTRIBUTING.md](CONTRIBUTING.md). If it helps you, star the repository and share what you make.
+Ten themes and a growing set of scene types, all checked frame by frame:
+[themes](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/sheet-themes.jpg) ·
+[scene types](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/sheet-scene-types-portrait.jpg) ·
+[how to add one](docs/CONTRIBUTING_SCENES.md).
 
-Built by **[Mohit Kale](https://github.com/mohitkale)** with
-**[Cursor Agent](https://github.com/cursoragent)**,
-**[OpenAI Codex](https://github.com/codex)** and
-**[Claude Code](https://claude.com/claude-code)**. See [contributors](CONTRIBUTORS.md).
+## Local first
 
-## Security and licensing
+|                        | Runs on your computer             | Optional cloud            |
+| ---------------------- | --------------------------------- | ------------------------- |
+| Writing the storyboard | You, Ollama, LM Studio, llama.cpp | Gemini, OpenAI            |
+| Voice                  | Kokoro                            | ElevenLabs, Cartesia      |
+| Video, captions, music | Always local                      | None                      |
+| Stock footage          | Your uploads                      | Pexels, Pixabay, Unsplash |
 
-For a trusted, single-user local account: [SECURITY.md](SECURITY.md). App code is
-**MIT**, HyperFrames **Apache-2.0**, the speech phonemizer **GPL-3.0-or-later**
-(source ships with each release). Models, fonts and providers keep their own
-terms: [licensing inventory](docs/LICENSING.md).
+Projects and outputs stay on your machine; a provider sees data only if you turn it on.
+
+## What it is and is not
+
+It makes **motion-graphics videos**: text, charts, quotes, lists and code on animated scenes,
+with a voice, captions and music. It is free, local and repeatable. It does **not** make talking
+avatars of real people or generated footage of invented scenes. If you want those, use a tool
+built for them; you can still bring your own clips.
+
+## Contribute
+
+Add a [scene type or theme](docs/CONTRIBUTING_SCENES.md), a [presenter](docs/CONTRIBUTING_PRESENTERS.md)
+or a [storyboard](examples/storyboards). Start with [CONTRIBUTING.md](CONTRIBUTING.md).
+All guides: [docs](docs/README.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md) ·
+[Security](SECURITY.md).
+
+Built by **[Mohit Kale](https://github.com/mohitkale)** with Cursor Agent, OpenAI Codex and
+[Claude Code](https://claude.com/claude-code). App code is **MIT**; HyperFrames is
+**Apache-2.0**; the speech phonemizer is **GPL-3.0-or-later**; models, fonts and providers keep
+their own terms ([licensing](docs/LICENSING.md)).
