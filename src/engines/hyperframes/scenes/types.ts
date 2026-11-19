@@ -60,6 +60,11 @@ export interface SceneDefinition<Payload = unknown> {
   fixedFill?: boolean;
   /** The scene is already a visual (cards, rail, boxes), so no icon badge is added. */
   ownVisual?: boolean;
+  /**
+   * Styles for this scene's own classes, added to the page's CSS. Size things with
+   * `px()` from `../units` (fractions of the frame height), never fixed pixels.
+   */
+  css?: string;
   /** Shape of the data a storyboard supplies; invalid data degrades to a statement. */
   schema: z.ZodType<Payload>;
   /** How the scene uses the content region in each format. */

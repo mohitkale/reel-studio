@@ -22,6 +22,24 @@ Open `http://localhost:3000`. Setup preserves existing configuration and uses
 versioned database migrations. See [setup](docs/archive/guides/SETUP.md) for Docker, runtime
 checks, and troubleshooting. Never use `db:push` to upgrade an existing database.
 
+## Your first contribution: a scene type or a theme
+
+The shortest path to a merged pull request is a new look for videos. Each takes about fifteen
+minutes and needs no voice model, network or API key:
+
+```bash
+npm run scene:new pro-tip      # a scene type: scaffold, then edit one folder
+npm run scene:preview pro-tip  # see it in 9:16, 16:9 and 1:1
+npm run theme:new ocean-blue   # a theme: scaffold, then edit the palette
+npm run themes:sheet           # one storyboard in every theme
+```
+
+The step-by-step tutorial is in [contributing scenes](docs/CONTRIBUTING_SCENES.md). Pick an
+open [good first issue](https://github.com/mohitkale/reel-studio/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22),
+comment that you are taking it, and open a pull request with the contact sheet attached. Made a
+video you are proud of? Share it in
+[Show and tell](https://github.com/mohitkale/reel-studio/discussions/categories/show-and-tell).
+
 ## Branches and PRs
 
 `main` is the only long-lived branch and is always releasable.
