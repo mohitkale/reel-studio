@@ -106,7 +106,7 @@ export function buildPresenterClips(options: {
     track: number,
     overlay = false,
   ) =>
-    `<div class="clip ${stage}${circle ? " bubble" : ""}${overlay ? " presenter-overlay" : ""}" data-layout-allow-overlap data-start="${t3(start)}" data-duration="${t3(end - start)}" data-track-index="${track}">${inner}</div>`;
+    `<div class="clip ${stage}${circle ? " bubble" : ""}${overlay ? " presenter-overlay" : ""}" data-presenter-clip data-layout-allow-overlap data-start="${t3(start)}" data-duration="${t3(end - start)}" data-track-index="${track}">${inner}</div>`;
   let baseIndex = 0;
   // The still face is cut at every nod so the head can drop for a moment.
   for (const span of spans) {

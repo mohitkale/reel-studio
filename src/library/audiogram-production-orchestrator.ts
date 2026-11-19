@@ -45,7 +45,10 @@ export async function executeAudiogramProductionJob(
     selection: input,
   });
   if (input.presenters)
-    plan.props.presenters = await buildAudiogramPresenters(plan.props);
+    plan.props.presenters = await buildAudiogramPresenters(
+      plan.props,
+      plan.wav,
+    );
   await upsertProductionJobStep(job.id, "validate", {
     state: "succeeded",
     progress: 1,

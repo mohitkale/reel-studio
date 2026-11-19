@@ -32,6 +32,9 @@ model BrandKit {
   palette     String? // JSON: color token overrides
   fonts       String? // JSON: {fontFamily?}
   logoAssetId String?
+  /// Uploaded audio assets played at the start and the end of the kit's videos.
+  introStingAssetId String?
+  outroStingAssetId String?
   handle      String?
   ctaDefaults String? // JSON
   createdAt   DateTime @default(now())

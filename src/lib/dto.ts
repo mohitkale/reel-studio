@@ -218,6 +218,8 @@ export interface BrandKitDTO {
   tokens: BrandTokens;
   handle: string | null;
   logoAssetId: string | null;
+  introStingAssetId: string | null;
+  outroStingAssetId: string | null;
   isDefault: boolean;
   createdAt: string;
   updatedAt: string;

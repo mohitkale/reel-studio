@@ -40,6 +40,10 @@ vi.mock("@/library/soundtrack-service", () => ({
 vi.mock("@/library/sfx-service", () => ({
   ensureSfxCues: mocks.ensureSfxCues,
 }));
+// No database in a unit test: the brand kit has no stings.
+vi.mock("@/library/brand-stings", () => ({
+  resolveBrandStings: async () => ({}),
+}));
 vi.mock("@/library/stock-media-usage", () => ({
   reportStockMediaSelectionUsage: mocks.reportStockMediaSelectionUsage,
 }));

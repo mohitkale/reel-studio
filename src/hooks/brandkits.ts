@@ -46,6 +46,8 @@ export function useUpdateBrandKit() {
       handle?: string | null;
       palette?: Record<string, string>;
       fonts?: { fontFamily?: string };
+      introStingAssetId?: string | null;
+      outroStingAssetId?: string | null;
     }) => {
       const res = await fetch(`/api/brandkits/${id}`, {
         method: "PATCH",

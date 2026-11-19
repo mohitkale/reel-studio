@@ -48,6 +48,57 @@ async function loadPhonemizer(): Promise<Phonemize | undefined> {
   }
 }
 
+const SOUNDING = 0.12;
+
+/**
+ * Word times from a recogniser run into the pause that follows (a word ends where
+ * the next begins) and start a little late. With the audio at hand, each word is
+ * pulled back to where the voice actually sounds: its end moves to the last
+ * sounding moment inside it, and its start moves up to 120 ms earlier while the
+ * voice is already sounding. The mouth then rests in pauses and opens on time.
+ */
+export function fitWordsToSound(
+  words: readonly TimedWord[],
+  sound: (seconds: number) => number,
+): TimedWord[] {
+  const out: TimedWord[] = [];
+  for (const word of words) {
+    // Onset: the first sounding moment from 120 ms before the word's start to its
+    // end. A recogniser may put a word's start inside the silence before it.
+    let start: number | undefined;
+    for (let t = Math.max(0, word.start - 0.12); t < word.end; t += 0.01)
+      if (sound(t) > SOUNDING) {
+        start = t;
+        break;
+      }
+    if (start === undefined) {
+      // Nothing sounds inside this word's time: keep it as a blink of a mouth.
+      const at = Math.max(
+        word.start,
+        out.length ? out[out.length - 1]!.end : 0,
+      );
+      out.push({ text: word.text, start: at, end: at + 0.06 });
+      continue;
+    }
+    let end = start + 0.06;
+    // The word ends at the first stretch of silence (100 ms) after it began: a
+    // sound after that belongs to the next word, even if the times overlap.
+    for (let t = start; t < word.end; t += 0.01) {
+      if (sound(t) > SOUNDING) end = t + 0.03;
+      else if (t - end > 0.1) break;
+    }
+    // Never overlap the word before.
+    const floor = out.length ? out[out.length - 1]!.end : 0;
+    start = Math.max(start, floor);
+    out.push({
+      text: word.text,
+      start,
+      end: Math.max(start + 0.06, Math.min(end, word.end + 0.05)),
+    });
+  }
+  return out;
+}
+
 /**
  * Everything the presenter does over time for some narration: mouth shapes from
  * the words' phonemes and times, blinks, nods and eyebrow raises. English words
@@ -58,6 +109,8 @@ export async function buildPresenterTrack(input: {
   words: readonly TimedWord[];
   /** The narration audio, for the loudness fallback. Without it that fallback is a steady half-open mouth. */
   wav?: Buffer;
+  /** Seconds the audio starts after time zero (a cover frame before the narration). */
+  audioOffset?: number;
   seconds: number;
   /** Anything stable, such as the title, so the blinks are the same every render. */
   seed: string;
@@ -85,10 +138,21 @@ export async function buildPresenterTrack(input: {
         ipa.set(word, undefined);
       }
     }
-  const energy = input.wav ? loudness(input.wav) : undefined;
+  let voice: ((seconds: number) => number) | undefined;
+  try {
+    voice = input.wav ? loudness(input.wav) : undefined;
+  } catch {
+    voice = undefined; // not a WAV this code can read: the mouth follows the words only
+  }
+  const offset = input.audioOffset ?? 0;
+  const energy = voice ? (t: number) => voice(t - offset) : undefined;
   const seed = createHash("sha256").update(input.seed).digest().readUInt32BE(0);
   return {
-    mouth: mouthTrack(input.words, (word) => ipa.get(word), energy),
+    mouth: mouthTrack(
+      energy ? fitWordsToSound(input.words, energy) : input.words,
+      (word) => ipa.get(word),
+      energy,
+    ),
     blinks: blinkTrack(input.seconds, seed),
     accents: accentTrack(input.words),
   };
@@ -105,6 +169,8 @@ export async function buildReelPresenterTrack(args: {
   coverSeconds: number;
   totalSeconds: number;
   seed: string;
+  /** The narration audio, to rest the mouth in pauses. */
+  wav?: Buffer;
 }): Promise<PresenterTrack> {
   const words: TimedWord[] = args.cues.flatMap((cue) => {
     if (cue.words?.length)
@@ -125,6 +191,8 @@ export async function buildReelPresenterTrack(args: {
   });
   return buildPresenterTrack({
     words,
+    wav: args.wav,
+    audioOffset: args.coverSeconds,
     seconds: args.totalSeconds,
     seed: args.seed,
   });

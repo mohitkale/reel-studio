@@ -15,6 +15,13 @@ import type { EnergyId, StyleId } from "@/video/visual-style";
 import type { ProductionPresetId } from "@/production/presets";
 import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-composition";
 import { cn } from "@/lib/utils";
+import type { Accent, Blink, MouthKey } from "@/video/visemes";
+
+type PresenterTrackProp = {
+  mouth: MouthKey[];
+  blinks: Blink[];
+  accents?: Accent[];
+};
 import { Button } from "@/components/ui/button";
 
 export interface HyperFramesPlayerHandle {
@@ -51,6 +58,8 @@ interface HyperFramesPlayerProps {
   styleId?: StyleId;
   energy?: EnergyId;
   preset?: { id: ProductionPresetId; version: string };
+  /** The presenter's mouth, blinks and nods, when the video has a presenter. */
+  presenterTrack?: PresenterTrackProp;
 }
 
 function formatClock(seconds: number): string {
@@ -123,6 +132,7 @@ export const HyperFramesPlayer = React.forwardRef<
     styleId,
     energy,
     preset,
+    presenterTrack,
   },
   ref,
 ) {
@@ -183,7 +193,7 @@ export const HyperFramesPlayer = React.forwardRef<
         preset,
         previewQuality,
       },
-      {},
+      { presenterTrack },
     );
   }, [
     scenes,
@@ -206,6 +216,7 @@ export const HyperFramesPlayer = React.forwardRef<
     energy,
     preset,
     previewQuality,
+    presenterTrack,
   ]);
 
   const seekIframe = React.useCallback((seconds: number) => {

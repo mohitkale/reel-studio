@@ -690,7 +690,14 @@ function buildSeekScript(
     });
   }
 
+  // The presenter is made of timed pieces; the export shows them by their times,
+  // so the preview does the same.
+  const presenterPieces = Array.from(document.querySelectorAll('[data-presenter-clip]'));
   function activate(time) {
+    for (const piece of presenterPieces) {
+      const from = Number(piece.dataset.start || 0);
+      piece.style.visibility = time >= from && time < from + Number(piece.dataset.duration || 0) ? 'visible' : 'hidden';
+    }
     for (const el of scenes) {
       const start = Number(el.dataset.start || 0);
       const duration = Number(el.dataset.duration || 0);
@@ -1507,7 +1514,7 @@ export function buildHyperframesCompositionHtml(
   <title>Reel Studio · HyperFrames</title>
   <style>${STYLES}${previewStyles}${HYPERFRAMES_PRESET_STYLES}${TYPE_MOTION_STYLES}
 ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLES}${REGISTERED_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_MOTION_STYLES}${STORY_MOTION_STYLES}${MOTION_LIBRARY_STYLES}
-    ${presenter?.css ?? ""}
+    ${presenter?.css ?? ""}${presenter && !opts.producerMode ? "[data-presenter-clip]{visibility:hidden}" : ""}
     .rs-subtitle{position:absolute;z-index:50;inset:0;box-sizing:border-box;display:flex;flex-direction:column;justify-content:${captionResolved.outer.justifyContent};align-items:${captionResolved.outer.alignItems};padding:${captionResolved.outer.paddingTop}px ${captionResolved.outer.paddingRight}px ${captionResolved.outer.paddingBottom}px ${captionResolved.outer.paddingLeft}px;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
     .rs-subtitle>span{display:block;max-width:${captionInner.maxWidth}px;padding:${captionInner.padding};border-radius:${captionInner.borderRadius}px;background:${captionInner.background};color:${captionInner.color};font-family:${cssFontStack(captionInner.fontFamily)};font-weight:${captionInner.fontWeight};line-height:${captionInner.lineHeight};letter-spacing:${captionInner.letterSpacing};text-align:${captionInner.textAlign};text-shadow:${captionInner.textShadow};${captionInner.WebkitTextStroke ? `-webkit-text-stroke:${captionInner.WebkitTextStroke};` : ""}overflow-wrap:anywhere}
     .rs-caption-emph>span:first-child{color:var(--brand-accent-text,var(--accent))}.rs-caption-line{display:block}.rs-caption-word{display:inline-block;position:relative}.rs-caption-active{position:absolute;inset:0;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}

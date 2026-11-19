@@ -16,6 +16,8 @@ const HOSTS = ["maya", "sam"] as const;
  */
 export async function buildAudiogramPresenters(
   props: PodcastAudiogramProps,
+  /** The clip's audio, so each mouth rests while its speaker is not sounding. */
+  wav?: Buffer,
 ): Promise<AudiogramPresenter[]> {
   const seconds = props.durationInFrames / props.fps;
   const speakers = [...new Set(props.beats.map((beat) => beat.speaker))].slice(
@@ -42,6 +44,7 @@ export async function buildAudiogramPresenters(
       });
     const track = await buildPresenterTrack({
       words,
+      wav,
       seconds,
       seed: `${props.title}:${speaker}`,
     });

@@ -34,6 +34,8 @@ export const productionBatchRowSchema = z.discriminatedUnion("kind", [
     orientations: variantOrientationsSchema,
     quality: z.enum(["draft", "standard", "high"]).default("standard"),
     quickProduce: quickProduceOptionsSchema.optional(),
+    /** "off" makes the video without captions. */
+    captions: z.enum(["auto", "off"]).optional(),
   }),
   z.object({
     ...rowFields,
@@ -106,6 +108,7 @@ export interface ExpandedProductionBatchItem {
         orientation: (typeof ORIENTATIONS)[number];
         quality: "draft" | "standard" | "high";
         quickProduce?: z.infer<typeof quickProduceOptionsSchema>;
+        captions?: "auto" | "off";
       }
     | {
         kind: "audio";

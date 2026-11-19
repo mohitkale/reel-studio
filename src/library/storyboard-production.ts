@@ -22,6 +22,7 @@ import {
 import { getAssets } from "@/library/repositories/assets";
 import { getProductionJobByIdempotencyKey } from "@/library/repositories/production-jobs";
 import { chapterPlanFromStarts } from "@/production/chapters";
+import { resolveBrandStings } from "@/library/brand-stings";
 import { getBrandKit } from "@/library/repositories/brandkits";
 import { createProjectFromPlan } from "@/library/repositories/projects";
 import { getScript, updateScript } from "@/library/repositories/scripts";
@@ -388,8 +389,13 @@ export async function produceFromStoryboard(
   }
   if (plan.sfx === "off") await setSfxEnabled(created.scriptId, false);
   else await ensureSfxCues(created.scriptId);
-  if (plan.stings === "auto" && plan.sfx !== "off")
-    await ensureStingCues(created.scriptId);
+  // Stings: the storyboard (or its series) asks for them, or the brand kit names its own.
+  if (plan.sfx !== "off" && plan.stings !== "off") {
+    const brand = await resolveBrandStings(created.scriptId);
+    const kitHasStings = Boolean(brand.intro || brand.outro);
+    if (plan.stings === "auto" || kitHasStings)
+      await ensureStingCues(created.scriptId, brand);
+  }
 
   if (options.createOnly) {
     return {
@@ -431,6 +437,7 @@ export async function produceFromStoryboard(
           ...(plan.scenePaces.some((p) => p !== 1)
             ? { paces: plan.scenePaces }
             : {}),
+          ...(plan.beatSync ? { beatSync: true } : {}),
         },
       },
       captions: plan.captions,

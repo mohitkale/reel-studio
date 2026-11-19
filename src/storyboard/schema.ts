@@ -588,6 +588,12 @@ const base = {
     .describe(
       'A short chime at the start and another at the end of the video. "auto" adds them; omit for none.',
     ),
+  beatSync: z
+    .enum(["auto", "off"])
+    .optional()
+    .describe(
+      'Start each scene on a beat of the music. "auto" changes only the silence between scenes (by a fraction of a second); narration is never stretched. Omit for the usual even gaps.',
+    ),
   sources: z
     .array(sourceSchema)
     .max(L.sources)

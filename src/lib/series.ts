@@ -29,6 +29,8 @@ export const seriesSchema = z
     brandKitId: z.string().trim().min(1).max(80).optional(),
     /** A short chime at the start and the end of every video in the series. */
     stings: z.boolean().optional(),
+    /** Start each scene on a beat of the music (only the silence between scenes changes). */
+    beatSync: z.boolean().optional(),
     /** How the voice reads every video: calm, energetic, storyteller or news. */
     voiceStyle: z.enum(VOICE_STYLE_IDS).optional(),
     /** The language every video is written in (en-US, es, fr, ...). */
@@ -65,6 +67,7 @@ export function applySeries(
   }
   if (series.music && open(out.music)) out.music = series.music;
   if (series.stings && out.stings === undefined) out.stings = "auto";
+  if (series.beatSync && out.beatSync === undefined) out.beatSync = "auto";
   if (series.language && out.language === undefined)
     out.language = series.language;
   const voice = (out.voice ?? {}) as Record<string, unknown>;

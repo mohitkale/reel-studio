@@ -47,7 +47,7 @@ The twelve shapes are `rest`, `ah`, `eh`, `ee`, `oh`, `oo`, `mbp`, `fv`, `l`,
 3. Run `npx vitest run src/engines/hyperframes/presenter`. It checks that every
    named part and all twelve mouth shapes exist and are different from each
    other.
-4. Look at it: render a contact sheet of the twelve mouths and one short clip
+4. Run `npm run presenter:review` for the lip sync numbers, then look at it: render a contact sheet of the twelve mouths and one short clip
    (**Recordings**, choose the presenter, make a draft clip) and attach frames to
    the pull request.
 

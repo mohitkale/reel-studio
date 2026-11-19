@@ -106,6 +106,7 @@ HTTP handlers under `src/app` (`/api/**` and `/media`).
 | `DELETE /api/image-provider`                         | IMG01      |
 | `POST /api/image-provider/test`                      | IMG01      |
 | `POST /api/production-jobs/[id]/export-folder`       | PRD01      |
+| `GET /api/scripts/[id]/presenter-track`              | SCN01      |
 | `GET /api/recordings`                                | REC01      |
 | `POST /api/recordings`                               | REC01      |
 | `GET /api/recordings/[id]`                           | REC01      |

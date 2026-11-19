@@ -37,6 +37,8 @@ export const quickProduceOptionsSchema = z
         style: z.enum(VOICE_STYLE_IDS).optional(),
         /** A speed multiplier per scene, in order (from the storyboard's `pace`). */
         paces: z.array(z.number().min(0.7).max(1.3)).max(200).optional(),
+        /** Start each scene on a beat of the music: only the gaps between scenes change. */
+        beatSync: z.boolean().optional(),
       })
       .default({
         enabled: true,
