@@ -108,6 +108,28 @@ The run fails if a GIF cannot be brought under its cap. The README links the fil
 the `demo-assets` release; `npm run demo:assets -- --upload demo-assets` attaches a fresh set
 (a public action: only a maintainer runs it).
 
+## The website
+
+`site/` holds the stylesheet, the copy-button script and the Open Graph image; `npm run site:build`
+writes the whole website to `dist/site/` (git-ignored): the landing page, the gallery of the
+twelve example storyboards (each with its video and its JSON), the MCP install page, and every
+guide in `docs/` rendered as HTML by `src/site/markdown.ts`. The build fails on a broken
+internal link or heading. There is no analytics and no cookie; videos and images come from
+`--media-base` (default: the `demo-assets` release).
+
+To look at it locally, with the media from your own `npm run demo:assets`:
+
+```bash
+npm run site:build -- --media-base http://localhost:8801 --site-url http://localhost:8802/
+python3 -m http.server 8801 --directory dist/demo &
+python3 -m http.server 8802 --directory dist/site
+```
+
+`.github/workflows/pages.yml` builds the site on every pull request that touches it and
+publishes it from `main`. A new guide goes in the `DOCS` list in `scripts/build-site.ts`;
+`npm run site:og` redraws `site/assets/og.png`. Pages must be set to "GitHub Actions" as its
+source in the repository settings (a maintainer step).
+
 ## Pull request checklist
 
 - [ ] Works in portrait, landscape and square with supplied copy and media

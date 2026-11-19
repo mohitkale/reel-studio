@@ -58,6 +58,15 @@ const GALLERY = [
   { name: "developer-demo", title: "A developer demo" },
 ] as const;
 
+/** The other golden videos the website gallery shows (the README shows the six above). */
+const SITE_EXTRA = [
+  "comparison",
+  "motivation",
+  "myth-vs-fact",
+  "news-recap",
+  "story",
+] as const;
+
 interface Entry {
   file: string;
   kind: string;
@@ -175,7 +184,9 @@ function duration(file: string): number {
 }
 
 async function ensureShowcase(): Promise<void> {
-  const needed = [...new Set([...HERO, ...GALLERY.map((g) => g.name)])];
+  const needed = [
+    ...new Set([...HERO, ...GALLERY.map((g) => g.name), ...SITE_EXTRA]),
+  ];
   const missing = has("--rerender")
     ? needed
     : needed.filter((name) => !existsSync(path.join(SHOWCASE, `${name}.mp4`)));
@@ -295,6 +306,51 @@ function galleryGifs(): void {
       `full video, twin of gallery-${name}.gif (${used.fps} fps GIF)`,
     );
   }
+}
+
+/** Posters for every gallery video, the other videos' MP4s, and the hero poster (website, roadmap L3). */
+function siteMedia(): void {
+  const poster = (input: string, output: string, at: number, maxSide: number) =>
+    ffmpeg(
+      "-ss",
+      at.toFixed(2),
+      "-i",
+      input,
+      "-frames:v",
+      "1",
+      "-vf",
+      `scale='if(gt(iw,ih),${maxSide},-2)':'if(gt(iw,ih),-2,${maxSide})':flags=lanczos`,
+      "-q:v",
+      "5",
+      output,
+    );
+  const names = [...GALLERY.map((g) => g.name), ...SITE_EXTRA] as string[];
+  for (const name of names) {
+    const input = path.join(SHOWCASE, `${name}.mp4`);
+    const output = path.join(OUT, `gallery-${name}.jpg`);
+    poster(input, output, Math.min(3, duration(input) / 4), 640);
+    record(output, "gallery-poster", `examples/storyboards/${name}.json`);
+  }
+  for (const name of SITE_EXTRA) {
+    const mp4 = path.join(OUT, `gallery-${name}.mp4`);
+    twin(path.join(SHOWCASE, `${name}.mp4`), mp4);
+    record(
+      mp4,
+      "gallery-mp4",
+      `examples/storyboards/${name}.json`,
+      undefined,
+      "full video, for the website gallery",
+    );
+  }
+  const hero = path.join(OUT, "hero-poster.jpg");
+  poster(path.join(OUT, "hero.mp4"), hero, 2, 1080);
+  record(
+    hero,
+    "gallery-poster",
+    HERO.join(" + "),
+    undefined,
+    "hero video poster",
+  );
 }
 
 /** One finished frame, shown next to the storyboard lines that made it. */
@@ -467,6 +523,27 @@ function ui(): void {
     "the real MCP server over stdio (demo-capture-ui.ts)",
     GALLERY_CAP,
   );
+  // The example podcast episode, as an MP3 for the website gallery.
+  const podcast = path.join(OUT, "gallery-podcast.mp3");
+  ffmpeg(
+    "-i",
+    path.join(dir, "episode.wav"),
+    "-vn",
+    "-c:a",
+    "libmp3lame",
+    "-b:a",
+    "96k",
+    "-ac",
+    "1",
+    podcast,
+  );
+  record(
+    podcast,
+    "podcast-audio",
+    "examples/storyboards/podcast.json",
+    undefined,
+    "made by the studio from the example podcast storyboard",
+  );
   copyFileSync(
     path.join(dir, "mcp-transcript.json"),
     path.join(OUT, "mcp-transcript.json"),
@@ -528,6 +605,7 @@ async function main(): Promise<void> {
     heroMontage();
     console.log("Gallery");
     galleryGifs();
+    siteMedia();
     frame();
   }
   if (stage("sheets")) {
@@ -536,7 +614,7 @@ async function main(): Promise<void> {
     sheets();
   }
   if (stage("ui")) {
-    redo(/^(screenshot|ui-|terminal)/);
+    redo(/^(screenshot|ui-|terminal|podcast)/);
     console.log("Screenshots, recording, MCP terminal");
     ui();
   }

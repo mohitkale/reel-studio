@@ -40,6 +40,8 @@
     "seed:demo-brandkit": "tsx scripts/seed-demo-brandkit.ts",
     "seed:demo-project": "tsx scripts/seed-demo-project.ts",
     "seed:demo-podcast": "tsx scripts/seed-demo-podcast.ts",
+    "site:og": "tsx scripts/build-og-image.ts",
+    "site:build": "tsx scripts/build-site.ts",
     "demo:assets": "tsx scripts/demo-assets.ts",
     "export:demo-assets": "tsx scripts/export-demo-assets.ts",
     "gen:music": "node scripts/generate-music.mjs",

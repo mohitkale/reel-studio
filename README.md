@@ -6,6 +6,8 @@
 
 **Type an idea, get a finished short video or podcast. Free, on your own computer.**
 
+**[Website, gallery and docs](https://mohitkale.github.io/reel-studio/)**
+
 ![Three videos made by Reel Studio](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/hero.gif)
 
 <sub>Made from [storyboards in this repository](examples/storyboards). [Hero as MP4](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/hero.mp4).</sub>
