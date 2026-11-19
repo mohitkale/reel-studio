@@ -11,6 +11,13 @@ import type { BrandTokens } from "@/video/tokens";
 import type { EnergyId, StyleId } from "@/video/visual-style";
 import type { VideoEngineId } from "@/engines/types";
 import type { ProductionPresetId } from "@/production/presets";
+import type { Accent, Blink, MouthKey } from "@/video/visemes";
+
+type PresenterTrackProp = {
+  mouth: MouthKey[];
+  blinks: Blink[];
+  accents?: Accent[];
+};
 
 export type EnginePlayerHandle = HyperFramesPlayerHandle;
 
@@ -42,6 +49,8 @@ interface EnginePlayerProps {
   styleId?: StyleId;
   energy?: EnergyId;
   preset?: { id: ProductionPresetId; version: string };
+  /** The presenter's mouth, blinks and nods, when the video has a presenter. */
+  presenterTrack?: PresenterTrackProp;
   catalogRevision?: string;
 }
 

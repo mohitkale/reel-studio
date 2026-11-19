@@ -156,9 +156,8 @@ A narrated video can have the same presenter with `presenter: { character, place
 its storyboard (`corner` bubble or `full` host); a scene with `presenter: "off"` hides it for
 full-bleed pictures. In a storyboard video the presenter is drawn as timed pieces (a still face,
 a mouth, a blink, and a short head drop on a nod), so there is no idle sway there; recording clips
-have sway. The editor's live preview does not show the presenter (the export does), and a video
-with a presenter is exported in one piece rather than in reusable sections, so long ones take
-longer.
+have sway. The editor's Full reel preview shows the presenter too, moved by the same track. A long
+video with chapters is still exported in reusable sections, presenter included.
 
 On a podcast, **Create audiogram** has a checkbox for two presenters, one for each of the first two
 speakers (Maya and Sam). Each one's mouth moves only during that speaker's turns, from the words

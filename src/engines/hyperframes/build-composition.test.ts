@@ -929,3 +929,61 @@ it.each(ORIENTATIONS)(
     expect(html).not.toContain("LIVE PRODUCT");
   },
 );
+
+describe("a presenter in the composition", () => {
+  const props = {
+    scenes: [
+      {
+        id: "a",
+        templateId: "hf-statement",
+        role: "statement",
+        text: "Hello there",
+        emphasis: [],
+      },
+      {
+        id: "b",
+        templateId: "hf-statement",
+        role: "statement",
+        text: "Second idea",
+        emphasis: [],
+      },
+    ],
+    timeline: [
+      { sceneId: "a", startFrame: 0, durationFrames: 90 },
+      { sceneId: "b", startFrame: 90, durationFrames: 90 },
+    ],
+    ...dimsFor("portrait"),
+    fps: 30,
+    tokens: {
+      ...defaultBrandTokens,
+      presenter: { character: "maya", placement: "corner", off: [1] },
+    },
+  } as unknown as Parameters<typeof buildHyperframesCompositionHtml>[0];
+  const track = {
+    mouth: [{ viseme: "ah" as const, start: 0.5, end: 0.9 }],
+    blinks: [{ start: 1, end: 1.14 }],
+    accents: [],
+  };
+
+  it("draws the presenter as timed pieces, hidden over the scene that turns it off", () => {
+    const html = buildHyperframesCompositionHtml(props, {
+      producerMode: true,
+      presenterTrack: track,
+    });
+    expect(html).toContain("data-presenter-clip");
+    // Scene 2 (3 s to 6 s) has the presenter off: no piece starts there.
+    expect(html).not.toMatch(/data-presenter-clip[^>]*data-start="3\.000"/);
+    expect(html).not.toContain("[data-presenter-clip]{visibility:hidden}");
+  });
+
+  it("has no presenter without a track, and the preview shows the pieces by time", () => {
+    expect(
+      buildHyperframesCompositionHtml(props, { producerMode: true }),
+    ).not.toContain("data-presenter-clip");
+    const preview = buildHyperframesCompositionHtml(props, {
+      presenterTrack: track,
+    });
+    expect(preview).toContain("[data-presenter-clip]{visibility:hidden}");
+    expect(preview).toContain("querySelectorAll('[data-presenter-clip]')");
+  });
+});

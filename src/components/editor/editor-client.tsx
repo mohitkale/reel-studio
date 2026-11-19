@@ -1,4 +1,5 @@
 "use client";
+import { usePresenterTrack } from "@/hooks/presenter";
 import { ProductProofPanel } from "./product-proof-panel";
 import { EditorialReviewPanel } from "./editorial-review-panel";
 import { EditorialScriptPanel } from "./editorial-script-panel";
@@ -114,6 +115,12 @@ export function EditorClient({
 }) {
   const router = useRouter();
   const { data: script, isLoading, isError, error } = useScript(scriptId);
+  // A video with a presenter shows it in the live preview, moved by the narration.
+  const presenter = usePresenterTrack(
+    scriptId,
+    Boolean(script?.brandTokens.presenter),
+    `${script?.takes[0]?.id ?? ""}:${script?.captionTracks?.[0]?.updatedAt ?? ""}`,
+  );
 
   const addScene = useAddScene(scriptId);
   const updateScene = useUpdateScene(scriptId);
@@ -1136,6 +1143,7 @@ export function EditorClient({
                     fps={fps}
                     width={script.width}
                     height={script.height}
+                    presenterTrack={presenter.data}
                     audioUrl={audioUrl}
                     musicUrl={script.musicUrl ?? undefined}
                     musicVolume={script.musicVolume}
