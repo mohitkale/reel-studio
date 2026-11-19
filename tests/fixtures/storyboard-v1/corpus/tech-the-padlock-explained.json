@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "The padlock in your browser, explained",
+  "format": "16:9",
+  "theme": "midnight-tech",
+  "voice": {
+    "voiceId": "am_michael",
+    "style": "news"
+  },
+  "presenter": {
+    "character": "orb",
+    "placement": "corner"
+  },
+  "sources": [
+    {
+      "title": "What is HTTPS? (Cloudflare Learning Center)",
+      "url": "https://www.cloudflare.com/learning/ssl/what-is-https/",
+      "accessed": "2026-11-19"
+    },
+    {
+      "title": "Certificate authority (MDN Web Docs)",
+      "url": "https://developer.mozilla.org/en-US/docs/Glossary/Certificate_authority",
+      "accessed": "2026-11-19"
+    },
+    {
+      "title": "An update on the lock icon (Chromium Blog)",
+      "url": "https://blog.chromium.org/2023/05/an-update-on-lock-icon.html",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "The padlock in your browser, explained",
+    "description": "What HTTPS and the padlock actually tell you, and what they do not.",
+    "hashtags": [
+      "#https",
+      "#security",
+      "#web"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "The padlock, explained",
+      "narration": "That small padlock in your address bar does one specific job. Here is what it means, and what it does not."
+    },
+    {
+      "type": "statement",
+      "headline": "HTTPS encrypts the trip",
+      "narration": "HTTPS is the web's normal protocol with encryption added. It stops anyone between you and the site from reading or changing what you send."
+    },
+    {
+      "type": "steps",
+      "headline": "What happens when you connect",
+      "narration": "Your browser asks the site for a secure connection. The site presents a certificate, the two agree on secret keys, and from then on everything is encrypted.",
+      "items": [
+        "Your browser asks for a secure connection",
+        "The site shows its certificate",
+        "Both sides agree on keys",
+        "Data flows encrypted"
+      ]
+    },
+    {
+      "type": "definition",
+      "headline": "Who vouches for a site",
+      "narration": "A certificate authority is an organisation that signs digital certificates. Your browser trusts a list of them, so a signed certificate lets it verify a site's identity.",
+      "definition": {
+        "term": "Certificate authority",
+        "meaning": "An organisation that signs digital certificates, so browsers can verify a site's identity."
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "The padlock is not a verdict",
+      "narration": "The padlock means the connection is encrypted. Chrome's own research found that many people read it as a sign a site is trustworthy, and it is not."
+    },
+    {
+      "type": "cta",
+      "headline": "Read the address first",
+      "narration": "Check the address in the bar, not just the padlock, before you type a password."
+    }
+  ]
+}

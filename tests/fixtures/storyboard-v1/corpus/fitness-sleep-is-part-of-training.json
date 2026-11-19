@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Sleep is part of training",
+  "format": "9:16",
+  "theme": "warm-documentary",
+  "voice": {
+    "voiceId": "af_heart",
+    "style": "calm"
+  },
+  "sources": [
+    {
+      "title": "About Sleep (CDC)",
+      "url": "https://www.cdc.gov/sleep/about/index.html",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "Sleep is part of training",
+    "description": "How many hours adults need, according to the CDC, and four habits that help.",
+    "hashtags": [
+      "#sleep",
+      "#recovery",
+      "#fitness"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Training happens in bed",
+      "narration": "You can do everything right in the gym and still undercut it at night."
+    },
+    {
+      "type": "statement",
+      "headline": "Recovery is part of the plan",
+      "narration": "You challenge your muscles in the gym, but you recover between sessions. Sleep is a big part of that recovery."
+    },
+    {
+      "type": "stat",
+      "headline": "How much sleep",
+      "narration": "The Centers for Disease Control and Prevention says adults need seven or more hours of sleep a night.",
+      "stat": {
+        "value": "7+ hours",
+        "label": "a night for adults"
+      }
+    },
+    {
+      "type": "list",
+      "headline": "What helps",
+      "narration": "The CDC suggests a steady schedule, a quiet, cool bedroom, no electronic devices for thirty minutes before bed, and no caffeine late in the day.",
+      "items": [
+        "Same bedtime and wake time",
+        "A quiet, relaxing, cool bedroom",
+        "Devices off 30 minutes before bed",
+        "No caffeine late in the day"
+      ]
+    },
+    {
+      "type": "cta",
+      "headline": "Protect tonight",
+      "narration": "Set a bedtime tonight and keep it for a week. If you struggle to sleep, talk to a doctor."
+    }
+  ]
+}

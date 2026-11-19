@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Why do we have seasons?",
+  "format": "16:9",
+  "theme": "playful-pastel",
+  "voice": {
+    "voiceId": "af_bella",
+    "style": "calm"
+  },
+  "sources": [
+    {
+      "title": "What Causes the Seasons? (NASA Space Place)",
+      "url": "https://spaceplace.nasa.gov/seasons/en/",
+      "accessed": "2026-11-19"
+    },
+    {
+      "title": "Earth Fact Sheet (NASA)",
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "Why do we have seasons? It's not distance",
+    "description": "Seasons come from Earth's tilt, not from its distance to the Sun.",
+    "hashtags": [
+      "#science",
+      "#seasons",
+      "#space"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Why do we have seasons?",
+      "narration": "Is summer when Earth is closest to the Sun? Many people think so. It is not."
+    },
+    {
+      "type": "statement",
+      "headline": "It is not distance",
+      "narration": "Earth is actually closest to the Sun in early January, in the middle of northern winter."
+    },
+    {
+      "type": "stat",
+      "headline": "The real reason",
+      "narration": "The real reason is tilt. Earth's axis is tilted by about twenty-three point four degrees to its orbit.",
+      "stat": {
+        "value": "23.4°",
+        "label": "Earth's axial tilt"
+      }
+    },
+    {
+      "type": "comparison",
+      "headline": "June and December",
+      "narration": "In June the northern half tilts toward the Sun, with longer days and more direct light. In December it tilts away.",
+      "compare": {
+        "left": {
+          "label": "June, north",
+          "text": "Tilted toward the Sun: long days"
+        },
+        "right": {
+          "label": "December, north",
+          "text": "Tilted away: short days, slanted light"
+        }
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "Opposite seasons",
+      "narration": "When it is summer in the north, it is winter in the south, because the two halves of Earth tilt toward and away from the Sun at opposite times."
+    },
+    {
+      "type": "cta",
+      "headline": "Look at the shadows",
+      "narration": "Watch how your shadow changes through the year."
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "The two-minute rule",
+  "format": "9:16",
+  "theme": "playful-pastel",
+  "voice": {
+    "voiceId": "af_sky",
+    "style": "energetic"
+  },
+  "sources": [
+    {
+      "title": "Getting Things Done (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Getting_Things_Done",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "The two-minute rule: clear tiny tasks fast",
+    "description": "A simple rule from Getting Things Done, with examples and its limits.",
+    "hashtags": [
+      "#productivity",
+      "#gtd",
+      "#habits"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Do it in two minutes",
+      "narration": "Your to-do list is full of tiny tasks that do not belong on a list."
+    },
+    {
+      "type": "definition",
+      "headline": "The two-minute rule",
+      "narration": "David Allen suggested a simple rule in his book Getting Things Done. If a task takes less than two minutes, do it right away.",
+      "definition": {
+        "term": "Two-minute rule",
+        "meaning": "If a task takes less than two minutes, do it right away instead of adding it to a list."
+      }
+    },
+    {
+      "type": "list",
+      "headline": "Good candidates",
+      "narration": "Reply to a quick message, put a dish in the dishwasher, file a receipt, or book that appointment.",
+      "items": [
+        "Reply to a quick message",
+        "Put a dish in the dishwasher",
+        "File a receipt",
+        "Book the appointment"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Why it works",
+      "narration": "Tracking a tiny task takes about as long as doing it. Finishing it also clears your head."
+    },
+    {
+      "type": "statement",
+      "headline": "Watch the limits",
+      "narration": "Do not let tiny tasks eat your whole day. Batch them, and protect time for work that matters."
+    },
+    {
+      "type": "cta",
+      "headline": "Do one now",
+      "narration": "Think of one two-minute task and do it before this video ends."
+    }
+  ]
+}

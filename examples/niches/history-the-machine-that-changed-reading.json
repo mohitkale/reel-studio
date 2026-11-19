@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "The machine that changed reading",
+  "format": "9:16",
+  "theme": "editorial-paper",
+  "voice": {
+    "voiceId": "am_adam",
+    "style": "storyteller"
+  },
+  "sources": [
+    {
+      "title": "Johannes Gutenberg (Encyclopaedia Britannica)",
+      "url": "https://www.britannica.com/biography/Johannes-Gutenberg",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "The machine that changed reading: Gutenberg's press",
+    "description": "How movable type and the printing press made books cheaper and ideas faster.",
+    "hashtags": [
+      "#history",
+      "#gutenberg",
+      "#printing"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "The machine that changed reading",
+      "narration": "Five hundred years ago, books were slow and costly to make. One invention changed that."
+    },
+    {
+      "type": "statement",
+      "headline": "Copied by hand",
+      "narration": "Before Johannes Gutenberg, every book in Europe was written out by a scribe, slowly, one copy at a time."
+    },
+    {
+      "type": "statement",
+      "headline": "Movable metal type",
+      "narration": "Gutenberg, a German craftsman from Mainz, originated printing from movable type. He combined a metal alloy for reusable type, an oil-based ink and a new kind of press."
+    },
+    {
+      "type": "timeline",
+      "headline": "From experiment to book",
+      "narration": "By 1450 his experiments were refined enough to win a loan. His forty-two line Bible dates from around fourteen fifty to fifty-five. In 1457 a Psalter from Mainz named its printers.",
+      "points": [
+        {
+          "label": "By 1450",
+          "text": "Experiments reach a working method"
+        },
+        {
+          "label": "c. 1450-55",
+          "text": "The 42-line Bible is printed"
+        },
+        {
+          "label": "1457",
+          "text": "A Mainz Psalter names its printers"
+        }
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Books for more people",
+      "narration": "The press was considered a history-changing invention, making books widely accessible."
+    },
+    {
+      "type": "cta",
+      "headline": "Hold a book today",
+      "narration": "Next time you pick up a book, remember that it was once a rare object."
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "The Art of War in a minute",
+  "format": "16:9",
+  "theme": "mono-brutalist",
+  "voice": {
+    "voiceId": "am_michael",
+    "style": "news"
+  },
+  "sources": [
+    {
+      "title": "The Art of War (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/The_Art_of_War",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "The Art of War in a minute",
+    "description": "The main ideas of Sun Tzu's The Art of War.",
+    "hashtags": [
+      "#artofwar",
+      "#suntzu",
+      "#books"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "The Art of War in a minute",
+      "narration": "One of the oldest books on strategy fits on a few pages. Here is what it says."
+    },
+    {
+      "type": "statement",
+      "headline": "A very old manual",
+      "narration": "The Art of War is a Chinese text on strategy, traditionally credited to Sun Tzu and placed in ancient China, often around the fifth century BCE."
+    },
+    {
+      "type": "list",
+      "headline": "Its main ideas",
+      "narration": "Know your enemy and yourself, plan before you fight, stay flexible as circumstances shift, and gather good intelligence.",
+      "items": [
+        "Know your enemy and know yourself",
+        "Plan before you fight",
+        "Stay flexible as things change",
+        "Gather good intelligence"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Thirteen short chapters",
+      "narration": "It has thirteen chapters, from Laying Plans in the first to the Use of Spies in the last."
+    },
+    {
+      "type": "statement",
+      "headline": "Beyond war",
+      "narration": "Readers apply it to business, sport and negotiation, though it was written about armies."
+    },
+    {
+      "type": "cta",
+      "headline": "Read it in an hour",
+      "narration": "It is short, and a public-domain translation is free to read."
+    }
+  ]
+}

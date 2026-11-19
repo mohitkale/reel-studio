@@ -35,6 +35,8 @@ export interface AppConfig {
   setupRequested?: boolean;
   /** Stop for a look at the scenes before a video is made (one stop, after the storyboard is checked). */
   reviewBeforeMaking?: boolean;
+  /** Add a one-second "Made with Reel Studio" tag at the end of new videos. Off unless chosen. */
+  endTag?: boolean;
   /** Steps a new video runs by itself; a missing key means on. */
   automation?: Partial<Automation>;
   /** The person's own respellings for the voice; they win over the bundled list. */
@@ -129,6 +131,14 @@ export async function setReviewBeforeMaking(on: boolean): Promise<AppConfig> {
   const config = await getConfig();
   if (on) config.reviewBeforeMaking = true;
   else delete config.reviewBeforeMaking;
+  await writeConfig(config);
+  return config;
+}
+
+export async function setEndTag(on: boolean): Promise<AppConfig> {
+  const config = await getConfig();
+  if (on) config.endTag = true;
+  else delete config.endTag;
   await writeConfig(config);
   return config;
 }

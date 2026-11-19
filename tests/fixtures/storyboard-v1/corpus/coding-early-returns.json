@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Flatten your code with early returns",
+  "format": "9:16",
+  "theme": "cinematic",
+  "voice": {
+    "voiceId": "af_heart",
+    "style": "calm"
+  },
+  "publish": {
+    "title": "Flatten your code with early returns",
+    "description": "A before-and-after example of replacing nested ifs with guard clauses.",
+    "hashtags": [
+      "#coding",
+      "#cleancode",
+      "#javascript"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Flatten your code",
+      "narration": "If your function drifts to the right of the screen, there is an easy fix."
+    },
+    {
+      "type": "statement",
+      "headline": "Deep nesting hides the point",
+      "narration": "When every check wraps the next one, the real work ends up buried on the right side of the screen."
+    },
+    {
+      "type": "code",
+      "headline": "Before: nested checks",
+      "narration": "Here every condition opens another level, and the one line that matters sits four levels deep.",
+      "code": {
+        "language": "javascript",
+        "text": "function pay(user, amount) {\n  if (user) {\n    if (user.active) {\n      if (amount > 0) {\n        return charge(user, amount);\n      }\n    }\n  }\n  return null;\n}"
+      }
+    },
+    {
+      "type": "code",
+      "headline": "After: early returns",
+      "narration": "Check the bad cases first and return early. The happy path then reads straight down.",
+      "code": {
+        "language": "javascript",
+        "text": "function pay(user, amount) {\n  if (!user) return null;\n  if (!user.active) return null;\n  if (amount <= 0) return null;\n  return charge(user, amount);\n}"
+      }
+    },
+    {
+      "type": "list",
+      "headline": "Why it helps",
+      "narration": "Less indentation means less to hold in your head, and the main path is easy to find.",
+      "items": [
+        "Less indentation",
+        "One idea per line",
+        "The main path is easy to find"
+      ]
+    },
+    {
+      "type": "cta",
+      "headline": "Try it on one function",
+      "narration": "Pick one nested function today and flatten it."
+    }
+  ]
+}

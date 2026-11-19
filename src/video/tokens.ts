@@ -25,6 +25,8 @@ export interface BrandTokens {
   reduceMotion?: boolean;
   /** An animated presenter over the video (see src/video/presenter-config.ts). */
   presenter?: PresenterConfig;
+  /** A one-second "Made with Reel Studio" tag at the very end. Off unless the person chose it. */
+  endTag?: boolean;
 }
 
 /** Coral Harbor — Airbnb-inspired default for new content. */

@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Name your booleans like questions",
+  "format": "1:1",
+  "theme": "midnight-tech",
+  "voice": {
+    "voiceId": "af_bella",
+    "style": "energetic"
+  },
+  "publish": {
+    "title": "Name your booleans like questions",
+    "description": "Prefixes that make boolean names read like sentences, and why to avoid double negatives.",
+    "hashtags": [
+      "#coding",
+      "#naming",
+      "#devtips"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Name your booleans",
+      "narration": "A boolean is a yes or no question. Name it like one."
+    },
+    {
+      "type": "comparison",
+      "headline": "Vague or clear",
+      "narration": "A name like flag or status tells you nothing. A name like isLoading says exactly what is true.",
+      "compare": {
+        "left": {
+          "label": "Vague",
+          "text": "flag, status, check, valid2"
+        },
+        "right": {
+          "label": "Clear",
+          "text": "isLoading, hasError, canSubmit"
+        }
+      }
+    },
+    {
+      "type": "list",
+      "headline": "Handy prefixes",
+      "narration": "Use is for a state, has for ownership, can for ability, and should for intent.",
+      "items": [
+        "is for a state: isOpen",
+        "has for ownership: hasAccess",
+        "can for ability: canEdit",
+        "should for intent: shouldRetry"
+      ]
+    },
+    {
+      "type": "comparison",
+      "headline": "Avoid double negatives",
+      "narration": "A negative name turns into a double negative in an if. Name the positive case instead.",
+      "compare": {
+        "left": {
+          "label": "Confusing",
+          "text": "if (!isNotReady)"
+        },
+        "right": {
+          "label": "Simple",
+          "text": "if (isReady)"
+        }
+      }
+    },
+    {
+      "type": "cta",
+      "headline": "Future you says thanks",
+      "narration": "Rename one boolean today. Future you will say thanks."
+    }
+  ]
+}

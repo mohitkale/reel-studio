@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "The stone that unlocked Egypt",
+  "format": "9:16",
+  "theme": "cinematic",
+  "voice": {
+    "voiceId": "bf_emma",
+    "style": "storyteller"
+  },
+  "language": "en-GB",
+  "sources": [
+    {
+      "title": "Rosetta Stone (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Rosetta_Stone",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "The stone that unlocked Egypt: the Rosetta Stone in 45 seconds",
+    "description": "How a decree in three scripts let scholars read hieroglyphs again.",
+    "hashtags": [
+      "#history",
+      "#rosettastone",
+      "#egypt"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "The stone that unlocked Egypt",
+      "narration": "For centuries nobody could read Egyptian hieroglyphs. Then a broken slab of dark stone changed everything."
+    },
+    {
+      "type": "steps",
+      "headline": "Three dates",
+      "narration": "A decree was carved in 196 BCE. French soldiers found the stone in 1799. And in 1822 Champollion announced how hieroglyphs worked.",
+      "items": [
+        "196 BCE: a decree is carved in three scripts",
+        "1799: French soldiers find it near Rosetta",
+        "1822: Champollion explains hieroglyphs"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Three scripts, one message",
+      "narration": "The same decree is written in Egyptian hieroglyphs, in Demotic, and in ancient Greek. Scholars could read Greek, so Greek became the key."
+    },
+    {
+      "type": "statement",
+      "headline": "A race to decipher",
+      "narration": "Thomas Young made early progress. In 1822 Jean-François Champollion showed how the signs worked, and the language of Egypt could be read again."
+    },
+    {
+      "type": "stat",
+      "headline": "Now in London",
+      "narration": "The Rosetta Stone has been on public display at the British Museum since 1802, and it is the most visited object there.",
+      "stat": {
+        "value": "1802",
+        "label": "on display in London since"
+      }
+    },
+    {
+      "type": "cta",
+      "headline": "Look closely",
+      "narration": "If you visit, look for the three bands of writing, one above the other."
+    }
+  ]
+}

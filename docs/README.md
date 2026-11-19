@@ -15,6 +15,7 @@ Start here.
 - [Storyboard](STORYBOARD.md): the JSON an agent writes (placeholder until v0.10).
 - [Scenes and themes](SCENES_AND_THEMES.md): presets, families, treatments, rendering.
 - [Quality](QUALITY.md): the rubric and the frame check for judging a video.
+- [Showcase](SHOWCASE.md): thirty example videos across ten niches, how they were made and checked.
 - [Troubleshooting](TROUBLESHOOTING.md): doctor, recovery, limits.
 
 ## Build on it

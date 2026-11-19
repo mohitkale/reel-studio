@@ -97,6 +97,18 @@ export default function SettingsPage() {
             />
             Review each video before it is made
           </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={ui.data?.endTag ?? false}
+              disabled={!ui.data || setup.isPending}
+              onChange={(event) =>
+                setup.mutate({ endTag: event.target.checked })
+              }
+            />
+            End my videos with a one-second &ldquo;Made with Reel Studio&rdquo;
+            tag
+          </label>
         </CardContent>
       </Card>
 

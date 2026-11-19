@@ -110,6 +110,7 @@ export function storyboardToReelProps(storyboard: Storyboard): StoryboardReel {
           variety: plan.look.variety,
           ...(plan.look.reduceMotion ? { reduceMotion: true } : {}),
           ...(plan.look.presenter ? { presenter: plan.look.presenter } : {}),
+          ...(plan.look.endTag ? { endTag: true } : {}),
         }
       : serverDefaultTokens,
     width,

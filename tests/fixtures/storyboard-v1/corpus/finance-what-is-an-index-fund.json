@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "What is an index fund?",
+  "format": "16:9",
+  "theme": "corporate-blue",
+  "voice": {
+    "voiceId": "am_adam",
+    "style": "news"
+  },
+  "sources": [
+    {
+      "title": "Index fund (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Index_fund",
+      "accessed": "2026-11-19"
+    },
+    {
+      "title": "S&P 500 (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/S%26P_500",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "What is an index fund? A two-minute explanation",
+    "description": "What an index is, how a fund tracks it, and why it is not risk-free. Education, not advice.",
+    "hashtags": [
+      "#indexfunds",
+      "#investing",
+      "#personalfinance"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "What is an index fund?",
+      "narration": "You have probably heard that index funds are a simple way to invest. Here is what that means."
+    },
+    {
+      "type": "definition",
+      "headline": "First, an index",
+      "narration": "An index is a list of companies used to measure a market. The S and P 500, for example, tracks five hundred large United States companies.",
+      "definition": {
+        "term": "Index",
+        "meaning": "A list of companies that measures a market. The S&P 500 tracks 500 large US companies."
+      }
+    },
+    {
+      "type": "diagram",
+      "headline": "How a fund tracks it",
+      "narration": "An index fund simply buys the companies in an index. When you invest, you own a small slice of all of them.",
+      "points": [
+        {
+          "label": "You invest"
+        },
+        {
+          "label": "Fund buys the index"
+        },
+        {
+          "label": "You own a small slice"
+        }
+      ]
+    },
+    {
+      "type": "comparison",
+      "headline": "Index fund or one stock",
+      "narration": "Spreading money across many companies reduces the damage if one of them fails. Putting it all in one company does not.",
+      "compare": {
+        "left": {
+          "label": "Index fund",
+          "text": "Spread across many companies, usually low fees"
+        },
+        "right": {
+          "label": "Single stock",
+          "text": "All your money rides on one company"
+        }
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "Not risk-free",
+      "narration": "An index fund can still fall when the market falls. Diversification reduces the risk of one company failing, not the risk of the whole market."
+    },
+    {
+      "type": "cta",
+      "headline": "Compare the fees",
+      "narration": "Fees are the part you can control, so compare them. This is education, not advice."
+    }
+  ]
+}

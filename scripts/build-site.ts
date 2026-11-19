@@ -131,7 +131,7 @@ function layout(args: {
   /** Path of the page inside the site, for the canonical URL and the nav. */
   page: string;
   body: string;
-  nav?: "home" | "gallery" | "mcp" | "docs";
+  nav?: "home" | "gallery" | "showcase" | "mcp" | "docs";
   video?: boolean;
   /** An image that is the first thing on screen; the browser is told to fetch it early. */
   preload?: string;
@@ -171,6 +171,7 @@ ${args.preload ? `<link rel="preload" as="image" href="${e(args.preload)}" fetch
   <a class="brand" href="${root}index.html"><span class="logo" aria-hidden="true"></span>Reel Studio</a>
   <nav aria-label="Main">
     ${link("gallery.html", "Gallery", "gallery")}
+    ${link("showcase.html", "Showcase", "showcase")}
     ${link("docs/index.html", "Docs", "docs")}
     ${link("mcp.html", "Use with an agent", "mcp")}
     <a href="${REPO}">GitHub</a>
@@ -224,7 +225,7 @@ function landing(): string {
   <h2>What it makes</h2>
   <p>Every video here comes from a short file in <a href="${REPO}/tree/main/examples/storyboards">examples/storyboards</a>.</p>
   <div class="tiles">${tiles}</div>
-  <p><a href="gallery.html">All twelve, with their storyboards</a></p>
+  <p><a href="gallery.html">All twelve, with their storyboards</a> · <a href="showcase.html">Thirty more, across ten niches</a></p>
 </section>
 
 <section class="band" id="try-it">
@@ -383,6 +384,92 @@ const CLIENTS: Array<{
     ),
   },
 ];
+
+interface NicheEntry {
+  file: string;
+  niche: string;
+  nicheTitle: string;
+  title: string;
+  format: string;
+  theme: string;
+  voice: string;
+  style: string;
+  presenter: string | null;
+  sources: string[];
+  brief: string;
+}
+
+/** The niche showcase wall (roadmap L8): thirty videos, each with its storyboard and how to make it again. */
+function showcasePage(): string {
+  const index = JSON.parse(
+    readFileSync(path.resolve("examples/niches.json"), "utf8"),
+  ) as {
+    niches: Record<string, string>;
+    entries: NicheEntry[];
+  };
+  const card = (entry: NicheEntry) => {
+    const name = entry.file.replace(/\.json$/, "");
+    const raw = readFileSync(
+      path.resolve("examples/niches", entry.file),
+      "utf8",
+    );
+    const json = JSON.parse(raw) as {
+      scenes: unknown[];
+      sources?: Array<{ title: string; url: string }>;
+    };
+    const cli = `node bin/reel-studio.mjs render examples/niches/${entry.file} -o ${name}.mp4 --quality standard`;
+    const mcp = `Call create_video with the storyboard in examples/niches/${entry.file}.`;
+    const shape =
+      entry.format === "9:16"
+        ? "portrait"
+        : entry.format === "1:1"
+          ? "square"
+          : "wide";
+    const sources = (json.sources ?? [])
+      .map((s) => `<li><a href="${e(s.url)}">${e(s.title)}</a></li>`)
+      .join("");
+    return `
+<article class="card" id="${name}">
+  <div class="card-media"><video controls preload="none" playsinline poster="${poster(`niche-${name}.jpg`, "")}" src="${MEDIA}/niche-${name}.mp4" class="${shape}" aria-label="${e(entry.title)}"></video></div>
+  <div class="card-body">
+    <h3>${e(entry.title)}</h3>
+    <p class="meta">${e(entry.format)} · ${json.scenes.length} scenes · ${e(entry.theme)} theme · voice ${e(entry.voice)}, ${e(entry.style)}${entry.presenter ? ` · presenter ${e(entry.presenter)}` : ""}</p>
+    <p>${e(entry.brief)}</p>
+    <details>
+      <summary>Make this video yourself</summary>
+      <p>The brief the storyboard was written from is the paragraph above. To render the storyboard as it is:</p>
+      ${codeBlock(cli)}
+      <p>Or with an agent that has the MCP server:</p>
+      ${codeBlock(mcp)}
+    </details>
+    <details>
+      <summary>Its storyboard (JSON)</summary>
+      <div class="code"><button type="button" class="copy" data-copy>Copy</button><pre tabindex="0" aria-label="Storyboard JSON for ${e(entry.title)}"><code>${e(raw.trim())}</code></pre></div>
+    </details>
+    ${sources ? `<details><summary>Sources</summary><ul>${sources}</ul></details>` : `<p class="meta">A sample with no factual claims, so no sources.</p>`}
+  </div>
+</article>`;
+  };
+  const sections = Object.entries(index.niches)
+    .map(
+      ([id, title]) => `
+<section class="band" id="niche-${id}">
+  <h2>${e(title)}</h2>
+  <div class="cards">${index.entries
+    .filter((x) => x.niche === id)
+    .map(card)
+    .join("\n")}</div>
+</section>`,
+    )
+    .join("\n");
+  return `
+<section class="page-head">
+  <h1>Showcase</h1>
+  <p class="lead">Thirty videos across ten kinds of channel, each with the storyboard that made it and the command to make it again. The storyboards were written by an AI model from a short brief; the voice, scenes, captions, music and video were made on a computer, the same way every time.</p>
+  <p>Factual videos cite their sources and were checked against them. Sample products are fictional and say so. Nothing here is financial or medical advice.</p>
+</section>
+${sections}`;
+}
 
 function mcpPage(): string {
   const blocks = CLIENTS.map(
@@ -550,6 +637,17 @@ function main(): void {
     }),
   );
   write(
+    "showcase.html",
+    layout({
+      title: "Showcase · Reel Studio",
+      description:
+        "Thirty videos across ten niches, each with its storyboard JSON and the command that makes it again.",
+      page: "showcase.html",
+      body: showcasePage(),
+      nav: "showcase",
+    }),
+  );
+  write(
     "mcp.html",
     layout({
       title: "Use Reel Studio from your agent · Reel Studio",
@@ -565,6 +663,7 @@ function main(): void {
   const pages = [
     "index.html",
     "gallery.html",
+    "showcase.html",
     "mcp.html",
     "docs/index.html",
     ...DOCS.map((d) => `docs/${d.file}.html`),

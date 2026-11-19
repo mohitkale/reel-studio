@@ -98,6 +98,8 @@ export const brandOverridesSchema = z
         variety: z.enum(["low", "medium", "high"]),
         reduceMotion: z.boolean().optional(),
         presenter: presenterConfigSchema.optional(),
+        /** End the video with a one-second "Made with Reel Studio" tag. */
+        endTag: z.boolean().optional(),
         /** The look belongs to a series: Shuffle look is refused. */
         locked: z.boolean().optional(),
       })

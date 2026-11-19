@@ -1469,6 +1469,11 @@ export function buildHyperframesCompositionHtml(
         ].join("");
       })()
     : "";
+  // The person's choice, off by default: a one-second tag over the very end of the video.
+  const endTag =
+    props.tokens.endTag && totalSeconds > 2
+      ? `<div class="clip end-tag" aria-hidden="true" data-start="${(totalSeconds - 1).toFixed(3)}" data-duration="1.000" data-track-index="22" data-layout-allow-overlap data-layout-allow-occlusion>Made with Reel Studio</div>`
+      : "";
   // An animated presenter: clips of a still face, a mouth and a blink, shown by time.
   const presenterSetting = props.tokens.presenter;
   const presenterCharacter = getCharacter(presenterSetting?.character);
@@ -1515,6 +1520,7 @@ export function buildHyperframesCompositionHtml(
   <style>${STYLES}${previewStyles}${HYPERFRAMES_PRESET_STYLES}${TYPE_MOTION_STYLES}
 ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLES}${REGISTERED_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_MOTION_STYLES}${STORY_MOTION_STYLES}${MOTION_LIBRARY_STYLES}
     ${presenter?.css ?? ""}${presenter && !opts.producerMode ? "[data-presenter-clip]{visibility:hidden}" : ""}
+    .end-tag{position:absolute;z-index:60;left:50%;top:calc(var(--safe-top,0px) + var(--frame-h,1920px)*0.02);transform:translateX(-50%);padding:.5em 1.1em;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font-family:var(--brand-font);font-weight:700;font-size:calc(var(--frame-h,1920px)*0.02);line-height:1;letter-spacing:.02em;white-space:nowrap;pointer-events:none}
     .rs-subtitle{position:absolute;z-index:50;inset:0;box-sizing:border-box;display:flex;flex-direction:column;justify-content:${captionResolved.outer.justifyContent};align-items:${captionResolved.outer.alignItems};padding:${captionResolved.outer.paddingTop}px ${captionResolved.outer.paddingRight}px ${captionResolved.outer.paddingBottom}px ${captionResolved.outer.paddingLeft}px;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
     .rs-subtitle>span{display:block;max-width:${captionInner.maxWidth}px;padding:${captionInner.padding};border-radius:${captionInner.borderRadius}px;background:${captionInner.background};color:${captionInner.color};font-family:${cssFontStack(captionInner.fontFamily)};font-weight:${captionInner.fontWeight};line-height:${captionInner.lineHeight};letter-spacing:${captionInner.letterSpacing};text-align:${captionInner.textAlign};text-shadow:${captionInner.textShadow};${captionInner.WebkitTextStroke ? `-webkit-text-stroke:${captionInner.WebkitTextStroke};` : ""}overflow-wrap:anywhere}
     .rs-caption-emph>span:first-child{color:var(--brand-accent-text,var(--accent))}.rs-caption-line{display:block}.rs-caption-word{display:inline-block;position:relative}.rs-caption-active{position:absolute;inset:0;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
@@ -1544,6 +1550,7 @@ ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLE
          style="${draftScale !== 1 ? `transform:scale(${draftScale});transform-origin:0 0;` : ""}width:${width}px;height:${height}px;--brand-background:${tokens.background};--brand-foreground:${tokens.foreground};--brand-muted:${tokens.muted};--brand-accent-foreground:${tokens.accentForeground};--brand-accent-text:${(colorContrast(tokens.accent, tokens.background) ?? 0) >= 4.5 ? tokens.accent : tokens.foreground};--motion-radius:${tokens.radius}px;--motion-gap:${Math.min(width * 0.032, height * 0.045, 48)}px;--brand-font:${escapeHtml(cssFontStack(hyperframesBrandFont(tokens.fontFamily)))};font-family:var(--brand-font);--accent:${accent};--grain-opacity:${chrome.grainOpacity};--motion-stiffness:${motionStiffness};--frame-h:${height}px;--region-top:${layout.region?.top ?? layout.safeArea.top}px;--region-height:${layout.region?.height ?? Math.round(height * 0.6)}px;--safe-top:${layout.safeArea.top}px;--safe-right:${layout.safeArea.right}px;--safe-bottom:${layout.safeArea.bottom}px;--safe-left:${layout.safeArea.left}px;--content-max-width:${layout.contentMaxWidth}px;--caption-max-width:${layout.captionMaxWidth}px;--caption-bottom:${layout.captionBottom}px;--type-scale:${layout.typeScale}${theme ? `;${themeRootStyle(theme)}` : ""}">
       ${coverBlock}
       ${progress}
+      ${endTag}
       ${videoBlocks.join("\n")}
       ${sceneBlocks
         .map((block) => {

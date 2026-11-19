@@ -60,6 +60,8 @@
     "storyboard:freeze": "tsx scripts/freeze-storyboard.ts",
     "storyboard:schema": "tsx scripts/generate-storyboard-schema.ts",
     "test:copy-fit": "node --import tsx scripts/verify-copy-fit.mjs",
+    "niches:variety": "tsx scripts/niche-variety.ts",
+    "niches:check": "tsx scripts/check-niches.ts",
     "examples:check": "tsx scripts/check-examples.ts",
     "examples:lint-frames": "node --import tsx scripts/frame-lint.mjs",
     "examples:render": "tsx scripts/render-examples.ts",

@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Why $100 buys less every year",
+  "format": "1:1",
+  "theme": "clean-minimal",
+  "voice": {
+    "voiceId": "af_nova",
+    "style": "calm"
+  },
+  "sources": [
+    {
+      "title": "Consumer Price Index (U.S. Bureau of Labor Statistics)",
+      "url": "https://www.bls.gov/cpi/",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "Why $100 buys less every year",
+    "description": "Inflation shown with simple arithmetic. An illustration, not a forecast or advice.",
+    "hashtags": [
+      "#inflation",
+      "#money",
+      "#personalfinance"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Why $100 buys less",
+      "narration": "A hundred dollars today will not buy the same things in twenty years. Here is the arithmetic."
+    },
+    {
+      "type": "statement",
+      "headline": "Prices tend to rise",
+      "narration": "Inflation is the general rise in prices over time. When prices rise, each dollar buys a little less."
+    },
+    {
+      "type": "chart",
+      "headline": "$100 at 3% inflation",
+      "narration": "At three percent a year, a hundred dollars of buying power shrinks to about seventy-four after ten years and about fifty-five after twenty.",
+      "chart": {
+        "labels": [
+          "Today",
+          "10 years",
+          "20 years"
+        ],
+        "series": [
+          {
+            "label": "Buying power ($)",
+            "values": [
+              100,
+              74,
+              55
+            ]
+          }
+        ],
+        "kind": "bar",
+        "source": "Illustration: 100 divided by 1.03 to the power of the years"
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "An example, not a forecast",
+      "narration": "Real inflation varies from year to year and from country to country. This is an example of the arithmetic, not a prediction."
+    },
+    {
+      "type": "cta",
+      "headline": "Know the number",
+      "narration": "Look up your own country's inflation figure and compare it with what your savings earn. This is general education, not financial advice."
+    }
+  ]
+}

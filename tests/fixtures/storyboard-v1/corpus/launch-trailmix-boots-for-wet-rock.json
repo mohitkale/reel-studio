@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Trailmix: a boot made for wet rock",
+  "format": "16:9",
+  "theme": "corporate-blue",
+  "voice": {
+    "voiceId": "af_bella",
+    "style": "news"
+  },
+  "publish": {
+    "title": "Trailmix: a boot for wet rock (a fictional sample)",
+    "description": "A sample product launch video. Trailmix is a made-up product.",
+    "hashtags": [
+      "#sample",
+      "#productlaunch"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Trailmix: a boot made for wet rock",
+      "narration": "This is a sample launch for a fictional boot. It is called Trailmix, and it is built for slick stone."
+    },
+    {
+      "type": "statement",
+      "headline": "Grip where it matters",
+      "narration": "Trailmix has a deep tread and a sticky heel edge, designed for slick stone and muddy descents."
+    },
+    {
+      "type": "comparison",
+      "headline": "Dry day and wet day",
+      "narration": "On a dry trail most boots feel fine. Wet rock is where a boot earns its price.",
+      "compare": {
+        "left": {
+          "label": "Dry trail",
+          "text": "Any decent boot copes"
+        },
+        "right": {
+          "label": "Wet rock",
+          "text": "Tread and rubber decide everything"
+        }
+      }
+    },
+    {
+      "type": "list",
+      "headline": "Built for the long day",
+      "narration": "A cushioned midsole, a roomy toe box and a waterproof liner.",
+      "items": [
+        "Cushioned midsole",
+        "Roomy toe box",
+        "Waterproof liner"
+      ]
+    },
+    {
+      "type": "stat",
+      "headline": "Weight",
+      "narration": "At nine hundred grams a pair, it is light enough to forget.",
+      "stat": {
+        "value": "900 g",
+        "label": "a pair, size 42"
+      }
+    },
+    {
+      "type": "cta",
+      "headline": "A fictional boot",
+      "narration": "Trailmix is made up, used here to show what a launch video can look like.",
+      "body": "A sample product for demonstration."
+    }
+  ]
+}

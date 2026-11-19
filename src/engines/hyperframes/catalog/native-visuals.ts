@@ -712,7 +712,7 @@ export function buildNativeCatalogVisual(args: {
           Math.round((Math.abs(value) / maxMagnitude) * 96),
         );
         const unit = series.unit ?? "";
-        return `<div class="fx-chart-bar" aria-label="${escapeHtml(`${chart.labels[index]}: ${value}${unit}`)}">
+        return `<div class="fx-chart-bar" style="color:${pal.ink}" aria-label="${escapeHtml(`${chart.labels[index]}: ${value}${unit}`)}">
           <b style="color:${pal.ink}">${escapeHtml(`${value}${unit}`)}</b>
           <i style="--h:${height}%;background:linear-gradient(180deg, ${accent}, ${pal.b})"></i>
           <span>${escapeHtml(chart.labels[index])}</span>

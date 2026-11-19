@@ -32,6 +32,8 @@ import {
 } from "node:fs";
 import path from "node:path";
 
+import { readNicheIndex } from "../src/storyboard/niches-check";
+
 const argv = process.argv.slice(2);
 const has = (name: string) => argv.includes(name);
 const value = (name: string) => {
@@ -353,6 +355,114 @@ function siteMedia(): void {
   );
 }
 
+/**
+ * The thirty niche videos for the website's showcase wall (roadmap L8): an MP4
+ * and a poster each, and a 45-second montage of nine of them for the README and
+ * social posts. Needs `npm run showcase -- --set niches` first.
+ */
+const NICHES_RENDERS = path.resolve("media/showcase-niches");
+/** Nine portrait videos from nine niches, three at a time, fifteen seconds each. */
+const MONTAGE = [
+  "tech-what-is-a-cookie",
+  "finance-the-rule-of-72",
+  "history-the-stone-that-unlocked-egypt",
+  "science-how-a-vaccine-teaches-your-body",
+  "language-one-syllable-four-meanings",
+  "fitness-sleep-is-part-of-training",
+  "launch-meet-lumen",
+  "productivity-do-it-in-two-minutes",
+  "books-frankenstein-in-a-minute",
+] as const;
+
+function nichesRendered(): boolean {
+  return readNicheIndex().entries.every((e) =>
+    existsSync(path.join(NICHES_RENDERS, e.file.replace(/\.json$/, ".mp4"))),
+  );
+}
+
+function nicheMedia(): void {
+  for (const entry of readNicheIndex().entries) {
+    const name = entry.file.replace(/\.json$/, "");
+    const input = path.join(NICHES_RENDERS, `${name}.mp4`);
+    if (!existsSync(input))
+      throw new Error(
+        `${name}.mp4 is missing. Render the niches first: npm run showcase -- --set niches`,
+      );
+    const source = `examples/niches/${entry.file}`;
+    const poster = path.join(OUT, `niche-${name}.jpg`);
+    ffmpeg(
+      "-ss",
+      Math.min(3, duration(input) / 4).toFixed(2),
+      "-i",
+      input,
+      "-frames:v",
+      "1",
+      "-vf",
+      "scale='if(gt(iw,ih),640,-2)':'if(gt(iw,ih),-2,640)':flags=lanczos",
+      "-q:v",
+      "5",
+      poster,
+    );
+    record(poster, "niche-poster", source);
+    const mp4 = path.join(OUT, `niche-${name}.mp4`);
+    twin(input, mp4, 960);
+    record(mp4, "niche-mp4", source, undefined, entry.title);
+  }
+  // The montage: three portrait videos side by side, three times, 45 s in all.
+  const parts = [0, 1, 2].map((row) =>
+    MONTAGE.slice(row * 3, row * 3 + 3).map((name) =>
+      path.join(NICHES_RENDERS, `${name}.mp4`),
+    ),
+  );
+  const inputs = parts.flat().flatMap((f) => ["-ss", "3", "-t", "15", "-i", f]);
+  const stack = (row: number) =>
+    [0, 1, 2]
+      .map(
+        (i) =>
+          `[${row * 3 + i}:v]setpts=PTS-STARTPTS,scale=360:640:force_original_aspect_ratio=decrease,pad=360:640:(ow-iw)/2:(oh-ih)/2:color=black[m${row * 3 + i}]`,
+      )
+      .join(";") +
+    `;[m${row * 3}][m${row * 3 + 1}][m${row * 3 + 2}]hstack=inputs=3[r${row}]`;
+  const graph = `${stack(0)};${stack(1)};${stack(2)};[r0][r1][r2]concat=n=3:v=1:a=0[v]`;
+  const source = MONTAGE.map((n) => `examples/niches/${n}.json`).join(" + ");
+  const montageMp4 = path.join(OUT, "montage.mp4");
+  ffmpeg(
+    ...inputs,
+    "-filter_complex",
+    graph,
+    "-map",
+    "[v]",
+    "-an",
+    "-c:v",
+    "libx264",
+    "-crf",
+    "26",
+    "-pix_fmt",
+    "yuv420p",
+    "-movflags",
+    "+faststart",
+    montageMp4,
+  );
+  record(montageMp4, "montage-mp4", source, HERO_CAP, "45 s, nine niches");
+  const montageWebm = path.join(OUT, "montage.webm");
+  ffmpeg(
+    ...inputs,
+    "-filter_complex",
+    graph,
+    "-map",
+    "[v]",
+    "-an",
+    "-c:v",
+    "libvpx-vp9",
+    "-crf",
+    "38",
+    "-b:v",
+    "0",
+    montageWebm,
+  );
+  record(montageWebm, "montage-webm", source, HERO_CAP, "45 s, nine niches");
+}
+
 /** One finished frame, shown next to the storyboard lines that made it. */
 function frame(): void {
   const input = path.join(SHOWCASE, "listicle.mp4");
@@ -607,6 +717,17 @@ async function main(): Promise<void> {
     galleryGifs();
     siteMedia();
     frame();
+  }
+  if (
+    only ? only.includes("niches") : !has("--skip-niches") && nichesRendered()
+  ) {
+    redo(/^(niche|montage)/);
+    console.log("Niche showcase media");
+    nicheMedia();
+  } else if (!only && !has("--skip-niches")) {
+    console.log(
+      "Niche videos are not rendered yet: skipping them (npm run showcase -- --set niches)",
+    );
   }
   if (stage("sheets")) {
     redo(/sheet$/);

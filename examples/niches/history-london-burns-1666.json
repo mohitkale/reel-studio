@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "London burns, 1666",
+  "format": "16:9",
+  "theme": "warm-documentary",
+  "voice": {
+    "voiceId": "bf_emma",
+    "style": "storyteller"
+  },
+  "language": "en-GB",
+  "sources": [
+    {
+      "title": "Great Fire of London (Encyclopaedia Britannica)",
+      "url": "https://www.britannica.com/event/Great-Fire-of-London",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "London burns, 1666: the Great Fire in 45 seconds",
+    "description": "How the fire started, how long it lasted, and how London was rebuilt.",
+    "hashtags": [
+      "#history",
+      "#london",
+      "#greatfire"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "London burns, 1666",
+      "narration": "In September 1666, a fire in a baker's house grew into the biggest fire London had ever seen."
+    },
+    {
+      "type": "timeline",
+      "headline": "Five days in September",
+      "narration": "It began on Sunday the second of September in Pudding Lane. A violent east wind spread it through Monday and Tuesday, and by Thursday it was extinguished.",
+      "points": [
+        {
+          "label": "Sunday 2 Sept",
+          "text": "A fire starts in the king's baker's house"
+        },
+        {
+          "label": "Mon and Tue",
+          "text": "A violent east wind spreads it"
+        },
+        {
+          "label": "Thursday",
+          "text": "It is extinguished"
+        }
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "One more flare-up",
+      "narration": "Thursday evening the flames burst out again at the Temple. Some houses were blown up with gunpowder to stop the spread."
+    },
+    {
+      "type": "stat",
+      "headline": "The damage",
+      "narration": "About thirteen thousand houses burned, along with eighty-seven parish churches and old Saint Paul's Cathedral.",
+      "stat": {
+        "value": "~13,000",
+        "label": "houses burned, plus 87 churches"
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "The old streets returned",
+      "narration": "Christopher Wren, John Evelyn and Robert Hooke each offered plans to redesign the city. None was adopted, and the old street lines mostly came back."
+    },
+    {
+      "type": "cta",
+      "headline": "Find the Monument",
+      "narration": "The Monument near London Bridge stands close to where the fire began."
+    }
+  ]
+}

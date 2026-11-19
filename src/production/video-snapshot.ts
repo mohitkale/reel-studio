@@ -75,6 +75,7 @@ export const videoScriptSnapshotSchema = z.object({
     variety: z.enum(["low", "medium", "high"]).optional(),
     reduceMotion: z.boolean().optional(),
     presenter: presenterConfigSchema.optional(),
+    endTag: z.boolean().optional(),
   }),
   coverUrl: z.string().nullable(),
   musicUrl: z.string().nullable(),

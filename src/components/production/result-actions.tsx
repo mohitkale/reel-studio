@@ -9,6 +9,7 @@ import { apiGet, apiPost } from "@/lib/api-client";
 import { SAMPLE_VOICES } from "@/lib/sample-voices";
 import { NativeSelect } from "@/components/ui/native-select";
 import { buildShareCaption, type CaptionSource } from "@/lib/share-caption";
+import { buildShareText } from "@/lib/share-text";
 import { useAIProviders } from "@/hooks/ai";
 import { pickWriter } from "@/lib/writer-chain";
 import { VOICE_STYLES, VOICE_STYLE_IDS } from "@/lib/voice-styles";
@@ -35,7 +36,7 @@ export function ResultActions({
   quality?: "draft" | "standard" | "high";
 }) {
   const [busy, setBusy] = React.useState<
-    "caption" | "sizes" | "voice" | "shorts" | "language"
+    "caption" | "share" | "sizes" | "voice" | "shorts" | "language"
   >();
   const providers = useAIProviders();
   const [style, setStyle] = React.useState<string>("");
@@ -65,6 +66,27 @@ export function ResultActions({
     } catch (e) {
       setMessage(
         e instanceof Error ? e.message : "Could not build the caption",
+      );
+    } finally {
+      setBusy(undefined);
+    }
+  }
+
+  async function copyShareText() {
+    setBusy("share");
+    setMessage(undefined);
+    setFallback(undefined);
+    try {
+      const text = buildShareText((await load()).title);
+      try {
+        await navigator.clipboard.writeText(text);
+        setMessage("Share text copied");
+      } catch {
+        setFallback(text);
+      }
+    } catch (e) {
+      setMessage(
+        e instanceof Error ? e.message : "Could not build the share text",
       );
     } finally {
       setBusy(undefined);
@@ -235,6 +257,19 @@ export function ResultActions({
             <Copy className="size-4" aria-hidden />
           )}
           Copy caption and hashtags
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={busy !== undefined}
+          onClick={() => void copyShareText()}
+        >
+          {busy === "share" ? (
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+          ) : (
+            <Copy className="size-4" aria-hidden />
+          )}
+          Copy share text
         </Button>
         <Button
           variant="outline"

@@ -297,6 +297,19 @@ Discussions welcome post (category: Announcements, then pin it):
 > We reply within a few working days. We are honest about what is not finished: see the roadmap
 > issue.
 
+### Show and tell thread (seed it with the showcase)
+
+Category: Show and tell. Post it once the showcase media is up; then pin it.
+
+> **Thirty videos, thirty storyboards.** We made thirty example videos across ten kinds of channel
+> (tech explained, coding tips, finance, fitness, history, productivity, product launches, language
+> learning, science, book summaries). Each one has its storyboard JSON and the command that makes
+> it again: https://mohitkale.github.io/reel-studio/showcase.html
+>
+> Made something with Reel Studio? Reply here with the video (or a link) and what you made it for.
+> If you want it on the wall, open an issue with the `showcase` label and your storyboard. We add
+> the ones that render cleanly and cite their sources.
+
 ## 7. Launch day
 
 1. Check the gates (section 1) and the claims table (section 3). Re-run `npm run demo:assets` and
