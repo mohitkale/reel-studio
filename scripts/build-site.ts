@@ -251,6 +251,13 @@ function landing(): string {
 <section class="band">
   <h2>What it is and is not</h2>
   <p>It makes <strong>motion-graphics videos</strong>: text, charts, quotes, lists and code on animated scenes, with a voice, captions and music. It is free, local and repeatable. It does <strong>not</strong> make talking avatars of real people or generated footage of invented scenes; for those, use a tool built for them. You can still bring your own clips.</p>
+</section>
+
+<section class="band join">
+  <h2>Join in</h2>
+  <p>Reel Studio is open source and built in the open. If it is useful to you, a star helps others find it; if you want to change it, fork it.</p>
+  <p class="cta"><a class="button" href="${REPO}">Star on GitHub</a> <a class="button ghost" href="${REPO}/fork">Fork it</a> <a class="button ghost" href="${REPO}/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22">Good first issues</a></p>
+  <p>New scene types, themes and example storyboards are each one small folder or file: <a href="docs/CONTRIBUTING_SCENES.html">how to add one</a>. The plan to v1.0 is in the <a href="${REPO}/issues/140">roadmap issue</a>.</p>
 </section>`;
 }
 
