@@ -437,6 +437,7 @@ export async function produceFromStoryboard(
           ...(plan.scenePaces.some((p) => p !== 1)
             ? { paces: plan.scenePaces }
             : {}),
+          ...(plan.beatSync ? { beatSync: true } : {}),
         },
       },
       captions: plan.captions,

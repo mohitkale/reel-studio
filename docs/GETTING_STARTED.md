@@ -95,6 +95,8 @@ self-contained runs (by chapter, or at the scenes that open a new thought), adds
 lacks one and a closing line, and makes each a vertical short. The choice is plain code, so the same
 video always gives the same shorts. Over MCP, `revise_video` with `derive: "shorts"` does the same. Over REST, `POST /api/scripts/:id/cutdowns` with `writer: { providerId }` also asks your storyboard writer to sharpen each short's opening line (it may change only the first scene; if it fails, the plain-code hook stays). The shorts are made as one batch: the response carries a `batchId`, and `GET /api/production-batches` shows all of them together.
 
+**Scenes on the beat**: `beatSync: "auto"` in a storyboard (or **Scenes on the beat** on a series) starts each scene on a beat of the bundled music. Only the silence between two scenes changes (0.3 to 0.8 s, usually under a tenth of a second off the usual 0.45 s); narration is never stretched. Music you uploaded has no known beats, so it keeps the even gaps. A real 4-scene render on a 60 bpm track started its scenes at 4.5 s, 9.5 s and 14.5 s (frame-exact on the half beat); nobody has yet judged by ear whether it feels better.
+
 **Brand kit stings**: on **Brand**, a kit can name an uploaded audio file (up to 30 seconds, uploaded in Assets) to play at the start and another at the end of every video that wears it. A video made with a kit that has stings gets them without asking; `stings: "off"` in the storyboard turns them off, and `stings: "auto"` adds the bundled chimes where the kit names none.
 
 **Series and many videos at once**: a series is a saved set of defaults (look, format, length, voice, voice style, language, brand kit, intro and outro chimes,

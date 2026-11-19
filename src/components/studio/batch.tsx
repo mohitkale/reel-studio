@@ -226,6 +226,16 @@ function SeriesEditor({
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
+                checked={draft.beatSync === true}
+                onChange={(e) =>
+                  set({ beatSync: e.target.checked ? true : undefined })
+                }
+              />
+              Scenes on the beat
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
                 checked={draft.captions !== false}
                 onChange={(e) =>
                   set({ captions: e.target.checked ? undefined : false })

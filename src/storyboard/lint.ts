@@ -233,6 +233,7 @@ const ROOT_KEYS = {
     "music",
     "sfx",
     "stings",
+    "beatSync",
     "variety",
     "seed",
     "series",

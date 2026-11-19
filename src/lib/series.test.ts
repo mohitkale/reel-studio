@@ -129,6 +129,19 @@ describe("series chimes, voice style and language", () => {
     });
   });
 
+  it("turns on beat sync only when the series asks and the storyboard is silent", () => {
+    const series = seriesSchema.parse({ name: "On beat", beatSync: true });
+    expect(
+      applySeries({ version: 1, title: "T", scenes: [] }, series),
+    ).toMatchObject({ beatSync: "auto" });
+    expect(
+      applySeries(
+        { version: 1, title: "T", beatSync: "off", scenes: [] },
+        series,
+      ),
+    ).toMatchObject({ beatSync: "off" });
+  });
+
   it("keeps what the storyboard sets", () => {
     const out = applySeries(
       {

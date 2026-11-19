@@ -83,6 +83,14 @@
             "off"
           ]
         },
+        "beatSync": {
+          "description": "Start each scene on a beat of the music. \"auto\" changes only the silence between scenes (by a fraction of a second); narration is never stretched. Omit for the usual even gaps.",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ]
+        },
         "sources": {
           "description": "Pages you used for facts. Leave out if you used none. Never invent sources.",
           "maxItems": 12,
@@ -766,6 +774,14 @@
         },
         "stings": {
           "description": "A short chime at the start and another at the end of the video. \"auto\" adds them; omit for none.",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ]
+        },
+        "beatSync": {
+          "description": "Start each scene on a beat of the music. \"auto\" changes only the silence between scenes (by a fraction of a second); narration is never stretched. Omit for the usual even gaps.",
           "type": "string",
           "enum": [
             "auto",

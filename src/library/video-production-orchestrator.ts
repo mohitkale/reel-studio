@@ -339,6 +339,13 @@ export async function executeVideoProductionJob(
         scenes: media.snapshot.script.scenes.map(resolveSpokenText),
         fps: media.snapshot.script.fps,
         quickProduceVoice: input.quickProduce?.voice,
+        // Beat-aligned gaps depend on which music plays and on the cover.
+        ...(input.quickProduce?.voice.beatSync
+          ? {
+              musicUrl: media.snapshot.script.musicUrl,
+              coverUrl: media.snapshot.script.coverUrl,
+            }
+          : {}),
       },
       audioSchema,
       async () => {
@@ -362,6 +369,12 @@ export async function executeVideoProductionJob(
             speed: input.quickProduce.voice.speed,
             style: input.quickProduce.voice.style,
             paces: input.quickProduce.voice.paces,
+            beatSync: input.quickProduce.voice.beatSync,
+            // The snapshot holds a frozen copy of the music; its beats are those of the original.
+            musicUrl:
+              media.assets.find(
+                (asset) => asset.resolvedUrl === media.snapshot.script.musicUrl,
+              )?.url ?? media.snapshot.script.musicUrl,
             label: "Quick Produce",
           });
           const frozen = videoTakeSnapshotSchema.parse(generated);

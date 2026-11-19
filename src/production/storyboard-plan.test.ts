@@ -256,6 +256,14 @@ describe("scene pace", () => {
   });
 });
 
+describe("beat sync", () => {
+  it("is off unless the storyboard asks for it", () => {
+    expect(plan().beatSync).toBe(false);
+    expect(plan({ beatSync: "off" }).beatSync).toBe(false);
+    expect(plan({ beatSync: "auto" }).beatSync).toBe(true);
+  });
+});
+
 describe("stings", () => {
   it("are left to the brand kit unless the storyboard asks for them or turns them off", () => {
     expect(plan().stings).toBe("default");

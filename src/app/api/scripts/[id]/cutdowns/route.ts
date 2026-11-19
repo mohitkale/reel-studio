@@ -200,6 +200,10 @@ export async function POST(
                   "af_heart",
                 ...(voice?.speed !== undefined ? { speed: voice.speed } : {}),
                 ...(voice?.style ? { style: voice.style } : {}),
+                ...(storyboard.kind === "video" &&
+                storyboard.beatSync === "auto"
+                  ? { beatSync: true }
+                  : {}),
               },
             },
           };

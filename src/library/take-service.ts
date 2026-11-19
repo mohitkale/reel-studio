@@ -6,10 +6,14 @@ import { randomUUID } from "node:crypto";
 
 import type { VoiceTakeDTO } from "@/lib/dto";
 import {
+  DEFAULT_GAP_SECONDS,
   estimateSpeechSeconds,
   stitchBeats,
   type BeatInput,
 } from "@/lib/audio-timing";
+import { beatAlignedGaps } from "@/lib/beat-sync";
+import { MUSIC_LIBRARY } from "@/lib/music-library";
+import { COVER_DURATION_SECONDS } from "@/video/types";
 import { makeSilentWav, parseWav } from "@/lib/wav";
 import { finalizeSpeechWav } from "@/lib/audio-production";
 import { getProvider } from "@/providers/voice/registry";
@@ -54,6 +58,13 @@ export interface GenerateTakeInput {
   style?: VoiceStyleId;
   /** A speed multiplier per scene, in order. */
   paces?: number[];
+  /** Start each scene on a beat of the script's music (only the gaps change). */
+  beatSync?: boolean;
+  /**
+   * The music's original URL, when the script holds a frozen copy of it (a
+   * production snapshot stores `/media/production-assets/<hash>.wav`).
+   */
+  musicUrl?: string | null;
   label?: string;
   onProgress?: (progress: TakeProgress) => void;
 }
@@ -148,6 +159,30 @@ async function synthesizeScenesConcurrently(
 }
 
 /**
+ * The silence after each scene so every next scene starts on a beat of the
+ * script's bundled music. Without a known track the usual gap stays.
+ */
+export function beatSyncedGaps(
+  beats: BeatInput[],
+  script: { musicUrl?: string | null; coverUrl?: string | null },
+): number | number[] {
+  const track = MUSIC_LIBRARY.find((t) => t.url === script.musicUrl);
+  if (!track) return DEFAULT_GAP_SECONDS;
+  return beatAlignedGaps({
+    durations: beats.map((beat) => {
+      const info = parseWav(beat.wav);
+      return (
+        info.dataLength /
+        (info.channels * (info.bitsPerSample / 8)) /
+        info.sampleRate
+      );
+    }),
+    grid: { bpm: track.bpm, offsetSeconds: track.offsetSeconds },
+    coverSeconds: script.coverUrl ? COVER_DURATION_SECONDS : 0,
+  });
+}
+
+/**
  * Generate a voice take for a script: synthesize each scene as its own beat
  * (so its exact duration is known), stitch the beats into one track with gaps,
  * store the WAV, and persist the take with per-beat frame timing.
@@ -157,6 +192,8 @@ async function generateTakeForScenes(
   script: {
     fps: number;
     scenes: Array<{ id: string; text: string; spokenText?: string | null }>;
+    musicUrl?: string | null;
+    coverUrl?: string | null;
   },
 ): Promise<VoiceTakeDTO> {
   if (!script.scenes.length) {
@@ -240,7 +277,16 @@ async function generateTakeForScenes(
     scene: beats.length,
     sceneCount: beats.length,
   });
-  const stitched = stitchBeats(beats, fps);
+  const stitched = stitchBeats(
+    beats,
+    fps,
+    input.beatSync && !input.placeholder
+      ? beatSyncedGaps(beats, {
+          musicUrl: input.musicUrl ?? script.musicUrl,
+          coverUrl: script.coverUrl,
+        })
+      : DEFAULT_GAP_SECONDS,
+  );
   // Even out per-provider/voice level differences (no-op for silent placeholders).
   const wav = input.placeholder
     ? stitched.wav
@@ -289,6 +335,8 @@ export function generateTakeFromVideoSnapshot(
         text: scene.text,
         spokenText: scene.spokenText,
       })),
+      musicUrl: input.snapshot.script.musicUrl,
+      coverUrl: input.snapshot.script.coverUrl,
     },
   );
 }
