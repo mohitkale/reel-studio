@@ -260,6 +260,50 @@ async function mcpSession(): Promise<McpLine[]> {
   return lines;
 }
 
+/** The example podcast storyboard, made into an episode by the studio; saved as episode.wav. */
+async function podcastEpisode(): Promise<void> {
+  const body = readFileSync("examples/storyboards/podcast.json", "utf8");
+  const queued = await fetch(`${base}/api/storyboards`, {
+    method: "POST",
+    headers: { "content-type": "application/json", origin: base },
+    body,
+  });
+  if (queued.status !== 202)
+    throw new Error(
+      `The podcast storyboard was refused: ${queued.status} ${await queued.text()}`,
+    );
+  const { jobId, podcastId } = (await queued.json()) as {
+    jobId: string;
+    podcastId: string;
+  };
+  const deadline = Date.now() + 15 * 60_000;
+  while (Date.now() < deadline) {
+    const job = (
+      (await (
+        await fetch(`${base}/api/podcasts/${podcastId}/takes/${jobId}`)
+      ).json()) as {
+        job: {
+          status: string;
+          error: string | null;
+          podcastTake: { audioUrl: string } | null;
+        };
+      }
+    ).job;
+    if (job.status === "error")
+      throw new Error(job.error ?? "The podcast episode failed");
+    if (job.status === "done" && job.podcastTake) {
+      const wav = await fetch(`${base}${job.podcastTake.audioUrl}`);
+      writeFileSync(
+        path.join(out, "episode.wav"),
+        Buffer.from(await wav.arrayBuffer()),
+      );
+      return;
+    }
+    await new Promise((r) => setTimeout(r, 3000));
+  }
+  throw new Error("The podcast episode did not finish in time");
+}
+
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -419,6 +463,9 @@ async function main(): Promise<void> {
     await renderTerminal(await terminal.newPage(), lines);
     await terminal.close();
     await browser.close();
+
+    // 4. The example podcast, for the website gallery.
+    await podcastEpisode();
   } finally {
     stop();
   }
