@@ -48,10 +48,16 @@ jobs:
       - id: pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+      # The posters and the hero poster are small and first on screen: serve them from the
+      # site itself. The videos stay on the demo-assets release and load only when played.
+      - name: Fetch posters
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download demo-assets --repo "$GITHUB_REPOSITORY" --pattern "gallery-*.jpg" --pattern "hero-poster.jpg" --dir dist/posters
       - name: Build the site
         env:
           SITE_URL: ${{ steps.pages.outputs.base_url }}
-        run: npm run site:build -- --site-url "${SITE_URL:-https://mohitkale.github.io/reel-studio/}"
+        run: npm run site:build -- --poster-dir dist/posters --site-url "${SITE_URL:-https://mohitkale.github.io/reel-studio/}"
       - if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
