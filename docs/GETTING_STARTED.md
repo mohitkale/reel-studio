@@ -93,7 +93,7 @@ goes more than 90 seconds without a hook, stat, quote, chart or comparison.
 **Shorts from a long video**: on a finished video, **Make shorts from this** picks three to five
 self-contained runs (by chapter, or at the scenes that open a new thought), adds a hook when a run
 lacks one and a closing line, and makes each a vertical short. The choice is plain code, so the same
-video always gives the same shorts. Over MCP, `revise_video` with `derive: "shorts"` does the same. Over REST, `POST /api/scripts/:id/cutdowns` with `writer: { providerId }` also asks your storyboard writer to sharpen each short's opening line (it may change only the first scene; if it fails, the plain-code hook stays).
+video always gives the same shorts. Over MCP, `revise_video` with `derive: "shorts"` does the same. Over REST, `POST /api/scripts/:id/cutdowns` with `writer: { providerId }` also asks your storyboard writer to sharpen each short's opening line (it may change only the first scene; if it fails, the plain-code hook stays). The shorts are made as one batch: the response carries a `batchId`, and `GET /api/production-batches` shows all of them together.
 
 **Series and many videos at once**: a series is a saved set of defaults (look, format, length, voice, voice style, language, brand kit, intro and outro chimes,
 music). On **Make many videos** (`/batch`, linked from Create), paste topics or a CSV, pick a series,

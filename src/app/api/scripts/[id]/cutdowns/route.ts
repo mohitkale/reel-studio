@@ -13,7 +13,10 @@ import {
   readRequestJson,
 } from "@/server/api-helpers";
 import { executeProductionJob } from "@/library/production-job-executor";
-import { runProductionWorkerOnce } from "@/library/production-worker";
+import { drainProductionQueue } from "@/library/production-worker";
+import { submitProductionBatch } from "@/library/production-batch-service";
+import { productionBatchView } from "@/library/production-batch-view";
+import { defaultVoiceForLanguage } from "@/providers/voice/voice-catalog";
 import { projectToStoryboard } from "@/library/project-storyboard";
 import { produceFromStoryboard } from "@/library/storyboard-production";
 import { cutdowns } from "@/storyboard/cutdowns";
@@ -82,7 +85,19 @@ export async function POST(
           400,
         );
     }
-    const shorts = [];
+    const shorts: Array<Record<string, unknown>> = [];
+    const created: Array<{
+      summary: {
+        title: string;
+        seconds: number;
+        fromScene: number;
+        toScene: number;
+        hookRewritten?: boolean;
+      };
+      storyboard: (typeof picked)[number]["storyboard"];
+      scriptId: string;
+      projectId: string;
+    }> = [];
     for (const short of picked) {
       let storyboard = short.storyboard;
       let hookRewritten = false;
@@ -134,26 +149,87 @@ export async function POST(
         shorts.push(summary);
         continue;
       }
+      // The editable project is made now; the batch below makes every short together.
       const made = await produceFromStoryboard(storyboard, {
         quality: body.quality,
+        createOnly: true,
         auth,
         serverBaseUrl: new URL(req.url).origin,
       });
-      shorts.push({
-        ...summary,
-        jobId: made.dryRun ? null : made.jobId,
-        projectId: made.dryRun ? null : made.projectId,
+      if (made.dryRun || !made.scriptId)
+        throw new ProviderError("A short could not be created", 500);
+      created.push({
+        summary,
+        storyboard,
+        scriptId: made.scriptId,
+        projectId: made.projectId,
       });
     }
-    if (!body.preview) {
+    if (body.preview) return NextResponse.json({ shorts }, { status: 200 });
+
+    // One batch for all the shorts: one id to ask about, one status, one bundle.
+    const batch = await submitProductionBatch({
+      request: {
+        idempotencyKey: `shorts:${randomUUID()}`,
+        runMode: "automatic",
+        priority: 0,
+        rows: created.map(({ storyboard, scriptId, summary }, index) => {
+          const voice =
+            storyboard.kind === "video" ? storyboard.voice : undefined;
+          return {
+            kind: "video" as const,
+            key: `short-${index + 1}`,
+            label: summary.title.slice(0, 120),
+            scriptId,
+            orientations: ["portrait" as const],
+            quality: body.quality,
+            captions:
+              storyboard.kind === "video" && storyboard.captions === "off"
+                ? ("off" as const)
+                : ("auto" as const),
+            quickProduce: {
+              enabled: true,
+              planner: "deterministic" as const,
+              mediaPreference: "none" as const,
+              voice: {
+                enabled: voice?.enabled !== false,
+                providerId: "kokoro-server" as const,
+                voiceId:
+                  voice?.voiceId ??
+                  defaultVoiceForLanguage(storyboard.language) ??
+                  "af_heart",
+                ...(voice?.speed !== undefined ? { speed: voice.speed } : {}),
+                ...(voice?.style ? { style: voice.style } : {}),
+              },
+            },
+          };
+        }),
+      },
+      auth,
+      serverBaseUrl: new URL(req.url).origin,
+    });
+    const view = productionBatchView(batch);
+    const queued = view.items.filter((item) => item.state === "queued").length;
+    if (queued)
       after(() =>
-        runProductionWorkerOnce({
+        drainProductionQueue({
           workerId: `web-cutdowns:${randomUUID()}`,
           execute: executeProductionJob,
+          maxJobs: queued,
         }),
       );
-    }
-    return NextResponse.json({ shorts }, { status: body.preview ? 200 : 202 });
+    created.forEach((short, index) => {
+      const item = view.items.find((i) => i.rowIndex === index);
+      shorts.push({
+        ...short.summary,
+        jobId: item?.job?.id ?? null,
+        projectId: short.projectId,
+      });
+    });
+    return NextResponse.json(
+      { batchId: view.id, state: view.state, shorts },
+      { status: 202 },
+    );
   } catch (error) {
     return errorResponse(error);
   }

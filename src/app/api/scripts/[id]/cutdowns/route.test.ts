@@ -2,6 +2,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   produce: vi.fn(),
+  submit: vi.fn(),
   write: vi.fn(),
   provider: { id: "ollama", label: "Ollama", isConfigured: () => true },
 }));
@@ -14,7 +15,22 @@ vi.mock("@/library/production-job-executor", () => ({
   executeProductionJob: vi.fn(),
 }));
 vi.mock("@/library/production-worker", () => ({
-  runProductionWorkerOnce: vi.fn(),
+  drainProductionQueue: vi.fn(),
+}));
+// The batch service is faked: this test must never write to a real database.
+vi.mock("@/library/production-batch-service", () => ({
+  submitProductionBatch: mocks.submit,
+}));
+vi.mock("@/library/production-batch-view", () => ({
+  productionBatchView: (batch: { id: string; rows: number }) => ({
+    id: batch.id,
+    state: "queued",
+    items: Array.from({ length: batch.rows }, (_, i) => ({
+      rowIndex: i,
+      state: "queued",
+      job: { id: `job-${i}` },
+    })),
+  }),
 }));
 vi.mock("next/server", async (original) => ({
   ...(await original<typeof import("next/server")>()),
@@ -58,7 +74,17 @@ const post = (body: unknown) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.produce.mockResolvedValue({ dryRun: false, jobId: "j" });
+  mocks.produce.mockImplementation(async () => ({
+    dryRun: false,
+    scriptId: `script-${Math.random()}`,
+    projectId: "p",
+  }));
+  mocks.submit.mockImplementation(
+    async ({ request }: { request: { rows: unknown[] } }) => ({
+      id: "batch-1",
+      rows: request.rows.length,
+    }),
+  );
 });
 
 it("changes only the opening scene when a writer sharpens the hook", async () => {
@@ -103,4 +129,37 @@ it("keeps the plain-code hook when the writer fails", async () => {
 it("makes shorts with no writer call at all by default", async () => {
   await post({ count: 1 });
   expect(mocks.write).not.toHaveBeenCalled();
+});
+
+it("makes the shorts as one batch with one id", async () => {
+  const response = await post({ count: 2 });
+  const json = await response.json();
+  expect(response.status).toBe(202);
+  expect(json.batchId).toBe("batch-1");
+  expect(mocks.submit).toHaveBeenCalledTimes(1);
+  const rows = mocks.submit.mock.calls[0]![0].request.rows;
+  expect(rows).toHaveLength(json.shorts.length);
+  expect(rows[0]).toMatchObject({
+    kind: "video",
+    orientations: ["portrait"],
+    captions: "auto",
+  });
+  expect(rows[0].quickProduce.voice).toMatchObject({
+    enabled: true,
+    providerId: "kokoro-server",
+  });
+  // Each project is made without a job of its own; the batch owns the jobs.
+  expect(mocks.produce.mock.calls.every((c) => c[1].createOnly === true)).toBe(
+    true,
+  );
+  expect(json.shorts.map((s: { jobId: string }) => s.jobId)).toEqual(
+    json.shorts.map((_: unknown, i: number) => `job-${i}`),
+  );
+});
+
+it("lists the shorts without making anything in preview", async () => {
+  const response = await post({ count: 2, preview: true });
+  expect(response.status).toBe(200);
+  expect(mocks.submit).not.toHaveBeenCalled();
+  expect(mocks.produce).not.toHaveBeenCalled();
 });
