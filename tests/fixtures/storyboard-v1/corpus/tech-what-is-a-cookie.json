@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "What is a cookie, really?",
+  "format": "9:16",
+  "theme": "clean-minimal",
+  "voice": {
+    "voiceId": "af_nova",
+    "style": "calm"
+  },
+  "sources": [
+    {
+      "title": "Using HTTP cookies (MDN Web Docs)",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies",
+      "accessed": "2026-11-19"
+    },
+    {
+      "title": "Third-party cookies (MDN Web Docs)",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/Privacy/Guides/Third-party_cookies",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "What is a cookie, really?",
+    "description": "A short explainer of web cookies: what they are, how a login uses one, and how to control them.",
+    "hashtags": [
+      "#cookies",
+      "#privacy",
+      "#webdev"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "What is a cookie?",
+      "narration": "Every site you visit can leave a small note in your browser. That note is called a cookie."
+    },
+    {
+      "type": "definition",
+      "headline": "Cookies in one line",
+      "narration": "A cookie is a small piece of text. The site sets it, your browser stores it, and sends it back on every later request to that site.",
+      "definition": {
+        "term": "Cookie",
+        "meaning": "A small piece of data a site asks your browser to store and send back on later visits."
+      }
+    },
+    {
+      "type": "steps",
+      "headline": "How a login stays alive",
+      "narration": "When you sign in, the site gives your browser a session cookie. Each new page request carries it, so the site can tell it is still you.",
+      "items": [
+        "You sign in",
+        "The site sets a session cookie",
+        "Your browser sends it back each time",
+        "The site knows it is you"
+      ]
+    },
+    {
+      "type": "comparison",
+      "headline": "First party and third party",
+      "narration": "A first-party cookie comes from the site you are visiting. A third-party cookie comes from a different site embedded in the page, and some of them are used to track you across sites.",
+      "compare": {
+        "left": {
+          "label": "First party",
+          "text": "Set by the site you are on"
+        },
+        "right": {
+          "label": "Third party",
+          "text": "Set by another site, some used to track you"
+        }
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "You are in control",
+      "narration": "You can see, block and delete cookies in your browser settings. Blocking all of them breaks most logins, so many people block only the third-party kind."
+    },
+    {
+      "type": "cta",
+      "headline": "Look at your own cookies",
+      "narration": "Open your browser's settings and see what is stored. You might be surprised."
+    }
+  ]
+}

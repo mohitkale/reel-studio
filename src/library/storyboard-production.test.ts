@@ -44,6 +44,8 @@ vi.mock("@/library/sfx-service", () => ({
 vi.mock("@/library/brand-stings", () => ({
   resolveBrandStings: async () => ({}),
 }));
+// The person's settings are not read in a unit test: the end tag is off.
+vi.mock("@/server/app-config", () => ({ getConfig: async () => ({}) }));
 vi.mock("@/library/stock-media-usage", () => ({
   reportStockMediaSelectionUsage: mocks.reportStockMediaSelectionUsage,
 }));

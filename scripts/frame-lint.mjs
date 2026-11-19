@@ -3,7 +3,7 @@
  * what a viewer sees. Renders the real compiled composition in the render
  * browser (no voice, no network), so it takes seconds, not minutes.
  *
- *   npm run examples:lint-frames [-- --only <name>] [--theme <id>] [--arrange 1|2|3] [--all-formats] [--out <dir>] [--write-baseline] [--gate]
+ *   npm run examples:lint-frames [-- --only <name>] [--theme <id>] [--arrange 1|2|3] [--all-formats] [--out <dir>] [--set niches] [--write-baseline] [--gate]
  *
  * Checks per scene (see docs/QUALITY.md): frame fill, smallest text, contrast,
  * text outside the safe area, headline against caption, and near-identical
@@ -36,8 +36,13 @@ if (arrangeOverride) process.env.REEL_FORCE_ARRANGE = arrangeOverride;
 const allFormats = args.includes("--all-formats");
 const gate = args.includes("--gate");
 const writeBaseline = args.includes("--write-baseline");
-const outDir = path.resolve(value("--out") ?? ".artifacts/frame-lint");
-const examplesDir = path.resolve("examples/storyboards");
+// `--set niches` checks the thirty niche showcase storyboards instead of the golden set.
+const set = value("--set") ?? "storyboards";
+const outDir = path.resolve(
+  value("--out") ??
+    `.artifacts/frame-lint${set === "storyboards" ? "" : `-${set}`}`,
+);
+const examplesDir = path.resolve("examples", set);
 
 /** Thresholds. Fill and the 9:16 text minimum come from the roadmap; the others are decisions recorded in docs/QUALITY.md. */
 export const THRESHOLDS = {

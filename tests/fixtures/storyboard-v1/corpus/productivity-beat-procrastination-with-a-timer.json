@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Beat procrastination with a timer",
+  "format": "1:1",
+  "theme": "bold-pop",
+  "voice": {
+    "voiceId": "am_michael",
+    "style": "energetic"
+  },
+  "presenter": {
+    "character": "maya",
+    "placement": "corner"
+  },
+  "sources": [
+    {
+      "title": "Pomodoro Technique (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Pomodoro_Technique",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "Beat procrastination with a 25-minute timer",
+    "description": "The Pomodoro Technique in four steps.",
+    "hashtags": [
+      "#pomodoro",
+      "#productivity",
+      "#focus"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Beat procrastination with a timer",
+      "narration": "Cannot start? Do not plan the whole afternoon. Plan twenty-five minutes."
+    },
+    {
+      "type": "steps",
+      "headline": "The method",
+      "narration": "Pick one task, work for one interval of about twenty-five minutes, take a short break, then go again.",
+      "items": [
+        "Pick one task",
+        "Work for about 25 minutes",
+        "Take a short break",
+        "Start the next interval"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Where it comes from",
+      "narration": "Francesco Cirillo created the Pomodoro Technique in the late nineteen eighties, named after a tomato-shaped kitchen timer."
+    },
+    {
+      "type": "statement",
+      "headline": "Why short bursts work",
+      "narration": "A small, fixed block is easier to start than an open-ended afternoon, and the break is built in."
+    },
+    {
+      "type": "cta",
+      "headline": "Set a timer now",
+      "narration": "Choose one task and start the clock."
+    }
+  ]
+}

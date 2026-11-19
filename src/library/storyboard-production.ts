@@ -50,6 +50,7 @@ import {
 } from "@/storyboard";
 import { ProviderError } from "@/providers/voice/types";
 import { generateSceneImages } from "@/library/scene-image-generation";
+import { getConfig } from "@/server/app-config";
 import { imageProviderConfigStore } from "@/server/image-provider-config";
 import { createImageProvider } from "@/providers/image/registry";
 
@@ -129,7 +130,10 @@ function canonical(value: unknown): string {
 
 export function storyboardHash(
   storyboard: unknown,
-  options: Pick<ProduceFromStoryboardOptions, "quality" | "brandKitId"> = {},
+  options: Pick<ProduceFromStoryboardOptions, "quality" | "brandKitId"> & {
+    /** The person's end-tag setting changes the video, so it changes the key. */
+    endTag?: boolean;
+  } = {},
 ): string {
   return createHash("sha256")
     .update(
@@ -137,6 +141,7 @@ export function storyboardHash(
         storyboard,
         quality: options.quality ?? "standard",
         ...(options.brandKitId ? { brandKitId: options.brandKitId } : {}),
+        ...(options.endTag ? { endTag: true } : {}),
       }),
     )
     .digest("hex");
@@ -197,12 +202,15 @@ export async function produceFromStoryboard(
     knownTrackIds: MUSIC_LIBRARY.map((track) => track.id),
   });
   const quality = options.quality ?? "standard";
+  // The person's own setting, off unless they chose it (Settings, or first-run setup).
+  const endTag = Boolean((await getConfig()).endTag);
+  if (endTag) plan.look = { ...plan.look, endTag: true };
   // A series can name a brand kit; one that no longer exists is ignored.
   const brandKitId =
     options.brandKitId && (await getBrandKit(options.brandKitId))
       ? options.brandKitId
       : undefined;
-  const hash = storyboardHash(storyboard, { quality, brandKitId });
+  const hash = storyboardHash(storyboard, { quality, brandKitId, endTag });
   const fixes = linted.fixes;
   const warnings = linted.warnings;
 

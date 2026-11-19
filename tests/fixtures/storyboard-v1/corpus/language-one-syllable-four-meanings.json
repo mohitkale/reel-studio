@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "One syllable, four meanings: Mandarin tones",
+  "format": "9:16",
+  "theme": "neon",
+  "voice": {
+    "voiceId": "af_heart",
+    "style": "energetic"
+  },
+  "presenter": {
+    "character": "sam",
+    "placement": "corner"
+  },
+  "sources": [
+    {
+      "title": "Tone (linguistics) (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Tone_(linguistics)",
+      "accessed": "2026-11-19"
+    },
+    {
+      "title": "Standard Chinese phonology (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Standard_Chinese_phonology",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "One syllable, four meanings: the Mandarin tones",
+    "description": "The four tones of Mandarin with the classic ma example.",
+    "hashtags": [
+      "#mandarin",
+      "#chinese",
+      "#languagelearning"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "One syllable can mean four different things",
+      "narration": "In Mandarin, the same sound can mean four different things. The difference is the tone."
+    },
+    {
+      "type": "list",
+      "headline": "The four tones",
+      "narration": "The first tone is high and level, mother. The second rises, hemp. The third dips, horse. The fourth falls sharply, to scold.",
+      "items": [
+        "mā: high and level, mother",
+        "má: rising, hemp",
+        "mǎ: dipping, horse",
+        "mà: falling, to scold"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "A fifth, neutral tone",
+      "narration": "There is also a light, neutral tone on some syllables. Pitch changes the word, so tones matter as much as vowels."
+    },
+    {
+      "type": "statement",
+      "headline": "Listen first, then say it aloud",
+      "narration": "Practise by listening and repeating, and record yourself. Tones are easier to hear than to describe."
+    },
+    {
+      "type": "cta",
+      "headline": "Say them aloud",
+      "narration": "Say the four words in a row, and listen to the pitch."
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Urgent or important?",
+  "format": "16:9",
+  "theme": "clean-minimal",
+  "voice": {
+    "voiceId": "af_heart",
+    "style": "calm"
+  },
+  "sources": [
+    {
+      "title": "Time management: Eisenhower method (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Time_management",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "Urgent or important? The Eisenhower matrix",
+    "description": "Four quadrants for deciding what to do, schedule, delegate or drop.",
+    "hashtags": [
+      "#productivity",
+      "#timemanagement",
+      "#eisenhower"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Urgent or important?",
+      "narration": "Busy is not the same as productive. Sorting your tasks takes one minute."
+    },
+    {
+      "type": "statement",
+      "headline": "They are not the same thing",
+      "narration": "Urgent tasks demand attention now. Important tasks move you toward your goals. The Eisenhower matrix separates the two."
+    },
+    {
+      "type": "list",
+      "headline": "Four quadrants",
+      "narration": "Do urgent and important tasks now. Schedule important ones that are not urgent. Delegate urgent ones that are not important. Drop the rest.",
+      "items": [
+        "Urgent and important: do it now",
+        "Important, not urgent: schedule it",
+        "Urgent, not important: delegate it",
+        "Neither: drop it"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Progress lives in quadrant two",
+      "narration": "Important work that is not urgent, like planning and learning, is easy to postpone. Schedule it first."
+    },
+    {
+      "type": "statement",
+      "headline": "Where the name comes from",
+      "narration": "The method is named after Dwight D. Eisenhower, who said he had two kinds of problems: the urgent and the important."
+    },
+    {
+      "type": "cta",
+      "headline": "Sort today's list",
+      "narration": "Take today's list and mark each task with a quadrant."
+    }
+  ]
+}

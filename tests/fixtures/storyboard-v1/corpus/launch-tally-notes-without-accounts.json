@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Tally: notes with no account",
+  "format": "9:16",
+  "theme": "neon",
+  "voice": {
+    "voiceId": "am_liam",
+    "style": "energetic"
+  },
+  "publish": {
+    "title": "Tally: notes with no account (a fictional sample)",
+    "description": "A sample app launch video. Tally is a made-up product.",
+    "hashtags": [
+      "#sample",
+      "#productlaunch"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Notes, minus the sign-up",
+      "narration": "A sample launch for a fictional app: Tally, notes with no account."
+    },
+    {
+      "type": "kinetic-text",
+      "headline": "Open. Type. Done.",
+      "narration": "You open it, you type, and it is saved. There is nothing else in the way."
+    },
+    {
+      "type": "comparison",
+      "headline": "No sign-up",
+      "narration": "Most notes apps want an email first. Tally starts empty and stays on your device.",
+      "compare": {
+        "left": {
+          "label": "Most apps",
+          "text": "Sign up, verify, then write"
+        },
+        "right": {
+          "label": "Tally",
+          "text": "Open it and write"
+        }
+      }
+    },
+    {
+      "type": "checklist",
+      "headline": "What it does",
+      "narration": "Plain text notes, quick search, and export to a file whenever you like.",
+      "items": [
+        "Plain text notes",
+        "Instant search",
+        "Export to a file",
+        "Works offline"
+      ]
+    },
+    {
+      "type": "cta",
+      "headline": "A fictional app",
+      "narration": "Tally is made up, used here to show what a launch video can look like.",
+      "body": "A sample product for demonstration."
+    }
+  ]
+}

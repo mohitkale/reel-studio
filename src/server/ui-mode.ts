@@ -17,6 +17,8 @@ export interface UiState {
   existingInstall: boolean;
   /** Videos wait for an OK on the scenes before they are made. */
   reviewBeforeMaking: boolean;
+  /** New videos end with a one-second "Made with Reel Studio" tag. Off unless chosen. */
+  endTag: boolean;
   /** Steps a new video runs by itself. */
   automation: Automation;
 }
@@ -39,6 +41,7 @@ export function decideUiState(
     | "onboardedAt"
     | "setupRequested"
     | "reviewBeforeMaking"
+    | "endTag"
     | "automation"
   >,
   existingInstall: boolean,
@@ -51,6 +54,7 @@ export function decideUiState(
       (!config.onboardedAt && !existingInstall),
     existingInstall,
     reviewBeforeMaking: Boolean(config.reviewBeforeMaking),
+    endTag: Boolean(config.endTag),
     automation: resolveAutomation(config.automation),
   };
 }

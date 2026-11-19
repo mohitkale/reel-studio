@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Why you stopped getting stronger",
+  "format": "9:16",
+  "theme": "bold-pop",
+  "voice": {
+    "voiceId": "am_eric",
+    "style": "energetic"
+  },
+  "presenter": {
+    "character": "rex",
+    "placement": "corner"
+  },
+  "sources": [
+    {
+      "title": "Physical Activity Guidelines for Adults (CDC)",
+      "url": "https://www.cdc.gov/physical-activity-basics/guidelines/adults.html",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "Why you stopped getting stronger (progressive overload)",
+    "description": "A simple explanation of progressive overload and four ways to apply it safely.",
+    "hashtags": [
+      "#fitness",
+      "#strengthtraining",
+      "#gym"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Why you stopped getting stronger (and the fix)",
+      "narration": "Same weights, same reps, same results. There is a reason, and it is fixable."
+    },
+    {
+      "type": "statement",
+      "headline": "Your body adapts",
+      "narration": "When a workout stops being hard, your body stops needing to change. Strength comes from asking for a little more."
+    },
+    {
+      "type": "definition",
+      "headline": "The name",
+      "narration": "The idea has a name: progressive overload. It is the steady increase of demand on your muscles over time.",
+      "definition": {
+        "term": "Overload",
+        "meaning": "Progressive overload: gradually raising the demand on your muscles over time."
+      }
+    },
+    {
+      "type": "list",
+      "headline": "Ways to add a little",
+      "narration": "You do not have to add weight every time. Small changes count.",
+      "items": [
+        "A bit more weight",
+        "One more rep",
+        "One more set",
+        "Slower, controlled reps"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Small and steady",
+      "narration": "Add a little at a time, keep good form, and rest between sessions. Adult guidelines call for strength work on two or more days a week, so there is room to build."
+    },
+    {
+      "type": "cta",
+      "headline": "Pick one lever",
+      "narration": "This week, change just one thing. If you have a health condition, talk to a professional first."
+    }
+  ]
+}

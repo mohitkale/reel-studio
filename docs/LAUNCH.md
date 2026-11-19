@@ -71,6 +71,10 @@ Made by `npm run launch:assets` (a running studio is needed) into `dist/launch/`
 | `clip-2-agent-and-compare.mp4` | 26 s: a scene of the JSON storyboard, the agent adding the server, and cloud tools next to Reel Studio.                                                                   |
 | `clip-3-what-you-get.mp4`      | What you get, what it is not, and the call to action.                                                                                                                     |
 
+A 31-second vertical teaser, also made by Reel Studio from
+[`launch/teaser.storyboard.json`](launch/teaser.storyboard.json) (render it on a running studio like any
+storyboard), for a "sneak peek" post the day before the showcase goes up.
+
 Also ready: the hero and gallery GIFs, the MCP terminal recording, the prompt-to-video recording
 and the screenshots, all from `npm run demo:assets` (hosted as assets of the `demo-assets`
 release), and the Open Graph card (`site/assets/og.png`).
@@ -296,6 +300,19 @@ Discussions welcome post (category: Announcements, then pin it):
 >
 > We reply within a few working days. We are honest about what is not finished: see the roadmap
 > issue.
+
+### Show and tell thread (seed it with the showcase)
+
+Category: Show and tell. Post it once the showcase media is up; then pin it.
+
+> **Thirty videos, thirty storyboards.** We made thirty example videos across ten kinds of channel
+> (tech explained, coding tips, finance, fitness, history, productivity, product launches, language
+> learning, science, book summaries). Each one has its storyboard JSON and the command that makes
+> it again: https://mohitkale.github.io/reel-studio/showcase.html
+>
+> Made something with Reel Studio? Reply here with the video (or a link) and what you made it for.
+> If you want it on the wall, open an issue with the `showcase` label and your storyboard. We add
+> the ones that render cleanly and cite their sources.
 
 ## 7. Launch day
 

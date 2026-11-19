@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Japanese uses three writing systems at once",
+  "format": "16:9",
+  "theme": "editorial-paper",
+  "voice": {
+    "voiceId": "af_nicole",
+    "style": "calm"
+  },
+  "sources": [
+    {
+      "title": "Japanese writing system (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Japanese_writing_system",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "Japanese uses three writing systems at once",
+    "description": "Hiragana, katakana and kanji, and what each is for.",
+    "hashtags": [
+      "#japanese",
+      "#languagelearning",
+      "#kanji"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Three writing systems at once",
+      "narration": "A single Japanese sentence can use three different scripts. Here is what each one does."
+    },
+    {
+      "type": "list",
+      "headline": "The scripts",
+      "narration": "Hiragana is for grammar and native words. Katakana is for loanwords and emphasis. Kanji are characters borrowed from Chinese that carry meaning.",
+      "items": [
+        "Hiragana: grammar and native words",
+        "Katakana: loanwords and emphasis",
+        "Kanji: characters that carry meaning",
+        "Romaji: Latin letters, as a helper"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Not as hard as it sounds",
+      "narration": "Hiragana and katakana each have forty-six basic characters, and both are worth learning first."
+    },
+    {
+      "type": "comparison",
+      "headline": "Same sound, two scripts",
+      "narration": "The word hiragana can be written in hiragana, and katakana in katakana, and they sound the same either way.",
+      "compare": {
+        "left": {
+          "label": "Hiragana",
+          "text": "ひらがな"
+        },
+        "right": {
+          "label": "Katakana",
+          "text": "カタカナ"
+        }
+      }
+    },
+    {
+      "type": "cta",
+      "headline": "Start with the kana",
+      "narration": "Learn a few characters a day and read them aloud."
+    }
+  ]
+}

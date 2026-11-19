@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "How much exercise do adults need?",
+  "format": "16:9",
+  "theme": "mono-brutalist",
+  "voice": {
+    "voiceId": "am_michael",
+    "style": "news"
+  },
+  "sources": [
+    {
+      "title": "Adult Activity: An Overview (CDC)",
+      "url": "https://www.cdc.gov/physical-activity-basics/guidelines/adults.html",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "How much exercise do adults need? The CDC numbers",
+    "description": "Weekly activity guidance for adults, from the CDC.",
+    "hashtags": [
+      "#fitness",
+      "#health",
+      "#exercise"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "How much exercise do adults need?",
+      "narration": "The CDC has a clear answer for adults. Here are the numbers."
+    },
+    {
+      "type": "stat",
+      "headline": "Moderate activity",
+      "narration": "Adults need at least one hundred fifty minutes of moderate-intensity activity a week, such as brisk walking, thirty minutes a day, five days a week.",
+      "stat": {
+        "value": "150 min",
+        "label": "moderate activity a week"
+      }
+    },
+    {
+      "type": "stat",
+      "headline": "Or vigorous activity",
+      "narration": "Or seventy-five minutes of vigorous activity, such as jogging or running, or an equivalent mix of the two.",
+      "stat": {
+        "value": "75 min",
+        "label": "vigorous activity a week"
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "Plus strength",
+      "narration": "On top of that, adults need muscle-strengthening activities on two or more days a week."
+    },
+    {
+      "type": "checklist",
+      "headline": "Work every major muscle group",
+      "narration": "Those activities should work all the major muscle groups: legs and hips, back and abdomen, chest, shoulders and arms.",
+      "items": [
+        "Legs and hips",
+        "Back and abdomen",
+        "Chest",
+        "Shoulders and arms"
+      ]
+    },
+    {
+      "type": "cta",
+      "headline": "Some is better than none",
+      "narration": "If you are starting from nothing, any activity helps. Build up gradually, and ask a professional if you are unsure."
+    }
+  ]
+}

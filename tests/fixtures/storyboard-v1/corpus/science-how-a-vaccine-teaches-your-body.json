@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "How a vaccine teaches your body",
+  "format": "9:16",
+  "theme": "corporate-blue",
+  "voice": {
+    "voiceId": "am_adam",
+    "style": "news"
+  },
+  "sources": [
+    {
+      "title": "How do vaccines work? (World Health Organization)",
+      "url": "https://www.who.int/news-room/feature-stories/detail/how-do-vaccines-work",
+      "accessed": "2026-11-19"
+    },
+    {
+      "title": "Explaining How Vaccines Work (CDC)",
+      "url": "https://www.cdc.gov/vaccines/basics/explaining-how-vaccines-work.html",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "How a vaccine teaches your body",
+    "description": "A short explanation of how vaccines train the immune system.",
+    "hashtags": [
+      "#science",
+      "#vaccines",
+      "#health"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "How a vaccine teaches your body",
+      "narration": "A vaccine is a rehearsal. Your body practises on part of a germ before the real thing."
+    },
+    {
+      "type": "steps",
+      "headline": "How it works",
+      "narration": "A vaccine contains weakened or inactive parts of a germ. Your immune system responds, makes antibodies and memory cells, and responds faster next time.",
+      "items": [
+        "A vaccine shows your body part of a germ",
+        "Your immune system responds",
+        "It makes antibodies and memory cells",
+        "Next time it responds faster"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Memory is the point",
+      "narration": "Memory cells stay alive after the germ is defeated. If you meet it again, the antibody response is much faster and more effective."
+    },
+    {
+      "type": "statement",
+      "headline": "Slower, but longer lasting",
+      "narration": "The CDC notes that the immunity a vaccine builds takes longer to develop than borrowed antibodies, but it lasts longer."
+    },
+    {
+      "type": "cta",
+      "headline": "Ask a professional",
+      "narration": "Ask your doctor or pharmacist which vaccines are right for you."
+    }
+  ]
+}

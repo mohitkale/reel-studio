@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Why phone batteries age",
+  "format": "9:16",
+  "theme": "neon",
+  "voice": {
+    "voiceId": "af_sky",
+    "style": "energetic"
+  },
+  "sources": [
+    {
+      "title": "How to Prolong Lithium-based Batteries (Battery University)",
+      "url": "https://batteryuniversity.com/article/bu-808-how-to-prolong-lithium-based-batteries",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "Why phone batteries age (and what helps)",
+    "description": "Lithium-ion wear in plain words: what speeds it up and what slows it down.",
+    "hashtags": [
+      "#battery",
+      "#phone",
+      "#tech"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Why phone batteries age",
+      "narration": "Your phone battery holds less than it used to. That is not a defect. Here is why it happens."
+    },
+    {
+      "type": "statement",
+      "headline": "Every charge costs a little",
+      "narration": "A phone battery is lithium-ion. Each time it charges and discharges, the cells lose a little of their capacity."
+    },
+    {
+      "type": "list",
+      "headline": "What wears it faster",
+      "narration": "Heat is the main enemy. Letting a battery swing all the way from empty to full, or sitting full while hot, also adds stress.",
+      "items": [
+        "Heat",
+        "Full swings from 0 to 100 percent",
+        "Sitting at 100 percent while hot"
+      ]
+    },
+    {
+      "type": "list",
+      "headline": "What helps",
+      "narration": "Keep it cool, top up in smaller steps, and avoid ultra-fast charging when you can.",
+      "items": [
+        "Keep it cool",
+        "Top up in small steps",
+        "Avoid ultra-fast charging when you can"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Do not obsess",
+      "narration": "Modern phones manage charging for you. Staying cool and sensible beats clever rules."
+    },
+    {
+      "type": "cta",
+      "headline": "Keep it out of the heat",
+      "narration": "If you remember one thing, keep your phone out of hot cars and direct sun."
+    }
+  ]
+}

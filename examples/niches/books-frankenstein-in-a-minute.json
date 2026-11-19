@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Frankenstein in a minute",
+  "format": "9:16",
+  "theme": "cinematic",
+  "voice": {
+    "voiceId": "bf_emma",
+    "style": "storyteller"
+  },
+  "language": "en-GB",
+  "sources": [
+    {
+      "title": "Frankenstein (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Frankenstein",
+      "accessed": "2026-11-19"
+    },
+    {
+      "title": "Frankenstein, 1818 edition, volume 3, chapter 3 (Wikisource)",
+      "url": "https://en.wikisource.org/wiki/Frankenstein,_or_the_Modern_Prometheus_(First_Edition,_1818)/Volume_3/Chapter_3",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "Frankenstein in a minute",
+    "description": "A short summary of Mary Shelley's Frankenstein (1818).",
+    "hashtags": [
+      "#frankenstein",
+      "#classics",
+      "#books"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Frankenstein in a minute",
+      "narration": "Everyone knows the monster. Fewer people know the story."
+    },
+    {
+      "type": "statement",
+      "headline": "A story within a story",
+      "narration": "Mary Shelley's novel, published anonymously in 1818, opens with letters from an Arctic explorer, Robert Walton, who meets Victor Frankenstein."
+    },
+    {
+      "type": "statement",
+      "headline": "The experiment",
+      "narration": "Victor, a young scientist, builds a living creature, then is horrified by what he has made and runs away."
+    },
+    {
+      "type": "kinetic-text",
+      "headline": "Left alone, and feared",
+      "narration": "The creature observes a family and learns their language, but people are frightened of him. He asks Victor to create a female companion for him."
+    },
+    {
+      "type": "quote",
+      "headline": "In the creature's words",
+      "narration": "The creature warns his maker that being rejected has made him dangerous.",
+      "quote": {
+        "text": "Beware; for I am fearless, and therefore powerful.",
+        "attribution": "Mary Shelley, Frankenstein (1818)"
+      }
+    },
+    {
+      "type": "cta",
+      "headline": "Who is responsible?",
+      "narration": "The book asks who is responsible for what we create. Its subtitle is The Modern Prometheus."
+    }
+  ]
+}

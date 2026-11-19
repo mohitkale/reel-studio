@@ -9,10 +9,16 @@
  * The rubric column is for the maintainer's 20-point review (docs/QUALITY.md).
  */
 import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { checkExamples, EXAMPLES_DIR } from "../src/storyboard/examples-check";
+import {
+  checkNiches,
+  NICHES_DIR,
+  readNicheIndex,
+} from "../src/storyboard/niches-check";
 
 const args = process.argv.slice(2);
 const value = (flag: string) => {
@@ -26,7 +32,16 @@ const base = (
 ).replace(/\/$/, "");
 const quality = value("--quality") ?? "standard";
 const only = value("--only")?.split(",");
-const outDir = path.resolve("media", "showcase");
+/** `--set niches` renders the thirty niche storyboards; the default is the golden set. */
+const set = value("--set") ?? "golden";
+if (!["golden", "niches"].includes(set))
+  throw new Error(`Unknown set "${set}". Use golden or niches.`);
+const resume = args.includes("--resume");
+const outDir = path.resolve(
+  "media",
+  set === "niches" ? "showcase-niches" : "showcase",
+);
+const storyboardDir = set === "niches" ? NICHES_DIR : EXAMPLES_DIR;
 const headers: Record<string, string> = {
   "content-type": "application/json",
   origin: base,
@@ -65,9 +80,24 @@ const escapeHtml = (text: string) =>
   text.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 
 async function main(): Promise<void> {
-  const { reports, problems } = checkExamples();
+  const checked = set === "niches" ? checkNiches() : checkExamples();
+  const problems = checked.problems;
+  const entries = set === "niches" ? readNicheIndex().entries : [];
+  const reports = checked.reports.map((report) => {
+    const name =
+      "name" in report ? report.name : report.file.replace(/\.json$/, "");
+    const entry = entries.find((e) => e.file === `${name}.json`);
+    return {
+      name,
+      kind: "kind" in report ? report.kind : ("video" as const),
+      format: "format" in report ? report.format : entry?.format,
+      seconds: report.seconds,
+    };
+  });
   if (problems.length > 0) {
-    console.error("Fix the examples first (npm run examples:check):");
+    console.error(
+      `Fix the examples first (npm run ${set === "niches" ? "niches" : "examples"}:check):`,
+    );
     for (const p of problems) console.error(`  - ${p}`);
     process.exit(1);
   }
@@ -75,15 +105,27 @@ async function main(): Promise<void> {
 
   // Frame-check scores come from the same storyboards, in their own formats.
   const lintDir = path.join(outDir, "frame-lint");
-  try {
-    execFileSync(
-      "node",
-      ["--import", "tsx", "scripts/frame-lint.mjs", "--out", lintDir],
-      { stdio: "pipe" },
-    );
-  } catch {
-    /* failures are read from the report */
-  }
+  // `--reuse-lint` keeps the frame check already in the output folder instead of running it again.
+  if (!(
+    args.includes("--reuse-lint") &&
+    existsSync(path.join(lintDir, "frame-lint.json"))
+  ))
+    try {
+      execFileSync(
+        "node",
+        [
+          "--import",
+          "tsx",
+          "scripts/frame-lint.mjs",
+          "--out",
+          lintDir,
+          ...(set === "niches" ? ["--set", "niches"] : []),
+        ],
+        { stdio: "pipe" },
+      );
+    } catch {
+      /* failures are read from the report */
+    }
   const lint = JSON.parse(
     await readFile(path.join(lintDir, "frame-lint.json"), "utf8"),
   ) as {
@@ -99,12 +141,16 @@ async function main(): Promise<void> {
   for (const report of reports) {
     if (report.kind === "podcast" || (only && !only.includes(report.name)))
       continue;
+    if (resume && existsSync(path.join(outDir, `${report.name}.mp4`))) {
+      console.log(`→ ${report.name}: already rendered, skipped (--resume)`);
+      continue;
+    }
     const started = Date.now();
     console.log(
       `→ ${report.name} (${report.format}, ~${Math.round(report.seconds)} s)`,
     );
     const body = await readFile(
-      path.join(EXAMPLES_DIR, `${report.name}.json`),
+      path.join(storyboardDir, `${report.name}.json`),
       "utf8",
     );
     const post = await fetch(

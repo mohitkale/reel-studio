@@ -1,0 +1,497 @@
+{
+  "about": "The thirty niche showcase storyboards in examples/niches: what each is, and the brief it was written from. Written by an AI model from the brief; everything after the storyboard is made locally.",
+  "niches": {
+    "tech": "Tech, explained",
+    "coding": "Coding tips",
+    "finance": "Finance explained",
+    "fitness": "Fitness",
+    "history": "History facts",
+    "productivity": "Productivity",
+    "launch": "Product launches",
+    "language": "Language learning",
+    "science": "Science",
+    "books": "Book summaries"
+  },
+  "entries": [
+    {
+      "file": "tech-what-is-a-cookie.json",
+      "niche": "tech",
+      "nicheTitle": "Tech, explained",
+      "title": "What is a cookie, really?",
+      "format": "9:16",
+      "theme": "clean-minimal",
+      "voice": "af_nova",
+      "style": "calm",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies",
+        "https://developer.mozilla.org/en-US/docs/Web/Privacy/Guides/Third-party_cookies"
+      ],
+      "brief": "A 40-second explainer of web cookies for people who only know the banner: what they are, how a login uses one, first party versus third party, and how to control them."
+    },
+    {
+      "file": "tech-the-padlock-explained.json",
+      "niche": "tech",
+      "nicheTitle": "Tech, explained",
+      "title": "The padlock in your browser, explained",
+      "format": "16:9",
+      "theme": "midnight-tech",
+      "voice": "am_michael",
+      "style": "news",
+      "presenter": "orb",
+      "factual": true,
+      "sources": [
+        "https://www.cloudflare.com/learning/ssl/what-is-https/",
+        "https://developer.mozilla.org/en-US/docs/Glossary/Certificate_authority",
+        "https://blog.chromium.org/2023/05/an-update-on-lock-icon.html"
+      ],
+      "brief": "A 45-second explainer of HTTPS: what the padlock means, how a secure connection starts, what a certificate authority does, and what the padlock does not tell you."
+    },
+    {
+      "file": "tech-why-phone-batteries-age.json",
+      "niche": "tech",
+      "nicheTitle": "Tech, explained",
+      "title": "Why phone batteries age",
+      "format": "9:16",
+      "theme": "neon",
+      "voice": "af_sky",
+      "style": "energetic",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://batteryuniversity.com/article/bu-808-how-to-prolong-lithium-based-batteries"
+      ],
+      "brief": "A 35-second explainer of lithium-ion battery wear, with what speeds it up, what helps, and a reminder not to obsess."
+    },
+    {
+      "file": "coding-undo-your-last-git-commit.json",
+      "niche": "coding",
+      "nicheTitle": "Coding tips",
+      "title": "Undo your last git commit",
+      "format": "16:9",
+      "theme": "mono-brutalist",
+      "voice": "am_eric",
+      "style": "calm",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://git-scm.com/docs/git-reset",
+        "https://git-scm.com/docs/git-revert"
+      ],
+      "brief": "A 45-second git tip: three ways to undo the last commit with reset, and when to use revert instead because the commit was already pushed."
+    },
+    {
+      "file": "coding-early-returns.json",
+      "niche": "coding",
+      "nicheTitle": "Coding tips",
+      "title": "Flatten your code with early returns",
+      "format": "9:16",
+      "theme": "cinematic",
+      "voice": "af_heart",
+      "style": "calm",
+      "presenter": null,
+      "factual": false,
+      "sources": [],
+      "brief": "A 40-second coding tip: replace nested if blocks with early returns, shown as a before and after in JavaScript."
+    },
+    {
+      "file": "coding-name-your-booleans.json",
+      "niche": "coding",
+      "nicheTitle": "Coding tips",
+      "title": "Name your booleans like questions",
+      "format": "1:1",
+      "theme": "midnight-tech",
+      "voice": "af_bella",
+      "style": "energetic",
+      "presenter": null,
+      "factual": false,
+      "sources": [],
+      "brief": "A 35-second naming tip: booleans should read like yes or no questions, with is, has, can and should prefixes, and no double negatives."
+    },
+    {
+      "file": "finance-the-rule-of-72.json",
+      "niche": "finance",
+      "nicheTitle": "Finance explained",
+      "title": "The rule of 72",
+      "format": "9:16",
+      "theme": "editorial-paper",
+      "voice": "af_heart",
+      "style": "calm",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://en.wikipedia.org/wiki/Rule_of_72"
+      ],
+      "brief": "A 40-second explainer of the rule of 72 for estimating how long money takes to double, with a chart for four rates and a clear 'not advice' ending."
+    },
+    {
+      "file": "finance-what-is-an-index-fund.json",
+      "niche": "finance",
+      "nicheTitle": "Finance explained",
+      "title": "What is an index fund?",
+      "format": "16:9",
+      "theme": "corporate-blue",
+      "voice": "am_adam",
+      "style": "news",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://en.wikipedia.org/wiki/Index_fund",
+        "https://en.wikipedia.org/wiki/S%26P_500"
+      ],
+      "brief": "A 45-second explainer of index funds: what an index is, how a fund tracks it, how it compares with one stock, and that it is not risk-free."
+    },
+    {
+      "file": "finance-why-100-dollars-buys-less.json",
+      "niche": "finance",
+      "nicheTitle": "Finance explained",
+      "title": "Why $100 buys less every year",
+      "format": "1:1",
+      "theme": "clean-minimal",
+      "voice": "af_nova",
+      "style": "calm",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://www.bls.gov/cpi/"
+      ],
+      "brief": "A 35-second explainer of inflation with an illustrative chart: what $100 is worth after ten and twenty years at three percent a year."
+    },
+    {
+      "file": "fitness-why-you-stopped-getting-stronger.json",
+      "niche": "fitness",
+      "nicheTitle": "Fitness",
+      "title": "Why you stopped getting stronger",
+      "format": "9:16",
+      "theme": "bold-pop",
+      "voice": "am_eric",
+      "style": "energetic",
+      "presenter": "rex",
+      "factual": true,
+      "sources": [
+        "https://www.cdc.gov/physical-activity-basics/guidelines/adults.html"
+      ],
+      "brief": "A 40-second explainer of progressive overload with four simple levers and a safety note."
+    },
+    {
+      "file": "fitness-how-much-exercise-adults-need.json",
+      "niche": "fitness",
+      "nicheTitle": "Fitness",
+      "title": "How much exercise do adults need?",
+      "format": "16:9",
+      "theme": "mono-brutalist",
+      "voice": "am_michael",
+      "style": "news",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://www.cdc.gov/physical-activity-basics/guidelines/adults.html"
+      ],
+      "brief": "A 45-second summary of the World Health Organization's activity guidance for adults, with the numbers on screen."
+    },
+    {
+      "file": "fitness-sleep-is-part-of-training.json",
+      "niche": "fitness",
+      "nicheTitle": "Fitness",
+      "title": "Sleep is part of training",
+      "format": "9:16",
+      "theme": "warm-documentary",
+      "voice": "af_heart",
+      "style": "calm",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://www.cdc.gov/sleep/about/index.html"
+      ],
+      "brief": "A 35-second note that recovery includes sleep, with the CDC's hours for adults and four habits that help."
+    },
+    {
+      "file": "history-the-stone-that-unlocked-egypt.json",
+      "niche": "history",
+      "nicheTitle": "History facts",
+      "title": "The stone that unlocked Egypt",
+      "format": "9:16",
+      "theme": "cinematic",
+      "voice": "bf_emma",
+      "style": "storyteller",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://en.wikipedia.org/wiki/Rosetta_Stone"
+      ],
+      "brief": "A 45-second history of the Rosetta Stone: the decree, the three scripts, the find in 1799 and the decipherment in 1822."
+    },
+    {
+      "file": "history-london-burns-1666.json",
+      "niche": "history",
+      "nicheTitle": "History facts",
+      "title": "London burns, 1666",
+      "format": "16:9",
+      "theme": "warm-documentary",
+      "voice": "bf_emma",
+      "style": "storyteller",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://www.britannica.com/event/Great-Fire-of-London"
+      ],
+      "brief": "A 45-second account of the Great Fire of London with the timeline, the scale, and the rebuilding."
+    },
+    {
+      "file": "history-the-machine-that-changed-reading.json",
+      "niche": "history",
+      "nicheTitle": "History facts",
+      "title": "The machine that changed reading",
+      "format": "9:16",
+      "theme": "editorial-paper",
+      "voice": "am_adam",
+      "style": "storyteller",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://www.britannica.com/biography/Johannes-Gutenberg"
+      ],
+      "brief": "A 40-second history of Gutenberg's printing press: hand-copied books, movable type, and how quickly presses spread."
+    },
+    {
+      "file": "productivity-do-it-in-two-minutes.json",
+      "niche": "productivity",
+      "nicheTitle": "Productivity",
+      "title": "The two-minute rule",
+      "format": "9:16",
+      "theme": "playful-pastel",
+      "voice": "af_sky",
+      "style": "energetic",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://en.wikipedia.org/wiki/Getting_Things_Done"
+      ],
+      "brief": "A 35-second explainer of the two-minute rule from Getting Things Done, with examples and its limits."
+    },
+    {
+      "file": "productivity-beat-procrastination-with-a-timer.json",
+      "niche": "productivity",
+      "nicheTitle": "Productivity",
+      "title": "Beat procrastination with a timer",
+      "format": "1:1",
+      "theme": "bold-pop",
+      "voice": "am_michael",
+      "style": "energetic",
+      "presenter": "maya",
+      "factual": true,
+      "sources": [
+        "https://en.wikipedia.org/wiki/Pomodoro_Technique"
+      ],
+      "brief": "A 35-second explainer of the Pomodoro Technique with its steps and origin."
+    },
+    {
+      "file": "productivity-urgent-or-important.json",
+      "niche": "productivity",
+      "nicheTitle": "Productivity",
+      "title": "Urgent or important?",
+      "format": "16:9",
+      "theme": "clean-minimal",
+      "voice": "af_heart",
+      "style": "calm",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://en.wikipedia.org/wiki/Time_management"
+      ],
+      "brief": "A 45-second explainer of the Eisenhower matrix with its four quadrants."
+    },
+    {
+      "file": "launch-meet-lumen.json",
+      "niche": "launch",
+      "nicheTitle": "Product launches",
+      "title": "Meet Lumen: light that follows the day",
+      "format": "9:16",
+      "theme": "cinematic",
+      "voice": "af_nicole",
+      "style": "storyteller",
+      "presenter": null,
+      "factual": false,
+      "sources": [],
+      "brief": "A 35-second launch video for a fictional desk lamp called Lumen. Clearly a sample: it shows what a product launch can look like and names no real company."
+    },
+    {
+      "file": "launch-tally-notes-without-accounts.json",
+      "niche": "launch",
+      "nicheTitle": "Product launches",
+      "title": "Tally: notes with no account",
+      "format": "9:16",
+      "theme": "neon",
+      "voice": "am_liam",
+      "style": "energetic",
+      "presenter": null,
+      "factual": false,
+      "sources": [],
+      "brief": "A 35-second launch video for a fictional notes app called Tally. A sample, naming no real company."
+    },
+    {
+      "file": "launch-trailmix-boots-for-wet-rock.json",
+      "niche": "launch",
+      "nicheTitle": "Product launches",
+      "title": "Trailmix: a boot made for wet rock",
+      "format": "16:9",
+      "theme": "corporate-blue",
+      "voice": "af_bella",
+      "style": "news",
+      "presenter": null,
+      "factual": false,
+      "sources": [],
+      "brief": "A 40-second launch video for a fictional hiking boot called Trailmix. A sample, naming no real company."
+    },
+    {
+      "file": "language-ser-or-estar.json",
+      "niche": "language",
+      "nicheTitle": "Language learning",
+      "title": "Ser or estar?",
+      "format": "9:16",
+      "theme": "bold-pop",
+      "voice": "af_heart",
+      "style": "energetic",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://en.wikipedia.org/wiki/Romance_copula"
+      ],
+      "brief": "A 40-second Spanish tip on ser versus estar with examples and the DOCTOR and PLACE memory trick."
+    },
+    {
+      "file": "language-three-writing-systems-at-once.json",
+      "niche": "language",
+      "nicheTitle": "Language learning",
+      "title": "Japanese uses three writing systems at once",
+      "format": "16:9",
+      "theme": "editorial-paper",
+      "voice": "af_nicole",
+      "style": "calm",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://en.wikipedia.org/wiki/Japanese_writing_system"
+      ],
+      "brief": "A 45-second overview of hiragana, katakana, kanji and romaji."
+    },
+    {
+      "file": "language-one-syllable-four-meanings.json",
+      "niche": "language",
+      "nicheTitle": "Language learning",
+      "title": "One syllable, four meanings: Mandarin tones",
+      "format": "9:16",
+      "theme": "neon",
+      "voice": "af_heart",
+      "style": "energetic",
+      "presenter": "sam",
+      "factual": true,
+      "sources": [
+        "https://en.wikipedia.org/wiki/Tone_(linguistics)",
+        "https://en.wikipedia.org/wiki/Standard_Chinese_phonology"
+      ],
+      "brief": "A 35-second introduction to the four Mandarin tones using the syllable ma."
+    },
+    {
+      "file": "science-why-do-we-have-seasons.json",
+      "niche": "science",
+      "nicheTitle": "Science",
+      "title": "Why do we have seasons?",
+      "format": "16:9",
+      "theme": "playful-pastel",
+      "voice": "af_bella",
+      "style": "calm",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://spaceplace.nasa.gov/seasons/en/",
+        "https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html"
+      ],
+      "brief": "A 45-second explainer of seasons: axial tilt, not distance from the Sun."
+    },
+    {
+      "file": "science-how-a-vaccine-teaches-your-body.json",
+      "niche": "science",
+      "nicheTitle": "Science",
+      "title": "How a vaccine teaches your body",
+      "format": "9:16",
+      "theme": "corporate-blue",
+      "voice": "am_adam",
+      "style": "news",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://www.who.int/news-room/feature-stories/detail/how-do-vaccines-work",
+        "https://www.cdc.gov/vaccines/basics/explaining-how-vaccines-work.html"
+      ],
+      "brief": "A 40-second explainer of how vaccines train the immune system."
+    },
+    {
+      "file": "science-a-year-that-measures-distance.json",
+      "niche": "science",
+      "nicheTitle": "Science",
+      "title": "A year that measures distance: the light-year",
+      "format": "9:16",
+      "theme": "midnight-tech",
+      "voice": "af_sky",
+      "style": "energetic",
+      "presenter": "ada",
+      "factual": true,
+      "sources": [
+        "https://spaceplace.nasa.gov/light-year/en/",
+        "https://en.wikipedia.org/wiki/Light-year"
+      ],
+      "brief": "A 35-second explainer of the light-year with the nearest star."
+    },
+    {
+      "file": "books-frankenstein-in-a-minute.json",
+      "niche": "books",
+      "nicheTitle": "Book summaries",
+      "title": "Frankenstein in a minute",
+      "format": "9:16",
+      "theme": "cinematic",
+      "voice": "bf_emma",
+      "style": "storyteller",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://en.wikipedia.org/wiki/Frankenstein",
+        "https://en.wikisource.org/wiki/Frankenstein,_or_the_Modern_Prometheus_(First_Edition,_1818)/Volume_3/Chapter_3"
+      ],
+      "brief": "A 45-second summary of Mary Shelley's Frankenstein (1818), with one real quotation from the book."
+    },
+    {
+      "file": "books-the-art-of-war-in-a-minute.json",
+      "niche": "books",
+      "nicheTitle": "Book summaries",
+      "title": "The Art of War in a minute",
+      "format": "16:9",
+      "theme": "mono-brutalist",
+      "voice": "am_michael",
+      "style": "news",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://en.wikipedia.org/wiki/The_Art_of_War"
+      ],
+      "brief": "A 45-second summary of The Art of War, traditionally credited to Sun Tzu."
+    },
+    {
+      "file": "books-a-roman-emperors-private-notes.json",
+      "niche": "books",
+      "nicheTitle": "Book summaries",
+      "title": "A Roman emperor's private notes: Meditations",
+      "format": "1:1",
+      "theme": "warm-documentary",
+      "voice": "am_adam",
+      "style": "calm",
+      "presenter": null,
+      "factual": true,
+      "sources": [
+        "https://en.wikipedia.org/wiki/Meditations"
+      ],
+      "brief": "A 40-second summary of Marcus Aurelius's Meditations and its Stoic themes."
+    }
+  ]
+}

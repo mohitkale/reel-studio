@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "The rule of 72",
+  "format": "9:16",
+  "theme": "editorial-paper",
+  "voice": {
+    "voiceId": "af_heart",
+    "style": "calm"
+  },
+  "sources": [
+    {
+      "title": "Rule of 72 (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Rule_of_72",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "The rule of 72: how long does money take to double?",
+    "description": "A rule of thumb for doubling time, with four examples. Education, not financial advice.",
+    "hashtags": [
+      "#personalfinance",
+      "#compoundinterest",
+      "#money"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "The rule of 72",
+      "narration": "Here is a quick way to estimate how long money takes to double."
+    },
+    {
+      "type": "definition",
+      "headline": "Divide 72 by the rate",
+      "narration": "Divide seventy-two by the yearly growth rate. The answer is roughly the number of years it takes to double.",
+      "definition": {
+        "term": "Rule of 72",
+        "meaning": "Years to double is about 72 divided by the annual rate of return, as a percentage."
+      }
+    },
+    {
+      "type": "chart",
+      "headline": "Years to double",
+      "narration": "At three percent it takes about twenty-four years. At six percent, twelve. At nine percent, eight. At twelve percent, six.",
+      "chart": {
+        "labels": [
+          "3%",
+          "6%",
+          "9%",
+          "12%"
+        ],
+        "series": [
+          {
+            "label": "Years",
+            "values": [
+              24,
+              12,
+              8,
+              6
+            ]
+          }
+        ],
+        "kind": "bar",
+        "source": "72 divided by the rate"
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "It works on debt too",
+      "narration": "The same rule shows how fast a debt can double at a given interest rate, if nothing is paid off."
+    },
+    {
+      "type": "statement",
+      "headline": "An estimate, not a promise",
+      "narration": "Real returns change from year to year and are never guaranteed. This is a rule of thumb, not financial advice."
+    },
+    {
+      "type": "cta",
+      "headline": "Try your own numbers",
+      "narration": "Pick a rate you read about and divide it into seventy-two."
+    }
+  ]
+}

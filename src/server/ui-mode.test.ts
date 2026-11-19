@@ -9,8 +9,14 @@ describe("decideUiState", () => {
       needsOnboarding: true,
       existingInstall: false,
       reviewBeforeMaking: false,
+      endTag: false,
       automation: { research: true, voice: true, music: true, captions: true },
     });
+  });
+
+  it("leaves the end tag off unless it was chosen", () => {
+    expect(decideUiState({}, false).endTag).toBe(false);
+    expect(decideUiState({ endTag: true }, false).endTag).toBe(true);
   });
 
   it("opens an existing install in Pro with no setup", () => {

@@ -53,6 +53,7 @@ function withStoryboardTheme(
     variety: "low" | "medium" | "high";
     reduceMotion?: boolean;
     presenter?: PresenterConfig;
+    endTag?: boolean;
   },
 ): BrandTokens {
   const theme = getTheme(themeId);
@@ -65,6 +66,7 @@ function withStoryboardTheme(
         variety: look.variety,
         ...(look.reduceMotion ? { reduceMotion: true } : {}),
         ...(look.presenter ? { presenter: look.presenter } : {}),
+        ...(look.endTag ? { endTag: true } : {}),
       }
     : themed;
 }

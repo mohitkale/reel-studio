@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "A year that measures distance: the light-year",
+  "format": "9:16",
+  "theme": "midnight-tech",
+  "voice": {
+    "voiceId": "af_sky",
+    "style": "energetic"
+  },
+  "presenter": {
+    "character": "ada",
+    "placement": "corner"
+  },
+  "sources": [
+    {
+      "title": "What Is a Light-Year? (NASA Space Place)",
+      "url": "https://spaceplace.nasa.gov/light-year/en/",
+      "accessed": "2026-11-19"
+    },
+    {
+      "title": "Light-year (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Light-year",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "A year that measures distance: the light-year",
+    "description": "What a light-year is, and how far away the nearest star is.",
+    "hashtags": [
+      "#space",
+      "#science",
+      "#lightyear"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "A year is a distance?",
+      "narration": "A light-year sounds like time. It is actually a distance, and a huge one."
+    },
+    {
+      "type": "definition",
+      "headline": "What a light-year is",
+      "narration": "A light-year is how far light travels in one year.",
+      "definition": {
+        "term": "Light-year",
+        "meaning": "The distance light travels in one year, about 9.46 trillion kilometres."
+      }
+    },
+    {
+      "type": "stat",
+      "headline": "The number",
+      "narration": "That is about nine point four six trillion kilometres.",
+      "stat": {
+        "value": "9.46T km",
+        "label": "one light-year"
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "The nearest star",
+      "narration": "The nearest star beyond our Sun, Proxima Centauri, is about four point two light-years away."
+    },
+    {
+      "type": "statement",
+      "headline": "Looking back in time",
+      "narration": "Light takes time to arrive, so you see distant objects as they were. Light from Proxima left about four years ago."
+    },
+    {
+      "type": "cta",
+      "headline": "Look up tonight",
+      "narration": "Every point of light you see left its star long ago."
+    }
+  ]
+}

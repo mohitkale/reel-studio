@@ -136,6 +136,8 @@ export interface StoryboardProductionPlan {
     variety: "low" | "medium" | "high";
     reduceMotion?: boolean;
     presenter?: PresenterConfig;
+    /** End with a one-second "Made with Reel Studio" tag (a setting of the person, not of the storyboard). */
+    endTag?: boolean;
     /** True when the storyboard names a series: the look is shared and locked. */
     locked?: boolean;
   };

@@ -279,7 +279,7 @@ It is enforced, not promised:
 - `tests/fixtures/storyboard-v1/frozen.schema.json` is the schema at the freeze. A test
   (`src/storyboard/schema-compat.test.ts`) compares the published schema with it and fails,
   naming the path, on any change that would refuse a document the frozen schema accepted.
-- `tests/fixtures/storyboard-v1/corpus/` holds the twelve golden storyboards as they were at the
+- `tests/fixtures/storyboard-v1/corpus/` holds the twelve golden storyboards and the thirty niche showcase storyboards as they were at the
   freeze. The same test lints each one (no errors, no repairs), plans it and builds its composition.
   The corpus only ever gains files; never edit one.
 - After an additive change, `npm run storyboard:freeze` moves the baseline forward (it refuses if

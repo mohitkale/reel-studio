@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Undo your last git commit",
+  "format": "16:9",
+  "theme": "mono-brutalist",
+  "voice": {
+    "voiceId": "am_eric",
+    "style": "calm"
+  },
+  "sources": [
+    {
+      "title": "git-reset documentation",
+      "url": "https://git-scm.com/docs/git-reset",
+      "accessed": "2026-11-19"
+    },
+    {
+      "title": "git-revert documentation",
+      "url": "https://git-scm.com/docs/git-revert",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "Undo your last git commit: soft, mixed, hard, or revert",
+    "description": "Three ways to undo a commit with git reset, and when to use git revert instead.",
+    "hashtags": [
+      "#git",
+      "#coding",
+      "#devtips"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Undo your last commit",
+      "narration": "You committed, and then spotted a mistake. Git gives you a few ways out, depending on what you want to keep."
+    },
+    {
+      "type": "terminal",
+      "headline": "Keep the changes, undo the commit",
+      "narration": "Reset soft moves the branch back one commit and keeps your changes staged, ready to commit again.",
+      "code": {
+        "language": "bash",
+        "text": "$ git reset --soft HEAD~1\n$ git status"
+      }
+    },
+    {
+      "type": "terminal",
+      "headline": "Keep the files, unstage them",
+      "narration": "A plain reset, which is mixed by default, also keeps your files but unstages them.",
+      "code": {
+        "language": "bash",
+        "text": "$ git reset HEAD~1"
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "The risky one",
+      "narration": "The last option is the only one that destroys work, so read it twice before you run it."
+    },
+    {
+      "type": "terminal",
+      "headline": "Throw it all away",
+      "narration": "Reset hard discards the commit and your changes. Use it only when you are sure.",
+      "code": {
+        "language": "bash",
+        "text": "$ git reset --hard HEAD~1"
+      }
+    },
+    {
+      "type": "statement",
+      "headline": "Already pushed?",
+      "narration": "If other people have your commit, do not rewrite history. Use git revert, which adds a new commit that undoes the old one."
+    },
+    {
+      "type": "cta",
+      "headline": "Pick the gentlest option",
+      "narration": "Choose the gentlest option that does the job, and check git status afterwards."
+    }
+  ]
+}

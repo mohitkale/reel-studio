@@ -987,3 +987,48 @@ describe("a presenter in the composition", () => {
     expect(preview).toContain("querySelectorAll('[data-presenter-clip]')");
   });
 });
+
+describe("the optional end tag", () => {
+  const base = {
+    scenes: [
+      {
+        id: "a",
+        templateId: "hf-statement",
+        role: "statement",
+        text: "Hello there",
+        emphasis: [],
+      },
+      {
+        id: "b",
+        templateId: "hf-statement",
+        role: "statement",
+        text: "Second idea",
+        emphasis: [],
+      },
+    ],
+    timeline: [
+      { sceneId: "a", startFrame: 0, durationFrames: 90 },
+      { sceneId: "b", startFrame: 90, durationFrames: 90 },
+    ],
+    ...dimsFor("portrait"),
+    fps: 30,
+  };
+  const build = (endTag?: boolean) =>
+    buildHyperframesCompositionHtml({
+      ...base,
+      tokens: { ...defaultBrandTokens, ...(endTag ? { endTag: true } : {}) },
+    } as unknown as Parameters<typeof buildHyperframesCompositionHtml>[0]);
+
+  it("is not in a video unless the person chose it", () => {
+    expect(build()).not.toContain('class="clip end-tag"');
+    expect(build(false)).not.toContain("Made with Reel Studio</div>");
+  });
+
+  it("is one second over the very end when chosen", () => {
+    const html = build(true);
+    // The video is 6 s long: the tag shows from 5 s to 6 s.
+    expect(html).toMatch(
+      /class="clip end-tag"[^>]*data-start="5\.000"[^>]*data-duration="1\.000"[^>]*>Made with Reel Studio</,
+    );
+  });
+});

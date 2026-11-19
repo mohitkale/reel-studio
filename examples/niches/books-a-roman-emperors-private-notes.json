@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "A Roman emperor's private notes: Meditations",
+  "format": "1:1",
+  "theme": "warm-documentary",
+  "voice": {
+    "voiceId": "am_adam",
+    "style": "calm"
+  },
+  "sources": [
+    {
+      "title": "Meditations (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Meditations",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "A Roman emperor's private notes: Meditations",
+    "description": "What Marcus Aurelius wrote to himself, and why we still read it.",
+    "hashtags": [
+      "#meditations",
+      "#stoicism",
+      "#books"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "A Roman emperor's private notes",
+      "narration": "Two thousand years ago, a Roman emperor wrote notes to himself. We still read them."
+    },
+    {
+      "type": "statement",
+      "headline": "Written for himself",
+      "narration": "Meditations are the private notes of Marcus Aurelius, Roman emperor from 161 to 180. He wrote them in Greek as a source for his own guidance and self-improvement."
+    },
+    {
+      "type": "list",
+      "headline": "Recurring themes",
+      "narration": "Focus on what is in your control, control your emotions, remember that everything comes from nature and returns to it, and stay focused and ethical.",
+      "items": [
+        "Focus on what is in your control",
+        "Keep your emotions in check",
+        "Everything returns to nature",
+        "Stay focused and act ethically"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "Stoic practice",
+      "narration": "He was a Stoic, and the notes read like reminders to himself: stay calm, stay fair, stay useful."
+    },
+    {
+      "type": "cta",
+      "headline": "Try one page",
+      "narration": "Read one page tonight and see what stays with you."
+    }
+  ]
+}

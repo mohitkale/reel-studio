@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Thirty videos, ten niches: tomorrow",
+  "format": "9:16",
+  "theme": "neon",
+  "voice": {
+    "voiceId": "am_michael",
+    "style": "energetic"
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Thirty videos. Ten niches.",
+      "narration": "Tomorrow, thirty videos across ten kinds of channel."
+    },
+    {
+      "type": "kinetic-text",
+      "headline": "One JSON file each",
+      "narration": "Every one of them starts as a small JSON file."
+    },
+    {
+      "type": "stat",
+      "headline": "Checked against the sources",
+      "narration": "Every fact was checked against the page it cites, and checking changed several of the videos.",
+      "stat": {
+        "value": "30 videos",
+        "label": "each with its storyboard"
+      }
+    },
+    {
+      "type": "list",
+      "headline": "History to coding tips",
+      "narration": "History, coding tips, finance, fitness, science, book summaries, and more.",
+      "items": ["History facts", "Coding tips", "Science"]
+    },
+    {
+      "type": "statement",
+      "headline": "Made on a laptop",
+      "narration": "The voice, the scenes and the video are all made on a laptop, with no fee per video."
+    },
+    {
+      "type": "cta",
+      "headline": "Tomorrow",
+      "body": "Free and open source",
+      "narration": "Tomorrow, with the storyboard beside every video."
+    }
+  ]
+}

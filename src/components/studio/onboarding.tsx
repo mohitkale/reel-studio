@@ -348,6 +348,30 @@ function WriterStep() {
   );
 }
 
+/** The one time the end tag is offered. It is off unless the person turns it on. */
+function ShareChoice() {
+  const state = useUiState();
+  const setMode = useSetUiMode();
+  return (
+    <div className="space-y-1 text-sm">
+      <p className="font-medium">When you share your videos (optional)</p>
+      <label className="flex items-start gap-2">
+        <input
+          type="checkbox"
+          className="mt-1"
+          checked={state.data?.endTag ?? false}
+          disabled={!state.data || setMode.isPending}
+          onChange={(event) => setMode.mutate({ endTag: event.target.checked })}
+        />
+        <span>
+          End my videos with a one-second &ldquo;Made with Reel Studio&rdquo;
+          tag. Off by default; you can change this in Settings any time.
+        </span>
+      </label>
+    </div>
+  );
+}
+
 /**
  * First-run setup in three steps (roadmap U2): ready check, voice, and who writes
  * the storyboard. It ends by making a sample video from a built-in storyboard so
@@ -423,6 +447,7 @@ export function Onboarding() {
       {step === 0 && <ReadyCheck />}
       {step === 1 && <VoiceStep />}
       {step === 2 && <WriterStep />}
+      {step === 2 && <ShareChoice />}
       {error && (
         <p role="alert" className="text-destructive text-sm">
           {error}{" "}

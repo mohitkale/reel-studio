@@ -8,6 +8,7 @@ import {
 } from "@/server/api-helpers";
 import {
   setAutomation,
+  setEndTag,
   setOnboarded,
   setReviewBeforeMaking,
   setUiMode,
@@ -24,6 +25,8 @@ const bodySchema = z
     onboarded: z.boolean().optional(),
     /** Stop for review before a video is made. */
     reviewBeforeMaking: z.boolean().optional(),
+    /** End new videos with a one-second "Made with Reel Studio" tag. */
+    endTag: z.boolean().optional(),
     /** Which steps run by themselves; only the keys sent change. */
     automation: z
       .object({
@@ -58,6 +61,7 @@ export async function POST(req: Request) {
     if (body.automation) await setAutomation(body.automation);
     if (body.reviewBeforeMaking !== undefined)
       await setReviewBeforeMaking(body.reviewBeforeMaking);
+    if (body.endTag !== undefined) await setEndTag(body.endTag);
     return Response.json(await readUiState());
   } catch (error) {
     return errorResponse(error);

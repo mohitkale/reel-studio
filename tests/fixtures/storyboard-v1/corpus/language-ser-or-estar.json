@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Ser or estar?",
+  "format": "9:16",
+  "theme": "bold-pop",
+  "voice": {
+    "voiceId": "af_heart",
+    "style": "energetic"
+  },
+  "sources": [
+    {
+      "title": "Romance copula (Wikipedia)",
+      "url": "https://en.wikipedia.org/wiki/Romance_copula",
+      "accessed": "2026-11-19"
+    }
+  ],
+  "publish": {
+    "title": "Ser or estar? The difference in 40 seconds",
+    "description": "Spanish to be: what each verb is for, with examples and a memory trick.",
+    "hashtags": [
+      "#spanish",
+      "#languagelearning",
+      "#serestar"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Ser or estar? Learn the difference in seconds",
+      "narration": "Spanish has two verbs for to be, and choosing between them trips up every learner."
+    },
+    {
+      "type": "comparison",
+      "headline": "Two verbs",
+      "narration": "Ser is for what something is: identity, origin, time. Estar is for how or where something is: mood and place.",
+      "compare": {
+        "left": {
+          "label": "Ser",
+          "text": "What it is: identity, origin, time"
+        },
+        "right": {
+          "label": "Estar",
+          "text": "How or where it is: mood, place"
+        }
+      }
+    },
+    {
+      "type": "list",
+      "headline": "Four examples",
+      "narration": "Soy estudiante means I am a student. Estoy cansado means I am tired. Es de Madrid means he is from Madrid. Está en casa means he is at home.",
+      "items": [
+        "Soy estudiante: I am a student",
+        "Estoy cansado: I am tired",
+        "Es de Madrid: he is from Madrid",
+        "Está en casa: he is at home"
+      ]
+    },
+    {
+      "type": "comparison",
+      "headline": "Same word, new meaning",
+      "narration": "Some adjectives change meaning. With ser, aburrido means boring. With estar, it means bored.",
+      "compare": {
+        "left": {
+          "label": "Ser aburrido",
+          "text": "To be boring"
+        },
+        "right": {
+          "label": "Estar aburrido",
+          "text": "To be bored"
+        }
+      }
+    },
+    {
+      "type": "cta",
+      "headline": "Make three sentences",
+      "narration": "Write one sentence with ser and one with estar, then say them out loud."
+    }
+  ]
+}

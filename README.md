@@ -36,6 +36,11 @@ Click one for the full MP4 with sound.
 | [![Listicle](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-listicle.gif)](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-listicle.mp4)    | [![Product launch](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-product-launch.gif)](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-product-launch.mp4) | [![How-to](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-how-to.gif)](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-how-to.mp4)                         |
 | [![Explainer](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-explainer.gif)](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-explainer.mp4) | [![Data story](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-data-story.gif)](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-data-story.mp4)             | [![Developer demo](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-developer-demo.gif)](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/gallery-developer-demo.mp4) |
 
+**Thirty more, across ten niches** (tech, coding, finance, fitness, history, productivity,
+product launches, language learning, science, books), each with its storyboard and the command to
+make it again: the [showcase wall](https://mohitkale.github.io/reel-studio/showcase.html) and a
+[45-second montage](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/montage.mp4).
+
 Also: **podcasts** with one or two hosts (WAV or MP3, transcript, chapters, video audiograms),
 vertical, square or wide output, captions you can edit, and your own footage and music.
 

@@ -32,6 +32,7 @@ export function useSetUiMode() {
       mode?: UiMode;
       onboarded?: boolean;
       reviewBeforeMaking?: boolean;
+      endTag?: boolean;
       automation?: Partial<Automation>;
     }) => apiPost<UiState>("/api/ui-mode", input),
     // Show a switch's new value at once; the server's answer replaces it.
@@ -45,6 +46,7 @@ export function useSetUiMode() {
           ...(input.reviewBeforeMaking !== undefined
             ? { reviewBeforeMaking: input.reviewBeforeMaking }
             : {}),
+          ...(input.endTag !== undefined ? { endTag: input.endTag } : {}),
           ...(input.automation
             ? { automation: { ...previous.automation, ...input.automation } }
             : {}),

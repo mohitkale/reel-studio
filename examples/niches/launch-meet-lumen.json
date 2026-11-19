@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "kind": "video",
+  "title": "Meet Lumen: light that follows the day",
+  "format": "9:16",
+  "theme": "cinematic",
+  "voice": {
+    "voiceId": "af_nicole",
+    "style": "storyteller"
+  },
+  "publish": {
+    "title": "Meet Lumen (a fictional sample product)",
+    "description": "A sample product launch video. Lumen is a made-up product.",
+    "hashtags": [
+      "#sample",
+      "#productlaunch"
+    ]
+  },
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Meet Lumen: light that follows the day",
+      "narration": "A sample launch for a fictional product: Lumen, a desk lamp that follows the day."
+    },
+    {
+      "type": "statement",
+      "headline": "Light that follows the day",
+      "narration": "Lumen warms in the evening and brightens in the morning, so your desk matches the time of day."
+    },
+    {
+      "type": "before-after",
+      "headline": "Before and after",
+      "narration": "No more flat white light all day. Lumen changes gently through the hours.",
+      "compare": {
+        "left": {
+          "label": "Before",
+          "text": "Flat white light at every hour"
+        },
+        "right": {
+          "label": "After",
+          "text": "Light that shifts with the hour"
+        }
+      }
+    },
+    {
+      "type": "list",
+      "headline": "What is in the box",
+      "narration": "The lamp, a charging cable, and a clip that holds it to a monitor.",
+      "items": [
+        "The lamp",
+        "A charging cable",
+        "A monitor clip"
+      ]
+    },
+    {
+      "type": "stat",
+      "headline": "Three modes",
+      "narration": "Choose focus, relax or night with one tap.",
+      "stat": {
+        "value": "3 modes",
+        "label": "focus, relax, night"
+      }
+    },
+    {
+      "type": "cta",
+      "headline": "A fictional product",
+      "narration": "Lumen is made up, used here to show what a launch video can look like.",
+      "body": "A sample product for demonstration."
+    }
+  ]
+}
