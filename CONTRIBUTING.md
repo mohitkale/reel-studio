@@ -40,6 +40,12 @@ comment that you are taking it, and open a pull request with the contact sheet a
 video you are proud of? Share it in
 [Show and tell](https://github.com/mohitkale/reel-studio/discussions/categories/show-and-tell).
 
+## What to expect from us
+
+This is a small project. We aim to reply to a new issue, discussion or pull request within three
+working days, and to review a small pull request within a week. If you have heard nothing after
+that, add a comment; it was missed, not ignored. Replying is not a promise to build something.
+
 ## Branches and PRs
 
 `main` is the only long-lived branch and is always releasable.
