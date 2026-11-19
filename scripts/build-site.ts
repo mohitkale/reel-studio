@@ -201,7 +201,7 @@ function landing(): string {
     <p class="lead">Free, and on your own computer. An AI model (or you) writes one small JSON file; voice, scenes, captions, music and the MP4 are made locally, the same way every time.</p>
     <p class="cta"><a class="button" href="#try-it">Try it</a> <a class="button ghost" href="gallery.html">See what it makes</a></p>
   </div>
-  <video class="hero-video" width="1080" height="640" autoplay muted loop playsinline preload="metadata" poster="${MEDIA}/hero-poster.jpg" aria-label="Three videos made by Reel Studio, side by side">
+  <video class="hero-video" width="1080" height="640" controls muted loop playsinline preload="none" poster="${MEDIA}/hero-poster.jpg" aria-label="Three videos made by Reel Studio, side by side">
     <source src="${MEDIA}/hero.webm" type="video/webm">
     <source src="${MEDIA}/hero.mp4" type="video/mp4">
   </video>
