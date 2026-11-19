@@ -125,7 +125,9 @@ python3 -m http.server 8801 --directory dist/demo &
 python3 -m http.server 8802 --directory dist/site
 ```
 
-`.github/workflows/pages.yml` builds the site on every pull request that touches it and
+The workflow downloads the posters from the release and serves them from the site
+(`--poster-dir`), so the first screen does not wait on a redirect; videos load from the release
+when played. `.github/workflows/pages.yml` builds the site on every pull request that touches it and
 publishes it from `main`. A new guide goes in the `DOCS` list in `scripts/build-site.ts`;
 `npm run site:og` redraws `site/assets/og.png`. Pages must be set to "GitHub Actions" as its
 source in the repository settings (a maintainer step).

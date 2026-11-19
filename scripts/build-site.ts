@@ -35,6 +35,10 @@ const SITE_URL = (
   value("--site-url") ?? "https://mohitkale.github.io/reel-studio/"
 ).replace(/\/?$/, "/");
 const OUT = path.resolve("dist/site");
+/** Posters are small and first on screen, so they are served from the site itself when a folder of them is given. */
+const POSTER_DIR = value("--poster-dir");
+const poster = (file: string, root: string): string =>
+  POSTER_DIR ? `${root}media/${file}` : `${MEDIA}/${file}`;
 
 /** What the gallery shows, in order, with one line each. */
 const GALLERY: Array<{ name: string; blurb: string }> = [
@@ -129,6 +133,8 @@ function layout(args: {
   body: string;
   nav?: "home" | "gallery" | "mcp" | "docs";
   video?: boolean;
+  /** An image that is the first thing on screen; the browser is told to fetch it early. */
+  preload?: string;
 }): string {
   const depth = args.page.split("/").length - 1;
   const root = depth === 0 ? "" : "../".repeat(depth);
@@ -157,6 +163,7 @@ function layout(args: {
 ${args.video ? `<meta property="og:video" content="${e(MEDIA)}/hero.mp4">\n<meta property="og:video:type" content="video/mp4">` : ""}
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="${root}style.css">
+${args.preload ? `<link rel="preload" as="image" href="${e(args.preload)}" fetchpriority="high">` : ""}
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -191,7 +198,7 @@ function landing(): string {
   const tiles = GALLERY.slice(0, 6)
     .map(
       ({ name }) =>
-        `<a class="tile" href="gallery.html#${name}"><img src="${MEDIA}/gallery-${name}.jpg" alt="${e(storyboardTitle(name))}" width="320" height="568" loading="lazy" decoding="async"><span>${e(storyboardTitle(name))}</span></a>`,
+        `<a class="tile" href="gallery.html#${name}"><img src="${poster(`gallery-${name}.jpg`, "")}" alt="${e(storyboardTitle(name))}" width="320" height="568" loading="lazy" decoding="async"><span>${e(storyboardTitle(name))}</span></a>`,
     )
     .join("");
   return `
@@ -201,7 +208,7 @@ function landing(): string {
     <p class="lead">Free, and on your own computer. An AI model (or you) writes one small JSON file; voice, scenes, captions, music and the MP4 are made locally, the same way every time.</p>
     <p class="cta"><a class="button" href="#try-it">Try it</a> <a class="button ghost" href="gallery.html">See what it makes</a></p>
   </div>
-  <video class="hero-video" width="1080" height="640" controls muted loop playsinline preload="none" poster="${MEDIA}/hero-poster.jpg" aria-label="Three videos made by Reel Studio, side by side">
+  <video class="hero-video" width="1080" height="640" controls muted loop playsinline preload="none" poster="${poster("hero-poster.jpg", "")}" aria-label="Three videos made by Reel Studio, side by side">
     <source src="${MEDIA}/hero.webm" type="video/webm">
     <source src="${MEDIA}/hero.mp4" type="video/mp4">
   </video>
@@ -294,7 +301,7 @@ function gallery(): string {
     const portrait = format === "9:16";
     const media = isPodcast
       ? `<audio controls preload="none" src="${MEDIA}/gallery-podcast.mp3" aria-label="${e(storyboardTitle(name))}"></audio>`
-      : `<video controls preload="none" playsinline poster="${MEDIA}/gallery-${name}.jpg" src="${MEDIA}/gallery-${name}.mp4" class="${portrait ? "portrait" : format === "1:1" ? "square" : "wide"}" aria-label="${e(storyboardTitle(name))}"></video>`;
+      : `<video controls preload="none" playsinline poster="${poster(`gallery-${name}.jpg`, "")}" src="${MEDIA}/gallery-${name}.mp4" class="${portrait ? "portrait" : format === "1:1" ? "square" : "wide"}" aria-label="${e(storyboardTitle(name))}"></video>`;
     return `
 <article class="card" id="${name}">
   <div class="card-media">${media}</div>
@@ -513,6 +520,10 @@ function main(): void {
     path.resolve("docs/assets/how-it-works.svg"),
     path.join(OUT, "assets/how-it-works.svg"),
   );
+  if (POSTER_DIR)
+    cpSync(path.resolve(POSTER_DIR), path.join(OUT, "media"), {
+      recursive: true,
+    });
 
   write(
     "index.html",
@@ -524,6 +535,7 @@ function main(): void {
       body: landing(),
       nav: "home",
       video: true,
+      preload: poster("hero-poster.jpg", ""),
     }),
   );
   write(
