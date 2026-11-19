@@ -86,6 +86,28 @@ definition. An OpenAI-compatible local server needs one registration with a labe
 protocol and defaults. Gemini and OpenAI keep fixed-origin cloud transports and
 separate credentials. Voice and stock providers live under `src/providers/`.
 
+## Demo media for the README
+
+`npm run demo:assets` regenerates every image and video the README shows into
+`dist/demo/` (ignored by git), with `manifest.json` (file, size, cap, source
+storyboard) and `index.html` to look at them all. It needs the app running
+(`npm run dev`) for the golden storyboards it has not rendered yet, a real Chrome,
+FFmpeg, and about 20 minutes.
+
+- Hero (MP4, WebM, GIF; GIF under 8 MB) and six gallery GIFs (each under 3 MB, each with
+  an MP4 twin) are cut from the `npm run showcase` renders in `media/showcase/`.
+  Choose which storyboards in `HERO` and `GALLERY` at the top of `scripts/demo-assets.ts`.
+- Theme and scene-type contact sheets come from `scripts/theme-sheet.mjs` and
+  `scripts/scene-sheet.mjs`.
+- Screenshots (home, generation view, result, phone), a prompt-to-video screen recording and
+  a terminal recording of the real MCP server making a video come from
+  `scripts/demo-capture-ui.ts`, which starts a throwaway studio with a fake local writer.
+
+Flags: `--skip-ui`, `--skip-sheets`, `--rerender` (render the storyboards again).
+The run fails if a GIF cannot be brought under its cap. The README links the files as assets of
+the `demo-assets` release; `npm run demo:assets -- --upload demo-assets` attaches a fresh set
+(a public action: only a maintainer runs it).
+
 ## Pull request checklist
 
 - [ ] Works in portrait, landscape and square with supplied copy and media
