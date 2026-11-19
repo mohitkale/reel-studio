@@ -31,7 +31,10 @@ export const sfxCueSchema = z.object({
     "swipe",
     "sting-intro",
     "sting-outro",
+    "custom",
   ]),
+  url: z.string().min(1).max(500).optional(),
+  durationSeconds: z.number().min(0.1).max(30).optional(),
   fromEnd: z.boolean().optional(),
   offsetSeconds: z.coerce
     .number()
@@ -128,7 +131,15 @@ export function resolveReelSfxCues(args: {
   );
   function resolve(cue: SfxCue): ResolvedCue | undefined {
     const beat = byScene.get(cue.sceneId);
-    const clip = getSfxClip(cue.sfxId);
+    const clip =
+      cue.sfxId === "custom" && cue.url
+        ? {
+            id: "custom" as const,
+            url: cue.url,
+            durationSeconds: cue.durationSeconds ?? 2,
+            peakOffsetSeconds: 0,
+          }
+        : getSfxClip(cue.sfxId);
     if (!beat || !clip || cue.volume === 0) return undefined;
     let offset = cue.offsetSeconds;
     // From the end: the clip finishes with the scene (or that long before it).

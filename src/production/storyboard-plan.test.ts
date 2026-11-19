@@ -257,8 +257,9 @@ describe("scene pace", () => {
 });
 
 describe("stings", () => {
-  it("are off unless the storyboard asks for them", () => {
-    expect(plan().stings).toBe("off");
+  it("are left to the brand kit unless the storyboard asks for them or turns them off", () => {
+    expect(plan().stings).toBe("default");
+    expect(plan({ stings: "off" }).stings).toBe("off");
     expect(plan({ stings: "auto" }).stings).toBe("auto");
   });
 });

@@ -24,6 +24,8 @@ const patchSchema = z.object({
   handle: z.string().max(64).nullable().optional(),
   palette: colorRecord.optional(),
   fonts: z.object({ fontFamily: z.string().max(120).optional() }).optional(),
+  introStingAssetId: z.string().min(1).max(80).nullable().optional(),
+  outroStingAssetId: z.string().min(1).max(80).nullable().optional(),
   isDefault: z.boolean().optional(),
 });
 

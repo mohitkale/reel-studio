@@ -1,3 +1,4 @@
+import type { BrandStings } from "@/library/brand-stings";
 import type { ScriptSfxState } from "@/lib/sfx-library";
 import { buildAutomaticSfxCues } from "@/lib/sfx-planner";
 import { parseSfxState } from "@/lib/sfx-cues";
@@ -64,7 +65,11 @@ export async function ensureSfxCues(
  * last one. They are saved as locked manual cues, so a refresh of the automatic
  * accents keeps them, and they can be moved or removed in the sound editor.
  */
-export async function ensureStingCues(scriptId: string): Promise<void> {
+export async function ensureStingCues(
+  scriptId: string,
+  /** The brand kit's own stings; the bundled chimes fill in whatever it does not name. */
+  brand: BrandStings = {},
+): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const script = await tx.script.findUnique({
       where: { id: scriptId },
@@ -75,24 +80,29 @@ export async function ensureStingCues(scriptId: string): Promise<void> {
     const first = script.scenes[0]!.id;
     const last = script.scenes[script.scenes.length - 1]!.id;
     const keep = state.cues.filter(
-      (cue) => cue.sfxId !== "sting-intro" && cue.sfxId !== "sting-outro",
+      (cue) =>
+        cue.sfxId !== "sting-intro" &&
+        cue.sfxId !== "sting-outro" &&
+        cue.sfxId !== "custom",
     );
     const cues: ScriptSfxState["cues"] = [
       {
         sceneId: first,
-        sfxId: "sting-intro",
+        ...(brand.intro
+          ? { sfxId: "custom" as const, ...brand.intro, volume: 0.8 }
+          : { sfxId: "sting-intro" as const, volume: 0.45 }),
         offsetSeconds: 0,
-        volume: 0.45,
         source: "manual",
         locked: true,
       },
       ...keep,
       {
         sceneId: last,
-        sfxId: "sting-outro",
+        ...(brand.outro
+          ? { sfxId: "custom" as const, ...brand.outro, volume: 0.8 }
+          : { sfxId: "sting-outro" as const, volume: 0.45 }),
         offsetSeconds: 0,
         fromEnd: true,
-        volume: 0.45,
         source: "manual",
         locked: true,
       },

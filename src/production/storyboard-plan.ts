@@ -127,7 +127,7 @@ export interface StoryboardProductionPlan {
   captions: "auto" | "off";
   sfx: "auto" | "off";
   /** Intro and outro chimes. Off unless the storyboard (or its series) asks. */
-  stings: "auto" | "off";
+  stings: "auto" | "off" | "default";
   /** Seed, variety and calm-motion switch for the variety engine. */
   look: {
     seed: string;
@@ -344,7 +344,7 @@ export function planFromStoryboard(
     },
     captions: storyboard.captions,
     sfx: storyboard.sfx ?? "auto",
-    stings: storyboard.stings ?? "off",
+    stings: storyboard.stings ?? "default",
     look: {
       // Without a seed the series (one shared family) or the title decides, so
       // a storyboard is stable by default.

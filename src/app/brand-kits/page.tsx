@@ -1,5 +1,6 @@
 "use client";
 
+import { useAssets } from "@/hooks/assets";
 import * as React from "react";
 import { Palette, Plus, Pencil, Trash2, Star } from "lucide-react";
 import { toast } from "sonner";
@@ -47,6 +48,9 @@ type EditState = {
   name: string;
   handle: string;
   colors: Record<string, string>;
+  /** Uploaded audio played at the start and the end of the kit's videos; "" for none. */
+  introSting: string;
+  outroSting: string;
 };
 
 function KitDialogForm({
@@ -74,10 +78,13 @@ function KitDialogForm({
   const [name, setName] = React.useState(kit?.name ?? "");
   const [handle, setHandle] = React.useState(kit?.handle ?? "");
   const [colors, setColors] = React.useState<Record<string, string>>(initColors);
+  const [introSting, setIntroSting] = React.useState(kit?.introStingAssetId ?? "");
+  const [outroSting, setOutroSting] = React.useState(kit?.outroStingAssetId ?? "");
+  const audioAssets = useAssets("audio");
 
   function handleSave() {
     if (!name.trim()) { toast.error("Kit name is required"); return; }
-    onSave({ id: kit?.id ?? "", name: name.trim(), handle: handle.trim(), colors });
+    onSave({ id: kit?.id ?? "", name: name.trim(), handle: handle.trim(), colors, introSting, outroSting });
   }
 
   const palette = COLOR_FIELDS.map(({ key }) => colors[key]).filter(Boolean);
@@ -108,6 +115,36 @@ function KitDialogForm({
               placeholder="@yourhandle"
             />
           </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {(
+            [
+              ["Intro sting", introSting, setIntroSting, "kit-intro-sting"],
+              ["Outro sting", outroSting, setOutroSting, "kit-outro-sting"],
+            ] as const
+          ).map(([label, value, set, id]) => (
+            <div key={id} className="space-y-1">
+              <Label htmlFor={id}>{label}</Label>
+              <select
+                id={id}
+                value={value}
+                onChange={(e) => set(e.target.value)}
+                className="bg-background h-9 w-full rounded-md border px-2 text-sm"
+              >
+                <option value="">None</option>
+                {(audioAssets.data ?? []).map((asset) => (
+                  <option key={asset.id} value={asset.id}>
+                    {asset.name ?? asset.id}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ))}
+          <p className="text-muted-foreground text-xs sm:col-span-2">
+            Upload a short sound (up to 30 seconds) in Assets, then pick it here. Videos
+            that wear this kit play it at the start and the end.
+          </p>
         </div>
 
         {palette.length > 0 && (
@@ -283,15 +320,24 @@ export default function BrandKitsPage() {
           name: state.name,
           handle: state.handle || null,
           palette,
+          introStingAssetId: state.introSting || null,
+          outroStingAssetId: state.outroSting || null,
         });
         toast.success("Brand kit updated");
       } else {
         const kit = await createKit.mutateAsync(state.name);
-        if (Object.keys(palette).length > 0 || state.handle) {
+        if (
+          Object.keys(palette).length > 0 ||
+          state.handle ||
+          state.introSting ||
+          state.outroSting
+        ) {
           await updateKit.mutateAsync({
             id: kit.id,
             handle: state.handle || null,
             palette,
+            introStingAssetId: state.introSting || null,
+            outroStingAssetId: state.outroSting || null,
           });
         }
         toast.success("Brand kit created");

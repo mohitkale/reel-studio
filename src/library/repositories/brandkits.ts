@@ -89,6 +89,8 @@ function toDTO(kit: BrandKit): BrandKitDTO {
     tokens: resolveBrandTokens(kit),
     handle: kit.handle,
     logoAssetId: kit.logoAssetId,
+    introStingAssetId: kit.introStingAssetId,
+    outroStingAssetId: kit.outroStingAssetId,
     isDefault: ctaDefaults.isDefault === true,
     createdAt: kit.createdAt.toISOString(),
     updatedAt: kit.updatedAt.toISOString(),
@@ -137,6 +139,9 @@ export interface BrandKitPatch {
   handle?: string | null;
   palette?: Record<string, string>;
   fonts?: { fontFamily?: string };
+  /** An audio asset id, or null to clear. */
+  introStingAssetId?: string | null;
+  outroStingAssetId?: string | null;
 }
 
 export async function updateBrandKit(
@@ -159,6 +164,12 @@ export async function updateBrandKit(
         : {}),
       ...(patch.fonts !== undefined
         ? { fonts: JSON.stringify({ ...currentFonts, ...patch.fonts }) }
+        : {}),
+      ...(patch.introStingAssetId !== undefined
+        ? { introStingAssetId: patch.introStingAssetId }
+        : {}),
+      ...(patch.outroStingAssetId !== undefined
+        ? { outroStingAssetId: patch.outroStingAssetId }
         : {}),
     },
   });

@@ -14,7 +14,9 @@ export type SfxId =
   | "riser"
   | "swipe"
   | "sting-intro"
-  | "sting-outro";
+  | "sting-outro"
+  /** A clip the cue carries itself (a brand kit's own sting): see `SfxCue.url`. */
+  | "custom";
 
 export interface SfxClip {
   id: SfxId;
@@ -138,6 +140,9 @@ export interface SfxCue {
   sfxId: SfxId;
   /** Seconds after scene start within the content timeline (post-cover). */
   offsetSeconds: number;
+  /** Where a `custom` clip is and how long it is. */
+  url?: string;
+  durationSeconds?: number;
   /** Count from the end of the scene instead: the clip ends `offsetSeconds` before the scene does (0 = ends with it). */
   fromEnd?: boolean;
   /** 0–1 linear gain for this one-shot. */

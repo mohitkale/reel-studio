@@ -225,3 +225,40 @@ describe("intro and outro stings", () => {
     ).toBe(true);
   });
 });
+
+describe("a brand kit's own sting", () => {
+  const custom = (extra: Partial<SfxCue> = {}): SfxCue => ({
+    sceneId: "scene",
+    sfxId: "custom",
+    url: "/media/assets/brand/hello.wav",
+    durationSeconds: 1.2,
+    offsetSeconds: 0,
+    volume: 0.8,
+    source: "manual",
+    locked: true,
+    ...extra,
+  });
+
+  it("plays the clip the cue carries, from the start of its scene", () => {
+    const [cue] = resolve([custom()]);
+    expect(cue).toMatchObject({
+      url: "/media/assets/brand/hello.wav",
+      startFrame: 90,
+      volume: 0.8,
+    });
+  });
+
+  it("ends a custom outro with its scene, using the length the cue carries", () => {
+    const [cue] = resolve([custom({ fromEnd: true })]);
+    // A 3 s scene and a 1.2 s clip: it starts 1.8 s in.
+    expect(cue!.startFrame).toBe(90 + Math.round(1.8 * 30));
+  });
+
+  it("is kept by the parser", () => {
+    const parsed = parseSfxState(JSON.stringify({ cues: [custom()] }));
+    expect(parsed.cues[0]).toMatchObject({
+      sfxId: "custom",
+      durationSeconds: 1.2,
+    });
+  });
+});
