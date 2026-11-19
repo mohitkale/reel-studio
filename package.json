@@ -85,6 +85,7 @@
     "icons:generate": "node scripts/generate-icons.mjs",
     "themes:sheet": "node scripts/theme-sheet.mjs",
     "scenes:sheet": "node --import tsx scripts/scene-sheet.mjs",
+    "scene:new": "node scripts/scene-new.mjs",
     "scene:preview": "node --import tsx scripts/scene-sheet.mjs --only",
     "voice:download": "node --import tsx scripts/download-voice-model.ts",
     "benchmark:render": "node --import tsx scripts/benchmark-render.ts",

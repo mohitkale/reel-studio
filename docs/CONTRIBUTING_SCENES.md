@@ -26,27 +26,88 @@ validates types, paths, variables, dependencies and assets, records SHA-256
 checksums and never changes an existing version directory. Run it twice before
 review: the second run must report no changes.
 
-## Add a scene type
+## Add a scene type (15 minutes)
 
-A storyboard scene type is one folder under `src/engines/hyperframes/scenes/<type>/`
-whose `index.ts` exports a `SceneDefinition` (`src/engines/hyperframes/scenes/types.ts`):
-the payload `schema`, `layout` notes for each format, `build` (the markup inside the
-panel) and a `sample`. Registering it is one line in `scenes/registry.ts`.
+A scene type is one folder, `src/engines/hyperframes/scenes/<name>/`, holding its data shape,
+its markup, its styles and a sample. You do not need to read the engine: you write the
+markup for the panel, and the engine fits it to the format, the theme and the narration.
 
-1. Add the type to `SCENE_TYPES` and any new data field to `src/storyboard/schema.ts`;
-   run `npm run storyboard:schema`.
-2. Map it in `STORYBOARD_TEMPLATE_BY_TYPE`, `STORYBOARD_ROLE_BY_TYPE` and the `panel`
-   switch in `src/production/storyboard-plan.ts`, and in `src/library/project-storyboard.ts`
-   for export.
-3. Size text from `--frame-h` with the helpers in `scenes/styles.ts`; the engine grows or
-   shrinks it to fit the panel. Use `kit.onAccent` for text on the accent colour.
-4. Give it three arrangements. Arrangement 1 is the classic design; add rules for
-   `.scene[data-arrange="2"]` and `[data-arrange="3"]` to
-   `scenes/arrangements.ts` (alignment, order, spacing, borders and fills; no
-   transforms, the entrance animations own those). Look at all three with
-   `REEL_FORCE_ARRANGE=2 npm run scenes:sheet` and `=3`.
-5. Check it: `/scenes` shows it, `npx vitest run src/engines/hyperframes/scenes`, and
-   `npm run examples:lint-frames -- --only <example>` passes for a storyboard that uses it.
+You need the repository set up (`npm ci`, see [getting started](GETTING_STARTED.md)); no
+voice model, network or API key.
+
+**1. Scaffold it.**
+
+```bash
+npm run scene:new pro-tip
+```
+
+This creates `src/engines/hyperframes/scenes/pro-tip/index.ts` and `index.test.ts`, then
+registers the type everywhere it has to be known (the storyboard format and its JSON Schema,
+the plan, the exporter and the tests) and regenerates `schemas/storyboard.v1.json`. If any
+registration point has moved, it changes nothing and tells you which one. The scene starts
+as a list of 2 to 6 short lines, so it already renders.
+
+**2. Look at it.**
+
+```bash
+npm run scene:preview pro-tip
+```
+
+This draws your scene (after a hook, before a call to action) at 9:16, 16:9 and 1:1 through
+the frame check and writes contact sheets to `.artifacts/scenes/zz-scene-tour-portrait.contact-sheet.jpg`
+(and `-landscape`, `-square`). The frame check fails the run when text overflows, runs under the
+contrast limit or leaves the safe area, and says which frame. About 25 seconds.
+
+**3. Make it yours.** Everything is in `index.ts`:
+
+| Field                 | What to do                                                                                                                                                                                                                                         |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`, `description` | What the scene library shows. One plain sentence for `description`.                                                                                                                                                                                |
+| `role`                | What the scene is for, so the motion director can pace it: `hook`, `explanation`, `summary`, `tip`, `emphasis`, `payoff`, `takeaway`, ... (the full list is `PRODUCTION_SCENE_ROLES` in `src/production/roles.ts`).                                |
+| `schema`              | The data a storyboard supplies, as a Zod object. Keep `items` (2 to 6 strings) unless the scene needs a different shape; see "A different shape" below.                                                                                            |
+| `build()`             | The markup inside the panel. Escape every string with `kit.escape()`. Use `kit.ink` for text, `kit.accent` for accents and `kit.onAccent` for text on an accent. `kit.emphasize()` and `kit.lineStack()` handle highlighted words and line breaks. |
+| `css`                 | Styles for the classes you use. Size everything with `px(0.036)` (3.6% of the frame height), never fixed pixels, so one rule serves every format.                                                                                                  |
+| `sample`              | Example content for the scene library, the tests and the preview. Make it look good.                                                                                                                                                               |
+
+Run `npm run scene:preview pro-tip` after each change and look at the three sheets.
+
+**4. Test it.**
+
+```bash
+npx vitest run src/engines/hyperframes/scenes
+```
+
+The scaffold's own tests check that the sample passes its schema, that too few or too many items
+are refused, and that markup from a storyboard is escaped. Add a test for anything special your
+`build()` does. The registry test also checks that your type plans, exports and draws in the
+tour with no repairs.
+
+**5. Use it in a storyboard and document it.** Add a scene with `"type": "pro-tip"` and
+`"items": [...]` to a file in `examples/storyboards/` (or your own), run
+`npm run examples:lint-frames -- --only <example>` and add a row to the scene table in
+[STORYBOARD.md](STORYBOARD.md). Improve the one-line description the scaffold added to
+`src/storyboard/schema.ts` (it is what a writing model reads), then run
+`npm run storyboard:schema`.
+
+**6. Open a pull request** with the contact sheet attached (see the checklist at the end).
+
+### A different shape
+
+If the scene needs something other than a list (two columns, a number, a picture), add a field
+for it to the scene object in `src/storyboard/schema.ts`, require it in the `need` map there, and
+carry it in the three places the scaffold wrote `items`: the `panel` switch in
+`src/production/storyboard-plan.ts`, the `registered` switch in `src/library/project-storyboard.ts`
+and the `panelToFields` maps in `registry.test.ts` and `scripts/scene-sheet.mjs`. Then run
+`npm run storyboard:schema`. Search for `"recap"` to find each spot: the scaffold put the new type
+beside it.
+
+### Optional: three arrangements
+
+Arrangement 1 is your design. The variety engine can also pick arrangements 2 and 3 to keep a long
+video from looking the same; a scene without rules for them just keeps arrangement 1. To add them,
+put rules for `.scene[data-arrange="2"]` and `[data-arrange="3"]` in
+`scenes/arrangements.ts` (alignment, order, spacing, borders and fills; no transforms, the entrance
+animations own those) and look with `REEL_FORCE_ARRANGE=2 npm run scene:preview pro-tip`, and `=3`.
 
 ## Add a theme (15 minutes)
 

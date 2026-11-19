@@ -3,8 +3,11 @@
  * (`--frame-h`) so one rule serves every format; the stage is a size container
  * so landscape can lay rows out side by side.
  */
-const H = "var(--frame-h, 1920px)";
-const px = (k: number) => `calc(${H} * ${k} * var(--sc-scale, 1))`;
+import { SCENE_DEFINITIONS } from "./registry";
+import { px } from "./units";
+
+/** Styles a scene type brings in its own folder (`css`), after the built-in ones. */
+const REGISTERED_STYLES = SCENE_DEFINITIONS.map((d) => d.css ?? "").join("\n");
 
 export const SCENE_STYLES = `
   .fx-panelled .fx-dialogue:has(> .sc-steps, > .sc-checks, > .sc-timeline) { align-items: stretch; text-align: left; justify-content: center; }
@@ -103,4 +106,5 @@ export const CHART_STYLES = `
   .fx-donut svg { height: 100%; max-height: ${px(0.36)}; aspect-ratio: 1; flex: none; }
   .fx-donut-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: ${px(0.012)}; font-size: ${px(0.03)}; font-weight: 700; text-align: left; }
   .fx-donut-legend i { display: inline-block; width: 0.8em; height: 0.8em; border-radius: 3px; margin-right: 0.5em; vertical-align: -0.05em; }
+${REGISTERED_STYLES}
 `;

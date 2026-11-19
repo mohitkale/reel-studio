@@ -86,7 +86,8 @@ describe("scene registry", () => {
         .sort(),
     ).toEqual([...SCENE_TYPES].sort());
     expect(sceneLibrary()).toHaveLength(SCENE_TYPES.length);
-    expect(SCENE_TYPES).toHaveLength(21);
+    // Nine built-in types (hook, statement, list, stat, chart, quote, code, media, cta).
+    expect(SCENE_TYPES).toHaveLength(9 + SCENE_DEFINITIONS.length);
   });
 
   it("validates every sample against its own schema", () => {
