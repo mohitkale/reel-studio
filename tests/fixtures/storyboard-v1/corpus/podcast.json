@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "kind": "podcast",
+  "title": "Is a four-day work week worth it?",
+  "speakers": [
+    {
+      "id": "maya",
+      "name": "Maya"
+    },
+    {
+      "id": "sam",
+      "name": "Sam"
+    }
+  ],
+  "turns": [
+    {
+      "speaker": "maya",
+      "text": "Welcome back. Today's question: is a four-day work week actually worth it, or is it just a nice idea on paper?"
+    },
+    {
+      "speaker": "sam",
+      "text": "I used to be skeptical. Fewer days sounds like less work done. But the pilot programs I have read about suggest people often keep their output."
+    },
+    {
+      "speaker": "maya",
+      "text": "The usual explanation is focus. When the week is shorter, meetings shrink and people protect their time more carefully."
+    },
+    {
+      "speaker": "sam",
+      "text": "Right, but it is not free. Some jobs, like support or healthcare, need coverage every day, so the schedule has to be designed, not just announced."
+    },
+    {
+      "speaker": "maya",
+      "text": "And a compressed week of long days is not the same thing. Four ten-hour days can leave people more tired, not less."
+    },
+    {
+      "speaker": "sam",
+      "text": "So the honest answer is: it depends on the work. Where output can be measured and shifts can be arranged, it is worth testing."
+    },
+    {
+      "speaker": "maya",
+      "text": "Test it, measure it, and be ready to adjust. Thanks for listening, and tell us what your team would do with a free Friday."
+    }
+  ]
+}

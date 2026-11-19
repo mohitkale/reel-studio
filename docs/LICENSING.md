@@ -66,6 +66,21 @@ each package’s `LICENSE` file in `node_modules` for the exact text.
 | `@modelcontextprotocol/sdk`           | MIT                | MCP server                                                                                                                                                                                                                                                                                                                             |
 | `@hyperframes/producer`               | Apache-2.0         | HyperFrames HTML→MP4 export                                                                                                                                                                                                                                                                                                            |
 
+### Other licences in the dependency tree
+
+`npm run licensing:check` fails when a non-development dependency has a licence that is not
+plainly permissive (MIT, ISC, BSD, Apache-2.0, 0BSD, Unlicense, OFL, CC0) and is not named here.
+These are the current ones:
+
+| Package                                                                 | Licence declared                                   | What it is and why it is here                                                                                                                                                                                                                                  |
+| ----------------------------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sharp` and `@img/sharp-libvips-*`                                      | Apache-2.0 and **LGPL-3.0-or-later**               | Image processing used by `@huggingface/transformers` (a dependency of `kokoro-js`). The libvips binaries are installed unmodified by npm as separate files, so they can be replaced; Reel Studio does not link or alter them.                                  |
+| `elkjs`                                                                 | **EPL-2.0**                                        | Graph layout, a dependency of Prisma Studio's `@prisma/studio-core`. Unmodified, installed by npm; not used by the app's own code.                                                                                                                             |
+| `caniuse-lite`                                                          | **CC-BY-4.0**                                      | Browser-support data used by Next.js's build tooling. Unmodified; attribution is in the package.                                                                                                                                                               |
+| `argparse`                                                              | Python-2.0                                         | Command-line parsing used by `wawoff2` (a dependency of `@hyperframes/producer`). Unmodified.                                                                                                                                                                  |
+| `@hyperframes/*` (core, engine, lint, parsers, producer, studio-server) | No licence field in the published package metadata | The HyperFrames packages declare no licence in their `package.json`. Their [repository](https://github.com/heygen-com/hyperframes/blob/main/LICENSE) is Apache-2.0, which is what this document relies on; check the package files before redistributing them. |
+| `expand-template`                                                       | MIT or WTFPL                                       | A transitive dependency of `better-sqlite3`'s installer; either licence is permissive.                                                                                                                                                                         |
+
 ---
 
 ## Optional cloud & media providers

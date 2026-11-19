@@ -6,6 +6,22 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+### Security
+
+- Updated Next.js to 16.4.6, which fixes two critical remote code execution advisories (image
+  optimisation and `use cache`) and a denial of service in server actions, plus Zod, Prisma and
+  the transitive Puppeteer and Hono packages. `npm audit` on production dependencies: 0 critical;
+  the 3 remaining high advisories (`sharp` through `kokoro-js`) have no fix yet and are recorded
+  with their reasoning in `docs/security-exceptions.json`. `npm run audit:check` enforces this.
+
+### Changed
+
+- Storyboard v1 is frozen: the schema may only grow, enforced by a compatibility test against the
+  frozen schema and a corpus of the golden storyboards (`docs/STORYBOARD.md`).
+- Added `npm run release:ready`, `test:upgrade-v080`, `licensing:check` and `audit:check`, and
+  `docs/RELEASE_READINESS.md`; fixed `test:release-upgrade`, which had been failing since v0.8.0.
+- `docs/LICENSING.md` now names every non-permissive dependency licence in the production tree.
+
 ## 0.8.0
 
 ### Added
