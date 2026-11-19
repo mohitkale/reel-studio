@@ -71,6 +71,10 @@ Made by `npm run launch:assets` (a running studio is needed) into `dist/launch/`
 | `clip-2-agent-and-compare.mp4` | 26 s: a scene of the JSON storyboard, the agent adding the server, and cloud tools next to Reel Studio.                                                                   |
 | `clip-3-what-you-get.mp4`      | What you get, what it is not, and the call to action.                                                                                                                     |
 
+A 31-second vertical teaser, also made by Reel Studio from
+[`launch/teaser.storyboard.json`](launch/teaser.storyboard.json) (render it on a running studio like any
+storyboard), for a "sneak peek" post the day before the showcase goes up.
+
 Also ready: the hero and gallery GIFs, the MCP terminal recording, the prompt-to-video recording
 and the screenshots, all from `npm run demo:assets` (hosted as assets of the `demo-assets`
 release), and the Open Graph card (`site/assets/og.png`).
