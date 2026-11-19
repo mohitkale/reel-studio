@@ -52,6 +52,8 @@ export interface GenerateTakeInput {
   speed?: number;
   /** A way of reading the voice (calm, energetic, storyteller, news). */
   style?: VoiceStyleId;
+  /** A speed multiplier per scene, in order. */
+  paces?: number[];
   label?: string;
   onProgress?: (progress: TakeProgress) => void;
 }
@@ -73,6 +75,7 @@ async function synthesizeScenesConcurrently(
     modelId?: string;
     speed?: number;
     style?: VoiceStyleId;
+    paces?: number[];
   },
   synth: (opts: SynthOptions) => Promise<SynthResult>,
   maxConcurrency: number,
@@ -92,12 +95,15 @@ async function synthesizeScenesConcurrently(
     while (cursor < scenes.length) {
       const i = cursor++;
       const scene = scenes[i];
+      const pace = ctx.paces?.[i] ?? 1;
+      // A scene's own pace is part of what was spoken, so it is part of the cache key.
+      const sceneSpeedTag = pace === 1 ? "" : `\0pace=${pace}`;
       const cacheParts: SceneAudioCacheKey = {
         sceneId: scene.id,
         providerId: ctx.providerId,
         voiceId: ctx.voiceId,
         modelId: ctx.modelId,
-        text: `${scene.text}${speedTag}`,
+        text: `${scene.text}${speedTag}${sceneSpeedTag}`,
       };
       let audio = await getCachedBeatAudio(cacheParts);
       if (!audio) {
@@ -108,7 +114,9 @@ async function synthesizeScenesConcurrently(
           voiceId: ctx.voiceId,
           modelId: ctx.modelId,
           text: scene.text,
-          ...(ctx.speed !== undefined ? { speed: ctx.speed } : {}),
+          ...(ctx.speed !== undefined || pace !== 1
+            ? { speed: (ctx.speed ?? 1) * pace }
+            : {}),
           ...(ctx.style ? { style: ctx.style } : {}),
         });
         assertProductionActive();
@@ -210,6 +218,7 @@ async function generateTakeForScenes(
         modelId: input.modelId,
         speed: input.speed,
         style: input.style,
+        paces: input.paces,
       },
       provider.synth,
       provider.maxConcurrency ?? DEFAULT_SYNTH_CONCURRENCY,

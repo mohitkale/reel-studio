@@ -7,6 +7,7 @@ import { Download, Loader2, Pause, Play, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
 import { useAIProviders } from "@/hooks/ai";
+import { useBrandKits } from "@/hooks/brandkits";
 import { useAutomation } from "@/hooks/ui-mode";
 import { apiGet, apiPost, apiPut } from "@/lib/api-client";
 import {
@@ -23,6 +24,7 @@ import {
 import { buildWriteRequest, lengthLabel } from "@/lib/one-prompt";
 import { MUSIC_LIBRARY } from "@/lib/music-library";
 import { parseTopics, type Series } from "@/lib/series";
+import { VOICE_STYLES, VOICE_STYLE_IDS } from "@/lib/voice-styles";
 import { THEMES } from "@/video/themes";
 
 const STORAGE_KEY = "reel-batch-v1";
@@ -38,6 +40,7 @@ function SeriesEditor({
   onChange: (next: Series[]) => Promise<void>;
 }) {
   const [draft, setDraft] = React.useState<Series>(EMPTY_SERIES);
+  const brandKits = useBrandKits();
   const [error, setError] = React.useState<string>();
   const set = (patch: Partial<Series>) => setDraft((d) => ({ ...d, ...patch }));
 
@@ -166,6 +169,39 @@ function SeriesEditor({
               ))}
             </NativeSelect>
           </label>
+          <label className="grid gap-1">
+            Brand kit
+            <NativeSelect
+              value={draft.brandKitId ?? ""}
+              onChange={(e) => set({ brandKitId: e.target.value || undefined })}
+            >
+              <option value="">None</option>
+              {(brandKits.data ?? []).map((kit) => (
+                <option key={kit.id} value={kit.id}>
+                  {kit.name}
+                </option>
+              ))}
+            </NativeSelect>
+          </label>
+          <label className="grid gap-1">
+            Voice style
+            <NativeSelect
+              value={draft.voiceStyle ?? ""}
+              onChange={(e) =>
+                set({
+                  voiceStyle: (e.target.value ||
+                    undefined) as Series["voiceStyle"],
+                })
+              }
+            >
+              <option value="">Natural</option>
+              {VOICE_STYLE_IDS.map((id) => (
+                <option key={id} value={id}>
+                  {VOICE_STYLES[id].label}
+                </option>
+              ))}
+            </NativeSelect>
+          </label>
           <div className="flex items-end gap-3">
             <label className="flex items-center gap-2">
               <input
@@ -176,6 +212,16 @@ function SeriesEditor({
                 }
               />
               Narrated
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={draft.stings === true}
+                onChange={(e) =>
+                  set({ stings: e.target.checked ? true : undefined })
+                }
+              />
+              Intro and outro chimes
             </label>
             <label className="flex items-center gap-2">
               <input

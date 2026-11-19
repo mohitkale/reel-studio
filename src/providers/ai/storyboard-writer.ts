@@ -174,7 +174,7 @@ async function writeLongStoryboard(
         ...brief,
         kind: "video",
         targetSeconds: perChapter,
-        topic: `${brief.topic}\n\nYou are writing ${twoPass ? "part" : "chapter"} ${index + 1} of ${outline.chapters.length} of a longer video titled "${outline.title}". This chapter: "${chapter.title}". ${chapter.goal}\nThe other chapters are: ${others}. Write only this chapter's scenes; do not repeat the others.${index > 0 ? " Do not open with a hook for the whole video." : ""}${index < outline.chapters.length - 1 ? " Do not close the whole video." : ""}`,
+        topic: `${brief.topic}\n\nYou are writing ${twoPass ? "part" : "chapter"} ${index + 1} of ${outline.chapters.length} of a longer video titled "${outline.title}". This chapter: "${chapter.title}". ${chapter.goal}\nThe other chapters are: ${others}. Write only this chapter's scenes; do not repeat the others.${index > 0 ? " Do not open with a hook for the whole video." : ""}${index < outline.chapters.length - 1 ? " Do not close the whole video." : ""}${!twoPass && index < outline.chapters.length - 1 ? " End this chapter with a recap scene that sums up its points." : ""}`,
       },
       lint: {
         ...args.lint,

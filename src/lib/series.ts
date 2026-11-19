@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { VOICE_STYLE_IDS } from "@/lib/voice-styles";
+
 /**
  * A series (roadmap A7) is a saved set of defaults for videos that belong together:
  * the same look, voice, format, length and music every time. A storyboard that sets
@@ -23,6 +25,14 @@ export const seriesSchema = z
     narration: z.boolean().optional(),
     captions: z.boolean().optional(),
     tone: z.string().trim().max(120).optional(),
+    /** A brand kit (colours, fonts, logo) every video in the series wears. */
+    brandKitId: z.string().trim().min(1).max(80).optional(),
+    /** A short chime at the start and the end of every video in the series. */
+    stings: z.boolean().optional(),
+    /** How the voice reads every video: calm, energetic, storyteller or news. */
+    voiceStyle: z.enum(VOICE_STYLE_IDS).optional(),
+    /** The language every video is written in (en-US, es, fr, ...). */
+    language: z.string().trim().min(2).max(8).optional(),
   })
   .strict();
 export type Series = z.infer<typeof seriesSchema>;
@@ -54,12 +64,21 @@ export function applySeries(
       out.captions = "off";
   }
   if (series.music && open(out.music)) out.music = series.music;
+  if (series.stings && out.stings === undefined) out.stings = "auto";
+  if (series.language && out.language === undefined)
+    out.language = series.language;
   const voice = (out.voice ?? {}) as Record<string, unknown>;
-  if (!podcast && (series.voiceId || series.narration === false)) {
+  if (
+    !podcast &&
+    (series.voiceId || series.voiceStyle || series.narration === false)
+  ) {
     out.voice = {
       ...voice,
       ...(series.voiceId && voice.voiceId === undefined
         ? { voiceId: series.voiceId }
+        : {}),
+      ...(series.voiceStyle && voice.style === undefined
+        ? { style: series.voiceStyle }
         : {}),
       ...(series.narration === false && voice.enabled === undefined
         ? { enabled: false }

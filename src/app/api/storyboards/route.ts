@@ -72,6 +72,7 @@ export async function POST(req: Request) {
     });
     const { series: seriesName, ...productionOptions } = options;
     let source: unknown = wrapped ? record.storyboard : body;
+    let brandKitId: string | undefined;
     if (seriesName) {
       const found = findSeries((await getConfig()).series, seriesName);
       if (!found)
@@ -83,9 +84,11 @@ export async function POST(req: Request) {
         );
       if (source && typeof source === "object" && !Array.isArray(source))
         source = applySeries(source as Record<string, unknown>, found);
+      if (found.brandKitId) brandKitId = found.brandKitId;
     }
     const result = await produceFromStoryboard(source, {
       ...productionOptions,
+      brandKitId,
       auth,
       serverBaseUrl: url.origin,
     });

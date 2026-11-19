@@ -18,6 +18,7 @@ function tour(): unknown {
     {
       steps: (p) => ({ items: p.items }),
       checklist: (p) => ({ items: p.items }),
+      recap: (p) => ({ items: p.items }),
       comparison: (p) => ({ compare: { left: p.left, right: p.right } }),
       "before-after": (p) => ({ compare: { left: p.left, right: p.right } }),
       timeline: (p) => ({ points: p.points }),
@@ -36,7 +37,7 @@ function tour(): unknown {
     scenes: [
       {
         type: "hook",
-        headline: "Twenty ways to say it",
+        headline: "Twenty-one ways to say it",
         narration: "A tour of every scene type the studio can draw.",
       },
       ...SCENE_DEFINITIONS.map((definition) => ({
@@ -78,13 +79,14 @@ describe("scene registry", () => {
     }
   });
 
-  it("offers twenty scene types in the library", () => {
+  it("offers every scene type in the library", () => {
     expect(
       sceneLibrary()
         .map((e) => e.type)
         .sort(),
     ).toEqual([...SCENE_TYPES].sort());
-    expect(sceneLibrary()).toHaveLength(20);
+    expect(sceneLibrary()).toHaveLength(SCENE_TYPES.length);
+    expect(SCENE_TYPES).toHaveLength(21);
   });
 
   it("validates every sample against its own schema", () => {

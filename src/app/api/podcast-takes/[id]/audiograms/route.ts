@@ -22,6 +22,7 @@ const bodySchema = z.object({
   endTurnId: z.string().min(1),
   orientation: orientationSchema.default("portrait"),
   quality: z.enum(["draft", "standard", "high"]).default("standard"),
+  presenters: z.boolean().optional(),
   idempotencyKey: z.string().min(8).max(240).optional(),
 });
 
@@ -42,6 +43,7 @@ export async function POST(
         endTurnId: body.endTurnId,
         orientation: body.orientation,
         quality: body.quality,
+        ...(body.presenters ? { presenters: true } : {}),
       },
     });
     after(() =>

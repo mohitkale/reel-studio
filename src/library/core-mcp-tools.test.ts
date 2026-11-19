@@ -103,6 +103,39 @@ it("create_video queues, waits and returns the finished video link", async () =>
   });
 });
 
+it("a finished video comes with its output folder", async () => {
+  mocks.post.mockImplementation(async (path: string) =>
+    path.endsWith("/export-folder")
+      ? {
+          folder: "/studio/media/exports/sky-j3",
+          files: ["video.mp4", "title.txt"],
+          notes: [],
+        }
+      : { jobId: "j3", projectId: "p3" },
+  );
+  mocks.get.mockImplementation(async (path: string) =>
+    path.endsWith("/artifacts/o1")
+      ? { artifact: { downloadUrl: "/media/v.mp4" } }
+      : {
+          job: {
+            state: "succeeded",
+            progress: 1,
+            outputs: [{ id: "o1", kind: "video" }],
+          },
+        },
+  );
+  const run = register(registerCoreTools).get("create_video")!.run;
+  const result = await run({ storyboard: { version: 1 } });
+  expect(JSON.parse(result.content[0]!.text)).toMatchObject({
+    outputFolder: "/studio/media/exports/sky-j3",
+    outputFiles: ["video.mp4", "title.txt"],
+  });
+  expect(mocks.post).toHaveBeenCalledWith(
+    "/api/production-jobs/j3/export-folder",
+    {},
+  );
+});
+
 it("create_video can return the job id straight away", async () => {
   mocks.post.mockResolvedValue({ jobId: "j2", projectId: "p2" });
   const run = register(registerCoreTools).get("create_video")!.run;

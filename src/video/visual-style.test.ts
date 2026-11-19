@@ -52,4 +52,3 @@ describe("resolvePlanVisualStyle", () => {
     ).toEqual({ styleId: "clean-story", energy: "calm" });
   });
 });
-

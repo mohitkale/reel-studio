@@ -186,7 +186,10 @@ export function getStyleChrome(styleId: StyleId): StyleChrome {
   return STYLE_CHROME[styleId];
 }
 
-export function getMotionRecipe(styleId: StyleId, energy: EnergyId): MotionRecipe {
+export function getMotionRecipe(
+  styleId: StyleId,
+  energy: EnergyId,
+): MotionRecipe {
   const base = BASE_MOTION[styleId];
   const scale = ENERGY_SCALE[energy];
   return {
@@ -206,7 +209,10 @@ export function getTransitionFrames(
 ): number {
   const chrome = STYLE_CHROME[styleId];
   const scale = ENERGY_SCALE[energy];
-  const at30 = Math.max(4, Math.round(chrome.transitionFrames * scale.transition));
+  const at30 = Math.max(
+    4,
+    Math.round(chrome.transitionFrames * scale.transition),
+  );
   return Math.max(4, Math.round((at30 / 30) * fps));
 }
 

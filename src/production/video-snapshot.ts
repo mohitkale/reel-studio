@@ -1,3 +1,4 @@
+import { presenterConfigSchema } from "@/video/presenter-config-schema";
 import { factoryLineageSchema } from "./factory-lineage";
 import { z } from "zod";
 import { sequenceConfigSchema } from "@/video/sequence-direction";
@@ -73,6 +74,7 @@ export const videoScriptSnapshotSchema = z.object({
     lookSeed: z.string().optional(),
     variety: z.enum(["low", "medium", "high"]).optional(),
     reduceMotion: z.boolean().optional(),
+    presenter: presenterConfigSchema.optional(),
   }),
   coverUrl: z.string().nullable(),
   musicUrl: z.string().nullable(),

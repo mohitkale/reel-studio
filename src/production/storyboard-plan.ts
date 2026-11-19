@@ -12,6 +12,7 @@ import { autoTheme, getTheme } from "@/video/themes";
 import type { ProductionPresetId } from "@/production/presets";
 import type { ProductionSceneRole } from "@/production/roles";
 import { defaultVoiceForLanguage } from "@/providers/voice/voice-catalog";
+import type { PresenterConfig } from "@/video/presenter-config";
 import type { VoiceStyleId } from "@/lib/voice-styles";
 import type { AIScene, ScenePlan } from "@/providers/ai/types";
 import {
@@ -45,6 +46,7 @@ export const STORYBOARD_TEMPLATE_BY_TYPE: Readonly<Record<SceneType, string>> =
     "media-split": "hf-media-split",
     "device-mockup": "hf-device-mockup",
     checklist: "hf-checklist",
+    recap: "hf-recap",
   };
 
 const ORIENTATION_BY_FORMAT: Record<VideoStoryboard["format"], Orientation> = {
@@ -77,6 +79,7 @@ export const STORYBOARD_ROLE_BY_TYPE: Readonly<
   "media-split": "feature",
   "device-mockup": "screenshot-demo",
   checklist: "summary",
+  recap: "summary",
 };
 
 /**
@@ -106,6 +109,9 @@ export interface StoryboardPlanScene {
   assetId?: string;
 }
 
+/** How much faster or slower a scene is read than the video's voice speed. */
+export const PACE_FACTOR = { slow: 0.88, normal: 1, fast: 1.12 } as const;
+
 export interface StoryboardProductionPlan {
   scenePlan: ScenePlan;
   presetId: ProductionPresetId;
@@ -120,11 +126,14 @@ export interface StoryboardProductionPlan {
   };
   captions: "auto" | "off";
   sfx: "auto" | "off";
+  /** Intro and outro chimes. Off unless the storyboard (or its series) asks. */
+  stings: "auto" | "off";
   /** Seed, variety and calm-motion switch for the variety engine. */
   look: {
     seed: string;
     variety: "low" | "medium" | "high";
     reduceMotion?: boolean;
+    presenter?: PresenterConfig;
     /** True when the storyboard names a series: the look is shared and locked. */
     locked?: boolean;
   };
@@ -132,6 +141,8 @@ export interface StoryboardProductionPlan {
   assetIds: Array<string | undefined>;
   /** Pictures the storyboard asked a local image model to make, per scene. */
   generatePrompts: Array<string | undefined>;
+  /** Reading pace per scene, a multiplier on the voice speed (1 is normal). */
+  scenePaces: number[];
   scenes: StoryboardPlanScene[];
   estimatedSeconds: number;
   /** The theme the video wears: named in the storyboard, or chosen from its words. */
@@ -150,6 +161,7 @@ export function planFromStoryboard(
   const warnings: string[] = [];
   const assetIds: Array<string | undefined> = [];
   const generatePrompts: Array<string | undefined> = [];
+  const scenePaces: number[] = [];
   const planScenes: StoryboardPlanScene[] = [];
 
   const scenes: AIScene[] = storyboard.scenes.map((scene, index) => {
@@ -179,6 +191,7 @@ export function planFromStoryboard(
         break;
       case "steps":
       case "checklist":
+      case "recap":
         panel = { items: scene.items };
         break;
       case "comparison":
@@ -251,6 +264,7 @@ export function planFromStoryboard(
     panel = { ...panel, sceneType: scene.type };
     assetIds.push(assetId);
     generatePrompts.push(scene.media?.generate);
+    scenePaces.push(PACE_FACTOR[scene.pace ?? "normal"]);
     planScenes.push({
       index,
       type: scene.type,
@@ -330,6 +344,7 @@ export function planFromStoryboard(
     },
     captions: storyboard.captions,
     sfx: storyboard.sfx ?? "auto",
+    stings: storyboard.stings ?? "off",
     look: {
       // Without a seed the series (one shared family) or the title decides, so
       // a storyboard is stable by default.
@@ -342,9 +357,21 @@ export function planFromStoryboard(
       ...(storyboard.series ? { locked: true } : {}),
       variety: storyboard.variety ?? "medium",
       ...(storyboard.reduceMotion ? { reduceMotion: true } : {}),
+      ...(storyboard.presenter
+        ? {
+            presenter: {
+              character: storyboard.presenter.character,
+              placement: storyboard.presenter.placement,
+              off: storyboard.scenes.flatMap((scene, index) =>
+                scene.presenter === "off" ? [index] : [],
+              ),
+            },
+          }
+        : {}),
     },
     assetIds,
     generatePrompts,
+    scenePaces,
     scenes: planScenes,
     estimatedSeconds: estimateDurationSeconds(storyboard),
     warnings,

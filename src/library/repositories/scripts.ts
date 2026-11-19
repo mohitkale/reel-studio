@@ -1,3 +1,4 @@
+import type { PresenterConfig } from "@/video/presenter-config";
 import type { Prisma } from "@prisma/client";
 import { recordHistory } from "@/library/scene-history";
 import { scriptSettingsSnapshot } from "@/library/structural-history";
@@ -51,6 +52,7 @@ function withStoryboardTheme(
     seed: string;
     variety: "low" | "medium" | "high";
     reduceMotion?: boolean;
+    presenter?: PresenterConfig;
   },
 ): BrandTokens {
   const theme = getTheme(themeId);
@@ -62,6 +64,7 @@ function withStoryboardTheme(
         lookSeed: look.seed,
         variety: look.variety,
         ...(look.reduceMotion ? { reduceMotion: true } : {}),
+        ...(look.presenter ? { presenter: look.presenter } : {}),
       }
     : themed;
 }

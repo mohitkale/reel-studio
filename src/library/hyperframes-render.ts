@@ -29,6 +29,7 @@ import path from "node:path";
 import { promises as fs } from "node:fs";
 import { spawn } from "node:child_process";
 
+import { buildReelPresenterTrack } from "@/library/presenter-track";
 import { coverFrames, type ReelProps, type ReelScene } from "@/video/types";
 import { extendHyperframesMusic } from "@/library/hyperframes-music-loop";
 import { type Orientation, dimsFor } from "@/lib/orientation";
@@ -290,6 +291,23 @@ async function runWorker(args: {
   });
 }
 
+/**
+ * A presenter's mouth, blinks and nods worked out from the words, before a page
+ * is built. The same for the whole page and for every scoped section, so a
+ * presenter looks identical wherever the video is cut.
+ */
+async function presenterTrackFor(inputProps: ReelProps) {
+  if (!inputProps.tokens?.presenter) return undefined;
+  const fps = inputProps.fps || 30;
+  return buildReelPresenterTrack({
+    cues: inputProps.captions?.cues ?? [],
+    fps,
+    coverSeconds: coverFrames(fps, Boolean(inputProps.coverUrl)) / fps,
+    totalSeconds: compositionTotalFrames(inputProps) / fps,
+    seed: inputProps.tokens.lookSeed ?? "presenter",
+  });
+}
+
 /** Write the same runtime, fonts, catalog and HTML used by export. */
 export async function writeHyperframesProject(
   projectDir: string,
@@ -351,12 +369,14 @@ export async function writeHyperframesProject(
     inputProps.musicUrl,
     durationFrames / fps,
   );
+  const presenterTrack = await presenterTrackFor(inputProps);
   const html = buildHyperframesCompositionHtml(
     { ...inputProps, musicUrl },
     {
       producerMode: true,
       runtimeUrl: GSAP_RENDER_URL,
       draftScale,
+      presenterTrack,
     },
   );
   if (lessonBudget) assertLessonHtmlBudget(Buffer.byteLength(html));
@@ -643,7 +663,11 @@ export async function runHyperframesRender(
       quality === "draft" && !useSections ? DRAFT_SCALE : undefined,
     );
     if (useSections)
-      await writeHyperframesVisualSections(projectDir, inputProps);
+      await writeHyperframesVisualSections(
+        projectDir,
+        inputProps,
+        await presenterTrackFor(inputProps),
+      );
 
     const store = getAssetStore();
     const fileName = `render-${renderId}.mp4`;

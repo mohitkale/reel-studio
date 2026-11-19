@@ -24,6 +24,7 @@ const out = path.resolve(
 const FIELDS = {
   steps: (p) => ({ items: p.items }),
   checklist: (p) => ({ items: p.items }),
+  recap: (p) => ({ items: p.items }),
   comparison: (p) => ({ compare: { left: p.left, right: p.right } }),
   "before-after": (p) => ({ compare: { left: p.left, right: p.right } }),
   timeline: (p) => ({ points: p.points }),
@@ -40,7 +41,7 @@ const tour = {
   scenes: [
     {
       type: "hook",
-      headline: "Twenty ways to say it",
+      headline: "Twenty-one ways to say it",
       narration: "A tour of every scene type the studio can draw.",
     },
     ...SCENE_DEFINITIONS.filter((d) => !only || d.id === only).map((d) => ({

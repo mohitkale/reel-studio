@@ -1,5 +1,8 @@
 import { escapeHtml as escape } from "@/lib/html";
 import type { PodcastAudiogramProps } from "@/video/podcast-audiogram";
+import { getCharacter } from "@/engines/hyperframes/presenter/characters";
+import { buildPresenterClips } from "@/engines/hyperframes/presenter/build-presenter-clips";
+import type { MouthKey } from "@/video/visemes";
 
 /** Timed speaker cards and waveform share one seekable timeline; audio is owned
  * by HyperFrames. Narration is the original selected podcast recording. */
@@ -20,6 +23,26 @@ export function buildAudiogramHtml(props: PodcastAudiogramProps): string {
       return `<section class="clip speaker-card" data-start="${beat.startFrame / props.fps}" data-duration="${(end - beat.startFrame) / props.fps}" data-track-index="1"><div class="speaker">${escape(beat.speaker)}</div><p>${escape(text)}</p></section>`;
     })
     .join("");
+  // Two presenters, one per speaker, replace the waveform at the bottom.
+  const presenters = (props.presenters ?? []).flatMap((p) => {
+    const character = getCharacter(p.characterId);
+    return character
+      ? [
+          buildPresenterClips({
+            character,
+            placement: "full",
+            frame: { width: props.width, height: props.height },
+            total: duration,
+            mouth: p.mouth as MouthKey[],
+            blinks: p.blinks,
+            nods: p.nods,
+            box: p.box,
+            uid: p.uid,
+            circle: false,
+          }),
+        ]
+      : [];
+  });
   const bars = props.waveform
     .map(
       (level, index) =>
@@ -42,12 +65,13 @@ h1{flex-shrink:0;margin:0 0 36px;font-size:${square ? 62 : landscape ? 76 : 82}p
 .speaker-card{position:absolute;inset:0}
 .speaker{color:${colors.accent};font-size:30px;font-weight:750;text-transform:uppercase;letter-spacing:.08em}
 p{font-size:${square ? 42 : landscape ? 45 : 52}px;line-height:1.16;letter-spacing:-.025em;margin:18px 0 0;overflow-wrap:anywhere}
+${presenters.map((p) => p.css).join("")}${presenters.length ? ".cards{max-height:34%;overflow:hidden}" : ""}
 .waveform{height:${square ? 100 : landscape ? 118 : 150}px;display:flex;align-items:center;gap:${landscape ? 9 : 7}px;margin-bottom:22px}
 .waveform span{flex:1;min-width:2px;border-radius:999px;background:${colors.muted}70}
 .progress{height:6px;background:${colors.muted}45;overflow:hidden;border-radius:999px}
 #progress{height:100%;background:${colors.accent};transform-origin:left center}
 </style></head><body><div id="audiogram" data-composition-id="audiogram" data-start="0" data-duration="${duration}" data-width="${props.width}" data-height="${props.height}" data-fps="${props.fps}">
-<div class="fill"></div><div class="content"><div class="label">${escape(props.presetLabel)} · Reel Studio</div><div class="copy"><h1>${escape(props.title)}</h1><div class="cards">${cards}</div></div><div><div class="waveform">${bars}</div><div class="progress"><div id="progress"></div></div></div></div>
+<div class="fill"></div><div class="content"><div class="label">${escape(props.presetLabel)} · Reel Studio</div><div class="copy"><h1>${escape(props.title)}</h1><div class="cards">${cards}</div></div><div>${presenters.length ? "" : `<div class="waveform">${bars}</div>`}${presenters.map((p) => p.html).join("\n")}<div class="progress"><div id="progress"></div></div></div></div>
 <audio id="narration" src="audio.wav" data-start="0" data-duration="${duration}" data-track-index="10" data-volume="1"></audio></div>
 <script>window.__timelines=window.__timelines||{};const tl=gsap.timeline({paused:true});
 tl.fromTo('.content',{opacity:0,y:28},{opacity:1,y:0,duration:Math.min(.5,${duration}),ease:'power2.out'},0);

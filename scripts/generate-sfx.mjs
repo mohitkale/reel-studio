@@ -191,6 +191,43 @@ function swipe(dur = 0.38) {
   return normalize(Array.from(out), 0.55);
 }
 
+/** One bell-like note: a sine with soft harmonics and an exponential decay. */
+function bell(out, startSeconds, freq, length, gain) {
+  const start = Math.floor(startSeconds * SR);
+  const n = Math.floor(length * SR);
+  for (let i = 0; i < n && start + i < out.length; i++) {
+    const t = i / SR;
+    const attack = Math.min(1, t / 0.008);
+    const env = attack * Math.exp(-t * (3.2 / length) * 2.4);
+    const tone =
+      Math.sin(2 * Math.PI * freq * t) +
+      0.32 * Math.sin(2 * Math.PI * freq * 2 * t) * Math.exp(-t * 6) +
+      0.12 * Math.sin(2 * Math.PI * freq * 3.01 * t) * Math.exp(-t * 9);
+    out[start + i] += tone * env * gain;
+  }
+}
+
+/** A short rising three-note chime for the start of a video (C, E, G). */
+function stingIntro(dur = 1.6) {
+  const out = new Float64Array(Math.floor(SR * dur));
+  bell(out, 0.0, 523.25, 1.1, 0.5);
+  bell(out, 0.14, 659.25, 1.1, 0.5);
+  bell(out, 0.28, 783.99, 1.3, 0.55);
+  bell(out, 0.28, 1046.5, 1.2, 0.18);
+  return normalize(Array.from(out), 0.5);
+}
+
+/** A falling chime that settles on a held C major chord, for the end of a video. */
+function stingOutro(dur = 2.2) {
+  const out = new Float64Array(Math.floor(SR * dur));
+  bell(out, 0.0, 783.99, 0.9, 0.45);
+  bell(out, 0.16, 659.25, 0.9, 0.45);
+  bell(out, 0.32, 523.25, 1.8, 0.5);
+  bell(out, 0.32, 329.63, 1.8, 0.3);
+  bell(out, 0.32, 392.0, 1.8, 0.25);
+  return normalize(Array.from(out), 0.5);
+}
+
 const PACK = [
   { id: "whoosh", fn: whoosh },
   { id: "soft-hit", fn: softHit },
@@ -198,6 +235,8 @@ const PACK = [
   { id: "click", fn: click },
   { id: "riser", fn: riser },
   { id: "swipe", fn: swipe },
+  { id: "sting-intro", fn: stingIntro },
+  { id: "sting-outro", fn: stingOutro },
 ];
 
 const outDir = path.join(process.cwd(), "public", "sfx");

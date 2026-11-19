@@ -165,6 +165,19 @@ export async function describeJob(jobId: string) {
     videoUrl = link ? absoluteUrl(link) : undefined;
   }
   const meta = video?.metadata ?? {};
+  // One folder per video with the MP4, the post text, the storyboard and a thumbnail.
+  let outputFolder:
+    { folder: string; files: string[]; notes: string[] } | undefined;
+  if (job.state === "succeeded") {
+    try {
+      outputFolder = await apiPost(
+        `/api/production-jobs/${encode(jobId)}/export-folder`,
+        {},
+      );
+    } catch {
+      // The video is still there without the folder.
+    }
+  }
   const failedStep = job.steps?.find((s) => s.state === "failed");
   return {
     jobId,
@@ -177,6 +190,8 @@ export async function describeJob(jobId: string) {
     ...(job.state === "succeeded"
       ? {
           filePath: localFilePath(videoUrl),
+          outputFolder: outputFolder?.folder,
+          outputFiles: outputFolder?.files,
           // 1280x720 PNG made on request from a frame of the video; size=vertical for 1080x1920.
           thumbnailUrl: absoluteUrl(
             `/api/production-jobs/${encode(jobId)}/thumbnail?size=landscape`,

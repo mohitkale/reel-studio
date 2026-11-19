@@ -59,6 +59,54 @@ export async function ensureSfxCues(
   });
 }
 
+/**
+ * Add an intro sting on the first scene and an outro sting that ends with the
+ * last one. They are saved as locked manual cues, so a refresh of the automatic
+ * accents keeps them, and they can be moved or removed in the sound editor.
+ */
+export async function ensureStingCues(scriptId: string): Promise<void> {
+  await prisma.$transaction(async (tx) => {
+    const script = await tx.script.findUnique({
+      where: { id: scriptId },
+      include: { scenes: { orderBy: { order: "asc" } } },
+    });
+    if (!script || script.scenes.length === 0) return;
+    const state = parseSfxState(script.sfxJson);
+    const first = script.scenes[0]!.id;
+    const last = script.scenes[script.scenes.length - 1]!.id;
+    const keep = state.cues.filter(
+      (cue) => cue.sfxId !== "sting-intro" && cue.sfxId !== "sting-outro",
+    );
+    const cues: ScriptSfxState["cues"] = [
+      {
+        sceneId: first,
+        sfxId: "sting-intro",
+        offsetSeconds: 0,
+        volume: 0.45,
+        source: "manual",
+        locked: true,
+      },
+      ...keep,
+      {
+        sceneId: last,
+        sfxId: "sting-outro",
+        offsetSeconds: 0,
+        fromEnd: true,
+        volume: 0.45,
+        source: "manual",
+        locked: true,
+      },
+    ];
+    await tx.script.update({
+      where: { id: scriptId },
+      data: {
+        sfxEnabled: true,
+        sfxJson: JSON.stringify({ enabled: true, cues }),
+      },
+    });
+  });
+}
+
 export async function setSfxEnabled(
   scriptId: string,
   enabled: boolean,

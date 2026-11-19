@@ -10,6 +10,7 @@ import { deviceMockup } from "./device-mockup";
 import { diagram } from "./diagram";
 import { kineticText } from "./kinetic-text";
 import { mediaSplit } from "./media-split";
+import { recap } from "./recap";
 import { steps } from "./steps";
 import { terminal } from "./terminal";
 import { timeline } from "./timeline";
@@ -26,6 +27,7 @@ export const SCENE_DEFINITIONS: ReadonlyArray<SceneDefinition<never>> = [
   diagram,
   mediaSplit,
   deviceMockup,
+  recap,
 ] as unknown as ReadonlyArray<SceneDefinition<never>>;
 
 const BY_TEMPLATE = new Map(SCENE_DEFINITIONS.map((d) => [d.templateId, d]));

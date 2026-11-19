@@ -75,6 +75,14 @@
             "off"
           ]
         },
+        "stings": {
+          "description": "A short chime at the start and another at the end of the video. \"auto\" adds them; omit for none.",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ]
+        },
         "sources": {
           "description": "Pages you used for facts. Leave out if you used none. Never invent sources.",
           "maxItems": 12,
@@ -211,6 +219,37 @@
           "additionalProperties": false,
           "description": "Narration settings. Omit to narrate with the default voice."
         },
+        "presenter": {
+          "description": "An animated presenter over the video. Omit for none.",
+          "type": "object",
+          "properties": {
+            "character": {
+              "type": "string",
+              "enum": [
+                "maya",
+                "sam",
+                "ada",
+                "rex",
+                "orb",
+                "bolt"
+              ],
+              "description": "A drawn host who speaks the narration with lip sync: \"maya\", \"sam\", \"ada\", \"rex\", \"orb\" or \"bolt\"."
+            },
+            "placement": {
+              "default": "corner",
+              "description": "\"corner\" (a round bubble, default) or \"full\" (a large host over the middle of the frame).",
+              "type": "string",
+              "enum": [
+                "corner",
+                "full"
+              ]
+            }
+          },
+          "required": [
+            "character"
+          ],
+          "additionalProperties": false
+        },
         "captions": {
           "default": "auto",
           "type": "string",
@@ -276,9 +315,10 @@
                   "diagram",
                   "media-split",
                   "device-mockup",
-                  "checklist"
+                  "checklist",
+                  "recap"
                 ],
-                "description": "What the scene is. hook: opening line that grabs attention. statement: one key idea. kinetic-text: a punchy line slammed word by word. list: 2-6 short points (needs items). steps: 2-6 numbered steps in order (needs items). checklist: 2-6 things to tick off (needs items). stat: one big number (needs stat). comparison: two options side by side (needs compare). before-after: a change from one state to another (needs compare). timeline: 2-5 moments in order (needs points). diagram: 2-5 connected parts of a process or system (needs points). chart: compare values (needs chart; chart.kind bar, line or donut). quote: a quotation (needs quote). definition: a term and its meaning (needs definition). code: a code snippet (needs code). terminal: shell commands and output (needs code). media: a full-frame picture or clip (needs media). media-split: picture beside the headline (needs media). device-mockup: a phone screen showing a picture (media optional). cta: closing call to action. Example: \"statement\"."
+                "description": "What the scene is. hook: opening line that grabs attention. statement: one key idea. kinetic-text: a punchy line slammed word by word. list: 2-6 short points (needs items). steps: 2-6 numbered steps in order (needs items). checklist: 2-6 things to tick off (needs items). recap: 2-6 short lines that sum up what was just covered, good at the end of a chapter of a long video (needs items). stat: one big number (needs stat). comparison: two options side by side (needs compare). before-after: a change from one state to another (needs compare). timeline: 2-5 moments in order (needs points). diagram: 2-5 connected parts of a process or system (needs points). chart: compare values (needs chart; chart.kind bar, line or donut). quote: a quotation (needs quote). definition: a term and its meaning (needs definition). code: a code snippet (needs code). terminal: shell commands and output (needs code). media: a full-frame picture or clip (needs media). media-split: picture beside the headline (needs media). device-mockup: a phone screen showing a picture (media optional). cta: closing call to action. Example: \"statement\"."
               },
               "headline": {
                 "type": "string",
@@ -610,6 +650,20 @@
                   "description": "A word or short phrase copied from the headline or body."
                 }
               },
+              "presenter": {
+                "description": "Set to \"off\" on a scene where the video-level presenter should not appear (a full-bleed picture, for example).",
+                "type": "string",
+                "const": "off"
+              },
+              "pace": {
+                "description": "How fast this scene is read: \"slow\" for a key idea or a number that should land, \"fast\" for a quick aside. Omit for the normal pace.",
+                "type": "string",
+                "enum": [
+                  "slow",
+                  "normal",
+                  "fast"
+                ]
+              },
               "durationHint": {
                 "description": "Rough seconds for the scene, 2 to 30. Only a hint: real timing follows the narration length. Omit unless you need a longer pause.",
                 "type": "number",
@@ -704,6 +758,14 @@
         },
         "sfx": {
           "description": "Sound effects (a whoosh on transitions, a tick on list items, a pop on emphasis) at a low level under the narration. \"auto\" (default) adds them, \"off\" leaves them out.",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ]
+        },
+        "stings": {
+          "description": "A short chime at the start and another at the end of the video. \"auto\" adds them; omit for none.",
           "type": "string",
           "enum": [
             "auto",

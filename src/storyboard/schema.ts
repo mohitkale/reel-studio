@@ -13,6 +13,10 @@
 import { z } from "zod";
 
 import { VOICE_STYLE_IDS } from "@/lib/voice-styles";
+import {
+  PRESENTER_CHARACTER_IDS,
+  VIDEO_PRESENTER_PLACEMENTS,
+} from "@/video/presenter-config";
 
 export const STORYBOARD_VERSION = 1 as const;
 
@@ -87,11 +91,12 @@ export const SCENE_TYPES = [
   "media-split",
   "device-mockup",
   "checklist",
+  "recap",
 ] as const;
 export const sceneTypeSchema = z
   .enum(SCENE_TYPES)
   .describe(
-    'What the scene is. hook: opening line that grabs attention. statement: one key idea. kinetic-text: a punchy line slammed word by word. list: 2-6 short points (needs items). steps: 2-6 numbered steps in order (needs items). checklist: 2-6 things to tick off (needs items). stat: one big number (needs stat). comparison: two options side by side (needs compare). before-after: a change from one state to another (needs compare). timeline: 2-5 moments in order (needs points). diagram: 2-5 connected parts of a process or system (needs points). chart: compare values (needs chart; chart.kind bar, line or donut). quote: a quotation (needs quote). definition: a term and its meaning (needs definition). code: a code snippet (needs code). terminal: shell commands and output (needs code). media: a full-frame picture or clip (needs media). media-split: picture beside the headline (needs media). device-mockup: a phone screen showing a picture (media optional). cta: closing call to action. Example: "statement".',
+    'What the scene is. hook: opening line that grabs attention. statement: one key idea. kinetic-text: a punchy line slammed word by word. list: 2-6 short points (needs items). steps: 2-6 numbered steps in order (needs items). checklist: 2-6 things to tick off (needs items). recap: 2-6 short lines that sum up what was just covered, good at the end of a chapter of a long video (needs items). stat: one big number (needs stat). comparison: two options side by side (needs compare). before-after: a change from one state to another (needs compare). timeline: 2-5 moments in order (needs points). diagram: 2-5 connected parts of a process or system (needs points). chart: compare values (needs chart; chart.kind bar, line or donut). quote: a quotation (needs quote). definition: a term and its meaning (needs definition). code: a code snippet (needs code). terminal: shell commands and output (needs code). media: a full-frame picture or clip (needs media). media-split: picture beside the headline (needs media). device-mockup: a phone screen showing a picture (media optional). cta: closing call to action. Example: "statement".',
   );
 
 export const FORMATS = ["9:16", "16:9", "1:1"] as const;
@@ -484,6 +489,18 @@ export const sceneSchema = z
       .describe(
         'Up to three words from the headline or body to highlight. Example: ["skill"].',
       ),
+    presenter: z
+      .literal("off")
+      .optional()
+      .describe(
+        'Set to "off" on a scene where the video-level presenter should not appear (a full-bleed picture, for example).',
+      ),
+    pace: z
+      .enum(["slow", "normal", "fast"])
+      .optional()
+      .describe(
+        'How fast this scene is read: "slow" for a key idea or a number that should land, "fast" for a quick aside. Omit for the normal pace.',
+      ),
     durationHint: z
       .number()
       .min(L.durationHint.min)
@@ -500,6 +517,7 @@ export const sceneSchema = z
       list: "items",
       steps: "items",
       checklist: "items",
+      recap: "items",
       stat: "stat",
       chart: "chart",
       comparison: "compare",
@@ -564,6 +582,12 @@ const base = {
     .describe(
       'Sound effects (a whoosh on transitions, a tick on list items, a pop on emphasis) at a low level under the narration. "auto" (default) adds them, "off" leaves them out.',
     ),
+  stings: z
+    .enum(["auto", "off"])
+    .optional()
+    .describe(
+      'A short chime at the start and another at the end of the video. "auto" adds them; omit for none.',
+    ),
   sources: z
     .array(sourceSchema)
     .max(L.sources)
@@ -594,6 +618,22 @@ export const videoStoryboardSchema = z
         'Optional visual theme: "bold-pop", "clean-minimal", "midnight-tech", "editorial-paper", "neon", "warm-documentary", "corporate-blue", "playful-pastel", "mono-brutalist" or "cinematic". Omit or use "auto" to let Reel Studio choose a theme that fits the content.',
       ),
     voice: voiceSchema.optional(),
+    presenter: z
+      .strictObject({
+        character: z
+          .enum(PRESENTER_CHARACTER_IDS)
+          .describe(
+            'A drawn host who speaks the narration with lip sync: "maya", "sam", "ada", "rex", "orb" or "bolt".',
+          ),
+        placement: z
+          .enum(VIDEO_PRESENTER_PLACEMENTS)
+          .default("corner")
+          .describe(
+            '"corner" (a round bubble, default) or "full" (a large host over the middle of the frame).',
+          ),
+      })
+      .optional()
+      .describe("An animated presenter over the video. Omit for none."),
     captions: captionsSchema.default("auto"),
     chapters: z
       .array(chapterSchema)

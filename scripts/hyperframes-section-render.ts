@@ -69,7 +69,13 @@ export async function renderHyperframesSections(
         const record = z
           .object({
             version: z.literal(1),
-            totalFrames: z.literal(plan.totalFrames),
+            // The planner rounds the page's duration up to a whole frame, so it can
+            // be one frame longer than the timeline the sections were cut from.
+            totalFrames: z
+              .number()
+              .int()
+              .min(plan.totalFrames - 1)
+              .max(plan.totalFrames),
             fps: z.literal(config.fps),
             count: z.literal(sections.length),
           })

@@ -1,6 +1,13 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { ReelProps } from "@/video/types";
+import type { Accent, Blink, MouthKey } from "@/video/visemes";
+
+type PresenterTrackInput = {
+  mouth: MouthKey[];
+  blinks: Blink[];
+  accents?: Accent[];
+};
 import {
   buildHyperframesCompositionHtml,
   compositionTotalFrames,
@@ -16,6 +23,8 @@ import { planRenderSections } from "@/production/render-sections";
 export async function writeHyperframesVisualSections(
   projectDir: string,
   props: ReelProps,
+  /** The presenter's mouth and blinks, when the video has one (global times). */
+  presenterTrack?: PresenterTrackInput,
 ) {
   const root = path.join(`${projectDir}-sections`, "visuals");
   if (
@@ -55,6 +64,7 @@ export async function writeHyperframesVisualSections(
       producerMode: true,
       runtimeUrl: "/_runtime/gsap.min.js",
       totalFrames,
+      presenterTrack,
     });
     if (html.includes("data-composition-src="))
       throw new Error("Imported compositions cannot use scoped visual reuse.");

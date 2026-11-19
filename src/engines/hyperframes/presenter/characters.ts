@@ -209,7 +209,13 @@ ${headShape}
 }
 
 /** The face and the hair in front, moved together as the head. Mouth shapes are added by the caller. */
-export function faceLayer(c: Character): string {
+export function faceLayer(
+  c: Character,
+  parts: { mouths: boolean; eyesClosed: boolean } = {
+    mouths: true,
+    eyesClosed: true,
+  },
+): string {
   const mascot = c.style === "mascot";
   const eyeY = mascot ? 238 : 232;
   const eyeR = mascot ? 26 : 13;
@@ -271,7 +277,7 @@ export function faceLayer(c: Character): string {
         `<g id="pres-mouth-${v}" opacity="${v === "rest" ? 1 : 0}">${mouthShape(v, c)}</g>`,
     )
     .join("");
-  return `<g id="pres-face">${cheeks}${hairFront}${eyeOpen}${eyeClosed}${brows}${nose}${mouths}${accessory}</g>`;
+  return `<g id="pres-face">${cheeks}${hairFront}${eyeOpen}${parts.eyesClosed ? eyeClosed : ""}${brows}${nose}${parts.mouths ? mouths : ""}${accessory}</g>`;
 }
 
 /** The whole rig as one SVG, with every mouth shape present and only `rest` showing. */
@@ -280,4 +286,61 @@ export function characterSvg(c: Character): string {
   // The face moves with the head: it is placed inside the head group.
   const withFace = back.replace("</g></g>", `${faceLayer(c)}</g></g>`);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" class="presenter-svg" role="img" aria-label="${c.name}">${withFace}</svg>`;
+}
+
+const FRAME =
+  'xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" class="presenter-svg" aria-hidden="true"';
+
+/**
+ * The rig as separate transparent layers for compositions that show and hide
+ * whole elements by time instead of scripting one SVG: the still face and body
+ * (`base`, with the eyes open and no mouth), a blink (`blink`) and one mouth.
+ * `uid` keeps gradient ids unique when a layer appears more than once.
+ */
+export function characterLayer(
+  c: Character,
+  layer: "base" | "blink" | Viseme,
+  uid = "0",
+  /** Move the head down this many rig units (a nod): the face layers follow it. */
+  dy = 0,
+): string {
+  const shift = (inner: string) =>
+    dy ? `<g transform="translate(0 ${dy})">${inner}</g>` : inner;
+  if (layer === "base") {
+    const back = backLayer(c)
+      .replace(
+        '<g id="pres-head">',
+        dy
+          ? `<g id="pres-head" transform="translate(0 ${dy})">`
+          : '<g id="pres-head">',
+      )
+      .replace(
+        "</g></g>",
+        `${faceLayer(c, { mouths: false, eyesClosed: false })}</g></g>`,
+      );
+    const unique = back
+      .replace(/url\(#pres-(skin|shirt)\)/g, `url(#pres-$1-${uid})`)
+      .replace(/ id="pres-([a-z-]+)"/g, ` id="pres-$1-${uid}"`);
+    return `<svg ${FRAME}>${unique}</svg>`;
+  }
+  if (layer === "blink") {
+    const mascot = c.style === "mascot";
+    const eyeY = mascot ? 238 : 232;
+    const r = (mascot ? 26 : 19) + 3;
+    const skin = c.style === "3d" ? c.skin : c.skin;
+    const lid = [150, 250]
+      .map(
+        (x) =>
+          `<ellipse cx="${x}" cy="${eyeY}" rx="${r}" ry="${r}" fill="${skin}"/>`,
+      )
+      .join("");
+    const closed = [150, 250]
+      .map(
+        (x) =>
+          `<path d="M${x - r + 2} ${eyeY} Q${x} ${eyeY + 12} ${x + r - 2} ${eyeY}" fill="none" stroke="${c.ink}" stroke-width="5" stroke-linecap="round"/>`,
+      )
+      .join("");
+    return `<svg ${FRAME}>${shift(lid + closed)}</svg>`;
+  }
+  return `<svg ${FRAME}>${shift(mouthShape(layer, c))}</svg>`;
 }

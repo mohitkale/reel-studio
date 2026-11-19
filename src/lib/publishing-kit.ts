@@ -38,6 +38,13 @@ export interface PlatformLimit {
   hashtags?: number;
 }
 
+/**
+ * Checked on 2026-11-19 against third-party reference tables (not the platforms'
+ * own help pages): YouTube title 100 and description 5000, Instagram caption
+ * 2200, LinkedIn post 3000 all agree. TikTok sources disagree (2200 or 4000), so
+ * the lower number is used. The Instagram hashtag count of 30 could not be
+ * confirmed. Platforms change these; the kit says so next to the check.
+ */
 export const PLATFORM_LIMITS: readonly PlatformLimit[] = [
   {
     id: "youtube",

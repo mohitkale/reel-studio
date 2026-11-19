@@ -21,11 +21,17 @@ import {
 } from "@/library/automatic-stock-media";
 import { getAssets } from "@/library/repositories/assets";
 import { getProductionJobByIdempotencyKey } from "@/library/repositories/production-jobs";
+import { chapterPlanFromStarts } from "@/production/chapters";
+import { getBrandKit } from "@/library/repositories/brandkits";
 import { createProjectFromPlan } from "@/library/repositories/projects";
 import { getScript, updateScript } from "@/library/repositories/scripts";
 import { submitProduction } from "@/library/production-service";
 import { autoAttachBundledMusic } from "@/library/soundtrack-service";
-import { ensureSfxCues, setSfxEnabled } from "@/library/sfx-service";
+import {
+  ensureSfxCues,
+  ensureStingCues,
+  setSfxEnabled,
+} from "@/library/sfx-service";
 import { reportStockMediaSelectionUsage } from "@/library/stock-media-usage";
 import { MUSIC_LIBRARY, suggestTrackForText } from "@/lib/music-library";
 import { getTheme } from "@/video/themes";
@@ -56,6 +62,8 @@ export interface ProduceFromStoryboardOptions {
   createOnly?: boolean;
   /** Hold the job for approval so the scenes can be looked at first. */
   review?: boolean;
+  /** A brand kit for the new project (from a series). Unknown ids are ignored. */
+  brandKitId?: string;
   minSeconds?: number;
   maxSeconds?: number;
   auth: RequestAuthorization;
@@ -120,10 +128,16 @@ function canonical(value: unknown): string {
 
 export function storyboardHash(
   storyboard: unknown,
-  options: Pick<ProduceFromStoryboardOptions, "quality"> = {},
+  options: Pick<ProduceFromStoryboardOptions, "quality" | "brandKitId"> = {},
 ): string {
   return createHash("sha256")
-    .update(canonical({ storyboard, quality: options.quality ?? "standard" }))
+    .update(
+      canonical({
+        storyboard,
+        quality: options.quality ?? "standard",
+        ...(options.brandKitId ? { brandKitId: options.brandKitId } : {}),
+      }),
+    )
     .digest("hex");
 }
 
@@ -182,7 +196,12 @@ export async function produceFromStoryboard(
     knownTrackIds: MUSIC_LIBRARY.map((track) => track.id),
   });
   const quality = options.quality ?? "standard";
-  const hash = storyboardHash(storyboard, { quality });
+  // A series can name a brand kit; one that no longer exists is ignored.
+  const brandKitId =
+    options.brandKitId && (await getBrandKit(options.brandKitId))
+      ? options.brandKitId
+      : undefined;
+  const hash = storyboardHash(storyboard, { quality, brandKitId });
   const fixes = linted.fixes;
   const warnings = linted.warnings;
 
@@ -302,6 +321,26 @@ export async function produceFromStoryboard(
     ),
   };
 
+  // Chapter marks become a chapter plan, so a long video is rendered in sections
+  // that a retry can reuse. Marks that do not fit the scenes are left out.
+  const chapterStarts = (() => {
+    if (storyboard.kind !== "video" || !storyboard.chapters?.length)
+      return undefined;
+    const starts = storyboard.chapters.map((chapter) => ({
+      title: chapter.title,
+      firstSceneIndex: chapter.startScene,
+    }));
+    try {
+      chapterPlanFromStarts(
+        starts,
+        finalPlan.scenes.map((_, index) => `scene-${index}`),
+      );
+      return starts;
+    } catch {
+      return undefined;
+    }
+  })();
+
   const preset = getProductionPreset(plan.presetId);
   if (!preset) throw new ProviderError(`Unknown look "${plan.presetId}"`, 500);
   const created = await createProjectFromPlan(
@@ -315,6 +354,8 @@ export async function produceFromStoryboard(
     },
     {
       series: storyboard.series,
+      ...(brandKitId ? { brandKitId } : {}),
+      ...(chapterStarts ? { chapterStarts } : {}),
       // No preset: the preset scene renderers show one hero line and drop list
       // items, stat labels and chart data, which a storyboard supplies.
       savedOverrides: {
@@ -347,6 +388,8 @@ export async function produceFromStoryboard(
   }
   if (plan.sfx === "off") await setSfxEnabled(created.scriptId, false);
   else await ensureSfxCues(created.scriptId);
+  if (plan.stings === "auto" && plan.sfx !== "off")
+    await ensureStingCues(created.scriptId);
 
   if (options.createOnly) {
     return {
@@ -385,6 +428,9 @@ export async function produceFromStoryboard(
             ? { speed: plan.voice.speed }
             : {}),
           ...(plan.voice.style ? { style: plan.voice.style } : {}),
+          ...(plan.scenePaces.some((p) => p !== 1)
+            ? { paces: plan.scenePaces }
+            : {}),
         },
       },
       captions: plan.captions,

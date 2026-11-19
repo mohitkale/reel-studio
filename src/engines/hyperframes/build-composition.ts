@@ -1,3 +1,6 @@
+import { getCharacter } from "@/engines/hyperframes/presenter/characters";
+import { buildPresenterClips } from "@/engines/hyperframes/presenter/build-presenter-clips";
+import type { Accent, Blink, MouthKey } from "@/video/visemes";
 import { buildMultiSeriesScene } from "./motion/multi-series-scene";
 import { buildAdaptiveScene, ADAPTIVE_STYLES } from "./motion/adaptive-blocks";
 import { resolveSequenceContinuity } from "@/production/sequence-continuity";
@@ -1046,6 +1049,12 @@ export function buildHyperframesCompositionHtml(
      * a whole, so nothing reflows.
      */
     draftScale?: number;
+    /** What the presenter does over time, from the narration (see src/library/presenter-track.ts). */
+    presenterTrack?: {
+      mouth: MouthKey[];
+      blinks: Blink[];
+      accents?: Accent[];
+    };
   } = {},
 ): string {
   const motionSpec = validateMotionForReel({
@@ -1453,6 +1462,36 @@ export function buildHyperframesCompositionHtml(
         ].join("");
       })()
     : "";
+  // An animated presenter: clips of a still face, a mouth and a blink, shown by time.
+  const presenterSetting = props.tokens.presenter;
+  const presenterCharacter = getCharacter(presenterSetting?.character);
+  const presenter =
+    presenterSetting && presenterCharacter && opts.presenterTrack
+      ? buildPresenterClips({
+          character: presenterCharacter,
+          placement: presenterSetting.placement,
+          frame: { width, height },
+          total: totalSeconds,
+          mouth: opts.presenterTrack.mouth,
+          blinks: opts.presenterTrack.blinks,
+          nods: (opts.presenterTrack.accents ?? [])
+            .filter((a) => a.kind === "nod")
+            .map((a) => a.at),
+          off: (presenterSetting.off ?? []).flatMap((index) => {
+            const beat = props.timeline[index];
+            return beat
+              ? [
+                  {
+                    start: coverSeconds + beat.startFrame / fpsSafe,
+                    end:
+                      coverSeconds +
+                      (beat.startFrame + beat.durationFrames) / fpsSafe,
+                  },
+                ]
+              : [];
+          }),
+        })
+      : undefined;
   const grainAttr = chrome.grainOpacity > 0 ? "1" : "0";
   // Preview-only paint savings. Producer output always retains the authored look.
   const previewStyles =
@@ -1468,6 +1507,7 @@ export function buildHyperframesCompositionHtml(
   <title>Reel Studio · HyperFrames</title>
   <style>${STYLES}${previewStyles}${HYPERFRAMES_PRESET_STYLES}${TYPE_MOTION_STYLES}
 ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLES}${REGISTERED_MOTION_STYLES}${DATA_MOTION_STYLES}${DIAGRAM_MOTION_STYLES}${MEDIA_MOTION_STYLES}${STORY_MOTION_STYLES}${MOTION_LIBRARY_STYLES}
+    ${presenter?.css ?? ""}
     .rs-subtitle{position:absolute;z-index:50;inset:0;box-sizing:border-box;display:flex;flex-direction:column;justify-content:${captionResolved.outer.justifyContent};align-items:${captionResolved.outer.alignItems};padding:${captionResolved.outer.paddingTop}px ${captionResolved.outer.paddingRight}px ${captionResolved.outer.paddingBottom}px ${captionResolved.outer.paddingLeft}px;pointer-events:none;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
     .rs-subtitle>span{display:block;max-width:${captionInner.maxWidth}px;padding:${captionInner.padding};border-radius:${captionInner.borderRadius}px;background:${captionInner.background};color:${captionInner.color};font-family:${cssFontStack(captionInner.fontFamily)};font-weight:${captionInner.fontWeight};line-height:${captionInner.lineHeight};letter-spacing:${captionInner.letterSpacing};text-align:${captionInner.textAlign};text-shadow:${captionInner.textShadow};${captionInner.WebkitTextStroke ? `-webkit-text-stroke:${captionInner.WebkitTextStroke};` : ""}overflow-wrap:anywhere}
     .rs-caption-emph>span:first-child{color:var(--brand-accent-text,var(--accent))}.rs-caption-line{display:block}.rs-caption-word{display:inline-block;position:relative}.rs-caption-active{position:absolute;inset:0;${opts.producerMode ? "" : "opacity:0;visibility:hidden"}}
@@ -1514,6 +1554,7 @@ ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLE
         )
         .join("\n")}
       ${buildSequenceHandoffs(sequence, tokens, fps, width, height)}
+      ${presenter?.html ?? ""}
       ${captionBlocks}
       ${debugOverlay}
       ${audioTags.join("\n")}

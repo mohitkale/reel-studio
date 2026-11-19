@@ -111,3 +111,56 @@ describe("parseTopics", () => {
     expect(parseTopics(many, 50)).toHaveLength(50);
   });
 });
+
+describe("series chimes, voice style and language", () => {
+  const rich = seriesSchema.parse({
+    name: "Calm facts",
+    stings: true,
+    voiceStyle: "calm",
+    language: "es",
+  });
+
+  it("fills them in when the storyboard leaves them out", () => {
+    const out = applySeries({ version: 1, title: "T", scenes: [] }, rich);
+    expect(out).toMatchObject({
+      stings: "auto",
+      language: "es",
+      voice: { style: "calm" },
+    });
+  });
+
+  it("keeps what the storyboard sets", () => {
+    const out = applySeries(
+      {
+        version: 1,
+        title: "T",
+        stings: "off",
+        language: "fr",
+        voice: { style: "news" },
+        scenes: [],
+      },
+      rich,
+    );
+    expect(out).toMatchObject({
+      stings: "off",
+      language: "fr",
+      voice: { style: "news" },
+    });
+  });
+
+  it("rejects a voice style that does not exist", () => {
+    expect(() =>
+      seriesSchema.parse({ name: "x", voiceStyle: "robot" }),
+    ).toThrow();
+  });
+});
+
+describe("series brand kit", () => {
+  it("accepts a brand kit id and keeps it out of the storyboard", () => {
+    const s = seriesSchema.parse({ name: "Branded", brandKitId: "kit_1" });
+    expect(s.brandKitId).toBe("kit_1");
+    expect(
+      applySeries({ version: 1, title: "T", scenes: [] }, s),
+    ).not.toHaveProperty("brandKitId");
+  });
+});

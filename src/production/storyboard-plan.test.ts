@@ -232,3 +232,90 @@ describe("planFromStoryboard", () => {
     );
   });
 });
+
+describe("scene pace", () => {
+  it("turns each scene's pace into a speed multiplier, in scene order", () => {
+    const plan = planFromStoryboard(
+      sb({}, [
+        {
+          type: "hook",
+          headline: "Hook",
+          narration: "A hook worth hearing today.",
+          pace: "fast",
+        },
+        {
+          type: "statement",
+          headline: "Idea",
+          narration: "One idea that should land slowly.",
+          pace: "slow",
+        },
+        { type: "cta", headline: "Go", narration: "Go and try it today." },
+      ]),
+    );
+    expect(plan.scenePaces).toEqual([1.12, 0.88, 1]);
+  });
+});
+
+describe("stings", () => {
+  it("are off unless the storyboard asks for them", () => {
+    expect(plan().stings).toBe("off");
+    expect(plan({ stings: "auto" }).stings).toBe("auto");
+  });
+});
+
+describe("presenter", () => {
+  it("is carried in the look with the scenes that turn it off", () => {
+    const p = plan({ presenter: { character: "bolt", placement: "full" } }, [
+      {
+        type: "hook",
+        headline: "Hook",
+        narration: "A hook worth hearing today.",
+      },
+      {
+        type: "statement",
+        headline: "Bare",
+        narration: "A scene without the host today.",
+        presenter: "off",
+      },
+      { type: "cta", headline: "Go", narration: "Go and try it today." },
+    ]);
+    expect(p.look.presenter).toEqual({
+      character: "bolt",
+      placement: "full",
+      off: [1],
+    });
+    expect(plan().look.presenter).toBeUndefined();
+  });
+});
+
+describe("recap scene", () => {
+  it("is planned as a summary treatment carrying its lines", () => {
+    const p = plan({}, [
+      {
+        type: "hook",
+        headline: "Hook",
+        narration: "A hook worth hearing today.",
+      },
+      {
+        type: "recap",
+        headline: "What we covered",
+        narration: "So, to recap: sleep, hours and a dark room.",
+        items: [
+          "Sleep saves memories",
+          "Seven hours is the target",
+          "A dark room helps",
+        ],
+      },
+      { type: "cta", headline: "Go", narration: "Go and try it today." },
+    ]);
+    expect(p.scenes[1]!.templateId).toBe("hf-recap");
+    expect(p.roles[1]).toBe("summary");
+    expect(p.scenePlan.scenes[1]!.panel).toMatchObject({
+      items: [
+        "Sleep saves memories",
+        "Seven hours is the target",
+        "A dark room helps",
+      ],
+    });
+  });
+});

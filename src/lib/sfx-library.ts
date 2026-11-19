@@ -6,7 +6,15 @@ import type { ShowpieceEvent } from "@/video/semantic-graphic";
  * Cue ids map templates → short one-shots mixed under VO.
  */
 
-export type SfxId = "whoosh" | "soft-hit" | "pop" | "click" | "riser" | "swipe";
+export type SfxId =
+  | "whoosh"
+  | "soft-hit"
+  | "pop"
+  | "click"
+  | "riser"
+  | "swipe"
+  | "sting-intro"
+  | "sting-outro";
 
 export interface SfxClip {
   id: SfxId;
@@ -67,6 +75,22 @@ export const SFX_LIBRARY: SfxClip[] = [
     url: "/sfx/swipe.wav",
     description: "Light transition swipe between scenes.",
   },
+  {
+    id: "sting-intro",
+    durationSeconds: 1.6,
+    peakOffsetSeconds: 0.295,
+    name: "Intro sting",
+    url: "/sfx/sting-intro.wav",
+    description: "A short rising chime for the start of a video.",
+  },
+  {
+    id: "sting-outro",
+    durationSeconds: 2.2,
+    peakOffsetSeconds: 0.335,
+    name: "Outro sting",
+    url: "/sfx/sting-outro.wav",
+    description: "A falling chime that settles, for the end of a video.",
+  },
 ];
 
 export function getSfxClip(id: string): SfxClip | undefined {
@@ -114,6 +138,8 @@ export interface SfxCue {
   sfxId: SfxId;
   /** Seconds after scene start within the content timeline (post-cover). */
   offsetSeconds: number;
+  /** Count from the end of the scene instead: the clip ends `offsetSeconds` before the scene does (0 = ends with it). */
+  fromEnd?: boolean;
   /** 0–1 linear gain for this one-shot. */
   volume: number;
   /** Missing source is a legacy/authored cue and is protected on refresh. */

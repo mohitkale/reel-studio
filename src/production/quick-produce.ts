@@ -35,6 +35,8 @@ export const quickProduceOptionsSchema = z
         speed: z.number().min(0.7).max(1.3).optional(),
         /** A way of reading the voice: speed, pauses and pitch (local Kokoro). */
         style: z.enum(VOICE_STYLE_IDS).optional(),
+        /** A speed multiplier per scene, in order (from the storyboard's `pace`). */
+        paces: z.array(z.number().min(0.7).max(1.3)).max(200).optional(),
       })
       .default({
         enabled: true,

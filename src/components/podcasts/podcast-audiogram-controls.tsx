@@ -59,6 +59,7 @@ export function PodcastAudiogramControls({ take }: { take: PodcastTakeDTO }) {
   const [orientation, setOrientation] = React.useState<
     "portrait" | "landscape" | "square"
   >("portrait");
+  const [presenters, setPresenters] = React.useState(false);
   const [job, setJob] = React.useState<PodcastAudiogramJobDTO | null>(null);
   const startIndex = take.timeline.findIndex(
     (beat) => beat.turnId === startTurnId,
@@ -102,6 +103,7 @@ export function PodcastAudiogramControls({ take }: { take: PodcastTakeDTO }) {
         startTurnId,
         endTurnId,
         orientation,
+        presenters,
         onProgress: setJob,
       });
       setJob(completed);
@@ -165,6 +167,14 @@ export function PodcastAudiogramControls({ take }: { take: PodcastTakeDTO }) {
           Produce
         </Button>
       </div>
+      <label className="flex items-center gap-2 text-xs">
+        <input
+          type="checkbox"
+          checked={presenters}
+          onChange={(e) => setPresenters(e.target.checked)}
+        />
+        Two animated presenters, one for each speaker (instead of the waveform)
+      </label>
       <div className="border-border grid gap-2 border-t pt-3">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold">Suggested ranges</span>

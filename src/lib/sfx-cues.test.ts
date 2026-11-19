@@ -190,3 +190,38 @@ describe("event sound timing", () => {
     ).toMatchObject({ volume: 0.35, offsetSeconds: 0 });
   });
 });
+
+describe("intro and outro stings", () => {
+  const manual = (
+    sfxId: SfxCue["sfxId"],
+    extra: Partial<SfxCue> = {},
+  ): SfxCue => ({
+    sceneId: "scene",
+    sfxId,
+    offsetSeconds: 0,
+    volume: 0.45,
+    source: "manual",
+    locked: true,
+    ...extra,
+  });
+
+  it("starts the intro sting with its scene", () => {
+    const [cue] = resolve([manual("sting-intro")]);
+    expect(cue).toMatchObject({
+      url: "/sfx/sting-intro.wav",
+      startFrame: 90,
+      volume: 0.45,
+    });
+  });
+
+  it("ends the outro sting with its scene", () => {
+    // The scene is 3 s long and the outro is 2.2 s: it starts 0.8 s in.
+    const [cue] = resolve([manual("sting-outro", { fromEnd: true })]);
+    expect(cue!.startFrame).toBe(90 + Math.round(0.8 * 30));
+    expect(
+      parseSfxState(
+        JSON.stringify({ cues: [manual("sting-outro", { fromEnd: true })] }),
+      ).cues[0]!.fromEnd,
+    ).toBe(true);
+  });
+});
