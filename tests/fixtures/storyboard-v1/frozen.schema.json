@@ -1,0 +1,950 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "number",
+          "const": 1,
+          "description": "Schema version. Always 1."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Title of the video or episode. Example: \"Why sleep is a skill\"."
+        },
+        "music": {
+          "default": "auto",
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "auto"
+            },
+            {
+              "type": "string",
+              "const": "none"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+            }
+          ],
+          "description": "Background music. \"auto\" picks a fitting bundled track, \"none\" for silence, or a track id. Default \"auto\"."
+        },
+        "variety": {
+          "description": "How much the look varies from scene to scene inside the theme: \"low\", \"medium\" (default) or \"high\".",
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "seed": {
+          "description": "Look seed. The same storyboard and seed always give the same video; a new seed gives a different cut. Omit to derive one from the title.",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 999999999
+            }
+          ]
+        },
+        "series": {
+          "description": "Series name. Videos in one series share a look family (the same seed unless a seed is given) so they read as one show, and the look stays locked against Shuffle.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "reduceMotion": {
+          "description": "Calmer output: no camera moves and gentler entrances. Default false.",
+          "type": "boolean"
+        },
+        "sfx": {
+          "description": "Sound effects (a whoosh on transitions, a tick on list items, a pop on emphasis) at a low level under the narration. \"auto\" (default) adds them, \"off\" leaves them out.",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ]
+        },
+        "stings": {
+          "description": "A short chime at the start and another at the end of the video. \"auto\" adds them; omit for none.",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ]
+        },
+        "beatSync": {
+          "description": "Start each scene on a beat of the music. \"auto\" changes only the silence between scenes (by a fraction of a second); narration is never stretched. Omit for the usual even gaps.",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ]
+        },
+        "sources": {
+          "description": "Pages you used for facts. Leave out if you used none. Never invent sources.",
+          "maxItems": 12,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120,
+                "description": "Title of the page or document. Example: \"WHO sleep guidance\"."
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Public http(s) address of the source."
+              },
+              "accessed": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                "description": "Date you read it, YYYY-MM-DD. Example: \"2026-11-13\"."
+              }
+            },
+            "required": [
+              "title",
+              "url",
+              "accessed"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "publish": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "description": "Title for posting, at most 100 characters. A clear promise, not clickbait. Example: \"Why the sky is blue\".",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "description": {
+              "description": "Post description: one or two sentences of what the viewer gets. No hashtags here; they go in hashtags.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1500
+            },
+            "hashtags": {
+              "description": "Up to ten hashtags, with or without the # sign.",
+              "maxItems": 10,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^#?[\\p{L}\\p{N}_]{2,40}$"
+              }
+            },
+            "thumbnailText": {
+              "description": "Three to six big words for the thumbnail, at most 40 characters. Example: \"Why is the sky blue?\".",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            }
+          },
+          "additionalProperties": false,
+          "description": "How to post the video: title, description, hashtags and thumbnail text. Leave out what you are unsure of."
+        },
+        "language": {
+          "description": "The language the narration is written in, when it is not American English: \"en-GB\", \"es\", \"fr\", \"hi\", \"it\", \"ja\", \"pt-BR\" or \"zh\". The voice is chosen to match.",
+          "type": "string",
+          "enum": [
+            "en-US",
+            "en-GB",
+            "es",
+            "fr",
+            "hi",
+            "it",
+            "ja",
+            "pt-BR",
+            "zh"
+          ]
+        },
+        "kind": {
+          "default": "video",
+          "description": "\"video\" (default) for a video.",
+          "type": "string",
+          "const": "video"
+        },
+        "format": {
+          "default": "9:16",
+          "type": "string",
+          "enum": [
+            "9:16",
+            "16:9",
+            "1:1"
+          ],
+          "description": "Canvas shape. \"9:16\" vertical for Reels, Shorts and TikTok; \"16:9\" landscape for YouTube; \"1:1\" square. Default \"9:16\"."
+        },
+        "theme": {
+          "description": "Optional visual theme: \"bold-pop\", \"clean-minimal\", \"midnight-tech\", \"editorial-paper\", \"neon\", \"warm-documentary\", \"corporate-blue\", \"playful-pastel\", \"mono-brutalist\" or \"cinematic\". Omit or use \"auto\" to let Reel Studio choose a theme that fits the content.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+        },
+        "voice": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Narrate the video with a local voice. Default true.",
+              "type": "boolean"
+            },
+            "voiceId": {
+              "description": "Voice name from the voice list, for example \"af_heart\". Omit to use the default voice.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            },
+            "speed": {
+              "description": "Speaking speed, 0.7 to 1.3. Omit for natural speed (1.0).",
+              "type": "number",
+              "minimum": 0.7,
+              "maximum": 1.3
+            },
+            "style": {
+              "description": "How the voice reads: \"calm\", \"energetic\", \"storyteller\" or \"news\". Omit for the natural read.",
+              "type": "string",
+              "enum": [
+                "calm",
+                "energetic",
+                "storyteller",
+                "news"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "description": "Narration settings. Omit to narrate with the default voice."
+        },
+        "presenter": {
+          "description": "An animated presenter over the video. Omit for none.",
+          "type": "object",
+          "properties": {
+            "character": {
+              "type": "string",
+              "enum": [
+                "maya",
+                "sam",
+                "ada",
+                "rex",
+                "orb",
+                "bolt"
+              ],
+              "description": "A drawn host who speaks the narration with lip sync: \"maya\", \"sam\", \"ada\", \"rex\", \"orb\" or \"bolt\"."
+            },
+            "placement": {
+              "default": "corner",
+              "description": "\"corner\" (a round bubble, default) or \"full\" (a large host over the middle of the frame).",
+              "type": "string",
+              "enum": [
+                "corner",
+                "full"
+              ]
+            }
+          },
+          "required": [
+            "character"
+          ],
+          "additionalProperties": false
+        },
+        "captions": {
+          "default": "auto",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ],
+          "description": "Captions generated from the narration. \"auto\" shows them, \"off\" hides them. Default \"auto\"."
+        },
+        "chapters": {
+          "description": "Long videos only (over about three minutes): where each chapter starts, so the description gets timestamps. Leave out for short videos.",
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 60,
+                "description": "Chapter title, at most 60 characters. Example: \"How light scatters\"."
+              },
+              "startScene": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "description": "Number of the scene where this chapter starts, counting from 0. The first chapter starts at 0. Start each chapter with a scene that names it."
+              }
+            },
+            "required": [
+              "title",
+              "startScene"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "scenes": {
+          "minItems": 1,
+          "maxItems": 120,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "hook",
+                  "statement",
+                  "list",
+                  "stat",
+                  "chart",
+                  "quote",
+                  "code",
+                  "media",
+                  "cta",
+                  "kinetic-text",
+                  "steps",
+                  "comparison",
+                  "before-after",
+                  "timeline",
+                  "definition",
+                  "terminal",
+                  "diagram",
+                  "media-split",
+                  "device-mockup",
+                  "checklist",
+                  "recap"
+                ],
+                "description": "What the scene is. hook: opening line that grabs attention. statement: one key idea. kinetic-text: a punchy line slammed word by word. list: 2-6 short points (needs items). steps: 2-6 numbered steps in order (needs items). checklist: 2-6 things to tick off (needs items). recap: 2-6 short lines that sum up what was just covered, good at the end of a chapter of a long video (needs items). stat: one big number (needs stat). comparison: two options side by side (needs compare). before-after: a change from one state to another (needs compare). timeline: 2-5 moments in order (needs points). diagram: 2-5 connected parts of a process or system (needs points). chart: compare values (needs chart; chart.kind bar, line or donut). quote: a quotation (needs quote). definition: a term and its meaning (needs definition). code: a code snippet (needs code). terminal: shell commands and output (needs code). media: a full-frame picture or clip (needs media). media-split: picture beside the headline (needs media). device-mockup: a phone screen showing a picture (media optional). cta: closing call to action. Example: \"statement\"."
+              },
+              "headline": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 60,
+                "description": "Short on-screen text, at most 60 characters, a complete phrase that is not cut off. Example: \"Sleep is a skill\"."
+              },
+              "narration": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 400,
+                "description": "What the voice says: full sentences, at most 400 characters, written to be heard. Do not repeat the headline word for word. Example: \"Most adults need seven to nine hours. Treat sleep like training, not an afterthought.\""
+              },
+              "body": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "Optional supporting line shown under the headline, at most 200 characters."
+              },
+              "items": {
+                "description": "Points for a list scene, 2 to 6. Example: [\"Same bedtime\", \"No screens\", \"Cool room\"].",
+                "minItems": 2,
+                "maxItems": 6,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60,
+                  "description": "One short point, at most 60 characters."
+                }
+              },
+              "stat": {
+                "description": "Key number for a stat scene.",
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 12,
+                    "description": "The big figure, at most 12 characters. Example: \"73%\"."
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 40,
+                    "description": "What the figure measures, at most 40 characters. Example: \"report better focus\"."
+                  }
+                },
+                "required": [
+                  "value",
+                  "label"
+                ],
+                "additionalProperties": false
+              },
+              "chart": {
+                "type": "object",
+                "properties": {
+                  "labels": {
+                    "minItems": 2,
+                    "maxItems": 6,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 24,
+                      "description": "One category label."
+                    },
+                    "description": "Category labels along the axis. Example: [\"2023\", \"2024\", \"2025\"]."
+                  },
+                  "series": {
+                    "minItems": 1,
+                    "maxItems": 3,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 24,
+                          "description": "Name of this data series. Example: \"Users\"."
+                        },
+                        "values": {
+                          "minItems": 2,
+                          "maxItems": 6,
+                          "type": "array",
+                          "items": {
+                            "type": "number"
+                          },
+                          "description": "One number per label, in the same order. Use real figures only."
+                        },
+                        "unit": {
+                          "description": "Unit shown with the numbers, for example \"%\" or \"k\".",
+                          "type": "string",
+                          "maxLength": 8
+                        }
+                      },
+                      "required": [
+                        "label",
+                        "values"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "description": "One to three data series. Each needs one value per label."
+                  },
+                  "source": {
+                    "description": "Where the numbers come from. Example: \"Company report, 2025\".",
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "kind": {
+                    "description": "How to draw it: \"bar\" to compare, \"line\" for change over time, \"donut\" for shares of a whole (first series only). Default \"bar\".",
+                    "type": "string",
+                    "enum": [
+                      "bar",
+                      "line",
+                      "donut"
+                    ]
+                  }
+                },
+                "required": [
+                  "labels",
+                  "series"
+                ],
+                "additionalProperties": false,
+                "description": "Data for a chart scene. Never invent numbers."
+              },
+              "compare": {
+                "description": "Two sides for a comparison or before-after scene: left is the first option or the before state.",
+                "type": "object",
+                "properties": {
+                  "left": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 24,
+                        "description": "Short title of this side. Example: \"Before\"."
+                      },
+                      "text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80,
+                        "description": "One short sentence about this side, at most 80 characters."
+                      }
+                    },
+                    "required": [
+                      "label",
+                      "text"
+                    ],
+                    "additionalProperties": false,
+                    "description": "The first option, or the before state. Example: {\"label\":\"Before\",\"text\":\"One hour per edit\"}."
+                  },
+                  "right": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 24,
+                        "description": "Short title of this side. Example: \"Before\"."
+                      },
+                      "text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 80,
+                        "description": "One short sentence about this side, at most 80 characters."
+                      }
+                    },
+                    "required": [
+                      "label",
+                      "text"
+                    ],
+                    "additionalProperties": false,
+                    "description": "The second option, or the after state. Example: {\"label\":\"After\",\"text\":\"One minute\"}."
+                  }
+                },
+                "required": [
+                  "left",
+                  "right"
+                ],
+                "additionalProperties": false
+              },
+              "points": {
+                "description": "Two to five moments (timeline) or parts (diagram), in order. Example: [{\"label\":\"2019\",\"text\":\"Launch\"},{\"label\":\"2024\",\"text\":\"1M users\"}].",
+                "minItems": 2,
+                "maxItems": 5,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 24,
+                      "description": "A date, name or step title. Example: \"2024\"."
+                    },
+                    "text": {
+                      "description": "Optional short detail, at most 70 characters.",
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 70
+                    }
+                  },
+                  "required": [
+                    "label"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "definition": {
+                "description": "Term and meaning for a definition scene.",
+                "type": "object",
+                "properties": {
+                  "term": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 40,
+                    "description": "The word being defined. Example: \"Latency\"."
+                  },
+                  "meaning": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160,
+                    "description": "Plain-words meaning, at most 160 characters."
+                  }
+                },
+                "required": [
+                  "term",
+                  "meaning"
+                ],
+                "additionalProperties": false
+              },
+              "quote": {
+                "description": "Quotation for a quote scene. Only real, attributed quotes.",
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160,
+                    "description": "The quotation, at most 160 characters, exactly as said."
+                  },
+                  "attribution": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "Who said it. Example: \"Dr. Mara Lin, sleep researcher\"."
+                  }
+                },
+                "required": [
+                  "text",
+                  "attribution"
+                ],
+                "additionalProperties": false
+              },
+              "code": {
+                "description": "Code for a code scene.",
+                "type": "object",
+                "properties": {
+                  "language": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9+#-]{1,20}$",
+                    "description": "Language name. Example: \"typescript\"."
+                  },
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 600,
+                    "description": "The snippet, at most 12 lines and 600 characters."
+                  }
+                },
+                "required": [
+                  "language",
+                  "text"
+                ],
+                "additionalProperties": false
+              },
+              "media": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "description": "Plain-words search for a fitting stock picture or clip. Example: \"sunrise over a quiet city street\".",
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 80
+                  },
+                  "assetId": {
+                    "description": "Id of an asset already in the project's library.",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  },
+                  "generate": {
+                    "description": "Describe a picture to make with a local image model, in plain words. Only used when the person has set one up; otherwise \"query\" (or the headline) finds a stock picture instead. Example: \"a lighthouse on a cliff at dusk, calm sea\".",
+                    "type": "string",
+                    "minLength": 4,
+                    "maxLength": 300
+                  },
+                  "path": {
+                    "description": "Relative path of a supplied file. Example: \"media/demo.mp4\".",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "additionalProperties": false,
+                "description": "Picture or clip for the scene. Provide exactly one of query, assetId, path or generate (generate may also carry a query as its fallback)."
+              },
+              "icon": {
+                "description": "Optional icon name in lowercase words joined by hyphens. Example: \"moon\".",
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+              },
+              "illustration": {
+                "description": "Optional looping background illustration: one of sixty names such as \"stars-2\" or \"bars-1\", a motif (\"orbits\", \"waves\", \"bubbles\", \"network\", \"bars\", \"rays\", \"leaves\", \"skyline\", \"gears\", \"dots\", \"stars\", \"spiral\") or a related word like \"space\" or \"growth\". Decorative only.",
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+              },
+              "emphasis": {
+                "description": "Up to three words from the headline or body to highlight. Example: [\"skill\"].",
+                "maxItems": 3,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 24,
+                  "description": "A word or short phrase copied from the headline or body."
+                }
+              },
+              "presenter": {
+                "description": "Set to \"off\" on a scene where the video-level presenter should not appear (a full-bleed picture, for example).",
+                "type": "string",
+                "const": "off"
+              },
+              "pace": {
+                "description": "How fast this scene is read: \"slow\" for a key idea or a number that should land, \"fast\" for a quick aside. Omit for the normal pace.",
+                "type": "string",
+                "enum": [
+                  "slow",
+                  "normal",
+                  "fast"
+                ]
+              },
+              "durationHint": {
+                "description": "Rough seconds for the scene, 2 to 30. Only a hint: real timing follows the narration length. Omit unless you need a longer pause.",
+                "type": "number",
+                "minimum": 2,
+                "maximum": 30
+              }
+            },
+            "required": [
+              "type",
+              "headline",
+              "narration"
+            ],
+            "additionalProperties": false,
+            "description": "One scene: what is shown and what is said."
+          },
+          "description": "Scenes in order. About 8 scenes make a 60-second video; a long video can use up to 120. Start with a hook and end with a cta or a statement that closes the idea."
+        }
+      },
+      "required": [
+        "version",
+        "title",
+        "scenes"
+      ],
+      "additionalProperties": false,
+      "description": "A video storyboard."
+    },
+    {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "number",
+          "const": 1,
+          "description": "Schema version. Always 1."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Title of the video or episode. Example: \"Why sleep is a skill\"."
+        },
+        "music": {
+          "default": "auto",
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "auto"
+            },
+            {
+              "type": "string",
+              "const": "none"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
+            }
+          ],
+          "description": "Background music. \"auto\" picks a fitting bundled track, \"none\" for silence, or a track id. Default \"auto\"."
+        },
+        "variety": {
+          "description": "How much the look varies from scene to scene inside the theme: \"low\", \"medium\" (default) or \"high\".",
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "seed": {
+          "description": "Look seed. The same storyboard and seed always give the same video; a new seed gives a different cut. Omit to derive one from the title.",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 999999999
+            }
+          ]
+        },
+        "series": {
+          "description": "Series name. Videos in one series share a look family (the same seed unless a seed is given) so they read as one show, and the look stays locked against Shuffle.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "reduceMotion": {
+          "description": "Calmer output: no camera moves and gentler entrances. Default false.",
+          "type": "boolean"
+        },
+        "sfx": {
+          "description": "Sound effects (a whoosh on transitions, a tick on list items, a pop on emphasis) at a low level under the narration. \"auto\" (default) adds them, \"off\" leaves them out.",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ]
+        },
+        "stings": {
+          "description": "A short chime at the start and another at the end of the video. \"auto\" adds them; omit for none.",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ]
+        },
+        "beatSync": {
+          "description": "Start each scene on a beat of the music. \"auto\" changes only the silence between scenes (by a fraction of a second); narration is never stretched. Omit for the usual even gaps.",
+          "type": "string",
+          "enum": [
+            "auto",
+            "off"
+          ]
+        },
+        "sources": {
+          "description": "Pages you used for facts. Leave out if you used none. Never invent sources.",
+          "maxItems": 12,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120,
+                "description": "Title of the page or document. Example: \"WHO sleep guidance\"."
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Public http(s) address of the source."
+              },
+              "accessed": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                "description": "Date you read it, YYYY-MM-DD. Example: \"2026-11-13\"."
+              }
+            },
+            "required": [
+              "title",
+              "url",
+              "accessed"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "publish": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "description": "Title for posting, at most 100 characters. A clear promise, not clickbait. Example: \"Why the sky is blue\".",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "description": {
+              "description": "Post description: one or two sentences of what the viewer gets. No hashtags here; they go in hashtags.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1500
+            },
+            "hashtags": {
+              "description": "Up to ten hashtags, with or without the # sign.",
+              "maxItems": 10,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^#?[\\p{L}\\p{N}_]{2,40}$"
+              }
+            },
+            "thumbnailText": {
+              "description": "Three to six big words for the thumbnail, at most 40 characters. Example: \"Why is the sky blue?\".",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            }
+          },
+          "additionalProperties": false,
+          "description": "How to post the video: title, description, hashtags and thumbnail text. Leave out what you are unsure of."
+        },
+        "language": {
+          "description": "The language the narration is written in, when it is not American English: \"en-GB\", \"es\", \"fr\", \"hi\", \"it\", \"ja\", \"pt-BR\" or \"zh\". The voice is chosen to match.",
+          "type": "string",
+          "enum": [
+            "en-US",
+            "en-GB",
+            "es",
+            "fr",
+            "hi",
+            "it",
+            "ja",
+            "pt-BR",
+            "zh"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "const": "podcast",
+          "description": "\"podcast\" for an audio episode."
+        },
+        "speakers": {
+          "minItems": 1,
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{0,19}$",
+                "description": "Short id used by turns. Example: \"host\"."
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40,
+                "description": "Display name. Example: \"Maya\"."
+              },
+              "voiceId": {
+                "description": "Voice name. Omit for the default voice.",
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 60
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          "description": "One to three speakers: solo narration, a two-host talk or an interview."
+        },
+        "turns": {
+          "minItems": 1,
+          "maxItems": 80,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "speaker": {
+                "type": "string",
+                "description": "The id of a speaker listed in speakers."
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 600,
+                "description": "What this speaker says, at most 600 characters, written to be heard."
+              }
+            },
+            "required": [
+              "speaker",
+              "text"
+            ],
+            "additionalProperties": false
+          },
+          "description": "The dialogue in order."
+        }
+      },
+      "required": [
+        "version",
+        "title",
+        "kind",
+        "speakers",
+        "turns"
+      ],
+      "additionalProperties": false,
+      "description": "A podcast storyboard: speakers and their turns."
+    }
+  ],
+  "$id": "https://github.com/mohitkale/reel-studio/blob/main/schemas/storyboard.v1.json",
+  "title": "Reel Studio Storyboard v1"
+}

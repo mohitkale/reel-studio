@@ -8,7 +8,10 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { schemaSignature } from "./migrate-database.mjs";
 
-const EXPECTED_MIGRATIONS = 20;
+// Every migration in the repository must have run: the count follows the folder.
+const EXPECTED_MIGRATIONS = (
+  await fs.readdir("prisma/migrations", { withFileTypes: true })
+).filter((entry) => entry.isDirectory()).length;
 
 const root = process.cwd(),
   evidence = path.resolve(
@@ -171,12 +174,62 @@ for (const [file, hash] of Object.entries(published040.migrations))
 // Reconstruct the exact 14-migration published database from this owned test
 // database. Later milestones are additive only; compare its remaining schema against the
 // checksummed historical migrations before exercising the real upgrade.
-again.exec(
-  `DROP TABLE MediaRankingJob; DROP TABLE ResearchSubmission; DROP TABLE ResearchJob; DROP TABLE EvidenceRevision; DROP TABLE AudioEditSession; DROP TABLE SceneEdit; DROP TABLE StudioPreset; ALTER TABLE Project DROP COLUMN archivedAt; ALTER TABLE Project DROP COLUMN series; DROP TABLE FactoryVariant; DROP TABLE FactoryRun; DROP TABLE FactoryProfile; DROP TABLE FactoryPack; DELETE FROM _prisma_migrations WHERE migration_name >= '20261017000100_factory_workflows';`,
-);
 const expected040 = new DatabaseSync(":memory:");
 for (const filename of Object.keys(published040.migrations))
   expected040.exec(await fs.readFile(filename, "utf8"));
+// Reduce this test database to exactly what v0.4.0 published: drop every table, index
+// and column that a later migration added, and forget those migrations. Derived from the
+// checksummed v0.4.0 migrations, so a new migration never needs this list edited.
+const publishedNames = Object.keys(published040.migrations).map((file) =>
+  path.basename(path.dirname(file)),
+);
+const publishedSchema = (db) => {
+  const tables = new Map();
+  for (const { name } of db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+    )
+    .all())
+    tables.set(
+      name,
+      new Set(
+        db
+          .prepare(`PRAGMA table_info("${name}")`)
+          .all()
+          .map((c) => c.name),
+      ),
+    );
+  const indexes = new Set(
+    db
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type = 'index' AND name NOT LIKE 'sqlite_%'",
+      )
+      .all()
+      .map((i) => i.name),
+  );
+  return { tables, indexes };
+};
+const wanted = publishedSchema(expected040);
+again.exec("PRAGMA foreign_keys = OFF");
+const present = publishedSchema(again);
+for (const index of present.indexes)
+  if (!wanted.indexes.has(index)) again.exec(`DROP INDEX "${index}"`);
+for (const [table, columns] of present.tables) {
+  if (table === "_prisma_migrations") continue;
+  if (!wanted.tables.has(table)) {
+    again.exec(`DROP TABLE "${table}"`);
+    continue;
+  }
+  for (const column of columns)
+    if (!wanted.tables.get(table).has(column))
+      again.exec(`ALTER TABLE "${table}" DROP COLUMN "${column}"`);
+}
+again.exec("PRAGMA foreign_keys = ON");
+again
+  .prepare(
+    `DELETE FROM _prisma_migrations WHERE migration_name NOT IN (${publishedNames.map(() => "?").join(",")})`,
+  )
+  .run(...publishedNames);
 assert.equal(
   schemaSignature(again),
   schemaSignature(expected040),
@@ -203,16 +256,18 @@ const snapshot040 = (db) =>
         .filter(
           (row) =>
             table !== "_prisma_migrations" ||
-            row.migration_name < "20261017000100_factory_workflows",
+            publishedNames.includes(row.migration_name),
         )
-        .map((row) => {
-          if (table !== "Project") return row;
-          return Object.fromEntries(
+        // Columns a later migration added are not part of what v0.4.0 stored.
+        .map((row) =>
+          Object.fromEntries(
             Object.entries(row).filter(
-              ([key]) => key !== "archivedAt" && key !== "series",
+              ([key]) =>
+                table === "_prisma_migrations" ||
+                wanted.tables.get(table)?.has(key),
             ),
-          );
-        }),
+          ),
+        ),
     ]),
   );
 const before040 = snapshot040(again);

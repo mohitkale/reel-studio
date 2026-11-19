@@ -259,10 +259,34 @@ a `query`, and rendering. The model never sees these.
   sound effects unless `sfx` is `"off"`. The finished mix is mastered to about -14 LUFS with
   a -1 dBTP ceiling and measured.
 
-## Versioning
+## Versioning and stability
 
-Additive changes (new optional fields, new scene types) keep `version: 1`.
-Anything breaking becomes `version: 2` with a converter from version 1.
+**Storyboard v1 is frozen** (roadmap L6). A storyboard that is valid today stays valid in every
+1.x release, and the same storyboard keeps producing a video: you can keep storyboards in a
+repository, or have an agent write them, and not worry that an update breaks them.
+
+The schema may only **grow**:
+
+| Allowed (keeps `version: 1`)                           | Not allowed (needs `version: 2` and a converter)                       |
+| ------------------------------------------------------ | ---------------------------------------------------------------------- |
+| A new optional field                                   | Removing or renaming a field                                           |
+| A new value in an enum (a new scene type, a new theme) | Removing a value from an enum                                          |
+| A looser bound (a longer `maxLength`, more items)      | A tighter bound, a new `pattern`, or a new `required` field            |
+| A new scene type with its own optional data            | Changing a field's type, or refusing unknown fields that were accepted |
+
+It is enforced, not promised:
+
+- `tests/fixtures/storyboard-v1/frozen.schema.json` is the schema at the freeze. A test
+  (`src/storyboard/schema-compat.test.ts`) compares the published schema with it and fails,
+  naming the path, on any change that would refuse a document the frozen schema accepted.
+- `tests/fixtures/storyboard-v1/corpus/` holds the twelve golden storyboards as they were at the
+  freeze. The same test lints each one (no errors, no repairs), plans it and builds its composition.
+  The corpus only ever gains files; never edit one.
+- After an additive change, `npm run storyboard:freeze` moves the baseline forward (it refuses if
+  the change is not additive), so later changes are checked against the newest contract.
+
+Behaviour is held the same way: a new look or a better layout may change how a scene is drawn, but
+not what a valid storyboard means. Lint auto-repairs (see above) may be added and never removed.
 
 ## Examples
 
