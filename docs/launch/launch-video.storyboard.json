@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "title": "Reel Studio: type an idea, get a video",
+  "format": "16:9",
+  "theme": "midnight-tech",
+  "language": "en-US",
+  "captions": "auto",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Type an idea. Get a video.",
+      "narration": "Type an idea. Get a finished video."
+    },
+    {
+      "type": "statement",
+      "headline": "On your own computer",
+      "narration": "Reel Studio makes short videos and podcasts on your own computer. No account, no cloud render, and no fee per video.",
+      "emphasis": ["computer"]
+    },
+    {
+      "type": "steps",
+      "headline": "How it works",
+      "narration": "A storyboard describes the video. Reel Studio does the rest: the voice, the scenes, the captions, the music, and the final MP4.",
+      "items": [
+        "Write a storyboard",
+        "Voice, scenes, captions and music are made here",
+        "Out comes an MP4"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "One small JSON file",
+      "narration": "The only step that needs AI is writing that storyboard, and it is just a small JSON file. Write it yourself, ask a model that runs on your machine, or let your coding agent do it.",
+      "emphasis": ["JSON"]
+    },
+    {
+      "type": "code",
+      "headline": "A scene in the storyboard",
+      "narration": "Each scene says what to show and what to say. That is all the model has to write.",
+      "code": {
+        "language": "json",
+        "text": "{\n  \"type\": \"hook\",\n  \"headline\": \"Stop clicking through Excel\",\n  \"narration\": \"Most people lose hours a week to the mouse.\"\n}"
+      }
+    },
+    {
+      "type": "code",
+      "headline": "Or let your agent do it",
+      "narration": "Or give it to your coding agent through MCP. One command adds the server, and the agent can make videos on its own.",
+      "code": {
+        "language": "bash",
+        "text": "$ claude mcp add reel-studio -- node bin/reel-studio.mjs mcp\nagent> create_video \"Why the sky is blue\"\nqueued job\nsucceeded"
+      }
+    },
+    {
+      "type": "comparison",
+      "headline": "Cloud tools or Reel Studio",
+      "narration": "Cloud video tools charge per video and upload your content. Reel Studio is free, stays on your machine, and gives the same video from the same storyboard.",
+      "compare": {
+        "left": {
+          "label": "Cloud video tools",
+          "text": "Credits per video, your content uploaded"
+        },
+        "right": {
+          "label": "Reel Studio",
+          "text": "Free, local, the same video every time"
+        }
+      }
+    },
+    {
+      "type": "checklist",
+      "headline": "What you get",
+      "narration": "You get a local voice, captions you can edit, portrait, landscape or square, and two-host podcasts.",
+      "items": [
+        "A local voice",
+        "Captions you can edit",
+        "Portrait, landscape or square",
+        "Two-host podcasts"
+      ]
+    },
+    {
+      "type": "statement",
+      "headline": "What it is not",
+      "narration": "It is made for motion graphics: text, charts, lists and code. It does not make talking avatars or generated footage, and it says so.",
+      "emphasis": ["motion graphics"]
+    },
+    {
+      "type": "cta",
+      "headline": "Free and open source",
+      "body": "github.com/mohitkale/reel-studio",
+      "narration": "Reel Studio is free and open source. Clone it, make your first video, and tell us what broke."
+    }
+  ]
+}

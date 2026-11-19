@@ -24,6 +24,7 @@ Start here.
 - [Contributing scenes](CONTRIBUTING_SCENES.md): add a template, treatment or provider.
 - [Feature inventory](FEATURES.md): every page, route and tool, guarded by `npm run test:parity`.
 - [Licensing](LICENSING.md): third-party terms and notices.
+- [Launch plan](LAUNCH.md): positioning, what we can and cannot claim yet, and a draft for every channel.
 - [Contributing](../CONTRIBUTING.md) and [agent rules](../AGENTS.md): branches, checks, PRs.
 - [Security](../SECURITY.md).
 
