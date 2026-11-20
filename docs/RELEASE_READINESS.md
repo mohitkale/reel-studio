@@ -45,12 +45,6 @@ so plainly (see the claims table in [LAUNCH.md](LAUNCH.md#3-what-we-can-say-and-
   its own piece of work (#110, #117).
 - **MCP client install guides** are written from each client's documentation; none has been run in
   the real client (#208 to #211).
-- **A render can fetch fonts from the network** (#233). During the browser journeys and the frame check
-  the HyperFrames compiler fetched font faces from Google Fonts for `Impact` (four times) and
-  `EB Garamond` (twice) and cached them under `~/.cache/hyperframes/fonts`. Reel Studio bundles
-  its own six families and aliases `Anton` and `Impact` to Archivo Black, but the kinetic-text
-  scene's CSS still names `Anton, Impact`. On a first run offline, or for anyone who does not want
-  a request to Google, that is a surprise and an unpinned input.
 - **The look of the output is not where the maintainer wants it.** On 20 Nov the maintainer
   reviewed real-content videos (NASA photographs, a Mars explainer) and found the visuals, the
   sound and the voice not premium. This release fixes loudness (-16 LUFS, no chimes, a quiet music
