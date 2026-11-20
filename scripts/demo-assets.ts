@@ -3,7 +3,7 @@
  * (roadmap L2) into `dist/demo/`, with a manifest and an `index.html`.
  *
  *   npm run demo:assets [-- --skip-ui] [-- --skip-sheets] [-- --skip-media]
- *                       [-- --only media,sheets,ui] [-- --rerender]
+ *                       [-- --only media,sheets,ui,screens] [-- --rerender]
  *                       [-- --upload <release-tag>]
  *
  * Inputs:
@@ -13,7 +13,7 @@
  *   - the theme and scene-type contact sheets (`scripts/theme-sheet.mjs`,
  *     `scripts/scene-sheet.mjs`), unless `--skip-sheets`.
  *   - scripted browser sessions and an MCP session (`scripts/demo-capture-ui.ts`),
- *     unless `--skip-ui`.
+ *     unless `--skip-ui`. The four README JPEGs also go to `docs/assets/screens/`.
  *
  * Every GIF has an MP4 twin and is held under its size cap (hero 8 MB, gallery
  * 3 MB); the run fails if a file cannot be brought under its cap.
@@ -515,13 +515,52 @@ function sheets(): void {
   }
 }
 
-function ui(): void {
+const readmeScreens = [
+  { name: "home", source: "Studio Create page (/)" },
+  { name: "result", source: "e2e/fixtures/written.storyboard.json" },
+  { name: "editor", source: "e2e/fixtures/written.storyboard.json" },
+  { name: "scene-types", source: "registered scene samples (/scenes)" },
+] as const;
+
+function copyReadmeScreens(directory: string): void {
+  const docs = path.resolve("docs/assets/screens");
+  const output = path.join(OUT, "screens");
+  for (const { name } of readmeScreens) {
+    const file = path.join(directory, "screens", `${name}.jpg`);
+    const bytes = size(file);
+    if (bytes === 0 || bytes > GALLERY_CAP)
+      throw new Error(
+        `README screenshot ${name}.jpg is ${bytes} bytes and must fit the ${fmtMb(GALLERY_CAP)} cap`,
+      );
+  }
+  mkdirSync(docs, { recursive: true });
+  mkdirSync(output, { recursive: true });
+  for (const { name, source } of readmeScreens) {
+    const file = path.join(directory, "screens", `${name}.jpg`);
+    const target = path.join(output, `${name}.jpg`);
+    copyFileSync(file, path.join(docs, `${name}.jpg`));
+    copyFileSync(file, target);
+    record(target, "readme-screenshot", source, GALLERY_CAP);
+  }
+}
+
+function ui(screensOnly = false): void {
   const dir = path.join(WORK, "ui");
   rmSync(dir, { recursive: true, force: true });
-  execFileSync("npx", ["tsx", "scripts/demo-capture-ui.ts", "--out", dir], {
-    stdio: "inherit",
-    shell: process.platform === "win32",
-  });
+  execFileSync(
+    process.execPath,
+    [
+      "--import",
+      "tsx",
+      "scripts/demo-capture-ui.ts",
+      "--out",
+      dir,
+      ...(screensOnly ? ["--screens-only"] : []),
+    ],
+    { stdio: "inherit" },
+  );
+  copyReadmeScreens(dir);
+  if (screensOnly) return;
   for (const name of [
     "ui-home",
     "ui-generation",
@@ -690,7 +729,7 @@ ${media}
 }
 
 async function main(): Promise<void> {
-  // `--only media,sheets,ui` redoes some stages and keeps the rest of dist/demo.
+  // `--only` redoes selected stages and keeps the rest of dist/demo.
   const only = value("--only")?.split(",");
   const stage = (name: string) =>
     only ? only.includes(name) : !has(`--skip-${name}`);
@@ -735,9 +774,13 @@ async function main(): Promise<void> {
     sheets();
   }
   if (stage("ui")) {
-    redo(/^(screenshot|ui-|terminal|podcast)/);
+    redo(/^(screenshot|readme-screenshot|ui-|terminal|podcast)/);
     console.log("Screenshots, recording, MCP terminal");
     ui();
+  } else if (only?.includes("screens")) {
+    redo(/^readme-screenshot$/);
+    console.log("README screenshots");
+    ui(true);
   }
   writeFileSync(
     path.join(OUT, "manifest.json"),

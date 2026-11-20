@@ -100,7 +100,7 @@ Eight core tools by default; the rest are opt-in. See [MCP](docs/MCP.md). No age
 
 <sub>The wait while the video is made is shown twelve times faster. Mobile works too: [home](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/ui-home-mobile.png), [result](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/ui-result-mobile.png).</sub>
 
-The studio as it is today (screenshots of the running app, with a video made through the MCP server):
+The running studio with a video made from the bundled demo storyboard.
 
 |                                                                                                            |                                                                                                         |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
@@ -108,6 +108,7 @@ The studio as it is today (screenshots of the running app, with a video made thr
 | ![Editor: every scene, its text and its voice script, with a live preview](docs/assets/screens/editor.jpg) | ![Scene types: each one drawn with sample content in every format](docs/assets/screens/scene-types.jpg) |
 
 Automation is the default and manual editing is always one switch away (Simple and Pro).
+Regenerate these four screenshots with `npm run demo:assets -- --only screens`.
 
 ## Themes and scene types
 
