@@ -6,6 +6,15 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+## 1.0.0 (2026-11-20)
+
+The storyboard format, the command line and the MCP tools are stable from here on: changes are
+additive. **Known limits at this release** (details in `docs/RELEASE_READINESS.md`): the package is
+not published to npm, so `npx reel-studio` does not work yet; the MCP client install guides have not
+been run in each client; Windows is exercised in CI only; nobody has scored the output against the
+quality rubric, and the maintainer's own review found the visuals, voice and sound not yet premium;
+picture scenes fall back silently when no stock media resolves (#245).
+
 ### Security
 
 - Updated Next.js to 16.4.6, which fixes two critical remote code execution advisories (image
@@ -21,6 +30,95 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 - Added `npm run release:ready`, `test:upgrade-v080`, `licensing:check` and `audit:check`, and
   `docs/RELEASE_READINESS.md`; fixed `test:release-upgrade`, which had been failing since v0.8.0.
 - `docs/LICENSING.md` now names every non-permissive dependency licence in the production tree.
+
+### Upgrade notes
+
+This release adds 1 database migration. Stop the app, back up the database and `media/` folder together, then run `npm run setup`. See [upgrading](docs/GETTING_STARTED.md#upgrading-and-rolling-back).
+
+### Engine and rendering
+
+- feat: theme:new and scene:preview, a 15-minute theme tutorial (L4, part) ([#214](https://github.com/mohitkale/reel-studio/pull/214))
+- fix: real exports dropped every scene's panel data (steps, diagram, checklist, illustration) ([#193](https://github.com/mohitkale/reel-studio/pull/193))
+- feat: sixty looping illustrations and a storyboard illustration field (V12b) ([#192](https://github.com/mohitkale/reel-studio/pull/192))
+- feat: whisper.cpp word timing for final exports, pop captions scale in (V4b) ([#185](https://github.com/mohitkale/reel-studio/pull/185))
+- feat: six recommended voices with a short sample each on /voices (V8b) ([#184](https://github.com/mohitkale/reel-studio/pull/184))
+- feat: stage, scene and time-left estimate while a video renders (V9b); caption timing check script ([#183](https://github.com/mohitkale/reel-studio/pull/183))
+- feat: three arrangements per scene type, Shuffle look, series look lock (V11b) ([#182](https://github.com/mohitkale/reel-studio/pull/182))
+- perf: draft previews capture a half-size canvas, 3x faster (V9b) ([#181](https://github.com/mohitkale/reel-studio/pull/181))
+- feat: layout contract: content region, caption band, fill-the-frame type (V2) ([#172](https://github.com/mohitkale/reel-studio/pull/172))
+- feat: v0.11 slice 1: quality rubric and frame checks, first layout fixes (V1, part of V2) ([#170](https://github.com/mohitkale/reel-studio/pull/170))
+- feat: v0.10 storyboard writer, research, golden set and project export (S5–S8) ([#168](https://github.com/mohitkale/reel-studio/pull/168))
+- fix: fit on-screen copy instead of cutting it ([#167](https://github.com/mohitkale/reel-studio/pull/167))
+- feat: produce a finished video from one storyboard call ([#166](https://github.com/mohitkale/reel-studio/pull/166))
+
+### Storyboard
+
+- feat: storyboard linter with auto-repair and POST /api/storyboards/lint ([#165](https://github.com/mohitkale/reel-studio/pull/165))
+- feat: Storyboard v1 schema, generated JSON Schema and guide ([#164](https://github.com/mohitkale/reel-studio/pull/164))
+
+### MCP
+
+- feat: agent-visible results, review_video and revise_video (M5, M6) ([#197](https://github.com/mohitkale/reel-studio/pull/197))
+- feat: doctor --fix downloads missing FFmpeg, Chrome and the voice model with consent (M8) ([#196](https://github.com/mohitkale/reel-studio/pull/196))
+- docs: install guides for eight MCP clients, marked as not yet run in each client (M9) ([#198](https://github.com/mohitkale/reel-studio/pull/198))
+- feat: self-starting MCP server with a per-install secret (M2) ([#195](https://github.com/mohitkale/reel-studio/pull/195))
+- feat: storyboard resources, five prompts and server instructions for agents (M4) ([#188](https://github.com/mohitkale/reel-studio/pull/188))
+- feat: five core MCP tools and REEL_STUDIO_MCP_TOOLS=core (M3, first part) ([#187](https://github.com/mohitkale/reel-studio/pull/187))
+- feat: headless command line: render, lint, schema, examples with exit codes (M7) ([#186](https://github.com/mohitkale/reel-studio/pull/186))
+
+### Studio
+
+- fix: quieter default sound, pictures that fill the frame, real README screenshots (#246) ([#247](https://github.com/mohitkale/reel-studio/pull/247))
+- feat: v0.14 audio and podcast factory: podcast, narration, music, chapters, shorts, publishing kit, series and batch (A1 to A7) ([#221](https://github.com/mohitkale/reel-studio/pull/221))
+- feat: v0.13 leftovers: steps that run by themselves, tell me what to change, step times, previous version (U9, U4, U3) ([#220](https://github.com/mohitkale/reel-studio/pull/220))
+- feat: v0.13 part 2: Playwright journeys and accessibility, core MCP tools by default, another voice (U8, M3, U4 part) ([#218](https://github.com/mohitkale/reel-studio/pull/218))
+- feat: v0.13 no-code Studio part 1: Simple and Pro modes, navigation, setup, result page edits (U9, U5, U2, U4 part) ([#216](https://github.com/mohitkale/reel-studio/pull/216))
+- feat: Examples page: start from a golden storyboard, change the text, no AI needed (U6) ([#200](https://github.com/mohitkale/reel-studio/pull/200))
+- feat: no-API-key mode: copy a prompt, paste the reply, checked and produced (U7) ([#203](https://github.com/mohitkale/reel-studio/pull/203))
+- feat: plain steps list on the result page while a video is made (U3, first part) ([#202](https://github.com/mohitkale/reel-studio/pull/202))
+- feat: one-prompt home screen: one box, format, length and look, one Create button (U1) ([#199](https://github.com/mohitkale/reel-studio/pull/199))
+
+### Audio and podcasts
+
+- feat: whisper DTW word timing and an independent timing check (V4b) ([#194](https://github.com/mohitkale/reel-studio/pull/194))
+- fix: voice:download and setup --voice ran into top-level await; record the fresh-clone check (V8b) ([#189](https://github.com/mohitkale/reel-studio/pull/189))
+
+### CI and tooling
+
+- ci: one-command releases with a tag-triggered publish workflow ([#163](https://github.com/mohitkale/reel-studio/pull/163))
+- ci: fast PR gate and on-demand full matrix ([#156](https://github.com/mohitkale/reel-studio/pull/156))
+- test: split fast unit tests from integration tests ([#154](https://github.com/mohitkale/reel-studio/pull/154))
+
+### Documentation
+
+- docs: interim README, one-screen pitch ([#162](https://github.com/mohitkale/reel-studio/pull/162))
+- docs: consolidate guides into a small canonical set, add link check ([#159](https://github.com/mohitkale/reel-studio/pull/159))
+- docs: feature inventory and parity guard ([#158](https://github.com/mohitkale/reel-studio/pull/158))
+- docs: single agent rule file, pointers for other harnesses ([#157](https://github.com/mohitkale/reel-studio/pull/157))
+
+### Repository
+
+- chore: MIT-only LICENSE, move third-party notice to NOTICE.md ([#160](https://github.com/mohitkale/reel-studio/pull/160))
+- chore: roadmap task form, PR template and label guide ([#155](https://github.com/mohitkale/reel-studio/pull/155))
+- chore: trunk-based branching strategy and repo cleanup ([#153](https://github.com/mohitkale/reel-studio/pull/153))
+
+### Other changes
+
+- feat: niche showcase of thirty sourced videos, share text, optional end tag (L8) ([#236](https://github.com/mohitkale/reel-studio/pull/236))
+- feat: release readiness: frozen Storyboard v1, v0.8.0 upgrade test, licence and audit gates, security updates (L6) ([#235](https://github.com/mohitkale/reel-studio/pull/235))
+- docs: launch plan with positioning, claims guard rail, channel drafts and a launch video made by Reel Studio (L5) ([#232](https://github.com/mohitkale/reel-studio/pull/232))
+- feat: npm run scene:new scaffolds a scene type, scenes bring their own styles, and a 15-minute tutorial (L4) ([#231](https://github.com/mohitkale/reel-studio/pull/231))
+- fix: the website serves its posters itself, so the first screen does not wait on a release redirect (L3) ([#227](https://github.com/mohitkale/reel-studio/pull/227))
+- feat: project website with gallery, MCP page and rendered docs (L3) ([#226](https://github.com/mohitkale/reel-studio/pull/226))
+- feat: launch README and a demo asset pipeline (L1, L2) ([#225](https://github.com/mohitkale/reel-studio/pull/225))
+- feat: shorts as one batch, editor presenter preview, lip-sync check, brand-kit stings, scenes on the beat (A3, A5, P1) ([#224](https://github.com/mohitkale/reel-studio/pull/224))
+- feat: v0.14 and v0.15 leftovers: pace, output folder, stings, series defaults, presenter, recap and resumable sections (A2 to A7, P1) ([#223](https://github.com/mohitkale/reel-studio/pull/223))
+- feat: v0.15 local AI studio: local writer, voice range, image generation, recordings to clips, animated presenter (P1 to P5) ([#222](https://github.com/mohitkale/reel-studio/pull/222))
+- chore: stop tracking a Playwright result file that was committed by mistake ([#219](https://github.com/mohitkale/reel-studio/pull/219))
+- fix: npm run dev and npm start crashed on a missing import in supervise.mjs ([#217](https://github.com/mohitkale/reel-studio/pull/217))
+- feat: v0.11 wave C: variety engine, camera moves, showcase command, gating frame check (V11, V12, V10) ([#175](https://github.com/mohitkale/reel-studio/pull/175))
+- feat: v0.11 wave B: captions, sound, voice download, render benchmark (V4, V7, V8, V9) ([#174](https://github.com/mohitkale/reel-studio/pull/174))
+- feat: v0.11 wave A: twenty scene types, ten themes, bundled icons (V3, V5, V6) ([#173](https://github.com/mohitkale/reel-studio/pull/173))
 
 ## 0.8.0
 
