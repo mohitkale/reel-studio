@@ -28,6 +28,7 @@ const DISPOSITIONS = new Set([
   "keep and simplify the entry point",
   "keep behind Pro mode",
 ]);
+const MODES = new Set(["Simple + Pro", "Pro"]);
 
 function walk(dir: string, file: string): string[] {
   const out: string[] = [];
@@ -106,7 +107,10 @@ export async function codeMcp(): Promise<Registered> {
 }
 
 interface Inventory {
-  capabilities: Map<string, { disposition: string; tests: string[] }>;
+  capabilities: Map<
+    string,
+    { disposition: string; mode: string; tests: string[] }
+  >;
   pages: Map<string, string>;
   routes: Map<string, string>;
   tools: Map<string, string>;
@@ -141,8 +145,14 @@ export function parseFeatures(markdown: string): Inventory {
     const c = cells(line);
     const first = c[0]?.replace(/^`|`$/g, "") ?? "";
     if (section === "Capabilities" && /^[A-Z]{2,4}\d{2}$/.test(first)) {
+      if (inv.capabilities.has(first))
+        throw new Error(`Duplicate capability ID: ${first}`);
       const tests = [...(c[6] ?? "").matchAll(/`([^`]+)`/g)].map((m) => m[1]!);
-      inv.capabilities.set(first, { disposition: c[7] ?? "", tests });
+      inv.capabilities.set(first, {
+        disposition: c[7] ?? "",
+        mode: c[8] ?? "",
+        tests,
+      });
     } else if (section === "Pages" && first.startsWith("/")) {
       inv.pages.set(first, c[1] ?? "");
     } else if (section === "REST routes" && /^[A-Z]+ \//.test(first)) {
@@ -228,6 +238,16 @@ async function main(): Promise<void> {
     }
   }
   for (const [id, row] of inv.capabilities) {
+    if (!MODES.has(row.mode)) {
+      problems.push(
+        `Capability ${id} has mode "${row.mode}"; allowed: ${[...MODES].join(", ")}`,
+      );
+    }
+    if ((row.mode === "Pro") !== (row.disposition === "keep behind Pro mode")) {
+      problems.push(
+        `Capability ${id} must agree on Pro mode in both the Mode and Disposition columns`,
+      );
+    }
     if (!DISPOSITIONS.has(row.disposition)) {
       problems.push(
         `Capability ${id} has disposition "${row.disposition}"; allowed: ${[...DISPOSITIONS].join("; ")}`,

@@ -18,7 +18,14 @@ test("paste a reply, make the video, export it", async ({
   context,
 }, testInfo) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const mode = await page.request.post("/api/ui-mode", {
+    data: { mode: "simple", onboarded: true, reviewBeforeMaking: false },
+  });
+  expect(mode.ok()).toBe(true);
   await page.goto("/");
+  const simple = page.getByRole("radio", { name: "Simple", exact: true });
+  const pro = page.getByRole("radio", { name: "Pro", exact: true });
+  await expect(simple).toHaveAttribute("aria-checked", "true");
   await page.locator("#one-prompt-input").fill("Why the sky is blue");
   await page.getByText("More options").click();
   await page.getByLabel(/Quick draft/).check();
@@ -71,7 +78,8 @@ test("paste a reply, make the video, export it", async ({
       ).metadata(),
     ).toMatchObject({ width, height, format: "png" });
   }
-  const jobId = new URL(page.url()).pathname.split("/").at(-1);
+  const resultPath = new URL(page.url()).pathname;
+  const jobId = resultPath.split("/").at(-1);
   const response = await page.request.post(
     `/api/production-jobs/${jobId}/export-folder`,
   );
@@ -100,4 +108,88 @@ test("paste a reply, make the video, export it", async ({
       ),
     });
   }
+
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(resultPath);
+  await expect(simple).toHaveAttribute("aria-checked", "true");
+  const editor = page.getByRole("link", { name: "Open full editor" });
+  await expect(editor).toBeVisible();
+  const editorPath = new URL((await editor.getAttribute("href"))!, page.url())
+    .pathname;
+  await expectPlayableVideo(page);
+  const player = page.getByLabel("Finished video");
+  await player.evaluate((video: HTMLVideoElement) => {
+    video.currentTime = 1;
+  });
+  await expect
+    .poll(() =>
+      player.evaluate(
+        (video: HTMLVideoElement) => !video.seeking && video.readyState >= 2,
+      ),
+    )
+    .toBe(true);
+  await page.screenshot({ path: testInfo.outputPath("simple-project.png") });
+  await page
+    .locator("aside")
+    .screenshot({ path: testInfo.outputPath("simple-sidebar.png") });
+  await pro.click();
+  await expect(pro).toHaveAttribute("aria-checked", "true");
+  const expandSidebar = page.getByRole("button", { name: "Expand sidebar" });
+  if (await expandSidebar.isVisible()) await expandSidebar.click();
+  await page
+    .locator("aside")
+    .screenshot({ path: testInfo.outputPath("pro-sidebar.png") });
+  await editor.click();
+  await page.waitForURL((url) => url.pathname === editorPath);
+
+  const sceneText = page.getByRole("textbox", {
+    name: "On-screen text",
+    exact: true,
+  });
+  await expect(sceneText).toHaveValue("Why is the sky blue?");
+  const edited = "Why our sky looks blue";
+  const saved = page.waitForResponse(
+    (response) =>
+      response.request().method() === "PATCH" &&
+      /\/api\/scenes\/[^/]+$/.test(new URL(response.url()).pathname),
+  );
+  await sceneText.fill(edited);
+  await sceneText.press("Tab");
+  expect((await saved).ok()).toBe(true);
+  await expect(page.getByText("Saving…", { exact: true })).toBeHidden();
+  await page.screenshot({ path: testInfo.outputPath("pro-project.png") });
+
+  await page.getByText("Customize video", { exact: true }).click();
+  for (const [button, dialog] of [
+    ["Film plan JSON", "Film plan checkpoint"],
+    ["Chapters", "Chapter structure"],
+    ["AI", "Generate scenes with AI"],
+    ["Search stock", "Stock media"],
+  ]) {
+    await page.getByRole("button", { name: button, exact: true }).click();
+    await expect(page.getByRole("dialog", { name: dialog })).toBeVisible();
+    await page.keyboard.press("Escape");
+  }
+  await page
+    .getByText("Editorial review and targeted revisions", { exact: true })
+    .click();
+  await expect(page.getByLabel("Editorial revision action")).toBeVisible();
+  await page.getByText("Create a language version", { exact: true }).click();
+  await expect(page.getByPlaceholder("For example, Hindi")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Scene by scene" }),
+  ).toBeVisible();
+
+  await simple.click();
+  await expect(simple).toHaveAttribute("aria-checked", "true");
+  await page
+    .locator("aside")
+    .getByRole("link", { name: "Create", exact: true })
+    .click();
+  const recent = page.getByRole("region", { name: "Recent videos" });
+  await recent.locator(`a[href$="${editorPath}"]`).click();
+  await page.waitForURL((url) => url.pathname === editorPath);
+  await expect(simple).toHaveAttribute("aria-checked", "true");
+  await expect(sceneText).toHaveValue(edited);
+  await page.screenshot({ path: testInfo.outputPath("simple-reopened.png") });
 });
