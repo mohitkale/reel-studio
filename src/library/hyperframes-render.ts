@@ -7,6 +7,7 @@ import { productionSignal } from "@/library/production-cancellation";
 import { randomUUID } from "node:crypto";
 import { createProgressWriter } from "@/library/progress-writer";
 import { writeHyperframesVisualSections } from "@/library/hyperframes-visual-sections";
+import { writeRenderExportFolder } from "@/library/export-folder";
 import type { VideoSnapshot } from "@/production/video-snapshot";
 import {
   masterVideoAudio,
@@ -713,6 +714,17 @@ export async function runHyperframesRender(
 
     await masterVideoAudio(outputPath, script.audioMastering);
     assertProductionActive();
+    await writeRenderExportFolder(
+      outputPath,
+      {
+        ...script,
+        width: inputProps.width ?? nativeDims.width,
+        height: inputProps.height ?? nativeDims.height,
+      },
+      inputProps,
+      inputProps.tokens?.themeId,
+    );
+    assertProductionActive();
     await writer.flush();
     await writer.stop();
     await completeRender(renderId, outputKey);
@@ -727,6 +739,12 @@ export async function runHyperframesRender(
     await fs.rm(projectDir, { recursive: true, force: true }).catch(() => {});
   } catch (err) {
     await writer.stop();
+    await fs
+      .rm(path.join(process.cwd(), "media", "exports", `render-${renderId}`), {
+        recursive: true,
+        force: true,
+      })
+      .catch(() => {});
     await fs.rm(
       audioMasteringReportPath(
         path.join(process.cwd(), "media", "renders", `render-${renderId}.mp4`),
