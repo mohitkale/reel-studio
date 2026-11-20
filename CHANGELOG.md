@@ -6,6 +6,8 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+- fix: renders no longer fetch fonts from Google Fonts; families named only in custom properties (`Impact`, `Georgia`, `Times New Roman`) are mapped to the bundled ones, with a test that runs the compiler's font pass over every example and look (#233)
+
 ## 1.0.0 (2026-11-20)
 
 The storyboard format, the command line and the MCP tools are stable from here on: changes are

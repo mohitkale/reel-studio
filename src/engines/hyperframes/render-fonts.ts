@@ -45,14 +45,17 @@ export function localizeHyperframesRenderFonts(
   html: string,
   runtimeUrl = "/_runtime",
 ): string {
+  // Also custom properties such as `--theme-heading-font`: the compiler reads their
+  // families too, and a leftover `Impact`, `Georgia` or `Times New Roman` makes it
+  // fetch a font from Google Fonts (#233).
   const normalizeCss = (css: string) =>
     css.replace(
-      /(font-family\s*:)([^;}]+)/gi,
+      /((?:font-family|--[\w-]*font[\w-]*)\s*:)([^;}]+)/gi,
       (_, property: string, families: string) =>
         property +
         families
           .replace(
-            /Instrument Serif|Libre Baskerville|Playfair Display|Georgia/g,
+            /Instrument Serif|Libre Baskerville|Playfair Display|Georgia|Times New Roman/g,
             "EB Garamond",
           )
           .replace(
