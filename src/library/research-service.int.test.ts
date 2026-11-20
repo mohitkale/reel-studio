@@ -17,7 +17,6 @@ import { ResearchRepository } from "./repositories/research";
 import { normalizeResearchRequest, runResearchJob } from "./research-service";
 import { evidenceFixture } from "@/research/fixtures";
 
-vi.setConfig({ testTimeout: 15_000 });
 const directory = mkdtempSync(path.join(tmpdir(), "reel-research-"));
 const filename = path.join(directory, "research.db");
 let client: ReturnType<typeof createPrismaClient>;

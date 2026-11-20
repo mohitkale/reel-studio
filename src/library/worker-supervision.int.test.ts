@@ -77,7 +77,7 @@ describe("process supervision", () => {
       await runner.done;
       await rm(dir, { recursive: true, force: true });
     }
-  }, 30000);
+  });
   it.each(["dev", "start", "docker"])(
     "stops both %s children on shutdown",
     async () => {

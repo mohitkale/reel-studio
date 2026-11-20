@@ -36,9 +36,9 @@ export default defineConfig({
         test: {
           name: "integration",
           include: [INTEGRATION],
-          // Real SQLite, FFmpeg and worker processes need more headroom than
-          // the 5 s unit default, especially on Windows and loaded machines.
-          testTimeout: 20_000,
+          // Cold SQLite/Prisma setup and child processes can take tens of
+          // seconds on Windows CI, even with a single integration worker.
+          testTimeout: process.platform === "win32" ? 60_000 : 20_000,
         },
       },
       {

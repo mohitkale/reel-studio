@@ -316,4 +316,4 @@ it("atomically appends chapters and stock, preserves prior work, and rejects rac
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-}, process.platform === "win32" ? 30_000 : 20_000);
+});

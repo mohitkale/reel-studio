@@ -222,4 +222,4 @@ it("preserves edited and muted cues through refresh, rejects stale edits, and re
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-}, 15_000);
+});

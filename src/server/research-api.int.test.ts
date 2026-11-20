@@ -54,7 +54,7 @@ vi.mock("./secrets", async (original) => ({
 vi.mock("@/library/research-writer", () => ({
   planWithResearchEvidence: vi.fn(),
 }));
-vi.setConfig({ testTimeout: 15_000 });
+
 const directory = mkdtempSync(path.join(tmpdir(), "reel-research-api-"));
 let client: ReturnType<typeof createPrismaClient>;
 const context = (id = "missing") => ({ params: Promise.resolve({ id }) });

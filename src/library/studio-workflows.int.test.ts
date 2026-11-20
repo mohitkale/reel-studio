@@ -342,4 +342,4 @@ it("preserves manual language versions, protects frozen assets and shares review
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-}, 30000);
+});

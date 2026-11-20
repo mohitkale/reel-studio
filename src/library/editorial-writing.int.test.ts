@@ -34,7 +34,7 @@ import {
 } from "./editorial-writing";
 import { readEditorialRecord } from "./repositories/editorial";
 import { importExternalEvidence } from "./research-import";
-vi.setConfig({ testTimeout: 15_000, hookTimeout: 20_000 });
+vi.setConfig({ hookTimeout: 20_000 });
 const root = mkdtempSync(path.join(tmpdir(), "reel-editorial-"));
 let previous: string | undefined;
 beforeAll(async () => {

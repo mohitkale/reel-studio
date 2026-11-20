@@ -8,7 +8,6 @@ import path from "node:path";
 import type { ImageProvider } from "@/providers/image/types";
 
 const previousDatabaseUrl = process.env.DATABASE_URL;
-vi.setConfig({ testTimeout: process.platform === "win32" ? 30_000 : 15_000 });
 
 afterEach(async () => {
   const g = globalThis as typeof globalThis & {
