@@ -48,6 +48,7 @@ make it again: the [showcase wall](https://mohitkale.github.io/reel-studio/showc
 
 Also: **podcasts** with one or two hosts (WAV or MP3, transcript, chapters, video audiograms),
 vertical, square or wide output, captions you can edit, and your own footage and music.
+The twenty bundled CC0 music tracks work offline.
 
 ## How it works
 

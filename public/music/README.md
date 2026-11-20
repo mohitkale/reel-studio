@@ -13,7 +13,15 @@ third party. They have not been mastered by an engineer; check the loudness unde
 voice before relying on one for a client.
 
 They are intentionally soft, loopable ambient beds meant to sit (ducked) under a
-voiceover. Regenerate with:
+voiceover. Automatic storyboard music uses the selected theme's mood tags.
+Cinematic picks Cinematic Rise, Mono Brutalist picks Tech Grid for its light
+percussion, and Clean Minimal picks Ambient Glow.
+
+The twenty WAVs add 20.48 MB (19.53 MiB) to the unpacked package. The WAVs ship
+with the studio so automatic music can work offline. Inspect the package
+contents with `npm pack --dry-run --json`.
+
+Regenerate the WAVs with this command.
 
 ```bash
 npm run gen:music
