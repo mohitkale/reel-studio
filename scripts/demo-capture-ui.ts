@@ -4,12 +4,12 @@
  * Starts a throwaway studio (its own data folder, a fake local writer, no
  * network), then with a real Chrome:
  *   - takes screenshots of the home page, the generation view and the result
- *     page, on desktop and on a phone;
+ *     page, on desktop and on a phone, plus the four README screenshots;
  *   - records one prompt-to-video session (webm) with the times that matter;
  *   - runs the real MCP server over stdio, makes a video with it, and renders
  *     the exchange as a terminal recording (PNG frames).
  *
- *   npx tsx scripts/demo-capture-ui.ts --out dist/demo/.work/ui
+ *   node --import tsx scripts/demo-capture-ui.ts --out dist/demo/.work/ui [--screens-only]
  *
  * Nothing here is faked: the MCP lines are what the server returned.
  */
@@ -20,7 +20,8 @@ import path from "node:path";
 import { readEngineInfo } from "../src/server/local-engine";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { chromium, type Page } from "@playwright/test";
+import { chromium, type Browser, type Page } from "@playwright/test";
+import { z } from "zod";
 
 const args = process.argv.slice(2);
 const flag = (name: string) => {
@@ -31,6 +32,7 @@ const out = path.resolve(flag("--out") ?? "dist/demo/.work/ui");
 const PORT = flag("--port") ?? "3190";
 const WRITER_PORT = flag("--writer-port") ?? "3198";
 const base = `http://127.0.0.1:${PORT}`;
+const screensOnly = args.includes("--screens-only");
 mkdirSync(out, { recursive: true });
 
 async function waitForServer(): Promise<void> {
@@ -101,6 +103,12 @@ async function simpleMode(page: Page): Promise<void> {
 
 /** Puts the player on a frame with something in it (the first frame is empty). */
 async function showFrame(page: Page, seconds: number): Promise<void> {
+  await page.waitForFunction(() => {
+    const video = document.querySelector<HTMLVideoElement>(
+      'video[aria-label="Finished video"]',
+    );
+    return video && video.readyState >= HTMLMediaElement.HAVE_METADATA;
+  });
   await page.getByLabel("Finished video").evaluate(
     (v, t) =>
       new Promise<void>((resolve) => {
@@ -124,6 +132,121 @@ const HIDE_DEV_BADGE = () => {
     document.head.appendChild(style),
   );
 };
+
+type PreviewWindow = Window & { __reelSeek?: (seconds: number) => void };
+
+/** Seek the live editor and gallery previews to a settled frame before capturing. */
+async function showPreviewFrames(page: Page, count: number): Promise<void> {
+  const selector = 'iframe[title="HyperFrames preview"]';
+  await page.waitForFunction(
+    ({ selector, count }) => {
+      const frames = Array.from(
+        document.querySelectorAll<HTMLIFrameElement>(selector),
+      );
+      return (
+        frames.length >= count &&
+        frames
+          .slice(0, count)
+          .every(
+            (frame) =>
+              typeof (frame.contentWindow as PreviewWindow | null)
+                ?.__reelSeek === "function",
+          )
+      );
+    },
+    { selector, count },
+  );
+  await page.locator(selector).evaluateAll(async (frames, count) => {
+    for (const element of frames.slice(0, count)) {
+      const frame = element as HTMLIFrameElement;
+      await frame.contentDocument?.fonts.ready;
+      (frame.contentWindow as PreviewWindow | null)?.__reelSeek?.(1.5);
+    }
+  }, count);
+}
+
+async function captureReadmeScreens(
+  browser: Browser,
+  resultUrl?: string,
+): Promise<void> {
+  const directory = path.join(out, "screens");
+  mkdirSync(directory, { recursive: true });
+  const desktop = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    colorScheme: "dark",
+  });
+  await desktop.addInitScript(HIDE_DEV_BADGE);
+  try {
+    const page = await desktop.newPage();
+    const capture = (name: string) =>
+      page.screenshot({
+        path: path.join(directory, `${name}.jpg`),
+        type: "jpeg",
+        quality: 84,
+      });
+    const headers = { origin: base, "content-type": "application/json" };
+    const mode = await fetch(`${base}/api/ui-mode`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ mode: "simple", onboarded: true }),
+    });
+    if (!mode.ok)
+      throw new Error(`Could not set the demo Studio mode: ${mode.status}`);
+    await page.goto(`${base}/`);
+    await page
+      .getByRole("heading", { name: "What do you want to make?" })
+      .waitFor();
+    await page
+      .locator("aside")
+      .getByRole("link", { name: "Settings", exact: true })
+      .waitFor();
+    await page.locator("#one-prompt-input").fill("Why is the sky blue?");
+    await capture("home");
+
+    if (!resultUrl) {
+      const response = await fetch(`${base}/api/storyboards?quality=draft`, {
+        method: "POST",
+        headers,
+        body: readFileSync("e2e/fixtures/written.storyboard.json", "utf8"),
+      });
+      if (!response.ok)
+        throw new Error(
+          `Could not queue the README video: ${response.status} ${await response.text()}`,
+        );
+      const { jobId } = z
+        .object({ jobId: z.string().min(1) })
+        .parse(await response.json());
+      resultUrl = `${base}/results/${encodeURIComponent(jobId)}`;
+    }
+    await page.goto(resultUrl);
+    await page.getByText("Ready to download").waitFor({ timeout: 8 * 60_000 });
+    await showFrame(page, 3);
+    await capture("result");
+
+    const editor = await page
+      .getByRole("link", { name: "Open full editor" })
+      .getAttribute("href");
+    if (!editor) throw new Error("The README video has no editor link.");
+    const editorUrl = new URL(editor, base);
+    editorUrl.search = "";
+    await page.goto(editorUrl.href);
+    await showPreviewFrames(page, 1);
+    await page
+      .locator('iframe[title="HyperFrames preview"]')
+      .first()
+      .evaluate((frame) => frame.scrollIntoView({ block: "center" }));
+    await capture("editor");
+
+    await page.goto(`${base}/scenes`);
+    await page
+      .getByRole("heading", { name: "Scene types", exact: true })
+      .waitFor();
+    await showPreviewFrames(page, 4);
+    await capture("scene-types");
+  } finally {
+    await desktop.close();
+  }
+}
 
 interface McpLine {
   kind: "command" | "output";
@@ -385,6 +508,15 @@ async function main(): Promise<void> {
       channel: process.env.E2E_BROWSER ?? "chrome",
     });
 
+    if (screensOnly) {
+      try {
+        await captureReadmeScreens(browser);
+      } finally {
+        await browser.close();
+      }
+      return;
+    }
+
     // 1. Desktop session, recorded.
     const recordings = path.join(out, "recording");
     const desktop = await browser.newContext({
@@ -454,6 +586,7 @@ async function main(): Promise<void> {
     await showFrame(mobile, 3);
     await mobile.screenshot({ path: path.join(out, "ui-result-mobile.png") });
     await phone.close();
+    await captureReadmeScreens(browser, resultUrl);
 
     // 3. The MCP flow, from the real server, drawn as a terminal.
     const lines = await mcpSession();

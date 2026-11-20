@@ -163,8 +163,11 @@ FFmpeg, and about 20 minutes.
 - Screenshots (home, generation view, result, phone), a prompt-to-video screen recording and
   a terminal recording of the real MCP server making a video come from
   `scripts/demo-capture-ui.ts`, which starts a throwaway studio with a fake local writer.
+- The four README screenshots go to `docs/assets/screens/` and `dist/demo/screens/`.
+  The manifest records each JPEG and its source. Run `npm run demo:assets -- --only screens`
+  to refresh the README screenshots and their preview entries using one draft video.
 
-Flags: `--skip-ui`, `--skip-sheets`, `--rerender` (render the storyboards again).
+Flags: `--skip-ui` (including the README screenshots), `--skip-sheets`, `--rerender` (render the storyboards again).
 The run fails if a GIF cannot be brought under its cap. The README links the files as assets of
 the `demo-assets` release; `npm run demo:assets -- --upload demo-assets` attaches a fresh set
 (a public action: only a maintainer runs it).
