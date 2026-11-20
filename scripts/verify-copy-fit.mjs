@@ -103,6 +103,9 @@ await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const base = `http://127.0.0.1:${server.address().port}`;
 const browser = await puppeteer.launch({
   headless: true,
+  // GitHub's Ubuntu runners restrict unprivileged user namespaces, which
+  // Chrome's sandbox needs; the runner is a throwaway VM.
+  args: process.env.CI ? ["--no-sandbox"] : [],
   executablePath:
     process.env.REEL_VERIFY_CHROME || (await puppeteer.executablePath()),
 });
