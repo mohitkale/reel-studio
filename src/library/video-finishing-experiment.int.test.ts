@@ -116,7 +116,7 @@ it("preserves exact coverage and encoded audio, resets temporal history at cuts 
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }
-}, 30_000);
+});
 it("requires explicit high quality and bounded, ordered timing", () => {
   const input = {
     mode: "temporal-blend-3",

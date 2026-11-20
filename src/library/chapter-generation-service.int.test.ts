@@ -406,7 +406,7 @@ it("generates one reviewed chapter, resumes/retries pending work and atomically 
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-}, 20_000);
+});
 
 it("preserves lesson goals, callback links and subject aliases through resumed chapter generation and revision restore", async () => {
   const directory = mkdtempSync(path.join(tmpdir(), "reel-m5-chapters-"));
@@ -571,4 +571,4 @@ it("preserves lesson goals, callback links and subject aliases through resumed c
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-}, 30_000);
+});

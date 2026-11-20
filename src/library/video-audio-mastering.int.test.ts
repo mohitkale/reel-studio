@@ -104,7 +104,7 @@ it("measures real encoded audio, preserves video packets, and rejects stale audi
   } finally {
     await fs.rm(directory, { recursive: true, force: true });
   }
-}, 20_000);
+});
 it("keeps a complete audio sample clock and honors authored start delays", async () => {
   const directory = await fs.mkdtemp(
     path.join(tmpdir(), "reel-mastering-clock-"),
@@ -170,7 +170,7 @@ it("keeps a complete audio sample clock and honors authored start delays", async
   } finally {
     await fs.rm(directory, { recursive: true, force: true });
   }
-}, 20_000);
+});
 it("balances high-range narration and quiet music holds without forced dynamic normalization", async () => {
   const directory = await fs.mkdtemp(
     path.join(tmpdir(), "reel-mastering-range-"),
@@ -196,7 +196,7 @@ it("balances high-range narration and quiet music holds without forced dynamic n
   } finally {
     await fs.rm(directory, { recursive: true, force: true });
   }
-}, 20_000);
+});
 it("leaves silent and audio-free media unchanged and safely cancels finishing", async () => {
   const directory = await fs.mkdtemp(
     path.join(tmpdir(), "reel-mastering-silent-"),
@@ -231,7 +231,7 @@ it("leaves silent and audio-free media unchanged and safely cancels finishing", 
   } finally {
     await fs.rm(directory, { recursive: true, force: true });
   }
-}, 20_000);
+});
 it("verifies the encoded ceiling on high-crest sound accents over a quiet bed", async () => {
   const directory = await fs.mkdtemp(
     path.join(tmpdir(), "reel-mastering-peaks-"),
@@ -272,4 +272,4 @@ it("verifies the encoded ceiling on high-crest sound accents over a quiet bed", 
   } finally {
     await fs.rm(directory, { recursive: true, force: true });
   }
-}, 20_000);
+});

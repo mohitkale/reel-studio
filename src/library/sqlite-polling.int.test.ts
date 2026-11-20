@@ -258,4 +258,4 @@ it("recognizes the installed adapter's actual busy-timeout error", async () => {
     if (blocker.exitCode === null) blocker.kill();
     await closed;
   }
-}, 15_000);
+});

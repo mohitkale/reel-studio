@@ -29,7 +29,7 @@ import { stockMediaCandidateSchema } from "@/providers/stock/schemas";
 import type { StockMediaProviderRegistry } from "@/providers/stock/registry";
 import { applyStockMediaSelection } from "./repositories/stock-media-selections";
 import { rankingForSelection } from "./media-ranking-selection";
-vi.setConfig({ testTimeout: 15_000, hookTimeout: 20_000 });
+vi.setConfig({ hookTimeout: 20_000 });
 const root = mkdtempSync(path.join(tmpdir(), "reel-media-ranking-"));
 let previous: string | undefined;
 beforeAll(async () => {

@@ -202,4 +202,4 @@ it("registers llama.cpp and completes video, podcast and clip plans over guarded
     await new Promise<void>((resolve) => server.close(() => resolve()));
     await rm(directory, { recursive: true, force: true });
   }
-}, 20000);
+});

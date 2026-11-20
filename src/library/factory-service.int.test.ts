@@ -367,4 +367,4 @@ it("migrates, pins profiles/packs and resumes immutable factory variants without
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-}, 30000);
+});

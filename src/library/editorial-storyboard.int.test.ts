@@ -36,7 +36,7 @@ import { importExternalEvidence } from "./research-import";
 import { controlEditorialStoryboard } from "./editorial-storyboard";
 import { moveSceneHistory } from "./scene-history";
 import { captureVideoSnapshot } from "./video-snapshot";
-vi.setConfig({ testTimeout: 15_000, hookTimeout: 20_000 });
+vi.setConfig({ hookTimeout: 20_000 });
 const root = mkdtempSync(path.join(tmpdir(), "reel-editorial-"));
 let previous: string | undefined;
 beforeAll(async () => {

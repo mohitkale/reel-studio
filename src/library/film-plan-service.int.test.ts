@@ -169,4 +169,4 @@ it("checkpoints, reads and restores choices in SQLite; rejects stale/forged plan
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });
   }
-}, 30_000);
+});

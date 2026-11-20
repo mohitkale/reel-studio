@@ -15,7 +15,6 @@ import path from "node:path";
 import { pcmToWav } from "@/lib/wav";
 
 const previousDatabaseUrl = process.env.DATABASE_URL;
-vi.setConfig({ testTimeout: process.platform === "win32" ? 30_000 : 15_000 });
 
 const TEST_FOLDER = "__brand-sting-test__";
 

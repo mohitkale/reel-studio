@@ -40,7 +40,7 @@ import {
 } from "./editorial-review";
 import { editorialReviewControlSchema } from "@/production/editorial-review";
 
-vi.setConfig({ testTimeout: 15_000, hookTimeout: 20_000 });
+vi.setConfig({ hookTimeout: 20_000 });
 const root = mkdtempSync(path.join(tmpdir(), "reel-editorial-"));
 let previous: string | undefined;
 beforeAll(async () => {

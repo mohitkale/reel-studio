@@ -104,5 +104,5 @@ describe("stock-media service repository", () => {
       delete globalWithPrisma.prisma;
       rmSync(directory, { recursive: true, force: true });
     }
-  }, process.platform === "win32" ? 30_000 : 5_000);
+  });
 });
