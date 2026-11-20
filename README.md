@@ -137,6 +137,9 @@ built for them; you can still bring your own clips.
 
 Add a [scene type or theme](docs/CONTRIBUTING_SCENES.md), a [presenter](docs/CONTRIBUTING_PRESENTERS.md)
 or a [storyboard](examples/storyboards). Start with [CONTRIBUTING.md](CONTRIBUTING.md).
+Measure sound, pacing and text in existing MP4s with `npm run quality:baseline`.
+[Quality guide](docs/QUALITY.md#measure-existing-exports).
+
 All guides: [docs](docs/README.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md) ·
 [Security](SECURITY.md).
 

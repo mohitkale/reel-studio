@@ -58,3 +58,42 @@ The layout contract these checks measure lives in `src/production/layout.ts`: ea
 The check gates: `npm run examples:lint-frames -- --gate` exits 1 on any failure, and the manual render workflow runs it that way. `npm run themes:sheet` renders one storyboard in all ten themes, `npm run seeds:sheet` renders one storyboard under five seeds, and `npm run showcase` renders the golden set with voice into `media/showcase/index.html` for the 20-point review.
 Baseline numbers from before the layout work are in
 [quality/baseline.json](quality/baseline.json).
+
+## Measure existing exports
+
+Use the same command for Reel Studio exports and local reference files. It reads
+the exported video with FFmpeg and FFprobe.
+
+```bash
+npm run quality:baseline -- --out .artifacts/quality-baseline.json media/showcase/explainer.mp4
+```
+
+Add `--ocr` if Tesseract with English language data is already available. It
+samples six frames and reports word-box height as a percentage of frame height
+and estimated contrast against nearby pixels. OCR can miss small or stylized
+text. The contrast values are estimates, especially on busy backgrounds.
+
+Pass `--annotations annotations.json` to supply scene boundaries and narration
+for each input. Use paths relative to the working directory. For a reference
+clip, use a plain-text `transcript` path in place of `storyboard`.
+
+```json
+{
+  "media/showcase/explainer.mp4": {
+    "sceneBoundariesSeconds": [9, 15, 23, 31, 39],
+    "storyboard": "examples/storyboards/explainer.json"
+  }
+}
+```
+
+- **Sound** reports integrated LUFS, true peak in dBTP, and loudness range in LU
+  from the first audio track. Integrated loudness is null for digital silence,
+  and the sound section is null for files without an audio track.
+- **Pacing** reports detected hard cuts and the lengths between them. It reports
+  supplied transitions and their scene lengths separately so dissolves and
+  same-layout scene changes can be measured. Use the same annotation method
+  across the clips you compare.
+- **Narration** reports words per minute of video from the supplied text. The
+  denominator includes pauses, and each row identifies which text it used.
+- **Typography** reports the minimum, 10th percentile, median, 90th percentile,
+  and maximum for the recognized word boxes in the sampled frames.
