@@ -191,6 +191,7 @@ export interface ProjectDTO {
   series?: string;
   outputType?: "video" | "voiceover";
   thumbnailUrl?: string | null;
+  thumbnailFallbackUrl?: string | null;
   openingText?: string;
   status?: "draft" | "ready";
   id: string;

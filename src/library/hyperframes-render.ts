@@ -8,6 +8,7 @@ import { randomUUID } from "node:crypto";
 import { createProgressWriter } from "@/library/progress-writer";
 import { writeHyperframesVisualSections } from "@/library/hyperframes-visual-sections";
 import { writeRenderExportFolder } from "@/library/export-folder";
+import { ensureRenderPoster, renderPosterKey } from "@/library/render-poster";
 import type { VideoSnapshot } from "@/production/video-snapshot";
 import {
   masterVideoAudio,
@@ -499,6 +500,8 @@ export async function runHyperframesRender(
     onProgress,
   } = opts;
 
+  const outputKey = `renders/render-${renderId}.mp4`;
+  const outputPath = path.join(process.cwd(), "media", outputKey);
   const writer = createProgressWriter<{
     progress: number;
     status: Parameters<typeof updateRenderProgress>[2];
@@ -681,9 +684,6 @@ export async function runHyperframesRender(
       );
 
     const store = getAssetStore();
-    const fileName = `render-${renderId}.mp4`;
-    const outputKey = `renders/${fileName}`;
-    const outputPath = path.join(process.cwd(), "media", outputKey);
     await fs.mkdir(path.dirname(outputPath), { recursive: true });
 
     progress(0.02, "rendering");
@@ -724,6 +724,7 @@ export async function runHyperframesRender(
       inputProps,
       inputProps.tokens?.themeId,
     );
+    await ensureRenderPoster(outputKey);
     assertProductionActive();
     await writer.flush();
     await writer.stop();
@@ -745,16 +746,11 @@ export async function runHyperframesRender(
         force: true,
       })
       .catch(() => {});
-    await fs.rm(
-      audioMasteringReportPath(
-        path.join(process.cwd(), "media", "renders", `render-${renderId}.mp4`),
-      ),
-      { force: true },
-    );
-    await fs.rm(
-      path.join(process.cwd(), "media", "renders", `render-${renderId}.mp4`),
-      { force: true },
-    );
+    await Promise.allSettled([
+      fs.rm(audioMasteringReportPath(outputPath), { force: true }),
+      fs.rm(outputPath, { force: true }),
+      fs.rm(renderPosterKey(outputPath), { force: true }),
+    ]);
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[render:hf] Job", renderId, "failed:", msg);
     await failRender(renderId, msg).catch(() => {});

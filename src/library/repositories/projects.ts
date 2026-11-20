@@ -62,6 +62,12 @@ export async function listProjects(): Promise<ProjectDTO[]> {
         orderBy: { createdAt: "asc" },
         include: {
           _count: { select: { scenes: true, takes: true } },
+          renders: {
+            where: { status: "done", outputPath: { not: null } },
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+            take: 1,
+            select: { id: true, createdAt: true },
+          },
           scenes: {
             take: 1,
             orderBy: { order: "asc" },
@@ -72,33 +78,40 @@ export async function listProjects(): Promise<ProjectDTO[]> {
     },
   });
 
-  return projects.map((p) => ({
-    id: p.id,
-    name: p.name,
-    archivedAt: p.archivedAt?.toISOString() ?? null,
-    series: p.series,
-    outputType:
-      parseJsonColumn(p.scripts[0]?.brandOverrides, brandOverridesSchema, {})
-        .creationOutputType ?? "video",
-    thumbnailUrl:
+  return projects.map((p) => {
+    const latest = p.scripts
+      .flatMap((script) => script.renders)
+      .sort(
+        (a, b) => +b.createdAt - +a.createdAt || b.id.localeCompare(a.id),
+      )[0];
+    const background = parseJsonColumn(
+      p.scripts[0]?.scenes[0]?.layoutJson,
+      sceneConfigSchema,
+      {},
+    ).background;
+    const cover =
       p.scripts[0]?.coverUrl ??
-      (() => {
-        const background = parseJsonColumn(
-          p.scripts[0]?.scenes[0]?.layoutJson,
-          sceneConfigSchema,
-          {},
-        ).background;
-        return background?.type === "image" ? background.url : null;
-      })(),
-    openingText: p.scripts[0]?.scenes[0]?.text.slice(0, 160) ?? "",
-    status: p.scripts.some((s) => s._count.takes > 0) ? "ready" : "draft",
-    createdAt: p.createdAt.toISOString(),
-    scriptCount: p.scripts.length,
-    sceneCount: p.scripts.reduce((sum, s) => sum + s._count.scenes, 0),
-    firstScriptId: p.scripts[0]?.id ?? null,
-    brandKitId: p.brandKitId,
-    videoEngine: resolveEngine(p.videoEngine),
-  }));
+      (background?.type === "image" ? background.url : null);
+    return {
+      id: p.id,
+      name: p.name,
+      archivedAt: p.archivedAt?.toISOString() ?? null,
+      series: p.series,
+      outputType:
+        parseJsonColumn(p.scripts[0]?.brandOverrides, brandOverridesSchema, {})
+          .creationOutputType ?? "video",
+      thumbnailUrl: latest ? `/api/renders/${latest.id}/poster` : cover,
+      ...(latest ? { thumbnailFallbackUrl: cover } : {}),
+      openingText: p.scripts[0]?.scenes[0]?.text.slice(0, 160) ?? "",
+      status: p.scripts.some((s) => s._count.takes > 0) ? "ready" : "draft",
+      createdAt: p.createdAt.toISOString(),
+      scriptCount: p.scripts.length,
+      sceneCount: p.scripts.reduce((sum, s) => sum + s._count.scenes, 0),
+      firstScriptId: p.scripts[0]?.id ?? null,
+      brandKitId: p.brandKitId,
+      videoEngine: resolveEngine(p.videoEngine),
+    };
+  });
 }
 
 /** Create a project with one empty script, returning the new script id. */
