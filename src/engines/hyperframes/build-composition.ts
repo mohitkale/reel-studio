@@ -395,6 +395,20 @@ function addBackgroundToPresetScene(
     .replace(/(<div class="fx-stage[^>]*>)/, `${backgroundHtml}\n    $1`);
 }
 
+const PHOTO_TEXT_DIALOGUE =
+  /fx-dlg-(?:opener|statement|stat|quote|cta|kinetic-text|definition)\b/;
+
+/** A text scene that has a photograph behind it drops its panel (see .photo-text). */
+export function markPhotoText(block: string): string {
+  if (
+    block.includes("photo-hero") ||
+    !block.includes('class="bg-photo') ||
+    !PHOTO_TEXT_DIALOGUE.test(block)
+  )
+    return block;
+  return block.replace('class="clip scene ', 'class="clip scene photo-text ');
+}
+
 function framesToSeconds(frames: number, fps: number): number {
   if (frames <= 0) return 0;
   return Math.max(0.05, frames / Math.max(1, fps));
@@ -491,6 +505,35 @@ const STYLES = `
   .scene.has-photo .fx-min-bg {
     opacity: 0.42;
   }
+  /* Picture scene: the photograph is the scene. */
+  .scene.photo-hero .bg-scrim {
+    background: linear-gradient(180deg, rgba(5,7,13,.18) 0%, rgba(5,7,13,0) 38%, rgba(5,7,13,.5) 66%, rgba(5,7,13,.86) 100%);
+  }
+  .scene.photo-hero .fx-stage > :not(.fx-content) { display: none; }
+  /* The id selector outranks the theme's per-layout panel styling. */
+  #root .scene.photo-hero .fx-panelled .fx-dialogue.fx-dlg-broll {
+    top: auto; bottom: calc(var(--safe-bottom, 10%) + 16%); height: auto;
+    background: none !important; border: 0 !important; box-shadow: none !important;
+    padding: 0; align-items: flex-start; text-align: left;
+  }
+  #root .scene.photo-hero .fx-panelled .fx-lt-plate {
+    height: auto; background: none !important; border: 0 !important; border-radius: 0;
+    backdrop-filter: none; padding: 0; box-shadow: none !important;
+    text-shadow: 0 2px 18px rgba(0,0,0,.7), 0 1px 3px rgba(0,0,0,.6);
+  }
+  #root .scene.photo-hero .fx-dlg-broll .fx-line-inner {
+    font-size: calc(var(--frame-h, 1920px) * 0.05) !important; white-space: normal;
+  }
+  /* Text scene over a photograph: no panel, the words sit on a darkened picture. */
+  .scene.photo-text .bg-scrim {
+    background: linear-gradient(180deg, rgba(5,7,13,.5) 0%, rgba(5,7,13,.58) 55%, rgba(5,7,13,.82) 100%);
+  }
+  .scene.photo-text .fx-stage > :not(.fx-content) { display: none; }
+  #root .scene.photo-text .fx-panelled .fx-dialogue {
+    background: none !important; border: 0 !important; box-shadow: none !important;
+    backdrop-filter: none;
+  }
+  #root .scene.photo-text .fx-panelled .fx-dialogue * { text-shadow: 0 2px 16px rgba(0,0,0,.6); }
   .scene.has-photo .recipe-editorial .fx-paper {
     opacity: 0.78;
   }
@@ -1336,8 +1379,14 @@ export function buildHyperframesCompositionHtml(
       scene.background?.type === "image"
         ? scene.background.url
         : undefined;
+    // A picture scene (hf-broll) lets the photograph be the scene: no mesh, a
+    // light shade only behind the headline (.photo-hero).
+    const pictureFirst =
+      scene.templateId === "hf-broll" &&
+      scene.background?.type === "image" &&
+      !framedUrl;
     sceneBlocks.push(`
-      <section${presetMetadata} id="scene-${escapeHtml(scene.id)}" class="clip scene ${transitionClass}${scene.background?.type === "image" || scene.background?.type === "video" ? " has-photo" : ""}" data-scene-id="${escapeHtml(scene.id)}"
+      <section${presetMetadata} id="scene-${escapeHtml(scene.id)}" class="clip scene ${transitionClass}${scene.background?.type === "image" || scene.background?.type === "video" ? " has-photo" : ""}${pictureFirst ? " photo-hero" : ""}" data-scene-id="${escapeHtml(scene.id)}"
                data-start="${absoluteStart.toFixed(3)}"
                data-duration="${duration.toFixed(3)}"
                data-track-index="1"
@@ -1559,6 +1608,7 @@ ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLE
             ? decorateCelestialType(block)
             : block;
         })
+        .map(markPhotoText)
         .map((block, index) =>
           block.replace(
             /(<section\b[^>]*>)([\s\S]*)(<\/section>\s*)$/,

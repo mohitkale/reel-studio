@@ -42,6 +42,7 @@ import {
   planFromStoryboard,
   type StoryboardProductionPlan,
 } from "@/production/storyboard-plan";
+import { shareBackdrops } from "@/production/backdrops";
 import { getProductionPreset } from "@/production/presets";
 import {
   estimateDurationSeconds,
@@ -53,6 +54,9 @@ import { generateSceneImages } from "@/library/scene-image-generation";
 import { getConfig } from "@/server/app-config";
 import { imageProviderConfigStore } from "@/server/image-provider-config";
 import { createImageProvider } from "@/providers/image/registry";
+
+/** A bed, not a feature: well under the narration (the studio default is 20). */
+const STORYBOARD_MUSIC_VOLUME = 12;
 
 export interface ProduceFromStoryboardOptions {
   quality?: "draft" | "standard" | "high";
@@ -350,12 +354,17 @@ export async function produceFromStoryboard(
     }
   })();
 
+  // Text scenes between a person's own pictures borrow one as a backdrop.
+  const sharedBackgrounds = shareBackdrops(
+    finalPlan.scenes.map((scene) => scene.templateId),
+    backgrounds,
+  );
   const preset = getProductionPreset(plan.presetId);
   if (!preset) throw new ProviderError(`Unknown look "${plan.presetId}"`, 500);
   const created = await createProjectFromPlan(
     finalPlan,
     plan.orientation,
-    backgrounds,
+    sharedBackgrounds,
     "hyperframes",
     {
       styleId: finalPlan.styleId ?? preset.defaults.styleId,
@@ -370,8 +379,9 @@ export async function produceFromStoryboard(
       savedOverrides: {
         themeId: plan.themeId,
         look: plan.look,
-        // Phone feeds expect about -14 LUFS; the mastered file is measured.
-        audioMastering: "social",
+        // -16 LUFS, the level the studio has always mastered to. The louder
+        // "social" target (-14) made music and effects fatiguing on headphones.
+        audioMastering: "balanced",
         storyboardSource: buildStoryboardSource(storyboard, finalPlan.scenes),
       },
       mediaPreferences: finalPlan.scenes.map(() => mediaPreference),
@@ -389,8 +399,17 @@ export async function produceFromStoryboard(
     // A fitting track from the theme's music mood; scene moods decide when the
     // theme gives no clear answer.
     const themed = suggestTrackForText(getTheme(plan.themeId)?.musicMood);
-    if (themed) await updateScript(created.scriptId, { musicUrl: themed.url });
-    else await autoAttachBundledMusic(created.scriptId);
+    if (themed)
+      await updateScript(created.scriptId, {
+        musicUrl: themed.url,
+        musicVolume: STORYBOARD_MUSIC_VOLUME,
+      });
+    else {
+      await autoAttachBundledMusic(created.scriptId);
+      await updateScript(created.scriptId, {
+        musicVolume: STORYBOARD_MUSIC_VOLUME,
+      });
+    }
   } else if (plan.music.mode === "track") {
     const track = MUSIC_LIBRARY.find((t) => t.id === plan.music.trackId);
     if (track) await updateScript(created.scriptId, { musicUrl: track.url });

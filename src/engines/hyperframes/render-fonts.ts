@@ -60,7 +60,7 @@ export function localizeHyperframesRenderFonts(
             "Inter",
           )
           .replace(/SFMono-Regular|Menlo|Monaco|Consolas/g, "Geist Mono")
-          .replace(/Anton|Impact/g, "Archivo Black"),
+          .replace(/Anton|Impact|Haettenschweiler/g, "Archivo Black"),
     );
   const withoutRemoteFonts = html
     // Restrict normalization to CSS: authored copy and script names stay exact.

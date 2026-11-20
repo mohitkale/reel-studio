@@ -26,6 +26,11 @@ Open [localhost:3000](http://localhost:3000), type what you want to make, press 
 `npm run doctor` tells you what is missing. Details: [getting started](docs/GETTING_STARTED.md).
 An `npx reel-studio` one-liner is planned; it is not published yet.
 
+**Status: v1.0.** The [storyboard format](docs/STORYBOARD.md#versioning-and-stability), the command line
+and the MCP tools are stable: changes from here on are additive. What is not done yet is listed
+plainly in [release readiness](docs/RELEASE_READINESS.md): the package is not on npm, the install
+guides for MCP clients have not been run in each client, and Windows is tested in CI only.
+
 ## What it makes
 
 Every video below was made from a short JSON file in [`examples/storyboards`](examples/storyboards).
@@ -93,6 +98,15 @@ Eight core tools by default; the rest are opt-in. See [MCP](docs/MCP.md). No age
 ![Typing a prompt and getting a finished video](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/ui-prompt-to-video.gif)
 
 <sub>The wait while the video is made is shown twelve times faster. Mobile works too: [home](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/ui-home-mobile.png), [result](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/ui-result-mobile.png).</sub>
+
+The studio as it is today (screenshots of the running app, with a video made through the MCP server):
+
+|                                                                                                            |                                                                                                         |
+| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| ![Create: one box, a format, a length and a look](docs/assets/screens/home.jpg)                            | ![Result: watch, share and download the MP4](docs/assets/screens/result.jpg)                            |
+| ![Editor: every scene, its text and its voice script, with a live preview](docs/assets/screens/editor.jpg) | ![Scene types: each one drawn with sample content in every format](docs/assets/screens/scene-types.jpg) |
+
+Automation is the default and manual editing is always one switch away (Simple and Pro).
 
 ## Themes and scene types
 
