@@ -42,6 +42,25 @@ export interface Review {
   totalSeconds: number;
 }
 
+/**
+ * Findings from what the studio said when it made the video: a scene that asked
+ * for a picture and did not get one is invisible in the exported storyboard (it
+ * is drawn as a statement), so it is read from the job's stored warnings.
+ */
+export function missingPictureFindings(warnings: string[]): Finding[] {
+  const out: Finding[] = [];
+  for (const line of warnings) {
+    const found = /^scenes\.(\d+)\.media: (.+)$/.exec(line);
+    if (found)
+      out.push({
+        scene: Number(found[1]) + 1,
+        rule: "media-unresolved",
+        suggestion: found[2]!,
+      });
+  }
+  return out;
+}
+
 export function reviewStoryboard(input: unknown): Review {
   const findings: Finding[] = [];
   const lint = lintStoryboard(input);

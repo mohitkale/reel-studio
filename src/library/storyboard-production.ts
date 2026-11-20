@@ -33,6 +33,7 @@ import {
   ensureStingCues,
   setSfxEnabled,
 } from "@/library/sfx-service";
+import { missingPictureWarnings } from "@/library/missing-pictures";
 import { reportStockMediaSelectionUsage } from "@/library/stock-media-usage";
 import { MUSIC_LIBRARY, suggestTrackForText } from "@/lib/music-library";
 import { getTheme } from "@/video/themes";
@@ -118,6 +119,10 @@ export interface StoryboardProduction {
   planWarnings: string[];
   estimatedSeconds: number;
 }
+
+/** Scene templates that show a picture the storyboard asked for. */
+const wantsPicture = (templateId: string) =>
+  templateId === "hf-broll" || templateId === "hf-media-split";
 
 /** Stable JSON: object keys sorted, so equal storyboards hash equally. */
 function canonical(value: unknown): string {
@@ -301,8 +306,8 @@ export async function produceFromStoryboard(
     ...plan.scenePlan,
     scenes: enrichScenePlan(plan.scenePlan.scenes, "hyperframes"),
   };
-  const wantsMedia = enriched.scenes.some(
-    (scene) => scene.templateId === "hf-broll",
+  const wantsMedia = enriched.scenes.some((scene) =>
+    wantsPicture(scene.templateId),
   );
   const mediaPreference = wantsMedia ? ("auto" as const) : ("none" as const);
   const decisions: AutomaticMediaDecision[] = wantsMedia
@@ -319,11 +324,21 @@ export async function produceFromStoryboard(
         background,
       }));
   const backgrounds = decisions.map((decision) => decision.background);
-  // Without a background a media scene falls back to an animated statement.
+  // Say which scenes asked for a picture and did not get one, and why, so the
+  // person or agent can fix it instead of being told everything is fine (#245).
+  warnings.push(
+    ...missingPictureWarnings(
+      storyboard,
+      decisions,
+      backgrounds.map((background) => Boolean(background)),
+    ),
+  );
+  // Without a background a media scene falls back to an animated statement
+  // (a media-split scene too, rather than an empty box beside the headline).
   const finalPlan = {
     ...enriched,
     scenes: enriched.scenes.map((scene, index) =>
-      scene.templateId === "hf-broll" && !backgrounds[index]
+      wantsPicture(scene.templateId) && !backgrounds[index]
         ? {
             ...scene,
             templateId: "hf-statement" as const,

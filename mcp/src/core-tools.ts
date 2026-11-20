@@ -17,6 +17,7 @@ import { MUSIC_LIBRARY } from "@/lib/music-library";
 import { SCENE_TYPES } from "@/storyboard";
 import {
   applyChanges,
+  missingPictureFindings,
   reviewStoryboard,
   type Change,
 } from "@/storyboard/review";
@@ -723,6 +724,17 @@ export function registerCoreTools(server: McpServer): void {
         (j) => j.state === "succeeded" && j.revision?.scriptId === scriptId,
       );
       const view = latest ? await describeJob(latest.id) : undefined;
+      if (latest) {
+        const stored = await apiGet<{
+          job?: { storyboard?: { warnings?: string[] } };
+          storyboard?: { warnings?: string[] };
+        }>(`/api/production-jobs/${encode(latest.id)}`);
+        review.findings.push(
+          ...missingPictureFindings(
+            (stored.job ?? stored).storyboard?.warnings ?? [],
+          ),
+        );
+      }
       return json(
         {
           projectId,

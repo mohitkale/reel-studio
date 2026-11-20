@@ -50,6 +50,8 @@ export interface AutomaticMediaDecision {
   kind?: StockMediaKind;
   providerId?: string;
   attemptedProviders: string[];
+  /** Providers that were asked and then refused or failed (not "no result"). */
+  failedProviders?: string[];
   message: string;
   background?: SceneBackground;
   snapshot?: ResolvedStockAsset;
@@ -169,6 +171,7 @@ export async function resolveAutomaticSceneMedia(
 
   const deps = dependencies(options.dependencies ?? {});
   const attemptedProviders: string[] = [];
+  const failedProviders: string[] = [];
   let readyProviderCount = 0;
   const kinds: StockMediaKind[] =
     preference === "auto" && preferredKind === "video"
@@ -243,6 +246,8 @@ export async function resolveAutomaticSceneMedia(
         };
       } catch {
         // Search/resolve/download failures fall through to the next source/kind.
+        if (!failedProviders.includes(providerId))
+          failedProviders.push(providerId);
       }
     }
   }
@@ -250,6 +255,7 @@ export async function resolveAutomaticSceneMedia(
     state: readyProviderCount ? "no-result" : "no-provider",
     kind: preferredKind,
     attemptedProviders,
+    ...(failedProviders.length ? { failedProviders } : {}),
     message: readyProviderCount
       ? "No stock result; using animated mood background"
       : "No configured stock provider; using animated mood background",

@@ -75,7 +75,15 @@ export function productionJobView(
         : 0;
   const snapshot = parse(job.inputSnapshot ?? null) as {
     quality?: unknown;
+    storyboard?: { warnings?: unknown };
   } | null;
+  // What the linter and planner said about a storyboard video, so a reviewer can
+  // see, for example, which scenes asked for a picture and did not get one.
+  const storyboardWarnings = Array.isArray(snapshot?.storyboard?.warnings)
+    ? snapshot.storyboard.warnings.filter(
+        (w): w is string => typeof w === "string",
+      )
+    : undefined;
   const quality =
     snapshot?.quality === "draft" ||
     snapshot?.quality === "standard" ||
@@ -86,6 +94,9 @@ export function productionJobView(
     id: job.id,
     kind: job.kind,
     quality,
+    ...(storyboardWarnings
+      ? { storyboard: { warnings: storyboardWarnings } }
+      : {}),
     state: job.state,
     progress,
     priority: job.priority,

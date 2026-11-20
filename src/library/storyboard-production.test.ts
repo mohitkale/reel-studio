@@ -266,4 +266,53 @@ describe("produceFromStoryboard", () => {
       ),
     ).rejects.toThrow(/Asset not found/);
   });
+
+  it("tells the caller which scenes asked for a picture and got none, and draws them as statements (#245)", async () => {
+    const scenes = [
+      { type: "hook", headline: "Hello", narration: "A short hook for you." },
+      {
+        type: "media-split",
+        headline: "The harbour",
+        body: "Boats at dawn",
+        narration: "Boats leave the harbour at dawn.",
+        media: { query: "harbour at dawn" },
+      },
+      {
+        type: "media",
+        headline: "Sunrise",
+        narration: "The sun comes up over the water.",
+        media: { query: "sunrise" },
+      },
+    ];
+    mocks.resolveAutomaticSceneMediaBatch.mockImplementation(
+      async (planned: unknown[]) =>
+        planned.map(() => ({
+          state: "no-provider",
+          attemptedProviders: [],
+          message: "No configured stock provider",
+        })),
+    );
+    const result = await produceFromStoryboard({ ...storyboard, scenes }, base);
+    // Both pictures were looked for (a media-split scene was never searched for before).
+    expect(mocks.resolveAutomaticSceneMediaBatch).toHaveBeenCalledTimes(1);
+    expect(
+      result.warnings
+        .filter((w) => w.rule === "media-unresolved")
+        .map((w) => w.path),
+    ).toEqual(["scenes.1.media", "scenes.2.media"]);
+    const request = mocks.submitProduction.mock.calls[0]![0].request;
+    expect(
+      request.storyboard.warnings.filter((w: string) =>
+        w.startsWith("scenes.1.media: Scene 2 (media-split) has no picture"),
+      ),
+    ).toHaveLength(1);
+    // No empty box: neither scene keeps a picture template.
+    const planned = mocks.createProjectFromPlan.mock.calls[0]![0];
+    expect(
+      planned.scenes.map((scene: { templateId: string }) => scene.templateId),
+    ).not.toContain("hf-media-split");
+    expect(
+      planned.scenes.map((scene: { templateId: string }) => scene.templateId),
+    ).not.toContain("hf-broll");
+  });
 });

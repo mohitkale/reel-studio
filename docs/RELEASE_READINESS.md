@@ -50,7 +50,6 @@ so plainly (see the claims table in [LAUNCH.md](LAUNCH.md#3-what-we-can-say-and-
   sound and the voice not premium. This release fixes loudness (-16 LUFS, no chimes, a quiet music
   bed), makes picture scenes show the photograph, and puts text scenes over supplied pictures
   (#246). The 16/20 rubric in [QUALITY.md](QUALITY.md) has still not been scored by a person.
-- **Picture scenes fall back silently** when no stock media resolves (#245).
 - **Nobody has watched or listened to** the lip sync, the stings, the beat-aligned scene starts or
   the launch video end to end.
 - **No real Ollama run** (the writer success target is unmeasured, #191), no real ComfyUI run, no
