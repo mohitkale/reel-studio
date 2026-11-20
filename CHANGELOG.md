@@ -8,6 +8,13 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## 1.0.0 (2026-11-20)
 
+The storyboard format, the command line and the MCP tools are stable from here on: changes are
+additive. **Known limits at this release** (details in `docs/RELEASE_READINESS.md`): the package is
+not published to npm, so `npx reel-studio` does not work yet; the MCP client install guides have not
+been run in each client; Windows is exercised in CI only; nobody has scored the output against the
+quality rubric, and the maintainer's own review found the visuals, voice and sound not yet premium;
+picture scenes fall back silently when no stock media resolves (#245).
+
 ### Security
 
 - Updated Next.js to 16.4.6, which fixes two critical remote code execution advisories (image
