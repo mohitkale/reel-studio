@@ -49,24 +49,21 @@ export async function frameDataUrl(
   }
 }
 
-/** Turn the thumbnail page into a PNG with the Chrome the studio already needs for exports. */
-export async function renderThumbnailPng(input: {
+type ThumbnailInput = {
   text: string;
-  size: ThumbnailSize;
   palette?: Partial<ThumbnailPalette>;
   fontFamily?: string;
   videoPath?: string;
-}): Promise<Buffer> {
-  const { width, height } = THUMBNAIL_SIZES[input.size];
-  const html = buildThumbnailHtml({
-    text: input.text,
-    size: input.size,
-    palette: input.palette,
-    fontFamily: input.fontFamily,
-    frameDataUrl: input.videoPath
-      ? await frameDataUrl(input.videoPath)
-      : undefined,
-  });
+};
+
+/** Reuse the same frame and Chrome session for the requested sizes. */
+export async function renderThumbnailPngs(
+  input: ThumbnailInput,
+  sizes: readonly ThumbnailSize[],
+): Promise<Buffer[]> {
+  const frame = input.videoPath
+    ? await frameDataUrl(input.videoPath)
+    : undefined;
   const browser = await puppeteer.launch({
     executablePath:
       process.env.REEL_VERIFY_CHROME || (await puppeteer.executablePath()),
@@ -74,10 +71,34 @@ export async function renderThumbnailPng(input: {
   });
   try {
     const page = await browser.newPage();
-    await page.setViewport({ width, height });
-    await page.setContent(html, { waitUntil: "load" });
-    return Buffer.from(await page.screenshot({ type: "png" }));
+    const outputs: Buffer[] = [];
+    for (const size of sizes) {
+      await page.setViewport(THUMBNAIL_SIZES[size]);
+      await page.setContent(
+        buildThumbnailHtml({ ...input, size, frameDataUrl: frame }),
+        { waitUntil: "load" },
+      );
+      await page.evaluate(() => {
+        const words = document.querySelector<HTMLElement>(".words");
+        if (!words) return;
+        let font = Number.parseFloat(getComputedStyle(words).fontSize);
+        while (words.scrollHeight > words.clientHeight && font > 24) {
+          font -= 2;
+          words.style.fontSize = `${font}px`;
+        }
+      });
+      outputs.push(Buffer.from(await page.screenshot({ type: "png" })));
+    }
+    return outputs;
   } finally {
     await browser.close();
   }
+}
+
+/** Turn a single thumbnail into a PNG with the studio's local Chrome. */
+export async function renderThumbnailPng(
+  input: ThumbnailInput & { size: ThumbnailSize },
+): Promise<Buffer> {
+  const [thumbnail] = await renderThumbnailPngs(input, [input.size]);
+  return thumbnail!;
 }

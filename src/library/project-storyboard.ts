@@ -227,9 +227,14 @@ function sceneToStoryboard(
   return out;
 }
 
+type StoryboardScript = Pick<
+  ScriptDTO,
+  "name" | "width" | "height" | "scenes" | "musicUrl"
+>;
+
 /** Pure: build a storyboard from a loaded script. */
 export function scriptToStoryboard(
-  script: ScriptDTO & { storyboardSource?: StoryboardSource },
+  script: StoryboardScript & { storyboardSource?: StoryboardSource },
 ): ProjectStoryboard {
   const notes: string[] = [];
   const source = script.storyboardSource;
@@ -290,8 +295,9 @@ export function scriptToStoryboard(
 
 export async function projectToStoryboard(
   scriptId: string,
+  renderedScript?: StoryboardScript,
 ): Promise<ProjectStoryboard | null> {
-  const script = await getScript(scriptId);
+  const script = renderedScript ?? (await getScript(scriptId));
   if (!script) return null;
   const row = await prisma.script.findUnique({
     where: { id: scriptId },
@@ -308,6 +314,39 @@ export async function projectToStoryboard(
     // An unreadable column exports from the scene model alone.
   }
   return scriptToStoryboard({ ...script, storyboardSource });
+}
+
+/** A video can render even when its older project data do not fit Storyboard v1. */
+export function publishingStoryboard(
+  script: StoryboardScript,
+  result: ProjectStoryboard | null,
+): Storyboard {
+  if (result?.storyboard) return result.storyboard;
+
+  const title = script.name.trim() || "Video";
+  const format =
+    script.width > script.height
+      ? "16:9"
+      : script.width === script.height
+        ? "1:1"
+        : "9:16";
+  const scenes = script.scenes.slice(0, L.scenes.max).map((scene, index) => {
+    const headline = scene.text.trim() || `Scene ${index + 1}`;
+    return {
+      type: "statement" as const,
+      headline: headline.slice(0, L.headline),
+      narration: (scene.spokenText?.trim() || headline).slice(0, L.narration),
+    };
+  });
+  return {
+    version: 1,
+    kind: "video",
+    title: title.slice(0, L.title),
+    format,
+    music: script.musicUrl ? "auto" : "none",
+    captions: "auto",
+    scenes,
+  };
 }
 
 /** The sidecar saved with a project made from a storyboard (see the header). */

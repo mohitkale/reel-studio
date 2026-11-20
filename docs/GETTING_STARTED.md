@@ -83,6 +83,10 @@ ear.
 On a finished video, **Publishing kit** gives a title, description and hashtags with
 copy buttons, whether each fits YouTube, Shorts, Reels, TikTok and LinkedIn, and one zip
 with the text, storyboard and captions. It is built from the storyboard's own words.
+Every video export also saves a posting folder in `media/exports/render-<id>/`
+with the MP4, storyboard, title, description, hashtags, SRT and WebVTT captions,
+and landscape and vertical PNG thumbnails. When there are no captions, the
+caption files contain no cues.
 
 **Long videos**: choose **5 min** on Create. The writer plans the chapters first, then
 writes each chapter's scenes (one model call for the outline plus one per chapter, so a paid
