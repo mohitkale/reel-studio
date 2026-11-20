@@ -371,6 +371,40 @@ describe("review_video and revise_video", () => {
     expect(result.content[1]).toMatchObject({ type: "image" });
   });
 
+  it("review reports a scene that asked for a picture and did not get one (#245)", async () => {
+    mocks.get.mockImplementation(async (path: string) => {
+      if (path === "/api/projects")
+        return { projects: [{ id: "p1", firstScriptId: "s1" }] };
+      if (path.endsWith("/storyboard"))
+        return { storyboard: exported, notes: [] };
+      if (path.startsWith("/api/production-jobs?"))
+        return {
+          jobs: [
+            { id: "j1", state: "succeeded", revision: { scriptId: "s1" } },
+          ],
+        };
+      if (path.endsWith("/artifacts/o1"))
+        return { artifact: { downloadUrl: "/media/renders/r.mp4" } };
+      return {
+        job: {
+          ...succeededJob.job,
+          storyboard: {
+            warnings: [
+              'scenes.1.media: Scene 2 (media) has no picture: no stock result for "sunrise". It is shown as a statement.',
+            ],
+          },
+        },
+      };
+    });
+    const run = register(registerCoreTools).get("review_video")!.run;
+    const body = JSON.parse((await run({ projectId: "p1" })).content[0]!.text);
+    expect(body.findings).toContainEqual({
+      scene: 2,
+      rule: "media-unresolved",
+      suggestion: expect.stringContaining('no stock result for "sunrise"'),
+    });
+  });
+
   it("revise applies the edits to the exported storyboard and produces it again", async () => {
     mocks.post.mockResolvedValue({ jobId: "j2", projectId: "p2" });
     const run = register(registerCoreTools).get("revise_video")!.run;

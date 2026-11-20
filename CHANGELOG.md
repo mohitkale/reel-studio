@@ -6,6 +6,8 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+- fix: scenes that asked for a picture and did not get one are reported (a warning per scene from `create_video`, a finding from `review_video`), a `media-split` scene without a picture is drawn as a statement instead of an empty box, and `media-split` scenes now trigger the stock search; `docs/STORYBOARD.md` says which providers supply pictures (#245)
+
 ## 1.0.0 (2026-11-20)
 
 The storyboard format, the command line and the MCP tools are stable from here on: changes are

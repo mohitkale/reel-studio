@@ -200,6 +200,24 @@ MCP and the CLI will call the same function. Scene types map to today's treatmen
 renderer cannot show yet (`body` on most scenes, `voice.speed` and `media.path`)
 are listed in the plan's `warnings` instead of being dropped silently.
 
+### Where pictures come from
+
+A `media` or `media-split` scene gets its picture from one of these, in this order:
+
+1. `media.assetId`: a picture or clip already in the library (always works, no network).
+2. `media.generate`, when an optional local image model is set up.
+3. `media.query` (or the headline, when there is no query): a stock search that runs on its own
+   against **Pexels, then Pixabay**, so one of those needs a key in Settings.
+   Unsplash pictures can only be chosen by hand in the editor, because their terms require a
+   hotlink, so an Unsplash key alone does not supply pictures to a video made from a storyboard.
+
+When no picture is found, the scene is **drawn as a plain statement** (a `media-split` scene
+too, rather than an empty box beside the headline), and the result says so: `create_video`
+and `POST /api/storyboards` return one warning per such scene (rule `media-unresolved`,
+path `scenes.<n>.media`) naming the scene and the reason (no usable provider is set up, no
+result for the query, or a provider refused), and `review_video` lists the same scenes as
+findings. The reason is stored with the video, so a later review sees it.
+
 ## Export and import
 
 Every project can be exported as a storyboard: `GET /api/scripts/<id>/storyboard`
