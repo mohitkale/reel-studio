@@ -9,8 +9,8 @@
         "libvips CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591",
         "libheif GHSA-g89c-p67h-r497, GHSA-2jg2-4"
       ],
-      "reachedThrough": "kokoro-js -> @huggingface/transformers -> sharp (also imported directly by src/library/visual-review-contrast.ts)",
-      "reason": "sharp decodes images with libvips and libheif. Reel Studio uses it in one place, src/library/visual-review-contrast.ts, on the PNG frames its own renderer captured from Chrome, never on an uploaded or downloaded file; @huggingface/transformers uses it for image pre-processing, which the text-to-speech voice never reaches. The advisories need a malformed image to be decoded, which this app does not do. No fixed version of the chain exists yet. Note: sharp is imported by app code but is not a direct dependency in package.json; it arrives through @huggingface/transformers (listed in docs/RELEASE_READINESS.md as a known gap).",
+      "reachedThrough": "kokoro-js -> @huggingface/transformers -> sharp (also a direct dependency, used by src/library/visual-review-contrast.ts)",
+      "reason": "sharp decodes images with libvips and libheif. Reel Studio uses it in one place, src/library/visual-review-contrast.ts, on the PNG frames its own renderer captured from Chrome, never on an uploaded or downloaded file; @huggingface/transformers uses it for image pre-processing, which the text-to-speech voice never reaches. The advisories need a malformed image to be decoded, which this app does not do. No fixed version of the chain exists yet. sharp is declared as a direct dependency (^0.35.5, the version the lock file already resolved at the top level), so it no longer depends on the voice chain to be installed.",
       "reviewBy": "2027-01-31"
     },
     {

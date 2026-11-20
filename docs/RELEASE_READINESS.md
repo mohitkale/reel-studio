@@ -51,9 +51,6 @@ so plainly (see the claims table in [LAUNCH.md](LAUNCH.md#3-what-we-can-say-and-
   its own six families and aliases `Anton` and `Impact` to Archivo Black, but the kinetic-text
   scene's CSS still names `Anton, Impact`. On a first run offline, or for anyone who does not want
   a request to Google, that is a surprise and an unpinned input.
-- **`sharp` is used but not declared** (#234). `src/library/visual-review-contrast.ts` imports it, and
-  `package.json` does not list it; it arrives through `@huggingface/transformers`. It works, and
-  it will break if that chain changes.
 - **The look of the output is not where the maintainer wants it.** On 20 Nov the maintainer
   reviewed real-content videos (NASA photographs, a Mars explainer) and found the visuals, the
   sound and the voice not premium. This release fixes loudness (-16 LUFS, no chimes, a quiet music

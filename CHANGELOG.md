@@ -6,6 +6,8 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+- fix: declare `sharp` as a direct dependency; visual review no longer relies on the voice package installing it (#234)
+
 ## 1.0.0 (2026-11-20)
 
 The storyboard format, the command line and the MCP tools are stable from here on: changes are
