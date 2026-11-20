@@ -46,6 +46,15 @@ it("normalizes legacy font declarations without changing authored copy or script
   expect(result).toContain('const Impact = "Georgia"');
 });
 
+it("maps the condensed display fonts a caption style names to the bundled heavy face", () => {
+  const html =
+    '<style>.cap{font-family:"Geist", Impact, Haettenschweiler, sans-serif}</style>';
+  const result = localizeHyperframesRenderFonts(html);
+  expect(result).not.toContain("Haettenschweiler");
+  expect(result).not.toContain("Impact");
+  expect(result).toContain("Archivo Black");
+});
+
 it("resolves legacy brand fonts and freezes unknown host-dependent faces", () => {
   expect(hyperframesBrandFont("DM Sans, Arial")).toBe("Inter");
   expect(hyperframesBrandFont("Georgia, serif")).toBe("EB Garamond");

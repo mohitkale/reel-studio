@@ -93,9 +93,10 @@ describe("produceFromStoryboard", () => {
       reused: false,
     });
     expect(mocks.createProjectFromPlan).toHaveBeenCalledTimes(1);
-    // Automatic music follows the theme's music mood.
+    // Automatic music follows the theme's music mood, as a quiet bed.
     expect(mocks.updateScript).toHaveBeenCalledWith("s1", {
       musicUrl: expect.stringMatching(/^\/music\/[a-z-]+\.wav$/),
+      musicVolume: 12,
     });
     expect(mocks.autoAttachBundledMusic).not.toHaveBeenCalled();
     expect(mocks.ensureSfxCues).toHaveBeenCalledWith("s1");

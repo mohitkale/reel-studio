@@ -2,7 +2,10 @@
 import { describe, expect, it } from "vitest";
 
 import { defaultBrandTokens } from "@/video/tokens";
-import { buildHyperframesCompositionHtml } from "@/engines/hyperframes/build-composition";
+import {
+  buildHyperframesCompositionHtml,
+  markPhotoText,
+} from "@/engines/hyperframes/build-composition";
 import { getVideoEngine } from "@/engines/registry";
 import { normalizeHfTemplateId } from "./templates";
 import { mapScenesToEngineTemplates } from "@/engines/hyperframes/map-templates";
@@ -86,6 +89,53 @@ describe("buildHyperframesCompositionHtml", () => {
       );
     },
   );
+  it("lets a supplied picture be the scene: picture scenes get the photo-hero treatment, other scenes do not", () => {
+    const render = (templateId: string) =>
+      buildHyperframesCompositionHtml({
+        scenes: [
+          {
+            id: "pic",
+            templateId,
+            text: "July 16, 1969: liftoff",
+            emphasis: [],
+            background: { type: "image", url: "/media/liftoff.jpg" },
+          },
+        ],
+        timeline: [{ sceneId: "pic", startFrame: 0, durationFrames: 180 }],
+        ...dimsFor("portrait"),
+        fps: 30,
+        tokens: defaultBrandTokens,
+      });
+    const picture = new DOMParser().parseFromString(
+      render("hf-broll"),
+      "text/html",
+    );
+    const scene = picture.querySelector('[data-scene-id="pic"]')!;
+    expect(scene.classList.contains("photo-hero")).toBe(true);
+    expect(scene.classList.contains("has-photo")).toBe(true);
+    const statement = new DOMParser().parseFromString(
+      render("hf-statement"),
+      "text/html",
+    );
+    expect(
+      statement
+        .querySelector('[data-scene-id="pic"]')!
+        .classList.contains("photo-hero"),
+    ).toBe(false);
+  });
+  it("drops the panel from a text scene that has a photograph behind it", () => {
+    const scene = (dialogue: string, photo: boolean) =>
+      `<section class="clip scene x">${photo ? '<div class="bg-photo bg-fx-ken-burns"></div>' : ""}<div class="${dialogue}"></div></section>`;
+    expect(markPhotoText(scene("fx-dialogue fx-dlg-stat", true))).toContain(
+      "scene photo-text",
+    );
+    expect(
+      markPhotoText(scene("fx-dialogue fx-dlg-stat", false)),
+    ).not.toContain("photo-text");
+    expect(markPhotoText(scene("fx-dialogue fx-dlg-list", true))).not.toContain(
+      "photo-text",
+    );
+  });
   it("emits a HyperFrames root with scene clips and seek API", () => {
     const html = buildHyperframesCompositionHtml({
       scenes: [
