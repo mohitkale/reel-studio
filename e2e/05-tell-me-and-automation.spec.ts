@@ -64,7 +64,9 @@ test("the pronunciation preview shows what the voice is given", async ({
   page,
 }) => {
   await page.goto("/settings");
-  const preview = page.getByText(/The voice is given:/).locator("..");
+  // One specific element. `.first()` because during hydration the streamed page can
+  // briefly hold two copies of the card, which made a strict locator fail once (#249).
+  const preview = page.getByTestId("pronunciation-preview").first();
   await expect(preview).toContainText("two million dollars");
   await expect(preview).toContainText("November thirteenth, 2026");
   await expect(preview).toContainText("forty percent");
