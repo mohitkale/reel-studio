@@ -50,9 +50,7 @@ export function RecordingTranscript({
           cues,
         });
       await qc.invalidateQueries({ queryKey: ["podcast", podcastId] });
-      toast.success(
-        "Transcript saved in a new take; original audio is preserved",
-      );
+      toast.success("Transcript saved as a new version of the recording");
     } catch (e) {
       if (!controller.signal.aborted)
         toast.error(
@@ -72,8 +70,8 @@ export function RecordingTranscript({
       </summary>
       <p className="text-muted-foreground my-2 text-xs">
         Whisper runs locally. Review recognized words and speaker labels before
-        publishing. A reviewed transcript creates another take sharing these
-        audio bytes.
+        publishing. A reviewed transcript saves a version that uses the original
+        recording.
       </p>
       {take.timeline.length ? (
         <fieldset disabled={busy} className="space-y-3">

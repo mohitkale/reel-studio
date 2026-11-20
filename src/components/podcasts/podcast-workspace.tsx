@@ -135,11 +135,12 @@ function VoicesUsedTooltip({
         className="max-w-sm space-y-1.5 text-left font-normal"
       >
         <p className="text-[11px] font-semibold tracking-wide uppercase opacity-80">
-          Voices used in this take
+          Voices in this recording
         </p>
         {voices.length === 0 ? (
           <p className="text-xs opacity-90">
-            No voice snapshot (older take). Regenerate to record cast voices.
+            Voice details are unavailable for this recording. Record again to
+            save the cast voices.
           </p>
         ) : (
           <ul className="space-y-1">
@@ -494,7 +495,7 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
     <div className="flex min-h-[calc(100dvh-8rem)] w-full min-w-0 flex-col gap-3 px-1 pb-2 sm:px-2 lg:h-[calc(100dvh-8rem)] lg:overflow-hidden">
       <PageHeader
         title={podcast.title}
-        description={`${podcast.characters.length} voices · ${podcast.turns.length} turns · ${podcast.takes.length} takes`}
+        description={`${podcast.characters.length} voices · ${podcast.turns.length} turns · ${podcast.takes.length} recordings`}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <HintTooltip label="Synthesize all turns, then stitch in order">
@@ -586,7 +587,7 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                 />
               </div>
               <div className="grid gap-1.5">
-                <Label>Production format</Label>
+                <Label>Episode format</Label>
                 <Combobox
                   value={presetId}
                   onChange={(value) => setPresetId(value as PodcastPresetId)}
@@ -926,14 +927,15 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
             {podcast.turns.length > 0 ? (
               <span className="text-muted-foreground text-xs">
                 Reuses unchanged turns, then stitches {podcast.turns.length} in
-                order · set speed per take below
+                order · set playback speed for each recording below
               </span>
             ) : null}
           </section>
 
           {podcast.takes.length === 0 ? (
             <p className="border-border bg-card/50 text-muted-foreground rounded-xl border border-dashed p-6 text-sm">
-              No takes yet. Generate podcast audio to hear the full episode.
+              No recordings yet. Generate podcast audio to hear the full
+              episode.
             </p>
           ) : (
             <ul className="grid gap-3">
@@ -952,7 +954,7 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                         >
                           <Volume2 className="text-muted-foreground size-4 shrink-0" />
                           <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                            {take.label || "Take"}
+                            {take.label || "Recording"}
                           </span>
                           {(take.voices?.length ?? 0) > 0 ? (
                             <Badge
@@ -1001,7 +1003,7 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                             )}
                           </Button>
                         </HintTooltip>
-                        <HintTooltip label="Download production MP3">
+                        <HintTooltip label="Download episode MP3">
                           <Button
                             type="button"
                             size="sm"
@@ -1013,15 +1015,16 @@ function PodcastWorkspaceForm({ podcast }: { podcast: PodcastDTO }) {
                             MP3
                           </Button>
                         </HintTooltip>
-                        <HintTooltip label="Delete this take">
+                        <HintTooltip label="Delete this recording">
                           <Button
                             size="icon"
                             variant="ghost"
                             className="text-muted-foreground hover:text-destructive size-8 bg-transparent hover:bg-transparent"
-                            aria-label="Delete take"
+                            aria-label="Delete recording"
                             onClick={() =>
                               deleteTake.mutate(take.id, {
-                                onSuccess: () => toast.info("Take deleted"),
+                                onSuccess: () =>
+                                  toast.info("Recording deleted"),
                               })
                             }
                           >

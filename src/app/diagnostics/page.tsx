@@ -43,8 +43,8 @@ export default function DiagnosticsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Production diagnostics"
-        description="Verify the local runtime before a render, podcast, or unattended batch."
+        title="System checks"
+        description="Check that your computer can export videos, record podcasts, and run batches."
         actions={
           <Button
             variant="outline"
@@ -89,9 +89,7 @@ export default function DiagnosticsPage() {
             <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
               <div className="space-y-1.5">
                 <CardTitle>
-                  {report.ready
-                    ? "Ready for local production"
-                    : "Production setup needs attention"}
+                  {report.ready ? "Ready to create" : "Setup needs attention"}
                 </CardTitle>
                 <CardDescription>
                   {report.platform} · checked{" "}
@@ -153,8 +151,7 @@ export default function DiagnosticsPage() {
             <CardTitle>Credential-free proof</CardTitle>
           </div>
           <CardDescription>
-            Render the bundled HyperFrames project with local placeholder
-            speech.
+            Export the bundled example with local placeholder speech.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -166,7 +163,7 @@ export default function DiagnosticsPage() {
               <Link href="/gallery">View gallery</Link>
             </Button>
             <Button asChild>
-              <Link href="/">Create production</Link>
+              <Link href="/">Create a video</Link>
             </Button>
           </div>
         </CardContent>

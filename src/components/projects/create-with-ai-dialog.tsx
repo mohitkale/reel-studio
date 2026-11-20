@@ -276,7 +276,7 @@ export function CreateWithAIDialog({
             (decision) => decision.state === "selected",
           ).length;
           toast.success(
-            quickProduce ? "Quick Produce started" : "Video drafted",
+            quickProduce ? "Video creation started" : "Video drafted",
             {
               description: quickProduce
                 ? "Follow the saved progress, then download or edit your finished video."
@@ -326,8 +326,8 @@ export function CreateWithAIDialog({
             <Link href="/settings" className="text-primary underline">
               Settings
             </Link>{" "}
-            to use AI. Create production on the Projects page works with your
-            own text and no key.
+            to use AI. Create manually on the Create page works with your own
+            text and no key.
           </p>
         ) : (
           <fieldset
@@ -792,9 +792,11 @@ export function CreateWithAIDialog({
               className="mt-1"
             />
             <span>
-              <span className="block text-sm font-medium">Quick Produce</span>
+              <span className="block text-sm font-medium">
+                Automatic MP4 export
+              </span>
               <span className="text-muted-foreground mt-1 block text-xs">
-                Automatically render a downloadable MP4 after creating the
+                Automatically export a downloadable MP4 after creating the
                 draft. Leave off to review your scenes first.
               </span>
             </span>
@@ -863,7 +865,7 @@ export function CreateWithAIDialog({
             {generate.isPending || editorial.isPending ? (
               <>
                 <Loader2 className="animate-spin" />
-                {quickProduce ? "Starting production..." : "Generating..."}
+                {quickProduce ? "Starting video..." : "Generating..."}
               </>
             ) : (
               <>

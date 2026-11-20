@@ -41,9 +41,8 @@ export function SpeechPresets({
         Shared speech presets
       </summary>
       <p className="text-muted-foreground mt-2 text-xs">
-        Reuse voices or pronunciation rules across productions. Apply
-        explicitly; existing takes remain unchanged. Saving the same name
-        updates that preset.
+        Reuse voices or pronunciation rules across videos and recordings. Choose
+        a preset to apply it. Saving under an existing name updates that preset.
       </p>
       {query.isError && (
         <QueryError title="Could not load presets" retry={query.refetch} />

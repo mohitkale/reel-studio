@@ -121,7 +121,7 @@ export function PodcastAudiogramControls({ take }: { take: PodcastTakeDTO }) {
         <Film className="text-muted-foreground size-4" />
         <span className="text-xs font-semibold">Create audiogram</span>
         <span className="text-muted-foreground text-[11px]">
-          Uses this take&apos;s original audio
+          Uses the original audio from this recording
         </span>
       </div>
       <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_12rem_auto]">
@@ -179,7 +179,7 @@ export function PodcastAudiogramControls({ take }: { take: PodcastTakeDTO }) {
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold">Suggested ranges</span>
           <span className="text-muted-foreground text-[11px]">
-            Quotes and timestamps come directly from this saved take.
+            Quotes and timestamps come directly from this recording.
           </span>
           {configuredProviders.length ? (
             <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -255,7 +255,7 @@ export function PodcastAudiogramControls({ take }: { take: PodcastTakeDTO }) {
           </span>
         ) : (
           <span className="text-muted-foreground text-[11px]">
-            Choose the start and end turns manually for this short take.
+            Choose the start and end turns manually for this short clip.
           </span>
         )}
       </div>
