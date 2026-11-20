@@ -81,7 +81,7 @@ export function PodcastAudioImport({ podcastId }: { podcastId: string }) {
         );
         if (!result.ok)
           throw new Error(
-            "Recording was saved. Local transcription failed; retry from the take's transcript controls.",
+            "Recording saved. Local transcription failed. Retry from the recording's transcript controls.",
           );
         await qc.invalidateQueries({ queryKey: ["podcast", podcastId] });
         toast.success("Local transcript saved — review before publishing");
@@ -150,9 +150,8 @@ export function PodcastAudioImport({ podcastId }: { podcastId: string }) {
     <section className="space-y-3 rounded-xl border p-4">
       <h3 className="font-semibold">Record or import</h3>
       <p className="text-muted-foreground text-xs">
-        Import audio or record a microphone take up to 15 minutes. Imported
-        takes keep their original speech; transcript timing is not inferred from
-        the script.
+        Import audio or record up to 15 minutes with your microphone. The
+        transcript uses the original speech to time each line.
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <label className="grid gap-1 text-sm">

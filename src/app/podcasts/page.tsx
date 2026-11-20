@@ -81,8 +81,7 @@ function NewPodcastDialog() {
         <DialogHeader>
           <DialogTitle>New podcast</DialogTitle>
           <DialogDescription>
-            Start with a production-ready format, then add your topic and
-            voices.
+            Start with a ready-made format, then add your topic and voices.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-2">
@@ -200,7 +199,7 @@ export default function PodcastsPage() {
                     </Badge>
                     <span className="text-muted-foreground text-xs">
                       {p.characterCount} voices · {p.turnCount} turns ·{" "}
-                      {p.takeCount} takes
+                      {p.takeCount} recordings
                     </span>
                   </div>
                 </div>
@@ -242,7 +241,7 @@ export default function PodcastsPage() {
                       {PODCAST_PRESETS[p.presetId].label}
                     </Badge>
                     <span className="text-muted-foreground text-[10px]">
-                      {p.turnCount} turns · {p.takeCount} takes
+                      {p.turnCount} turns · {p.takeCount} recordings
                     </span>
                   </div>
                 </div>
@@ -272,7 +271,7 @@ export default function PodcastsPage() {
           if (!open) setDeletingId(null);
         }}
         title="Delete podcast?"
-        description={`Delete "${deleting?.title}"? This removes the script and all audio takes.`}
+        description={`Delete "${deleting?.title}"? This removes the script and all recordings.`}
         confirmLabel="Delete podcast"
         onConfirm={() => {
           if (!deletingId) return;

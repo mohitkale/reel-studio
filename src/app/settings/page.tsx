@@ -153,7 +153,7 @@ export default function SettingsPage() {
           <div className="space-y-1.5">
             <CardTitle className="flex items-center gap-2 text-base">
               <Activity className="text-primary size-4" />
-              Production readiness
+              System readiness
             </CardTitle>
             <CardDescription>
               Check Node, SQLite, FFmpeg, media storage, catalog assets, and
@@ -173,9 +173,9 @@ export default function SettingsPage() {
           </CardTitle>
           <CardDescription>
             Connect Ollama or LM Studio on this computer. Local servers require
-            no cloud key and can plan an enabled Quick Produce request. The
-            deterministic Quick Produce planner needs no server. Private LAN
-            servers require an explicit opt-in.
+            no cloud key and can write a storyboard for a video. The built-in
+            planner works without a server. Private LAN servers require an
+            explicit opt-in.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -240,9 +240,9 @@ export default function SettingsPage() {
           <CardTitle className="text-base">Voice providers</CardTitle>
           <CardDescription>
             Enter API keys to enable each provider. Keys are written to a
-            git-ignored .env.local and never leave your machine. Quick Produce
-            uses server-side Kokoro by default; its model weights are downloaded
-            on first use when not already cached.
+            git-ignored .env.local and never leave your machine. Automatic video
+            creation uses Kokoro on your computer by default. Model weights
+            download on first use if they are not already cached.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -358,10 +358,9 @@ export default function SettingsPage() {
           <CardTitle className="text-base">AI tools / MCP (optional)</CardTitle>
           <CardDescription>
             Generate a token so external AI agents can create and edit
-            storyboards or request Quick Produce through the MCP server. Keep
-            the legacy token for its established approval flow, or mint named
-            production tokens with explicit provider, duration, batch and
-            paid-usage limits.
+            storyboards or make videos through the MCP server. Keep the legacy
+            token for its established approval flow, or create named tokens with
+            explicit provider, duration, batch and paid-usage limits.
           </CardDescription>
         </CardHeader>
         <CardContent>

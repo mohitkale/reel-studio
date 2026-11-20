@@ -95,7 +95,7 @@ export function AudioWorkbench({
       context = new AudioContext();
       const decoded = await context.decodeAudioData(bytes);
       if (decoded.duration > 1800)
-        throw new Error("Audio editing supports up to 30 minutes per take");
+        throw new Error("Audio editing supports recordings up to 30 minutes");
       setBuffer(decoded);
       setPeaks(waveformPeaks(decoded.getChannelData(0)));
       setEnd(decoded.duration);
@@ -236,7 +236,7 @@ export function AudioWorkbench({
         setPreview(previewRef.current);
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not render audio");
+      toast.error(e instanceof Error ? e.message : "Could not prepare audio");
     } finally {
       setRendering(false);
     }
@@ -267,7 +267,9 @@ export function AudioWorkbench({
           qc.invalidateQueries({ queryKey: ["projects"] }),
         ]);
         onSaved?.(result.takeId);
-        toast.success("Edited take saved — available for playback and export");
+        toast.success(
+          "Edited recording saved and ready for playback or export",
+        );
       } else toast.success("Edit plan and undo history saved to the studio");
     } catch (error) {
       toast.error(
@@ -295,8 +297,8 @@ export function AudioWorkbench({
         )}
       </div>
       <p className="text-muted-foreground text-xs">
-        Save your plan and undo history to the studio, then save an edited take
-        for playback and export. The original remains available.
+        Save your plan and undo history to the studio, then save an edited
+        version for playback and export. The original remains available.
       </p>
       {error && (
         <p role="alert" className="text-destructive text-sm">
@@ -444,7 +446,7 @@ export function AudioWorkbench({
               Save edit plan
             </Button>
             <Button disabled={rendering} onClick={() => void saveStudio(true)}>
-              Save as new take
+              Save as new version
             </Button>
             <Button
               variant="outline"
@@ -495,7 +497,7 @@ export function AudioWorkbench({
           </div>
           <p className="text-muted-foreground text-xs">
             Studio revision {revision}. Review trimmed narration and captions
-            before exporting video from an edited take.
+            before exporting video from an edited recording.
           </p>
           {preview && (
             <audio

@@ -252,7 +252,7 @@ function KitCard({
             onClick={onToggleDefault}
             disabled={settingDefault}
             aria-label={kit.isDefault ? "Remove as default" : "Set as default"}
-            title={kit.isDefault ? "Remove as default kit" : "Set as default kit for all projects"}
+            title={kit.isDefault ? "Remove as default kit" : "Set as default kit for all videos"}
           >
             <Star className={cn("size-3.5", kit.isDefault && "fill-current")} />
           </Button>
@@ -370,7 +370,7 @@ export default function BrandKitsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Brand Kits"
-        description="Your colors and @handle on every video. Star a kit to apply it to all new projects automatically."
+        description="Your colors and @handle on every video. Star a kit to apply it to all new videos automatically."
         actions={
           <div className="flex items-center gap-2">
             <HintTooltip label="What is a brand kit?" side="bottom">
@@ -396,7 +396,7 @@ export default function BrandKitsPage() {
         <EmptyState
           icon={Palette}
           title="No brand kits yet"
-          description="Create a kit to define colors, a handle and font for a project. Star a kit to make it the default for all projects."
+          description="Create a kit to define colors, a handle and font for a video. Star a kit to make it the default for all videos."
           action={
             <Button onClick={openNew}>
               <Plus className="size-3.5" />
@@ -431,7 +431,7 @@ export default function BrandKitsPage() {
         open={!!deleteTarget}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
         title="Delete brand kit?"
-        description={`"${deleteTarget?.name}" will be permanently removed. Projects using it will revert to the default style.`}
+        description={`"${deleteTarget?.name}" will be permanently removed. Videos using it will revert to the default style.`}
         onConfirm={() => {
           if (!deleteTarget) return;
           deleteKit.mutate(deleteTarget.id, {
@@ -454,8 +454,8 @@ export default function BrandKitsPage() {
                 </p>
                 <p>
                   Star a kit to make it the <strong className="text-foreground">Default</strong>.
-                  Every new project (including Create with AI) will use that kit
-                  automatically. You can still switch kits per project in the editor.
+                  Every new video (including Create with AI) will use that kit
+                  automatically. You can still switch kits for individual videos in the editor.
                 </p>
                 <p>
                   New installs start with <strong className="text-foreground">Coral Harbor</strong> —

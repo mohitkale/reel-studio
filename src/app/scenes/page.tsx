@@ -93,7 +93,7 @@ export default function ScenesPage() {
     <div className="space-y-6">
       <PageHeader
         title="Scene types"
-        description="Every scene type a storyboard can use, rendered with sample content. Pick a format to see how each one fills the frame."
+        description="Every scene type a storyboard can use, shown with sample content. Pick a format to see how each one fills the frame."
       />
       <div className="flex gap-2" role="group" aria-label="Format">
         {FORMATS.map((item) => (

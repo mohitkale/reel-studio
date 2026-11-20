@@ -42,8 +42,7 @@ export default function CreatePage() {
         <>
           <details className="rounded-xl border p-3">
             <summary className="cursor-pointer text-sm font-medium">
-              More ways to create: podcast, voiceover, repurpose, manual
-              production
+              More ways to create a podcast, voiceover, clip or manual video
             </summary>
             <div className="mt-4">
               <CreationHub />

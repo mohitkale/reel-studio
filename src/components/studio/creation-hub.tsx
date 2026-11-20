@@ -25,7 +25,7 @@ export function CreationHub() {
       <div
         className="grid grid-cols-2 gap-2 md:grid-cols-4"
         role="group"
-        aria-label="Production type"
+        aria-label="Output type"
       >
         {[
           { id: "video", label: "Video", Icon: Film },
@@ -54,7 +54,7 @@ export function CreationHub() {
               </p>
               <CreateWithAIDialog
                 initialQuickProduce
-                trigger={<Button>Quick Produce</Button>}
+                trigger={<Button>Make video</Button>}
               />
             </div>
             <div className="space-y-3">
@@ -72,7 +72,7 @@ export function CreationHub() {
                 Arrange your script and media with local presets.
               </p>
               <CreationWizard
-                trigger={<Button variant="outline">Create production</Button>}
+                trigger={<Button variant="outline">Create manually</Button>}
               />
             </div>
           </div>
@@ -80,8 +80,8 @@ export function CreationHub() {
           <div className="space-y-3">
             <h2 className="font-semibold">Script to voiceover</h2>
             <p className="text-muted-foreground text-sm">
-              Build an audio project with paragraph takes, voice selection and
-              downloadable audio.
+              Choose a voice, record your script paragraph by paragraph, and
+              download the audio.
             </p>
             <div className="flex flex-wrap gap-2">
               <CreationWizard
@@ -107,14 +107,14 @@ export function CreationHub() {
         ) : (
           <div className="space-y-3">
             <h2 className="font-semibold">
-              Turn a master into a series of outputs
+              Turn one video into several formats
             </h2>
             <p className="text-muted-foreground text-sm">
-              Review saved masters, choose formats and cutdowns, and track
-              production in the factory.
+              Choose formats and shorter clips for a saved video, then track the
+              exports in one batch.
             </p>
             <Button asChild>
-              <Link href="/factory">Open content factory</Link>
+              <Link href="/factory">Open batches</Link>
             </Button>
           </div>
         )}
