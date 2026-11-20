@@ -6,6 +6,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+- fix: declare `sharp` as a direct dependency; visual review no longer relies on the voice package installing it (#234)
 - fix: renders no longer fetch fonts from Google Fonts; families named only in custom properties (`Impact`, `Georgia`, `Times New Roman`) are mapped to the bundled ones, with a test that runs the compiler's font pass over every example and look (#233)
 
 ## 1.0.0 (2026-11-20)
