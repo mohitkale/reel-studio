@@ -131,7 +131,7 @@ export function PronunciationCard() {
             onChange={(e) => setSample(e.target.value)}
             className="bg-background w-full rounded-lg border p-2 text-sm"
           />
-          <p className="text-sm">
+          <p className="text-sm" data-testid="pronunciation-preview">
             <span className="text-muted-foreground">The voice is given: </span>
             {normalizeForSpeech(sample, { dictionary: rules })}
           </p>

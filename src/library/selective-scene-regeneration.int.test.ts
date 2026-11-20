@@ -203,7 +203,9 @@ describe("selective scene regeneration", () => {
         rmSync(directory, { recursive: true, force: true });
       }
     },
-    process.platform === "win32" ? 30_000 : 5_000,
+    // Opening a fresh SQLite file and a Prisma client takes tens of seconds on a
+    // busy Windows runner; it failed at 30 s once on the v1.0.0 release PR (#249).
+    process.platform === "win32" ? 120_000 : 20_000,
   );
 });
 
