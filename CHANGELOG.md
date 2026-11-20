@@ -7,6 +7,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ## Unreleased
 
 - fix: scenes that asked for a picture and did not get one are reported (a warning per scene from `create_video`, a finding from `review_video`), a `media-split` scene without a picture is drawn as a statement instead of an empty box, and `media-split` scenes now trigger the stock search; `docs/STORYBOARD.md` says which providers supply pictures (#245)
+- fix: declare `sharp` as a direct dependency; visual review no longer relies on the voice package installing it (#234)
 - fix: renders no longer fetch fonts from Google Fonts; families named only in custom properties (`Impact`, `Georgia`, `Times New Roman`) are mapped to the bundled ones, with a test that runs the compiler's font pass over every example and look (#233)
 
 ## 1.0.0 (2026-11-20)
