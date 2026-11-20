@@ -12,7 +12,7 @@ npm run release:ready -- --quick # skips the production build, browser journeys 
 It writes `.artifacts/release-ready.json`, exits 1 if anything that ran failed, and lists the
 checks that need a person or a published package as **waiting**, never as passed.
 
-Status as of 19 Nov 2026 (package version 0.8.0; the next release number is the maintainer's call).
+Status as of 20 Nov 2026 (package version 0.8.0; the next release number is the maintainer's call).
 
 ## The checklist
 
@@ -54,6 +54,12 @@ so plainly (see the claims table in [LAUNCH.md](LAUNCH.md#3-what-we-can-say-and-
 - **`sharp` is used but not declared** (#234). `src/library/visual-review-contrast.ts` imports it, and
   `package.json` does not list it; it arrives through `@huggingface/transformers`. It works, and
   it will break if that chain changes.
+- **The look of the output is not where the maintainer wants it.** On 20 Nov the maintainer
+  reviewed real-content videos (NASA photographs, a Mars explainer) and found the visuals, the
+  sound and the voice not premium. This release fixes loudness (-16 LUFS, no chimes, a quiet music
+  bed), makes picture scenes show the photograph, and puts text scenes over supplied pictures
+  (#246). The 16/20 rubric in [QUALITY.md](QUALITY.md) has still not been scored by a person.
+- **Picture scenes fall back silently** when no stock media resolves (#245).
 - **Nobody has watched or listened to** the lip sync, the stings, the beat-aligned scene starts or
   the launch video end to end.
 - **No real Ollama run** (the writer success target is unmeasured, #191), no real ComfyUI run, no
