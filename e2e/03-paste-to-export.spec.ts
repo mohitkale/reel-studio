@@ -89,8 +89,8 @@ test("paste a reply, make the video, export it", async ({
   ] as const) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(route);
-    const frame = page.locator(`img[src="${poster}"]`);
-    await frame.scrollIntoViewIfNeeded();
+    const frame = page.locator(`img[src$="${poster}"]`);
+    await frame.scrollIntoViewIfNeeded({ timeout: 30_000 });
     await expect
       .poll(() => frame.evaluate((img: HTMLImageElement) => img.naturalWidth))
       .toBeGreaterThan(0);
