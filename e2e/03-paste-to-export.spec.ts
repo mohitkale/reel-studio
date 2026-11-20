@@ -13,7 +13,10 @@ const storyboard = JSON.parse(
 ) as { title: string };
 
 // Journey 3: no key. Copy the prompt, paste a reply, check it, make and export the video.
-test("paste a reply, make the video, export it", async ({ page, context }) => {
+test("paste a reply, make the video, export it", async ({
+  page,
+  context,
+}, testInfo) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/");
   await page.locator("#one-prompt-input").fill("Why the sky is blue");
@@ -77,4 +80,24 @@ test("paste a reply, make the video, export it", async ({ page, context }) => {
   expect(exported.folder).toBe(folder);
   expect(exported.files.sort()).toEqual(files);
   await downloadMp4(page);
+
+  const poster = `/api/renders/${renderName.slice("render-".length)}/poster`;
+  for (const [route, width] of [
+    ["/", 1440],
+    ["/", 375],
+    ["/library", 375],
+  ] as const) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(route);
+    const frame = page.locator(`img[src$="${poster}"]`);
+    await frame.scrollIntoViewIfNeeded({ timeout: 30_000 });
+    await expect
+      .poll(() => frame.evaluate((img: HTMLImageElement) => img.naturalWidth))
+      .toBeGreaterThan(0);
+    await page.screenshot({
+      path: testInfo.outputPath(
+        `${route === "/" ? "create" : "library"}-${width}.png`,
+      ),
+    });
+  }
 });

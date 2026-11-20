@@ -25,6 +25,7 @@ import {
   type ListingViewMode,
 } from "@/lib/listing-layout";
 import { cn } from "@/lib/utils";
+import type { ProjectDTO } from "@/lib/dto";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -141,6 +142,93 @@ function NewProjectDialog() {
   );
 }
 
+function ProjectThumbnail({
+  project,
+  compact = false,
+}: {
+  project: ProjectDTO;
+  compact?: boolean;
+}) {
+  const [failed, setFailed] = React.useState<string[]>([]);
+  const source = [project.thumbnailUrl, project.thumbnailFallbackUrl].find(
+    (url) => url && !failed.includes(url),
+  );
+  const isRender =
+    source === project.thumbnailUrl &&
+    project.thumbnailFallbackUrl !== undefined;
+  return (
+    <div
+      className={cn(
+        "from-primary/15 to-secondary text-primary relative flex items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br",
+        compact ? "h-14 w-full shrink-0 sm:w-24" : "aspect-video",
+      )}
+    >
+      {source ? (
+        <Image
+          key={source}
+          fill
+          unoptimized
+          sizes={
+            compact
+              ? "96px"
+              : "(min-width: 1280px) 16vw, (min-width: 640px) 33vw, 100vw"
+          }
+          src={source}
+          alt=""
+          className={isRender ? "bg-muted object-contain" : "object-cover"}
+          onError={() => setFailed((urls) => [...urls, source])}
+        />
+      ) : compact ? (
+        <FileVideo className="size-5" aria-hidden />
+      ) : (
+        <div className="px-4 text-center text-sm font-semibold">
+          <span className="mb-2 block text-[10px] font-normal tracking-wider uppercase">
+            {project.openingText ? "Opening scene" : "Blank video"}
+          </span>
+          <span className="line-clamp-4">
+            {project.openingText || project.name}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function RecentVideos() {
+  const { data: projects } = useProjects();
+  const recent = projects
+    ?.filter(
+      (project) =>
+        !project.archivedAt &&
+        project.outputType !== "voiceover" &&
+        project.firstScriptId,
+    )
+    .slice(0, 3);
+  if (!recent?.length) return null;
+
+  return (
+    <section className="space-y-3" aria-labelledby="recent-videos">
+      <h2 id="recent-videos" className="text-lg font-semibold">
+        Recent videos
+      </h2>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {recent.map((project) => (
+          <Link
+            key={project.id}
+            href={`/editor/${project.firstScriptId}`}
+            className="focus-visible:ring-ring block space-y-2 rounded-lg border p-2 focus-visible:ring-2 focus-visible:outline-none"
+          >
+            <ProjectThumbnail project={project} />
+            <h3 className="line-clamp-2 px-1 text-sm font-medium">
+              {project.name}
+            </h3>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /** All videos with search, status and series filters. Used by Library and by Pro's home. */
 export function ProjectsLibrary() {
   const {
@@ -247,9 +335,7 @@ export function ProjectsLibrary() {
           {filtered.map((p) => (
             <Card key={p.id} className="overflow-hidden">
               <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center">
-                <div className="from-primary/15 to-secondary text-primary flex h-14 w-full shrink-0 items-center justify-center rounded-md bg-gradient-to-br sm:w-24">
-                  <FileVideo className="size-5" />
-                </div>
+                <ProjectThumbnail project={p} compact />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="truncate leading-tight font-medium">
@@ -314,27 +400,7 @@ export function ProjectsLibrary() {
           {filtered.map((p) => (
             <Card key={p.id} className="group flex flex-col">
               <CardContent className="flex flex-1 flex-col gap-3 p-4">
-                <div className="from-primary/15 to-secondary text-primary relative flex aspect-video items-center justify-center rounded-lg bg-gradient-to-br">
-                  {p.thumbnailUrl ? (
-                    <Image
-                      fill
-                      unoptimized
-                      sizes="(min-width: 1280px) 16vw, (min-width: 640px) 33vw, 100vw"
-                      src={p.thumbnailUrl}
-                      alt=""
-                      className="absolute inset-0 h-full w-full rounded-lg object-cover"
-                    />
-                  ) : (
-                    <div className="px-4 text-center text-sm font-semibold">
-                      <span className="mb-2 block text-[10px] font-normal tracking-wider uppercase">
-                        {p.openingText ? "Opening scene" : "Blank video"}
-                      </span>
-                      <span className="line-clamp-4">
-                        {p.openingText || p.name}
-                      </span>
-                    </div>
-                  )}
-                </div>
+                <ProjectThumbnail project={p} />
                 <div className="flex-1">
                   <Input
                     aria-label={`Series for ${p.name}`}

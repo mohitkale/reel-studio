@@ -4,6 +4,7 @@ import { promises as fs } from "node:fs";
 import type { RenderDTO } from "@/lib/dto";
 import { getAssetStore } from "@/library/storage";
 import { prisma } from "@/library/db";
+import { ensureRenderPoster, renderPosterKey } from "@/library/render-poster";
 
 function toDTO(r: {
   id: string;
@@ -95,6 +96,15 @@ export async function getRender(id: string): Promise<RenderDTO | null> {
   return row ? toDTO(row) : null;
 }
 
+export async function getRenderPoster(id: string): Promise<Buffer | undefined> {
+  const row = await prisma.render.findUnique({
+    where: { id },
+    select: { status: true, outputPath: true },
+  });
+  if (row?.status !== "done" || !row.outputPath) return undefined;
+  return ensureRenderPoster(row.outputPath);
+}
+
 export async function updateRenderProgress(
   id: string,
   progress: number,
@@ -133,7 +143,10 @@ export async function deleteRender(id: string): Promise<void> {
   if (!row) return;
   if (row.outputPath) {
     const filePath = path.join(process.cwd(), "media", row.outputPath);
-    await fs.unlink(filePath).catch(() => {});
+    await Promise.allSettled([
+      fs.unlink(filePath),
+      fs.unlink(renderPosterKey(filePath)),
+    ]);
   }
   await prisma.render.delete({ where: { id } });
 }

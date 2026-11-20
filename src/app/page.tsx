@@ -6,7 +6,10 @@ import { useUiMode } from "@/hooks/ui-mode";
 import { CreationHub } from "@/components/studio/creation-hub";
 import { OnePromptCreate } from "@/components/studio/one-prompt-create";
 import { CreationReadiness } from "@/components/projects/creation-readiness";
-import { ProjectsLibrary } from "@/components/projects/projects-library";
+import {
+  ProjectsLibrary,
+  RecentVideos,
+} from "@/components/projects/projects-library";
 import { Onboarding } from "@/components/studio/onboarding";
 
 export default function CreatePage() {
@@ -31,13 +34,16 @@ export default function CreatePage() {
         .
       </p>
       {ready && mode === "simple" ? (
-        <p className="text-muted-foreground text-sm">
-          Your finished videos are in the{" "}
-          <Link href="/library" className="text-foreground underline">
-            Library
-          </Link>
-          . Want every manual control? Switch to Pro at the top.
-        </p>
+        <>
+          <RecentVideos />
+          <p className="text-muted-foreground text-sm">
+            Your finished videos are in the{" "}
+            <Link href="/library" className="text-foreground underline">
+              Library
+            </Link>
+            . Want every manual control? Switch to Pro at the top.
+          </p>
+        </>
       ) : (
         <>
           <details className="rounded-xl border p-3">

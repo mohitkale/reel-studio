@@ -50,6 +50,7 @@ Also: **podcasts** with one or two hosts (WAV or MP3, transcript, chapters, vide
 vertical, square or wide output, captions you can edit, and your own footage and music.
 Each MP4 export comes with a local folder for posting, including both thumbnail
 sizes, caption files, the storyboard, title, description and hashtags.
+Create and Library show frames from your finished videos.
 The twenty bundled CC0 music tracks work offline.
 
 ## How it works

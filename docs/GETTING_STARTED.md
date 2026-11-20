@@ -55,6 +55,8 @@ storyboard) and one Create box. **Pro** adds every editor and manual workspace.
 An install that already has videos opens in Pro with nothing moved. Switch in
 the header or in **Settings**, which also has **Run setup again** and **Review
 each video before it is made**. Switching never changes your videos.
+Create and Library show a frame from a project's latest finished video. Simple
+shows up to three recent videos below the Create box.
 
 **Settings** also has **What runs by itself** (web research, voice, music and
 captions; each can be changed for one video under More options on Create). On a

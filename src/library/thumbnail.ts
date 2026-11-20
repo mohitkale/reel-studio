@@ -1,7 +1,5 @@
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-
 import puppeteer from "puppeteer";
+import { extractVideoFrame } from "@/library/video-frame";
 
 import {
   buildThumbnailHtml,
@@ -10,43 +8,15 @@ import {
   type ThumbnailSize,
 } from "@/lib/thumbnail-html";
 
-const run = promisify(execFile);
-
 /** One frame of the video as a JPEG data URL, or undefined when it cannot be read. */
 export async function frameDataUrl(
   videoPath: string,
   atSeconds = 1,
 ): Promise<string | undefined> {
-  try {
-    const { stdout } = await run(
-      "ffmpeg",
-      [
-        "-v",
-        "error",
-        "-ss",
-        atSeconds.toFixed(2),
-        "-i",
-        videoPath,
-        "-frames:v",
-        "1",
-        "-vf",
-        "scale=1280:-2",
-        "-q:v",
-        "3",
-        "-f",
-        "image2pipe",
-        "-vcodec",
-        "mjpeg",
-        "pipe:1",
-      ],
-      { encoding: "buffer", maxBuffer: 16 * 1024 * 1024, timeout: 30_000 },
-    );
-    return stdout.length > 0
-      ? `data:image/jpeg;base64,${stdout.toString("base64")}`
-      : undefined;
-  } catch {
-    return undefined;
-  }
+  const frame = await extractVideoFrame(videoPath, atSeconds, "scale=1280:-2");
+  return frame
+    ? `data:image/jpeg;base64,${frame.toString("base64")}`
+    : undefined;
 }
 
 type ThumbnailInput = {
