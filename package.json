@@ -97,6 +97,7 @@
     "scene:preview": "node --import tsx scripts/scene-sheet.mjs --only",
     "voice:download": "node --import tsx scripts/download-voice-model.ts",
     "benchmark:render": "node --import tsx scripts/benchmark-render.ts",
+    "quality:baseline": "node scripts/measure-exports.mjs",
     "theme:new": "node scripts/theme-new.mjs",
     "illustrations:sheet": "node --import tsx scripts/illustration-sheet.ts",
     "cli:verify": "bash scripts/verify-cli.sh",
