@@ -102,6 +102,18 @@ describe("choosing and snapping", () => {
     expect(suggestTrackForText("")).toBeUndefined();
   });
 
+  it("picks distinct tracks for at least six themes, including the ambient, cinematic and percussion beds", () => {
+    const picks = THEMES.map(
+      (theme) => [theme.id, suggestTrackForText(theme.musicMood)?.id] as const,
+    );
+    expect(new Set(picks.map(([, id]) => id)).size).toBeGreaterThanOrEqual(6);
+    expect(Object.fromEntries(picks)).toMatchObject({
+      "clean-minimal": "ambient-glow",
+      cinematic: "cinematic-rise",
+      "mono-brutalist": "tech-grid",
+    });
+  });
+
   it("lists beats and loops them", () => {
     const t = MUSIC_LIBRARY.find((x) => x.id === "cinematic-tension")!; // 60 bpm, 16 s loop
     expect(trackBeatTimes(t, 3)).toEqual([0, 1, 2]);

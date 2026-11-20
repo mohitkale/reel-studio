@@ -33,5 +33,5 @@ export const cinematic: Theme = {
   background: "cinema",
   motion: "slow",
   captionStyle: "cinematic",
-  musicMood: "cinematic ambient",
+  musicMood: "cinematic ambient dramatic",
 };

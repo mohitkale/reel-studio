@@ -22,6 +22,7 @@ export type MusicTag =
   | "playful"
   | "dramatic"
   | "acoustic"
+  | "percussion"
   | "ambient";
 
 export interface MusicTrack {
@@ -197,7 +198,7 @@ export const MUSIC_LIBRARY: MusicTrack[] = [
     "Tech Grid",
     "Fast, dry, precise — data, dashboards and developer topics.",
     ["tech", "energetic"],
-    ["tech"],
+    ["tech", "percussion"],
     "high",
     150,
   ),
@@ -206,7 +207,7 @@ export const MUSIC_LIBRARY: MusicTrack[] = [
     "Cinematic Rise",
     "A big slow pad with bell notes that build — reveals and trailers.",
     ["dramatic", "inspiring"],
-    ["cinematic", "ambient"],
+    ["cinematic", "ambient", "dramatic"],
     "low",
     60,
   ),
@@ -275,7 +276,8 @@ const TAG_WORDS: Record<MusicTag, string[]> = {
   playful: ["playful", "ukulele", "fun", "quirky", "bounce"],
   dramatic: ["dramatic", "tense", "tension", "intense", "stakes"],
   acoustic: ["acoustic", "piano", "guitar", "fingerstyle", "organic"],
-  ambient: ["ambient", "pad", "atmospheric", "minimal"],
+  percussion: ["percussion", "drums", "drum beat"],
+  ambient: ["ambient", "pad", "atmospheric"],
 };
 
 /**
