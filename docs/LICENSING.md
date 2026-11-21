@@ -131,10 +131,6 @@ licenses**.
 - See VoiceForge’s **Licensing & responsible use** section before commercial use.
 - Only clone voices you have the right to clone.
 
-See the [Indian-language voice evaluation](INDIC_VOICES.md) for the separate
-code, model, and training-data terms reviewed for v1.1. The release shortlist
-currently has zero approved models.
-
 ---
 
 ## User-uploaded content
