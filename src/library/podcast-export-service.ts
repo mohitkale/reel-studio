@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 
-import { transcodeWavToMp3 } from "@/lib/audio-production";
 import { prisma } from "@/library/db";
+import { encodePodcastMp3 } from "@/library/podcast-mp3";
+import { toPodcastTakeDTO } from "@/library/repositories/podcast-map";
 import { getAssetStore } from "@/library/storage";
 import { ProviderError } from "@/providers/voice/types";
 
@@ -9,7 +10,10 @@ export async function preparePodcastTakeExport(
   takeId: string,
   format: "wav" | "mp3",
 ): Promise<{ format: "wav" | "mp3"; url: string }> {
-  const take = await prisma.podcastTake.findUnique({ where: { id: takeId } });
+  const take = await prisma.podcastTake.findUnique({
+    where: { id: takeId },
+    include: { podcast: { select: { title: true } } },
+  });
   if (!take) throw new ProviderError("Podcast take not found", 404);
   const store = getAssetStore();
   if (format === "wav") {
@@ -34,7 +38,11 @@ export async function preparePodcastTakeExport(
   }
   let mp3: Buffer;
   try {
-    mp3 = await transcodeWavToMp3(wav);
+    mp3 = await encodePodcastMp3(wav, {
+      title: take.podcast.title,
+      fps: take.fps,
+      chapters: toPodcastTakeDTO(take).chapters,
+    });
   } catch (error) {
     throw new ProviderError(
       `MP3 export needs ffmpeg${error instanceof Error ? `: ${error.message}` : ""}`,

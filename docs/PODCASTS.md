@@ -23,6 +23,8 @@ storyboard (see [Storyboard](STORYBOARD.md#podcast)) to `POST /api/storyboards`,
 makes the cast with Kokoro voices, loads the turns, adds intro and outro music from the
 bundled library and masters the episode to -16 LUFS. The result has WAV and MP3, a
 transcript, chapter markers and show notes in one .tar.gz package.
+New MP3 exports embed the episode title, cover artwork, and timed chapter
+markers for players that support ID3 chapters.
 
 ## Finishing
 

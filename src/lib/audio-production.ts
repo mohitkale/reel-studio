@@ -3,6 +3,7 @@ import {
   cancelChild,
 } from "@/library/production-cancellation";
 import { spawn } from "node:child_process";
+import { readFile } from "node:fs/promises";
 
 import { normalizeWavLoudness } from "@/lib/audio-normalize";
 import { parseWav } from "@/lib/wav";
@@ -73,9 +74,10 @@ export function finalizeSpeechWav(
 export async function transcodeWavToMp3(
   wav: Buffer,
   binary = process.env.FFMPEG_BIN?.trim() || "ffmpeg",
+  metadata?: { artworkFile: string; metadataFile: string; outputFile: string },
 ): Promise<Buffer> {
   assertProductionActive();
-  return new Promise((resolve, reject) => {
+  const stdout = await new Promise<Buffer>((resolve, reject) => {
     const child = spawn(
       binary,
       [
@@ -86,13 +88,40 @@ export async function transcodeWavToMp3(
         "wav",
         "-i",
         "pipe:0",
+        ...(metadata
+          ? [
+              "-i",
+              metadata.artworkFile,
+              "-f",
+              "ffmetadata",
+              "-i",
+              metadata.metadataFile,
+              "-map",
+              "0:a:0",
+              "-map",
+              "1:v:0",
+              "-map_metadata",
+              "2",
+              "-map_chapters",
+              "2",
+              "-c:v",
+              "copy",
+              "-disposition:v",
+              "attached_pic",
+              "-metadata:s:v",
+              "comment=Cover (front)",
+              "-id3v2_version",
+              "3",
+            ]
+          : []),
         "-codec:a",
         "libmp3lame",
         "-b:a",
         "192k",
         "-f",
         "mp3",
-        "pipe:1",
+        // FFmpeg needs a seekable destination to finalize the ID3 header.
+        metadata?.outputFile ?? "pipe:1",
       ],
       {
         shell: false,
@@ -119,16 +148,14 @@ export async function transcodeWavToMp3(
         );
         return;
       }
-      const result = Buffer.concat(stdout);
-      if (result.length === 0) {
-        reject(new Error("MP3 export produced an empty file"));
-        return;
-      }
-      resolve(result);
+      resolve(Buffer.concat(stdout));
     });
     child.stdin.on("error", () => undefined);
     child.stdin.end(wav);
   });
+  const result = metadata ? await readFile(metadata.outputFile) : stdout;
+  if (result.length === 0) throw new Error("MP3 export produced an empty file");
+  return result;
 }
 
 /** Decode a bounded uploaded audio excerpt to the podcast PCM target. */
