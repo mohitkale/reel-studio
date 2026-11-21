@@ -11,6 +11,7 @@ import {
   RecentVideos,
 } from "@/components/projects/projects-library";
 import { Onboarding } from "@/components/studio/onboarding";
+import { ExamplesStrip } from "@/components/studio/example-previews";
 
 export default function CreatePage() {
   const { mode, ready } = useUiMode();
@@ -33,6 +34,7 @@ export default function CreatePage() {
         </Link>
         .
       </p>
+      <ExamplesStrip />
       {ready && mode === "simple" ? (
         <>
           <RecentVideos />

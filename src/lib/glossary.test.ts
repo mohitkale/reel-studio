@@ -21,6 +21,8 @@ const SIMPLE_SCREENS = [
   "src/app/brand-kits/page.tsx",
   "src/app/diagnostics/page.tsx",
   "src/app/examples/page.tsx",
+  "src/components/studio/examples-gallery.tsx",
+  "src/components/studio/example-previews.tsx",
   "src/app/library/page.tsx",
   "src/app/podcasts/page.tsx",
   "src/app/recordings/page.tsx",
