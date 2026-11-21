@@ -6,24 +6,18 @@ export const WRITER_PORT = Number(process.env.E2E_WRITER_PORT ?? "3199");
 
 /** Sets up the fake local writer as the studio's storyboard writer. */
 export async function useFakeWriter(page: Page): Promise<void> {
-  await page.goto("/settings");
-  const status = await page.evaluate(async (port) => {
-    const response = await fetch("/api/ai/local-config", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        providerId: "ollama",
-        config: {
-          baseUrl: `http://127.0.0.1:${port}`,
-          modelId: "fixture:latest",
-          temperature: 0.2,
-          allowLan: false,
-        },
-      }),
-    });
-    return response.status;
-  }, WRITER_PORT);
-  expect(status).toBe(200);
+  const response = await page.request.post("/api/ai/local-config", {
+    data: {
+      providerId: "ollama",
+      config: {
+        baseUrl: `http://127.0.0.1:${WRITER_PORT}`,
+        modelId: "fixture:latest",
+        temperature: 0.2,
+        allowLan: false,
+      },
+    },
+  });
+  expect(response.status()).toBe(200);
 }
 
 /** Waits for a finished video on a result page and checks it can play. */

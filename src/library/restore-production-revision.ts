@@ -16,9 +16,21 @@ import { createProjectFromPlan } from "@/library/repositories/projects";
 import { videoSnapshotSchema } from "@/production/video-snapshot";
 import { normalizeTemplateIdForEngine } from "@/engines/registry";
 import { scenePlanSchema, type ScenePlan } from "@/providers/ai/types";
+import {
+  dimsFor,
+  orientationFromDims,
+  type Orientation,
+} from "@/lib/orientation";
 
-export async function restoreProductionRevision(snapshotValue: unknown) {
+export async function restoreProductionRevision(
+  snapshotValue: unknown,
+  orientation?: Orientation,
+): Promise<{ projectId: string; scriptId: string; restoredTakeId?: string }> {
   const snapshot = videoSnapshotSchema.parse(snapshotValue);
+  const size = orientation ? dimsFor(orientation) : snapshot.script;
+  const restoreAudio = Boolean(snapshot.factory || orientation);
+  const { lookSeed, variety, reduceMotion, presenter, endTag } =
+    snapshot.script.brandTokens;
   if (snapshot.script.scenes.length > 240)
     throw new Error("Revision restore supports up to 240 scenes.");
   if (snapshot.script.chapterPlan) {
@@ -28,19 +40,19 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
     );
     if (issue) throw new Error(issue);
   }
-  let factoryAudio: Buffer | undefined;
-  if (snapshot.factory && snapshot.take) {
+  let sourceAudio: Buffer | undefined;
+  if (restoreAudio && snapshot.take) {
     if (!snapshot.take.audioUrl.startsWith("/media/"))
-      throw new Error("Factory take restoration requires local audio");
+      throw new Error("Restoring narration requires local audio");
     const key = sanitizeKey(
         decodeURIComponent(snapshot.take.audioUrl.slice(7)),
       ),
       opened = await getAssetStore().open(key);
     if (opened.size > 128 * 1024 * 1024) {
       await opened.close();
-      throw new Error("Factory take exceeds the 128 MiB restoration budget");
+      throw new Error("Narration exceeds the 128 MiB restoration budget");
     }
-    factoryAudio = Buffer.from(
+    sourceAudio = Buffer.from(
       await new Response(opened.stream({ end: opened.size - 1 })).arrayBuffer(),
     );
   }
@@ -48,7 +60,7 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
     snapshot.stockMedia.map((item) => [item.sceneId, item.snapshot] as const),
   );
   const headers = {
-    projectName: `${snapshot.script.name} · completed revision`,
+    projectName: `${snapshot.script.name} · ${orientation ?? "completed revision"}`,
     scriptName: snapshot.script.name,
     styleId: snapshot.script.styleId,
     energy: snapshot.script.energy,
@@ -84,11 +96,7 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
   };
   const created = await createProjectFromPlan(
     plan,
-    snapshot.script.width > snapshot.script.height
-      ? "landscape"
-      : snapshot.script.width === snapshot.script.height
-        ? "square"
-        : "portrait",
+    orientation ?? orientationFromDims(size.width, size.height),
     snapshot.script.scenes.map((scene) => scene.background),
     snapshot.script.videoEngine,
     {
@@ -116,6 +124,17 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
       outputType: "video",
       creationSource: { kind: "text" },
       savedOverrides: {
+        ...(orientation && lookSeed
+          ? {
+              look: {
+                seed: lookSeed,
+                variety: variety ?? "medium",
+                reduceMotion,
+                presenter,
+                endTag,
+              },
+            }
+          : {}),
         ...(snapshot.script.researchEvidence
           ? { researchEvidence: snapshot.script.researchEvidence }
           : {}),
@@ -191,8 +210,8 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
         data: {
           brandOverrides: JSON.stringify(restoredOverrides),
           fps: snapshot.script.fps,
-          width: snapshot.script.width,
-          height: snapshot.script.height,
+          width: size.width,
+          height: size.height,
           coverUrl: snapshot.script.coverUrl,
           musicUrl: snapshot.script.musicUrl,
           musicVolume: snapshot.script.musicVolume,
@@ -256,10 +275,10 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
         },
       });
     }
-    if (snapshot.factory) {
-      let restoredTakeId: string | undefined;
+    let restoredTakeId: string | undefined;
+    if (restoreAudio) {
       if (snapshot.take) {
-        const bytes = factoryAudio!,
+        const bytes = sourceAudio!,
           audioPath = `revision-restores/${randomUUID()}.wav`;
         ownedAudio.push(audioPath);
         await getAssetStore().put(audioPath, bytes);
@@ -300,7 +319,7 @@ export async function restoreProductionRevision(snapshotValue: unknown) {
           },
         });
     }
-    return created;
+    return restoredTakeId ? { ...created, restoredTakeId } : created;
   } catch (error) {
     // Only this incomplete newly-created copy and its private audio are rolled back.
     await prisma.project

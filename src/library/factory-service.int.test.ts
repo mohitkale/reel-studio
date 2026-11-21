@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { pcmToWav, parseWav } from "@/lib/wav";
 import { factoryRunRequestSchema } from "@/production/factory";
+import { videoProductionJobInputSchema } from "@/production/jobs";
 const storage = vi.hoisted(() => ({ files: new Map<string, Buffer>() }));
 vi.mock("@/library/storage", () => ({
   getAssetStore: () => ({
@@ -363,6 +364,73 @@ it("migrates, pins profiles/packs and resumes immutable factory variants without
         ).brandOverrides!,
       ).frozenBrandTokens,
     ).toBeUndefined();
+
+    const { makeResultSizes } = await import("./result-sizes");
+    const finishedSnapshot = {
+      ...short,
+      factory: undefined,
+      script: {
+        ...short.script,
+        brandTokens: {
+          ...short.script.brandTokens,
+          lookSeed: "result-size-fixture",
+        },
+      },
+    };
+    const finishedJob = await prisma.productionJob.create({
+      data: {
+        kind: "video",
+        state: "succeeded",
+        idempotencyKey: "finished-result-sizing-fixture",
+        inputSnapshot: JSON.stringify({
+          renderId: "finished-render",
+          scriptId: short.script.id,
+          orientation: "landscape",
+          quality: "draft",
+        }),
+        steps: {
+          create: {
+            key: "prepare_composition",
+            state: "succeeded",
+            detailJson: JSON.stringify({ snapshot: finishedSnapshot }),
+          },
+        },
+      },
+    });
+    const sizeRequest = () =>
+      makeResultSizes(
+        finishedJob.id,
+        { origin: "web", token: null },
+        "http://localhost:3000",
+      );
+    const { sizes } = await sizeRequest();
+    expect(sizes.map((size) => size.format)).toEqual(["16:9", "9:16", "1:1"]);
+    expect(sizes[0]).toMatchObject({ jobId: finishedJob.id, current: true });
+    for (const size of sizes.slice(1)) {
+      const job = await prisma.productionJob.findUniqueOrThrow({
+        where: { id: size.jobId },
+      });
+      const input = videoProductionJobInputSchema.parse(
+        JSON.parse(job.inputSnapshot),
+      );
+      const snapshot = input.snapshot!;
+      expect(snapshot.script.styleId).toBe(short.script.styleId);
+      expect(snapshot.script.brandTokens).toEqual(
+        finishedSnapshot.script.brandTokens,
+      );
+      expect(snapshot.script.scenes.map((scene) => scene.text)).toEqual(
+        short.script.scenes.map((scene) => scene.text),
+      );
+      const copiedTake = snapshot.take!;
+      expect(copiedTake.id).toBe(input.voiceTakeId);
+      expect(storage.files.get(copiedTake.audioUrl.slice(7))).toEqual(
+        storage.files.get(short.take!.audioUrl.slice(7)),
+      );
+      expect(snapshot.script.captionTracks?.[0]?.sourceTakeId).toBe(
+        copiedTake.id,
+      );
+    }
+    expect((await sizeRequest()).sizes).toEqual(sizes);
   } finally {
     await prisma.$disconnect();
     rmSync(directory, { recursive: true, force: true });

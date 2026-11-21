@@ -137,19 +137,27 @@ export async function getScripts(
         voiceClips: script.voiceClips.map(toVoiceClipDTO),
         voiceMode: resolveVoiceMode(script.voiceMode),
         brandKitId: script.project.brandKitId,
-        brandTokens:
-          overrides.frozenBrandTokens ??
-          withStoryboardTheme(
-            applyVisualTheme(
-              brandKit
-                ? resolveBrandTokens(brandKit)
-                : { ...serverDefaultTokens },
-              script.project.brandKitId ? undefined : overrides.visualTheme,
+        brandTokens: overrides.frozenBrandTokens
+          ? withStoryboardTheme(
+              {
+                ...overrides.frozenBrandTokens,
+                ...(overrides.look ? { lookSeed: overrides.look.seed } : {}),
+              },
+              overrides.themeId,
+              Boolean(script.project.brandKitId),
+              overrides.look,
+            )
+          : withStoryboardTheme(
+              applyVisualTheme(
+                brandKit
+                  ? resolveBrandTokens(brandKit)
+                  : { ...serverDefaultTokens },
+                script.project.brandKitId ? undefined : overrides.visualTheme,
+              ),
+              overrides.themeId,
+              Boolean(script.project.brandKitId),
+              overrides.look,
             ),
-            overrides.themeId,
-            Boolean(script.project.brandKitId),
-            overrides.look,
-          ),
         visualTheme: script.project.brandKitId
           ? undefined
           : overrides.visualTheme,
@@ -207,6 +215,7 @@ export async function updateScript(
     hideProgressBar?: boolean;
     styleId?: StyleId;
     energy?: EnergyId;
+    themeId?: string;
     voiceMode?: VoiceMode;
     audioMastering?: import("@/production/audio-mastering").AudioMastering;
     frozenBrandTokens?: import("@/video/tokens").BrandTokens;
@@ -239,6 +248,7 @@ export async function updateScript(
     if (
       data.styleId !== undefined ||
       data.energy !== undefined ||
+      data.themeId !== undefined ||
       data.audioMastering !== undefined ||
       data.lookSeed !== undefined ||
       data.chapterDraft !== undefined ||
@@ -267,6 +277,7 @@ export async function updateScript(
         ...(data.factoryLineage ? { factoryLineage: data.factoryLineage } : {}),
         ...(data.styleId !== undefined ? { styleId: data.styleId } : {}),
         ...(data.energy !== undefined ? { energy: data.energy } : {}),
+        ...(data.themeId !== undefined ? { themeId: data.themeId } : {}),
         ...(data.chapterDraft !== undefined
           ? { chapterDraft: data.chapterDraft }
           : {}),

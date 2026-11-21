@@ -10,7 +10,6 @@ import { apiPatch, apiPost } from "@/lib/api-client";
 import { useProductionJob } from "@/hooks/production-jobs";
 import { useScript } from "@/hooks/script";
 import { QuickProduceStatus } from "./quick-produce-status";
-import { ChangeVideo } from "./change-video";
 import { ResultActions } from "./result-actions";
 import { TellMe } from "./tell-me";
 import { PublishingKit } from "./publishing-kit";
@@ -160,7 +159,7 @@ export function ProductionResult({
     );
   const scriptId = query.data.revision.scriptId;
   return (
-    <div className="mx-auto max-w-4xl space-y-5">
+    <div className="@container mx-auto max-w-6xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Your video</h1>
         <div className="flex flex-wrap gap-2">
@@ -189,18 +188,31 @@ export function ProductionResult({
           (it is kept, so nothing is made again).
         </p>
       )}
-      <QuickProduceStatus jobId={jobId} scriptId={scriptId} />
-      {query.data.state === "succeeded" && (
-        <>
-          <ResultActions scriptId={scriptId} quality={query.data.quality} />
-          <KitSection scriptId={scriptId} jobId={jobId} />
-          <ChangeVideo jobId={jobId} scriptId={scriptId} />
-          <TellMe
-            jobId={jobId}
-            scriptId={scriptId}
-            quality={query.data.quality}
-          />
-        </>
+      {query.data.state === "succeeded" ? (
+        <div className="grid gap-6 @3xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          <div className="min-w-0 space-y-5">
+            <QuickProduceStatus
+              jobId={jobId}
+              scriptId={scriptId}
+              onResultPage
+            />
+            <TellMe
+              jobId={jobId}
+              scriptId={scriptId}
+              quality={query.data.quality}
+            />
+          </div>
+          <div className="min-w-0 space-y-5">
+            <ResultActions
+              jobId={jobId}
+              scriptId={scriptId}
+              quality={query.data.quality}
+            />
+            <KitSection scriptId={scriptId} jobId={jobId} />
+          </div>
+        </div>
+      ) : (
+        <QuickProduceStatus jobId={jobId} scriptId={scriptId} onResultPage />
       )}
       <Remix scriptId={scriptId} />
     </div>

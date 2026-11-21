@@ -335,8 +335,11 @@ export function useReplanMotionDirection(scriptId: string) {
 export function useSetScriptVisualStyle(scriptId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { styleId?: StyleId; energy?: EnergyId }) =>
-      apiSend(`/api/scripts/${scriptId}`, "PATCH", vars),
+    mutationFn: (vars: {
+      styleId?: StyleId;
+      energy?: EnergyId;
+      themeId?: string;
+    }) => apiSend(`/api/scripts/${scriptId}`, "PATCH", vars),
     onMutate: async (vars) => {
       await qc.cancelQueries({ queryKey: ["script", scriptId] });
       const prev = qc.getQueryData<ScriptDTO>(["script", scriptId]);
@@ -345,6 +348,9 @@ export function useSetScriptVisualStyle(scriptId: string) {
           ...prev,
           ...(vars.styleId !== undefined ? { styleId: vars.styleId } : {}),
           ...(vars.energy !== undefined ? { energy: vars.energy } : {}),
+          ...(vars.themeId !== undefined
+            ? { brandTokens: { ...prev.brandTokens, themeId: vars.themeId } }
+            : {}),
         });
       }
       return { prev };

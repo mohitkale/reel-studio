@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { audioMasteringSchema } from "@/production/audio-mastering";
+import { THEME_IDS } from "@/video/themes";
 
 import {
   getScript,
@@ -43,6 +44,7 @@ const patchSchema = z.object({
     .enum(["bold-hook", "clean-story", "teach-me", "soft-brand"])
     .optional(),
   energy: z.enum(["calm", "normal", "high"]).optional(),
+  themeId: z.enum(THEME_IDS).optional(),
   voiceMode: z.enum(["oneshot", "per_scene"]).optional(),
   /** Re-roll the look: a new seed gives a different cut of the same video. */
   lookSeed: z.string().trim().min(1).max(60).optional(),

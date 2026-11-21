@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { moveScene, sceneStripChanged, toUndoScene } from "@/lib/scene-strip";
+import {
+  moveScene,
+  moveSceneTo,
+  sceneStripChanged,
+  toUndoScene,
+} from "@/lib/scene-strip";
 import type { SceneDTO } from "@/lib/dto";
 
 const scene = (id: string, text: string, spokenText: string | null = null) =>
@@ -32,6 +37,14 @@ describe("scene strip helpers", () => {
     expect(snap.id).toBe("a");
   });
 
+  it("moves scenes across the strip and ignores a stale drag", () => {
+    const ids = ["a", "b", "c", "d"];
+    expect(moveSceneTo(ids, "a", "c")).toEqual(["b", "c", "a", "d"]);
+    expect(moveSceneTo(ids, "d", "b")).toEqual(["a", "d", "b", "c"]);
+    expect(moveSceneTo(ids, "a", "removed")).toBe(ids);
+    expect(moveSceneTo(ids, "a", "a")).toBe(ids);
+  });
+
   it("notices text, narration and order changes but not untouched scenes", () => {
     const base = [scene("a", "One"), scene("b", "Two")].map(toUndoScene);
     expect(
@@ -47,5 +60,20 @@ describe("scene strip helpers", () => {
       sceneStripChanged(base, [scene("b", "Two"), scene("a", "One")]),
     ).toBe(true);
     expect(sceneStripChanged(base, [scene("a", "One")])).toBe(true);
+    expect(
+      sceneStripChanged(base, [
+        { ...scene("a", "One"), templateId: "hf-quote" },
+        scene("b", "Two"),
+      ]),
+    ).toBe(true);
+    expect(
+      sceneStripChanged(base, [
+        {
+          ...scene("a", "One"),
+          background: { type: "image", url: "/media/fixture.png" },
+        },
+        scene("b", "Two"),
+      ]),
+    ).toBe(true);
   });
 });
