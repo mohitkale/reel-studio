@@ -1,14 +1,21 @@
 "use client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useIsMutating,
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 export function EditHistory({
   scriptId,
   onRestored,
+  disabled,
 }: {
   scriptId: string;
   onRestored?(): void;
+  disabled?: boolean;
 }) {
   const qc = useQueryClient();
   const query = useQuery({
@@ -19,6 +26,7 @@ export function EditHistory({
       ),
   });
   const mutation = useMutation({
+    mutationKey: ["scene-history", scriptId],
     mutationFn: (action: "undo" | "redo") =>
       apiPost(`/api/scripts/${scriptId}/history`, { action }),
     onSuccess: async () => {
@@ -37,7 +45,9 @@ export function EditHistory({
         size="sm"
         variant="outline"
         disabled={
-          mutation.isPending || !query.data?.history.some((e) => !e.undone)
+          disabled ||
+          mutation.isPending ||
+          !query.data?.history.some((e) => !e.undone)
         }
         onClick={() => mutation.mutate("undo")}
       >
@@ -47,7 +57,9 @@ export function EditHistory({
         size="sm"
         variant="outline"
         disabled={
-          mutation.isPending || !query.data?.history.some((e) => e.undone)
+          disabled ||
+          mutation.isPending ||
+          !query.data?.history.some((e) => e.undone)
         }
         onClick={() => mutation.mutate("redo")}
       >
@@ -60,4 +72,8 @@ export function EditHistory({
       )}
     </div>
   );
+}
+
+export function useRestoringEditHistory(scriptId: string) {
+  return useIsMutating({ mutationKey: ["scene-history", scriptId] }) > 0;
 }

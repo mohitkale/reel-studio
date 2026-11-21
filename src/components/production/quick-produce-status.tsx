@@ -168,10 +168,12 @@ export function QuickProduceStatus({
   jobId,
   scriptId,
   showPreview = true,
+  onResultPage = false,
 }: {
   jobId: string | null;
   scriptId: string;
   showPreview?: boolean;
+  onResultPage?: boolean;
 }) {
   const router = useRouter();
   const query = useProductionJob(jobId);
@@ -215,7 +217,9 @@ export function QuickProduceStatus({
     onSuccess: ({ job }) => {
       toast.success("Making the updated video");
       router.replace(
-        `/editor/${scriptId}?productionJob=${encodeURIComponent(job.id)}`,
+        onResultPage
+          ? `/results/${job.id}?from=${encodeURIComponent(jobId ?? "")}`
+          : `/editor/${scriptId}?productionJob=${encodeURIComponent(job.id)}`,
       );
     },
     onError: (error) =>

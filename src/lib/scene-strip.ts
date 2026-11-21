@@ -46,20 +46,30 @@ export function toUndoScene(scene: SceneDTO): UndoScene {
   });
 }
 
-/** True when the scenes differ from the snapshot in text, narration or order. */
+/** True when text, layout, media or scene order differs from the finished draft. */
 export function sceneStripChanged(
   snapshot: UndoScene[],
-  scenes: Pick<SceneDTO, "id" | "text" | "spokenText">[],
+  scenes: SceneDTO[],
 ): boolean {
   if (snapshot.length !== scenes.length) return true;
-  return scenes.some((scene, i) => {
-    const before = snapshot[i];
-    return (
-      before.id !== scene.id ||
-      before.text !== scene.text ||
-      (before.spokenText ?? "") !== (scene.spokenText ?? "")
-    );
-  });
+  return scenes.some(
+    (scene, i) =>
+      JSON.stringify(toUndoScene(scene)) !== JSON.stringify(snapshot[i]),
+  );
+}
+
+export function moveSceneTo(
+  ids: string[],
+  sourceId: string,
+  targetId: string,
+): string[] {
+  const source = ids.indexOf(sourceId);
+  const target = ids.indexOf(targetId);
+  if (source < 0 || target < 0 || source === target) return ids;
+  const next = [...ids];
+  next.splice(source, 1);
+  next.splice(target, 0, sourceId);
+  return next;
 }
 
 /** Swap a scene with its neighbour. Returns the ids in the new order. */

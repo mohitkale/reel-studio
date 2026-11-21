@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { after, NextResponse } from "next/server";
+import { z } from "zod";
 
 import { executeProductionJob } from "@/library/production-job-executor";
 import { productionJobViewWithRevision } from "@/library/production-job-view";
@@ -9,7 +10,11 @@ import { submitProduction } from "@/library/production-service";
 import { runProductionWorkerOnce } from "@/library/production-worker";
 import { videoProductionJobInputSchema } from "@/production/jobs";
 import { authorizeRequest } from "@/server/auth";
-import { errorResponse } from "@/server/api-helpers";
+import {
+  errorResponse,
+  parseClientInput,
+  readRequestJson,
+} from "@/server/api-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,6 +25,10 @@ export async function POST(
 ) {
   try {
     const auth = authorizeRequest(req, "production:submit");
+    const { review } = parseClientInput(
+      z.object({ review: z.boolean().optional() }),
+      await readRequestJson(req, { allowEmpty: true }),
+    );
     const { id } = await context.params;
     const source = await getProductionJob(id);
     if (!source) {
@@ -44,7 +53,7 @@ export async function POST(
         orientation: input.orientation,
         quality: input.quality,
         idempotencyKey: `quick-produce:${randomUUID()}`,
-        runMode: "automatic",
+        runMode: review ? "approval" : "automatic",
         priority: source.priority,
         quickProduce: input.quickProduce,
         captions: input.captions,

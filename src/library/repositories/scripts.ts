@@ -138,10 +138,15 @@ export async function getScripts(
         voiceMode: resolveVoiceMode(script.voiceMode),
         brandKitId: script.project.brandKitId,
         brandTokens: overrides.frozenBrandTokens
-          ? {
-              ...overrides.frozenBrandTokens,
-              ...(overrides.look ? { lookSeed: overrides.look.seed } : {}),
-            }
+          ? withStoryboardTheme(
+              {
+                ...overrides.frozenBrandTokens,
+                ...(overrides.look ? { lookSeed: overrides.look.seed } : {}),
+              },
+              overrides.themeId,
+              Boolean(script.project.brandKitId),
+              overrides.look,
+            )
           : withStoryboardTheme(
               applyVisualTheme(
                 brandKit
@@ -210,6 +215,7 @@ export async function updateScript(
     hideProgressBar?: boolean;
     styleId?: StyleId;
     energy?: EnergyId;
+    themeId?: string;
     voiceMode?: VoiceMode;
     audioMastering?: import("@/production/audio-mastering").AudioMastering;
     frozenBrandTokens?: import("@/video/tokens").BrandTokens;
@@ -242,6 +248,7 @@ export async function updateScript(
     if (
       data.styleId !== undefined ||
       data.energy !== undefined ||
+      data.themeId !== undefined ||
       data.audioMastering !== undefined ||
       data.lookSeed !== undefined ||
       data.chapterDraft !== undefined ||
@@ -270,6 +277,7 @@ export async function updateScript(
         ...(data.factoryLineage ? { factoryLineage: data.factoryLineage } : {}),
         ...(data.styleId !== undefined ? { styleId: data.styleId } : {}),
         ...(data.energy !== undefined ? { energy: data.energy } : {}),
+        ...(data.themeId !== undefined ? { themeId: data.themeId } : {}),
         ...(data.chapterDraft !== undefined
           ? { chapterDraft: data.chapterDraft }
           : {}),

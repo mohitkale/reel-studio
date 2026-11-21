@@ -52,7 +52,8 @@ Each MP4 export comes with a local folder for posting, including both thumbnail
 sizes, caption files, the storyboard, title, description and hashtags.
 Create and Library show frames from your finished videos.
 The result page shows each production step and a draft preview during export.
-After export, **Make other sizes** carries the finished video's look and narration into the other two aspect ratios.
+After export, edit scenes or choose a different theme on the result page.
+**Make other sizes** carries the finished video's look and narration into the other two aspect ratios.
 The twenty bundled CC0 music tracks work offline.
 
 ## How it works

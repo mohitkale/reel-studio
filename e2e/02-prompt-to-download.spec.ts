@@ -100,4 +100,62 @@ test("prompt to a changed, downloaded video by keyboard", async ({ page }) => {
     originalVideo!,
   );
   expect(requests).toEqual([]);
+
+  // The result's scene strip reuses the editor's durable history.
+  const strip = page.getByRole("list", { name: "Scene strip" });
+  const firstScene = strip.getByRole("listitem").first();
+  await firstScene.getByRole("button", { name: "Scene type" }).click();
+  await page
+    .getByLabel("Scene type", { exact: true })
+    .selectOption({ label: "Quote" });
+  await page.getByRole("button", { name: "Use this scene type" }).click();
+  await expect(firstScene).toContainText("Pull quote");
+  await page.getByRole("button", { name: "Undo edit" }).click();
+  await expect(firstScene).not.toContainText("Pull quote");
+  await page
+    .getByTestId("drag-scene-1")
+    .dragTo(strip.getByRole("listitem").nth(1));
+  await expect(page.getByLabel("Scene 1 text on screen")).toHaveValue(
+    "Blue light scatters most",
+  );
+  await page.getByRole("button", { name: "Undo edit" }).click();
+  await expect(page.getByLabel("Scene 1 text on screen")).toHaveValue(
+    "Why does the sky look blue?",
+  );
+  await firstScene.getByRole("button", { name: "Delete scene 1" }).click();
+  await expect(strip.getByRole("listitem")).toHaveCount(2);
+  await page.getByRole("button", { name: "Undo edit" }).click();
+  await expect(strip.getByRole("listitem")).toHaveCount(3);
+
+  await firstScene.getByRole("button", { name: "Regenerate copy" }).click();
+  const changes = page.getByRole("list", { name: "Changes" });
+  await expect(changes).toContainText("Scene 1");
+  await expect(changes).not.toContainText("Scene 2");
+  await page.getByRole("button", { name: "Discard" }).click();
+  const shorterRequest = page.waitForRequest(
+    (request) =>
+      request.url().endsWith("/api/storyboards/write") &&
+      request.method() === "POST",
+  );
+  await page.getByRole("button", { name: "Shorter", exact: true }).click();
+  expect(
+    (await shorterRequest).postDataJSON().brief.revise.instruction,
+  ).toMatch(/25% shorter/);
+  await expect(
+    page.getByRole("button", { name: "Make this version" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Discard" }).click();
+  await firstScene.getByRole("button", { name: "Regenerate copy" }).click();
+  await expect(changes).toContainText("Scene 1");
+  await page.getByRole("button", { name: "Make this version" }).click();
+  await page.waitForURL(
+    (url) => url.searchParams.get("from") === first.split("/results/")[1],
+  );
+  await expectPlayableVideo(page);
+  await expect(page.getByLabel("Scene 1 text on screen")).toHaveValue(
+    "Why is the sky blue?",
+  );
+  await expect(page.getByLabel("Scene 2 text on screen")).toHaveValue(
+    "Blue light scatters most",
+  );
 });
