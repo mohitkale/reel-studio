@@ -47,6 +47,8 @@ export async function POST(
         runMode: "automatic",
         priority: source.priority,
         quickProduce: input.quickProduce,
+        captions: input.captions,
+        storyboard: input.storyboard,
       },
       auth,
       serverBaseUrl: new URL(req.url).origin,

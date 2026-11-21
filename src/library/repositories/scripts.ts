@@ -137,19 +137,22 @@ export async function getScripts(
         voiceClips: script.voiceClips.map(toVoiceClipDTO),
         voiceMode: resolveVoiceMode(script.voiceMode),
         brandKitId: script.project.brandKitId,
-        brandTokens:
-          overrides.frozenBrandTokens ??
-          withStoryboardTheme(
-            applyVisualTheme(
-              brandKit
-                ? resolveBrandTokens(brandKit)
-                : { ...serverDefaultTokens },
-              script.project.brandKitId ? undefined : overrides.visualTheme,
+        brandTokens: overrides.frozenBrandTokens
+          ? {
+              ...overrides.frozenBrandTokens,
+              ...(overrides.look ? { lookSeed: overrides.look.seed } : {}),
+            }
+          : withStoryboardTheme(
+              applyVisualTheme(
+                brandKit
+                  ? resolveBrandTokens(brandKit)
+                  : { ...serverDefaultTokens },
+                script.project.brandKitId ? undefined : overrides.visualTheme,
+              ),
+              overrides.themeId,
+              Boolean(script.project.brandKitId),
+              overrides.look,
             ),
-            overrides.themeId,
-            Boolean(script.project.brandKitId),
-            overrides.look,
-          ),
         visualTheme: script.project.brandKitId
           ? undefined
           : overrides.visualTheme,

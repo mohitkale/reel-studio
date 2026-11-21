@@ -192,7 +192,11 @@ export function ProductionResult({
       <QuickProduceStatus jobId={jobId} scriptId={scriptId} />
       {query.data.state === "succeeded" && (
         <>
-          <ResultActions scriptId={scriptId} quality={query.data.quality} />
+          <ResultActions
+            jobId={jobId}
+            scriptId={scriptId}
+            quality={query.data.quality}
+          />
           <KitSection scriptId={scriptId} jobId={jobId} />
           <ChangeVideo jobId={jobId} scriptId={scriptId} />
           <TellMe

@@ -132,6 +132,12 @@ export const brandOverridesSchema = z
         handle: z.string(),
         fontFamily: z.string(),
         radius: z.number(),
+        themeId: z.string().optional(),
+        lookSeed: z.string().optional(),
+        variety: z.enum(["low", "medium", "high"]).optional(),
+        reduceMotion: z.boolean().optional(),
+        presenter: presenterConfigSchema.optional(),
+        endTag: z.boolean().optional(),
       })
       .optional(),
     productionPreset: z

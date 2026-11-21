@@ -206,6 +206,7 @@ HTTP handlers under `src/app` (`/api/**` and `/media`).
 | `POST /api/production-jobs/[id]/cancel`              | PRD01      |
 | `GET /api/production-jobs/[id]/events`               | PRD01      |
 | `POST /api/production-jobs/[id]/produce-current`     | PRD01      |
+| `POST /api/production-jobs/[id]/sizes`               | RND01      |
 | `POST /api/production-jobs/[id]/retry`               | PRD01      |
 | `POST /api/production-jobs/[id]/revision`            | PRD01      |
 | `GET /api/production-jobs/[id]/thumbnail`            | PRD01      |

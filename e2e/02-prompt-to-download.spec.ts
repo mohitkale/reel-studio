@@ -41,17 +41,63 @@ test("prompt to a changed, downloaded video by keyboard", async ({ page }) => {
   await expectPlayableVideo(page);
   await expect(page.getByRole("heading", { name: "Change it" })).toBeVisible();
 
-  // Change the look, make the video again, and download it.
+  // Edit the text and look on the result page, then download the new render.
   const first = page.url();
+  const originalVideo = await page
+    .getByLabel("Finished video")
+    .getAttribute("src");
+  const scene = page.getByLabel("Scene 1 text on screen");
+  await scene.fill("Why does the sky look blue?");
+  await scene.press("Tab");
   await page.getByLabel("Look").selectOption({ label: "Clean Story" });
   await page.getByRole("button", { name: "Update video" }).click();
   await page.waitForURL(
     (url) => url.toString() !== first && /\/results\//.test(url.pathname),
   );
   await expectPlayableVideo(page);
-  // The earlier version is kept and one click away; nothing is made again.
-  await expect(
-    page.getByRole("link", { name: /previous version/ }),
-  ).toHaveAttribute("href", new RegExp(`${first.split("/results/")[1]}$`));
+  await expect(page.getByLabel("Scene 1 text on screen")).toHaveValue(
+    "Why does the sky look blue?",
+  );
   await downloadMp4(page);
+
+  await page.getByRole("button", { name: "Make other sizes" }).click();
+  const sizes = page.getByRole("list", { name: "Other sizes" });
+  await expect(sizes).toContainText("9:16: current video");
+  for (const [format, dimensions] of [
+    ["16:9", [960, 540]],
+    ["1:1", [540, 540]],
+  ] as const) {
+    const link = sizes.getByRole("link", { name: `Open ${format} result` });
+    await expect(link).toBeVisible();
+    const href = await link.getAttribute("href");
+    const variant = await page.context().newPage();
+    await variant.goto(href!);
+    await expectPlayableVideo(variant);
+    await expect(variant.getByLabel("Scene 1 text on screen")).toHaveValue(
+      "Why does the sky look blue?",
+    );
+    await expect(variant.getByLabel("Look")).toHaveValue("clean-story");
+    expect(
+      await variant.getByLabel("Finished video").evaluate((element) => {
+        const video = element as HTMLVideoElement;
+        return [video.videoWidth, video.videoHeight];
+      }),
+    ).toEqual(dimensions);
+    await downloadMp4(variant);
+    await variant.close();
+  }
+
+  // Undo returns to the same finished file without submitting a render.
+  const requests: string[] = [];
+  page.on("request", (request) => {
+    if (request.method() === "POST") requests.push(request.url());
+  });
+  await page.getByRole("link", { name: /previous version/ }).click();
+  await expect(page).toHaveURL(first);
+  await expectPlayableVideo(page);
+  await expect(page.getByLabel("Finished video")).toHaveAttribute(
+    "src",
+    originalVideo!,
+  );
+  expect(requests).toEqual([]);
 });

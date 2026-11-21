@@ -63,8 +63,10 @@ captions; each can be changed for one video under More options on Create). On a
 finished video, **Change it** edits text, order, look and music in place and
 links back to the previous version, **Tell me what to change** asks the
 storyboard writer for edits and shows them before anything is made, and **Share
-it** copies a caption with hashtags and makes the other two sizes or another
-voice from the same storyboard.
+it** copies a caption with hashtags. **Make other sizes** keeps the finished
+video's words, look, captions and recorded narration and makes the other two
+sizes. The original and both versions are listed together. **Make it with this
+voice** produces a version with another voice from the same storyboard.
 
 While a video is being made, the result page shows the current step and elapsed
 time. Play the draft preview once the scenes are laid out, then watch the scene

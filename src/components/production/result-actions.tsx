@@ -15,12 +15,12 @@ import { pickWriter } from "@/lib/writer-chain";
 import { VOICE_STYLES, VOICE_STYLE_IDS } from "@/lib/voice-styles";
 import { KOKORO_LANGUAGE_GROUPS } from "@/providers/voice/kokoro";
 
-const FORMATS = ["9:16", "16:9", "1:1"] as const;
 type Storyboard = CaptionSource & { format?: string; [k: string]: unknown };
 
 interface Made {
   format: string;
   jobId?: string | null;
+  current?: boolean;
   error?: string;
 }
 
@@ -29,9 +29,11 @@ interface Made {
  * the same storyboard, or export the storyboard. All local; nothing is rewritten.
  */
 export function ResultActions({
+  jobId,
   scriptId,
   quality,
 }: {
+  jobId: string;
   scriptId: string;
   quality?: "draft" | "standard" | "high";
 }) {
@@ -98,31 +100,13 @@ export function ResultActions({
     setMessage(undefined);
     setMade([]);
     try {
-      const storyboard = await load();
-      const current = storyboard.format ?? "9:16";
-      const results: Made[] = [];
-      for (const format of FORMATS.filter((f) => f !== current)) {
-        try {
-          const queued = await apiPost<{ jobId?: string | null }>(
-            "/api/storyboards",
-            {
-              storyboard: { ...storyboard, format },
-              quality: quality ?? "standard",
-            },
-          );
-          results.push({ format, jobId: queued.jobId });
-        } catch (e) {
-          results.push({
-            format,
-            error: e instanceof Error ? e.message : "Could not start",
-          });
-        }
-        setMade([...results]);
-      }
-    } catch (e) {
-      setMessage(
-        e instanceof Error ? e.message : "Could not load the storyboard",
+      const { sizes } = await apiPost<{ sizes: Made[] }>(
+        `/api/production-jobs/${jobId}/sizes`,
+        {},
       );
+      setMade(sizes);
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Could not make other sizes");
     } finally {
       setBusy(undefined);
     }
@@ -391,9 +375,13 @@ export function ResultActions({
           {made.map((item) => (
             <li key={item.format}>
               {item.format}:{" "}
-              {item.jobId ? (
+              {item.current ? (
+                <span>current video</span>
+              ) : item.jobId ? (
                 <Link href={`/results/${item.jobId}`} className="underline">
-                  watch it being made
+                  {made.some((result) => result.current)
+                    ? `Open ${item.format} result`
+                    : "watch it being made"}
                 </Link>
               ) : (
                 <span className="text-destructive">{item.error}</span>
