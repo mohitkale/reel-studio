@@ -113,3 +113,47 @@ when the model is a plain ONNX file. A dependency advisory check belongs to the
 actual sidecar lockfile. Publisher inventory metadata supplies expected hashes,
 and the release gate must verify the downloaded bytes before loading them.
 [PyTorch advisories](https://github.com/pytorch/pytorch/security/advisories) · [ONNX Runtime release notes](https://github.com/microsoft/onnxruntime/releases) · [Release gate #242](https://github.com/mohitkale/reel-studio/issues/242)
+
+## Release gate checklist
+
+Complete one checklist for each proposed model and decoder. Publish the
+review evidence against the exact runtime build and model revisions.
+
+- [ ] All weights are ONNX or safetensors, including secondary decoders.
+      The reviewed loader uses `trust_remote_code=False` and opens only local
+      files. Any required script is part of the reviewed runtime build.
+- [ ] The optional downloader pins every artifact to an immutable revision
+      and checks SHA-256 before committing the download. On mismatch it discards
+      its own temporary file and reports the failed artifact. Staged files and
+      their hashes are recorded in the manifest.
+- [ ] Observe the sidecar listening on `127.0.0.1`. Confirm the packaged
+      sandbox denies outbound network access and writes outside the model data
+      directory. Link evidence for the supported platforms and runtime build.
+- [ ] Review code, weight and training-data rights for the planned commercial
+      use. Record the actual terms and attribution in [Licensing](LICENSING.md).
+      Deliver weights as an optional download under their own terms.
+- [ ] Run `npm run audit:check` and audit the precise sidecar lockfile. Link
+      both reports and record the sidecar lockfile's SHA-256.
+- [ ] Confirm the model uses no reference recordings or link consent and
+      licence evidence for every proposed reference. The feature must not
+      impersonate a real person.
+
+Stage the files and the reviewed manifest in one directory, then run:
+
+```sh
+npm run voice:gate -- path/to/model-manifest.json
+```
+
+| Manifest field   | Required contents                                                                                                                                                       |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `model`          | Model name and version for the report                                                                                                                                   |
+| `artifacts[]`    | `path` relative to the manifest, `kind` (`weights` or `data`), `sha256`, `revision` (full Git hash), and `source` (HTTPS URL containing the revision as a path segment) |
+| `terms`          | HTTPS sources `code`, `weights`, and `trainingData` (array), plus `commercialUseAllowed: true` and `delivery: "optional-download"`                                      |
+| `runtime`        | `bindHost: "127.0.0.1"`, `outboundNetwork: false`, `writesOutsideData: false`, `trustRemoteCode: false`, `runtimeDownloads: false`, and an HTTPS `evidence` link        |
+| `audits`         | HTTPS report links `app` and `sidecar` plus `lockfile` containing its relative `path` and `sha256`                                                                      |
+| `referenceAudio` | `{ "kind": "none" }` or `{ "kind": "consented", "evidence": "https://…" }`                                                                                              |
+
+The command checks declared formats, revision pins, staged files, hashes, and
+the presence of the documented evidence links. Review the linked licence,
+sandbox, consent and audit evidence before approval. The v1.1 shortlist
+currently has no candidate ready for that review.

@@ -145,6 +145,8 @@ Add a [scene type or theme](docs/CONTRIBUTING_SCENES.md), a [presenter](docs/CON
 or a [storyboard](examples/storyboards). Start with [CONTRIBUTING.md](CONTRIBUTING.md).
 Measure sound, pacing and text in existing MP4s with `npm run quality:baseline`.
 [Quality guide](docs/QUALITY.md#measure-existing-exports).
+Verify staged voice-model files and evidence with `npm run voice:gate`.
+[Voice model release checklist](docs/INDIC_VOICES.md#release-gate-checklist).
 
 All guides: [docs](docs/README.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md) ·
 [Security](SECURITY.md).
