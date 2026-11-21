@@ -24,6 +24,7 @@ import {
 import { THEMES } from "@/video/themes";
 
 import {
+  ApiError,
   absoluteUrl,
   apiGet,
   apiGetBinary,
@@ -99,6 +100,24 @@ const STAGE_LABEL: Record<string, string> = {
   verify_artifacts: "checking the file",
 };
 
+const STAGE_FIX: Record<string, string> = {
+  validate:
+    "The storyboard is not valid. Fix the fields named in the cause using reel://storyboard/schema, then submit it again.",
+  plan: "Check the scenes, their order and the requested format. Open the saved storyboard in Studio, correct the scene named in the cause, and submit it again.",
+  resolve_media:
+    "Stock media could not be fetched. Remove the failed media query or replace the missing file with a local Library asset, then retry.",
+  synthesize_audio:
+    "Narration failed. Check the voice settings or select an available voice. Set voice.enabled to false if you want a silent video.",
+  time_content:
+    "Fix caption cues that end before they start or supply a narration take that matches the scenes, then retry.",
+  prepare_composition:
+    "Open the storyboard in the editor and check the scene named in the cause. Correct its layout data, or switch it to a plain statement scene, then retry.",
+  render_export:
+    "Run `reel-studio doctor` to check Chrome, FFmpeg and the local worker. Check the reported cause before retrying the export.",
+  verify_artifacts:
+    "Check whether the MP4 opens and whether it has its expected audio. Check free disk space, then export a fresh copy.",
+};
+
 /** A specific, actionable explanation of a failed stage. */
 export function explainFailure(
   stage: string | undefined,
@@ -108,29 +127,35 @@ export function explainFailure(
   const at = stage ?? "unknown";
   const text = `${cause}`.toLowerCase();
   let fix: string;
-  if (/kokoro|onnx|voice model|transformers|\.cache/.test(text))
+  if (
+    at === "synthesize_audio" &&
+    /kokoro|onnx|voice model|transformers/.test(text) &&
+    /missing|enoent|not found|not installed|download/.test(text)
+  )
     fix =
       "The local voice model is missing. Run `reel-studio doctor --fix` or `npm run voice:download` (about 90 MB), or set voice.enabled to false for a silent video with captions, then call create_video again.";
-  else if (/ffmpeg|ffprobe/.test(text))
+  else if (
+    /ffmpeg|ffprobe/.test(text) &&
+    /enoent|missing|not installed|not on path/.test(text)
+  )
     fix =
       "FFmpeg is missing or not on PATH. Run `reel-studio doctor --fix` (it asks before downloading), then retry.";
-  else if (/chrome|chromium|puppeteer|browser/.test(text))
+  else if (
+    at === "render_export" &&
+    /chrome|chromium|puppeteer|browser/.test(text)
+  )
     fix =
       "Chrome could not start. Run `reel-studio doctor --fix` (it asks before downloading), or set REEL_VERIFY_CHROME to a Chrome path, then retry.";
-  else if (/duration|too long|exceeds/.test(text))
+  else if (
+    at === "time_content" &&
+    /too long|exceeds|supports up to/.test(text)
+  )
     fix =
       "The video is too long. Cut scenes or shorten the narration, then retry.";
-  else if (at === "validate" || /storyboard|lint/.test(text))
-    fix =
-      "The storyboard is not valid. Fix the errors named in the cause (see reel://storyboard/schema), then call create_video again.";
-  else if (at === "resolve_media")
-    fix =
-      "Stock media could not be fetched. Remove the media query from the scene or add a library asset, then retry.";
-  else if (at === "synthesize_audio")
-    fix =
-      "Narration failed. Check the voice settings, or set voice.enabled to false for a silent video.";
   else
-    fix = `The ${STAGE_LABEL[at] ?? at} step failed. Retry once with quality "draft"; if it fails the same way, check .data/engine.log.`;
+    fix =
+      STAGE_FIX[at] ??
+      "Open the job in Studio and check its latest step and .data/engine.log before trying again.";
   return { stage: at, cause, fix };
 }
 
@@ -285,16 +310,37 @@ async function produce(
   },
   extra: ToolExtra,
 ): Promise<ToolResult> {
-  const queued = await apiPost<{
+  let queued: {
     jobId?: string | null;
     projectId?: string;
     reused?: boolean;
     warnings?: unknown[];
     fixes?: unknown[];
-  }>(
-    `/api/storyboards?quality=${options.quality ?? "standard"}${options.series ? `&series=${encode(options.series)}` : ""}`,
-    storyboard,
-  );
+  };
+  try {
+    queued = await apiPost(
+      `/api/storyboards?quality=${options.quality ?? "standard"}${options.series ? `&series=${encode(options.series)}` : ""}`,
+      storyboard,
+    );
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 422) {
+      const issues = z
+        .array(z.object({ path: z.string(), message: z.string() }))
+        .safeParse(error.issues);
+      const cause = issues.data
+        ?.slice(0, 3)
+        .map(({ path, message }) => `${path}: ${message}`)
+        .join("; ");
+      return {
+        ...json({
+          state: "failed",
+          failure: explainFailure("validate", cause || error.message),
+        }),
+        isError: true,
+      };
+    }
+    throw error;
+  }
   if (!queued.jobId) return json(queued);
   const base = {
     projectId: queued.projectId,

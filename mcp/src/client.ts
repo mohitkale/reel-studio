@@ -25,6 +25,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    readonly issues?: unknown,
   ) {
     super(message);
     this.name = "ApiError";
@@ -71,7 +72,7 @@ async function request<T>(
       (res.status === 401 || res.status === 403
         ? "Unauthorized — check that REEL_STUDIO_MCP_TOKEN matches the token in Settings."
         : `Request failed (HTTP ${res.status})`);
-    throw new ApiError(message, res.status);
+    throw new ApiError(message, res.status, json.errors);
   }
   return json as T;
 }
