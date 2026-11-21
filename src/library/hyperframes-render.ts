@@ -432,6 +432,7 @@ export async function writeHyperframesReviewProject(
   projectDir: string,
   props: ReelProps,
   serverBaseUrl: string,
+  draftScale?: number,
 ) {
   await fs.mkdir(projectDir, { recursive: true });
   const scenes = await Promise.all(
@@ -467,14 +468,20 @@ export async function writeHyperframesReviewProject(
     "cover",
     serverBaseUrl,
   );
-  await writeHyperframesProject(projectDir, {
-    ...props,
-    scenes,
-    coverUrl,
-    audioUrl: undefined,
-    musicUrl: undefined,
-    sfxCues: [],
-  });
+  await writeHyperframesProject(
+    projectDir,
+    {
+      ...props,
+      scenes,
+      coverUrl,
+      audioUrl: undefined,
+      musicUrl: undefined,
+      sfxCues: [],
+    },
+    false,
+    undefined,
+    draftScale,
+  );
 }
 
 /** Linear scale of a draft capture: 0.5 is a quarter of the pixels. */

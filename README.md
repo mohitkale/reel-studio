@@ -51,6 +51,7 @@ vertical, square or wide output, captions you can edit, and your own footage and
 Each MP4 export comes with a local folder for posting, including both thumbnail
 sizes, caption files, the storyboard, title, description and hashtags.
 Create and Library show frames from your finished videos.
+The result page shows each production step and a draft preview during export.
 The twenty bundled CC0 music tracks work offline.
 
 ## How it works

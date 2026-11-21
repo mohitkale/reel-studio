@@ -66,6 +66,7 @@ export async function executeAudioProductionJob(
     context.signal.throwIfAborted();
     return upsertProductionJobStep(job.id, "synthesize_audio", {
       state: "running",
+      progressUpdate: true,
       progress: Math.min(
         0.95,
         progress.sceneCount > 0 ? progress.scene / progress.sceneCount : 0,
@@ -138,6 +139,7 @@ export async function executePodcastProductionJob(
     context.signal.throwIfAborted();
     return upsertProductionJobStep(job.id, "synthesize_audio", {
       state: "running",
+      progressUpdate: true,
       progress: Math.min(
         0.95,
         progress.sceneCount > 0 ? progress.scene / progress.sceneCount : 0,

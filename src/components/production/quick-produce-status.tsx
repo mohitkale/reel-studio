@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
@@ -16,6 +18,7 @@ import { apiPost } from "@/lib/api-client";
 import { stepElapsed } from "@/lib/step-time";
 import { useScript } from "@/hooks/script";
 import { describeJobProgress } from "@/production/render-estimate";
+import { preparedVideoCompositionSchema } from "@/production/video-snapshot";
 import {
   useApproveProductionJob,
   useCancelProductionJob,
@@ -37,6 +40,17 @@ const STAGES = [
   ["render_export", "Export the video"],
   ["verify_artifacts", "Check the result"],
 ] as const;
+
+const DraftPlayer = dynamic(
+  () =>
+    import("@/components/editor/engine-player").then(
+      (module) => module.EnginePlayer,
+    ),
+  {
+    ssr: false,
+    loading: () => <p role="status">Opening the draft preview…</p>,
+  },
+);
 
 /** One symbol and plain words per step state, so a step never reads as a bare code. */
 function stepMark(state: string | undefined): string {
@@ -75,40 +89,50 @@ function shortRevision(value: string | null | undefined) {
 /** Stage, scene and time left, from the benchmark and then the pace so far. */
 function JobProgressLine({
   job,
-  scriptId,
+  sceneSeconds,
+  now,
 }: {
   job: ProductionJobView;
-  scriptId: string;
+  sceneSeconds: number[];
+  now: number;
 }) {
-  const script = useScript(scriptId);
-  const [now, setNow] = React.useState(() => Date.now());
-  React.useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-  const take = script.data?.takes[0];
-  const sceneSeconds = (take?.timeline ?? []).map(
-    (beat) => beat.durationFrames / (take?.fps || 30),
-  );
   const started = Date.parse(job.startedAt ?? job.createdAt);
+  const elapsed = Math.max(0, (now - started) / 1000);
   return (
-    <p className="text-muted-foreground text-xs" role="status">
-      {describeJobProgress({
-        steps: job.steps,
-        progress: job.progress,
-        sceneSeconds,
-        quality: job.quality,
-        elapsedSeconds: Math.max(0, (now - started) / 1000),
-      })}
+    <p
+      className="text-muted-foreground flex flex-wrap gap-x-3 text-xs"
+      data-testid="active-job-progress"
+    >
+      <span role="status">
+        {job.state === "queued"
+          ? "Queued for the local worker"
+          : describeJobProgress({
+              steps: job.steps,
+              progress: job.progress,
+              sceneSeconds,
+              quality: job.quality,
+              elapsedSeconds: elapsed,
+            })}
+      </span>
+      <span aria-hidden>{Math.floor(elapsed)} s elapsed</span>
     </p>
   );
 }
 
 /** The storyboard's scenes as cards while the video is made, so the wait shows the work. */
-function LiveScenes({ scriptId }: { scriptId: string }) {
+function LiveScenes({
+  scriptId,
+  previews = [],
+}: {
+  scriptId: string;
+  previews?: ProductionJobView["scenePreviews"];
+}) {
   const script = useScript(scriptId);
   const scenes = [...(script.data?.scenes ?? [])].sort(
     (a, b) => a.order - b.order,
+  );
+  const thumbnails = new Map(
+    previews.map(({ sceneId, downloadUrl }) => [sceneId, downloadUrl]),
   );
   if (scenes.length === 0) return null;
   return (
@@ -119,6 +143,16 @@ function LiveScenes({ scriptId }: { scriptId: string }) {
       <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {scenes.map((scene, index) => (
           <li key={scene.id} className="rounded-md border p-2 text-xs">
+            {thumbnails.has(scene.id) && (
+              <Image
+                unoptimized
+                src={thumbnails.get(scene.id)!}
+                width={240}
+                height={240}
+                alt=""
+                className="bg-muted mb-2 aspect-video w-full rounded object-contain"
+              />
+            )}
             <span className="text-muted-foreground block">
               Scene {index + 1}
             </span>
@@ -141,6 +175,21 @@ export function QuickProduceStatus({
 }) {
   const router = useRouter();
   const query = useProductionJob(jobId);
+  const prepared = query.data?.steps.find(
+    (step) => step.key === "prepare_composition" && step.state === "succeeded",
+  )?.detail;
+  const draft = React.useMemo(() => {
+    if (
+      !prepared ||
+      typeof prepared !== "object" ||
+      !("composition" in prepared)
+    )
+      return null;
+    const parsed = preparedVideoCompositionSchema.safeParse(
+      prepared.composition,
+    );
+    return parsed.success ? parsed.data : null;
+  }, [prepared]);
   const [now, setNow] = React.useState(() => Date.now());
   const cancel = useCancelProductionJob();
   const approve = useApproveProductionJob();
@@ -187,8 +236,10 @@ export function QuickProduceStatus({
     return (
       <Card>
         <CardContent className="text-muted-foreground flex items-center gap-2 p-4 text-sm">
-          <Loader2 className="size-4 animate-spin" /> Reconnecting to your
-          video…
+          <p role="status">
+            Opening your saved video job. The local worker keeps running while
+            this page connects.
+          </p>
         </CardContent>
       </Card>
     );
@@ -233,10 +284,32 @@ export function QuickProduceStatus({
             style={{ width: `${Math.round(job.progress * 100)}%` }}
           />
         </div>
-        {job.state === "running" && (
-          <JobProgressLine job={job} scriptId={scriptId} />
+        {stillWorking && (
+          <JobProgressLine
+            job={job}
+            now={now}
+            sceneSeconds={
+              draft?.props.timeline.map(
+                (beat) => beat.durationFrames / draft.props.fps,
+              ) ?? []
+            }
+          />
         )}
 
+        {showPreview && stillWorking && draft && (
+          <section aria-label="Draft preview" className="space-y-2">
+            <h2 className="text-sm font-semibold">Draft preview</h2>
+            <div className="mx-auto max-w-md">
+              <DraftPlayer
+                {...draft.props}
+                totalFrames={draft.totalFrames}
+                videoEngine="hyperframes"
+                previewQuality="draft"
+                loop={false}
+              />
+            </div>
+          </section>
+        )}
         {showPreview &&
           job.state === "succeeded" &&
           job.outputs.find((output) => output.format === "mp4") && (
@@ -252,7 +325,12 @@ export function QuickProduceStatus({
               }
             />
           )}
-        {active && <LiveScenes scriptId={scriptId} />}
+        {active && (
+          <LiveScenes
+            scriptId={scriptId}
+            previews={showPreview ? job.scenePreviews : undefined}
+          />
+        )}
         <details className="text-sm" open={active || job.state === "failed"}>
           <summary className="cursor-pointer font-medium">
             Steps and details

@@ -37,6 +37,7 @@ export interface ProductionJobView {
   startedAt?: string | null;
   steps: ProductionJobStepView[];
   outputs: ProductionJobOutputView[];
+  scenePreviews?: Array<{ sceneId: string; downloadUrl: string }>;
   revision: {
     id: string;
     projectId: string;
