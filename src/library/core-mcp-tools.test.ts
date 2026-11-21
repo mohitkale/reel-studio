@@ -8,7 +8,8 @@ const mocks = vi.hoisted(() => ({
   post: vi.fn(),
   binary: vi.fn(),
 }));
-vi.mock("../../mcp/src/client.js", () => ({
+vi.mock("../../mcp/src/client.js", async (original) => ({
+  ApiError: (await original<typeof import("../../mcp/src/client")>()).ApiError,
   apiGet: mocks.get,
   apiPost: mocks.post,
   apiPatch: vi.fn(),
@@ -293,10 +294,17 @@ describe("explainFailure", () => {
       ["render_export", "spawn ffmpeg ENOENT", /doctor --fix/],
       ["render_export", "Could not find Chrome", /Chrome/],
       ["validate", "scenes[0].type: Unknown", /storyboard is not valid/],
+      ["plan", "scene order is invalid", /their order/],
       ["time_content", "Requested duration 900s exceeds", /too long/],
+      ["time_content", "Caption cue has invalid timing", /caption cues/],
       ["resolve_media", "stock provider timeout", /Stock media/],
       ["synthesize_audio", "provider returned 500", /voice\.enabled/],
-      ["verify_artifacts", "weird", /checking the file/],
+      ["prepare_composition", "unsupported layout", /layout data/],
+      [
+        "verify_artifacts",
+        "MP4 container is incomplete",
+        /Check whether the MP4 opens/,
+      ],
     ];
     for (const [stage, error, fix] of cases) {
       const out = explainFailure(stage, error);

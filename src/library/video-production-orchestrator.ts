@@ -15,6 +15,7 @@ import {
   videoStageHash,
 } from "@/library/video-stage-media";
 import { resolveReelTimeline } from "@/lib/reel-timeline";
+import { coverFrames } from "@/video/types";
 import { resolveSpokenText } from "@/lib/spoken-text";
 import { prepareVideoComposition } from "@/library/render-service";
 import { assertVideoDuration, videoDurationLimit } from "@/production/limits";
@@ -48,7 +49,12 @@ import {
   getProductionJobStep,
 } from "@/library/repositories/production-jobs";
 
-type Context = { signal: AbortSignal; heartbeat: () => Promise<boolean> };
+type Context = {
+  signal: AbortSignal;
+  heartbeat: () => Promise<boolean>;
+  /** Internal test seam for a fault after a stage has been durably started. */
+  beforeStage?: (key: ProductionStepKey) => void | Promise<void>;
+};
 type Dependencies = {
   render: (input: StartRenderOptions) => Promise<void>;
   artifact: (
@@ -225,7 +231,22 @@ export async function executeVideoProductionJob(
   dependencies: Dependencies = defaults,
 ): Promise<void> {
   return withProductionSignal(context.signal, async () => {
-    const input = videoProductionJobInputSchema.parse(job.inputSnapshot);
+    const parsed = videoProductionJobInputSchema.safeParse(job.inputSnapshot);
+    if (!parsed.success) {
+      const error = new Error(
+        parsed.error.issues
+          .map(({ path, message }) => `${path.join(".")}: ${message}`)
+          .join("; "),
+      );
+      await dependencies.step(job.id, "validate", {
+        state: "failed",
+        progress: 0,
+        error: error.message,
+        leaseOwner: job.leaseOwner,
+      });
+      throw error;
+    }
+    const input = parsed.data;
     const takePath = (audioUrl: string) =>
       audioUrl.startsWith("/media/")
         ? path.join(process.cwd(), "media", audioUrl.slice(7))
@@ -273,6 +294,7 @@ export async function executeVideoProductionJob(
       });
       try {
         await active();
+        await context.beforeStage?.(key);
         const output = schema.parse(await run());
         await active();
         await dependencies.step(job.id, key, {
@@ -424,6 +446,12 @@ export async function executeVideoProductionJob(
         }
       },
     );
+    const fps = media.snapshot.script.fps;
+    const cover = coverFrames(fps, Boolean(media.snapshot.script.coverUrl));
+    const durationLimit = Math.min(
+      input.maxDurationSeconds,
+      videoDurationLimit(media.snapshot.script),
+    );
     const timing = await stage(
       "time_content",
       {
@@ -433,7 +461,9 @@ export async function executeVideoProductionJob(
           id: scene.id,
           text: resolveSpokenText(scene),
         })),
-        fps: media.snapshot.script.fps,
+        fps,
+        cover,
+        durationLimit,
       },
       timingSchema,
       async () => {
@@ -442,14 +472,20 @@ export async function executeVideoProductionJob(
             if (cue.endFrame <= cue.startFrame)
               throw new Error("Caption cue has invalid timing");
           }
-        return resolveReelTimeline(
+        const resolved = resolveReelTimeline(
           media.snapshot.script.scenes.map((scene) => ({
             id: scene.id,
             text: resolveSpokenText(scene),
           })),
           audio.take,
-          media.snapshot.script.fps,
+          fps,
         );
+        assertVideoDuration(
+          Math.max(1, resolved.totalFrames + cover),
+          fps,
+          durationLimit,
+        );
+        return resolved;
       },
     );
     const preparedSchema = z.object({
@@ -513,15 +549,6 @@ export async function executeVideoProductionJob(
       },
     );
     const composition = prepared.composition;
-    // Check actual timing after synthesis, also when resuming cached stages.
-    assertVideoDuration(
-      composition.totalFrames,
-      composition.props.fps,
-      Math.min(
-        input.maxDurationSeconds,
-        videoDurationLimit(prepared.snapshot.script),
-      ),
-    );
     const artifact = await stage(
       "render_export",
       { prepared, quality: input.quality },

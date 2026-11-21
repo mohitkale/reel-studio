@@ -138,8 +138,10 @@ thumbnail link, duration, resolution, size, the studio page, and an
 can see images can look at its work. While `create_video` waits it sends MCP progress
 notifications (stage and percent) if the client supplied a progress token. If your client times
 out first, the job keeps running: call `get_job`; a render can take several minutes, so set the
-client's tool timeout to at least 10 minutes. A failed job returns the failing stage, the cause and
-a specific fix (for example: the voice model is missing, run `npm run voice:download`).
+client's tool timeout to at least 10 minutes. A failed job returns a `failure` object with `stage`,
+`cause` and `fix`. For example, a missing Kokoro voice model reports `synthesize_audio` and
+suggests `npm run voice:download`. If the storyboard fails validation before a job is created,
+`create_video` returns the same fields with `stage` set to `validate`.
 
 These eight are the default. Set `REEL_STUDIO_MCP_TOOLS=all` in the server's environment to
 expose every other tool as well (research, editorial, podcasts, factory, voice takes and the rest;
