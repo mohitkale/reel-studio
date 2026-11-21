@@ -46,7 +46,7 @@ product launches, language learning, science, books), each with its storyboard a
 make it again: the [showcase wall](https://mohitkale.github.io/reel-studio/showcase.html) and a
 [45-second montage](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/montage.mp4).
 
-Also: **podcasts** with one or two hosts (WAV or MP3, transcript, chapters, video audiograms),
+Also: **podcasts** with one or two hosts (WAV or chapter-tagged MP3, transcript, video audiograms),
 vertical, square or wide output, captions you can edit, and your own footage and music.
 Each MP4 export comes with a local folder for posting, including both thumbnail
 sizes, caption files, the storyboard, title, description and hashtags.

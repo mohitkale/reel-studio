@@ -11,7 +11,6 @@ import {
   analyzeWav,
   finalizeSpeechWav,
   transcodeAudioToWav,
-  transcodeWavToMp3,
 } from "@/lib/audio-production";
 import { getProvider } from "@/providers/voice/registry";
 import {
@@ -37,6 +36,7 @@ import {
   derivePodcastChapters,
   resolvePodcastPreset,
 } from "@/library/podcast-presets";
+import { encodePodcastMp3 } from "@/library/podcast-mp3";
 import { parseJsonColumn } from "@/library/schemas";
 import {
   applyPodcastPronunciations,
@@ -403,10 +403,15 @@ export async function generatePodcastTake(
   await getAssetStore().put(key, wav);
   let mp3Path: string | undefined;
   try {
-    const mp3 = await transcodeWavToMp3(wav);
-    mp3Path = `podcast-takes/${randomUUID()}.mp3`;
+    const mp3 = await encodePodcastMp3(wav, {
+      title: podcast.title,
+      fps: DEFAULT_FPS,
+      chapters,
+    });
+    const key = `podcast-takes/${randomUUID()}.mp3`;
     assertProductionActive();
-    await getAssetStore().put(mp3Path, mp3);
+    await getAssetStore().put(key, mp3);
+    mp3Path = key;
   } catch (error) {
     console.warn(
       "[podcast-takes] MP3 export unavailable; WAV remains ready:",
