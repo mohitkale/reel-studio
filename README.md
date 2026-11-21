@@ -114,6 +114,8 @@ The running studio with a video made from the bundled demo storyboard.
 | ![Editor: every scene, its text and its voice script, with a live preview](docs/assets/screens/editor.jpg) | ![Scene types: each one drawn with sample content in every format](docs/assets/screens/scene-types.jpg) |
 
 Automation is the default and manual editing is always one switch away (Simple and Pro).
+On **Create**, open **Examples** for looping previews and storyboards you can
+edit and export with the local engines. See [Getting started](docs/GETTING_STARTED.md#start-from-an-example).
 Regenerate these four screenshots with `npm run demo:assets -- --only screens`.
 
 ## Themes and scene types

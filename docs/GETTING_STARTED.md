@@ -47,6 +47,19 @@ active render can interrupt that job; retry after the reload.
 3. For an AI-written draft, choose **Create with AI** after configuring a provider
    in **Settings**. For an unattended video, enable **Quick Produce**.
 
+### Start from an example
+
+On **Create**, choose a video under **Start from an example**, or choose
+**Browse all examples** to see the theme, scene types and length of each
+storyboard. The studio loads the published showcase previews from GitHub as
+they scroll into view. The storyboards, manual edits, and video export work
+offline with the local voice and renderer already set up.
+
+Choose **Change the text first** to edit the title, headlines, or narration,
+then select **Make my version**. With a writer configured, you can also enter a
+new topic and choose **Rewrite for this topic**. The words and scene details
+appear for review with the same types and order before you make the video.
+
 ## Simple and Pro
 
 A clean install opens in **Simple**: five destinations (Create, Library,
