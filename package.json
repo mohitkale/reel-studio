@@ -96,6 +96,7 @@
     "scene:new": "node scripts/scene-new.mjs",
     "scene:preview": "node --import tsx scripts/scene-sheet.mjs --only",
     "voice:download": "node --import tsx scripts/download-voice-model.ts",
+    "voice:gate": "node --import tsx scripts/verify-voice-gate.ts",
     "benchmark:render": "node --import tsx scripts/benchmark-render.ts",
     "quality:baseline": "node scripts/measure-exports.mjs",
     "theme:new": "node scripts/theme-new.mjs",
