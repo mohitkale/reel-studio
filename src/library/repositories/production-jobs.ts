@@ -276,6 +276,7 @@ export async function upsertProductionJobStep(
     progress: number;
     cacheKey?: string;
     leaseOwner?: string;
+    progressUpdate?: boolean;
     detail?: unknown;
     error?: string;
   },
@@ -311,7 +312,9 @@ export async function upsertProductionJobStep(
         cacheKey: input.cacheKey,
         detailJson: input.detail === undefined ? undefined : json(input.detail),
         error: input.error?.slice(0, 2_000) ?? null,
-        ...timestamps,
+        ...(input.progressUpdate && input.state === "running"
+          ? { finishedAt: null }
+          : timestamps),
       },
     });
   });

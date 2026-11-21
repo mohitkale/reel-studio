@@ -66,6 +66,12 @@ storyboard writer for edits and shows them before anything is made, and **Share
 it** copies a caption with hashtags and makes the other two sizes or another
 voice from the same storyboard.
 
+While a video is being made, the result page shows the current step and elapsed
+time. Play the draft preview once the scenes are laid out, then watch the scene
+cards fill in with rendered stills. Reloading reconnects to the saved job. If
+a step fails, **Try this step again** resumes from the failed work and reuses
+finished steps.
+
 **Music**: twenty bundled tracks (all CC0, generated here) with mood tags, energy and an
 exact beat grid. Under More options on Create you can pick one and preview it; the
 default is automatic, which follows the look's music mood. Cut suggestions snap to

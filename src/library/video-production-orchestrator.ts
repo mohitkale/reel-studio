@@ -41,6 +41,7 @@ import { getRender } from "@/library/repositories/renders";
 import { generateTakeFromVideoSnapshot } from "@/library/take-service";
 import { buildAutoCaptionTrack } from "@/library/auto-captions";
 import { contactSheetTimes, renderContactSheet } from "@/library/contact-sheet";
+import { publishScenePreviews } from "@/library/production-scene-previews";
 import {
   addProductionJobOutput,
   upsertProductionJobStep,
@@ -64,6 +65,7 @@ type Dependencies = {
   output: typeof addProductionJobOutput;
   synthesize?: typeof generateTakeFromVideoSnapshot;
   contactSheet?: typeof renderContactSheet;
+  preview?: typeof publishScenePreviews;
 };
 
 /** The caption look of the video's theme, when it has one. */
@@ -181,6 +183,7 @@ const defaults: Dependencies = {
   step: upsertProductionJobStep,
   output: addProductionJobOutput,
   synthesize: generateTakeFromVideoSnapshot,
+  preview: publishScenePreviews,
 };
 
 const timingSchema = z.object({
@@ -524,6 +527,33 @@ export async function executeVideoProductionJob(
       { prepared, quality: input.quality },
       artifactSchema,
       async () => {
+        const previewsFinished = new AbortController();
+        const previews =
+          input.storyboard &&
+          input.productionRevisionId &&
+          dependencies
+            .preview?.({
+              jobId: job.id,
+              props: composition.props,
+              totalFrames: composition.totalFrames,
+              serverBaseUrl: input.serverBaseUrl,
+              signal: AbortSignal.any([
+                context.signal,
+                previewsFinished.signal,
+              ]),
+              publish: (path, sceneId) =>
+                dependencies.output(job.id, {
+                  kind: "scene-preview",
+                  format: "jpg",
+                  path,
+                  metadata: { sceneId },
+                  leaseOwner: job.leaseOwner,
+                }),
+            })
+            .catch((error: unknown) => {
+              if (!context.signal.aborted && !previewsFinished.signal.aborted)
+                console.warn("Could not publish scene previews", error);
+            });
         // Mirror the render's own progress into the step, so the status card
         // can name the scene and estimate the time left while it renders.
         let polling = true;
@@ -536,6 +566,7 @@ export async function executeVideoProductionJob(
                 ? dependencies.step(job.id, "render_export", {
                     state: "running",
                     progress: Math.min(0.99, Math.max(0, render.progress)),
+                    progressUpdate: true,
                     leaseOwner: job.leaseOwner,
                   })
                 : undefined,
@@ -549,9 +580,11 @@ export async function executeVideoProductionJob(
             prepared: composition,
           });
         } finally {
+          previewsFinished.abort();
           polling = false;
           clearInterval(timer);
           await inFlight;
+          await previews;
         }
         const artifact = await dependencies.artifact(input.renderId);
         const verified = await dependencies.verify(

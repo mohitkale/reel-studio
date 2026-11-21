@@ -142,7 +142,13 @@ export function ProductionResult({
   previousJobId?: string;
 }) {
   const query = useProductionJob(jobId);
-  if (query.isLoading) return <p role="status">Loading your video…</p>;
+  if (query.isLoading)
+    return (
+      <p role="status">
+        Opening your saved video job. The local worker keeps running while this
+        page connects.
+      </p>
+    );
   if (query.isError || !query.data?.revision)
     return (
       <div role="alert">

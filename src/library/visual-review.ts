@@ -103,11 +103,17 @@ export async function renderVisualReviewFrames(
   serverBaseUrl: string,
   signal?: AbortSignal,
   onLayout?: (evidence: LayoutEvidence) => void,
+  draftScale?: number,
 ): Promise<string[]> {
   await fs.mkdir(outputDir, { recursive: true });
   const projectDir = await fs.mkdtemp(path.join(tmpdir(), "reel-review-hf-"));
   try {
-    await writeHyperframesReviewProject(projectDir, props, serverBaseUrl);
+    await writeHyperframesReviewProject(
+      projectDir,
+      props,
+      serverBaseUrl,
+      draftScale,
+    );
     const configPath = path.join(projectDir, "review-capture.json");
     const evidencePath = path.join(projectDir, "review-evidence.json");
     if (onLayout)
@@ -163,7 +169,7 @@ export async function renderVisualReviewFrames(
       );
     const images = (await fs.readdir(outputDir))
       .filter((name) => /^frame-\d+-at-.*\.png$/.test(name))
-      .sort();
+      .sort((a, b) => Number(a.split("-")[1]) - Number(b.split("-")[1]));
     if (images.length !== frames.length)
       throw new Error("Review capture did not produce every requested frame.");
     const paths = images.map((name) => path.join(outputDir, name));

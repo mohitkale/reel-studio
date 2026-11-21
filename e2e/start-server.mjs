@@ -10,6 +10,7 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import http from "node:http";
 import os from "node:os";
 import path from "node:path";
+import { pcmToWav } from "../src/lib/wav.ts";
 
 const PORT = process.env.E2E_PORT ?? "3187";
 const WRITER_PORT = Number(process.env.E2E_WRITER_PORT ?? "3199");
@@ -31,6 +32,8 @@ const env = {
   UNSPLASH_ACCESS_KEY: "",
   PEXELS_API_KEY: "",
   PIXABAY_API_KEY: "",
+  VOICEFORGE_SERVICE_URL: `http://127.0.0.1:${WRITER_PORT}`,
+  VOICEFORGE_API_TOKEN: "",
   NEXT_TELEMETRY_DISABLED: "1",
   // CI reuses the build it just made; elsewhere the tests keep to their own folder.
   REEL_NEXT_DIST_DIR: process.env.E2E_REUSE_BUILD ? ".next" : ".next-e2e",
@@ -42,7 +45,20 @@ const migrate = spawnSync(process.execPath, ["scripts/migrate-database.mjs"], {
 });
 if (migrate.status !== 0) process.exit(migrate.status ?? 1);
 
-/** The two endpoints the studio uses from an Ollama server. */
+// A deterministic local tone stands in for each voiced scene in the retry journey.
+const voiceRate = 24_000;
+const voiceSamples = voiceRate * 9;
+const voicePcm = Buffer.alloc(voiceSamples * 2);
+for (let i = 0; i < voiceSamples; i++) {
+  voicePcm.writeInt16LE(
+    Math.round(1500 * Math.sin((i * 2 * Math.PI * 180) / voiceRate)),
+    i * 2,
+  );
+}
+const voiceWav = pcmToWav(voicePcm, { sampleRate: voiceRate });
+let voiceReady = false;
+
+/** Local fixtures for the Ollama writer and the VoiceForge retry scenario. */
 const writer = http.createServer((req, res) => {
   res.setHeader("content-type", "application/json");
   if (req.url === "/api/tags") {
@@ -54,6 +70,22 @@ const writer = http.createServer((req, res) => {
         JSON.stringify({ message: { role: "assistant", content: reply } }),
       ),
     );
+  } else if (req.method === "POST" && req.url === "/__fixture/voice-ready") {
+    voiceReady = true;
+    res.end("{}");
+  } else if (req.url === "/v1/engines" || req.url === "/v1/voices") {
+    res.end("[]");
+  } else if (req.method === "POST" && req.url === "/v1/synthesize") {
+    req.resume();
+    req.on("end", () => {
+      if (!voiceReady) {
+        res.statusCode = 422;
+        res.end(JSON.stringify({ detail: "Fixture voice is unavailable" }));
+        return;
+      }
+      res.setHeader("content-type", "audio/wav");
+      res.end(voiceWav);
+    });
   } else {
     res.statusCode = 404;
     res.end("{}");

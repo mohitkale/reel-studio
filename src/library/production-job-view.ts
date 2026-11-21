@@ -90,6 +90,23 @@ export function productionJobView(
     snapshot?.quality === "high"
       ? snapshot.quality
       : undefined;
+  const scenePreviews = job.outputs.flatMap((output) => {
+    if (output.kind !== "scene-preview") return [];
+    const metadata = parse(output.metadataJson);
+    if (
+      !metadata ||
+      typeof metadata !== "object" ||
+      !("sceneId" in metadata) ||
+      typeof metadata.sceneId !== "string"
+    )
+      return [];
+    return [
+      {
+        sceneId: metadata.sceneId,
+        downloadUrl: getAssetStore().url(assetKey(output.path)),
+      },
+    ];
+  });
   return {
     id: job.id,
     kind: job.kind,
@@ -130,15 +147,18 @@ export function productionJobView(
       startedAt: step.startedAt?.toISOString() ?? null,
       finishedAt: step.finishedAt?.toISOString() ?? null,
     })),
-    outputs: job.outputs.map((output) => ({
-      id: output.id,
-      kind: output.kind,
-      format: output.format,
-      checksum: output.checksum,
-      metadata: parse(output.metadataJson),
-      downloadUrl: getAssetStore().url(assetKey(output.path)),
-      createdAt: output.createdAt.toISOString(),
-    })),
+    ...(scenePreviews.length > 0 ? { scenePreviews } : {}),
+    outputs: job.outputs
+      .filter((output) => output.kind !== "scene-preview")
+      .map((output) => ({
+        id: output.id,
+        kind: output.kind,
+        format: output.format,
+        checksum: output.checksum,
+        metadata: parse(output.metadataJson),
+        downloadUrl: getAssetStore().url(assetKey(output.path)),
+        createdAt: output.createdAt.toISOString(),
+      })),
   };
 }
 
