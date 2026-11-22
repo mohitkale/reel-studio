@@ -1,6 +1,7 @@
 import {
   chapterDirectionSchema,
   chapterDirectionIssue,
+  lessonDirections,
   longFormPolicySchema,
 } from "./long-form";
 import { z } from "zod";
@@ -36,15 +37,23 @@ export type ChapterPlan = z.infer<typeof chapterPlanSchema>;
 export function chapterPlanFromStarts(
   starts: readonly { title: string; firstSceneIndex: number }[],
   sceneIds: readonly string[],
+  targetSeconds?: number,
 ): ChapterPlan {
+  const chapters = starts.map((chapter, index) => ({
+    id: `chapter:${index + 1}`,
+    title: chapter.title,
+    firstSceneId: Number.isInteger(chapter.firstSceneIndex)
+      ? sceneIds[chapter.firstSceneIndex]
+      : undefined,
+  }));
+  const directions =
+    targetSeconds === undefined ? undefined : lessonDirections(chapters);
   const plan = chapterPlanSchema.parse({
     version: "1.0.0",
-    chapters: starts.map((chapter, index) => ({
-      id: `chapter:${index + 1}`,
-      title: chapter.title,
-      firstSceneId: Number.isInteger(chapter.firstSceneIndex)
-        ? sceneIds[chapter.firstSceneIndex]
-        : undefined,
+    ...(directions ? { longForm: { version: "1.0.0", targetSeconds } } : {}),
+    chapters: chapters.map((chapter, index) => ({
+      ...chapter,
+      direction: directions?.[index],
     })),
   });
   const issue = chapterPlanIssue(plan, sceneIds);

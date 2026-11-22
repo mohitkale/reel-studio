@@ -126,6 +126,32 @@ describe("produceFromStoryboard", () => {
     expect(mocks.autoAttachBundledMusic).not.toHaveBeenCalled();
   });
 
+  it("opts a storyboard above five minutes into the bounded long-form chapter plan", async () => {
+    const narration = "Watch the participant and write down their decision. "
+      .repeat(5)
+      .trim();
+    const scenes = Array.from({ length: 24 }, (_, index) => ({
+      type: "hook",
+      headline: `Test step ${index + 1}`,
+      narration,
+    }));
+    const chapters = Array.from({ length: 8 }, (_, index) => ({
+      title: `Chapter ${index + 1}`,
+      startScene: index * 3,
+    }));
+    await produceFromStoryboard(
+      { ...storyboard, format: "16:9", scenes, chapters },
+      base,
+    );
+    const options = mocks.createProjectFromPlan.mock.calls[0]![5];
+    expect(options.chapterTargetSeconds).toBeGreaterThan(300);
+    expect(options.chapterTargetSeconds).toBeLessThanOrEqual(600);
+    expect(options.chapterStarts[1]).toEqual({
+      title: "Chapter 2",
+      firstSceneIndex: 3,
+    });
+  });
+
   it("attaches a named bundled track", async () => {
     await produceFromStoryboard({ ...storyboard, music: "lofi-chill" }, base);
     expect(mocks.updateScript).toHaveBeenCalledWith("s1", {

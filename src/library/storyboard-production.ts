@@ -22,6 +22,7 @@ import {
 import { getAssets } from "@/library/repositories/assets";
 import { getProductionJobByIdempotencyKey } from "@/library/repositories/production-jobs";
 import { chapterPlanFromStarts } from "@/production/chapters";
+import { PRODUCTION_LIMITS } from "@/production/limits";
 import { resolveBrandStings } from "@/library/brand-stings";
 import { getBrandKit } from "@/library/repositories/brandkits";
 import { createProjectFromPlan } from "@/library/repositories/projects";
@@ -368,6 +369,14 @@ export async function produceFromStoryboard(
       return undefined;
     }
   })();
+  const chapterTargetSeconds =
+    chapterStarts &&
+    plan.estimatedSeconds > PRODUCTION_LIMITS.chapterVideoSeconds
+      ? Math.min(
+          PRODUCTION_LIMITS.lessonVideoSeconds,
+          Math.round(plan.estimatedSeconds),
+        )
+      : undefined;
 
   // Text scenes between a person's own pictures borrow one as a backdrop.
   const sharedBackgrounds = shareBackdrops(
@@ -388,7 +397,7 @@ export async function produceFromStoryboard(
     {
       series: storyboard.series,
       ...(brandKitId ? { brandKitId } : {}),
-      ...(chapterStarts ? { chapterStarts } : {}),
+      ...(chapterStarts ? { chapterStarts, chapterTargetSeconds } : {}),
       // No preset: the preset scene renderers show one hero line and drop list
       // items, stat labels and chart data, which a storyboard supplies.
       savedOverrides: {

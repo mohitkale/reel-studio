@@ -675,19 +675,21 @@ export async function runHyperframesRender(
         (inputProps.sequenceDirection &&
           compositionTotalFrames(inputProps) > script.fps * 30),
       ) && [24, 30, 60].includes(script.fps);
-    // Drafts capture a quarter of the pixels at half the frame rate.
+    const draftScale = quality === "draft" ? DRAFT_SCALE : undefined;
+    // Sectioned drafts keep their frame rate for exact section boundaries.
     await writeHyperframesProject(
       projectDir,
       inputProps,
       Boolean(script.chapterPlan?.longForm),
       snapshot?.factory?.packDigest,
-      quality === "draft" && !useSections ? DRAFT_SCALE : undefined,
+      draftScale,
     );
     if (useSections)
       await writeHyperframesVisualSections(
         projectDir,
         inputProps,
         await presenterTrackFor(inputProps, projectDir),
+        draftScale,
       );
 
     const store = getAssetStore();
@@ -703,7 +705,16 @@ export async function runHyperframesRender(
       // the time. The full-quality export keeps the project's own rate.
       fps: useSections ? script.fps : draftFps(script.fps, quality),
       quality,
-      sections: useSections ? nativeDims : undefined,
+      sections: useSections
+        ? {
+            width: Math.round(
+              (inputProps.width ?? nativeDims.width) * (draftScale ?? 1),
+            ),
+            height: Math.round(
+              (inputProps.height ?? nativeDims.height) * (draftScale ?? 1),
+            ),
+          }
+        : undefined,
       onProgress: (pct) => {
         // Keep a little headroom so "100%" only lands after completeRender.
         const capped = Math.min(
