@@ -6,7 +6,9 @@
  * must be running (`npm run dev`).
  *
  *   npm run benchmark:render [-- --only motivation,listicle] [--qualities draft,standard,high] [--base http://localhost:3000]
+ *   npm run benchmark:render -- --one-scene-edit [--base http://localhost:3000]
  */
+import { randomUUID } from "node:crypto";
 import { cpus, platform, release, totalmem } from "node:os";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -23,8 +25,13 @@ const base = (
   process.env.REEL_STUDIO_URL ??
   "http://localhost:3000"
 ).replace(/\/$/, "");
-const only = (value("--only") ?? "motivation").split(",");
-const qualities = (value("--qualities") ?? "draft,standard,high").split(",");
+const oneSceneEdit = args.includes("--one-scene-edit");
+const only = (
+  value("--only") ?? (oneSceneEdit ? "listicle" : "motivation")
+).split(",");
+const qualities = (
+  value("--qualities") ?? (oneSceneEdit ? "standard" : "draft,standard,high")
+).split(",");
 const headers: Record<string, string> = {
   "content-type": "application/json",
   origin: base,
@@ -58,13 +65,71 @@ async function poll(jobId: string): Promise<JobView> {
   }
 }
 
+async function rerenderListicle(scriptId: string, quality: string) {
+  const { script } = (await fetch(`${base}/api/scripts/${scriptId}`, {
+    headers,
+  }).then((response) => response.json())) as {
+    script?: { scenes: Array<{ id: string }> };
+  };
+  if (script?.scenes.length !== 6)
+    throw new Error("The one-scene benchmark requires the six-scene listicle.");
+  const started = performance.now();
+  const edit = await fetch(`${base}/api/scenes/${script.scenes[2].id}`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify({ text: "Select with Shift and an arrow" }),
+  });
+  if (!edit.ok) throw new Error(`Scene edit failed: ${edit.status}`);
+  const post = await fetch(`${base}/api/production-jobs`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      kind: "video",
+      scriptId,
+      orientation: "portrait",
+      quality,
+      idempotencyKey: randomUUID(),
+      quickProduce: {
+        enabled: true,
+        planner: "deterministic",
+        mediaPreference: "none",
+        voice: { enabled: false },
+      },
+      captions: "auto",
+    }),
+  });
+  const queued = (await post.json()) as {
+    job?: { id: string };
+    error?: string;
+  };
+  if (!queued.job)
+    throw new Error(queued.error ?? "Could not queue the scene edit.");
+  const finished = await poll(queued.job.id);
+  if (
+    finished.state !== "succeeded" ||
+    !finished.outputs.some((output) => output.kind === "video")
+  )
+    throw new Error(finished.error ?? "The edited video did not export.");
+  return (performance.now() - started) / 1000;
+}
+
 async function main(): Promise<void> {
+  if (
+    oneSceneEdit &&
+    (only.join(",") !== "listicle" ||
+      qualities.some((quality) => !["standard", "high"].includes(quality)))
+  )
+    throw new Error(
+      "--one-scene-edit requires the listicle example at standard or high quality.",
+    );
+
   const rows: Array<{
     example: string;
     quality: string;
     videoSeconds: number;
     wallSeconds: number;
     ratio: number;
+    editSeconds?: number;
   }> = [];
   for (const name of only) {
     const storyboard = JSON.parse(
@@ -83,7 +148,11 @@ async function main(): Promise<void> {
           body: JSON.stringify(storyboard),
         },
       );
-      const queued = (await post.json()) as { jobId?: string; error?: string };
+      const queued = (await post.json()) as {
+        jobId?: string;
+        scriptId?: string;
+        error?: string;
+      };
       if (!queued.jobId)
         throw new Error(`${name}: ${queued.error ?? post.status}`);
       const job = await poll(queued.jobId);
@@ -96,10 +165,25 @@ async function main(): Promise<void> {
       const wallSeconds = (Date.now() - started) / 1000;
       const videoSeconds = Number(metadata.duration);
       const ratio = wallSeconds / videoSeconds;
-      rows.push({ example: name, quality, videoSeconds, wallSeconds, ratio });
+      const row: (typeof rows)[number] = {
+        example: name,
+        quality,
+        videoSeconds,
+        wallSeconds,
+        ratio,
+      };
+      rows.push(row);
       console.log(
         `${name} ${quality}: ${videoSeconds.toFixed(1)} s video in ${wallSeconds.toFixed(0)} s (${ratio.toFixed(2)}x)`,
       );
+      if (oneSceneEdit) {
+        if (!queued.scriptId)
+          throw new Error("The benchmark project has no script.");
+        row.editSeconds = await rerenderListicle(queued.scriptId, quality);
+        console.log(
+          `${name} ${quality} one-scene edit: ${row.editSeconds.toFixed(2)} s (${((100 * row.editSeconds) / wallSeconds).toFixed(1)}% of the full render)`,
+        );
+      }
     }
   }
 
@@ -111,9 +195,10 @@ async function main(): Promise<void> {
     memoryGb: Math.round(totalmem() / 1024 ** 3),
     node: process.version,
   };
-  await mkdir("docs/quality", { recursive: true });
+  const reportDirectory = oneSceneEdit ? ".artifacts" : "docs/quality";
+  await mkdir(reportDirectory, { recursive: true });
   await writeFile(
-    "docs/quality/render-benchmark.json",
+    path.join(reportDirectory, "render-benchmark.json"),
     JSON.stringify(
       { recordedAt: new Date().toISOString().slice(0, 10), machine, rows },
       null,

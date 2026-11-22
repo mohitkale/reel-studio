@@ -6,6 +6,7 @@ import { expect, it } from "vitest";
 import type { ReelProps } from "@/video/types";
 import { serverDefaultTokens } from "@/lib/brand-defaults";
 import { hashRenderDirectory } from "@/library/render-section-cache";
+import { SHORT_RENDER_SECTION_SECONDS } from "@/production/render-sections";
 import { writeHyperframesVisualSections } from "./hyperframes-visual-sections";
 import { sequenceFixture } from "../../tests/fixtures/sequence-direction";
 
@@ -108,7 +109,9 @@ it("freezes only active native visuals/media and captions, preserving global end
     await fs.rm(`${project}-sections`, { recursive: true });
     await writeHyperframesVisualSections(project, props);
     expect(await hashRenderDirectory(scope(0))).not.toBe(before);
-    await writeHyperframesVisualSections(project, props, undefined, 0.5);
+    await writeHyperframesVisualSections(project, props, undefined, {
+      draftScale: 0.5,
+    });
     const draft = await fs.readFile(path.join(scope(0), "index.html"), "utf8");
     expect(draft).toContain('data-width="540"');
     expect(draft).toContain('data-height="960"');
@@ -120,4 +123,52 @@ it("freezes only active native visuals/media and captions, preserving global end
 it("keeps imported catalog blocks on whole-composition reuse", async () => {
   const props = { scenes: [{ templateId: "hf-kinetic-slam" }] } as ReelProps;
   expect(await writeHyperframesVisualSections("unused", props)).toBe(false);
+});
+
+it("uses the global handoff index and invalidates the outgoing five-second section", async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "reel-short-scopes-"));
+  const project = path.join(root, "project");
+  const visual = (index: number) =>
+    fs.readFile(
+      path.join(`${project}-sections`, "visuals", String(index), "index.html"),
+      "utf8",
+    );
+  const sceneIds = ["opening", "changed", "next", "later"];
+  const props: ReelProps = {
+    fps: 30,
+    tokens: serverDefaultTokens,
+    scenes: sceneIds.map((id, order) => ({
+      id,
+      order,
+      templateId: "hf-statement",
+      text: id,
+      emphasis: [],
+    })),
+    timeline: sceneIds.map((sceneId, index) => ({
+      sceneId,
+      startFrame: index * 30 * SHORT_RENDER_SECTION_SECONDS,
+      durationFrames: 30 * SHORT_RENDER_SECTION_SECONDS,
+    })),
+  };
+  try {
+    await fs.mkdir(path.join(project, "_runtime"), { recursive: true });
+    expect(
+      await writeHyperframesVisualSections(project, props, undefined, {
+        sectionSeconds: SHORT_RENDER_SECTION_SECONDS,
+      }),
+    ).toBe(true);
+    const overlap = await visual(2);
+    expect(overlap).toContain('data-scene-id="changed"');
+    expect(overlap).toContain('data-scene-id="next"');
+    expect(overlap).not.toContain('data-first-scene="1"');
+    const later = await visual(3);
+    props.scenes[1].text = "Edited headline";
+    await writeHyperframesVisualSections(project, props, undefined, {
+      sectionSeconds: SHORT_RENDER_SECTION_SECONDS,
+    });
+    expect(await visual(2)).not.toBe(overlap);
+    expect(await visual(3)).toBe(later);
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
 });

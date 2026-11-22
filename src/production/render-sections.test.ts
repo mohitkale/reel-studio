@@ -1,5 +1,8 @@
 import { expect, it } from "vitest";
-import { planRenderSections } from "./render-sections";
+import {
+  planRenderSections,
+  SHORT_RENDER_SECTION_SECONDS,
+} from "./render-sections";
 it("partitions global frame ranges exactly once, including chapter starts and partial tails", () => {
   const sections = planRenderSections(6001, 30, [750, 3500, 750, -1, 6001]);
   const frames = sections.flatMap((section) =>
@@ -25,4 +28,14 @@ it("partitions global frame ranges exactly once, including chapter starts and pa
     [1.5, 30],
   ])
     expect(() => planRenderSections(frames, fps)).toThrow();
+});
+
+it("cuts short renders into five-second ranges with an exact final frame", () => {
+  expect(planRenderSections(313, 30, [], SHORT_RENDER_SECTION_SECONDS)).toEqual(
+    [
+      { index: 0, startFrame: 0, endFrame: 149 },
+      { index: 1, startFrame: 150, endFrame: 299 },
+      { index: 2, startFrame: 300, endFrame: 312 },
+    ],
+  );
 });

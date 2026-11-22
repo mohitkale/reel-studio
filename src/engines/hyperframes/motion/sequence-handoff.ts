@@ -8,10 +8,13 @@ export function buildSequenceHandoffs(
   fps: number,
   width: number,
   height: number,
+  include?: (startFrame: number, endFrame: number) => boolean,
 ) {
   return (plan?.boundaries ?? [])
     .filter((b) => b.kind === "shared-card")
     .map((b, index) => {
+      if (include && !include(b.startFrame, b.startFrame + b.durationFrames))
+        return "";
       const from = b.from!,
         to = b.to!,
         subject = plan!.subjects.find((s) => s.id === b.subjectId)!;

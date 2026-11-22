@@ -50,7 +50,10 @@ to current templates; saved historical provenance and existing MP4s remain intac
   reset after a minute of healthy uptime) and stops both processes if the web
   process fails.
 - Chapter exports render in 30-second sections at 24/30/60 FPS and reuse verified
-  cached frames when inputs are unchanged. Inactive render caches expire after
+  cached frames when inputs are unchanged. Eligible short standard and high
+  exports use five-second sections that retain global timing and include any
+  dependent scene transitions. A failed selective render retries as a full
+  export. Inactive render caches expire after
   seven days and trim toward 1 GiB. Final audio is mixed once and muxed once.
 - MCP tokens: legacy tokens keep human approval for video renders; named scoped
   tokens may allow bounded automation (see [MCP](MCP.md)).
@@ -59,6 +62,8 @@ to current templates; saved historical provenance and existing MP4s remain intac
 
 `npm run benchmark:render` renders silent golden storyboards at draft, standard and high
 quality through the real pipeline and writes `docs/quality/render-benchmark.json`.
+Use `npm run benchmark:render -- --one-scene-edit` for the six-scene portrait edit benchmark.
+It records the full render and one-headline edit times in `.artifacts/render-benchmark.json`.
 Measured on an Intel i7-9750H laptop (12 cores, 16 GB, Node 24), a 22.5 s 9:16 video
 (`motivation`), development server on the same machine:
 
@@ -82,9 +87,10 @@ and the contact sheet:
 So a 45 s draft takes about 60 s on this machine; the fixed overhead is about 10 s. Frame capture
 (the headless browser screenshotting each frame) is still most of the time. Standard and high
 quality are unchanged and still capture full-size frames. Other capture modes (drawElement,
-forcing screenshots off) made no difference here. Per-scene section renders are cached (see
-`src/library/render-section-cache.int.test.ts`); that cache only applies to long, sectioned
-videos, and the one-scene-edit speedup is not yet measured.
+forcing screenshots off) made no difference here. Short native compositions up to 100 seconds
+can reuse verified five-second sections. Each section includes the scenes and handoffs needed
+for its frames. Drafts, imported HyperFrames blocks, and exports with 30-second section plans
+keep their existing render paths.
 
 ## Bounds and safety
 
