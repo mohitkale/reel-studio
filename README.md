@@ -108,6 +108,9 @@ Eight core tools by default; the rest are opt-in. See [MCP](docs/MCP.md). No age
 
 The running studio with a video made from the bundled demo storyboard.
 
+Long storyboards with chapter markers can run up to ten minutes. Completed render
+sections are reused when the job is retried. See [Storyboard](docs/STORYBOARD.md).
+
 |                                                                                                            |                                                                                                         |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | ![Create: one box, a format, a length and a look](docs/assets/screens/home.jpg)                            | ![Result: watch, share and download the MP4](docs/assets/screens/result.jpg)                            |

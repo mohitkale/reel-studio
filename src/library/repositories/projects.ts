@@ -211,6 +211,7 @@ export async function createProjectFromPlan(
     preset?: { id: ProductionPresetId; version: string };
     roles?: ProductionSceneRole[];
     chapterStarts?: Array<{ title: string; firstSceneIndex: number }>;
+    chapterTargetSeconds?: number;
     assetRefs?: string[][];
     mediaPreferences?: MediaPreference[];
     stockSelections?: Array<ResolvedStockAsset | undefined>;
@@ -239,7 +240,11 @@ export async function createProjectFromPlan(
     ? plan.scenes.map(() => randomUUID())
     : [];
   const chapterPlan = production?.chapterStarts
-    ? chapterPlanFromStarts(production.chapterStarts, sceneIds)
+    ? chapterPlanFromStarts(
+        production.chapterStarts,
+        sceneIds,
+        production.chapterTargetSeconds,
+      )
     : undefined;
   const defaultKit = await getDefaultBrandKit();
   // Automatic themes replace only the untouched starter palette. A selected

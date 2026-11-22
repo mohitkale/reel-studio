@@ -137,11 +137,16 @@ describe("project motion persistence", () => {
           { title: "Question", firstSceneIndex: 0 },
           { title: "Explanation", firstSceneIndex: 12 },
         ],
+        chapterTargetSeconds: 480,
       },
     );
     const script = create.mock.calls[0][0].data.scripts.create;
     const ids = script.scenes.create.map((scene: { id: string }) => scene.id);
     expect(new Set(ids).size).toBe(24);
+    expect(JSON.parse(script.brandOverrides).chapterPlan.longForm).toEqual({
+      version: "1.0.0",
+      targetSeconds: 480,
+    });
     expect(
       JSON.parse(script.brandOverrides).chapterPlan.chapters.map(
         (chapter: { firstSceneId: string }) => chapter.firstSceneId,

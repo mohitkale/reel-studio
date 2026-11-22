@@ -25,6 +25,7 @@ export async function writeHyperframesVisualSections(
   props: ReelProps,
   /** The presenter's mouth and blinks, when the video has one (global times). */
   presenterTrack?: PresenterTrackInput,
+  draftScale?: number,
 ) {
   const root = path.join(`${projectDir}-sections`, "visuals");
   if (
@@ -65,6 +66,7 @@ export async function writeHyperframesVisualSections(
       runtimeUrl: "/_runtime/gsap.min.js",
       totalFrames,
       presenterTrack,
+      draftScale,
     });
     if (html.includes("data-composition-src="))
       throw new Error("Imported compositions cannot use scoped visual reuse.");

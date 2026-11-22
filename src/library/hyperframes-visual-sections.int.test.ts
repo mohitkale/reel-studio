@@ -108,6 +108,11 @@ it("freezes only active native visuals/media and captions, preserving global end
     await fs.rm(`${project}-sections`, { recursive: true });
     await writeHyperframesVisualSections(project, props);
     expect(await hashRenderDirectory(scope(0))).not.toBe(before);
+    await writeHyperframesVisualSections(project, props, undefined, 0.5);
+    const draft = await fs.readFile(path.join(scope(0), "index.html"), "utf8");
+    expect(draft).toContain('data-width="540"');
+    expect(draft).toContain('data-height="960"');
+    expect(draft).toContain('data-duration="32.000"');
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }
