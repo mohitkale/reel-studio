@@ -72,6 +72,9 @@ describe("themes", () => {
         "creator-punch",
       ).id,
     ).toBe("sunset");
+    expect(
+      autoTheme("Forest hiking and a garden trail", "creator-punch").id,
+    ).toBe("forest");
   });
 
   it("puts the palette on tokens, and keeps a brand kit's colours", () => {
