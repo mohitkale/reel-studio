@@ -66,6 +66,12 @@ describe("themes", () => {
     expect(autoTheme("nothing in particular", "data-story").id).toBe(
       "corporate-blue",
     );
+    expect(
+      autoTheme(
+        "Coastal travel photography on a summer evening",
+        "creator-punch",
+      ).id,
+    ).toBe("sunset");
   });
 
   it("puts the palette on tokens, and keeps a brand kit's colours", () => {

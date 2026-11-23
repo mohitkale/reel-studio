@@ -1,7 +1,7 @@
 /**
  * Contact sheet of one storyboard in every theme (roadmap V5).
  *
- *   node scripts/theme-sheet.mjs [--only product-launch] [--out .artifacts/themes]
+ *   node scripts/theme-sheet.mjs [--only product-launch] [--theme sunset] [--out .artifacts/themes]
  *
  * Runs the frame check once per theme, then lays the first four scenes of each
  * theme side by side (one row per theme) with ffmpeg.
@@ -9,24 +9,22 @@
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { tsImport } from "tsx/esm/api";
 
 const args = process.argv.slice(2);
 const value = (flag, fallback) =>
   args.includes(flag) ? args[args.indexOf(flag) + 1] : fallback;
 const only = value("--only", "product-launch");
 const out = path.resolve(value("--out", ".artifacts/themes"));
-const themes = [
-  "bold-pop",
-  "clean-minimal",
-  "midnight-tech",
-  "editorial-paper",
-  "neon",
-  "warm-documentary",
-  "corporate-blue",
-  "playful-pastel",
-  "mono-brutalist",
-  "cinematic",
-];
+const { THEMES } = await tsImport(
+  "../src/video/themes/index.ts",
+  import.meta.url,
+);
+const chosen = value("--theme", null);
+const themes = THEMES.map(({ id }) => id).filter(
+  (id) => !chosen || id === chosen,
+);
+if (!themes.length) throw new Error(`Unknown theme: ${chosen}`);
 const COLUMNS = 4;
 mkdirSync(out, { recursive: true });
 const failures = {};
@@ -83,8 +81,12 @@ execFileSync("ffmpeg", [
   "-loglevel",
   "error",
   ...rows.flatMap((r) => ["-i", r]),
-  "-filter_complex",
-  `${rows.map((_, i) => `[${i}:v]`).join("")}vstack=inputs=${rows.length}`,
+  ...(rows.length > 1
+    ? [
+        "-filter_complex",
+        `${rows.map((_, i) => `[${i}:v]`).join("")}vstack=inputs=${rows.length}`,
+      ]
+    : []),
   "-frames:v",
   "1",
   "-q:v",

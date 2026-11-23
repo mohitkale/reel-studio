@@ -127,7 +127,8 @@ Regenerate these four screenshots with `npm run demo:assets -- --only screens`.
 
 ## Themes and scene types
 
-Ten themes and a growing set of scene types, all checked frame by frame:
+The themes include Sunset, a warm look for travel and photography. Explore the
+frame-checked examples and learn how to add your own.
 [themes](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/sheet-themes.jpg) ·
 [scene types](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/sheet-scene-types-portrait.jpg) ·
 [how to add one](docs/CONTRIBUTING_SCENES.md).

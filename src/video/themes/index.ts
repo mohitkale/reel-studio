@@ -13,6 +13,7 @@ import { monoBrutalist } from "./mono-brutalist";
 import { neon } from "./neon";
 import { playfulPastel } from "./playful-pastel";
 import { warmDocumentary } from "./warm-documentary";
+import { sunset } from "./sunset";
 import type { Theme } from "./types";
 
 export type { Theme } from "./types";
@@ -28,6 +29,7 @@ export const THEMES: readonly Theme[] = [
   playfulPastel,
   monoBrutalist,
   cinematic,
+  sunset,
 ];
 
 export const THEME_IDS = THEMES.map((theme) => theme.id);

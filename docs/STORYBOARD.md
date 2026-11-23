@@ -22,7 +22,7 @@ are enforced by validation rather than by prompt text.
 | `kind`         | no       | `"video"` (default) or `"podcast"`.                                                                                                                                                                                                                                                                                                             |
 | `title`        | yes      | Up to 80 characters.                                                                                                                                                                                                                                                                                                                            |
 | `format`       | no       | `"9:16"` (default), `"16:9"` or `"1:1"`.                                                                                                                                                                                                                                                                                                        |
-| `theme`        | no       | One of the ten themes below, or `"auto"`. Omit to let Reel Studio pick one.                                                                                                                                                                                                                                                                     |
+| `theme`        | no       | One of the themes below, or `"auto"`. Omit to let Reel Studio pick one.                                                                                                                                                                                                                                                                         |
 | `voice`        | no       | `{ enabled, voiceId?, speed?, style? }`. Default: narrated with the default voice. `style` is `calm`, `energetic`, `storyteller` or `news`.                                                                                                                                                                                                     |
 | `language`     | no       | `en-US` (default), `en-GB`, `es`, `fr`, `hi`, `it`, `ja`, `pt-BR` or `zh`. A voice that speaks another language is swapped for the language's own.                                                                                                                                                                                              |
 | `music`        | no       | `"auto"` (default), `"none"` or a track id.                                                                                                                                                                                                                                                                                                     |
@@ -96,12 +96,14 @@ failing. New types are added without changing the version.
 ### Themes
 
 `bold-pop`, `clean-minimal`, `midnight-tech`, `editorial-paper`, `neon`,
-`warm-documentary`, `corporate-blue`, `playful-pastel`, `mono-brutalist` and
-`cinematic`. A theme sets palette, a bundled font pair, type treatment, corner and
-stroke, background treatment, motion personality, caption style and music mood,
-and works with every scene type. With `theme` omitted or `"auto"` the studio picks
-one from the storyboard's words (at least two keyword matches), otherwise from the
-production look. A brand kit overrides the palette and fonts and keeps the rest.
+`warm-documentary`, `corporate-blue`, `playful-pastel`, `mono-brutalist`, `cinematic`
+and `sunset`. See the [Sunset preview](assets/themes/sunset.jpg) and
+[frames from a Sunset export](assets/themes/sunset-export.jpg). A theme sets the palette,
+a bundled font pair, type treatment, corner and stroke, background treatment, motion
+personality, caption style and music mood, and works with every scene type.
+With `theme` omitted or `"auto"` the studio picks one from the storyboard's words
+(at least two keyword matches), or uses the production look. An explicitly selected
+or customized brand kit supplies its own palette and fonts.
 
 Nothing in a storyboard refers to internal ids: no template, recipe, capability or
 catalog block names. Unknown fields are rejected.
