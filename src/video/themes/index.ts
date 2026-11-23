@@ -16,6 +16,7 @@ import { warmDocumentary } from "./warm-documentary";
 import { sunset } from "./sunset";
 import { forest } from "./forest";
 import { highContrast } from "./high-contrast";
+import { retroTerminal } from "./retro-terminal";
 import type { Theme } from "./types";
 
 export type { Theme } from "./types";
@@ -34,6 +35,7 @@ export const THEMES: readonly Theme[] = [
   sunset,
   forest,
   highContrast,
+  retroTerminal,
 ];
 
 export const THEME_IDS = THEMES.map((theme) => theme.id);

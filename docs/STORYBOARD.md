@@ -97,10 +97,12 @@ failing. New types are added without changing the version.
 
 `bold-pop`, `clean-minimal`, `midnight-tech`, `editorial-paper`, `neon`,
 `warm-documentary`, `corporate-blue`, `playful-pastel`, `mono-brutalist`, `cinematic`
-along with `sunset`, `forest` and `high-contrast`. See the [Sunset preview](assets/themes/sunset.jpg),
+along with `sunset`, `forest`, `high-contrast` and `retro-terminal`. See the [Sunset preview](assets/themes/sunset.jpg),
 [Sunset export](assets/themes/sunset-export.jpg), [Forest preview](assets/themes/forest.jpg)
 and [Forest export](assets/themes/forest-export.jpg). The [High Contrast preview](assets/themes/high-contrast.jpg)
 and [export](assets/themes/high-contrast-export.jpg) use a black, white and yellow palette.
+See the [Retro Terminal preview](assets/themes/retro-terminal.jpg) and
+[export](assets/themes/retro-terminal-export.jpg) for amber type on a dark grid.
 A theme sets the palette,
 a bundled font pair, type treatment, corner and stroke, background treatment, motion
 personality, caption style and music mood, and works with every scene type.

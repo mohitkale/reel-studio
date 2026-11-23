@@ -100,6 +100,9 @@ describe("themes", () => {
     expect(
       autoTheme("High contrast tips for accessibility", "creator-punch").id,
     ).toBe("high-contrast");
+    expect(
+      autoTheme("A retro hacker console from the 80s", "developer-demo").id,
+    ).toBe("retro-terminal");
   });
 
   it("puts the palette on tokens, and keeps a brand kit's colours", () => {
