@@ -5,6 +5,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  rename,
   symlink,
   writeFile,
 } from "node:fs/promises";
@@ -195,6 +196,7 @@ await writeFile(
       files: [
         dist,
         "server.js",
+        "npm-shrinkwrap.json",
         "voice-pack-manifest.json",
         "bin",
         "docs/prompts",
@@ -220,6 +222,20 @@ const npm = (args) =>
     cwd: staged,
     encoding: "utf8",
   });
+// Reuse the checkout's dependency versions and ship a production-only lock so
+// a cold install can fetch tarballs without resolving hundreds of manifests.
+const packageLock = path.join(staged, "package-lock.json");
+await writeFile(packageLock, JSON.stringify(lock));
+npm([
+  "install",
+  "--package-lock-only",
+  "--omit=dev",
+  "--ignore-scripts",
+  "--no-audit",
+  "--no-fund",
+]);
+await rename(packageLock, path.join(staged, "npm-shrinkwrap.json"));
+
 const [report] = JSON.parse(
   npm(["pack", "--dry-run", "--ignore-scripts", "--json"]),
 );
@@ -237,6 +253,7 @@ if (
     "src/cli/main.mjs",
     "mcp/src/index.mjs",
     "scripts/production-worker.mjs",
+    "npm-shrinkwrap.json",
     "voice-pack-manifest.json",
   ].every((file) => report.files.some((entry) => entry.path === file))
 )
