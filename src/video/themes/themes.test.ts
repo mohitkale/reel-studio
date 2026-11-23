@@ -57,6 +57,28 @@ describe("themes", () => {
       expect(getTheme(id)).toBeDefined();
   });
 
+  it("keeps all High Contrast palette text at 7:1 or higher", () => {
+    const { palette } = getTheme("high-contrast")!;
+    const surfaceColors = [
+      palette.background,
+      palette.backgroundAccent,
+      mix(palette.background, palette.foreground, 0.09),
+    ];
+    const textColors = [
+      palette.foreground,
+      palette.muted,
+      palette.accent,
+      palette.accentSecondary,
+    ];
+    for (const surface of surfaceColors) {
+      for (const color of textColors)
+        expect(ratio(color, surface)).toBeGreaterThanOrEqual(7);
+    }
+    expect(
+      ratio(palette.accentForeground, palette.accent),
+    ).toBeGreaterThanOrEqual(7);
+  });
+
   it("chooses automatically and deterministically from the words", () => {
     const text = "Learn to code: a developer guide to the API and the terminal";
     expect(autoTheme(text, "creator-punch").id).toBe("midnight-tech");
@@ -75,6 +97,9 @@ describe("themes", () => {
     expect(
       autoTheme("Forest hiking and a garden trail", "creator-punch").id,
     ).toBe("forest");
+    expect(
+      autoTheme("High contrast tips for accessibility", "creator-punch").id,
+    ).toBe("high-contrast");
   });
 
   it("puts the palette on tokens, and keeps a brand kit's colours", () => {
