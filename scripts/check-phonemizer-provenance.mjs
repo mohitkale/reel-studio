@@ -5,7 +5,10 @@ import { createReadStream, promises as fs } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-export async function checkPhonemizerProvenance({ distribution = false } = {}) {
+export async function checkPhonemizerProvenance({
+  distribution = false,
+  archive = ".artifacts/reel-phonemizer-corresponding-source.tar.gz",
+} = {}) {
   const root = process.cwd(),
     manifest = JSON.parse(
       await fs.readFile("vendor/phonemizer/provenance.json", "utf8"),
@@ -61,11 +64,10 @@ export async function checkPhonemizerProvenance({ distribution = false } = {}) {
   assert.equal(pkg.version, "1.2.1-reel.1");
   assert.equal(pkg.license, "GPL-3.0-or-later");
   if (distribution) {
-    const entries = execFileSync(
-      "tar",
-      ["-tzf", ".artifacts/reel-phonemizer-corresponding-source.tar.gz"],
-      { encoding: "utf8", maxBuffer: 8 * 1024 * 1024 },
-    ).split("\n");
+    const entries = execFileSync("tar", ["-tzf", archive], {
+      encoding: "utf8",
+      maxBuffer: 8 * 1024 * 1024,
+    }).split("\n");
     assert.ok(
       entries.every(
         (entry) => !entry.startsWith("/") && !entry.split("/").includes(".."),
@@ -89,15 +91,9 @@ export async function checkPhonemizerProvenance({ distribution = false } = {}) {
         (value) => value.replace(/^\.\//, "") === name,
       );
       assert.ok(entry, `Missing archived input ${name}`);
-      return execFileSync(
-        "tar",
-        [
-          "-xOf",
-          ".artifacts/reel-phonemizer-corresponding-source.tar.gz",
-          entry,
-        ],
-        { maxBuffer: 8 * 1024 * 1024 },
-      );
+      return execFileSync("tar", ["-xOf", archive, entry], {
+        maxBuffer: 8 * 1024 * 1024,
+      });
     };
     assert.deepEqual(
       JSON.parse(

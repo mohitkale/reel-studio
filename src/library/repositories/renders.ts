@@ -1,3 +1,4 @@
+import { mediaDirectory } from "@/library/storage/media-directory";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 
@@ -142,7 +143,7 @@ export async function deleteRender(id: string): Promise<void> {
   const row = await prisma.render.findUnique({ where: { id } });
   if (!row) return;
   if (row.outputPath) {
-    const filePath = path.join(process.cwd(), "media", row.outputPath);
+    const filePath = path.join(mediaDirectory(), row.outputPath);
     await Promise.allSettled([
       fs.unlink(filePath),
       fs.unlink(renderPosterKey(filePath)),

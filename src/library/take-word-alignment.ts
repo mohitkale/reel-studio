@@ -6,6 +6,7 @@
  * installed, listening to the take gives each word its own time. Without it,
  * or when a scene's words cannot be matched, the caller keeps its estimate.
  */
+import { mediaDirectory } from "@/library/storage/media-directory";
 import { execFile } from "node:child_process";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -120,7 +121,7 @@ export async function alignTakeWords(
 ): Promise<Map<string, TimedWord[]>> {
   const result = new Map<string, TimedWord[]>();
   if (!take.audioUrl.startsWith("/media/")) return result;
-  const audioPath = path.join(process.cwd(), "media", take.audioUrl.slice(7));
+  const audioPath = path.join(mediaDirectory(), take.audioUrl.slice(7));
   const wav = await readFile(audioPath);
   const heard = await hearWav(audioPath);
   if (!heard?.length) return result;

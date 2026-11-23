@@ -44,8 +44,69 @@ jobs:
         run: npx vitest run --project render
       - name: Copy fit (30 headlines in three formats, real browser)
         run: npm run test:copy-fit
+  npm-candidate:
+    needs: [phonemizer]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ONNXRUNTIME_NODE_INSTALL_CUDA: skip
+      PUPPETEER_SKIP_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: source-built-phonemizer
+          path: phonemizer-source
+      - run: npm ci
+      - run: npm run voice:download
+      - name: Build the standalone package and separate voice pack
+        run: |
+          source=$(find phonemizer-source -name reel-phonemizer-corresponding-source.tar.gz -print -quit)
+          test -n "$source"
+          npm run package:npm -- --voice-source "$source"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: reel-studio-npm-candidate
+          path: |
+            .artifacts/npm-package/candidate-*/mohitkale-reel-studio-*.tgz
+            .artifacts/npm-package/candidate-*/reel-kokoro-voice-pack.json.gz
+            .artifacts/npm-package/candidate-*/pack-report.json
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 7
+  npm-smoke:
+    needs: [npm-candidate]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: reel-studio-npm-candidate
+          path: npm-candidate
+      - name: Start with only Node from a clean directory
+        shell: bash
+        run: |
+          archive=$(find npm-candidate -name 'mohitkale-reel-studio-*.tgz' -print -quit)
+          test -n "$archive"
+          npm run package:smoke -- "$archive"
   publish:
-    needs: [gate, phonemizer, render-smoke]
+    needs: [gate, phonemizer, render-smoke, npm-smoke]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -78,6 +139,10 @@ jobs:
         with:
           name: source-built-phonemizer
           path: phonemizer
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: reel-studio-npm-candidate
+          path: npm-candidate
       - name: Create the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -88,10 +153,35 @@ jobs:
             exit 1
           fi
           cp "$archive" reel-phonemizer-corresponding-source.tar.gz
-          sha256sum reel-phonemizer-corresponding-source.tar.gz > SHA256SUMS
+          voice_pack=$(find npm-candidate -name reel-kokoro-voice-pack.json.gz -print -quit)
+          test -n "$voice_pack"
+          cp "$voice_pack" reel-kokoro-voice-pack.json.gz
+          sha256sum reel-phonemizer-corresponding-source.tar.gz reel-kokoro-voice-pack.json.gz > SHA256SUMS
           gh release create "$GITHUB_REF_NAME" \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag \
             --title "Reel Studio $GITHUB_REF_NAME" \
             --notes-file notes.md \
-            reel-phonemizer-corresponding-source.tar.gz SHA256SUMS
+            reel-phonemizer-corresponding-source.tar.gz reel-kokoro-voice-pack.json.gz SHA256SUMS
+  publish-npm:
+    if: startsWith(github.ref, 'refs/tags/v') && vars.REEL_STUDIO_PUBLISH_NPM == 'true'
+    needs: [publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: reel-studio-npm-candidate
+          path: npm-candidate
+      - name: Publish the verified archive with npm provenance
+        run: |
+          archive=$(find npm-candidate -name 'mohitkale-reel-studio-*.tgz' -print -quit)
+          test -n "$archive"
+          npm publish "$archive" --access public --provenance

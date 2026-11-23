@@ -1,3 +1,4 @@
+import { mediaDirectory } from "@/library/storage/media-directory";
 import { execFile } from "node:child_process";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -41,9 +42,7 @@ async function stingFor(
   if (!assetId) return undefined;
   const asset = await prisma.asset.findUnique({ where: { id: assetId } });
   if (!asset || asset.type !== "audio") return undefined;
-  const seconds = await probeSeconds(
-    path.join(process.cwd(), "media", asset.path),
-  );
+  const seconds = await probeSeconds(path.join(mediaDirectory(), asset.path));
   // A sting is a moment, not a track: anything over thirty seconds is not one.
   if (!seconds || seconds > 30) return undefined;
   return {

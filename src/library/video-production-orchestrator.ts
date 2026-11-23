@@ -1,3 +1,4 @@
+import { mediaDirectory } from "@/library/storage/media-directory";
 import { CAPTION_STYLE_PRESETS } from "@/lib/caption-style";
 import { getTheme } from "@/video/themes";
 import { parseWav } from "@/lib/wav";
@@ -181,7 +182,7 @@ const defaults: Dependencies = {
     if (!render.outputPath)
       throw new Error(`Render ${renderId} has no output path`);
     return {
-      path: path.join(process.cwd(), "media", render.outputPath),
+      path: path.join(mediaDirectory(), render.outputPath),
       expectsAudio: Boolean(render.voiceTakeId),
     };
   },
@@ -249,7 +250,7 @@ export async function executeVideoProductionJob(
     const input = parsed.data;
     const takePath = (audioUrl: string) =>
       audioUrl.startsWith("/media/")
-        ? path.join(process.cwd(), "media", audioUrl.slice(7))
+        ? path.join(mediaDirectory(), audioUrl.slice(7))
         : null;
     const takeChecksum = async (audioUrl: string) => {
       const filePath = takePath(audioUrl);
@@ -347,7 +348,7 @@ export async function executeVideoProductionJob(
           if (asset.checksum) {
             try {
               const checksum = await hashRenderFile(
-                path.join(process.cwd(), "media", asset.resolvedUrl.slice(7)),
+                path.join(mediaDirectory(), asset.resolvedUrl.slice(7)),
               );
               if (checksum !== asset.checksum) return false;
             } catch {
@@ -423,7 +424,7 @@ export async function executeVideoProductionJob(
         if (take.audioUrl.startsWith("/media/")) {
           const wav = parseWav(
             await fs.readFile(
-              path.join(process.cwd(), "media", take.audioUrl.slice(7)),
+              path.join(mediaDirectory(), take.audioUrl.slice(7)),
             ),
           );
           durationSeconds = wav.durationSeconds;
@@ -684,10 +685,7 @@ export async function executeVideoProductionJob(
               storyboard: input.storyboard,
               captions: autoCaptions ? "auto" : (input.captions ?? null),
               contactSheet: contactSheetPath
-                ? path.relative(
-                    path.join(process.cwd(), "media"),
-                    contactSheetPath,
-                  )
+                ? path.relative(mediaDirectory(), contactSheetPath)
                 : null,
             }
           : {}),

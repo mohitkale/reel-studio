@@ -1,7 +1,6 @@
-import path from "node:path";
-
 import { type AssetStore } from "./types";
 import { LocalDiskStore } from "./local-disk";
+import { mediaDirectory } from "./media-directory";
 
 export type { AssetStore, StoredAsset } from "./types";
 
@@ -13,7 +12,7 @@ let store: AssetStore | undefined;
  */
 export function getAssetStore(): AssetStore {
   if (!store) {
-    store = new LocalDiskStore(path.join(process.cwd(), "media"));
+    store = new LocalDiskStore(mediaDirectory());
   }
   return store;
 }

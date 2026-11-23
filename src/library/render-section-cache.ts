@@ -1,3 +1,4 @@
+import { mediaDirectory } from "@/library/storage/media-directory";
 import path from "node:path";
 import { promises as fs, createReadStream } from "node:fs";
 import { createHash, randomUUID } from "node:crypto";
@@ -160,7 +161,7 @@ export async function renderCachedSection(args: {
   renderSectionSchema.parse(args.section);
   assertProductionActive();
   const directory = path.join(
-    args.root ?? path.join(process.cwd(), "media", "render-cache"),
+    args.root ?? path.join(mediaDirectory(), "render-cache"),
     args.key,
   );
   await fs.mkdir(directory, { recursive: true });

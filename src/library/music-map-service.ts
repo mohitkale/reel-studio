@@ -8,6 +8,7 @@ import { promisify } from "node:util";
 import { prisma } from "@/library/db";
 import { brandOverridesSchema, parseJsonColumn } from "@/library/schemas";
 import { sanitizeKey } from "@/library/storage/local-disk";
+import { mediaDirectory } from "@/library/storage/media-directory";
 import { assertPathInsideRoot } from "@/server/url-safety";
 import { ProviderError } from "@/providers/voice/types";
 import {
@@ -29,7 +30,7 @@ async function sourceAudio(url: string, baseUrl: string) {
       400,
     );
   const media = parsed.pathname.startsWith("/media/");
-  const root = path.resolve(media ? "media" : "public/music");
+  const root = media ? mediaDirectory() : path.resolve("public/music");
   const key = sanitizeKey(decodeURIComponent(parsed.pathname.slice(7)));
   const file = await fs.realpath(
     assertPathInsideRoot(root, path.join(root, key)),

@@ -20,6 +20,11 @@ import { pipeline } from "node:stream/promises";
 import { Readable } from "node:stream";
 
 import { KOKORO_MODEL_ID } from "@/providers/voice/kokoro";
+import {
+  ensureInstalledVoicePack,
+  installedVoicePackDirectory,
+  isInstalledVoicePack,
+} from "@/library/installed-voice-pack";
 
 /** Files the quantized model needs (the voices ship inside `kokoro-js`). */
 export const KOKORO_MODEL_FILES = [
@@ -49,6 +54,12 @@ export interface DownloadProgress {
 
 /** Where the Kokoro runtime caches the model. */
 export async function voiceModelCacheDir(): Promise<string> {
+  if (isInstalledVoicePack())
+    return path.join(
+      await installedVoicePackDirectory(),
+      "models",
+      KOKORO_MODEL_ID,
+    );
   const { env } = await import("@huggingface/transformers");
   return path.join(String(env.cacheDir), KOKORO_MODEL_ID);
 }
@@ -117,6 +128,25 @@ export async function downloadVoiceModel(
     onProgress?: (progress: DownloadProgress) => void;
   } = {},
 ): Promise<VoiceModelStatus> {
+  if (
+    isInstalledVoicePack() &&
+    !options.cacheDir &&
+    !options.host &&
+    !options.fetchImpl
+  ) {
+    await ensureInstalledVoicePack({
+      signal: options.signal,
+      onProgress: (bytesDone, bytesTotal) =>
+        options.onProgress?.({
+          file: "reel-kokoro-voice-pack.json.gz",
+          fileIndex: 0,
+          fileCount: 1,
+          bytesDone,
+          bytesTotal,
+        }),
+    });
+    return getVoiceModelStatus();
+  }
   const host = options.host ?? MODEL_HOST;
   const fetchImpl = options.fetchImpl ?? fetch;
   const cacheDir = options.cacheDir ?? (await voiceModelCacheDir());

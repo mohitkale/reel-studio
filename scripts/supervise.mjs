@@ -11,6 +11,8 @@ import {
 } from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
+import { isInstalledStudio } from "./installed-environment.mjs";
+import { main as migrateDatabase } from "./migrate-database.mjs";
 
 /**
  * A FFmpeg that `doctor --fix` installed into the data directory is put in front
@@ -137,6 +139,7 @@ if (
   process.env.NODE_ENV ??= mode === "dev" ? "development" : "production";
   const require = createRequire(import.meta.url);
   require("@next/env").loadEnvConfig(process.cwd(), mode === "dev");
+  const installed = mode === "start" && isInstalledStudio(process.cwd());
   const flags = process.argv.slice(3);
   const portIndex = flags.findIndex(
     (flag) => flag === "-p" || flag === "--port",
@@ -148,6 +151,7 @@ if (
   const home = process.env.REEL_STUDIO_HOME?.trim()
     ? path.resolve(process.env.REEL_STUDIO_HOME)
     : path.join(process.cwd(), ".data");
+  if (installed) migrateDatabase();
   const infoPath = path.join(home, "engine.json");
   try {
     mkdirSync(home, { recursive: true });
@@ -174,15 +178,18 @@ if (
   };
   process.once("exit", forgetInfo);
   const runner = supervise({
-    web: [
-      process.execPath,
-      require.resolve("next/dist/bin/next"),
-      mode,
-      ...nextServerFlags(flags),
-    ],
+    web: installed
+      ? [process.execPath, "server.js"]
+      : [
+          process.execPath,
+          require.resolve("next/dist/bin/next"),
+          mode,
+          ...nextServerFlags(flags),
+        ],
     worker: productionWorkerCommand(mode),
     env: {
       ...process.env,
+      ...(installed ? { HOSTNAME: "127.0.0.1", PORT: port } : {}),
       PATH: withInstalledTools(process.env.PATH, home),
       REEL_SUPERVISED_WORKER: "1",
       REEL_WORKER_BASE_URL: `http://127.0.0.1:${port}`,

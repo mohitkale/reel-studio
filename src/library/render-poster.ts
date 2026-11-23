@@ -1,3 +1,4 @@
+import { mediaDirectory } from "@/library/storage/media-directory";
 import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
@@ -21,7 +22,7 @@ async function saveRenderPoster(
   const cached = await store.get(posterKey).catch(() => undefined);
   if (cached?.length) return cached;
 
-  const root = await fs.realpath(path.resolve(process.cwd(), "media"));
+  const root = await fs.realpath(mediaDirectory());
   const candidate = assertPathInsideRoot(
     root,
     path.join(root, sanitizeKey(outputKey)),

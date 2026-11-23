@@ -12,6 +12,8 @@
   "scripts": {
     "dev": "node scripts/supervise.mjs dev",
     "build": "next build --webpack",
+    "package:npm": "node scripts/package-npm.mjs",
+    "package:smoke": "node scripts/smoke-npm-package.mjs",
     "start": "node scripts/supervise.mjs start",
     "lint": "eslint",
     "format": "prettier --write .",

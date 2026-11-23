@@ -10,9 +10,6 @@
  * Progress: HyperFrames reports job.progress as 0–100. We emit HF_PROGRESS as 0–1.
  */
 
-import path from "node:path";
-import { pathToFileURL } from "node:url";
-
 const [
   projectDir,
   outputPath,
@@ -37,12 +34,7 @@ if (!Number.isFinite(fps) || fps <= 0) {
   process.exit(2);
 }
 
-const producerUrl = pathToFileURL(
-  path.resolve(
-    process.cwd(),
-    "node_modules/@hyperframes/producer/dist/index.js",
-  ),
-).href;
+const producerUrl = import.meta.resolve("@hyperframes/producer");
 
 const {
   createRenderJob,

@@ -1,3 +1,4 @@
+import { mediaDirectory } from "@/library/storage/media-directory";
 import path from "node:path";
 
 import { getAssetStore } from "@/library/storage";
@@ -18,7 +19,7 @@ function parse(value: string | null): unknown {
 
 function assetKey(value: string): string {
   if (!path.isAbsolute(value)) return value;
-  const mediaRoot = path.resolve(process.cwd(), "media");
+  const mediaRoot = mediaDirectory();
   const relative = path.relative(mediaRoot, value);
   if (relative.startsWith("..") || path.isAbsolute(relative)) return value;
   return relative;

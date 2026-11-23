@@ -1,3 +1,4 @@
+import { mediaDirectory } from "@/library/storage/media-directory";
 import { access, mkdir, statfs } from "node:fs/promises";
 import { constants, existsSync } from "node:fs";
 import path from "node:path";
@@ -49,7 +50,7 @@ function commandVersion(command: string): string | null {
 }
 
 function defaultDependencies(): DiagnosticDependencies {
-  const mediaRoot = path.resolve(process.cwd(), "media");
+  const mediaRoot = mediaDirectory();
   const galleryFiles = [
     "portrait-demo.mp4",
     "portrait-demo.jpg",

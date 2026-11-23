@@ -24,6 +24,10 @@ import {
   KOKORO_APPROX_BYTES,
 } from "../src/library/voice-model";
 import { engineHome } from "../src/server/local-engine";
+import {
+  isInstalledVoicePack,
+  KOKORO_PACK_APPROX_BYTES,
+} from "../src/library/installed-voice-pack";
 
 const args = process.argv.slice(2);
 const fix = args.includes("--fix");
@@ -69,10 +73,14 @@ async function main() {
       : "× Browser: no Chrome for rendering was found\n  Run: npm run doctor -- --fix (downloads Chrome for Testing, about 150 MB)",
   );
   const voice = await getVoiceModelStatus();
+  const packedVoice = isInstalledVoicePack();
+  const voiceBytes = packedVoice
+    ? KOKORO_PACK_APPROX_BYTES
+    : KOKORO_APPROX_BYTES;
   console.log(
     voice.cached
       ? `✓ Voice model: ${voice.location}`
-      : `! Voice model: not downloaded (videos are silent with captions)\n  Run: npm run voice:download (about 90 MB)`,
+      : `! Voice model: not downloaded\n  Run: ${packedVoice ? "reel-studio doctor --fix" : "npm run voice:download"} (about ${Math.round(voiceBytes / 1e6)} MB)`,
   );
   const failed = report.checks.filter((c) => c.status === "fail");
   console.log(
@@ -123,7 +131,7 @@ async function main() {
     if (
       !voice.cached &&
       (await ask(
-        `Download the voice model (about ${Math.round(KOKORO_APPROX_BYTES / 1e6)} MB) to ${voice.location}?`,
+        `Download the voice model (about ${Math.round(voiceBytes / 1e6)} MB) to ${voice.location}?`,
       ))
     ) {
       await downloadVoiceModel({});

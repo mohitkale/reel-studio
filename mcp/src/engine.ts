@@ -22,7 +22,9 @@ import {
   readEngineInfo,
   readOrCreateLocalSecret,
   writeEngineInfo,
+  type EngineInfo,
 } from "../../src/server/local-engine";
+import { isInstalledStudio } from "../../scripts/installed-environment.mjs";
 
 export interface Engine {
   baseUrl: string;
@@ -84,6 +86,7 @@ function takeLock(lockPath: string): number | null {
 
 export async function ensureEngine(
   log: (line: string) => void,
+  startedBy: EngineInfo["startedBy"] = "mcp",
 ): Promise<Engine> {
   const home = engineHome();
   mkdirSync(home, { recursive: true });
@@ -110,9 +113,11 @@ export async function ensureEngine(
     }
     try {
       const port = await freePort();
-      const mode = existsSync(path.join(root, ".next", "BUILD_ID"))
-        ? "start"
-        : "dev";
+      const mode =
+        isInstalledStudio(root) ||
+        existsSync(path.join(root, ".next", "BUILD_ID"))
+          ? "start"
+          : "dev";
       const out = openSync(path.join(home, "engine.log"), "a");
       log(`starting the studio engine (${mode}) on port ${port}`);
       const child = spawn(
@@ -126,7 +131,7 @@ export async function ensureEngine(
             ...process.env,
             PORT: String(port),
             REEL_STUDIO_HOME: home,
-            REEL_ENGINE_STARTED_BY: "mcp",
+            REEL_ENGINE_STARTED_BY: startedBy,
           },
         },
       );
@@ -136,7 +141,7 @@ export async function ensureEngine(
         {
           port,
           pid: child.pid ?? 0,
-          startedBy: "mcp",
+          startedBy,
           startedAt: new Date().toISOString(),
         },
         home,

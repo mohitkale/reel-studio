@@ -10,6 +10,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { tmpdir } from "node:os";
 import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
 import { captureVideoSnapshot } from "@/library/video-snapshot";
 import { prepareVideoComposition } from "@/library/render-service";
 import {
@@ -142,8 +143,12 @@ export async function renderVisualReviewFrames(
             ]
           : []),
         path.join(
-          process.cwd(),
-          "node_modules/hyperframes/bin/hyperframes.mjs",
+          path.dirname(
+            createRequire(path.join(process.cwd(), "package.json")).resolve(
+              "hyperframes/package.json",
+            ),
+          ),
+          "bin/hyperframes.mjs",
         ),
         "snapshot",
         projectDir,

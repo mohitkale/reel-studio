@@ -1,3 +1,4 @@
+import { mediaDirectory } from "@/library/storage/media-directory";
 import { assertRenderStagingAllowed } from "@/lib/render-media-policy";
 import { downloadPublicMediaToFile } from "@/server/public-media-download";
 import { productionSignal } from "@/library/production-cancellation";
@@ -49,7 +50,7 @@ export async function resolveVideoStageMedia(
       !url.startsWith("http") || parsed.origin === new URL(baseUrl).origin;
     if (!local) {
       assertRenderStagingAllowed(url);
-      const directory = path.join(process.cwd(), "media", "production-assets");
+      const directory = path.join(mediaDirectory(), "production-assets");
       await fs.mkdir(directory, { recursive: true });
       const temporary = path.join(directory, `${randomUUID()}.tmp`);
       try {
@@ -58,7 +59,7 @@ export async function resolveVideoStageMedia(
         )(url, temporary, { signal: productionSignal() });
         const checksum = await hashRenderFile(temporary);
         const target = `production-assets/${checksum}.${media.extension}`;
-        const destination = path.join(process.cwd(), "media", target);
+        const destination = path.join(mediaDirectory(), target);
         assertProductionActive();
         const cached = await hashRenderFile(destination).catch((error) => {
           if (error.code === "ENOENT") return null;
@@ -75,13 +76,13 @@ export async function resolveVideoStageMedia(
     const pathname = decodeURIComponent(parsed.pathname);
     const media = pathname.startsWith("/media/");
     const key = sanitizeKey(pathname.slice(media ? 7 : 1));
-    const root = path.resolve(process.cwd(), media ? "media" : "public");
+    const root = media ? mediaDirectory() : path.resolve("public");
     const source = path.join(root, key);
     const real = await fs.realpath(source);
     const realRoot = await fs.realpath(root);
     if (!real.startsWith(realRoot + path.sep))
       throw new Error("Media resolves outside its store");
-    const directory = path.join(process.cwd(), "media", "production-assets");
+    const directory = path.join(mediaDirectory(), "production-assets");
     await fs.mkdir(directory, { recursive: true });
     const temporary = path.join(directory, `${randomUUID()}.tmp`);
     let target: string;
@@ -92,7 +93,7 @@ export async function resolveVideoStageMedia(
       assertProductionActive();
       checksum = await hashRenderFile(temporary);
       target = `production-assets/${checksum}${path.extname(key)}`;
-      const destination = path.join(process.cwd(), "media", target);
+      const destination = path.join(mediaDirectory(), target);
       const cached = await hashRenderFile(destination).catch(
         (error: unknown) => {
           if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;

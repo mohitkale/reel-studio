@@ -1,3 +1,4 @@
+import { mediaDirectory } from "@/library/storage/media-directory";
 import { buildAudiogramPresenters } from "@/library/audiogram-presenters";
 import path from "node:path";
 import { promises as fs } from "node:fs";
@@ -79,7 +80,7 @@ export async function executeAudiogramProductionJob(
     progress: 0,
   });
   const outputKey = `audiograms/audiogram-${job.id}.mp4`;
-  const outputPath = path.join(process.cwd(), "media", outputKey);
+  const outputPath = path.join(mediaDirectory(), outputKey);
   await fs.mkdir(path.dirname(outputPath), { recursive: true });
   await assertActive(context);
   await renderHyperframesAudiogram(

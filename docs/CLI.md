@@ -35,6 +35,21 @@ checksum-verified FFmpeg (a tampered file is deleted and rejected), Chrome throu
 installer, and the voice model. A system FFmpeg is always preferred when present. Exit code 1
 when something required is missing.
 
-`npm run cli:verify` runs a shell test of every exit code. Not built yet: starting the engine
-for you when it is not running (the self-starting MCP server issue) and the published
-`npx` entry.
+`npm run cli:verify` runs a shell test of every exit code. The npm candidate starts its
+engine automatically for `render` and `mcp`. From a source checkout, start the engine
+before running the CLI `render` command.
+
+## Testing a package candidate
+
+`npm run package:npm -- --voice-source <corresponding-source.tar.gz>` builds a standalone
+`@mohitkale/reel-studio` candidate from source files listed by Git. It needs the local Kokoro
+model cache from `npm run setup -- --voice`. The pack report, npm tarball, and separate
+checksum-pinned Kokoro voice pack are saved in `.artifacts/npm-package/`. The build command
+does not publish anything.
+
+`npm run package:smoke -- <package.tgz>` exercises a fresh npm install on a disposable test
+machine. The installed command starts the studio and worker on a free loopback port and opens
+the home screen. It creates the database, media directory, and model cache in `~/.reel-studio`
+by default. Set `REEL_STUDIO_HOME` to use another directory or `REEL_STUDIO_NO_OPEN=1` to print
+the loopback URL for a headless check. The voice pack is downloaded and verified on first use
+of Kokoro. Source checkouts still use `npm run dev`.

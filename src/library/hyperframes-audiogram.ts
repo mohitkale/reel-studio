@@ -21,14 +21,11 @@ export async function writeAudiogramProject(
     ),
     fs.writeFile(path.join(directory, "audio.wav"), plan.wav),
     fs.copyFile(
-      path.resolve("node_modules/gsap/dist/gsap.min.js"),
+      path.resolve("public/reel-runtime/gsap.min.js"),
       path.join(runtime, "gsap.min.js"),
     ),
     fs.copyFile(
-      path.resolve(
-        "node_modules/@fontsource-variable/geist/files",
-        HYPERFRAMES_RENDER_FONT_FILES.sans,
-      ),
+      path.resolve("public/reel-runtime", HYPERFRAMES_RENDER_FONT_FILES.sans),
       path.join(runtime, "geist.woff2"),
     ),
   ]);

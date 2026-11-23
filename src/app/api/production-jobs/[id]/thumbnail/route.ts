@@ -1,3 +1,4 @@
+import { mediaDirectory } from "@/library/storage/media-directory";
 import path from "node:path";
 
 import { NextResponse } from "next/server";
@@ -66,7 +67,7 @@ export async function GET(
 
     // The finished video, only when it lives under the media folder.
     const mp4 = job.outputs.find((output) => output.format === "mp4");
-    const mediaRoot = path.resolve(process.cwd(), "media");
+    const mediaRoot = mediaDirectory();
     const candidate = mp4
       ? path.isAbsolute(mp4.path)
         ? mp4.path

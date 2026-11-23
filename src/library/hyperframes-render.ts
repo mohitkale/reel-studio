@@ -1,3 +1,4 @@
+import { mediaDirectory } from "@/library/storage/media-directory";
 import { assertLessonHtmlBudget } from "@/production/long-form";
 import { NATIVE_ONLY_BLOCKS } from "@/engines/hyperframes/catalog/build-scene";
 import { sequenceConfigFor } from "@/video/sequence-direction";
@@ -109,7 +110,7 @@ export function localFsPathForUrl(
         const key = sanitizeKey(
           stripLeadingSlash(pathname.slice("/media".length)),
         );
-        const mediaRoot = path.join(process.cwd(), "media");
+        const mediaRoot = mediaDirectory();
         return assertPathInsideRoot(mediaRoot, path.join(mediaRoot, key));
       }
       if (pathname.startsWith("/music/")) {
@@ -168,10 +169,9 @@ export async function materializeUrl(
       throw new Error(`Local media missing for HyperFrames render: ${fsPath}`);
     }
     const parsed = new URL(url, serverBaseUrl);
-    const root = path.join(
-      process.cwd(),
-      parsed.pathname.startsWith("/media/") ? "media" : "public/music",
-    );
+    const root = decodeURIComponent(parsed.pathname).startsWith("/media/")
+      ? mediaDirectory()
+      : path.resolve("public/music");
     const real = assertPathInsideRoot(
       await fs.realpath(root),
       await fs.realpath(fsPath),
@@ -537,7 +537,7 @@ export async function runHyperframesRender(
   } = opts;
 
   const outputKey = `renders/render-${renderId}.mp4`;
-  const outputPath = path.join(process.cwd(), "media", outputKey);
+  const outputPath = path.join(mediaDirectory(), outputKey);
   const writer = createProgressWriter<{
     progress: number;
     status: Parameters<typeof updateRenderProgress>[2];
@@ -577,7 +577,7 @@ export async function runHyperframesRender(
       ? dimsFor(orientation)
       : { width: script.width, height: script.height };
 
-    const projectDir = path.join(process.cwd(), "media", "hf-work", renderId);
+    const projectDir = path.join(mediaDirectory(), "hf-work", renderId);
     await fs.mkdir(projectDir, { recursive: true });
 
     const scenes = await Promise.all(
@@ -814,7 +814,7 @@ export async function runHyperframesRender(
   } catch (err) {
     await writer.stop();
     await fs
-      .rm(path.join(process.cwd(), "media", "exports", `render-${renderId}`), {
+      .rm(path.join(mediaDirectory(), "exports", `render-${renderId}`), {
         recursive: true,
         force: true,
       })
@@ -830,12 +830,12 @@ export async function runHyperframesRender(
     upsertJob({ id: renderId, progress: 0, status: "error", error: msg });
   } finally {
     await writer.stop();
-    await fs.rm(path.join(process.cwd(), "media", "hf-work", renderId), {
+    await fs.rm(path.join(mediaDirectory(), "hf-work", renderId), {
       recursive: true,
       force: true,
     });
     await fs.rm(
-      path.join(process.cwd(), "media", "hf-work", `${renderId}-sections`),
+      path.join(mediaDirectory(), "hf-work", `${renderId}-sections`),
       { recursive: true, force: true },
     );
   }

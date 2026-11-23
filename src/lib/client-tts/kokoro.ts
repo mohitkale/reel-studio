@@ -22,9 +22,12 @@ let nextId = 1;
 
 function ensureWorker(): Worker {
   if (!worker) {
-    worker = new Worker(new URL("./kokoro.worker.ts", import.meta.url), {
-      type: "module",
-    });
+    worker =
+      process.env.NEXT_PUBLIC_REEL_STUDIO_PACKAGED === "1"
+        ? new Worker("/api/kokoro-voice-pack/client.mjs", { type: "module" })
+        : new Worker(new URL("./kokoro.worker.ts", import.meta.url), {
+            type: "module",
+          });
     worker.onmessage = (e: MessageEvent) => {
       const m = e.data as {
         type: string;
@@ -51,6 +54,8 @@ function ensureWorker(): Worker {
       const err = new Error(e.message || "Kokoro worker crashed");
       for (const req of pending.values()) req.reject(err);
       pending.clear();
+      worker?.terminate();
+      worker = null;
     };
   }
   return worker;

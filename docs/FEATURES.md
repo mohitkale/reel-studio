@@ -165,6 +165,7 @@ HTTP handlers under `src/app` (`/api/**` and `/media`).
 | `POST /api/factory/runs/[id]`                        | FAC01      |
 | `POST /api/factory/runs`                             | FAC01      |
 | `GET /api/kokoro-voice/[id]`                         | VOI02      |
+| `GET /api/kokoro-voice-pack/[...file]`               | VOI02      |
 | `GET /api/local-transcription/status`                | TRN01      |
 | `GET /api/music/keys`                                | MUS01      |
 | `POST /api/music/keys`                               | MUS01      |

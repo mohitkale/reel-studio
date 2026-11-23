@@ -22,9 +22,27 @@ beforeEach(async () => {
 });
 afterEach(async () => {
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
   await rm(dir, { recursive: true, force: true });
 });
 describe("render local file boundary", () => {
+  it("materializes media from a packaged install's per-user folder", async () => {
+    const media = path.join(dir, "profile", "assets");
+    await mkdir(media, { recursive: true });
+    await writeFile(path.join(media, "test.wav"), "from the profile");
+    vi.stubEnv("REEL_STUDIO_MEDIA_DIR", media);
+    await expect(
+      materializeUrl(
+        "/media/test.wav",
+        project,
+        "voice",
+        "http://localhost:3000",
+      ),
+    ).resolves.toBe("_assets/voice.wav");
+    await expect(
+      readFile(path.join(project, "_assets", "voice.wav"), "utf8"),
+    ).resolves.toBe("from the profile");
+  });
   it("copies app-relative and exact-origin media into the render project", async () => {
     await writeFile(path.join(dir, "media", "test.wav"), "fixture");
     expect(

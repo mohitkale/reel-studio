@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // The browser tests build into their own folder so they never touch a running dev server.
   distDir: process.env.REEL_NEXT_DIST_DIR || ".next",
+  ...(process.env.REEL_STUDIO_PACKAGE_BUILD === "1"
+    ? { output: "standalone" as const, outputFileTracingRoot: process.cwd() }
+    : {}),
   // Preserve same-origin srcDoc previews, WASM workers and media. Inline motion
   // scripts still need a separate nonce-based policy; do not claim XSS isolation.
   headers() {

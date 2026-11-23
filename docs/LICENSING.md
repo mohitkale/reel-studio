@@ -177,7 +177,11 @@ compatibility fixture, and embedded Emscripten library/runtime source and notice
 Redistribution of the engine must preserve its GPL terms and provide matching
 corresponding source; an Apache-only or MIT-only notice is insufficient. The app
 installer uses the prebuilt engine and does not install a compiler or rebuild it.
-The source archive is a separate release asset, not an app runtime download.
+Source checkouts use the vendored engine and can retrieve its source archive
+from the release. The standalone npm candidate carries neither the engine nor
+the weights. Its first-use Kokoro voice pack includes both, along with the
+corresponding-source archive and the license notices. The npm archive pins the
+voice pack's SHA-256 for that release.
 
 `npm run release:check` verifies the committed component hashes and notices;
 `npm run test:phonemizer` verifies actual Kokoro dependency resolution and output.

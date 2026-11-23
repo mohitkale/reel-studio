@@ -1,3 +1,4 @@
+import { mediaDirectory } from "@/library/storage/media-directory";
 import { execFile } from "node:child_process";
 import { realpath } from "node:fs/promises";
 import path from "node:path";
@@ -88,7 +89,7 @@ export async function completedVideoFrame(
     1,
     coverFrames(props.fps, Boolean(props.coverUrl)),
   );
-  const root = await realpath(path.join(process.cwd(), "media"));
+  const root = await realpath(mediaDirectory());
   const file = await realpath(path.resolve(root, review.video.path));
   if (!file.startsWith(root + path.sep))
     throw new ProviderError("The video is outside the media store", 404);

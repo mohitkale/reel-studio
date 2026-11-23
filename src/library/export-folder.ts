@@ -1,3 +1,4 @@
+import { mediaDirectory } from "@/library/storage/media-directory";
 import { constants, promises as fs } from "node:fs";
 import path from "node:path";
 
@@ -44,12 +45,7 @@ const FILES = [
 ];
 
 function automaticFolder(source: string): string {
-  return path.resolve(
-    process.cwd(),
-    "media",
-    "exports",
-    path.parse(source).name,
-  );
+  return path.resolve(mediaDirectory(), "exports", path.parse(source).name);
 }
 
 async function hasCompletePackage(folder: string): Promise<boolean> {
@@ -195,7 +191,7 @@ export async function writeExportFolder(jobId: string): Promise<ExportFolder> {
   if (job.state !== "succeeded")
     throw new ProviderError("The video is not finished yet.", 409);
 
-  const mediaRoot = path.resolve(process.cwd(), "media");
+  const mediaRoot = mediaDirectory();
   const mp4 = job.outputs.find((output) => output.format === "mp4");
   const candidate = mp4 && path.resolve(mediaRoot, mp4.path);
   const source =

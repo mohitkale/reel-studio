@@ -24,6 +24,7 @@ npm ci && npm run setup && npm run dev
 
 Open [localhost:3000](http://localhost:3000), type what you want to make, press **Create**.
 `npm run doctor` tells you what is missing. Details: [getting started](docs/GETTING_STARTED.md).
+Maintainers can build and verify an unpublished [npm package candidate](docs/CLI.md#testing-a-package-candidate).
 An `npx reel-studio` one-liner is planned; it is not published yet.
 
 **Status: v1.0.** The [storyboard format](docs/STORYBOARD.md#versioning-and-stability), the command line

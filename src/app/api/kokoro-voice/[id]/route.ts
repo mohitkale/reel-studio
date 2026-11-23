@@ -4,6 +4,10 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { errorResponse } from "@/server/api-helpers";
+import {
+  ensureInstalledVoicePack,
+  isInstalledVoicePack,
+} from "@/library/installed-voice-pack";
 
 export const runtime = "nodejs";
 
@@ -19,10 +23,14 @@ const VOICE_ID_RE = /^[a-z]{2}_[a-z]+$/;
 
 /** Candidate `voices/` dirs — bundlers may resolve the package path differently. */
 function voicesDirCandidates(): string[] {
-  const dirs = [path.join(process.cwd(), "node_modules", "kokoro-js", "voices")];
+  const dirs = [
+    path.join(process.cwd(), "node_modules", "kokoro-js", "voices"),
+  ];
   try {
     const require = createRequire(import.meta.url);
-    dirs.push(path.join(path.dirname(require.resolve("kokoro-js")), "..", "voices"));
+    dirs.push(
+      path.join(path.dirname(require.resolve("kokoro-js")), "..", "voices"),
+    );
   } catch {
     // ignore — cwd candidate above is the reliable one in Next
   }
@@ -30,6 +38,10 @@ function voicesDirCandidates(): string[] {
 }
 
 async function readVoiceFile(id: string): Promise<Buffer | null> {
+  if (isInstalledVoicePack()) {
+    const pack = await ensureInstalledVoicePack();
+    return readFile(path.join(pack, "voices", `${id}.bin`)).catch(() => null);
+  }
   for (const dir of voicesDirCandidates()) {
     const buf = await readFile(path.join(dir, `${id}.bin`)).catch(() => null);
     if (buf) return buf;

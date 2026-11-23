@@ -10,6 +10,12 @@ import { normalizeForSpeech } from "@/lib/speech-normalize";
 import { pacingForStyle, pitchRatio, styledSpeed } from "@/lib/voice-styles";
 import { getConfig } from "@/server/app-config";
 import type { KokoroTTS } from "kokoro-js";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+import {
+  ensureInstalledVoicePack,
+  isInstalledVoicePack,
+} from "@/library/installed-voice-pack";
 
 import { pcmToWav, TARGET_SAMPLE_RATE } from "@/lib/wav";
 import {
@@ -44,9 +50,20 @@ const inference = createInferenceGate();
 
 let ttsPromise: Promise<KokoroTTS> | null = null;
 
+async function loadKokoroModule(): Promise<
+  Pick<typeof import("kokoro-js"), "KokoroTTS">
+> {
+  if (isInstalledVoicePack()) {
+    const pack = await ensureInstalledVoicePack();
+    const url = pathToFileURL(path.join(pack, "dist", "kokoro.mjs")).href;
+    return import(/* webpackIgnore: true */ url);
+  }
+  return import("kokoro-js");
+}
+
 function loadModel(): Promise<KokoroTTS> {
   if (!ttsPromise) {
-    ttsPromise = import("kokoro-js")
+    ttsPromise = loadKokoroModule()
       .then(({ KokoroTTS }) =>
         KokoroTTS.from_pretrained(KOKORO_MODEL_ID, {
           dtype: "q8",

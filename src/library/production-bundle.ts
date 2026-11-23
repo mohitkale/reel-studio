@@ -1,3 +1,4 @@
+import { mediaDirectory } from "@/library/storage/media-directory";
 import { createReadStream } from "node:fs";
 import { realpath, stat } from "node:fs/promises";
 import path from "node:path";
@@ -102,7 +103,7 @@ export async function productionBatchBundleEntries(
       } | null;
     }>;
   },
-  mediaRootPath = path.resolve(process.cwd(), "media"),
+  mediaRootPath = mediaDirectory(),
 ): Promise<ProductionBundleEntry[]> {
   const mediaRoot = await realpath(mediaRootPath);
   const manifestItems: Array<Record<string, unknown>> = [];

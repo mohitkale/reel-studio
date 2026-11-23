@@ -9,6 +9,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { lintStoryboard } from "@/storyboard";
+import { ensureEngine } from "../../mcp/src/engine";
 
 import {
   applyOverrides,
@@ -104,7 +105,10 @@ async function lintCommand(rest: string[]): Promise<number> {
   return EXIT.ok;
 }
 
-async function renderCommand(rest: string[]): Promise<number> {
+async function renderCommand(
+  rest: string[],
+  installed = false,
+): Promise<number> {
   const args = parseRenderArgs(rest);
   const say = (event: Record<string, unknown>, text?: string) => {
     if (args.json) console.log(progressLine(event));
@@ -126,6 +130,14 @@ async function renderCommand(rest: string[]): Promise<number> {
       describeErrors(lint).join("\n"),
     );
     return EXIT.invalid;
+  }
+  if (installed && !process.env.REEL_STUDIO_URL) {
+    const engine = await ensureEngine(
+      (message) => console.error(message),
+      "user",
+    );
+    process.env.REEL_STUDIO_URL = engine.baseUrl;
+    process.env.REEL_STUDIO_MCP_TOKEN = engine.secret;
   }
   if (!(await engineUp())) {
     say(
@@ -225,12 +237,45 @@ function examplesCommand(rest: string[]): number {
   return EXIT.ok;
 }
 
-export async function main(argv: string[]): Promise<number> {
+async function launchInstalledStudio(): Promise<number> {
+  const { baseUrl } = await ensureEngine(
+    (message) => console.error(message),
+    "user",
+  );
+  console.log(baseUrl);
+  if (process.env.REEL_STUDIO_NO_OPEN !== "1") {
+    const platform = process.platform;
+    const command =
+      platform === "darwin"
+        ? "open"
+        : platform === "win32"
+          ? "rundll32.exe"
+          : "xdg-open";
+    const args =
+      platform === "win32"
+        ? ["url.dll,FileProtocolHandler", baseUrl]
+        : [baseUrl];
+    await new Promise<void>((resolve) => {
+      const browser = spawn(command, args, { stdio: "ignore" });
+      browser.once("error", () => resolve());
+      browser.once("spawn", () => {
+        browser.unref();
+        resolve();
+      });
+    });
+  }
+  return EXIT.ok;
+}
+
+export async function main(
+  argv: string[],
+  options: { installed?: boolean } = {},
+): Promise<number> {
   const [command, ...rest] = argv;
   try {
     switch (command) {
       case "render":
-        return await renderCommand(rest);
+        return await renderCommand(rest, options.installed);
       case "lint":
         return await lintCommand(rest);
       case "schema":
@@ -271,6 +316,9 @@ export async function main(argv: string[]): Promise<number> {
           child.once("error", () => resolve(EXIT.missing));
         });
       case undefined:
+        if (options.installed) return await launchInstalledStudio();
+        console.log(HELP);
+        return EXIT.ok;
       case "help":
       case "--help":
       case "-h":

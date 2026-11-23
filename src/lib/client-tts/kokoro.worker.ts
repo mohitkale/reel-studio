@@ -14,6 +14,7 @@ import {
  * the main thread never holds raw PCM and peak memory stays low.
  */
 import { KokoroTTS } from "kokoro-js";
+import { env as modelEnv } from "@huggingface/transformers";
 
 import { enableExtendedKokoroVoices } from "@/providers/voice/kokoro-extended-voices";
 import {
@@ -25,6 +26,14 @@ import {
 } from "./wav-encode";
 
 const MODEL_ID = "onnx-community/Kokoro-82M-v1.0-ONNX";
+
+if (process.env.NEXT_PUBLIC_REEL_STUDIO_PACKAGED === "1") {
+  modelEnv.allowRemoteModels = false;
+  modelEnv.allowLocalModels = true;
+  modelEnv.localModelPath = "/api/kokoro-voice-pack/models/";
+  if (modelEnv.backends.onnx.wasm)
+    modelEnv.backends.onnx.wasm.wasmPaths = "/api/kokoro-voice-pack/wasm/";
+}
 
 // Typed handle to the worker global without pulling in the conflicting webworker lib.
 const ctx = self as unknown as {
