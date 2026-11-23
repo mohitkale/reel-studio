@@ -1,5 +1,6 @@
 import { escapeHtml as escape } from "@/lib/html";
 import type { RecWord } from "@/lib/recording-clips";
+import type { PresenterAdjustment } from "@/video/presenter-config";
 import type { Character } from "@/engines/hyperframes/presenter/characters";
 import {
   buildPresenter,
@@ -28,6 +29,7 @@ export interface RecordingClipProps {
   presenter?: {
     character: Character;
     placement: PresenterPlacement;
+    adjustment?: PresenterAdjustment;
     track: PresenterTrack;
   };
   colors: {
@@ -104,6 +106,7 @@ export function buildRecordingClipHtml(props: RecordingClipProps): string {
     ? buildPresenter({
         character: props.presenter.character,
         placement: props.presenter.placement,
+        adjustment: props.presenter.adjustment,
         frame: { width: props.width, height: props.height },
         seconds: duration,
         track: props.presenter.track,

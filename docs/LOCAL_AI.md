@@ -151,6 +151,8 @@ follows the phonemes and timing of the words (twelve mouth shapes), falling back
 to the loudness of the audio for words it cannot read. The character blinks,
 nods on emphasis, raises its brows on a question and sways a little. How it
 works and how to add a character: [Contributing presenters](CONTRIBUTING_PRESENTERS.md).
+In **Pro**, change the presenter's horizontal position, vertical position, or
+scale. The preview and export use the same placement, including the split-screen boundary.
 
 A narrated video can have the same presenter with `presenter: { character, placement }` in
 its storyboard (`corner` bubble or `full` host); a scene with `presenter: "off"` hides it for
@@ -170,5 +172,6 @@ while the voice sounds and is still when it does not, and the lag between them. 
 mouth kept moving through pauses (it was still at rest in only 8% of the silent moments, a
 recogniser lets a word run into the pause after it); words are now fitted to where the voice
 actually sounds, and the same sample reads 90% agreement, the mouth at rest in 76% of the silent
-moments and a lag of 0.08 s. The numbers are no substitute for watching it: that review at
-normal and half speed is still the maintainer's.
+moments and a lag of 0.08 s. The maintainer reviewed a separate 30-second Maya export at
+normal and half speed for [#146](https://github.com/mohitkale/reel-studio/issues/146) and confirmed
+that the mouth shapes follow the speech.

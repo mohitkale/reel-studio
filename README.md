@@ -112,6 +112,8 @@ The running studio with a video made from the bundled demo storyboard.
 
 Long storyboards with chapter markers can run up to ten minutes. Completed render
 sections are reused when the job is retried. See [Storyboard](docs/STORYBOARD.md).
+Recording clips can use an animated presenter. Pro mode adds position and scale controls.
+See [Animated presenter](docs/LOCAL_AI.md#animated-presenter).
 
 |                                                                                                            |                                                                                                         |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
