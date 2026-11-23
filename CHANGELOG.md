@@ -6,10 +6,66 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## Unreleased
 
+## 1.1.0 (2026-11-23)
+
 - fix: MCP video failures name the production stage, cause and recovery step, including invalid storyboards and videos that exceed their duration limit (#114)
 - fix: scenes that asked for a picture and did not get one are reported (a warning per scene from `create_video`, a finding from `review_video`), a `media-split` scene without a picture is drawn as a statement instead of an empty box, and `media-split` scenes now trigger the stock search; `docs/STORYBOARD.md` says which providers supply pictures (#245)
 - fix: declare `sharp` as a direct dependency; visual review no longer relies on the voice package installing it (#234)
 - fix: renders no longer fetch fonts from Google Fonts; families named only in custom properties (`Impact`, `Georgia`, `Times New Roman`) are mapped to the bundled ones, with a test that runs the compiler's font pass over every example and look (#233)
+
+### Engine and rendering
+
+- Add a Pro Tip scene with a bundled lightbulb badge ([#295](https://github.com/mohitkale/reel-studio/pull/295))
+- Add five looping cloud illustrations ([#293](https://github.com/mohitkale/reel-studio/pull/293))
+- Add the Retro Terminal storyboard theme ([#291](https://github.com/mohitkale/reel-studio/pull/291))
+- Keep the scene scaffold usable after the first contribution ([#292](https://github.com/mohitkale/reel-studio/pull/292))
+- Add the High Contrast storyboard theme ([#290](https://github.com/mohitkale/reel-studio/pull/290))
+- Add the Forest storyboard theme ([#289](https://github.com/mohitkale/reel-studio/pull/289))
+- Add the Sunset storyboard theme ([#288](https://github.com/mohitkale/reel-studio/pull/288))
+- Add Pro position and scale controls for presenters ([#287](https://github.com/mohitkale/reel-studio/pull/287))
+- Review finished videos and reuse sections on MCP edits ([#284](https://github.com/mohitkale/reel-studio/pull/284))
+- feat: measure existing video export baselines (#262) ([#263](https://github.com/mohitkale/reel-studio/pull/263))
+- fix: declare sharp as a direct dependency (#234) ([#255](https://github.com/mohitkale/reel-studio/pull/255))
+- fix: renders no longer fetch fonts from Google Fonts (#233) ([#256](https://github.com/mohitkale/reel-studio/pull/256))
+
+### Storyboard
+
+- Add a sourced trail-map storyboard to the golden set ([#294](https://github.com/mohitkale/reel-studio/pull/294))
+- fix: write publishing files for every video export (#132) ([#268](https://github.com/mohitkale/reel-studio/pull/268))
+
+### MCP
+
+- fix: report actionable MCP production failures (#114) ([#272](https://github.com/mohitkale/reel-studio/pull/272))
+
+### Studio
+
+- feat: preview and remix bundled video examples (#124) ([#278](https://github.com/mohitkale/reel-studio/pull/278))
+- fix: preserve the finished result when making other sizes (#122) ([#277](https://github.com/mohitkale/reel-studio/pull/277))
+- feat: show live previews and preserve step timing (#121) ([#271](https://github.com/mohitkale/reel-studio/pull/271))
+- docs: record Simple and Pro capabilities (#143) ([#270](https://github.com/mohitkale/reel-studio/pull/270))
+- fix: show real frames on project cards (#119) ([#269](https://github.com/mohitkale/reel-studio/pull/269))
+- fix: use plain language across the Studio (#123) ([#264](https://github.com/mohitkale/reel-studio/pull/264))
+- fix: report scenes whose picture did not resolve; media-split without a picture is a statement (#245) ([#257](https://github.com/mohitkale/reel-studio/pull/257))
+
+### Audio and podcasts
+
+- fix: embed podcast chapters and cover art in MP3 exports (#127) ([#279](https://github.com/mohitkale/reel-studio/pull/279))
+- docs: evaluate Indian-language voice candidates (#237) ([#273](https://github.com/mohitkale/reel-studio/pull/273))
+- fix: pick distinct music for cinematic and percussion themes (#129) ([#265](https://github.com/mohitkale/reel-studio/pull/265))
+
+### CI and tooling
+
+- test: share the Windows integration timeout (#260) ([#261](https://github.com/mohitkale/reel-studio/pull/261))
+- fix: make two flaky tests specific and realistic about time (#249) ([#258](https://github.com/mohitkale/reel-studio/pull/258))
+
+### Documentation
+
+- docs: remove deferred Indic voice evaluation (#275) ([#276](https://github.com/mohitkale/reel-studio/pull/276))
+- fix: regenerate the checked-in README screenshots (#135) ([#267](https://github.com/mohitkale/reel-studio/pull/267))
+
+### Other changes
+
+- docs: mark Reel Studio development as paused ([#296](https://github.com/mohitkale/reel-studio/pull/296))
 
 ## 1.0.0 (2026-11-20)
 
