@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "title": "How to spot a steep trail on a map",
+  "format": "9:16",
+  "theme": "high-contrast",
+  "scenes": [
+    {
+      "type": "hook",
+      "headline": "Spot the steep trail",
+      "narration": "Two hikes can cover the same distance and feel completely different. The squiggly lines on your map tell you why."
+    },
+    {
+      "type": "definition",
+      "headline": "Read the contour lines",
+      "narration": "Every point along one contour line is at the same height. The next line marks a different height.",
+      "definition": {
+        "term": "Contour line",
+        "meaning": "A line connecting places at the same elevation."
+      }
+    },
+    {
+      "type": "comparison",
+      "headline": "Spacing shows steepness",
+      "narration": "When the lines bunch up, elevation changes over a short distance. When they spread out, the ground is gentler.",
+      "compare": {
+        "left": { "label": "Close together", "text": "Steeper ground" },
+        "right": { "label": "Far apart", "text": "Gentler ground" }
+      }
+    },
+    {
+      "type": "stat",
+      "headline": "Check the map legend",
+      "narration": "If the legend says twenty feet, that's the height difference between two neighboring contour lines on that map.",
+      "stat": { "value": "20 ft", "label": "Example contour interval" }
+    },
+    {
+      "type": "cta",
+      "headline": "Find the climb",
+      "narration": "Open a topo map and trace your next trail. Can you spot where the lines get closest?"
+    }
+  ],
+  "sources": [
+    {
+      "title": "USGS Topo Map Symbol Guide",
+      "url": "https://www.usgs.gov/ngp-standards-and-specifications/us-topo-map-symbol-guide",
+      "accessed": "2026-11-24"
+    }
+  ]
+}
