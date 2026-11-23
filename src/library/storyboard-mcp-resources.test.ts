@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { expect, it, vi } from "vitest";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { THEMES } from "@/video/themes";
 
 vi.mock("../../mcp/src/client.js", () => ({
   apiGet: vi.fn(),
@@ -66,7 +67,9 @@ it("lists the four storyboard resources and serves real content", async () => {
   const options = JSON.parse(
     (await resources.get("reel://options")!()).contents[0]!.text,
   );
-  expect(options.themes).toHaveLength(10);
+  expect(options.themes).toEqual(
+    THEMES.map(({ id, description }) => ({ id, use: description })),
+  );
 });
 
 it("offers the five prompts, each pointing at the guide and ending in create_video", () => {

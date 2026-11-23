@@ -55,7 +55,7 @@ sheet per example: green dashed is the safe area, cyan the content box, red a fa
 
 The layout contract these checks measure lives in `src/production/layout.ts`: each format has a safe area, a content region (portrait: 14% to 68% of the frame height; landscape: 12% to 78%; square: 12% to 72%) and a caption band beneath it. Scene content fills its region and the text inside is fitted to it; `debugLayout` on the composition props draws the regions.
 
-The check gates: `npm run examples:lint-frames -- --gate` exits 1 on any failure, and the manual render workflow runs it that way. `npm run themes:sheet` renders one storyboard in all ten themes, `npm run seeds:sheet` renders one storyboard under five seeds, and `npm run showcase` renders the golden set with voice into `media/showcase/index.html` for the 20-point review.
+The check gates: `npm run examples:lint-frames -- --gate` exits 1 on any failure, and the manual render workflow runs it that way. `npm run themes:sheet` renders one storyboard in every registered theme. Add `-- --theme sunset` to inspect a single theme. `npm run seeds:sheet` renders one storyboard under five seeds, and `npm run showcase` renders the golden set with voice into `media/showcase/index.html` for the 20-point review.
 Baseline numbers from before the layout work are in
 [quality/baseline.json](quality/baseline.json).
 

@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { THEMES } from "@/video/themes";
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
@@ -165,7 +166,9 @@ it("waitForJob stops at the wait limit with the latest state", async () => {
 it("list_options is one compact answer", async () => {
   const run = register(registerCoreTools).get("list_options")!.run;
   const options = JSON.parse((await run({})).content[0]!.text);
-  expect(options.themes.length).toBe(10);
+  expect(options.themes).toEqual(
+    THEMES.map(({ id, description }) => ({ id, use: description })),
+  );
   expect(options.sceneTypes).toContain("steps");
   expect(options.formats).toEqual(["9:16", "16:9", "1:1"]);
 });

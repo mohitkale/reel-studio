@@ -49,6 +49,7 @@ import { CORAL_HARBOR_NAME, CORAL_HARBOR_PALETTE } from "@/lib/brand-defaults";
 import { enrichSemanticSequence } from "@/production/semantic-direction";
 import type { VisualTheme } from "@/production/creative-direction";
 import { chapterPlanFromStarts } from "@/production/chapters";
+import { getTheme } from "@/video/themes";
 
 function resolveEngine(engine?: VideoEngineId | string | null): VideoEngineId {
   return engine && isVideoEngineId(engine) ? engine : DEFAULT_VIDEO_ENGINE;
@@ -202,7 +203,7 @@ export async function createProjectFromPlan(
       | "width"
       | "height"
     >;
-    savedOverrides?: Record<string, unknown>;
+    savedOverrides?: Record<string, unknown> & { themeId?: string };
     sceneOverrides?: Array<
       Pick<Prisma.SceneCreateWithoutScriptInput, "layoutJson" | "hideText">
     >;
@@ -262,7 +263,9 @@ export async function createProjectFromPlan(
       ));
   const brandKitId =
     production?.brandKitId === undefined
-      ? production?.visualTheme && starterKit
+      ? starterKit &&
+        (production?.visualTheme ||
+          getTheme(production?.savedOverrides?.themeId))
         ? null
         : (defaultKit?.id ?? null)
       : production.brandKitId;

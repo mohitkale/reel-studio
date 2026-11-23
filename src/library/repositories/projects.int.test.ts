@@ -60,6 +60,28 @@ describe("project motion persistence", () => {
       JSON.parse(project.scripts.create.brandOverrides).visualTheme,
     ).toEqual(VISUAL_THEMES.botanical);
   });
+  it("lets a named storyboard theme supply the palette on a fresh install", async () => {
+    getDefaultBrandKit.mockResolvedValue({
+      id: "starter",
+      name: CORAL_HARBOR_NAME,
+      palette: JSON.stringify(CORAL_HARBOR_PALETTE),
+      handle: "@yourbrand",
+      fonts: null,
+    });
+    await createProjectFromPlan(
+      plan,
+      "portrait",
+      [],
+      "hyperframes",
+      undefined,
+      { savedOverrides: { themeId: "sunset" } },
+    );
+    const project = create.mock.calls[0][0].data;
+    expect(project.brandKitId).toBeNull();
+    expect(JSON.parse(project.scripts.create.brandOverrides).themeId).toBe(
+      "sunset",
+    );
+  });
   it("respects a customized default brand and an explicit kit", async () => {
     getDefaultBrandKit.mockResolvedValue({
       id: "custom",
