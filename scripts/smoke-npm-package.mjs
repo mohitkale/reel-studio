@@ -14,7 +14,9 @@ const archive = path.resolve(input);
 const firstStartLimitSeconds = 120;
 const cwd = await mkdtemp(path.join(tmpdir(), "reel package smoke "));
 const home = path.join(cwd, "studio files");
-const cache = path.join(cwd, "npm-cache");
+const primedCache = process.env.REEL_STUDIO_SMOKE_NPM_CACHE;
+const cache = primedCache ?? path.join(cwd, "npm-cache");
+const logs = path.join(cwd, "npm-logs");
 const env = {
   ...process.env,
   REEL_STUDIO_HOME: home,
@@ -22,7 +24,9 @@ const env = {
   PUPPETEER_SKIP_DOWNLOAD: "1",
   ONNXRUNTIME_NODE_INSTALL_CUDA: "skip",
   npm_config_cache: cache,
+  npm_config_logs_dir: logs,
   npm_config_loglevel: "info",
+  ...(primedCache ? { npm_config_prefer_offline: "true" } : {}),
 };
 delete env.DATABASE_URL;
 delete env.REEL_STUDIO_MEDIA_DIR;
@@ -46,9 +50,7 @@ try {
       cwd,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "inherit"],
-      // Let slow installs reach the app so CI can distinguish registry delay
-      // from launch failures. The first-start budget is still enforced below.
-      timeout: 300_000,
+      timeout: primedCache ? 300_000 : firstStartLimitSeconds * 1000,
     },
   );
   const url = stdout.match(/^http:\/\/127\.0\.0\.1:\d+$/m)?.[0];
@@ -71,19 +73,20 @@ try {
   }
   assert.ok(workerStarted, "The installed production worker did not start");
   const elapsed = (performance.now() - start) / 1000;
+  const install = primedCache ? "Primed-cache" : "Cold";
   console.log(
-    `Installed studio served its home screen in ${elapsed.toFixed(2)} s on ${process.platform}`,
+    `${install} install served the studio home screen in ${elapsed.toFixed(2)} s on ${process.platform}`,
   );
-  assert.ok(
-    elapsed < firstStartLimitSeconds,
-    "First start exceeded two minutes",
-  );
+  if (!primedCache)
+    assert.ok(
+      elapsed < firstStartLimitSeconds,
+      "First start exceeded two minutes",
+    );
 } catch (error) {
   const log = await readFile(path.join(home, "engine.log"), "utf8").catch(
     () => "",
   );
   if (log) console.error(log.slice(-10_000));
-  const logs = path.join(cache, "_logs");
   for (const name of (await readdir(logs).catch(() => [])).sort().slice(-2)) {
     const npmLog = await readFile(path.join(logs, name), "utf8");
     console.error(npmLog.split("\n").slice(-35).join("\n"));
