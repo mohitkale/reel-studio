@@ -7,7 +7,7 @@ camera move (`push-in`, `pull-out`, `pan`) on the scene's content with the decor
 background shapes moving against it at their own depth. The plan is deterministic for a
 storyboard and seed, `variety` sets how often non-default variants appear, and
 `reduceMotion` turns camera moves off and keeps every entrance a plain rise. Scenes can also
-carry one of sixty looping background illustrations (`illustration` in the storyboard;
+carry one of 65 looping background illustrations (`illustration` in the storyboard;
 `docs/assets/illustrations/sheet.jpg`, `npm run illustrations:sheet`), drawn by code so there is
 no third-party artwork. Not built yet: rack focus, 3D orbit, image saliency and cut-out
 parallax.
