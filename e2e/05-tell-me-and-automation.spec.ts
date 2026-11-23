@@ -30,7 +30,11 @@ test("automation defaults save and show on the Create screen", async ({
   page,
 }) => {
   await page.goto("/settings");
-  const captions = page.getByLabel("Show captions");
+  // Streaming can briefly leave a hidden copy of the settings controls in the DOM.
+  const captions = page.getByRole("checkbox", {
+    name: "Show captions",
+    exact: true,
+  });
   await expect(captions).toBeEnabled();
   await expect(captions).toBeChecked();
   await captions.click();
@@ -44,13 +48,13 @@ test("automation defaults save and show on the Create screen", async ({
 
   await page.goto("/");
   await page.getByText("More options").click();
-  await expect(page.getByLabel("Show captions")).not.toBeChecked();
+  await expect(captions).not.toBeChecked();
 
   // Put it back so nothing after this depends on it.
   await page.goto("/settings");
-  await expect(page.getByLabel("Show captions")).toBeEnabled();
-  await page.getByLabel("Show captions").click();
-  await expect(page.getByLabel("Show captions")).toBeChecked();
+  await expect(captions).toBeEnabled();
+  await captions.click();
+  await expect(captions).toBeChecked();
   await expect
     .poll(
       async () =>

@@ -9,12 +9,16 @@ export const renderSectionSchema = z
   .strict()
   .refine((section) => section.endFrame >= section.startFrame);
 export type RenderSection = z.infer<typeof renderSectionSchema>;
+export const DEFAULT_RENDER_SECTION_SECONDS = 30;
+export const SHORT_RENDER_SECTION_SECONDS = 5;
+export const MAX_RENDER_SECTION_COUNT = 20;
 
 /** Keep global timestamps, partitioning bounded capture work without retiming. */
 export function planRenderSections(
   totalFrames: number,
   fps: number,
   chapterStarts: number[] = [],
+  sectionSeconds = DEFAULT_RENDER_SECTION_SECONDS,
 ) {
   if (
     !Number.isInteger(totalFrames) ||
@@ -22,6 +26,9 @@ export function planRenderSections(
     !Number.isInteger(fps) ||
     fps < 1 ||
     fps > 60 ||
+    !Number.isInteger(sectionSeconds) ||
+    sectionSeconds < 1 ||
+    sectionSeconds > DEFAULT_RENDER_SECTION_SECONDS ||
     totalFrames > fps * 600
   )
     throw new Error(
@@ -36,17 +43,18 @@ export function planRenderSections(
       totalFrames,
     ]),
   ].sort((a, b) => a - b);
+  const sectionFrames = fps * sectionSeconds;
   const sections: RenderSection[] = [];
   for (let index = 0; index < boundaries.length - 1; index++) {
     for (
       let start = boundaries[index];
       start < boundaries[index + 1];
-      start += fps * 30
+      start += sectionFrames
     )
       sections.push({
         index: sections.length,
         startFrame: start,
-        endFrame: Math.min(boundaries[index + 1], start + fps * 30) - 1,
+        endFrame: Math.min(boundaries[index + 1], start + sectionFrames) - 1,
       });
   }
   return sections;

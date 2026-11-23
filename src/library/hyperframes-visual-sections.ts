@@ -14,7 +14,17 @@ import {
 } from "@/engines/hyperframes/build-composition";
 import { getCatalogBlockByTemplateId } from "@/engines/hyperframes/catalog/manifest";
 import { sectionVisualProps } from "@/production/section-visuals";
-import { planRenderSections } from "@/production/render-sections";
+import {
+  DEFAULT_RENDER_SECTION_SECONDS,
+  planRenderSections,
+  SHORT_RENDER_SECTION_SECONDS,
+} from "@/production/render-sections";
+
+export function supportsHyperframesVisualSections(props: ReelProps) {
+  return !props.scenes.some((scene) =>
+    getCatalogBlockByTemplateId(scene.templateId, props.catalogRevision),
+  );
+}
 
 /** Freeze actual silent native projects, never a guessed projection of a
  * compiled page. Imported sub-compositions may reach outside their scene and
@@ -25,18 +35,17 @@ export async function writeHyperframesVisualSections(
   props: ReelProps,
   /** The presenter's mouth and blinks, when the video has one (global times). */
   presenterTrack?: PresenterTrackInput,
-  draftScale?: number,
+  options: { sectionSeconds?: number; draftScale?: number } = {},
 ) {
+  const { sectionSeconds = DEFAULT_RENDER_SECTION_SECONDS, draftScale } =
+    options;
   const root = path.join(`${projectDir}-sections`, "visuals");
-  if (
-    props.scenes.some((scene) =>
-      getCatalogBlockByTemplateId(scene.templateId, props.catalogRevision),
-    )
-  )
-    return false;
+  if (!supportsHyperframesVisualSections(props)) return false;
   const fps = props.fps || 30;
   const totalFrames = compositionTotalFrames(props);
-  for (const section of planRenderSections(totalFrames, fps)) {
+  const sections = planRenderSections(totalFrames, fps, [], sectionSeconds);
+  const short = sectionSeconds === SHORT_RENDER_SECTION_SECONDS;
+  for (const section of sections) {
     const directory = path.join(root, String(section.index));
     await fs.mkdir(directory, { recursive: true });
     const scoped = sectionVisualProps(props, section, fps);
@@ -61,12 +70,22 @@ export async function writeHyperframesVisualSections(
       path.join(directory, "_runtime"),
       { recursive: true },
     );
-    const html = buildHyperframesCompositionHtml(scoped, {
+    const visualProps = short
+      ? { ...props, audioUrl: undefined, musicUrl: undefined, sfxCues: [] }
+      : scoped;
+    const html = buildHyperframesCompositionHtml(visualProps, {
       producerMode: true,
       runtimeUrl: "/_runtime/gsap.min.js",
       totalFrames,
       presenterTrack,
       draftScale,
+      stablePaint: short,
+      section: short
+        ? {
+            ...section,
+            sceneIds: new Set(scoped.scenes.map((scene) => scene.id)),
+          }
+        : undefined,
     });
     if (html.includes("data-composition-src="))
       throw new Error("Imported compositions cannot use scoped visual reuse.");
@@ -78,7 +97,8 @@ export async function writeHyperframesVisualSections(
       version: 1,
       totalFrames,
       fps,
-      count: planRenderSections(totalFrames, fps).length,
+      count: sections.length,
+      sectionSeconds,
     }),
   );
   return true;

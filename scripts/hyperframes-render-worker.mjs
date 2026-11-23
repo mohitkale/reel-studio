@@ -21,6 +21,7 @@ const [
   mode,
   widthRaw,
   heightRaw,
+  sectionSecondsRaw,
 ] = process.argv.slice(2);
 
 if (!projectDir || !outputPath || !fpsRaw) {
@@ -87,6 +88,10 @@ try {
         quality,
         width: Number(widthRaw),
         height: Number(heightRaw),
+        sectionSeconds:
+          sectionSecondsRaw === undefined
+            ? undefined
+            : Number(sectionSecondsRaw),
         signal: cancellation.signal,
       },
       { planV2, renderChunkV2, assembleV2, readPlanV2Manifest },

@@ -2,7 +2,12 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { z } from "zod";
-import { planRenderSections } from "../src/production/render-sections";
+import {
+  DEFAULT_RENDER_SECTION_SECONDS,
+  MAX_RENDER_SECTION_COUNT,
+  planRenderSections,
+  SHORT_RENDER_SECTION_SECONDS,
+} from "../src/production/render-sections";
 import { renderCachedSection } from "../src/library/render-section-cache";
 import {
   hyperframesSectionCacheKey,
@@ -19,6 +24,7 @@ export async function renderHyperframesSections(
     quality: string;
     width: number;
     height: number;
+    sectionSeconds?: number;
     signal: AbortSignal;
   },
   producer: Pick<
@@ -35,29 +41,39 @@ export async function renderHyperframesSections(
       quality: z.enum(["draft", "standard", "high"]),
     })
     .parse(input);
+  const sectionSeconds = z
+    .union([
+      z.literal(DEFAULT_RENDER_SECTION_SECONDS),
+      z.literal(SHORT_RENDER_SECTION_SECONDS),
+    ])
+    .default(DEFAULT_RENDER_SECTION_SECONDS)
+    .parse(input.sectionSeconds);
+  const short = sectionSeconds === SHORT_RENDER_SECTION_SECONDS;
+  const planConfig = {
+    ...config,
+    format: "mp4",
+    codec: "h264",
+    chunkSize: config.fps * sectionSeconds,
+    maxParallelChunks: MAX_RENDER_SECTION_COUNT,
+    hdrMode: "force-sdr",
+    rejectOnSystemFonts: true,
+    failClosedFontFetch: true,
+    strictness: "best-effort",
+    abortSignal: input.signal,
+  } as const;
   const directory = await fs.mkdtemp(
     path.join(os.tmpdir(), "reel-hf-sections-"),
   );
   return withProductionSignal(input.signal, async () => {
     try {
       const planDir = path.join(directory, "plan");
-      const plan = await planV2(
-        input.projectDir,
-        {
-          ...config,
-          format: "mp4",
-          codec: "h264",
-          chunkSize: config.fps * 30,
-          maxParallelChunks: 20,
-          hdrMode: "force-sdr",
-          rejectOnSystemFonts: true,
-          failClosedFontFetch: true,
-          strictness: "best-effort",
-          abortSignal: input.signal,
-        },
-        planDir,
+      const plan = await planV2(input.projectDir, planConfig, planDir);
+      const sections = planRenderSections(
+        plan.totalFrames,
+        config.fps,
+        [],
+        sectionSeconds,
       );
-      const sections = planRenderSections(plan.totalFrames, config.fps);
       if (sections.length !== plan.chunkCount)
         throw new Error(
           "HyperFrames section coverage differs from the frozen plan.",
@@ -78,6 +94,10 @@ export async function renderHyperframesSections(
               .max(plan.totalFrames),
             fps: z.literal(config.fps),
             count: z.literal(sections.length),
+            sectionSeconds: z
+              .number()
+              .default(DEFAULT_RENDER_SECTION_SECONDS)
+              .refine((seconds) => seconds === sectionSeconds),
           })
           .strict()
           .parse(
@@ -89,6 +109,8 @@ export async function renderHyperframesSections(
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
       }
+      if (short && !scoped)
+        throw new Error("Short render sections require scoped visual inputs.");
       console.log("HF_PROGRESS 0.10");
       const chunks: string[] = [];
       for (const section of sections) {
@@ -99,18 +121,7 @@ export async function renderHyperframesSections(
           renderPlanDir = path.join(directory, `visual-plan-${section.index}`);
           const visualPlan = await planV2(
             path.join(visualRoot, String(section.index)),
-            {
-              ...config,
-              format: "mp4",
-              codec: "h264",
-              chunkSize: config.fps * 30,
-              maxParallelChunks: 20,
-              hdrMode: "force-sdr",
-              rejectOnSystemFonts: true,
-              failClosedFontFetch: true,
-              strictness: "best-effort",
-              abortSignal: input.signal,
-            },
+            planConfig,
             renderPlanDir,
           );
           if (

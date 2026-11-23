@@ -7,10 +7,66 @@ import { createRequire } from "node:module";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
+import { promisify } from "node:util";
 import { buildHyperframesCompositionHtml } from "../src/engines/hyperframes/build-composition.ts";
 import { copyHyperframesRuntime } from "../src/library/hyperframes-runtime.ts";
 import { defaultBrandTokens } from "../src/video/tokens.ts";
+
+const [mode, firstExport, secondExport, ...frameArgs] = process.argv.slice(2);
+if (mode === "--compare-seams") {
+  const frames = [...new Set(frameArgs.map(Number))].sort((a, b) => a - b);
+  assert(
+    firstExport &&
+      secondExport &&
+      frames.length &&
+      frames.every((frame) => Number.isSafeInteger(frame) && frame >= 0),
+    "Use --compare-seams <warm.mp4> <fresh.mp4> <frame> [frame...]",
+  );
+  const run = promisify(execFile);
+  const filter = `select=${frames.map((frame) => `eq(n\\,${frame})`).join("+")}`;
+  async function hashes(filename) {
+    const { stdout } = await run("ffmpeg", [
+      "-v",
+      "error",
+      "-i",
+      filename,
+      "-map",
+      "0:v:0",
+      "-vf",
+      filter,
+      "-fps_mode",
+      "passthrough",
+      "-f",
+      "framemd5",
+      "-",
+    ]);
+    return stdout
+      .trim()
+      .split("\n")
+      .filter((row) => !row.startsWith("#"))
+      .map((row) => row.split(",").at(-1).trim());
+  }
+  const warm = await hashes(firstExport);
+  const fresh = await hashes(secondExport);
+  assert.equal(
+    warm.length,
+    frames.length,
+    "Warm export is missing sampled frames",
+  );
+  assert.equal(
+    fresh.length,
+    frames.length,
+    "Fresh export is missing sampled frames",
+  );
+  for (const [index, frame] of frames.entries()) {
+    assert.equal(warm[index], fresh[index], `Decoded frame ${frame} differs`);
+  }
+  console.log(
+    `Decoded frames match at ${frames.length} samples (${frames.join(", ")}).`,
+  );
+  process.exit(0);
+}
 
 const require = createRequire(import.meta.url);
 const { default: puppeteer } = await import(

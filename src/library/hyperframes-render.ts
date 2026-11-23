@@ -5,8 +5,17 @@ import { copyHyperframesRuntime } from "@/library/hyperframes-runtime";
 import { downloadPublicMediaToFile } from "@/server/public-media-download";
 import { productionSignal } from "@/library/production-cancellation";
 import { randomUUID } from "node:crypto";
+import { availableParallelism } from "node:os";
 import { createProgressWriter } from "@/library/progress-writer";
-import { writeHyperframesVisualSections } from "@/library/hyperframes-visual-sections";
+import {
+  supportsHyperframesVisualSections,
+  writeHyperframesVisualSections,
+} from "@/library/hyperframes-visual-sections";
+import {
+  DEFAULT_RENDER_SECTION_SECONDS,
+  MAX_RENDER_SECTION_COUNT,
+  SHORT_RENDER_SECTION_SECONDS,
+} from "@/production/render-sections";
 import { writeRenderExportFolder } from "@/library/export-folder";
 import { ensureRenderPoster, renderPosterKey } from "@/library/render-poster";
 import type { VideoSnapshot } from "@/production/video-snapshot";
@@ -198,7 +207,7 @@ async function runWorker(args: {
   outputPath: string;
   fps: number;
   quality: RenderQuality;
-  sections?: { width: number; height: number };
+  sections?: { width: number; height: number; sectionSeconds: number };
   onProgress: (pct: number) => void;
 }): Promise<void> {
   assertProductionActive();
@@ -223,6 +232,7 @@ async function runWorker(args: {
               "sections",
               String(args.sections.width),
               String(args.sections.height),
+              String(args.sections.sectionSeconds),
             ]
           : []),
       ],
@@ -230,7 +240,26 @@ async function runWorker(args: {
         detached: process.platform !== "win32",
         cwd: process.cwd(),
         env: args.sections
-          ? { ...process.env, TMPDIR: scratch, TMP: scratch, TEMP: scratch }
+          ? {
+              ...process.env,
+              TMPDIR: scratch,
+              TMP: scratch,
+              TEMP: scratch,
+              ...(args.sections.sectionSeconds === SHORT_RENDER_SECTION_SECONDS
+                ? {
+                    PRODUCER_FORCE_SCREENSHOT: "true",
+                    // Each Chrome process has its own compositor. A shared
+                    // compositor serializes captures across the worker pages.
+                    PRODUCER_ENABLE_BROWSER_POOL: "false",
+                    PRODUCER_MAX_WORKERS: String(
+                      Math.max(
+                        1,
+                        Math.min(4, Math.floor(availableParallelism() / 2)),
+                      ),
+                    ),
+                  }
+                : {}),
+            }
           : process.env,
         stdio: ["ignore", "pipe", "pipe"],
       },
@@ -669,12 +698,26 @@ export async function runHyperframesRender(
       ? { ...prepared.props, scenes, audioUrl, musicUrl, sfxCues, coverUrl }
       : legacyInputProps;
 
-    const useSections =
-      Boolean(
-        script.chapterPlan ||
-        (inputProps.sequenceDirection &&
-          compositionTotalFrames(inputProps) > script.fps * 30),
-      ) && [24, 30, 60].includes(script.fps);
+    const sectionFps = [24, 30, 60].includes(script.fps);
+    const totalFrames = compositionTotalFrames(inputProps);
+    const longSections = Boolean(
+      script.chapterPlan ||
+      (inputProps.sequenceDirection &&
+        totalFrames > script.fps * DEFAULT_RENDER_SECTION_SECONDS),
+    );
+    const shortSectionFrames = script.fps * SHORT_RENDER_SECTION_SECONDS;
+    const shortSections =
+      sectionFps &&
+      !longSections &&
+      quality !== "draft" &&
+      inputProps.scenes.length > 1 &&
+      totalFrames > shortSectionFrames &&
+      totalFrames <= shortSectionFrames * MAX_RENDER_SECTION_COUNT &&
+      supportsHyperframesVisualSections(inputProps);
+    const useSections = (sectionFps && longSections) || shortSections;
+    const sectionSeconds = longSections
+      ? DEFAULT_RENDER_SECTION_SECONDS
+      : SHORT_RENDER_SECTION_SECONDS;
     const draftScale = quality === "draft" ? DRAFT_SCALE : undefined;
     // Sectioned drafts keep their frame rate for exact section boundaries.
     await writeHyperframesProject(
@@ -689,7 +732,7 @@ export async function runHyperframesRender(
         projectDir,
         inputProps,
         await presenterTrackFor(inputProps, projectDir),
-        draftScale,
+        { sectionSeconds, draftScale },
       );
 
     const store = getAssetStore();
@@ -698,24 +741,14 @@ export async function runHyperframesRender(
     progress(0.02, "rendering");
     console.log("[render:hf] Starting HyperFrames worker", renderId);
 
-    await runWorker({
+    const worker = {
       projectDir,
       outputPath,
       // A draft is a preview: half the frames per second renders in about half
       // the time. The full-quality export keeps the project's own rate.
       fps: useSections ? script.fps : draftFps(script.fps, quality),
       quality,
-      sections: useSections
-        ? {
-            width: Math.round(
-              (inputProps.width ?? nativeDims.width) * (draftScale ?? 1),
-            ),
-            height: Math.round(
-              (inputProps.height ?? nativeDims.height) * (draftScale ?? 1),
-            ),
-          }
-        : undefined,
-      onProgress: (pct) => {
+      onProgress: (pct: number) => {
         // Keep a little headroom so "100%" only lands after completeRender.
         const capped = Math.min(
           script.audioMastering !== "original" ? 0.96 : 0.99,
@@ -728,7 +761,29 @@ export async function runHyperframesRender(
           );
         }
       },
-    });
+    };
+    try {
+      await runWorker({
+        ...worker,
+        sections: useSections
+          ? {
+              width: Math.round(
+                (inputProps.width ?? nativeDims.width) * (draftScale ?? 1),
+              ),
+              height: Math.round(
+                (inputProps.height ?? nativeDims.height) * (draftScale ?? 1),
+              ),
+              sectionSeconds,
+            }
+          : undefined,
+      });
+    } catch (error) {
+      if (!shortSections) throw error;
+      assertProductionActive();
+      console.warn("[render:hf] Retrying with the full render worker", error);
+      await fs.rm(outputPath, { force: true });
+      await runWorker(worker);
+    }
 
     await masterVideoAudio(outputPath, script.audioMastering);
     assertProductionActive();

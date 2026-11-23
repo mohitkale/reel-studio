@@ -3,6 +3,10 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { expect, it, vi } from "vitest";
+import {
+  DEFAULT_RENDER_SECTION_SECONDS,
+  SHORT_RENDER_SECTION_SECONDS,
+} from "@/production/render-sections";
 import type { PlanV2Manifest, PlanV2Result } from "@hyperframes/producer";
 vi.mock("@/library/render-section-cache", async (original) => ({
   ...(await original<typeof import("@/library/render-section-cache")>()),
@@ -18,107 +22,123 @@ vi.mock("@/library/render-section-cache", async (original) => ({
   ),
 }));
 import { renderHyperframesSections } from "../../scripts/hyperframes-section-render";
-it("renders the scoped native plan for each cache key but assembles once with the original complete audio plan", async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "reel-native-scope-"));
-  const projectDir = path.join(root, "project");
-  const visualRoot = path.join(`${projectDir}-sections`, "visuals");
-  await fs.mkdir(visualRoot, { recursive: true });
-  await fs.writeFile(
-    path.join(visualRoot, "manifest.json"),
-    JSON.stringify({ version: 1, totalFrames: 960, fps: 30, count: 2 }),
-  );
-  const base = {
-    totalFrames: 960,
-    chunkCount: 2,
-    width: 720,
-    height: 1280,
-    fps: 30,
-  };
-  const manifest = {
-    ...base,
-    protocol: {},
-    producerVersion: "0.8.40",
-    ffmpegVersion: "test",
-    format: "mp4",
-    limitations: { videoDependencyMode: "exact-rendered-frames" },
-    artifacts: [
-      {
-        path: "meta/encoder.json",
-        sha256: "encoder",
-        sizeBytes: 1,
-        chunks: "all",
-        assembler: true,
-      },
-    ],
-  } as unknown as PlanV2Manifest;
-  const producer = {
-    planV2: vi.fn(async () => base as PlanV2Result),
-    readPlanV2Manifest: vi.fn(() => manifest),
-    renderChunkV2: vi.fn(async (_dir: string, index: number) => ({
-      framesEncoded: index === 0 ? 900 : 60,
-    })),
-    assembleV2: vi.fn(async () => ({})),
-  };
-  const input = {
-    projectDir,
-    outputPath: path.join(root, "out.mp4"),
-    quality: "draft",
-    ...base,
-    signal: new AbortController().signal,
-  };
-  try {
-    await renderHyperframesSections(
-      input,
-      producer as unknown as Parameters<typeof renderHyperframesSections>[1],
-    );
-    expect(producer.planV2.mock.calls).toHaveLength(3);
-    const renderCalls = producer.renderChunkV2.mock.calls;
-    expect(renderCalls[0][0]).toContain("visual-plan-0");
-    expect(renderCalls[1][0]).toContain("visual-plan-1");
-    expect(producer.assembleV2.mock.calls).toHaveLength(1);
-    expect(producer.assembleV2).toHaveBeenCalledWith(
-      expect.stringMatching(/[\\/]plan$/),
-      ["section-0.mp4", "section-1.mp4"],
-      input.outputPath,
-      expect.any(Object),
-    );
-    producer.planV2
-      .mockResolvedValueOnce(base as PlanV2Result)
-      .mockResolvedValueOnce({ ...base, totalFrames: 900 } as PlanV2Result);
-    await expect(
-      renderHyperframesSections(
+it.each([DEFAULT_RENDER_SECTION_SECONDS, SHORT_RENDER_SECTION_SECONDS])(
+  "assembles %i-second sections with the complete audio plan",
+  async (sectionSeconds) => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "reel-native-scope-"));
+    const projectDir = path.join(root, "project");
+    const visualRoot = path.join(`${projectDir}-sections`, "visuals");
+    await fs.mkdir(visualRoot, { recursive: true });
+    const sectionFrames = sectionSeconds * 30;
+    const base = {
+      totalFrames: sectionFrames + 60,
+      chunkCount: 2,
+      width: 720,
+      height: 1280,
+      fps: 30,
+    };
+    const writeManifest = (totalFrames: number) =>
+      fs.writeFile(
+        path.join(visualRoot, "manifest.json"),
+        JSON.stringify({
+          version: 1,
+          totalFrames,
+          fps: 30,
+          count: 2,
+          sectionSeconds,
+        }),
+      );
+    await writeManifest(base.totalFrames);
+    const manifest = {
+      ...base,
+      protocol: {},
+      producerVersion: "0.8.40",
+      ffmpegVersion: "test",
+      format: "mp4",
+      limitations: { videoDependencyMode: "exact-rendered-frames" },
+      artifacts: [
+        {
+          path: "meta/encoder.json",
+          sha256: "encoder",
+          sizeBytes: 1,
+          chunks: "all",
+          assembler: true,
+        },
+      ],
+    } as unknown as PlanV2Manifest;
+    const producer = {
+      planV2: vi.fn(async () => base as PlanV2Result),
+      readPlanV2Manifest: vi.fn(() => manifest),
+      renderChunkV2: vi.fn(async (_dir: string, index: number) => ({
+        framesEncoded: index === 0 ? sectionFrames : 60,
+      })),
+      assembleV2: vi.fn(async () => ({})),
+    };
+    const input = {
+      projectDir,
+      outputPath: path.join(root, "out.mp4"),
+      quality: "draft",
+      sectionSeconds,
+      ...base,
+      signal: new AbortController().signal,
+    };
+    try {
+      await renderHyperframesSections(
         input,
         producer as unknown as Parameters<typeof renderHyperframesSections>[1],
-      ),
-    ).rejects.toThrow("changed global coverage");
-    // The planner rounds the page's duration up to a whole frame, so the sections
-    // may have been cut from a timeline one frame shorter. More than that is refused.
-    await fs.writeFile(
-      path.join(visualRoot, "manifest.json"),
-      JSON.stringify({ version: 1, totalFrames: 959, fps: 30, count: 2 }),
-    );
-    await renderHyperframesSections(
-      input,
-      producer as unknown as Parameters<typeof renderHyperframesSections>[1],
-    );
-    await fs.writeFile(
-      path.join(visualRoot, "manifest.json"),
-      JSON.stringify({ version: 1, totalFrames: 958, fps: 30, count: 2 }),
-    );
-    await expect(
-      renderHyperframesSections(
+      );
+      expect(producer.planV2.mock.calls).toHaveLength(3);
+      const renderCalls = producer.renderChunkV2.mock.calls;
+      expect(renderCalls[0][0]).toMatch(/visual-plan-0$/);
+      expect(renderCalls[1][0]).toMatch(/visual-plan-1$/);
+      expect(producer.assembleV2.mock.calls).toHaveLength(1);
+      expect(producer.assembleV2).toHaveBeenCalledWith(
+        expect.stringMatching(/[\\/]plan$/),
+        ["section-0.mp4", "section-1.mp4"],
+        input.outputPath,
+        expect.any(Object),
+      );
+      producer.planV2
+        .mockResolvedValueOnce(base as PlanV2Result)
+        .mockResolvedValueOnce({
+          ...base,
+          totalFrames: sectionFrames,
+        } as PlanV2Result);
+      await expect(
+        renderHyperframesSections(
+          input,
+          producer as unknown as Parameters<
+            typeof renderHyperframesSections
+          >[1],
+        ),
+      ).rejects.toThrow("changed global coverage");
+      // The planner rounds the page's duration up to a whole frame, so the sections
+      // may have been cut from a timeline one frame shorter. More than that is refused.
+      await writeManifest(base.totalFrames - 1);
+      await renderHyperframesSections(
         input,
         producer as unknown as Parameters<typeof renderHyperframesSections>[1],
-      ),
-    ).rejects.toThrow();
-    await fs.writeFile(path.join(visualRoot, "manifest.json"), "{}");
-    await expect(
-      renderHyperframesSections(
-        input,
-        producer as unknown as Parameters<typeof renderHyperframesSections>[1],
-      ),
-    ).rejects.toThrow();
-  } finally {
-    await fs.rm(root, { recursive: true, force: true });
-  }
-});
+      );
+      await writeManifest(base.totalFrames - 2);
+      await expect(
+        renderHyperframesSections(
+          input,
+          producer as unknown as Parameters<
+            typeof renderHyperframesSections
+          >[1],
+        ),
+      ).rejects.toThrow();
+      await fs.writeFile(path.join(visualRoot, "manifest.json"), "{}");
+      await expect(
+        renderHyperframesSections(
+          input,
+          producer as unknown as Parameters<
+            typeof renderHyperframesSections
+          >[1],
+        ),
+      ).rejects.toThrow();
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  },
+);

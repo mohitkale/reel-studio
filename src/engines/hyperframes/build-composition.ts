@@ -5,10 +5,12 @@ import { buildMultiSeriesScene } from "./motion/multi-series-scene";
 import { buildAdaptiveScene, ADAPTIVE_STYLES } from "./motion/adaptive-blocks";
 import { resolveSequenceContinuity } from "@/production/sequence-continuity";
 import { buildSequenceHandoffs } from "./motion/sequence-handoff";
+import type { RenderSection } from "@/production/render-sections";
 import { escapeHtml } from "@/lib/html";
 import { MOTION_LIBRARY_STYLES } from "./motion/library-styles";
 import { colorContrast, readableMotionPalette } from "@/video/readable-palette";
 import { buildTextFitScript } from "./text-fit";
+import { HYPERFRAMES_PAINT_BARRIER } from "./paint-barrier";
 import { validateMotionForReel } from "@/video/motion-spec";
 import { compileDirectorMotion } from "@/video/director-motion";
 import { compileMotionShot } from "./motion/compile-shot";
@@ -1093,6 +1095,10 @@ export function buildHyperframesCompositionHtml(
     runtimeUrl?: string;
     /** Preserve the complete endpoint for silent globally timed section projects. */
     totalFrames?: number;
+    /** Limit emitted visuals while retaining whole-video direction and indices. */
+    section?: RenderSection & { sceneIds: ReadonlySet<string> };
+    /** A screenshot capture waits for the compositor to finish each seek. */
+    stablePaint?: boolean;
     /**
      * Draft previews: capture a smaller canvas (for example 0.5 for a quarter
      * of the pixels). The layout stays authored at full size and is scaled as
@@ -1113,6 +1119,9 @@ export function buildHyperframesCompositionHtml(
   });
   const fps = props.fps || 30;
   const sequence = resolveSequenceContinuity(props);
+  const section = opts.section;
+  const inSection = (start: number, end: number) =>
+    !section || (start <= section.endFrame && end > section.startFrame);
   const width = props.width || 1080;
   const height = props.height || 1920;
   const layout = props.layout ?? resolveProductionLayout({ width, height });
@@ -1202,6 +1211,11 @@ export function buildHyperframesCompositionHtml(
     const beat = timeline[i];
     const scene = props.scenes.find((s) => s.id === beat.sceneId);
     if (!scene) continue;
+    if (section && !section.sceneIds.has(scene.id)) {
+      // Keep the index used by the global look and incoming handoff.
+      sceneBlocks.push("");
+      continue;
+    }
     const next = timeline[i + 1];
     const endFrame = next
       ? next.startFrame
@@ -1468,6 +1482,8 @@ export function buildHyperframesCompositionHtml(
       ? props.captions.cues
           .filter((cue) => !redundantCues.has(cue.id))
           .map((cue, index) => {
+            if (!inSection(cover + cue.startFrame, cover + cue.endFrame))
+              return "";
             const start = coverSeconds + cue.startFrame / fpsSafe;
             const duration =
               Math.max(1, cue.endFrame - cue.startFrame) / fpsSafe;
@@ -1617,7 +1633,7 @@ ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLE
           ),
         )
         .join("\n")}
-      ${buildSequenceHandoffs(sequence, tokens, fps, width, height)}
+      ${buildSequenceHandoffs(sequence, tokens, fps, width, height, section && inSection)}
       ${presenter?.html ?? ""}
       ${captionBlocks}
       ${debugOverlay}
@@ -1626,6 +1642,7 @@ ${ADAPTIVE_STYLES}${CELESTIAL_STYLES}${SHOWPIECE_STYLES}${SEMANTIC_GRAPHIC_STYLE
   </div>
   ${buildGsapMotionBootScript(opts.runtimeUrl)}
   ${buildTextFitScript()}
+  ${opts.stablePaint ? HYPERFRAMES_PAINT_BARRIER : ""}
   ${opts.producerMode ? "" : buildSeekScript(beats, coverSeconds, totalSeconds, fps, hideProgress, audioMix)}
 </body>
 </html>`;
