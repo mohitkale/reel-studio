@@ -25,6 +25,7 @@ const FIELDS = {
   steps: (p) => ({ items: p.items }),
   checklist: (p) => ({ items: p.items }),
   recap: (p) => ({ items: p.items }),
+  "pro-tip": (p) => ({ items: p.items }),
   comparison: (p) => ({ compare: { left: p.left, right: p.right } }),
   "before-after": (p) => ({ compare: { left: p.left, right: p.right } }),
   timeline: (p) => ({ points: p.points }),

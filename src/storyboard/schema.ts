@@ -92,11 +92,12 @@ export const SCENE_TYPES = [
   "device-mockup",
   "checklist",
   "recap",
+  "pro-tip",
 ] as const;
 export const sceneTypeSchema = z
   .enum(SCENE_TYPES)
   .describe(
-    'What the scene is. hook: opening line that grabs attention. statement: one key idea. kinetic-text: a punchy line slammed word by word. list: 2-6 short points (needs items). steps: 2-6 numbered steps in order (needs items). checklist: 2-6 things to tick off (needs items). recap: 2-6 short lines that sum up what was just covered, good at the end of a chapter of a long video (needs items). stat: one big number (needs stat). comparison: two options side by side (needs compare). before-after: a change from one state to another (needs compare). timeline: 2-5 moments in order (needs points). diagram: 2-5 connected parts of a process or system (needs points). chart: compare values (needs chart; chart.kind bar, line or donut). quote: a quotation (needs quote). definition: a term and its meaning (needs definition). code: a code snippet (needs code). terminal: shell commands and output (needs code). media: a full-frame picture or clip (needs media). media-split: picture beside the headline (needs media). device-mockup: a phone screen showing a picture (media optional). cta: closing call to action. Example: "statement".',
+    'What the scene is. hook: opening line that grabs attention. statement: one key idea. kinetic-text: a punchy line slammed word by word. list: 2-6 short points (needs items). steps: 2-6 numbered steps in order (needs items). checklist: 2-6 things to tick off (needs items). recap: 2-6 short lines that sum up what was just covered, good at the end of a chapter of a long video (needs items). stat: one big number (needs stat). comparison: two options side by side (needs compare). before-after: a change from one state to another (needs compare). timeline: 2-5 moments in order (needs points). diagram: 2-5 connected parts of a process or system (needs points). chart: compare values (needs chart; chart.kind bar, line or donut). quote: a quotation (needs quote). definition: a term and its meaning (needs definition). code: a code snippet (needs code). terminal: shell commands and output (needs code). media: a full-frame picture or clip (needs media). media-split: picture beside the headline (needs media). device-mockup: a phone screen showing a picture (media optional). cta: closing call to action. pro-tip: a lightbulb badge and 2-6 practical tips (needs items). Example: "statement".',
   );
 
 export const FORMATS = ["9:16", "16:9", "1:1"] as const;
@@ -518,6 +519,7 @@ export const sceneSchema = z
       steps: "items",
       checklist: "items",
       recap: "items",
+      "pro-tip": "items",
       stat: "stat",
       chart: "chart",
       comparison: "compare",

@@ -21,7 +21,7 @@ import path from "node:path";
 const name = process.argv[2];
 if (!name || !/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(name)) {
   console.error(
-    "Give a lowercase name with hyphens, for example: npm run scene:new pro-tip",
+    "Give a lowercase name with hyphens, for example: npm run scene:new quick-tip",
   );
   process.exit(1);
 }

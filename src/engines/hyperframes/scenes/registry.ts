@@ -14,6 +14,7 @@ import { recap } from "./recap";
 import { steps } from "./steps";
 import { terminal } from "./terminal";
 import { timeline } from "./timeline";
+import { proTip } from "./pro-tip";
 
 export const SCENE_DEFINITIONS: ReadonlyArray<SceneDefinition<never>> = [
   kineticText,
@@ -28,6 +29,7 @@ export const SCENE_DEFINITIONS: ReadonlyArray<SceneDefinition<never>> = [
   mediaSplit,
   deviceMockup,
   recap,
+  proTip,
 ] as unknown as ReadonlyArray<SceneDefinition<never>>;
 
 const BY_TEMPLATE = new Map(SCENE_DEFINITIONS.map((d) => [d.templateId, d]));
