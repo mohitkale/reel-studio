@@ -9,6 +9,7 @@ import { z } from "zod";
 import { getCharacter } from "@/engines/hyperframes/presenter/characters";
 import { PRESENTER_PLACEMENTS } from "@/engines/hyperframes/presenter/build-presenter";
 import { buildPresenterTrack } from "@/library/presenter-track";
+import { presenterAdjustmentSchema } from "@/video/presenter-config-schema";
 import { buildRecordingClipHtml } from "@/engines/hyperframes/build-recording-clip";
 import { HYPERFRAMES_RENDER_FONT_FILES } from "@/engines/hyperframes/render-fonts";
 import {
@@ -388,6 +389,7 @@ export const clipRequestSchema = z
       .object({
         character: z.string().max(20),
         placement: z.enum(PRESENTER_PLACEMENTS as [string, ...string[]]),
+        adjustment: presenterAdjustmentSchema.optional(),
       })
       .optional(),
     quality: z.enum(["draft", "standard", "high"]).default("standard"),
@@ -593,6 +595,7 @@ export async function startClips(
                   character,
                   placement: request.presenter.placement as
                     "full" | "corner" | "split",
+                  adjustment: request.presenter.adjustment,
                   track: await buildPresenterTrack({
                     words,
                     wav,

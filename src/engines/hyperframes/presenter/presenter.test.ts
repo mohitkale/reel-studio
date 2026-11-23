@@ -99,6 +99,21 @@ describe("presenter layout and timeline", () => {
     ).toBeUndefined();
   });
 
+  it("moves and scales the rig within its side of a split frame", () => {
+    const frame = { width: 1920, height: 1080 };
+    const before = presenterLayout("split", frame);
+    const after = presenterLayout("split", frame, {
+      horizontal: -50,
+      vertical: -50,
+      scale: 65,
+    });
+    expect(after.video).toEqual(before.video);
+    expect(after.presenter.left).toBe(960);
+    expect(after.presenter.top).toBe(0);
+    expect(after.presenter.width).toBeCloseTo(before.presenter.width * 0.65);
+    expect(after.presenter.height).toBeCloseTo(before.presenter.height * 0.65);
+  });
+
   it("writes the timeline: one mouth change at a time, blinks, nods and sway", () => {
     const built = buildPresenter({
       character: CHARACTERS[1]!,

@@ -1,4 +1,5 @@
 import type { Accent, Blink, MouthKey } from "@/video/visemes";
+import type { PresenterAdjustment } from "@/video/presenter-config";
 
 import { characterSvg, type Character } from "./characters";
 
@@ -52,7 +53,7 @@ function fit(box: Box): Box {
 }
 
 /** Where the presenter, the video and the captions go for a placement and frame size. */
-export function presenterLayout(
+function presetLayout(
   placement: PresenterPlacement,
   frame: { width: number; height: number },
 ): PresenterLayout {
@@ -99,6 +100,51 @@ export function presenterLayout(
   };
 }
 
+export function presenterLayout(
+  placement: PresenterPlacement,
+  frame: { width: number; height: number },
+  adjustment?: PresenterAdjustment,
+): PresenterLayout {
+  const layout = presetLayout(placement, frame);
+  if (!adjustment) return layout;
+
+  const { width, height } = frame;
+  const left = layout.video && width >= height ? layout.video.width : 0;
+  const top = layout.video && height > width ? layout.video.height : 0;
+  const bounds = { left, top, width: width - left, height: height - top };
+  const box = layout.presenter;
+  const scale = Math.min(
+    adjustment.scale / 100,
+    bounds.width / box.width,
+    bounds.height / box.height,
+  );
+  const nextWidth = box.width * scale;
+  const nextHeight = box.height * scale;
+  const clamp = (value: number, min: number, max: number) =>
+    Math.max(min, Math.min(value, max));
+  return {
+    ...layout,
+    presenter: {
+      left: clamp(
+        box.left +
+          (box.width - nextWidth) / 2 +
+          (adjustment.horizontal * bounds.width) / 100,
+        bounds.left,
+        width - nextWidth,
+      ),
+      top: clamp(
+        box.top +
+          (box.height - nextHeight) / 2 +
+          (adjustment.vertical * bounds.height) / 100,
+        bounds.top,
+        height - nextHeight,
+      ),
+      width: nextWidth,
+      height: nextHeight,
+    },
+  };
+}
+
 export interface BuiltPresenter {
   html: string;
   css: string;
@@ -115,9 +161,14 @@ export function buildPresenter(options: {
   frame: { width: number; height: number };
   seconds: number;
   track: PresenterTrack;
+  adjustment?: PresenterAdjustment;
 }): BuiltPresenter {
   const { character: c, track } = options;
-  const layout = presenterLayout(options.placement, options.frame);
+  const layout = presenterLayout(
+    options.placement,
+    options.frame,
+    options.adjustment,
+  );
   const box = layout.presenter;
   const px = (n: number) => `${Math.round(n)}px`;
   const css = `.presenter{position:absolute;left:${px(box.left)};top:${px(box.top)};width:${px(box.width)};height:${px(box.height)};z-index:5}${

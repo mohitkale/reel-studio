@@ -114,6 +114,8 @@ Long storyboards with chapter markers can run up to ten minutes. Completed rende
 sections are reused when the job is retried. See [Storyboard](docs/STORYBOARD.md).
 From a finished video, **Make shorts from this** makes vertical cutdowns in one batch
 and reuses saved Kokoro narration for matching lines. See [Getting started](docs/GETTING_STARTED.md#simple-and-pro).
+Recording clips can use an animated presenter. Pro mode adds position and scale controls.
+See [Animated presenter](docs/LOCAL_AI.md#animated-presenter).
 
 |                                                                                                            |                                                                                                         |
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
