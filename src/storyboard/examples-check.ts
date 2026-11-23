@@ -14,7 +14,7 @@ export const EXAMPLES_DIR = path.resolve(
   "examples",
   "storyboards",
 );
-export const GOLDEN_COUNT = 12;
+export const GOLDEN_COUNT = 13;
 /** Roadmap V3: the golden set shows the scene library, not nine types. */
 export const MIN_SCENE_TYPES = 14;
 

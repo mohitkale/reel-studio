@@ -1,4 +1,4 @@
-/** `npm run examples:check`: validate and lint the twelve golden storyboards. Fast. */
+/** `npm run examples:check`: validate and lint the golden storyboards. Fast. */
 import { checkExamples } from "../src/storyboard/examples-check";
 
 const { reports, problems } = checkExamples();

@@ -7,6 +7,7 @@ import type { ScriptDTO } from "@/lib/dto";
 import { enrichScenePlan } from "@/library/enrich-scene-plan";
 import { planFromStoryboard } from "@/production/storyboard-plan";
 import { lintStoryboard, type Storyboard } from "@/storyboard";
+import { GOLDEN_COUNT } from "@/storyboard/examples-check";
 import { MUSIC_LIBRARY } from "@/lib/music-library";
 
 import {
@@ -92,8 +93,8 @@ function normalize(storyboard: Extract<Storyboard, { kind: "video" }>) {
 describe("storyboard -> project -> storyboard", () => {
   const videos = golden.filter((name) => load(name).kind === "video");
 
-  it("covers eleven golden videos (the podcast is not a project)", () => {
-    expect(videos).toHaveLength(11);
+  it("covers every golden example except the podcast", () => {
+    expect(videos).toHaveLength(GOLDEN_COUNT - 1);
   });
 
   it.each(videos)("%s round trips after normalisation", (name) => {

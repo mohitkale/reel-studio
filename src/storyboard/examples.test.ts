@@ -5,7 +5,7 @@ import { checkExamples, GOLDEN_COUNT } from "./examples-check";
 describe("golden storyboards", () => {
   const { reports, problems } = checkExamples();
 
-  it("are twelve, valid, with zero lint fixes, warnings or errors", () => {
+  it("match the golden count with zero lint fixes, warnings or errors", () => {
     expect(reports).toHaveLength(GOLDEN_COUNT);
     expect(problems).toEqual([]);
   });

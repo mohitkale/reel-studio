@@ -245,13 +245,14 @@ statement today.
 
 ## The golden set
 
-`examples/storyboards/` holds twelve hand-written storyboards (a product launch,
+`examples/storyboards/` holds thirteen hand-written storyboards (a product launch,
 explainer, listicle, data story, how-to, news recap, motivation, developer demo,
-comparison, myth versus fact, story and a podcast episode) in all three formats.
+comparison, myth versus fact, story, trail-map tutorial and a podcast episode) in all three formats.
 `npm run examples:check` validates and lints them (zero fixes and warnings; it also
-runs in the unit tests). `npm run examples:render` renders the eleven videos through
+runs in the unit tests). `npm run examples:render` renders the twelve videos through
 `POST /api/storyboards` into `media/examples/` with a contact sheet each; start the app
-first.
+first. The trail-map tutorial has [three-format previews](assets/examples/trail-map-formats.jpg)
+and [frames from the portrait export](assets/examples/trail-map-export.jpg).
 
 ## What is decided locally
 
