@@ -61,7 +61,10 @@ export function missingPictureFindings(warnings: string[]): Finding[] {
   return out;
 }
 
-export function reviewStoryboard(input: unknown): Review {
+export function reviewStoryboard(
+  input: unknown,
+  sceneSeconds?: readonly number[],
+): Review {
   const findings: Finding[] = [];
   const lint = lintStoryboard(input);
   for (const e of lint.errors)
@@ -91,11 +94,15 @@ export function reviewStoryboard(input: unknown): Review {
         rule: "long-narration",
         suggestion: `scene ${n}: the narration is ${spoken} words (about ${Math.round(spoken / WORDS_PER_SECOND)} s); split it into two scenes or cut it to ${MAX_NARRATION_WORDS} words.`,
       });
-    const seconds = Math.max(
-      2,
-      spoken / WORDS_PER_SECOND,
-      Number(scene.durationHint) || 0,
-    );
+    const actual = sceneSeconds?.[i];
+    const seconds =
+      actual !== undefined && Number.isFinite(actual) && actual > 0
+        ? actual
+        : Math.max(
+            2,
+            spoken / WORDS_PER_SECOND,
+            Number(scene.durationHint) || 0,
+          );
     total += seconds;
     pacing.push({
       scene: n,

@@ -413,6 +413,73 @@ describe("review_video and revise_video", () => {
     });
   });
 
+  it("uses the frozen storyboard and offers full-size frames from the completed export", async () => {
+    const get = mocks.get.getMockImplementation()!;
+    mocks.get.mockImplementation(async (path: string) => {
+      if (path === "/api/production-jobs/j1/review")
+        return {
+          storyboard: {
+            ...exported,
+            scenes: [
+              { ...exported.scenes[0], headline: "Short headline" },
+              exported.scenes[1],
+            ],
+          },
+          timeline: [7, 8],
+          audio: { hasAudio: true },
+          frameCheck: { status: "sampled", totalScenes: 2 },
+        };
+      return get(path);
+    });
+    const run = register(registerCoreTools).get("review_video")!.run;
+    const result = await run({ projectId: "p1", detail: { scenes: [1, 2] } });
+    const body = JSON.parse(result.content[0]!.text);
+    expect(
+      body.findings.map((finding: { rule: string }) => finding.rule),
+    ).not.toContain("long-headline");
+    expect(body).toMatchObject({
+      totalSeconds: 15,
+      audio: { hasAudio: true },
+      frameCheck: { status: "sampled", totalScenes: 2 },
+      frames: [{ scene: 1 }, { scene: 2 }],
+    });
+    expect(result.content.slice(2)).toHaveLength(2);
+    expect(result.content[2]).toMatchObject({
+      type: "image",
+      mimeType: "image/png",
+    });
+  });
+
+  it("routes a headline-only edit to an immutable revision of the finished video", async () => {
+    const get = mocks.get.getMockImplementation()!;
+    mocks.get.mockImplementation(async (path: string) =>
+      path.endsWith("/review?storyboardOnly=1")
+        ? { storyboard: exported }
+        : get(path),
+    );
+    mocks.post.mockResolvedValue({
+      supported: true,
+      jobId: "j2",
+      state: "queued",
+    });
+    const run = register(registerCoreTools).get("revise_video")!.run;
+    const result = await run({
+      projectId: "p1",
+      changes: [{ op: "update", index: 1, fields: { headline: "Short one" } }],
+      wait: false,
+    });
+    expect(mocks.post).toHaveBeenCalledWith("/api/production-jobs/j1/review", {
+      index: 1,
+      from: exported.scenes[0].headline,
+      headline: "Short one",
+    });
+    expect(JSON.parse(result.content[0]!.text)).toMatchObject({
+      projectId: "p1",
+      jobId: "j2",
+      state: "queued",
+    });
+  });
+
   it("revise applies the edits to the exported storyboard and produces it again", async () => {
     mocks.post.mockResolvedValue({ jobId: "j2", projectId: "p2" });
     const run = register(registerCoreTools).get("revise_video")!.run;

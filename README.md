@@ -100,6 +100,7 @@ starts the studio itself and needs no token on your own computer.
 
 Eight core tools by default; the rest are opt-in. See [MCP](docs/MCP.md). No agent? Use the
 [command line](docs/CLI.md): `node bin/reel-studio.mjs render story.json -o story.mp4`.
+An agent can review exported frames and revise a headline using the existing narration.
 
 ## Use it in the browser
 

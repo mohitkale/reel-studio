@@ -591,6 +591,19 @@ async function exportedStoryboard(projectId: string) {
   return { scriptId, storyboard: result.storyboard, notes: result.notes ?? [] };
 }
 
+async function latestFinishedVideo(scriptId: string) {
+  const { jobs } = await apiGet<{
+    jobs: Array<{
+      id: string;
+      state: string;
+      revision?: { scriptId?: string } | null;
+    }>;
+  }>("/api/production-jobs?limit=50");
+  return jobs.find(
+    (job) => job.state === "succeeded" && job.revision?.scriptId === scriptId,
+  );
+}
+
 export function registerCoreTools(server: McpServer): void {
   server.registerTool(
     "create_video",
@@ -753,22 +766,38 @@ export function registerCoreTools(server: McpServer): void {
     "review_video",
     {
       description:
-        "Look over a finished video's storyboard: findings phrased as the edit that fixes each one (long headlines, repeated scene types, missing hook or close), pacing per scene, and the latest contact sheet image. Fix what it names with revise_video, once.",
-      inputSchema: { projectId: z.string().min(1) },
+        "Review a finished video for suggested storyboard edits, sampled frame layout, audio levels and pacing. Supply up to two scene numbers in detail.scenes for full-size frames from the export, then fix the findings with revise_video once.",
+      inputSchema: {
+        projectId: z.string().min(1),
+        detail: z
+          .object({ scenes: z.array(z.number().int().positive()).max(2) })
+          .optional(),
+      },
     },
-    guard(async ({ projectId }) => {
+    guard(async ({ projectId, detail }) => {
       const { scriptId, storyboard } = await exportedStoryboard(projectId);
-      const review = reviewStoryboard(storyboard);
-      const { jobs } = await apiGet<{
-        jobs: Array<{
-          id: string;
-          state: string;
-          revision?: { scriptId?: string } | null;
-        }>;
-      }>("/api/production-jobs?limit=50");
-      const latest = jobs.find(
-        (j) => j.state === "succeeded" && j.revision?.scriptId === scriptId,
+      const latest = await latestFinishedVideo(scriptId);
+      const endpoint = latest
+        ? `/api/production-jobs/${encode(latest.id)}/review`
+        : undefined;
+      const evidence = endpoint
+        ? await apiGet<{
+            storyboard?: unknown;
+            frameCheck?: unknown;
+            audio?: unknown;
+            timeline?: number[];
+          }>(endpoint).catch((error: unknown) => {
+            if (error instanceof ApiError && error.status === 404)
+              return undefined;
+            throw error;
+          })
+        : undefined;
+      const review = reviewStoryboard(
+        evidence?.storyboard ?? storyboard,
+        evidence?.timeline,
       );
+      if (detail?.scenes.some((scene) => scene > review.pacing.length))
+        throw new Error("A requested frame scene is out of range.");
       const view = latest ? await describeJob(latest.id) : undefined;
       if (latest) {
         const stored = await apiGet<{
@@ -781,16 +810,36 @@ export function registerCoreTools(server: McpServer): void {
           ),
         );
       }
-      return json(
+      const frames = endpoint
+        ? [...new Set(detail?.scenes ?? [])].map((scene) => ({
+            scene,
+            url: `${endpoint}?frameScene=${scene}`,
+          }))
+        : [];
+      const result = json(
         {
           projectId,
           ...review,
           latestVideo: view,
-          frameCheck:
-            "Layout checks run on the finished frames (npm run examples:lint-frames); review_video does not run them yet, so look at the contact sheet for clipped or crowded text.",
+          frameCheck: evidence?.frameCheck ?? { status: "unavailable" },
+          audio: evidence?.audio,
+          frames: frames.map(({ scene, url }) => ({
+            scene,
+            url: absoluteUrl(url),
+          })),
         },
         view ? await contactSheetImage(view) : undefined,
       );
+      for (const frame of frames) {
+        const bytes = await apiGetBinary(frame.url);
+        if (bytes && bytes.length <= 5_000_000)
+          result.content.push({
+            type: "image",
+            data: bytes.toString("base64"),
+            mimeType: "image/png",
+          });
+      }
+      return result;
     }),
   );
 
@@ -798,7 +847,7 @@ export function registerCoreTools(server: McpServer): void {
     "revise_video",
     {
       description:
-        "Change a finished video's storyboard and make it again, or with derive=\"shorts\" cut it into three to five vertical shorts (self-contained runs with a hook and a closing line). changes is a list of edits to scenes counted from 1: {op:'update',index,fields}, {op:'replace',index,scene}, {op:'insert',index,scene}, {op:'remove',index}, {op:'move',from,to}; set changes top-level fields such as title or theme. Creates a new video (the whole video is rendered again).",
+        'Change a finished video\'s storyboard and make it again, or use derive="shorts" for vertical cutdowns. A headline-only update reuses narration and eligible unchanged render sections. Scene numbers start at 1. Use update, replace, insert, remove or move in changes, and use set for top-level fields.',
       inputSchema: {
         projectId: z.string().min(1),
         changes: z
@@ -868,7 +917,59 @@ export function registerCoreTools(server: McpServer): void {
             next: "Each short is a job; call get_job with its jobId until it is done.",
           });
         }
-        const { storyboard } = await exportedStoryboard(projectId);
+        const { scriptId, storyboard } = await exportedStoryboard(projectId);
+        const change = changes[0];
+        if (
+          changes.length === 1 &&
+          change.op === "update" &&
+          Object.keys(change.fields).length === 1 &&
+          typeof change.fields.headline === "string" &&
+          !Object.keys(set ?? {}).length
+        ) {
+          const latest = await latestFinishedVideo(scriptId);
+          if (latest) {
+            const endpoint = `/api/production-jobs/${encode(latest.id)}/review`;
+            try {
+              const { storyboard: rendered } = await apiGet<{
+                storyboard?: { scenes?: { headline: string }[] };
+              }>(`${endpoint}?storyboardOnly=1`);
+              const old = rendered?.scenes?.[change.index - 1]?.headline;
+              if (old) {
+                const queued = await apiPost<{
+                  supported: boolean;
+                  jobId?: string;
+                  state?: string;
+                }>(endpoint, {
+                  index: change.index,
+                  from: old,
+                  headline: change.fields.headline,
+                  quality,
+                });
+                if (queued.supported && queued.jobId) {
+                  if (wait === false || queued.state === "awaiting_approval")
+                    return json({
+                      projectId,
+                      jobId: queued.jobId,
+                      state: queued.state,
+                    });
+                  const view = await waitForJob(
+                    queued.jobId,
+                    600,
+                    3000,
+                    progressReporter(extra),
+                  );
+                  return json(
+                    { projectId, ...view },
+                    await contactSheetImage(view),
+                  );
+                }
+              }
+            } catch (error) {
+              if (!(error instanceof ApiError && error.status === 404))
+                throw error;
+            }
+          }
+        }
         const revised = applyChanges(storyboard, changes as Change[], set);
         return produce(
           revised as Record<string, unknown>,
