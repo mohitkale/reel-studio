@@ -63,7 +63,7 @@ are enforced by validation rather than by prompt text.
 | `pace`         | no                       | `slow` (about 12% slower), `normal` or `fast` (about 12% faster) for this scene's narration, on top of the voice speed and style.                                                                                                                        |
 | `durationHint` | no                       | Seconds, 2 to 30. A hint only; timing follows the narration length.                                                                                                                                                                                      |
 
-There are twenty-one scene types. Every one is shown in every format on the app's
+There are twenty-two scene types. Every one is shown in every format on the app's
 `/scenes` page.
 
 | Type            | Use it for                                       | Needs        |
@@ -75,6 +75,7 @@ There are twenty-one scene types. Every one is shown in every format on the app'
 | `steps`         | Numbered steps in order                          | `items`      |
 | `checklist`     | Things to tick off                               | `items`      |
 | `recap`         | A short summary of what was just covered         | `items`      |
+| `pro-tip`       | A lightbulb badge and two to six practical tips  | `items`      |
 | `stat`          | One big number                                   | `stat`       |
 | `comparison`    | Two options side by side                         | `compare`    |
 | `before-after`  | A change from one state to another               | `compare`    |

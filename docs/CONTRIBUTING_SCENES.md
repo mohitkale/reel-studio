@@ -38,10 +38,10 @@ voice model, network or API key.
 **1. Scaffold it.**
 
 ```bash
-npm run scene:new pro-tip
+npm run scene:new quick-tip
 ```
 
-This creates `src/engines/hyperframes/scenes/pro-tip/index.ts` and `index.test.ts`, then
+This creates `src/engines/hyperframes/scenes/quick-tip/index.ts` and `index.test.ts`, then
 registers the type everywhere it has to be known (the storyboard format and its JSON Schema,
 the plan, the exporter and the tests) and regenerates `schemas/storyboard.v1.json`. If any
 registration point has moved, it changes nothing and tells you which one. Run the same
@@ -51,7 +51,7 @@ as a list of 2 to 6 short lines, so it already renders.
 **2. Look at it.**
 
 ```bash
-npm run scene:preview pro-tip
+npm run scene:preview quick-tip
 ```
 
 This draws your scene (after a hook, before a call to action) at 9:16, 16:9 and 1:1 through
@@ -71,7 +71,7 @@ three formats.
 | `css`                 | Styles for the classes you use. Size everything with `px(0.036)` (3.6% of the frame height), never fixed pixels, so one rule serves every format.                                                                                                  |
 | `sample`              | Example content for the scene library, the tests and the preview. Make it look good.                                                                                                                                                               |
 
-Run `npm run scene:preview pro-tip` after each change and look at the three sheets.
+Run `npm run scene:preview quick-tip` after each change and look at the three sheets.
 
 **4. Test it.**
 
@@ -84,7 +84,7 @@ are refused, and that markup from a storyboard is escaped. Add a test for anythi
 `build()` does. The registry test also checks that your type plans, exports and draws in the
 tour with no repairs.
 
-**5. Use it in a storyboard and document it.** Add a scene with `"type": "pro-tip"` and
+**5. Use it in a storyboard and document it.** Add a scene with `"type": "quick-tip"` and
 `"items": [...]` to a file in `examples/storyboards/` (or your own), run
 `npm run examples:lint-frames -- --only <example>` and add a row to the scene table in
 [STORYBOARD.md](STORYBOARD.md). Improve the one-line description the scaffold added to
@@ -109,7 +109,7 @@ Arrangement 1 is your design. The variety engine can also pick arrangements 2 an
 video from looking the same; a scene without rules for them just keeps arrangement 1. To add them,
 put rules for `.scene[data-arrange="2"]` and `[data-arrange="3"]` in
 `scenes/arrangements.ts` (alignment, order, spacing, borders and fills; no transforms, the entrance
-animations own those) and look with `REEL_FORCE_ARRANGE=2 npm run scene:preview pro-tip`, and `=3`.
+animations own those) and look with `REEL_FORCE_ARRANGE=2 npm run scene:preview quick-tip`, and `=3`.
 
 ## Add a theme (15 minutes)
 
