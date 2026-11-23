@@ -11,6 +11,7 @@ const input = process.argv[2];
 if (!input || !process.env.npm_execpath)
   throw new Error("Use npm run package:smoke -- <reel-studio-package.tgz>");
 const archive = path.resolve(input);
+const firstStartLimitSeconds = 120;
 const cwd = await mkdtemp(path.join(tmpdir(), "reel package smoke "));
 const home = path.join(cwd, "studio files");
 const cache = path.join(cwd, "npm-cache");
@@ -45,7 +46,9 @@ try {
       cwd,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "inherit"],
-      timeout: 120_000,
+      // Let slow installs reach the app so CI can distinguish registry delay
+      // from launch failures. The first-start budget is still enforced below.
+      timeout: 300_000,
     },
   );
   const url = stdout.match(/^http:\/\/127\.0\.0\.1:\d+$/m)?.[0];
@@ -71,7 +74,10 @@ try {
   console.log(
     `Installed studio served its home screen in ${elapsed.toFixed(2)} s on ${process.platform}`,
   );
-  assert.ok(elapsed < 120, "First start exceeded two minutes");
+  assert.ok(
+    elapsed < firstStartLimitSeconds,
+    "First start exceeded two minutes",
+  );
 } catch (error) {
   const log = await readFile(path.join(home, "engine.log"), "utf8").catch(
     () => "",
