@@ -44,7 +44,8 @@ npm run scene:new pro-tip
 This creates `src/engines/hyperframes/scenes/pro-tip/index.ts` and `index.test.ts`, then
 registers the type everywhere it has to be known (the storyboard format and its JSON Schema,
 the plan, the exporter and the tests) and regenerates `schemas/storyboard.v1.json`. If any
-registration point has moved, it changes nothing and tells you which one. The scene starts
+registration point has moved, it changes nothing and tells you which one. Run the same
+command with a new name to add another scene. The scene starts
 as a list of 2 to 6 short lines, so it already renders.
 
 **2. Look at it.**
@@ -56,7 +57,8 @@ npm run scene:preview pro-tip
 This draws your scene (after a hook, before a call to action) at 9:16, 16:9 and 1:1 through
 the frame check and writes contact sheets to `.artifacts/scenes/zz-scene-tour-portrait.contact-sheet.jpg`
 (and `-landscape`, `-square`). The frame check fails the run when text overflows, runs under the
-contrast limit or leaves the safe area, and says which frame. About 25 seconds.
+contrast limit or leaves the safe area, and says which frame. Allow about a minute for all
+three formats.
 
 **3. Make it yours.** Everything is in `index.ts`:
 

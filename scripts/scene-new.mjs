@@ -36,7 +36,7 @@ if (existsSync(folder)) {
   process.exit(1);
 }
 
-/** The registrations: file, the text to find, and what to put in its place. */
+/** Insert next to built-in lines that remain in place after each addition. */
 const edits = [
   {
     file: "src/engines/hyperframes/scenes/registry.ts",
@@ -45,18 +45,18 @@ const edits = [
   },
   {
     file: "src/engines/hyperframes/scenes/registry.ts",
-    find: "  recap,\n] as unknown as",
-    to: `  recap,\n  ${camel},\n] as unknown as`,
+    find: "  recap,\n",
+    to: `  recap,\n  ${camel},\n`,
   },
   {
     file: "src/storyboard/schema.ts",
-    find: '  "recap",\n] as const;',
-    to: `  "recap",\n  "${name}",\n] as const;`,
+    find: '  "recap",\n',
+    to: `  "recap",\n  "${name}",\n`,
   },
   {
     file: "src/storyboard/schema.ts",
-    find: 'cta: closing call to action. Example: "statement".',
-    to: `cta: closing call to action. ${name}: ${title}, 2-6 short items (needs items). Example: "statement".`,
+    find: ' Example: "statement".',
+    to: ` ${name}: ${title}, 2-6 short items (needs items). Example: "statement".`,
   },
   {
     file: "src/storyboard/schema.ts",
@@ -70,8 +70,8 @@ const edits = [
   },
   {
     file: "src/production/storyboard-plan.ts",
-    find: '  recap: "summary",\n};',
-    to: `  recap: "summary",\n  "${name}": "summary",\n};`,
+    find: '  recap: "summary",\n',
+    to: `  recap: "summary",\n  "${name}": "summary",\n`,
   },
   {
     file: "src/production/storyboard-plan.ts",
@@ -113,15 +113,6 @@ for (const edit of edits) {
   }
   contents.set(edit.file, text.replace(edit.find, edit.to));
 }
-if (
-  contents
-    .get("src/storyboard/schema.ts")
-    .includes(`"${name}",\n] as const;`) === false
-) {
-  console.error("Unexpected schema layout; nothing was changed.");
-  process.exit(1);
-}
-
 try {
   mkdirSync(folder, { recursive: true });
   writeFileSync(
