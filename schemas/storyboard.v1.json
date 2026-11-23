@@ -189,7 +189,7 @@
           "description": "Canvas shape. \"9:16\" vertical for Reels, Shorts and TikTok; \"16:9\" landscape for YouTube; \"1:1\" square. Default \"9:16\"."
         },
         "theme": {
-          "description": "Optional visual theme: \"bold-pop\", \"clean-minimal\", \"midnight-tech\", \"editorial-paper\", \"neon\", \"warm-documentary\", \"corporate-blue\", \"playful-pastel\", \"mono-brutalist\", \"cinematic\", \"sunset\", \"forest\" or \"high-contrast\". Omit or use \"auto\" to let Reel Studio choose a theme that fits the content.",
+          "description": "Optional visual theme: \"bold-pop\", \"clean-minimal\", \"midnight-tech\", \"editorial-paper\", \"neon\", \"warm-documentary\", \"corporate-blue\", \"playful-pastel\", \"mono-brutalist\", \"cinematic\", \"sunset\", \"forest\", \"high-contrast\" or \"retro-terminal\". Omit or use \"auto\" to let Reel Studio choose a theme that fits the content.",
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]{0,39}$"
         },
