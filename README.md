@@ -6,6 +6,8 @@
 
 **Type an idea, get a finished short video or podcast. Free, on your own computer.**
 
+> **Development is paused.** The source and [existing GitHub releases](https://github.com/mohitkale/reel-studio/releases) remain available. There is no timeline for further updates.
+
 **[Website, gallery and docs](https://mohitkale.github.io/reel-studio/)**
 
 ![Three videos made by Reel Studio](https://github.com/mohitkale/reel-studio/releases/download/demo-assets/hero.gif)
@@ -24,12 +26,9 @@ npm ci && npm run setup && npm run dev
 
 Open [localhost:3000](http://localhost:3000), type what you want to make, press **Create**.
 `npm run doctor` tells you what is missing. Details: [getting started](docs/GETTING_STARTED.md).
-An `npx reel-studio` one-liner is planned; it is not published yet.
-
-**Status: v1.0.** The [storyboard format](docs/STORYBOARD.md#versioning-and-stability), the command line
-and the MCP tools are stable: changes from here on are additive. What is not done yet is listed
-plainly in [release readiness](docs/RELEASE_READINESS.md): the package is not on npm, the install
-guides for MCP clients have not been run in each client, and Windows is tested in CI only.
+Install Reel Studio from the source checkout above. See [release readiness](docs/RELEASE_READINESS.md)
+for the v1.0 validation record and known limits, including npm availability, MCP client setup,
+and Windows testing.
 
 ## What it makes
 
