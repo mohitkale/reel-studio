@@ -10,7 +10,7 @@ import {
   vi,
 } from "vitest";
 import { createHash } from "node:crypto";
-import { DatabaseSync } from "node:sqlite";
+import { backup, DatabaseSync } from "node:sqlite";
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -120,21 +120,30 @@ const token = (overrides: Partial<McpNamedTokenRecord> = {}) => {
   return { authorization: "Bearer research-token" };
 };
 
-beforeAll(() => {
+beforeAll(async () => {
   const filename = path.join(directory, "research.db");
-  const db = new DatabaseSync(filename);
-  for (const migration of readdirSync("prisma/migrations")
-    .filter((name) => name !== "migration_lock.toml")
-    .sort())
-    db.exec(
-      readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),
-    );
-  db.close();
+  // The API tests need a file-backed database. Build the schema in memory so
+  // each migration statement does not require a separate disk sync.
+  const db = new DatabaseSync(":memory:");
+  try {
+    for (const migration of readdirSync("prisma/migrations")
+      .filter((name) => name !== "migration_lock.toml")
+      .sort())
+      db.exec(
+        readFileSync(`prisma/migrations/${migration}/migration.sql`, "utf8"),
+      );
+    await backup(db, filename);
+  } finally {
+    db.close();
+  }
   const previous = process.env.DATABASE_URL;
   process.env.DATABASE_URL = `file:${filename}`;
-  client = createPrismaClient();
-  if (previous === undefined) delete process.env.DATABASE_URL;
-  else process.env.DATABASE_URL = previous;
+  try {
+    client = createPrismaClient();
+  } finally {
+    if (previous === undefined) delete process.env.DATABASE_URL;
+    else process.env.DATABASE_URL = previous;
+  }
   Object.assign(researchRepository, { db: client });
 });
 beforeEach(async () => {

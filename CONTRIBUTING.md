@@ -112,7 +112,8 @@ A test that opens a database, writes files, or starts a process is an
 integration test and is named `*.int.test.ts`. Unit tests run in the Node
 environment; start a file with `// @vitest-environment jsdom` when it needs a DOM.
 Integration tests inherit a 60-second timeout on Windows and a 20-second timeout
-elsewhere. Use the project default unless a test needs more time.
+elsewhere. On Windows, integration setup and cleanup hooks also have 60 seconds.
+Use the project default unless a test needs more time.
 
 You do not need the entire suite after every edit. Keep external providers mocked
 unless live usage is explicitly authorized. Real exports are required for visual

@@ -39,6 +39,7 @@ export default defineConfig({
           // Cold SQLite/Prisma setup and child processes can take tens of
           // seconds on Windows CI, even with a single integration worker.
           testTimeout: process.platform === "win32" ? 60_000 : 20_000,
+          hookTimeout: process.platform === "win32" ? 60_000 : undefined,
         },
       },
       {
