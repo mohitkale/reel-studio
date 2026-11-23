@@ -34,6 +34,7 @@ import type { VideoEngineId } from "@/engines/types";
 import { videoDurationLimit } from "@/production/limits";
 import { reviewVisualInputs } from "@/production/visual-review-findings";
 import { cancelChild } from "@/library/production-cancellation";
+import type { VideoSnapshot } from "@/production/video-snapshot";
 
 function runSnapshot(
   args: string[],
@@ -200,11 +201,14 @@ export async function createVisualReview(
   request: VisualReviewRequest,
   serverBaseUrl: string,
   signal?: AbortSignal,
+  frozenSnapshot?: VideoSnapshot,
 ): Promise<VisualReviewResult> {
   const input = visualReviewRequestSchema.parse(request);
   return serialized(async () => {
     signal?.throwIfAborted();
-    const captured = await captureVideoSnapshot(scriptId, input.voiceTakeId);
+    const captured = frozenSnapshot
+      ? structuredClone(frozenSnapshot)
+      : await captureVideoSnapshot(scriptId, input.voiceTakeId);
     captured.script.scenes.sort((a, b) => a.order - b.order);
     const timing = resolveReelTimeline(
       captured.script.scenes.map((scene) => ({

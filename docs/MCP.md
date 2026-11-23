@@ -124,8 +124,8 @@ Eight high-level tools cover the common path, so an agent does not have to learn
 | `create_podcast` | A podcast storyboard in; waits (default) and returns the episode links and one .tar.gz package with WAV, MP3, transcript, chapters and show notes |
 | `get_job`        | State, progress percent, stage and the video link of a job                                                                                        |
 | `list_options`   | Themes, scene types, formats, qualities, recommended voices and music ids                                                                         |
-| `review_video`   | Findings as suggested storyboard edits, pacing per scene, the latest contact sheet                                                                |
-| `revise_video`   | Apply scene edits (update, replace, insert, remove, move) and make the video again                                                                |
+| `review_video`   | Suggested storyboard edits, sampled frame checks, audio levels, pacing, a contact sheet, and up to two full-size export frames                    |
+| `revise_video`   | Apply storyboard edits. A headline-only change can reuse narration and unchanged render sections                                                  |
 | `list_videos`    | Recent projects                                                                                                                                   |
 | `open_studio`    | The local studio address, or one video's editor address                                                                                           |
 
@@ -142,6 +142,13 @@ client's tool timeout to at least 10 minutes. A failed job returns a `failure` o
 `cause` and `fix`. For example, a missing Kokoro voice model reports `synthesize_audio` and
 suggests `npm run voice:download`. If the storyboard fails validation before a job is created,
 `create_video` returns the same fields with `stage` set to `validate`.
+
+`review_video` samples stable reading frames from up to eight scenes of the
+finished composition. Set `detail: { "scenes": [2, 4] }` to ask for up to two
+full-size images decoded from the MP4. After a headline-only update,
+`revise_video` submits a new frozen revision in the same project using the
+finished video's narration, timing, and media. Chaptered and short native
+exports reuse eligible sections. Structural changes make a new project.
 
 These eight are the default. Set `REEL_STUDIO_MCP_TOOLS=all` in the server's environment to
 expose every other tool as well (research, editorial, podcasts, factory, voice takes and the rest;
