@@ -18,7 +18,11 @@ import { submitProductionBatch } from "@/library/production-batch-service";
 import { productionBatchView } from "@/library/production-batch-view";
 import { defaultVoiceForLanguage } from "@/providers/voice/voice-catalog";
 import { projectToStoryboard } from "@/library/project-storyboard";
+import { getScript } from "@/library/repositories/scripts";
 import { produceFromStoryboard } from "@/library/storyboard-production";
+import { reuseCutdownNarration } from "@/library/cutdown-narration";
+import type { QuickProduceOptions } from "@/production/quick-produce";
+import { PACE_FACTOR } from "@/production/storyboard-plan";
 import { cutdowns } from "@/storyboard/cutdowns";
 import { ProviderError } from "@/providers/voice/types";
 
@@ -63,9 +67,10 @@ export async function POST(
       bodySchema,
       await readRequestJson(req, { allowEmpty: true }),
     );
-    const result = await projectToStoryboard(id);
-    if (!result) throw new ProviderError("Script not found", 404);
-    if (!result.storyboard || result.storyboard.kind !== "video")
+    const source = await getScript(id);
+    if (!source) throw new ProviderError("Script not found", 404);
+    const result = await projectToStoryboard(id, source);
+    if (result?.storyboard?.kind !== "video")
       throw new ProviderError("This project cannot be cut into shorts", 422);
     const picked = cutdowns(result.storyboard, {
       count: body.count,
@@ -95,6 +100,7 @@ export async function POST(
         hookRewritten?: boolean;
       };
       storyboard: (typeof picked)[number]["storyboard"];
+      voice: QuickProduceOptions["voice"];
       scriptId: string;
       projectId: string;
     }> = [];
@@ -158,9 +164,37 @@ export async function POST(
       });
       if (made.dryRun || !made.scriptId)
         throw new ProviderError("A short could not be created", 500);
+      const narrator = storyboard.voice;
+      const paces = storyboard.scenes.map(
+        (scene) => PACE_FACTOR[scene.pace ?? "normal"],
+      );
+      const voice: QuickProduceOptions["voice"] = {
+        enabled: narrator?.enabled !== false,
+        providerId: "kokoro-server",
+        voiceId:
+          narrator?.voiceId ??
+          defaultVoiceForLanguage(storyboard.language) ??
+          "af_heart",
+        ...(narrator?.speed !== undefined ? { speed: narrator.speed } : {}),
+        ...(narrator?.style ? { style: narrator.style } : {}),
+        ...(paces.some((pace) => pace !== 1) ? { paces } : {}),
+        ...(storyboard.beatSync === "auto" ? { beatSync: true } : {}),
+      };
+      if (voice.enabled) {
+        const target = await getScript(made.scriptId);
+        if (!target)
+          throw new ProviderError("A short could not be loaded", 500);
+        await reuseCutdownNarration({
+          source: source.scenes,
+          target,
+          sourceSceneIndices: short.sourceSceneIndices,
+          voice,
+        });
+      }
       created.push({
         summary,
         storyboard,
+        voice,
         scriptId: made.scriptId,
         projectId: made.projectId,
       });
@@ -173,9 +207,7 @@ export async function POST(
         idempotencyKey: `shorts:${randomUUID()}`,
         runMode: "automatic",
         priority: 0,
-        rows: created.map(({ storyboard, scriptId, summary }, index) => {
-          const voice =
-            storyboard.kind === "video" ? storyboard.voice : undefined;
+        rows: created.map(({ storyboard, scriptId, summary, voice }, index) => {
           return {
             kind: "video" as const,
             key: `short-${index + 1}`,
@@ -191,20 +223,7 @@ export async function POST(
               enabled: true,
               planner: "deterministic" as const,
               mediaPreference: "none" as const,
-              voice: {
-                enabled: voice?.enabled !== false,
-                providerId: "kokoro-server" as const,
-                voiceId:
-                  voice?.voiceId ??
-                  defaultVoiceForLanguage(storyboard.language) ??
-                  "af_heart",
-                ...(voice?.speed !== undefined ? { speed: voice.speed } : {}),
-                ...(voice?.style ? { style: voice.style } : {}),
-                ...(storyboard.kind === "video" &&
-                storyboard.beatSync === "auto"
-                  ? { beatSync: true }
-                  : {}),
-              },
+              voice,
             },
           };
         }),

@@ -3,6 +3,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   produce: vi.fn(),
   submit: vi.fn(),
+  reuseNarration: vi.fn(),
   write: vi.fn(),
   provider: { id: "ollama", label: "Ollama", isConfigured: () => true },
 }));
@@ -49,6 +50,12 @@ vi.mock("@/library/project-storyboard", () => ({
       })),
     },
   }),
+}));
+vi.mock("@/library/repositories/scripts", () => ({
+  getScript: async (id: string) => ({ id, scenes: [] }),
+}));
+vi.mock("@/library/cutdown-narration", () => ({
+  reuseCutdownNarration: mocks.reuseNarration,
 }));
 vi.mock("@/library/storyboard-production", () => ({
   produceFromStoryboard: mocks.produce,
@@ -148,6 +155,13 @@ it("makes the shorts as one batch with one id", async () => {
     enabled: true,
     providerId: "kokoro-server",
   });
+  expect(mocks.reuseNarration).toHaveBeenCalledTimes(json.shorts.length);
+  expect(mocks.reuseNarration.mock.calls[0]![0].voice).toEqual(
+    rows[0].quickProduce.voice,
+  );
+  expect(mocks.reuseNarration.mock.invocationCallOrder[0]).toBeLessThan(
+    mocks.submit.mock.invocationCallOrder[0]!,
+  );
   // Each project is made without a job of its own; the batch owns the jobs.
   expect(mocks.produce.mock.calls.every((c) => c[1].createOnly === true)).toBe(
     true,
@@ -162,4 +176,5 @@ it("lists the shorts without making anything in preview", async () => {
   expect(response.status).toBe(200);
   expect(mocks.submit).not.toHaveBeenCalled();
   expect(mocks.produce).not.toHaveBeenCalled();
+  expect(mocks.reuseNarration).not.toHaveBeenCalled();
 });

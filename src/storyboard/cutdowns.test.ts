@@ -93,6 +93,27 @@ describe("cutdowns", () => {
     expect(plain.storyboard.scenes[0]!.type).toBe("hook");
   });
 
+  it("keeps a chapter opening that gives context and maps generated scenes separately", () => {
+    const board = longVideo(true);
+    board.scenes[6]!.narration =
+      "This exercise tests how people start a task before seeing any hints.";
+    const short = cutdowns(board).find(
+      (item) => item.storyboard.title === "Part two",
+    )!;
+    expect(short.from).toBe(6);
+    expect(short.storyboard.scenes[1]!.narration).toBe(
+      board.scenes[6]!.narration,
+    );
+    expect(short.sourceSceneIndices).toEqual([
+      null,
+      ...Array.from(
+        { length: short.to - short.from + 1 },
+        (_, index) => short.from + index,
+      ),
+      null,
+    ]);
+  });
+
   it("splits a video without chapters at its hook-like scenes", () => {
     const shorts = cutdowns(longVideo(false), { count: 5 });
     expect(shorts.length).toBeGreaterThanOrEqual(3);

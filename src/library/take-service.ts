@@ -28,8 +28,8 @@ import { getAssetStore } from "@/library/storage";
 import { createTake } from "@/library/repositories/takes";
 import {
   getCachedBeatAudio,
+  sceneSynthesisCacheKey,
   setCachedBeatWav,
-  type SceneAudioCacheKey,
 } from "@/library/scene-audio-cache";
 import { resolveSpokenText } from "@/lib/spoken-text";
 import type { VoiceStyleId } from "@/lib/voice-styles";
@@ -96,26 +96,17 @@ async function synthesizeScenesConcurrently(
   const results: BeatInput[] = new Array(total);
   let cursor = 0;
   let completed = 0;
-  // Bake speed into the cache key so retunes don't reuse wrong-rate audio.
-  const speedTag =
-    (typeof ctx.speed === "number" && Number.isFinite(ctx.speed)
-      ? `\0speed=${ctx.speed}`
-      : "") + (ctx.style ? `\0style=${ctx.style}` : "");
-
   async function worker() {
     while (cursor < scenes.length) {
       const i = cursor++;
       const scene = scenes[i];
       const pace = ctx.paces?.[i] ?? 1;
-      // A scene's own pace is part of what was spoken, so it is part of the cache key.
-      const sceneSpeedTag = pace === 1 ? "" : `\0pace=${pace}`;
-      const cacheParts: SceneAudioCacheKey = {
-        sceneId: scene.id,
-        providerId: ctx.providerId,
-        voiceId: ctx.voiceId,
-        modelId: ctx.modelId,
-        text: `${scene.text}${speedTag}${sceneSpeedTag}`,
-      };
+      const cacheParts = sceneSynthesisCacheKey(
+        scene.id,
+        scene.text,
+        ctx,
+        pace,
+      );
       let audio = await getCachedBeatAudio(cacheParts);
       if (!audio) {
         onProgress?.(completed, total, i + 1);

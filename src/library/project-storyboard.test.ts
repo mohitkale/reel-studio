@@ -69,11 +69,13 @@ function normalize(storyboard: Extract<Storyboard, { kind: "video" }>) {
     title: storyboard.title,
     format: storyboard.format,
     captions: storyboard.captions,
+    language: storyboard.language,
     sources: storyboard.sources ?? null,
     scenes: storyboard.scenes.map((s) => ({
       type: s.type,
       headline: s.headline,
       narration: s.narration,
+      pace: s.pace,
       body: s.body ?? null,
       items: s.items ?? null,
       stat: s.stat ?? null,
@@ -94,6 +96,19 @@ describe("storyboard -> project -> storyboard", () => {
 
   it("covers eleven golden videos (the podcast is not a project)", () => {
     expect(videos).toHaveLength(11);
+  });
+
+  it("retains the language and scene pace for cutdown narration", () => {
+    const original = load(videos[0]!) as Extract<Storyboard, { kind: "video" }>;
+    original.language = "en-GB";
+    original.scenes[0]!.pace = "slow";
+    const { dto, source } = project(original);
+    const exported = scriptToStoryboard({ ...dto, storyboardSource: source });
+    expect(exported.storyboard?.language).toBe("en-GB");
+    expect(
+      exported.storyboard?.kind === "video" &&
+        exported.storyboard.scenes[0]!.pace,
+    ).toBe("slow");
   });
 
   it.each(videos)("%s round trips after normalisation", (name) => {

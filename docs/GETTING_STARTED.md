@@ -120,10 +120,10 @@ provider is charged for each). The storyboard marks where chapters start; the pu
 turns them into YouTube timestamps, and the linter warns when a long video has no chapters or
 goes more than 90 seconds without a hook, stat, quote, chart or comparison.
 
-**Shorts from a long video**: on a finished video, **Make shorts from this** picks three to five
+**Shorts from a long video**. On a finished video, **Make shorts from this** picks three to five
 self-contained runs (by chapter, or at the scenes that open a new thought), adds a hook when a run
 lacks one and a closing line, and makes each a vertical short. The choice is plain code, so the same
-video always gives the same shorts. Over MCP, `revise_video` with `derive: "shorts"` does the same. Over REST, `POST /api/scripts/:id/cutdowns` with `writer: { providerId }` also asks your storyboard writer to sharpen each short's opening line (it may change only the first scene; if it fails, the plain-code hook stays). The shorts are made as one batch: the response carries a `batchId`, and `GET /api/production-batches` shows all of them together.
+video always gives the same shorts. Each short reuses the saved Kokoro narration and word timings for scenes with matching text and voice settings. Kokoro reads new or edited lines and fills in any missing cache entries. Over MCP, `revise_video` with `derive: "shorts"` does the same. Over REST, `POST /api/scripts/:id/cutdowns` with `writer: { providerId }` asks your storyboard writer to sharpen each short's opening line. The writer can change the first scene only. The short keeps its existing hook if the writer fails. The response carries one `batchId` for the whole batch. `GET /api/production-batches` shows all the shorts together.
 
 **Scenes on the beat**: `beatSync: "auto"` in a storyboard (or **Scenes on the beat** on a series) starts each scene on a beat of the bundled music. Only the silence between two scenes changes (0.3 to 0.8 s, usually under a tenth of a second off the usual 0.45 s); narration is never stretched. Music you uploaded has no known beats, so it keeps the even gaps. A real 4-scene render on a 60 bpm track started its scenes at 4.5 s, 9.5 s and 14.5 s (frame-exact on the half beat); nobody has yet judged by ear whether it feels better.
 

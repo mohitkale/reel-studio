@@ -20,6 +20,7 @@ import {
   lintStoryboard,
   STORYBOARD_LIMITS as L,
   type Storyboard,
+  type VideoStoryboard,
 } from "@/storyboard";
 
 /** Scene template to storyboard type: the inverse of STORYBOARD_TEMPLATE_BY_TYPE. */
@@ -41,6 +42,7 @@ export interface SceneExtras {
   icon?: string;
   illustration?: string;
   durationHint?: number;
+  pace?: VideoStoryboard["scenes"][number]["pace"];
   statLabel?: string;
   quoteAttribution?: string;
   code?: { language: string; headline?: string };
@@ -50,6 +52,7 @@ export interface StoryboardSource {
   version: 1;
   root: {
     theme?: string;
+    language?: string;
     captions?: "auto" | "off";
     sources?: unknown[];
     publish?: unknown;
@@ -224,6 +227,7 @@ function sceneToStoryboard(
   if (extras?.icon) out.icon = extras.icon;
   if (extras?.illustration) out.illustration = extras.illustration;
   if (extras?.durationHint) out.durationHint = extras.durationHint;
+  if (extras?.pace) out.pace = extras.pace;
   return out;
 }
 
@@ -274,6 +278,7 @@ export function scriptToStoryboard(
     title: script.name,
     format,
     ...(source?.root.theme ? { theme: source.root.theme } : {}),
+    ...(source?.root.language ? { language: source.root.language } : {}),
     music,
     captions: source?.root.captions ?? "auto",
     ...(source?.root.sources ? { sources: source.root.sources } : {}),
@@ -358,6 +363,7 @@ export function buildStoryboardSource(
     version: 1,
     root: {
       ...(storyboard.theme ? { theme: storyboard.theme } : {}),
+      ...(storyboard.language ? { language: storyboard.language } : {}),
       captions: storyboard.captions,
       ...(storyboard.sources ? { sources: storyboard.sources } : {}),
       ...(storyboard.publish ? { publish: storyboard.publish } : {}),
@@ -375,6 +381,7 @@ export function buildStoryboardSource(
         ...(scene.icon ? { icon: scene.icon } : {}),
         ...(scene.illustration ? { illustration: scene.illustration } : {}),
         ...(scene.durationHint ? { durationHint: scene.durationHint } : {}),
+        ...(scene.pace ? { pace: scene.pace } : {}),
         ...(scene.stat ? { statLabel: scene.stat.label } : {}),
         ...(scene.quote ? { quoteAttribution: scene.quote.attribution } : {}),
         ...(scene.code

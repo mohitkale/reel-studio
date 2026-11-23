@@ -34,6 +34,8 @@ export interface Cutdown {
   /** Zero-based scene numbers in the source video, first to last (the added hook and close excluded). */
   from: number;
   to: number;
+  /** Source scene for each short scene. Generated hooks and closings have no source. */
+  sourceSceneIndices: Array<number | null>;
   seconds: number;
   /** Higher is better; the shorts are picked and ordered by it. */
   score: number;
@@ -45,6 +47,20 @@ const sceneSeconds = (scene: Scene) =>
     countWords(scene.narration) / WORDS_PER_SECOND,
     scene.durationHint ?? 0,
   );
+
+function isChapterMarker(scene: Scene, title: string): boolean {
+  const normalize = (text: string) =>
+    text
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}]+/gu, " ")
+      .trim();
+  const spoken = normalize(scene.narration).replace(/^chapter \d+\b\s*/, "");
+  return (
+    !spoken ||
+    spoken === normalize(title) ||
+    spoken === normalize(scene.headline)
+  );
+}
 
 /** Where a chapter or, without chapters, a run of scenes starts. */
 function runStarts(board: VideoStoryboard): number[] {
@@ -106,9 +122,14 @@ export function cutdowns(
   const candidates: Cutdown[] = [];
   for (const [index, start] of starts.entries()) {
     const end = (starts[index + 1] ?? board.scenes.length) - 1;
-    // Skip the card that only names a chapter, then take scenes until the time is used.
-    let from = start;
-    if (chapterTitles.has(start) && start > 0) from = start + 1;
+    // Keep narrated chapter openings: they give the short its context.
+    const chapterTitle = chapterTitles.get(start);
+    const from =
+      start > 0 &&
+      chapterTitle &&
+      isChapterMarker(board.scenes[start]!, chapterTitle)
+        ? start + 1
+        : start;
     const run: Scene[] = [];
     // The added hook takes about three seconds when the run does not open on one.
     let seconds = HOOK_LIKE.has(board.scenes[from]?.type ?? "") ? 0 : 3;
@@ -125,8 +146,7 @@ export function cutdowns(
     if (run.length < 2 || seconds + 4 < minSeconds) continue;
     if (seconds + 4 > maxSeconds) continue;
     const title =
-      chapterTitles.get(start) ??
-      cutAtBoundary(run[0]!.headline || board.title, 60);
+      chapterTitle ?? cutAtBoundary(run[0]!.headline || board.title, 60);
     const storyboard = build(board, run, title, closing);
     const lint = lintStoryboard(storyboard);
     if (
@@ -136,12 +156,18 @@ export function cutdowns(
     )
       continue;
     // Fewer warnings is better; a hook-like opening and a good length help.
-    const hookBonus = HOOK_LIKE.has(run[0]!.type) ? 2 : 0;
+    const hasHook = HOOK_LIKE.has(run[0]!.type);
+    const hookBonus = hasHook ? 2 : 0;
     const lengthBonus = seconds >= 20 && seconds <= maxSeconds - 4 ? 1 : 0;
     candidates.push({
       storyboard: lint.storyboard,
       from,
       to: last,
+      sourceSceneIndices: [
+        ...(hasHook ? [] : [null]),
+        ...run.map((_, index) => from + index),
+        null,
+      ],
       seconds: Math.round(seconds + 4),
       score: hookBonus + lengthBonus - lint.warnings.length,
     });

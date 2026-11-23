@@ -1,5 +1,6 @@
 import { readSpeechWords, writeSpeechWords } from "@/library/speech-word-store";
 import type { SpeechWord } from "@/lib/speech-words";
+import type { VoiceStyleId } from "@/lib/voice-styles";
 import { createHash, randomUUID } from "node:crypto";
 
 import { prisma } from "@/library/db";
@@ -15,6 +16,31 @@ export interface SceneAudioCacheKey {
   voiceId: string;
   modelId?: string;
   text: string;
+}
+
+/** Keep recording settings in the key so a different reading cannot reuse it. */
+export function sceneSynthesisCacheKey(
+  sceneId: string,
+  spoken: string,
+  voice: Pick<SceneAudioCacheKey, "providerId" | "voiceId" | "modelId"> & {
+    speed?: number;
+    style?: VoiceStyleId;
+  },
+  pace = 1,
+): SceneAudioCacheKey {
+  const speed =
+    typeof voice.speed === "number" && Number.isFinite(voice.speed)
+      ? `\0speed=${voice.speed}`
+      : "";
+  const style = voice.style ? `\0style=${voice.style}` : "";
+  const scenePace = pace === 1 ? "" : `\0pace=${pace}`;
+  return {
+    sceneId,
+    providerId: voice.providerId,
+    voiceId: voice.voiceId,
+    modelId: voice.modelId,
+    text: `${spoken}${speed}${style}${scenePace}`,
+  };
 }
 
 /** Best-effort scene-audio cache lookup (see SceneAudioBeat in schema.prisma). */
