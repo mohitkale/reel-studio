@@ -6,7 +6,7 @@ import { BENCHMARK_BRIEFS } from "./benchmark-briefs";
 import { benchmarkTable, summarise } from "./benchmark-report";
 
 describe("writer benchmark", () => {
-  it("has one brief for each golden example", () => {
+  it("keeps the twelve benchmark briefs linked to checked-in examples", () => {
     const examples = BENCHMARK_BRIEFS.map((b) => b.example).sort();
     expect(examples).toHaveLength(12);
     for (const name of examples)
