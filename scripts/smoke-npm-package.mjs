@@ -1,10 +1,11 @@
 /** Run an actual tarball from an empty directory. Intended for disposable CI hosts. */
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, readFile, stat } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { setTimeout as wait } from "node:timers/promises";
+import { pathToFileURL } from "node:url";
 
 const input = process.argv[2];
 if (!input || !process.env.npm_execpath)
@@ -12,12 +13,15 @@ if (!input || !process.env.npm_execpath)
 const archive = path.resolve(input);
 const cwd = await mkdtemp(path.join(tmpdir(), "reel package smoke "));
 const home = path.join(cwd, "studio files");
+const cache = path.join(cwd, "npm-cache");
 const env = {
   ...process.env,
   REEL_STUDIO_HOME: home,
   REEL_STUDIO_NO_OPEN: "1",
   PUPPETEER_SKIP_DOWNLOAD: "1",
   ONNXRUNTIME_NODE_INSTALL_CUDA: "skip",
+  npm_config_cache: cache,
+  npm_config_loglevel: "info",
 };
 delete env.DATABASE_URL;
 delete env.REEL_STUDIO_MEDIA_DIR;
@@ -32,7 +36,7 @@ try {
       "exec",
       "--yes",
       "--package",
-      archive,
+      pathToFileURL(archive).href,
       "--",
       "reel-studio",
     ],
@@ -73,6 +77,11 @@ try {
     () => "",
   );
   if (log) console.error(log.slice(-10_000));
+  const logs = path.join(cache, "_logs");
+  for (const name of (await readdir(logs).catch(() => [])).sort().slice(-2)) {
+    const npmLog = await readFile(path.join(logs, name), "utf8");
+    console.error(npmLog.split("\n").slice(-35).join("\n"));
+  }
   throw error;
 } finally {
   const engine = JSON.parse(
