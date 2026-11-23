@@ -12,7 +12,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
-// `npm run scene:new` edits nine files that must stay in step with the code. This
+// `npm run scene:new` edits files that must stay in step with the code. This
 // runs it in a copy of those files, so a change that moves one of them fails here
 // instead of in the next contributor's terminal.
 const FILES = [
@@ -49,19 +49,22 @@ afterEach(() => {
 describe("npm run scene:new", () => {
   it("creates the folder and registers the type in every place", () => {
     const dir = copyOfRepo();
-    const result = run(dir, "pro-tip");
+    const result = run(dir, "scaffold-sample");
     expect(result.status, result.stderr).toBe(0);
-    const folder = path.join(dir, "src/engines/hyperframes/scenes/pro-tip");
+    const folder = path.join(
+      dir,
+      "src/engines/hyperframes/scenes/scaffold-sample",
+    );
     expect(existsSync(path.join(folder, "index.ts"))).toBe(true);
     expect(existsSync(path.join(folder, "index.test.ts"))).toBe(true);
     for (const file of FILES) {
       const text = readFileSync(path.join(dir, file), "utf8");
-      expect(text, file).toMatch(/pro-tip|proTip/);
+      expect(text, file).toMatch(/scaffold-sample|scaffoldSample/);
     }
     const index = readFileSync(path.join(folder, "index.ts"), "utf8");
-    expect(index).toContain('id: "pro-tip"');
-    expect(index).toContain('templateId: "hf-pro-tip"');
-    expect(index).toContain("export const proTip");
+    expect(index).toContain('id: "scaffold-sample"');
+    expect(index).toContain('templateId: "hf-scaffold-sample"');
+    expect(index).toContain("export const scaffoldSample");
     // The generated source is valid TypeScript (esbuild would refuse it otherwise).
     execFileSync(
       process.execPath,
@@ -73,11 +76,24 @@ describe("npm run scene:new", () => {
     );
   });
 
+  it("keeps both registrations when scaffolding a second scene", () => {
+    const dir = copyOfRepo();
+    const first = run(dir, "scaffold-sample");
+    const second = run(dir, "scaffold-followup");
+    expect(first.status, first.stderr).toBe(0);
+    expect(second.status, second.stderr).toBe(0);
+    for (const file of FILES) {
+      const text = readFileSync(path.join(dir, file), "utf8");
+      expect(text, file).toMatch(/scaffold-sample|scaffoldSample/);
+      expect(text, file).toMatch(/scaffold-followup|scaffoldFollowup/);
+    }
+  });
+
   it("refuses a bad or existing name and changes nothing", () => {
     const dir = copyOfRepo();
     expect(run(dir, "Pro Tip").status).toBe(1);
-    expect(run(dir, "pro-tip").status).toBe(0);
-    expect(run(dir, "pro-tip").status).toBe(1);
+    expect(run(dir, "scaffold-sample").status).toBe(0);
+    expect(run(dir, "scaffold-sample").status).toBe(1);
   });
 
   it("changes nothing when a registration point has moved", () => {
@@ -92,7 +108,7 @@ describe("npm run scene:new", () => {
       path.join(dir, "src/engines/hyperframes/scenes/registry.ts"),
       "utf8",
     );
-    const result = run(dir, "pro-tip");
+    const result = run(dir, "scaffold-sample");
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("storyboard-plan.ts");
     expect(readFileSync(file, "utf8")).toBe(before);
@@ -103,7 +119,9 @@ describe("npm run scene:new", () => {
       ),
     ).toBe(registry);
     expect(
-      existsSync(path.join(dir, "src/engines/hyperframes/scenes/pro-tip")),
+      existsSync(
+        path.join(dir, "src/engines/hyperframes/scenes/scaffold-sample"),
+      ),
     ).toBe(false);
   });
 });
