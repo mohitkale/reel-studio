@@ -621,7 +621,7 @@ export const videoStoryboardSchema = z
     theme: slug
       .optional()
       .describe(
-        'Optional visual theme: "bold-pop", "clean-minimal", "midnight-tech", "editorial-paper", "neon", "warm-documentary", "corporate-blue", "playful-pastel", "mono-brutalist", "cinematic", "sunset" or "forest". Omit or use "auto" to let Reel Studio choose a theme that fits the content.',
+        'Optional visual theme: "bold-pop", "clean-minimal", "midnight-tech", "editorial-paper", "neon", "warm-documentary", "corporate-blue", "playful-pastel", "mono-brutalist", "cinematic", "sunset", "forest" or "high-contrast". Omit or use "auto" to let Reel Studio choose a theme that fits the content.',
       ),
     voice: voiceSchema.optional(),
     presenter: z
