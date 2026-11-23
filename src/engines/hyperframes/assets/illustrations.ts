@@ -1,7 +1,7 @@
 /**
- * Looping illustrations (roadmap V12b): sixty original vector scenes, drawn by
+ * Looping illustrations (roadmap V12b): 65 original vector scenes, drawn by
  * code, so there is no third-party artwork and nothing to attribute (the code is
- * MIT like the rest of the project). Twelve motifs, five seeded variants each.
+ * MIT like the rest of the project). Thirteen motifs, five seeded variants each.
  *
  * They are decorative backgrounds behind a scene's panel, coloured by the
  * theme (`--fx-c`, `--fx-glow`, `--fx-ink`). Motion is plain CSS keyframes
@@ -22,12 +22,13 @@ export const ILLUSTRATION_MOTIFS = [
   "dots",
   "stars",
   "spiral",
+  "clouds",
 ] as const;
 export type IllustrationMotif = (typeof ILLUSTRATION_MOTIFS)[number];
 
 export const VARIANTS_PER_MOTIF = 5;
 
-/** `orbits-1` to `spiral-5`. */
+/** `orbits-1` to `clouds-5`. */
 export const ILLUSTRATION_NAMES: string[] = ILLUSTRATION_MOTIFS.flatMap(
   (motif) =>
     Array.from({ length: VARIANTS_PER_MOTIF }, (_, i) => `${motif}-${i + 1}`),
@@ -56,6 +57,7 @@ const KEYWORDS: Record<IllustrationMotif, string[]> = {
   dots: ["grid", "pattern", "map", "design", "digital", "pixel", "list"],
   stars: ["space", "night", "moon", "star", "dream", "story", "sleep"],
   spiral: ["journey", "focus", "time", "habit", "loop", "mind", "learning"],
+  clouds: ["weather", "sky", "overcast", "cloudscape", "mist"],
 };
 
 /** An exact name, a motif, or a keyword; null when nothing fits. */
@@ -233,6 +235,18 @@ const spiral: Gen = (r) => {
   return `<path d="${d}" class="il-line il-thick il-dash"/><circle cx="500" cy="500" r="22" class="il-fill il-pulse"/>`;
 };
 
+const clouds: Gen = (r) => {
+  const count = 3 + Math.floor(r() * 4);
+  return Array.from({ length: count }, (_, i) => {
+    const x = 140 + r() * 720;
+    const y = 120 + ((i + 0.5) * 760) / count;
+    const width = 0.7 + r() * 1.1;
+    const height = 0.65 + r() * 0.7;
+    const duration = f(12 + r() * 10);
+    return `<g transform="translate(${f(x)} ${f(y)}) scale(${f(width)} ${f(height)})"><g class="il-cloud-drift" style="animation-duration:${duration}s"><path d="M-140 35 C-185 35-175-34-126-37 C-124-92-54-115-18-67 C20-115 98-87 98-41 C150-53 184-19 168 14 C160 33 139 35 117 35Z" class="${i % 2 ? "il-fill-b" : "il-fill"}"/><path d="M-134 24 H116" class="il-window" style="opacity:.24;stroke:var(--fx-ink, #fff);stroke-width:2;stroke-linecap:round"/></g></g>`;
+  }).join("");
+};
+
 const GENERATORS: Record<IllustrationMotif, Gen> = {
   orbits,
   waves,
@@ -246,6 +260,7 @@ const GENERATORS: Record<IllustrationMotif, Gen> = {
   dots,
   stars,
   spiral,
+  clouds,
 };
 
 /** The SVG markup of one illustration, or null for an unknown name. */
@@ -275,6 +290,7 @@ export const ILLUSTRATION_STYLES = `
   .il-spin { animation-name: il-spin; animation-timing-function: linear; }
   .il-spin-r { animation-name: il-spin-r; animation-timing-function: linear; }
   .il-sway { animation-name: il-sway; }
+  .il-cloud-drift { animation-name: il-cloud-drift; }
   .il-float { animation-name: il-float; }
   .il-rise { animation-name: il-rise; }
   .il-pulse { animation-name: il-pulse; }
@@ -285,6 +301,7 @@ export const ILLUSTRATION_STYLES = `
   @keyframes il-spin { to { transform: rotate(360deg); } }
   @keyframes il-spin-r { to { transform: rotate(-360deg); } }
   @keyframes il-sway { 0%,100% { transform: translateX(-26px) rotate(-3deg); } 50% { transform: translateX(26px) rotate(3deg); } }
+  @keyframes il-cloud-drift { 0%,100% { transform: translateX(-38px); } 50% { transform: translateX(38px); } }
   @keyframes il-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-34px); } }
   @keyframes il-rise { 0% { transform: translateY(40px); opacity: 0; } 20%,80% { opacity: .7; } 100% { transform: translateY(-120px); opacity: 0; } }
   @keyframes il-pulse { 0%,100% { transform: scale(1); opacity: .35; } 50% { transform: scale(1.25); opacity: .8; } }

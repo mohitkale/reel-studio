@@ -1,5 +1,5 @@
 /**
- * `npm run illustrations:sheet`: a contact sheet of all sixty illustrations
+ * `npm run illustrations:sheet`: a contact sheet of all registered illustrations
  * (docs/assets/illustrations/sheet.jpg), each frozen a few seconds into its
  * loop. Needs Chrome through puppeteer, like the frame check.
  */
