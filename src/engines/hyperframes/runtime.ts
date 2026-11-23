@@ -1,4 +1,4 @@
-import gsapPackage from "gsap/package.json";
+import gsapPackage from "gsap/package.json" with { type: "json" };
 
 export const GSAP_PREVIEW_URL = "/reel-runtime/gsap.min.js";
 

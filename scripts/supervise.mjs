@@ -42,7 +42,8 @@ export function nextServerFlags(flags, env = process.env) {
 }
 
 /** Next reloads web modules; the separate dev worker must reload its imports too. */
-export function productionWorkerCommand(mode) {
+export function productionWorkerCommand(mode, installed = false) {
+  if (installed) return [process.execPath, "scripts/production-worker.mjs"];
   return [
     process.execPath,
     ...(mode === "dev" ? ["--watch", "--watch-preserve-output"] : []),
@@ -186,7 +187,7 @@ if (
           mode,
           ...nextServerFlags(flags),
         ],
-    worker: productionWorkerCommand(mode),
+    worker: productionWorkerCommand(mode, installed),
     env: {
       ...process.env,
       ...(installed ? { HOSTNAME: "127.0.0.1", PORT: port } : {}),

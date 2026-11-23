@@ -293,9 +293,9 @@ export async function main(
           const child = spawn(
             process.execPath,
             [
-              "--import",
-              "tsx",
-              path.join(root, "scripts", "doctor.ts"),
+              ...(options.installed
+                ? [path.join(root, "scripts", "doctor.mjs")]
+                : ["--import", "tsx", path.join(root, "scripts", "doctor.ts")]),
               ...rest,
             ],
             { cwd: root, stdio: "inherit", env: process.env },
@@ -309,7 +309,9 @@ export async function main(
         return await new Promise<number>((resolve) => {
           const child = spawn(
             process.execPath,
-            ["--import", "tsx", path.join(root, "mcp", "src", "index.ts")],
+            options.installed
+              ? [path.join(root, "mcp", "src", "index.mjs")]
+              : ["--import", "tsx", path.join(root, "mcp", "src", "index.ts")],
             { cwd: root, stdio: "inherit", env: process.env },
           );
           child.once("exit", (code) => resolve(code ?? 1));

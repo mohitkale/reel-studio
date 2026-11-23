@@ -70,8 +70,9 @@ process.once("SIGINT", () => cancellation.abort());
 
 try {
   if (mode === "sections") {
-    const { renderHyperframesSections } =
-      await import("./hyperframes-section-render.ts");
+    const { renderHyperframesSections } = process.env.REEL_STUDIO_INSTALL_ROOT
+      ? await import("./hyperframes-section-render.mjs")
+      : await import("./hyperframes-section-render.ts");
     await renderHyperframesSections(
       {
         projectDir,

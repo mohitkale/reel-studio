@@ -11,6 +11,7 @@ import {
 import { createRequire } from "node:module";
 import path from "node:path";
 import { parseArgs } from "node:util";
+import { build } from "esbuild";
 import { buildVoicePack } from "./package-voice-pack.mjs";
 import { checkPhonemizerProvenance } from "./check-phonemizer-provenance.mjs";
 
@@ -132,6 +133,30 @@ await copyFiles(
       !["next.config.ts", "postcss.config.mjs", "package.json"].includes(file),
   ),
 );
+// npm puts the bin and its modules under node_modules, where TS path aliases
+// are not applied by the source-checkout launcher. Ship native JS entrypoints.
+await build({
+  absWorkingDir: root,
+  entryPoints: {
+    "src/cli/main": "src/cli/main.ts",
+    "mcp/src/index": "mcp/src/index.ts",
+    "scripts/production-worker": "scripts/production-worker.ts",
+    "scripts/doctor": "scripts/doctor.ts",
+    "scripts/hyperframes-section-render":
+      "scripts/hyperframes-section-render.ts",
+    "scripts/hyperframes-review-hook": "scripts/hyperframes-review-hook.mts",
+  },
+  outdir: staged,
+  outExtension: { ".js": ".mjs" },
+  platform: "node",
+  target: "node24",
+  format: "esm",
+  packages: "external",
+  bundle: true,
+  banner: {
+    js: 'import { createRequire as createNativeRequire } from "node:module"; const require = createNativeRequire(import.meta.url);',
+  },
+});
 const pack = await buildVoicePack(
   root,
   voiceSource,
@@ -209,6 +234,9 @@ if (
     "server.js",
     `${dist}/BUILD_ID`,
     "bin/reel-studio.mjs",
+    "src/cli/main.mjs",
+    "mcp/src/index.mjs",
+    "scripts/production-worker.mjs",
     "voice-pack-manifest.json",
   ].every((file) => report.files.some((entry) => entry.path === file))
 )

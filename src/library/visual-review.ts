@@ -135,12 +135,17 @@ export async function renderVisualReviewFrames(
     const output = await runSnapshot(
       [
         ...(onLayout
-          ? [
-              "--import",
-              "tsx",
-              "--import",
-              path.join(process.cwd(), "scripts/hyperframes-review-hook.mts"),
-            ]
+          ? process.env.REEL_STUDIO_INSTALL_ROOT
+            ? [
+                "--import",
+                path.join(process.cwd(), "scripts/hyperframes-review-hook.mjs"),
+              ]
+            : [
+                "--import",
+                "tsx",
+                "--import",
+                path.join(process.cwd(), "scripts/hyperframes-review-hook.mts"),
+              ]
           : []),
         path.join(
           path.dirname(

@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { mkdtemp, readFile, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { setTimeout as wait } from "node:timers/promises";
 
 const input = process.argv[2];
 if (!input || !process.env.npm_execpath)
@@ -51,6 +52,17 @@ try {
   assert.ok((await stat(path.join(home, "studio.db"))).size > 0);
   assert.ok((await stat(path.join(home, "media"))).isDirectory());
   assert.ok((await stat(path.join(home, "models"))).isDirectory());
+  const logFile = path.join(home, "engine.log");
+  let workerStarted = false;
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const log = await readFile(logFile, "utf8");
+    if (/\[production-worker\].*ready/.test(log)) {
+      workerStarted = true;
+      break;
+    }
+    await wait(250);
+  }
+  assert.ok(workerStarted, "The installed production worker did not start");
   const elapsed = (performance.now() - start) / 1000;
   console.log(
     `Installed studio served its home screen in ${elapsed.toFixed(2)} s on ${process.platform}`,
