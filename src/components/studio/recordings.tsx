@@ -7,6 +7,12 @@ import { Loader2, Scissors, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { useUiMode } from "@/hooks/ui-mode";
+import { dimsFor } from "@/lib/orientation";
+import {
+  DEFAULT_PRESENTER_ADJUSTMENT,
+  type PresenterAdjustment,
+} from "@/video/presenter-config";
 import {
   fillerWordIndexes,
   type ClipSuggestion,
@@ -167,6 +173,7 @@ export function Recordings() {
 }
 
 function RecordingView({ id }: { id: string }) {
+  const { mode, ready: modeReady } = useUiMode();
   const detail = useQuery({
     queryKey: ["recording", id],
     queryFn: () =>
@@ -184,6 +191,7 @@ function RecordingView({ id }: { id: string }) {
   const [reframe, setReframe] = React.useState<"blur" | "fill">("blur");
   const [theme, setTheme] = React.useState("bold-pop");
   const [presenterId, setPresenterId] = React.useState("");
+  const [adjustment, setAdjustment] = React.useState<PresenterAdjustment>();
   const [chosenPlacement, setPlacement] = React.useState<
     "full" | "corner" | "split" | undefined
   >();
@@ -228,6 +236,10 @@ function RecordingView({ id }: { id: string }) {
   const words: RecWord[] = recording.words;
   // A recording with video gets a corner bubble by default; audio gets the full frame.
   const placement = chosenPlacement ?? (recording.hasVideo ? "corner" : "full");
+  const character = getCharacter(presenterId);
+  const frame = dimsFor(
+    format === "9:16" ? "portrait" : format === "16:9" ? "landscape" : "square",
+  );
   const inClip = (index: number) =>
     selected.some(
       (i) =>
@@ -254,7 +266,7 @@ function RecordingView({ id }: { id: string }) {
           reframe,
           theme,
           ...(presenterId
-            ? { presenter: { character: presenterId, placement } }
+            ? { presenter: { character: presenterId, placement, adjustment } }
             : {}),
           quality: "standard",
         },
@@ -448,15 +460,59 @@ function RecordingView({ id }: { id: string }) {
             </label>
           )}
         </div>
-        {presenterId && getCharacter(presenterId) && (
+        {character && (
           <div className="flex items-center gap-3 text-xs">
-            <PresenterPreview character={getCharacter(presenterId)!} />
+            <PresenterPreview
+              character={character}
+              placement={placement}
+              frame={frame}
+              adjustment={adjustment}
+            />
             <p className="text-muted-foreground max-w-sm">
-              {getCharacter(presenterId)!.description} The mouth follows the
-              words and the audio, and the character blinks and nods. The
-              preview steps through all twelve mouth shapes.
+              {character.description}
             </p>
           </div>
+        )}
+        {character && modeReady && mode === "pro" && (
+          <fieldset className="flex flex-wrap gap-x-6 gap-y-3 text-sm">
+            <legend className="mb-1 font-medium">
+              Presenter position and scale
+            </legend>
+            {(
+              [
+                {
+                  field: "horizontal",
+                  label: "Horizontal position",
+                  min: -50,
+                  max: 50,
+                },
+                {
+                  field: "vertical",
+                  label: "Vertical position",
+                  min: -50,
+                  max: 50,
+                },
+                { field: "scale", label: "Scale", min: 50, max: 150 },
+              ] as const
+            ).map(({ field, label, min, max }) => (
+              <label key={field} className="grid gap-1">
+                {label}
+                <input
+                  type="range"
+                  min={min}
+                  max={max}
+                  value={(adjustment ?? DEFAULT_PRESENTER_ADJUSTMENT)[field]}
+                  onChange={(event) => {
+                    const value = event.currentTarget.valueAsNumber;
+                    setAdjustment((previous) => ({
+                      ...(previous ?? DEFAULT_PRESENTER_ADJUSTMENT),
+                      [field]: value,
+                    }));
+                  }}
+                />
+              </label>
+            ))}
+          </fieldset>
         )}
         <Button
           onClick={() => void make()}

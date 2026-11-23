@@ -18,6 +18,19 @@ export const VIDEO_PRESENTER_PLACEMENTS = ["corner", "full"] as const;
 export type VideoPresenterPlacement =
   (typeof VIDEO_PRESENTER_PLACEMENTS)[number];
 
+/** Translation as a percentage of the available region and scale as a percentage of the preset. */
+export interface PresenterAdjustment {
+  horizontal: number;
+  vertical: number;
+  scale: number;
+}
+
+export const DEFAULT_PRESENTER_ADJUSTMENT: PresenterAdjustment = {
+  horizontal: 0,
+  vertical: 0,
+  scale: 100,
+};
+
 export interface PresenterConfig {
   character: PresenterCharacterId;
   placement: VideoPresenterPlacement;
