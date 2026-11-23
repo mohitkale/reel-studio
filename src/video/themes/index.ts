@@ -14,6 +14,7 @@ import { neon } from "./neon";
 import { playfulPastel } from "./playful-pastel";
 import { warmDocumentary } from "./warm-documentary";
 import { sunset } from "./sunset";
+import { forest } from "./forest";
 import type { Theme } from "./types";
 
 export type { Theme } from "./types";
@@ -30,6 +31,7 @@ export const THEMES: readonly Theme[] = [
   monoBrutalist,
   cinematic,
   sunset,
+  forest,
 ];
 
 export const THEME_IDS = THEMES.map((theme) => theme.id);

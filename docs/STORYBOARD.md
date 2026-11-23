@@ -97,8 +97,9 @@ failing. New types are added without changing the version.
 
 `bold-pop`, `clean-minimal`, `midnight-tech`, `editorial-paper`, `neon`,
 `warm-documentary`, `corporate-blue`, `playful-pastel`, `mono-brutalist`, `cinematic`
-and `sunset`. See the [Sunset preview](assets/themes/sunset.jpg) and
-[frames from a Sunset export](assets/themes/sunset-export.jpg). A theme sets the palette,
+along with `sunset` and `forest`. See the [Sunset preview](assets/themes/sunset.jpg),
+[Sunset export](assets/themes/sunset-export.jpg), [Forest preview](assets/themes/forest.jpg)
+and [Forest export](assets/themes/forest-export.jpg). A theme sets the palette,
 a bundled font pair, type treatment, corner and stroke, background treatment, motion
 personality, caption style and music mood, and works with every scene type.
 With `theme` omitted or `"auto"` the studio picks one from the storyboard's words
