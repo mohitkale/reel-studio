@@ -79,14 +79,13 @@ jobs:
           archive=$(find npm-candidate -name 'mohitkale-reel-studio-*.tgz' -print -quit)
           test -n "$archive"
           npm run package:smoke -- "$archive"
-      - name: Verify Windows launch separately with primed registry cache
+      - name: Verify Windows launch from the archive's exact dependency lock
         if: failure() && runner.os == 'Windows'
         shell: bash
         env:
           ONNXRUNTIME_NODE_INSTALL_CUDA: skip
           PUPPETEER_SKIP_DOWNLOAD: "1"
         run: |
-          npm ci --ignore-scripts
           archive=$(find npm-candidate -name 'mohitkale-reel-studio-*.tgz' -print -quit)
           test -n "$archive"
-          REEL_STUDIO_SMOKE_NPM_CACHE="$(npm config get cache)" npm run package:smoke -- "$archive"
+          REEL_STUDIO_SMOKE_NPM_CACHE="$(npm config get cache)" npm run package:smoke -- "$archive" --locked

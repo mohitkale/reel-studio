@@ -8,13 +8,18 @@ import { setTimeout as wait } from "node:timers/promises";
 import { pathToFileURL } from "node:url";
 
 const input = process.argv[2];
+const lockedInstall = process.argv[3] === "--locked";
 if (!input || !process.env.npm_execpath)
-  throw new Error("Use npm run package:smoke -- <reel-studio-package.tgz>");
+  throw new Error(
+    "Use npm run package:smoke -- <reel-studio-package.tgz> [--locked]",
+  );
 const archive = path.resolve(input);
 const firstStartLimitSeconds = 120;
 const cwd = await mkdtemp(path.join(tmpdir(), "reel package smoke "));
 const home = path.join(cwd, "studio files");
-const primedCache = process.env.REEL_STUDIO_SMOKE_NPM_CACHE;
+const primedCache = lockedInstall
+  ? process.env.REEL_STUDIO_SMOKE_NPM_CACHE
+  : undefined;
 const cache = primedCache ?? path.join(cwd, "npm-cache");
 const logs = path.join(cwd, "npm-logs");
 const env = {
@@ -34,25 +39,37 @@ delete env.REEL_STUDIO_MODEL_CACHE_DIR;
 
 try {
   const start = performance.now();
-  const stdout = execFileSync(
-    process.execPath,
-    [
-      process.env.npm_execpath,
-      "exec",
-      "--yes",
-      "--package",
-      pathToFileURL(archive).href,
-      "--",
-      "reel-studio",
-    ],
-    {
-      env,
-      cwd,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "inherit"],
-      timeout: primedCache ? 300_000 : firstStartLimitSeconds * 1000,
-    },
-  );
+  const runOptions = {
+    env,
+    cwd,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "inherit"],
+    timeout: lockedInstall ? 300_000 : firstStartLimitSeconds * 1000,
+  };
+  let launch = [
+    process.env.npm_execpath,
+    "exec",
+    "--yes",
+    "--package",
+    pathToFileURL(archive).href,
+    "--",
+    "reel-studio",
+  ];
+  if (lockedInstall) {
+    const packageDir = path.join(cwd, "package");
+    const tar =
+      process.platform === "win32"
+        ? path.join(process.env.SystemRoot, "System32", "tar.exe")
+        : "tar";
+    execFileSync(tar, ["-xf", archive], { cwd, timeout: 30_000 });
+    execFileSync(
+      process.execPath,
+      [process.env.npm_execpath, "ci", "--omit=dev", "--no-audit", "--no-fund"],
+      { ...runOptions, cwd: packageDir, stdio: "inherit" },
+    );
+    launch = [path.join(packageDir, "bin", "reel-studio.mjs")];
+  }
+  const stdout = execFileSync(process.execPath, launch, runOptions);
   const url = stdout.match(/^http:\/\/127\.0\.0\.1:\d+$/m)?.[0];
   assert.ok(url, "The installed CLI did not report a loopback URL");
   const response = await fetch(url, { signal: AbortSignal.timeout(10_000) });
@@ -73,11 +90,11 @@ try {
   }
   assert.ok(workerStarted, "The installed production worker did not start");
   const elapsed = (performance.now() - start) / 1000;
-  const install = primedCache ? "Primed-cache" : "Cold";
+  const install = lockedInstall ? "Locked diagnostic" : "Cold";
   console.log(
     `${install} install served the studio home screen in ${elapsed.toFixed(2)} s on ${process.platform}`,
   );
-  if (!primedCache)
+  if (!lockedInstall)
     assert.ok(
       elapsed < firstStartLimitSeconds,
       "First start exceeded two minutes",
